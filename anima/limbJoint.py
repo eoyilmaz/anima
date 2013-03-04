@@ -17,10 +17,9 @@ class Joint(object):
 
         self._setJoints( (self._check_joints(joints)) ,(self._check_name(name)) )
 
-
-        #****************************************************************************************************#
-    #deletes the instances and remove from static jointInstances list
     def __del__(self):
+        """deletes the instances and remove from static jointInstances list
+        """
         Joint.jointInstances.remove(self._root)
         pm.delete(self._root)
 
