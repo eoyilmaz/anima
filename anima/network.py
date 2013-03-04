@@ -18,11 +18,9 @@ class Network(object):
         #it creates a network node
         pass
 
-
-    #****************************************************************************************************#
-
-    #creates a networkNode. This node holds all the limb nodes
     def _createNetwork(self):
+        """creates a networkNode. This node holds all the limb nodes
+        """
         #creates a networkNode. This node holds all the maya nodes
         self._name = self._name + "_Network"
         pm.createNode("network", n= self.name)
