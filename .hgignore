@@ -1,0 +1,19 @@
+# Ignore file for oyProjectManager
+
+# use glob syntax
+syntax: glob
+
+build/*
+dist/*
+anima.egg-info/*
+docs/build/*
+docs/source/generated/*
+docs/source/static/.backup/*
+docs/source/static/images/*
+*.pyc
+*~
+.~*
+.DS_Store
+.coverage
+*.swp
+
