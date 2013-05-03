@@ -6,50 +6,67 @@ from pymel.all import mel
 class UtilityFuncs():
 
 
-#****************************************************************************************************#
-
     #selects the hiearachy
     @staticmethod
     def selHierarchy(root):
         pm.select(root, hi=1)
         return pm.ls(sl = 1)
-#****************************************************************************************************#
 
-    #rename the hiearachy
+
+
     @staticmethod
     def renameHierarchy(hierarchy, name):
+        #rename the hiearachy
         for s in hierarchy:
             pm.rename(s, (name + "#"))
-
         return hierarchy
-#****************************************************************************************************#
 
-    #duplicate the object
+
+
     @staticmethod
     def duplicateObject(object):
+        #duplicate the object
         dup = pm.duplicate(object)
         return dup[0]
 
 
-#****************************************************************************************************#
     @staticmethod
     def typeCheck(instanceName, className) :
         if not isinstance(instanceName, (className)):
-            raise TypeError("%s should be an instance of %s", (instanceName, className))
+            raise TypeError("%s should be an instance of %s",
+                (instanceName, className))
 
-#****************************************************************************************************#
-    #evaluates the given string and return a list
+
+
     @staticmethod
     def evaluate(command):
+        #evaluates the given string and return a list
         return eval(command)
 
+    @staticmethod
+    def connect(sourceObj, sourceAttr, destObj, destAttr):
+        source = sourceObj + "." + sourceAttr
+        dest = destObj + "." + destAttr
+        pm.connectAttr(source, dest)
 
+    @staticmethod
+    def rename_byType(nodes):
+        temp_list = []
+        for nd in nodes:
+            temp_name = nd + pm.nodeType(nd)
+            temp_list.append(temp_name)
+        return temp_list
 
-
+    @staticmethod
+    def rename(object, name_in):
+        return (pm.rename(object, name_in))
+    @staticmethod
+    def position(object):
+        return pm.xform(object, q = 1, ws = 1, t = 1)
 
 #controllers Shape Dictionary
 
-    ctrlShapes = {"circle" :  ("pm.circle( nr=(0, 1, 0), c=(0, 0, 0), sw=360, r=1 )"),
+    ctrlShapes = {"circle" :  ("pm.delete((pm.circle( nr=(0, 1, 0), c=(0, 0, 0), sw=360, r=1)), ch = 1)"),
 
                   "arrowCtrl" :     ("""pm.curve(per=True, d = 1, p = [ ( -1, -0.00207849, 0 ), ( 1, -0.00207849, 0 ),
                                     ( 1, 2.997922, 0 ),( 2, 2.997922, 0 ), ( 0, 4.997922, 0 ), ( -2, 2.997922, 0 ),

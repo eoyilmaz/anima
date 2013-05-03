@@ -10,6 +10,7 @@ docs/build/*
 docs/source/generated/*
 docs/source/static/.backup/*
 docs/source/static/images/*
+.idea/
 *.pyc
 *~
 .~*

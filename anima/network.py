@@ -1,8 +1,7 @@
-__author__ = 'Morteza'
+__author__ = 'eda'
 #Bu sinif dictionary ve node name i alir ve network node u olusturur.
 #network node un connectionlari geri dondurur
 #objeleri siler
-#vs.. vs..
 import pymel.core as pm
 class Network(object):
     def __init__(self, name):
@@ -14,9 +13,6 @@ class Network(object):
     def __del__(self):
         pass
 
-    def _createNetwork(self):
-        #it creates a network node
-        pass
 
     def _createNetwork(self):
         """creates a networkNode. This node holds all the limb nodes
@@ -28,12 +24,10 @@ class Network(object):
 
 
     def attach(self, object):
-        #it connects the given object to the network and return an id number for the object
+        #it connects the given object to the network and return an id number
+        # for the object
         #all_cons = pm.listConnections(self.name)
-        if object in self.connections:
-            print ("the %s is already connected to network", object)
-        else:
-            print "eda"
+        if not object in self.connections:
             mayaCon = object + ('.message')
             networkId = len(self.connections)
             tempAttr = '%s[%s]' % ("affectedBy", networkId)
@@ -42,6 +36,9 @@ class Network(object):
             self.connections.append(object)
 
 
+    def attachList(self, objectList):
+        for obj in objectList :
+            self.attach(obj)
 
     def remove(self, object):
         #it removes the given object from a network
@@ -49,24 +46,23 @@ class Network(object):
     def select(self):
         pass
 
-    #****************************************************************************************************#
 
+    @property
     # returns and sets the _zeroGrp value
-    def name():
-        def fget(self):
-            return self._name
-        def fset(self, name):
-            self._name = name
-        return locals()
-    name = property( **name() )
-
-    def connections():
-        def fget(self):
-            return self._connections
-        return locals()
-
-    connections = property( **connections() )
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self, name_in):
+        self._name = pm.rename(self._name, name_in)
 
 
-#****************************************************************************************************#
+
+    @property
+    #returns connections
+    def connections(self):
+        return self._connections
+
+
+
+
 
