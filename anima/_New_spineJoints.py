@@ -1,4 +1,4 @@
-__author__ = 'Eda'
+
 import pymel.core as pm
 from utilityFuncs import UtilityFuncs as utiFuncs
 from curve import Curve

@@ -1,4 +1,4 @@
-__author__ = 'Eda'
+
 
 import pymel.core as pm
 from _New_drawNode import DrawNode
