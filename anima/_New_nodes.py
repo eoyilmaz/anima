@@ -1,4 +1,3 @@
-
 import pymel.core as pm
 from network import Network
 
@@ -25,9 +24,11 @@ class Nodes(object):
     @property
     def controllers(self):
         return self._controllers
+
     @controllers.setter
     def controllers(self, object_in):
         self.appendObject(self._controllers, object_in)
+
     @controllers.deleter
     def controllers(self):
         self.deleter(self.controllers)
@@ -36,9 +37,11 @@ class Nodes(object):
     @property
     def joints(self):
         return self._joints
+
     @joints.setter
     def joints(self, object_in):
         self.appendObject(self._joints, object_in)
+
     @joints.deleter
     def joints(self):
         self.deleter(self.joints)
@@ -47,6 +50,7 @@ class Nodes(object):
     @property
     def utilities(self):
         return self._utilities
+
     @utilities.setter
     def utilities(self, object_in):
         self.appendObject(self._utilities, object_in)
@@ -54,7 +58,6 @@ class Nodes(object):
     @utilities.deleter
     def utilities(self):
         self.deleter(self.utilities)
-
 
 
     def appendObject(self, nodeType, object_in):
@@ -71,7 +74,7 @@ class Nodes(object):
 
 
     def checkMembers(self, nodeType, object_in):
-        if (nodeType == object_in):
+        if nodeType == object_in:
             return False
         return True
 
@@ -82,9 +85,9 @@ class Nodes(object):
 
     def deleter(self, nodeList):
         objects = pm.ls()
-        for obj in objects :
+        for obj in objects:
             for nodes in nodeList:
-                if (obj == nodes):
+                if obj == nodes:
                     pm.delete(nodes)
 
-        del nodeList [:]
+        del nodeList[:]

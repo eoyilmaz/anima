@@ -1,10 +1,12 @@
-
 import pymel.core as pm
+
+from anima.shapes import Shape
 from character import Character
 from _New_nodes import Nodes
 from _New_joint import SpineJoints
 from curve import Curve
 from _New_drawNode import DrawNode
+
 
 class Limb(object):
     def __init__(self, limbName_in):
@@ -16,7 +18,7 @@ class Limb(object):
         self._mainCtrl = None
 
         # Creates a network for the Limb
-        self._network = Network(limbName_in)
+        self._network = Network(limbName_in) # TODO: What is network
 
         # Character Link
         self._charName = None
@@ -37,7 +39,7 @@ class Limb(object):
     def _validate_mainCtrl(self, mainCtrl):
         """validates the given mainCtrl"""
         if mainCtrl != None:
-            self.mainCtrl =  pm.nt.Transform(mainCtrl)
+            self.mainCtrl = pm.nt.Transform(mainCtrl)
 
     def do_spine_ik(self, curve_in):
         print self.curve_in
@@ -89,9 +91,10 @@ class IkSpineLimb(object):
         self._COGCtrl = None
 
         self._stuff = []
-#*****************************************************************************#
+
+    # *************************************************************************
     # IKSPINE BASE SETUP METHODS
-    def create_spine(self, name_in, curve_in, frontAxis = "z"):
+    def create_spine(self, name_in, curve_in, frontAxis="z"):
         #self._network = Network(name_in)
         self._limbName = name_in
         # You can change createion method with a Joint Chain Class
@@ -101,25 +104,28 @@ class IkSpineLimb(object):
         self.joints = SpineJoints(name_in, curve_in)
         self.joints.orient_spine(frontAxis)
 
-        ikSolver = pm.ikHandle(sj = self.joints.startJoint,
-                               ee = self.joints.endJoint,
-                               tws = "linear",
-                               cra = True,
-                               pcv = False,
-                               ns = 2,
-                               sol = "ikSplineSolver",
-                               name = (name_in + "_IKSpine"))
+        ikSolver = pm.ikHandle(sj=self.joints.startJoint,
+                               ee=self.joints.endJoint,
+                               tws="linear",
+                               cra=True,
+                               pcv=False,
+                               ns=2,
+                               sol="ikSplineSolver",
+                               name=(name_in + "_IKSpine"))
 
-        self._ikHandle =  pm.rename(ikSolver[0], (name_in + "_IK_Spine"))
-        self._effector = pm.rename(ikSolver[0], (name_in  + "_IK_SpineEffector"))
+        self._ikHandle = pm.rename(ikSolver[0], (name_in + "_IK_Spine"))
+        self._effector = pm.rename(ikSolver[0],
+                                   (name_in + "_IK_SpineEffector"))
         self._curve = Curve((name_in + "_IKSpineCurve"), ikSolver[2])
 
 
-
     def create_clusters(self):
-        for i in range (0, self._curve.numCVs):
+        for i in range(0, self._curve.numCVs):
             pm.select(self._curve.curveNode.cv[i])
-            self.clusters = DrawNode((self._limbName + "IK_SpineCl_#"), 'cluster')
+            self.clusters = DrawNode(
+                Shape.cluster,
+                self._limbName + "IK_SpineCl_#"
+            )
             self.clusters[i].create_axialCor()
             #self.clusters = pm.cluster(n =(self._limbName + "IK_SpineCl_#"))
             #temp = DrawNode((self._limbName + "IK_SpineCl_zero_#"), 'transform')
@@ -127,16 +133,17 @@ class IkSpineLimb(object):
 
             #pm.parent (self._clusters[i], temp.drawnNode)
             #print self._clustersZero[0].drawnNode
+
     def make_stretchy(self):
         #check joints
         self._scaleMD = pm.createNode("multiplyDivide",
-                                      n = self.limbName + "_scaleMD")
+                                      n=self.limbName + "_scaleMD")
         pm.connectAttr(self.curve.curveInfo.arcLength, self.scaleMD.input1X)
         pm.setAttr(self.scaleMD.input2X, self.curve.arclen)
         pm.setAttr(self.scaleMD.operation, 2)
 
         for jnt in self.joints.jointChain:
-            factor = pm.createNode("multiplyDivide", n = "factor_" + jnt)
+            factor = pm.createNode("multiplyDivide", n="factor_" + jnt)
             pm.connectAttr(self.scaleMD.outputX, factor.input1X)
             pm.setAttr(factor.input2X, (pm.getAttr(jnt.ty)))
             pm.connectAttr(factor.outputX, jnt.ty)
@@ -147,7 +154,7 @@ class IkSpineLimb(object):
         # Hip Ctrl Create
 
 
-        self._hipCtrl = DrawNode('hip_ctrl', 'ikCtrl')
+        self._hipCtrl = DrawNode(Shape.ikCtrl, 'hip_ctrl')
         self.hipCtrl.temp_point_const(self.clusters[0].drawnNode)
         self.hipCtrl.create_axialCor()
 
@@ -159,13 +166,14 @@ class IkSpineLimb(object):
 
         # Shoulder Ctrl Create
 
-        self._shoulderCtrl = DrawNode('shoulder_ctrl', 'circle')
-        self.shoulderCtrl.temp_point_const(self.clusters[(len(self.clusters) - 1)].drawnNode)
+        self._shoulderCtrl = DrawNode(Shape.circle, 'shoulder_ctrl')
+        self.shoulderCtrl.temp_point_const(
+            self.clusters[(len(self.clusters) - 1)].drawnNode)
         self.shoulderCtrl.create_axialCor()
 
         # COG Ctrl Create
 
-        self._COGCtrl = DrawNode('COG_ctrl', 'cube')
+        self._COGCtrl = DrawNode(Shape.cube, 'COG_ctrl')
         self._COGCtrl.temp_point_const(self.hipCtrl.drawnNode)
         self._COGCtrl.create_axialCor()
 
@@ -177,17 +185,18 @@ class IkSpineLimb(object):
 
         # Create Mid Cluster Control Transforms and Constrains
         mid_cluster = self.clusters[2].drawnNode
-        tempCluster_const_1 = DrawNode("C_IK_SpineCl_ConstGrp", 'transform')
+        tempCluster_const_1 = DrawNode(Shape.transform,
+                                       "C_IK_SpineCl_ConstGrp")
         tempCluster_const_1.temp_point_const(mid_cluster)
         pm.parent(tempCluster_const_1.drawnNode, self.hipCtrl.drawnNode)
 
-        tempCluster_const_2= DrawNode("C_IK_SpineCl_ConstGrp", 'transform')
+        tempCluster_const_2 = DrawNode(Shape.transform,
+                                       "C_IK_SpineCl_ConstGrp")
         tempCluster_const_2.temp_point_const(mid_cluster)
         pm.parent(tempCluster_const_2.drawnNode, self.shoulderCtrl.drawnNode)
 
-        tempCluster_const_1.TO_point_const(mid_cluster)
-        tempCluster_const_2.TO_point_const(mid_cluster)
-
+        tempCluster_const_1.to_point_const(mid_cluster)
+        tempCluster_const_2.to_point_const(mid_cluster)
 
         self.stuff = tempCluster_const_1
         self.stuff = tempCluster_const_2
@@ -199,11 +208,11 @@ class IkSpineLimb(object):
     # Create Root Costrain Jnt Unde Hip cotrol
         # Duplicate zero Jnt
 
-        tempConst = pm.duplicate(self.joints.zeroJoint, po = True,
-                                    name = ("Const_" + self.joints.zeroJoint ))
+        tempConst = pm.duplicate(self.joints.zeroJoint, po=True,
+                                 name=("Const_" + self.joints.zeroJoint ))
         rootConst_jnt = tempConst[0]
 
-        pm.parent (rootConst_jnt, self.hipCtrl.drawnNode)
+        pm.parent(rootConst_jnt, self.hipCtrl.drawnNode)
         pm.pointConstraint(rootConst_jnt, self.joints.zeroJoint)
         pm.orientConstraint(rootConst_jnt, self.joints.zeroJoint)
         pm.setAttr(rootConst_jnt.visibility, 0)
@@ -211,11 +220,13 @@ class IkSpineLimb(object):
 
     def organize_DAG(self):
         pass
-#*****************************************************************************#
-        # PROPERTIES
+
+    # *************************************************************************
+    # PROPERTIES
     @property
     def spineJoints(self):
         return self._joints
+
     @spineJoints.setter
     def spineJoints(self, joints_in):
         self._joints = joints_in
@@ -223,9 +234,11 @@ class IkSpineLimb(object):
     @property
     def curve(self):
         return self._curve
+
     @property
     def clusters(self):
         return self._clusters
+
     @clusters.setter
     def clusters(self, node_in):
         self._clusters.append(node_in)
@@ -234,30 +247,34 @@ class IkSpineLimb(object):
     @property
     def hipCtrl(self):
         return self._hipCtrl
+
     @hipCtrl.setter
     def hipCtrl(self, name_in):
-        if (self._hipCtrl != None):
-            pm.rename(self._hipCtrl.drawnNode , name_in)
+        if self._hipCtrl is not None:
+            pm.rename(self._hipCtrl.drawnNode, name_in)
 
     @property
     def shoulderCtrl(self):
         return self._shoulderCtrl
+
     @shoulderCtrl.setter
     def shoulderCtrl(self, name_in):
-        if (self._shoulderCtrl != None):
-            pm.rename(self._shoulderCtrl.drawnNode , name_in)
+        if self._shoulderCtrl != None:
+            pm.rename(self._shoulderCtrl.drawnNode, name_in)
+
     @property
     def stuff(self):
         return self._stuff
+
     @stuff.setter
     def stuff(self, stuff_in):
         self._stuff.append(stuff_in)
 
 
-
     @property
     def limbName(self):
         return self._limbName
+
     @property
     def scaleMD(self):
         return self._scaleMD

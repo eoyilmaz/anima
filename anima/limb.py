@@ -102,7 +102,7 @@ class Limb(object):
 
     def validate_nodeName(self, node_in):
         for key in self.nodes.keys() :
-            if (node_in == key) :
+            if node_in == key:
                 raise ValueError("%s.nodes has already have %s node!" %
                                  (self.__class__.__name__, node_in))
 
@@ -259,7 +259,7 @@ class Limb(object):
         #connect splineNode Network to limbNetwork
         self.append_toLimb(splineNode)
 
-        if (stretchy == True):
+        if stretchy == True:
             self.do_StretchySpline(splineIK_curve, ikJoints.hierarchy,
                                    splineIK_handle, splineNode, maintainVolume)
 
@@ -296,7 +296,7 @@ class Limb(object):
                                        curveInfo.normalizedScale,
                                        self.mainCtrl.scaleX, 2)
 
-        if (maintainVolume == 0):
+        if maintainVolume == 0:
             for jnt in joints:
                 pm.connectAttr (globalScaleMd.outputX, jnt.scaleX)
         else:

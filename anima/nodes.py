@@ -85,7 +85,7 @@ class Nodes(object):
 
 
     def checkMembers(self, nodeType, object_in):
-        if (nodeType == object_in):
+        if nodeType == object_in:
             return False
         return True
 
@@ -98,7 +98,7 @@ class Nodes(object):
         objects = pm.ls()
         for obj in objects :
             for nodes in nodeList:
-                if (obj == nodes):
+                if obj == nodes:
                     pm.delete(nodes)
 
         del nodeList [:]
