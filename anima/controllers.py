@@ -5,9 +5,15 @@ from limbJoint import ControlJoint
 
 
 class Controller(object):
+    """
+
+    :param str name: It is name of the controller, can not be None.
+    
+    """
+    
     def __init__(self, name, position=None, shape="circle"):
 
-        self._name = name
+        self._name = self._validate_name(name)
         self._shape = self._validate_shape(shape)
 
         if not position:
@@ -156,6 +162,9 @@ class Controller(object):
     def parent(self, object):
         pm.parent(object, self.name)
         return self.name
+
+    def _validate_name(self, name):
+        return name
 
 
 class FkController(Controller):
