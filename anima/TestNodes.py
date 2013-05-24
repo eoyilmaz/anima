@@ -35,7 +35,7 @@
 #         objects = pm.ls()
 #         for obj in objects :
 #             for ctrl in self.controllers:
-#                 if (obj == ctrl):
+#                 if obj == ctrl:
 #                     pm.delete(ctrl)
 #
 #         del self.controllers [:]
@@ -54,7 +54,7 @@
 #         objects = pm.ls()
 #         for obj in objects :
 #             for jnt in self.joints:
-#                 if (obj == jnt):
+#                 if obj == jnt:
 #                     pm.delete(jnt)
 #
 #         del self.joints [:]
@@ -71,7 +71,7 @@
 #         objects = pm.ls()
 #         for obj in objects :
 #             for nodes in self.nodes:
-#                 if (obj == nodes):
+#                 if obj == nodes:
 #                     pm.delete(nodes)
 #
 #         del self.nodes [:]

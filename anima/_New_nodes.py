@@ -1,47 +1,34 @@
-# -*- coding: utf-8 -*-
 import pymel.core as pm
 from network import Network
 
-class UtilityNodes(object):
-    def __init__(self, name):
-        self.name = name
-        self.outputConnects = []
-        self.inputConnections = []
-        self.operation = None
-
-    def connectOutput(self):
-        pass
-    def connectInput(self):
-        pass
-
 
 class Nodes(object):
-    def __init__(self, name):
+    def __init__(self, nodesName_in):
 
-        self.name = name
+        self.nodesName = nodesName_in
         self._controllers = []
-        self._nodes = []
+        self._utilities = []
         self._joints = []
         self._curves = []
-        self.network = Network(self.name)
+
+        self.network = Network(self.nodesName)
 
     def deleteNodes(self):
-        pm.delete(self.network.name)
+        pm.delete(self.network.nodesName)
         del self.controllers
         del self.joints
-        del self.nodes
+        del self.utilities
 
         del self
-
-
-
 
     @property
     def controllers(self):
         return self._controllers
+
     @controllers.setter
     def controllers(self, object_in):
         self.appendObject(self._controllers, object_in)
+
     @controllers.deleter
     def controllers(self):
         self.deleter(self.controllers)
@@ -50,25 +37,27 @@ class Nodes(object):
     @property
     def joints(self):
         return self._joints
+
     @joints.setter
     def joints(self, object_in):
         self.appendObject(self._joints, object_in)
+
     @joints.deleter
     def joints(self):
         self.deleter(self.joints)
 
 
     @property
-    def nodes(self):
-        return self._nodes
-    @nodes.setter
-    def nodes(self, object_in):
-        self.appendObject(self._nodes, object_in)
+    def utilities(self):
+        return self._utilities
 
-    @nodes.deleter
-    def nodes(self):
-        self.deleter(self.nodes)
+    @utilities.setter
+    def utilities(self, object_in):
+        self.appendObject(self._utilities, object_in)
 
+    @utilities.deleter
+    def utilities(self):
+        self.deleter(self.utilities)
 
 
     def appendObject(self, nodeType, object_in):
@@ -96,9 +85,9 @@ class Nodes(object):
 
     def deleter(self, nodeList):
         objects = pm.ls()
-        for obj in objects :
+        for obj in objects:
             for nodes in nodeList:
                 if obj == nodes:
                     pm.delete(nodes)
 
-        del nodeList [:]
+        del nodeList[:]

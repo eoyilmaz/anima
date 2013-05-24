@@ -1,5 +1,5 @@
 
-
+# -*- coding: utf-8 -*-
 
 class Character(object):
     def __init__(self, name):

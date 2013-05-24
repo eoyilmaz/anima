@@ -7,6 +7,12 @@
 import pymel.core as pm
 from utilityFuncs import UtilityFuncs as utiFuncs
 
+# TODO: use this logging instead of print statements
+import logging
+from anima import logging_level
+logger = logging.getLogger(__name__)
+logger.setLevel(logging_level)
+
 
 class Joint(object):
 
@@ -30,11 +36,11 @@ class Joint(object):
         self._renameJoints(name)
         self._position = []
         print (pm.listRelatives(self._root, p = 1))
-        if (pm.listRelatives(self._root, p = 1)):
+        if pm.listRelatives(self._root, p = 1):
             pm.parent(self._root, w = 1)
-            print "dsdasd"
+            logger.debug("dsdasd")
         else :
-            print "aesd"
+            logger.debug("aesd")
 
 
 
@@ -162,7 +168,7 @@ class IkJoint(Joint):
     def _validate_endJoint(self, startJoint, endJoint):
         tempHierarchy = utiFuncs.selHierarchy(startJoint)
         for jnt in tempHierarchy:
-            if (jnt == endJoint):
+            if jnt == endJoint:
                 return tempHierarchy.index(jnt)
 
 
