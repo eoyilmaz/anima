@@ -1,7 +1,7 @@
 import pymel.core as pm
 
-from anima.rig.shapes import Shape
-from anima.rig.character import Character
+from shapes import Shape
+from character import Character
 from anima.rig._New_joint import SpineJoints
 from anima.rig.curve import Curve
 from anima.rig._New_drawNode import DrawNode
@@ -121,20 +121,21 @@ class IkSpineLimb(object):
     def create_clusters(self):
         for i in range(0, self._curve.numCVs):
             pm.select(self._curve.curveNode.cv[i])
-            self.clusters = DrawNode(
+            tempClstr = DrawNode(
                 Shape.cluster,
                 self._limbName + "IK_SpineCl_#"
             )
-            self.clusters[i].create_axialCor()
-            #self.clusters = pm.cluster(n =(self._limbName + "IK_SpineCl_#"))
-            #temp = DrawNode((self._limbName + "IK_SpineCl_zero_#"), 'transform')
-            #self._clustersZero.append((temp.drawnNode))
+            tempClstr.create_axialCor()
+            self.clusters.append(tempClstr)
+            #self.clusters[i].create_axialCor()
 
-            #pm.parent (self._clusters[i], temp.drawnNode)
-            #print self._clustersZero[0].drawnNode
 
     def make_stretchy(self):
         #check joints
+        """
+
+
+        """
         self._scaleMD = pm.createNode("multiplyDivide",
                                       n=self.limbName + "_scaleMD")
         pm.connectAttr(self.curve.curveInfo.arcLength, self.scaleMD.input1X)
@@ -153,8 +154,13 @@ class IkSpineLimb(object):
         # Hip Ctrl Create
 
 
+        """
+
+
+        """
         self._hipCtrl = DrawNode(Shape.ikCtrl, 'hip_ctrl')
-        self.hipCtrl.temp_point_const(self.clusters[0].drawnNode)
+        self.hipCtrl.temp_constrain(self.clusters[0].drawnNode)
+
         self.hipCtrl.create_axialCor()
 
 
@@ -166,14 +172,17 @@ class IkSpineLimb(object):
         # Shoulder Ctrl Create
 
         self._shoulderCtrl = DrawNode(Shape.circle, 'shoulder_ctrl')
-        self.shoulderCtrl.temp_point_const(
+        self.shoulderCtrl.temp_constrain(
             self.clusters[(len(self.clusters) - 1)].drawnNode)
+
         self.shoulderCtrl.create_axialCor()
+
 
         # COG Ctrl Create
 
         self._COGCtrl = DrawNode(Shape.cube, 'COG_ctrl')
-        self._COGCtrl.temp_point_const(self.hipCtrl.drawnNode)
+        self._COGCtrl.temp_constrain(self.hipCtrl.drawnNode)
+
         self._COGCtrl.create_axialCor()
 
         #parent Shoulder Clusters to Shoulder Control
@@ -186,7 +195,8 @@ class IkSpineLimb(object):
         mid_cluster = self.clusters[2].drawnNode
         tempCluster_const_1 = DrawNode(Shape.transform,
                                        "C_IK_SpineCl_ConstGrp")
-        tempCluster_const_1.temp_point_const(mid_cluster)
+        #tempCluster_const_1.temp_point_const(mid_cluster)
+        tempCluster_const_1.temp_constrain(mid_cluster)
         pm.parent(tempCluster_const_1.drawnNode, self.hipCtrl.drawnNode)
 
         tempCluster_const_2 = DrawNode(Shape.transform,
@@ -194,8 +204,10 @@ class IkSpineLimb(object):
         tempCluster_const_2.temp_point_const(mid_cluster)
         pm.parent(tempCluster_const_2.drawnNode, self.shoulderCtrl.drawnNode)
 
-        tempCluster_const_1.to_point_const(mid_cluster)
-        tempCluster_const_2.to_point_const(mid_cluster)
+        tempCluster_const_1.constrain(mid_cluster, targetType='targetObj')
+        tempCluster_const_2.constrain(mid_cluster, targetType='targetObj')
+        #tempCluster_const_1.point_const_target(mid_cluster)
+        #tempCluster_const_2.point_const_target(mid_cluster)
 
         self.stuff = tempCluster_const_1
         self.stuff = tempCluster_const_2
@@ -278,67 +290,5 @@ class IkSpineLimb(object):
     def scaleMD(self):
         return self._scaleMD
 
-
-
-
-
-
-        # def create_clusters(self):
-        #     for i in range (0, self._curve.numCVs):
-        #         pm.select(self._curve.curveNode.cv[i])
-        #         self.clusters = pm.cluster(n =(self._limbName + "IK_SpineCl_#"))
-        #         temp = DrawNode((self._limbName + "IK_SpineCl_zero_#"), 'transform')
-        #         self._clustersZero.append((temp.drawnNode))
-        #
-        #         pm.parent (self._clusters[i], temp.drawnNode)
-        #         #print self._clustersZero[0].drawnNode
-        # def create_controllers(self):
-        #     #Check if clusters is not an empty list
-        #     # Hip Ctrl Create
-        #     hipZero = DrawNode('hip_zero', 'transform')
-        #     hipZero.temp_point_const(self.clusters[0])
-        #     self._stuff.append(hipZero.drawnNode)
-        #
-        #     self._hipCtrl = DrawNode('hip_ctrl', 'ikCtrl')
-        #     self.hipCtrl.temp_point_const(hipZero.drawnNode)
-        #     pm.parent(self.hipCtrl.drawnNode, hipZero.drawnNode)
-        #
-        #     #parent Hip Clusters to Hip Control
-        #     pm.parent(self.clustersZero[0], self.clustersZero[1],
-        #               self.hipCtrl.drawnNode)
-        #
-        #
-        #     # Shoulder Ctrl Create
-        #     shoulderZero = DrawNode('shoulder_zero', 'transform')
-        #     shoulderZero.temp_point_const(self.clusters[(len(self.clusters) - 1)])
-        #     self._stuff.append(shoulderZero.drawnNode)
-        #
-        #     self._shoulderCtrl = DrawNode('shoulder_ctrl', 'circle')
-        #     self._shoulderCtrl.temp_point_const(shoulderZero.drawnNode)
-        #     pm.parent(self._shoulderCtrl.drawnNode, shoulderZero._drawnNode)
-        #     #parent Shoulder Clusters to Shoulder Control
-        #     pm.parent(self.clustersZero[(len(self.clusters) - 1)],
-        #               self.clustersZero[(len(self.clusters) - 2)],
-        #               self._shoulderCtrl.drawnNode)
-        #
-        #
-        #
-        #     # Create Mid Cluster Control Transforms and Constrains
-        #     mid_cluster = self.clusters[2]
-        #     tempCluster_const_1 = DrawNode("C_IK_SpineCl_ConstGrp", 'transform')
-        #     tempCluster_const_1.temp_point_const(mid_cluster)
-        #     pm.parent(tempCluster_const_1.drawnNode, self.hipCtrl.drawnNode)
-        #
-        #     tempCluster_const_2= DrawNode("C_IK_SpineCl_ConstGrp", 'transform')
-        #     tempCluster_const_2.temp_point_const(mid_cluster)
-        #     pm.parent(tempCluster_const_2.drawnNode, self.shoulderCtrl.drawnNode)
-        #
-        #     pm.pointConstraint(tempCluster_const_1.drawnNode, mid_cluster, mo = 0)
-        #
-        #     pm.pointConstraint(tempCluster_const_2.drawnNode, mid_cluster, mo = 0)
-        #
-        #
-        #     self.stuff = tempCluster_const_1.drawnNode
-        #     self.stuff = tempCluster_const_2.drawnNode
 
 

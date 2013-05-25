@@ -1,5 +1,5 @@
 import pymel.core as pm
-from anima.rig.network import Network
+from network import Network
 
 
 class Nodes(object):

@@ -11,26 +11,43 @@ class DrawNode(object):
     def __init__(self, drawer, name):
 
         # Drawn Node
+        """
+
+        :param drawer:
+        :param name:
+        """
+
         self._drawnNode = None
 
-        self._draw(drawer, name)
+        self._set_drawnNode(drawer, name)
 
         self._pointConst = None
-        self._to_pointConst = None
+        self._pointConstTarget = None
 
         self._parentConst = None
-        self._to_parentConst = None
+        self._parentConstTarget = None
 
         self._orientCons = None
-        self._to_orientConst = None
+        self._orientConstTarget = None
 
         self._transform = None
         self._axialCor = None
-        self._ofsGrps = []
+        self._ofsGrp = []
+
+        self._constrainedPoint = None
+        self._targetPoint = None
+
+        self._constrainedParent = None
+        self._targetParent = None
+        self._targetOrient = None
+        self._constrainedOrient = None
 
     def _draw(self, drawer, args):
-        # Draw the Node
-        self._drawnNode = drawer(*args)
+            # Draw the Node
+        return drawer(args)
+
+    def _set_drawnNode(self, drawer, args):
+        self._drawnNode = self._draw(drawer, args)
 
     def freeze_transformations(self):
         pm.makeIdentity(self._drawnNode, apply=True)
@@ -78,92 +95,9 @@ class DrawNode(object):
         return self._axialCor
 
     @property
-    def ofsGrps(self):
-        return self._ofsGrps
+    def ofsGrp(self):
+        return self._ofsGrp
 
-    # *************************************************************************
-    # POINT CONSTRAIN
-    def point_const(self, node):
-        # Creates Point Costrain to get transformation values
-        self._pointConst = pm.pointConstraint(node, self.drawnNode, mo=0)
-
-    def del_point_const(self):
-        # Deletes Point Costrain
-        pm.delete(self._pointConst)
-
-    def temp_point_const(self, node):
-        # Create a temp constrain and delete to get the positions
-        self.point_const(node)
-        self.del_point_const()
-
-    def to_point_const(self, node, maintainOff=0):
-        self._to_pointConst = pm.pointConstraint(self.drawnNode, node,
-                                                 mo=maintainOff)
-
-    def del_to_point_const(self):
-        pm.delete(self._to_pointConst)
-
-    def temp_to_point_const(self, node):
-        self.to_point_const(node)
-        self.del_to_point_const()
-
-    # *************************************************************************
-    # ORIENT CONSTRAIN
-    # Constrain to Object
-    def orient_const(self, node):
-        # Creates Orient Costrain to get transformation values
-        self._orientConst = pm.orientConstraint(node, self.drawnNode, mo=0)
-
-    def del_orient_const(self):
-        # Deletes Orient Costrain
-        pm.delete(self._orientConst)
-
-    def temp_orient_const(self, node):
-        # Create a temp constrain and delete to get the positions
-        self.orient_const(node)
-        self.del_orient_const()
-
-    # Costrained to
-    def to_orient_const(self, node, maintainOff=0):
-        self._to_orientConst = pm.orientConstraint(
-            self.drawnNode, node, mo=maintainOff
-        )
-
-    def del_to_orient_const(self):
-        pm.delete(self._to_orientConst)
-
-    def temp_to_orient_const(self, node):
-        self.to_orient_const(node)
-        self.del_to_orient_const()
-
-    # *************************************************************************
-    # PARENT CONSTRAIN
-    # Constrain to Object
-    def parent_const(self, node):
-        # Creates Parent Costrain to get transformation values
-        self._parentConst = pm.parentConstraint(node, self.drawnNode, mo=0)
-
-    def del_parent_const(self):
-        # Deletes Parent Costrain
-        pm.delete(self._parentConst)
-
-    def temp_parent_const(self, node):
-        # Create a temp constrain and delete to get the positions
-        self.parent_const(node)
-        self.del_parent_const()
-
-    # Costrained to
-    def to_parent_const(self, node, maintainOff=0):
-        self._to_parentConst = pm.parentConstraint(
-            self.drawnNode, node, mo=maintainOff
-        )
-
-    def del_to_parent_const(self):
-        pm.delete(self._to_parentConst)
-
-    def temp_to_parent_const(self, node):
-        self.to_parent_const(node)
-        self.del_to_parent_const()
 
     #delete Later
     def create_parentConst(self, source, dest, maintainOff=0):
@@ -177,10 +111,88 @@ class DrawNode(object):
         # Create Axial Correction group
         if self._axialCor is not None:
             temp_grp = pm.group(self.drawnNode, n=(self._axialCor + "_#"))
-            self.ofsGrps.append(temp_grp)
+            self.ofsGrp.append(temp_grp)
         else:
+            name = (self.drawnNode + "_axialCor")
             self._axialCor = self._draw(Shape.transform,
-                                        self.drawnNode + "_axialCor")
-            pm.delete(self.create_parentConst(self.drawnNode, self.axialCor))
-            pm.parent(self._drawnNode, self.axialCor)
+                                        (name))
+
+            pm.delete(pm.parentConstraint(self.drawnNode, self.axialCor, mo=0))
+            pm.parent(self._drawnNode, self._axialCor)
+            #pm.delete(self.create_parentConst(self.drawnNode, self.axialCor))
+            #pm.parent(self._drawnNode, self.axialCor)
+
+
+    def constrain(self, node_in, constType='point',
+                  targetType='constObj',
+                  maintainOff=0):
+
+        """
+        :param constType: It can bePoint Orient or Parent
+        :param targetType: It can be constObj or targetObj
+                if targetType is constObj node in object Constrain drawnNode
+                if targetType is targetObj drawnNode Constrain node in object
+        :param node_in: if it is 1 preserve the constrained object’s position
+        :param target: it should be constObj or targetObj
+        :param maintainOffset: if it is 1 preserve the constrained
+                object’s position
+        """
+        tempConst = None
+        target, constrained, setObjType = self._validate_targetType(node_in,
+                                                                    targetType)
+
+        if constType is 'point':
+            tempConst = pm.pointConstraint(target, constrained, mo=maintainOff)
+            if setObjType is 'setConstrainedPoint':
+                self._constrainedPoint = tempConst
+            else:
+                self._targetPoint = tempConst
+        elif constType is 'orient':
+            tempConst = pm.orienConstraint(target, constrained, mo = maintainOff)
+            if setObjType is 'setConstrainedPoint':
+                self._constrainedOrient = tempConst
+            else:
+                self._targetOrient = tempConst
+        elif constType is 'parent' :
+            tempConst = pm.parentConstraint(target, constrained,mo = maintainOff)
+            if setObjType is 'setConstrainedPoint':
+                self._constrainedParent = tempConst
+            else:
+                self._targetParent = tempConst
+
+        return tempConst
+
+
+    def _validate_targetType(self, node_in, targetType):
+        """
+
+        :param node_in:
+        :param targetType:
+        :return: :raise:
+        """
+        if (targetType is not 'constObj') and (targetType is not 'targetObj'):
+            raise TypeError(
+                '%s parameter should be constObj or targetObj' % targetType)
+
+        elif targetType is 'constObj':
+            return node_in, self.drawnNode, 'setConstrainedPoint'
+        else:
+            return self.drawnNode, node_in, 'setTargetPoint'
+
+    def temp_constrain(self, node_in, constType='point',
+                           targetType='constObj',
+                           maintainOff=0):
+
+        """
+        :param constType: It can bePoint Orient or Parent
+        :param targetType: It can be constObj or targetObj
+                if targetType is constObj node in object Constrain drawnNode
+                if targetType is targetObj drawnNode Constrain node in object
+        :param node_in: if it is 1 preserve the constrained object’s position
+        :param target: it should be constObj or targetObj
+        :param maintainOffset: if it is 1 preserve the constrained
+                object’s position
+        """
+        pm.delete(self.constrain(node_in, constType, targetType, maintainOff))
+
 
