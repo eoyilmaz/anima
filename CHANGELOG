@@ -5,4 +5,6 @@ Anima Tools Changes
 0.1.0.a1
 --------
 
-* 
+* Update: Organized the folder structure
+* Update: Moved all rigging scripts to ``rig`` package.
+* New: Created a new package called ``pipeline``.

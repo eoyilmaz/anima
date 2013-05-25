@@ -1,7 +1,7 @@
 import pymel.core as pm
 from utilityFuncs import UtilityFuncs as utiFuncs
 
-from limbJoint import ControlJoint
+from anima.rig.limbJoint import ControlJoint
 
 
 class Controller(object):

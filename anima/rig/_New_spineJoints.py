@@ -1,7 +1,6 @@
 
 import pymel.core as pm
-from utilityFuncs import UtilityFuncs as utiFuncs
-from curve import Curve
+from anima.rig.curve import Curve
 
 
 class SpineJoint(object):

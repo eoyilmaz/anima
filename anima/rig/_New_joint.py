@@ -1,7 +1,7 @@
 import pymel.core as pm
-from _New_drawNode import DrawNode
-from anima.shapes import Shape
-from curve import Curve
+from anima.rig._New_drawNode import DrawNode
+from anima.rig.shapes import Shape
+from anima.rig.curve import Curve
 # *****************************************************************************
 # *******************************  CLASS JOINT   ******************************
 # *****************************************************************************

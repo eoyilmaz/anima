@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import pymel.core as pm
-from utilityFuncs import UtilityFuncs as utiFuncs
+from anima.rig.utilityFuncs import UtilityFuncs as utiFuncs
 
 # TODO: use this logging instead of print statements
 import logging

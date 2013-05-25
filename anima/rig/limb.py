@@ -1,11 +1,11 @@
 
-from character import Character
-from controllers import FkController, Controller, JointController
-from limbJoint import Joint, FkJoint, IkJoint, ControlJoint
-from network import Network
+from anima.rig.character import Character
+from anima.rig.controllers import FkController, Controller, JointController
+from anima.rig.limbJoint import FkJoint, IkJoint
+from anima.rig.network import Network
 import pymel.core as pm
-from utilityFuncs import UtilityFuncs as utiFuncs
-from nodes import Nodes
+from anima.rig.utilityFuncs import UtilityFuncs as utiFuncs
+from anima.rig.nodes import Nodes
 
 
 
