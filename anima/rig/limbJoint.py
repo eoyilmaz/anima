@@ -13,6 +13,12 @@ from anima import logging_level
 logger = logging.getLogger(__name__)
 logger.setLevel(logging_level)
 
+# TODO: use this logging instead of print statements
+import logging
+from anima import logging_level
+logger = logging.getLogger(__name__)
+logger.setLevel(logging_level)
+
 
 class Joint(object):
 
