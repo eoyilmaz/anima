@@ -8,3 +8,6 @@ Anima Tools Changes
 * Update: Organized the folder structure
 * Update: Moved all rigging scripts to ``rig`` package.
 * New: Created a new package called ``pipeline``.
+* Update: Converted the uiCompiler.py to a standalone script which runs with
+  system python (where it is much easier to install PySide and PyQt4 with
+  system package managers).

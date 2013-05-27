@@ -47,55 +47,11 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_11">
         <item>
-         <widget class="QLabel" name="projects_label">
+         <widget class="QLabel" name="label">
           <property name="text">
-           <string>Project</string>
+           <string>logged_in_user</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="projects_comboBox">
-          <property name="maxVisibleItems">
-           <number>50</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="client_label">
-          <property name="text">
-           <string>Client:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="client_name_label">
-          <property name="text">
-           <string>TextLabel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="user_label">
-          <property name="text">
-           <string>User</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="users_comboBox"/>
         </item>
        </layout>
       </item>
@@ -114,274 +70,19 @@
            <number>6</number>
           </property>
           <item>
-           <widget class="QTabWidget" name="tabWidget">
-            <property name="enabled">
-             <bool>true</bool>
+           <widget class="QLabel" name="label_2">
+            <property name="text">
+             <string>Tasks</string>
             </property>
-            <property name="currentIndex">
-             <number>0</number>
-            </property>
-            <widget class="QWidget" name="assets_tab">
-             <property name="enabled">
-              <bool>true</bool>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTreeWidget" name="treeWidget">
+            <column>
+             <property name="text">
+              <string notr="true">1</string>
              </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>1</horstretch>
-               <verstretch>1</verstretch>
-              </sizepolicy>
-             </property>
-             <attribute name="title">
-              <string>Assets</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_4">
-              <item>
-               <widget class="QGroupBox" name="asset_info_groupBox">
-                <property name="title">
-                 <string>Asset Information</string>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_3">
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0">
-                   <item>
-                    <layout class="QVBoxLayout" name="verticalLayout_2">
-                     <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_9">
-                       <item>
-                        <widget class="QLabel" name="asset_name_label">
-                         <property name="font">
-                          <font>
-                           <weight>50</weight>
-                           <bold>false</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Name</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <spacer name="horizontalSpacer_6">
-                         <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
-                         </property>
-                         <property name="sizeType">
-                          <enum>QSizePolicy::Maximum</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>40</width>
-                           <height>20</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="create_asset_pushButton">
-                         <property name="text">
-                          <string>Create New Asset</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                     <item>
-                      <widget class="QTableWidget" name="assets_tableWidget">
-                       <property name="toolTip">
-                        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Right click to&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Rename Asset&lt;/span&gt;&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                       </property>
-                       <property name="editTriggers">
-                        <set>QAbstractItemView::NoEditTriggers</set>
-                       </property>
-                       <property name="selectionMode">
-                        <enum>QAbstractItemView::SingleSelection</enum>
-                       </property>
-                       <property name="selectionBehavior">
-                        <enum>QAbstractItemView::SelectRows</enum>
-                       </property>
-                       <property name="columnCount">
-                        <number>2</number>
-                       </property>
-                       <attribute name="horizontalHeaderStretchLastSection">
-                        <bool>true</bool>
-                       </attribute>
-                       <column>
-                        <property name="text">
-                         <string>Type</string>
-                        </property>
-                       </column>
-                       <column>
-                        <property name="text">
-                         <string>Name</string>
-                        </property>
-                       </column>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="shots_tab">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <attribute name="title">
-              <string>Shots</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_11">
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_15">
-                <item>
-                 <widget class="QLabel" name="sequences_label">
-                  <property name="text">
-                   <string>Sequence</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="sequences_comboBox"/>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="asset_info_groupBox_2">
-                <property name="title">
-                 <string>Shot Information</string>
-                </property>
-                <property name="flat">
-                 <bool>false</bool>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayout_8">
-                 <item>
-                  <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0">
-                   <item>
-                    <layout class="QVBoxLayout" name="verticalLayout_9">
-                     <item>
-                      <layout class="QHBoxLayout" name="horizontalLayout_13">
-                       <item>
-                        <widget class="QLabel" name="shot_name_label">
-                         <property name="font">
-                          <font>
-                           <weight>50</weight>
-                           <bold>false</bold>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Name</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <spacer name="horizontalSpacer_5">
-                         <property name="orientation">
-                          <enum>Qt::Horizontal</enum>
-                         </property>
-                         <property name="sizeHint" stdset="0">
-                          <size>
-                           <width>40</width>
-                           <height>20</height>
-                          </size>
-                         </property>
-                        </spacer>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="create_shot_pushButton">
-                         <property name="enabled">
-                          <bool>false</bool>
-                         </property>
-                         <property name="text">
-                          <string>Create New Shot</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                     <item>
-                      <widget class="QListWidget" name="shots_listWidget"/>
-                     </item>
-                     <item>
-                      <layout class="QGridLayout" name="gridLayout">
-                       <item row="0" column="0">
-                        <widget class="QLabel" name="frame_range_label">
-                         <property name="text">
-                          <string>Range</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="1">
-                        <widget class="QSpinBox" name="start_frame_spinBox">
-                         <property name="maximum">
-                          <number>9999</number>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="2">
-                        <widget class="QSpinBox" name="end_frame_spinBox">
-                         <property name="maximum">
-                          <number>9999</number>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="0">
-                        <widget class="QLabel" name="handles_label">
-                         <property name="text">
-                          <string>Handles</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="1">
-                        <widget class="QSpinBox" name="handle_at_start_spinBox">
-                         <property name="maximum">
-                          <number>9999</number>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="2">
-                        <widget class="QSpinBox" name="handle_at_end_spinBox">
-                         <property name="maximum">
-                          <number>9999</number>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="3">
-                        <widget class="QPushButton" name="shot_info_update_pushButton">
-                         <property name="text">
-                          <string>Update</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
+            </column>
            </widget>
           </item>
           <item>
@@ -475,7 +176,7 @@
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
             <layout class="QGridLayout" name="gridLayout_3">
-             <item row="1" column="0">
+             <item row="0" column="0">
               <widget class="QLabel" name="takes_label">
                <property name="minimumSize">
                 <size>
@@ -494,7 +195,7 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="note_label">
                <property name="minimumSize">
                 <size>
@@ -507,40 +208,7 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="0">
-              <widget class="QLabel" name="version_types_label">
-               <property name="minimumSize">
-                <size>
-                 <width>35</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <weight>50</weight>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Type</string>
-               </property>
-              </widget>
-             </item>
              <item row="0" column="1">
-              <layout class="QHBoxLayout" name="horizontalLayout_4">
-               <item>
-                <widget class="QListWidget" name="version_types_listWidget"/>
-               </item>
-               <item>
-                <widget class="QToolButton" name="add_type_toolButton">
-                 <property name="text">
-                  <string>+</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item row="1" column="1">
               <layout class="QHBoxLayout" name="horizontalLayout_6">
                <item>
                 <widget class="QListWidget" name="takes_listWidget"/>
@@ -554,7 +222,7 @@
                </item>
               </layout>
              </item>
-             <item row="2" column="1">
+             <item row="1" column="1">
               <widget class="QTextEdit" name="note_textEdit">
                <property name="enabled">
                 <bool>true</bool>
@@ -858,13 +526,6 @@ p, li { white-space: pre-wrap; }
   </layout>
  </widget>
  <tabstops>
-  <tabstop>projects_comboBox</tabstop>
-  <tabstop>users_comboBox</tabstop>
-  <tabstop>create_asset_pushButton</tabstop>
-  <tabstop>sequences_comboBox</tabstop>
-  <tabstop>create_shot_pushButton</tabstop>
-  <tabstop>shots_listWidget</tabstop>
-  <tabstop>add_type_toolButton</tabstop>
   <tabstop>add_take_toolButton</tabstop>
   <tabstop>note_textEdit</tabstop>
   <tabstop>export_as_pushButton</tabstop>
