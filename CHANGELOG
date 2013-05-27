@@ -2,8 +2,14 @@
 Anima Tools Changes
 ===================
 
+0.1.0.a2
+========
+
+* Pipeline:
+  * Update: login_dialog is now working.
+
 0.1.0.a1
---------
+========
 
 * Update: Organized the folder structure
 * Update: Moved all rigging scripts to ``rig`` package.

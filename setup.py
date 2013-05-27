@@ -17,7 +17,6 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 required_packages = [
-    'pymel',
     'stalker'
 ]
 
@@ -25,9 +24,9 @@ setup(name="anima",
       version=anima.__version__,
       authors=["Eda Gokce", "Erkan Ozgur Yilmaz"],
       author_emails=["anima.eda@gmail.com", "eoyilmaz@gmail.com"],
-      description=("Tools for character animation"),
+      description=("VFX and animation tools used in Anima Istanbul"),
       long_description=read("README"),
-      keywords=["animation", "character", "studio", "vfx"],
+      keywords=["animation", "character", "studio", "vfx", "pipeline"],
       packages=find_packages(exclude=["tests*"]),
       platforms=["any"],
       url="http://code.google.com/p/anima-tools/",

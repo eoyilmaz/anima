@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/login_dialog.ui'
 #
-# Created: Mon May 27 12:19:57 2013
+# Created: Mon May 27 16:16:09 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -19,22 +19,22 @@ class Ui_Dialog(object):
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setContentsMargins(-1, 10, -1, -1)
         self.formLayout.setObjectName("formLayout")
-        self.label = QtGui.QLabel(Dialog)
-        self.label.setObjectName("label")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.lineEdit = QtGui.QLineEdit(Dialog)
-        self.lineEdit.setInputMask("")
-        self.lineEdit.setObjectName("lineEdit")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.lineEdit)
-        self.label_2 = QtGui.QLabel(Dialog)
-        self.label_2.setObjectName("label_2")
-        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
-        self.lineEdit_2 = QtGui.QLineEdit(Dialog)
-        self.lineEdit_2.setInputMask("")
-        self.lineEdit_2.setText("")
-        self.lineEdit_2.setEchoMode(QtGui.QLineEdit.Password)
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.lineEdit_2)
+        self.login_or_email_label = QtGui.QLabel(Dialog)
+        self.login_or_email_label.setObjectName("login_or_email_label")
+        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.login_or_email_label)
+        self.login_or_email_lineEdit = QtGui.QLineEdit(Dialog)
+        self.login_or_email_lineEdit.setInputMask("")
+        self.login_or_email_lineEdit.setObjectName("login_or_email_lineEdit")
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.login_or_email_lineEdit)
+        self.password_label = QtGui.QLabel(Dialog)
+        self.password_label.setObjectName("password_label")
+        self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.password_label)
+        self.password_lineEdit = QtGui.QLineEdit(Dialog)
+        self.password_lineEdit.setInputMask("")
+        self.password_lineEdit.setText("")
+        self.password_lineEdit.setEchoMode(QtGui.QLineEdit.Password)
+        self.password_lineEdit.setObjectName("password_lineEdit")
+        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.password_lineEdit)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
@@ -46,6 +46,6 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Login to Stalker", None, QtGui.QApplication.UnicodeUTF8))
-        self.label.setText(QtGui.QApplication.translate("Dialog", "Login or email", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("Dialog", "Password", None, QtGui.QApplication.UnicodeUTF8))
+        self.login_or_email_label.setText(QtGui.QApplication.translate("Dialog", "Login or email", None, QtGui.QApplication.UnicodeUTF8))
+        self.password_label.setText(QtGui.QApplication.translate("Dialog", "Password", None, QtGui.QApplication.UnicodeUTF8))
 
