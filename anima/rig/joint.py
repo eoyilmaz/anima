@@ -1,5 +1,5 @@
 import pymel.core as pm
-from drawNode import DrawNode
+from anima.rig.drawNode import DrawNode
 from shapes import Shape
 from curve import Curve
 

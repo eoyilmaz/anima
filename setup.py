@@ -16,7 +16,10 @@ import anima
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-required_packages = ["pymel"]
+required_packages = [
+    'pymel',
+    'stalker'
+]
 
 setup(name="anima",
       version=anima.__version__,
