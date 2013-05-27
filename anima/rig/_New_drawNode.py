@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pymel.core as pm
-from shapes import Shape
+from anima.rig.shapes import Shape
 
 
 class DrawNode(object):

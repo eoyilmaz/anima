@@ -1,7 +1,7 @@
 
 # -*- coding: utf-8 -*-
 from _New_drawNode import DrawNode
-from shapes import Shape
+from anima.rig.shapes import Shape
 
 class Controllers(object):
     def __init__(self, drawer, name_in):

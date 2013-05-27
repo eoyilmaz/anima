@@ -2,10 +2,9 @@ import pymel.core as pm
 
 from shapes import Shape
 from character import Character
-from _New_nodes import Nodes
-from _New_joint import SpineJoints
-from curve import Curve
-from _New_drawNode import DrawNode
+from anima.rig._New_joint import SpineJoints
+from anima.rig.curve import Curve
+from anima.rig._New_drawNode import DrawNode
 
 
 class Limb(object):
