@@ -1,8 +1,6 @@
-__author__ = 'eda'
-#Bu sinif dictionary ve node name i alir ve network node u olusturur.
-#network node un connectionlari geri dondurur
-#objeleri siler
+
 import pymel.core as pm
+
 class Network(object):
     def __init__(self, name):
         self._name = name
