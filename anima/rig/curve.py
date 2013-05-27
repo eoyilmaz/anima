@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 
 import pymel.core as pm
 class Curve(object):

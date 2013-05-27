@@ -1,11 +1,10 @@
 import pymel.core as pm
-from anima.rig._New_drawNode import DrawNode
-from anima.rig.shapes import Shape
-from anima.rig.curve import Curve
-# *****************************************************************************
-# *******************************  CLASS JOINT   ******************************
-# *****************************************************************************
+from anima.rig.drawNode import DrawNode
+from shapes import Shape
+from curve import Curve
 
+
+# JOINT CLASS
 class Joint(object):
     def __init__(self, jointName_in, position):
 
@@ -13,8 +12,7 @@ class Joint(object):
         pm.select(cl=1)
         self._jointName = pm.joint(n=(jointName_in + "#"), p=self._jointPos)
 
-    # *************************************************************************
-    # BASE METHODS
+    # BASE SETUP METHODS
     def _getPosition(self, position):
         # Checks the type of the Position and Return Position vector
         if isinstance(position, pm.dt.Vector):
@@ -29,7 +27,6 @@ class Joint(object):
         return self._jointPos
 
 
-    # *************************************************************************
     # PROPERTIES
     @property
     # Joint Name Getter - Setter
@@ -46,13 +43,15 @@ class Joint(object):
         return self._jointPos
 
 
-# *****************************************************************************
-# *********************      CLASS JOINT CHAIN    *****************************
-# *****************************************************************************
-
+# JOINT CHAIN CLASS
 class JointChain(object):
     def __init__(self, jointsName, positions):
 
+        """
+
+        :param jointsName:
+        :param positions:
+        """
         self._jointChain = []
         self._jointsPos = []
         # Creates Joints
@@ -63,10 +62,11 @@ class JointChain(object):
         self._startJoint = None
         self._endJoint = None
 
+        self._startPos = None
+        self._endPos = None
 
-    # *************************************************************************
-    # BASE SETUP METHODS
 
+     # BASE SETUP METHODS
     def _createJoints(self, jointsName, positions):
         self._validate_positions(positions)
         for pos in positions:
@@ -81,7 +81,6 @@ class JointChain(object):
             raise TypeError("%s.name should be an instance of List!" %
                             self.__class__.__name__)
 
-    # *************************************************************************
     # PROPERTIES
     @property
     def startJoint(self):
@@ -109,9 +108,16 @@ class JointChain(object):
     def numOfJoints(self):
         return self._numOfJoints
 
-    # *************************************************************************
-    # SETS ORIENTATION of Joint and Chain
+    @property
+    def startPos(self):
+        return self._jointsPos[0]
 
+    @property
+    def endPos(self):
+        return self._jointsPos[self.numOfJoints - 1]
+
+
+    # ORIENTATION  SET  METHODS
     def orient_joint(self, joint, aimAxis=[1, 0, 0], upAxis=[0, 0, 1],
                      worldUpType="vector",
                      worldUpVector=[0, 1, 0]):
@@ -121,7 +127,7 @@ class JointChain(object):
             raise TypeError("%s sholud be an instance of pm.nt.Joint Class"
                             % joint)
         jointUnder = self.jointUnder(joint)
-        if jointUnder == None:
+        if jointUnder is None:
             return 0
         temporalGroup = DrawNode(Shape.transform, 'temporalGroup')
         pm.parent(jointUnder, temporalGroup.drawnNode)
@@ -150,12 +156,13 @@ class JointChain(object):
                                upAxis=[0, 0, 1],
                                worldUpType="object",
                                frontAxis="z"):
+        #TODO : Validate frontAxis
         # orient_joint Function OverLoading
         # Creates a temporal Trasnform node for WorldUpVector.
-        # Calls super Class orient_joint method
+        # Calls orient_joint method
 
         jointUnder = self.jointUnder(joint)
-        if jointUnder == None:
+        if jointUnder is None:
             return 0
         moveAxis = [0, 0]
         if frontAxis == "x":
@@ -164,7 +171,7 @@ class JointChain(object):
             moveAxis[1] = -1
 
         temporalTrans = DrawNode(Shape.transform, 'temporalTransform')
-        temporalTrans.temp_point_const(jointUnder)
+        temporalTrans.temp_constrain(jointUnder)
         temporalTrans.freeze_transformations()
 
         temporalTransMove = self.orient_choose_direction(joint, jointUnder,
@@ -173,13 +180,12 @@ class JointChain(object):
                                          (temporalTransMove * 0.001),
                                          moveAxis[1]]))
         worldUpVector = temporalTrans.drawnNode
-        super(SpineJoints, self).orient_joint(joint, aimAxis, upAxis,
-                                              worldUpType,
-                                              worldUpVector)
+        self.orient_joint(joint, aimAxis, upAxis, worldUpType, worldUpVector)
         temporalTrans.delete()
 
 
     def orient_choose_direction(self, joint, jointUnder, frontAxis):
+        #TODO : Validate frontAxis
         if frontAxis == "x":
             frontInt = 0
         elif frontAxis == "z":
@@ -187,10 +193,10 @@ class JointChain(object):
         returnVal = 1
 
         transform_1 = DrawNode(Shape.transform, 'direction1')
-        transform_1.temp_point_const(joint)
+        transform_1.temp_constrain(joint)
 
         transform_2 = DrawNode(Shape.transform, "direction2")
-        transform_2.temp_point_const(jointUnder)
+        transform_2.temp_constrain(jointUnder)
 
         frontTransform = transform_1.transform[frontInt] - \
                          transform_2.transform[frontInt]
@@ -208,19 +214,25 @@ class JointChain(object):
             return None
         return jointUnder
 
-
-    def orient_joint_chain(self, startJoint=None, endJoint=None):
-
-        startIndex, endIndex = self.get_start_end_index(startJoint, endJoint)
-
+    def orient_joint_chain(self, startJoint=None, endJoint=None,
+                           frontAxis=None):
+        #TODO: Validate front axis
+        startIndex, endIndex = self.get_start_end_index(startJoint,
+                                                            endJoint)
         for j in range(startIndex, (endIndex + 1)):
-            self.orient_joint(self.jointChain[j])
+            if frontAxis is None:
+                self.orient_joint(self.jointChain[j])
+            else:
+                self.orient_joint_frontAxis(self.jointChain[j],
+                                            frontAxis=frontAxis)
+
+
 
     def get_start_end_index(self, startJoint=None, endJoint=None):
         # Sets the default values
-        if startJoint == None:
+        if startJoint is None:
             startJoint = self.jointRoot
-        if endJoint == None:
+        if endJoint is None:
             endJoint = self.jointChain[self.numOfJoints - 1]
             #Gets the Index of the Start Joint and End Joint
         startIndex = self.get_index_of_joint(startJoint)
@@ -236,13 +248,17 @@ class JointChain(object):
                         (joint_in, self.__class__.__name__))
 
 
-# *****************************************************************************
-# ************************   CLASS SPINE JOINT   ******************************
-# *****************************************************************************
-
+# SPINE JOINT CLASS
 class SpineJoints(JointChain):
     def __init__(self, jointsName, curve, spans=10, horizontalSpine=0):
 
+        """
+
+:param jointsName:
+:param curve:
+:param spans:
+:param horizontalSpine:
+"""
         jointsName = jointsName + "_jnt_"
         curveName = jointsName + "baseCrv"
         #Position of the Joints
@@ -259,29 +275,37 @@ class SpineJoints(JointChain):
         self._horizontalSpine = horizontalSpine
 
         self._frontAxis = None
+        self._zeroJoint = None
+        self._zeroPos = None
 
         self._get_curve_points()
 
         super(SpineJoints, self).__init__(jointsName, self._jointsPos)
+        self.set_zero_joint()
+
+    # BASE SETUP METHODS
+    def set_zero_joint(self):
 
         #Removes Zero Joint from Joint Chain
         pm.joint(self.jointChain[0], e=True, zso=True, oj='xyz', sao='xup')
         self.zeroJoint = self.jointChain[0]
 
+        self._zeroPos = pm.dt.Point(pm.getAttr(self._zeroJoint.translate))
         self.jointChain.remove(self.jointChain[0])
         self.jointPos.remove(self.jointPos[0])
+        pm.joint(self.jointChain[1], e=True, zso=True, oj='xyz', sao='yup')
         for i in range(1, len(self.jointChain)):
             pm.joint(self.jointChain[i], e=True, zso=True, oj='xyz', sao='yup')
             #sets Start End Num Of Joints again
         self._numOfJoints = len(self._jointChain)
+        #Orient Zero Joint
+        temporalGroup = DrawNode(Shape.transform, 'temporalGroup')
+        pm.parent(self.startJoint, temporalGroup.drawnNode)
 
-        #del later
-        # self._startJoint = self.jointChain[0]
-        # self._endJoint = self.jointChain[self.numOfJoints - 1]
-
-    # *************************************************************************
-    # BASE SETUP METHODS
-
+        print (pm.getAttr(self.zeroJoint.jointOrient))
+        pm.setAttr(self.zeroJoint.jointOrientX, 0)
+        pm.parent(self.startJoint, self.zeroJoint)
+        temporalGroup.delete()
 
     def _get_curve_points(self):
         self._jointPos = []
@@ -302,8 +326,6 @@ class SpineJoints(JointChain):
         lastCVPos = self._curve.cvPositions[self._curve.numCVs - 1]
         self._jointsPos.append(lastCVPos)
 
-
-    # *************************************************************************
     # PROPERTIES
     @property
     def curve(self):
@@ -324,14 +346,7 @@ class SpineJoints(JointChain):
     @frontAxis.setter
     def frontAxis(self, frontAxis):
         self._frontAxis = frontAxis
-        #del later
 
-    # @property
-    # def startJoint(self):
-    #     return self._startJoint
-    # @property
-    # def endJoint(self):
-    #     return self._endJoint
     @property
     def zeroJoint(self):
         return self._zeroJoint
@@ -340,29 +355,15 @@ class SpineJoints(JointChain):
     def zeroJoint(self, joint_in):
         self._zeroJoint = pm.nt.Joint(joint_in)
 
-    # *************************************************************************
-    # ORIENTATION Joint and Chain
+    @property
+    def zeroPos(self):
+        return self._zeroPos
 
-    def orient_joint_chain(self, startJoint=None, endJoint=None,
-                           frontAxis="z"):
-        self.frontAxis = frontAxis
-        startIndex, endIndex = self.get_start_end_index(startJoint, endJoint)
-
-        for j in range(startIndex, (endIndex + 1)):
-            self.orient_joint_frontAxis(self.jointChain[j],
-                                        frontAxis=self.frontAxis)
-
+    # METHODS
     def orient_spine(self, frontAxis):
-        #Orient Zero Joint
         self.orient_joint_chain(self.startJoint, self.endJoint, frontAxis)
 
-        temporalGroup = DrawNode(Shape.transform, 'temporalGroup')
-        pm.parent(self.startJoint, temporalGroup.drawnNode)
 
-        print (pm.getAttr(self.zeroJoint.jointOrient))
-        pm.setAttr(self.zeroJoint.jointOrientX, 0)
-        pm.parent(self.startJoint, self.zeroJoint)
-        temporalGroup.delete()
 
 
 

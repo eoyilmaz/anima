@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from drawNode import DrawNode
-from shapes import Shape
+# Copyright (c) 2012-2013, Anima Istanbul
+#
+# This module is part of anima-tools and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.rig.drawNode import DrawNode
 
 
 class Controllers(object):
