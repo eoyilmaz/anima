@@ -158,7 +158,7 @@ class DrawNode(object):
     def temp_outputPoint(self, constrained, maintainOff=1):
         tempConst = self.inputPoint(constrained, maintainOff)
         pm.delete(tempConst)
-        
+
     # Create Orient Constrain
     def inputOrient(self, target=None, maintainOff=None):
         if target is None and maintainOff is None:
