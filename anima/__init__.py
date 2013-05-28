@@ -8,4 +8,4 @@ __version__ = "0.1.0.a2"
 
 
 import logging
-logging_level = logging.ERROR
+logging_level = logging.DEBUG

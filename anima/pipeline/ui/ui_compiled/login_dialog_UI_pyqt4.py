@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/login_dialog.ui'
 #
-# Created: Mon May 27 16:16:09 2013
+# Created: Tue May 28 17:25:40 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -26,7 +26,9 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
+        Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
         Dialog.resize(364, 138)
+        Dialog.setModal(True)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.formLayout = QtGui.QFormLayout()

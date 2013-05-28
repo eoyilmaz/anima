@@ -8,16 +8,16 @@ import logging
 from sqlalchemy import or_
 
 import anima
-from anima.pipeline.ui import (UICaller, AnimaDialogBase, is_pyqt4, is_pyside,
+from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
                                QtGui, QtCore)
 
 # create a logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-if is_pyside():
+if IS_PYSIDE:
     from anima.pipeline.ui.ui_compiled import login_dialog_UI_pyside as login_dialog_UI
-elif is_pyqt4():
+elif IS_PYQT4:
     from anima.pipeline.ui.ui_compiled import login_dialog_UI_pyqt4 as login_dialog_UI
 
 
@@ -57,7 +57,7 @@ class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self._setup_signals()
 
         # center window
-        self._center_window()
+        self.center_window()
 
         logger.debug("finished initializing the interface")
 
@@ -112,7 +112,7 @@ class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
             session.store_user(user)
             session.save()
 
-            self.close()
+            self.accept()
         else:
             QtGui.QMessageBox.critical(
                 self,

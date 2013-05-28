@@ -8,91 +8,85 @@
 
 import os
 import logging
-from oyProjectManager import conf
-from oyProjectManager.models.entity import VersionableBase
+# from oyProjectManager import conf
+# from oyProjectManager.models.entity import VersionableBase
+from stalker import Version
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.ERROR)
 
-qt_module_key = "PREFERRED_QT_MODULE"
-qt_module = "PyQt4"
+from anima.pipeline.ui import QtCore, QtGui
 
-if os.environ.has_key(qt_module_key):
-    qt_module = os.environ[qt_module_key]
-
-if qt_module == "PySide":
-    from PySide import QtGui, QtCore
-elif qt_module == "PyQt4":
-    import sip
-    sip.setapi('QString', 2)
-    sip.setapi('QVariant', 2)
-    from PyQt4 import QtGui, QtCore
 
 def clear_thumbnail(gView):
     """Clears the thumbnail for the given QGraphicsView
     
     :param gView: The QGraphicsView instance
     """
-    
+
     if not gView:
         return
-    
+
     # clear the graphics scene in case there is no thumbnail
     scene = gView.scene()
     if not scene:
         scene = QtGui.QGraphicsScene(gView)
         gView.setScene(scene)
-    
+
     scene.clear()
 
-def update_gview_with_versionable_thumbnail(versionable, gView):
-    """Updates the given QGraphicsView with the given Versionable thumbnail.
+
+def update_gview_with_version_thumbnail(version, gView):
+    """Updates the given QGraphicsView with the given Version thumbnail.
     
-    :param versionable: A
-      :class:`~oyProjectManager.models.entity.VersionableBase` instance
+    :param version: A
+      :class:`~stalker.models.version.Version` instance
     
     :param gView: A QtGui.QGraphicsView instance
     """
-    
-    if not isinstance(versionable, VersionableBase) or \
-       not isinstance(gView, QtGui.QGraphicsView):
+
+    if not isinstance(version, Version) or \
+            not isinstance(gView, QtGui.QGraphicsView):
         # do nothing
         return
-    
+
     # get the thumbnail full path
-    update_gview_with_image_file(
-        versionable.thumbnail_full_path,
-        gView
-    )
+    if version.thumbnail:
+        update_gview_with_image_file(
+            version.thumbnail.full_path,
+            gView
+        )
+
 
 def update_gview_with_image_file(image_full_path, gView):
     """updates the QGraphicsView with the given image
     """
-    
-    if not isinstance(gView, QtGui.QGraphicsView) and \
-        not isinstance(versionable, VersionableBase):
+
+    if not isinstance(gView, QtGui.QGraphicsView):
         return
-    
+
     clear_thumbnail(gView)
-    
+
     if image_full_path != "":
         logger.debug("creating pixmap from: %s" % image_full_path)
-        
-        size = conf.thumbnail_size
-        width = size[0]
-        height = size[1]
-        
+
+        # size = conf.thumbnail_size
+        # width = size[0]
+        # height = size[1]
+
         if os.path.exists(image_full_path):
-            pixmap = QtGui.QPixmap(image_full_path, format='JPG').scaled(
-                width, height,
-                QtCore.Qt.KeepAspectRatio,
-                QtCore.Qt.SmoothTransformation
-            )
-            
+            # pixmap = QtGui.QPixmap(image_full_path, format='JPG').scaled(
+            #     width, height,
+            #     QtCore.Qt.KeepAspectRatio,
+            #     QtCore.Qt.SmoothTransformation
+            # )
+            pixmap = QtGui.QPixmap(image_full_path, format='JPG')
+
             scene = gView.scene()
             scene.addPixmap(pixmap)
 
-def upload_thumbnail(versionable, thumbnail_source_full_path, size=conf.thumbnail_size):
+
+def upload_thumbnail(versionable, thumbnail_source_full_path):
     """Uploads the given thumbnail for the given versionable
     
     :param versionable: An instance of
@@ -103,13 +97,13 @@ def upload_thumbnail(versionable, thumbnail_source_full_path, size=conf.thumbnai
     :param str thumbnail_source_full_path: A string which is showing the path
       of the thumbnail image
     """
-    
+
     # get width height
-    width = size[0]
-    height = size[0]
-    
+    # width = size[0]
+    # height = size[0]
+
     thumbnail_full_path = versionable.thumbnail_full_path
-    
+
     # upload the chosen image to the repo, overwrite any image present
     # create the dirs
     try:
@@ -117,20 +111,22 @@ def upload_thumbnail(versionable, thumbnail_source_full_path, size=conf.thumbnai
     except OSError:
         # dir exists
         pass
-    
+
     # instead of copying the item
     # just render a resized version to the output path
-    pixmap = QtGui.QPixmap(thumbnail_source_full_path, format='JPG').scaled(
-        width, height,
-        QtCore.Qt.KeepAspectRatio,
-        QtCore.Qt.SmoothTransformation
-    )
+    pixmap = QtGui.QPixmap(thumbnail_source_full_path, format='JPG')#.scaled(
+        # width, height,
+        # QtCore.Qt.KeepAspectRatio,
+        # QtCore.Qt.SmoothTransformation
+    # )
     # now render it to the path
-    pixmap.save(
-        thumbnail_full_path,
-        conf.thumbnail_format,
-        conf.thumbnail_quality
-    )
+    # pixmap.save(
+    #     thumbnail_full_path,
+    #     conf.thumbnail_format,
+    #     conf.thumbnail_quality
+    # )
+    pixmap.save(thumbnail_full_path, 'jpg', 85)
+
 
 def choose_thumbnail(parent):
     """shows a dialog for thumbnail upload
@@ -141,11 +137,12 @@ def choose_thumbnail(parent):
         os.path.expanduser("~"),
         "Image Files (*.png *.jpg *.bmp)"
     )
-    
+
     if isinstance(thumbnail_full_path, tuple):
         thumbnail_full_path = thumbnail_full_path[0]
-    
+
     return thumbnail_full_path
+
 
 def render_image_from_gview(gview, image_full_path):
     """renders the gview scene to an image at the given full path
@@ -162,7 +159,7 @@ def render_image_from_gview(gview, image_full_path):
         except OSError:
             # dir exists
             pass
-        
+
         pixmap.save(
             image_full_path
         )

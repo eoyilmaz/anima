@@ -18,18 +18,18 @@ qt_lib = PYQT4
 if os.environ.has_key(qt_lib_key):
     qt_lib = os.environ[qt_lib_key]
 
-
-def is_pyside():
+@property
+def IS_PYSIDE():
     return qt_lib == PYSIDE
 
-
-def is_pyqt4():
+@property
+def IS_PYQT4():
     return qt_lib == PYQT4
 
 
-if is_pyside():
+if IS_PYSIDE:
     from PySide import QtGui, QtCore
-elif is_pyqt4():
+elif IS_PYQT4:
     import sip
 
     sip.setapi('QString', 2)
@@ -73,7 +73,7 @@ class AnimaDialogBase(object):
     """A simple class to hold basic common functions for dialogs
     """
 
-    def _center_window(self):
+    def center_window(self):
         """centers the window to the screen
         """
         screen = QtGui.QDesktopWidget().screenGeometry()

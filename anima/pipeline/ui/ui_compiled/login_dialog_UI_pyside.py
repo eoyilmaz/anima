@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/login_dialog.ui'
 #
-# Created: Mon May 27 16:16:09 2013
+# Created: Tue May 28 17:25:40 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,9 @@ from PySide import QtCore, QtGui
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
+        Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
         Dialog.resize(364, 138)
+        Dialog.setModal(True)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtGui.QFormLayout()

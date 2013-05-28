@@ -7,6 +7,8 @@ Anima Tools Changes
 
 * Pipeline:
   * Update: login_dialog is now working.
+  * New: created a new UI called version_creator for creating new Versions from
+    within environments
 
 0.1.0.a1
 ========
