@@ -3,13 +3,12 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import os
 import sys
 import shutil
 import tempfile
 import unittest2
-import logging
 
+import transaction
 from stalker.models.auth import LocalSession
 
 
@@ -38,8 +37,8 @@ from stalker.models.env import EnvironmentBase
 
 from anima.pipeline.ui import version_creator
 
-logger = logging.getLogger("anima.pipeline.ui.version_creator")
-logger.setLevel(logging.DEBUG)
+# logger = logging.getLogger("anima.pipeline.ui.version_creator")
+# logger.setLevel(logging.DEBUG)
 
 
 # exceptions for test purposes
@@ -141,9 +140,20 @@ class VersionCreatorTester(unittest2.TestCase):
         # self.temp_projects_folder = tempfile.mkdtemp()
 
         # os.environ["STALKER_PATH"] = self.temp_config_folder
+        
+        
+        # create a LocalSession first
+        self.admin = User.query.all()[0]
+        self.lsession = LocalSession()
+        self.lsession.store_user(self.admin)
+        self.lsession.save()
 
-        # for PyQt4
-        self.app = QtGui.QApplication(sys.argv)
+        if IS_PYQT4:
+            # for PyQt4
+            if not QtGui.qApp:
+                self.app = QtGui.QApplication(sys.argv)
+            else:
+                self.app = QtGui.qApp
 
     def tearDown(self):
         """cleans the test environment
@@ -182,35 +192,22 @@ class VersionCreatorTester(unittest2.TestCase):
         # dialog = version_creator.MainDialog()
         #QtCore.QTimer.singleShot(0, dialog.current_dialog, QtCore.SLOT('accept()'))
         # self.show_dialog(dialog)
-        # TODO: this part is still not clear in my mind
-        self.fail('test is not implemented yet')
+        self.fail("I don't know how to implement testing of dialogs ")
 
     def test_logged_in_user_field_is_updated_correctly(self):
         """testing if the logged_in_user field is updated correctly
         """
-        # create a LocalSession first
-        admin = User.query.all()[0]
-        lsession = LocalSession()
-        lsession.store_user(admin)
-        lsession.save()
-
         dialog = version_creator.MainDialog()
 
         # now expect to see the admin.name on the dialog.logged_in_user_label
         self.assertEqual(
             dialog.logged_in_user_label.text(),
-            admin.name
+            self.admin.name
         )
 
     def test_logout_button_shows_the_login_dialog(self):
         """logout dialog shows the login_dialog
         """
-        # create a LocalSession first
-        admin = User.query.all()[0]
-        lsession = LocalSession()
-        lsession.store_user(admin)
-        lsession.save()
-
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
 
@@ -266,12 +263,6 @@ class VersionCreatorTester(unittest2.TestCase):
         """testing if the tasks_treeWidget is filled with projects as root
         level items
         """
-        # create local session
-        admin = User.query.all()[0]
-        local_session = LocalSession()
-        local_session.store_user(admin)
-        local_session.save()
-
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -346,21 +337,21 @@ class VersionCreatorTester(unittest2.TestCase):
         t1 = Task(
             name='Test Task 1',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t2 = Task(
             name='Test Task 2',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t3 = Task(
             name='Test Task 2',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
@@ -368,21 +359,21 @@ class VersionCreatorTester(unittest2.TestCase):
         t4 = Task(
             name='Test Task 4',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t5 = Task(
             name='Test Task 5',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         # no tasks for project 3
 
         # record them all to the db
-        DBSession.add_all([admin, p1, p2, p3, t1, t2, t3, t4, t5])
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5])
         DBSession.commit()
 
         # now call the dialog and expect to see all these projects as root
@@ -392,7 +383,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # self.show_dialog(dialog)
 
         self.assertEqual(
-            len(admin.tasks),
+            len(self.admin.tasks),
             5
         )
 
@@ -416,28 +407,17 @@ class VersionCreatorTester(unittest2.TestCase):
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
         """
-        # create local session
-        admin = User.query.all()[0]
-        local_session = LocalSession()
-        local_session.store_user(admin)
-        local_session.save()
-
         dialog = version_creator.MainDialog()
         self.assertEqual(
             defaults.version_take_name,
             dialog.takes_listWidget.currentItem().text()
         )
 
-    def test_takes_listWidget_lists_Main_by_default_for_tasks_with_no_versions(self):
+    def test_takes_listWidget_lists_Main_by_default_for_tasks_with_no_versions(
+            self):
         """testing if the takes_listWidget lists "Main" by default for a task
         with no version
         """
-        # create local session
-        admin = User.query.all()[0]
-        local_session = LocalSession()
-        local_session.store_user(admin)
-        local_session.save()
-
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -511,21 +491,21 @@ class VersionCreatorTester(unittest2.TestCase):
         t1 = Task(
             name='Test Task 1',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t2 = Task(
             name='Test Task 2',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t3 = Task(
             name='Test Task 2',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
@@ -533,21 +513,21 @@ class VersionCreatorTester(unittest2.TestCase):
         t4 = Task(
             name='Test Task 4',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t5 = Task(
             name='Test Task 5',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         # no tasks for project 3
 
         # record them all to the db
-        DBSession.add_all([admin, p1, p2, p3, t1, t2, t3, t4, t5])
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5])
         DBSession.commit()
 
         # now call the dialog and expect to see all these projects as root
@@ -561,16 +541,11 @@ class VersionCreatorTester(unittest2.TestCase):
             dialog.takes_listWidget.currentItem().text()
         )
 
-    def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(self):
+    def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(
+            self):
         """testing if the takes_listWidget lists "Main" by default for a
         project with no tasks
         """
-        # create local session
-        admin = User.query.all()[0]
-        local_session = LocalSession()
-        local_session.store_user(admin)
-        local_session.save()
-
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -643,7 +618,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # create no tasks
 
         # record them all to the db
-        DBSession.add_all([admin, p1, p2, p3])
+        DBSession.add_all([self.admin, p1, p2, p3])
         DBSession.commit()
 
         # now call the dialog and expect to see all these projects as root
@@ -651,21 +626,17 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
-        
+
         self.assertEqual(
             defaults.version_take_name,
             dialog.takes_listWidget.currentItem().text()
         )
-    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(self):
+
+    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(
+            self):
         """testing if the takes_listWidget lists all the takes of the current
         task versions
         """
-        # create local session
-        admin = User.query.all()[0]
-        local_session = LocalSession()
-        local_session.store_user(admin)
-        local_session.save()
-
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -739,21 +710,21 @@ class VersionCreatorTester(unittest2.TestCase):
         t1 = Task(
             name='Test Task 1',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t2 = Task(
             name='Test Task 2',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t3 = Task(
             name='Test Task 3',
             project=p1,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
@@ -761,38 +732,38 @@ class VersionCreatorTester(unittest2.TestCase):
         t4 = Task(
             name='Test Task 4',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         t5 = Task(
             name='Test Task 5',
             project=p2,
-            resources=[admin],
+            resources=[self.admin],
             status_list=task_status_list
         )
 
         # no tasks for project 3
-        
+
         # versions
         version_status_list = StatusList(
             name='Verson Statuses',
             statuses=[status1, status2, status3],
             target_entity_type=Version
         )
-        
+
         # record them all to the db
-        DBSession.add_all([admin, p1, p2, p3, t1, t2, t3, t4, t5,
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
                            version_status_list])
         DBSession.commit()
 
         # task 1
-        
+
         # default (Main)
         v1 = Version(version_of=t1, full_path='/some/path')
         DBSession.add(v1)
         DBSession.commit()
-        
+
         v2 = Version(version_of=t1, full_path='/some/path')
         DBSession.add(v2)
         DBSession.commit()
@@ -843,6 +814,604 @@ class VersionCreatorTester(unittest2.TestCase):
         self.assertGreater(len(items), 0)
         p1_item = items[0]
         self.assertIsNotNone(p1_item)
+
+        # get task1
+        t1_item = None
+        for i in range(p1_item.childCount()):
+            item = p1_item.child(i)
+            if item.text(0) == t1.name:
+                t1_item = item
+                break
+        self.assertIsNotNone(t1_item)
+
+        dialog.tasks_treeWidget.setCurrentItem(item)
+
+        # now check if the takes_listWidget lists all the takes of the
+        # t1 versions
+        takes = ['Main', 'Take1', 'Take2']
+        self.assertEqual(
+            dialog.takes_listWidget.count(),
+            3
+        )
+
+        self.assertTrue(
+            dialog.takes_listWidget.item(0).text(),
+            'Main'
+        )
+
+        self.assertTrue(
+            dialog.takes_listWidget.item(1).text(),
+            'Take1'
+        )
+
+        self.assertTrue(
+            dialog.takes_listWidget.item(2).text(),
+            'Take2'
+        )
+
+    def test_statuses_comboBox_filled_with_version_statuses(self):
+        """testing if the status_comboBox is filled with statuses suitable for
+        Versions
+        """
+        s1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        s2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        s3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        s4 = Status(
+            name='Waiting Review',
+            code='WRev'
+        )
+
+        s5 = Status(
+            name='On Hold',
+            code='OH'
+        )
+
+        s6 = Status(
+            name='Approved',
+            code='APP'
+        )
+
+        # create the StatusList for Verions
+        version_statuses = StatusList(
+            name='Version Statuses',
+            target_entity_type=Version,
+            statuses=[s1, s2, s3, s4]
+        )
+
+        # record them all to the db
+        DBSession.add(version_statuses)
+        DBSession.commit()
+
+        dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
+
+        # check if the statuses_comboBox has 4 items
+        self.assertEqual(
+            dialog.statuses_comboBox.count(),
+            4
+        )
+
+        # status names are all in the comboBox
+        status_names = [
+            'Waiting To Start',
+            'Work In Progress',
+            'Completed',
+            'Waiting Review'
+        ]
+
+        for i in range(4):
+            item_text = dialog.statuses_comboBox.itemText(i)
+            self.assertEqual(
+                status_names[i],
+                item_text
+            )
+
+    def test_previous_versions_tableWidget_is_filled_with_proper_info(self):
+        """testing if the previous_versions_tableWidget is filled with proper
+        information
+        """
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path='T;/TestRepo/',
+            linux_path='/mnt/T/TestRepo/',
+            osx_path='/Volumes/T/TestRepo/'
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # no tasks for project 3
+
+        # versions
+        version_status_list = StatusList(
+            name='Verson Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Version
+        )
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
+                           version_status_list])
+        DBSession.commit()
+
+        # task 1
+
+        # default (Main)
+        v1 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v1)
+        DBSession.commit()
+
+        v2 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v2)
+        DBSession.commit()
+
+        v3 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v3)
+        DBSession.commit()
+
+        # Take1
+        v4 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v4)
+        DBSession.commit()
+
+        v5 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v5)
+        DBSession.commit()
+
+        v6 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v6)
+        DBSession.commit()
+
+        # Take2
+        v7 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v7)
+        DBSession.commit()
+
+        v8 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v8)
+        DBSession.commit()
+
+        v9 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v9)
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
+
+        # set the current item to task1
+        # get the corresponding item
+        items = dialog.tasks_treeWidget.findItems(
+            p1.name,
+            QtCore.Qt.MatchExactly,
+            0
+        )
+        self.assertGreater(len(items), 0)
+        p1_item = items[0]
+        self.assertIsNotNone(p1_item)
+
+        # get task1
+        t1_item = None
+        for i in range(p1_item.childCount()):
+            item = p1_item.child(i)
+            if item.text(0) == t1.name:
+                t1_item = item
+                break
+        self.assertIsNotNone(t1_item)
+
+        dialog.tasks_treeWidget.setCurrentItem(t1_item)
+
+        # select the first take
+        dialog.takes_listWidget.setCurrentRow(0)
+
+        # the row count should be 2
+        self.assertEqual(
+            dialog.previous_versions_tableWidget.rowCount(),
+            3
+        )
+
+        # now check if the previous versions tableWidget has the info
+        versions = [v1, v2, v3]
+        for i in range(2):
+            self.assertEqual(
+                int(dialog.previous_versions_tableWidget.item(i, 0).text()),
+                versions[i].version_number
+            )
+
+            self.assertEqual(
+                dialog.previous_versions_tableWidget.item(i, 1).text(),
+                versions[i].created_by.name
+            )
+
+            # TODO: add test for file size column
+
+            #self.assertEqual(
+            #    dialog.previous_versions_tableWidget.item(i, 3).text(),
+            #    datetime.datetime.fromtimestamp(
+            #        os.path.getmtime(versions[i].full_path)
+            #    ).strftime(conf.time_format)
+            #)
+
+            #self.assertEqual(
+            #    dialog.previous_versions_tableWidget.item(i, 4).text(),
+            #    versions[i].note
+            #)
+
+    def test_get_new_version_with_publish_checkBox_is_checked_creates_published_Version(
+            self):
+        """testing if checking publish_checkbox will create a published Version
+        instance
+        """
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path='T;/TestRepo/',
+            linux_path='/mnt/T/TestRepo/',
+            osx_path='/Volumes/T/TestRepo/'
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # no tasks for project 3
+
+        # versions
+        version_status_list = StatusList(
+            name='Verson Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Version
+        )
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
+                           version_status_list])
+        DBSession.commit()
+        
+        # task 1
+
+        # default (Main)
+        v1 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v1)
+        DBSession.commit()
+
+        v2 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v2)
+        DBSession.commit()
+
+        v3 = Version(
+            version_of=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v3)
+        DBSession.commit()
+
+        # Take1
+        v4 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v4)
+        DBSession.commit()
+
+        v5 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v5)
+        DBSession.commit()
+
+        v6 = Version(
+            version_of=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v6)
+        DBSession.commit()
+
+        # Take2
+        v7 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v7)
+        DBSession.commit()
+
+        v8 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v8)
+        DBSession.commit()
+
+        v9 = Version(
+            version_of=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v9)
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
+        
+        # select the t1
+        items = dialog.tasks_treeWidget.findItems(
+            p1.name,
+            QtCore.Qt.MatchExactly,
+            0
+        )
+        self.assertGreater(len(items), 0)
+        p1_item = items[0]
+        self.assertIsNotNone(p1_item)
         
         # get task1
         t1_item = None
@@ -855,25 +1424,20 @@ class VersionCreatorTester(unittest2.TestCase):
         
         dialog.tasks_treeWidget.setCurrentItem(item)
         
-        # now check if the takes_listWidget lists all the takes of the
-        # t1 versions
-        takes = ['Main', 'Take1', 'Take2']
-        self.assertEqual(
-            dialog.takes_listWidget.count(),
-            3
-        )
+        # first check if unpublished
+        vers_new = dialog.get_new_version()
         
-        self.assertTrue(
-            dialog.takes_listWidget.item(0).text(),
-            'Main'
-        )
+        # is_published should be True
+        self.assertFalse(vers_new.is_published)
         
-        self.assertTrue(
-            dialog.takes_listWidget.item(1).text(),
-            'Take1'
-        )
+        # check the publish checkbox
+        dialog.publish_checkBox.setChecked(True)
         
-        self.assertTrue(
-            dialog.takes_listWidget.item(2).text(),
-            'Take2'
-        )
+        vers_new = dialog.get_new_version()
+        
+        # is_published should be True
+        self.assertTrue(vers_new.is_published)
+
+    # def test_save_will_not_allow_if_the_user_is_not_one_of_the_resource(self):
+    #     """testing if the UI will not allow to create a new version if the
+    #     """

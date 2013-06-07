@@ -8,4 +8,5 @@ __version__ = "0.1.0.a2"
 
 
 import logging
+logging.basicConfig()
 logging_level = logging.DEBUG

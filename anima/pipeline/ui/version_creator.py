@@ -5,21 +5,24 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import logging
+import datetime
 import os
+import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
 from stalker.models.auth import LocalSession
 from stalker.models.env import EnvironmentBase
 
+
 import anima
+from anima.pipeline import utils
 from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
                                QtGui, QtCore, ui_utils, login_dialog)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-
-from stalker import db, defaults, Version
+from stalker import db, defaults, Version, StatusList, Status, Note
 
 
 if IS_PYSIDE:
@@ -45,6 +48,8 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       function. It also passes the created app instance to this executor.
     
     """
+    DBSession.remove()
+    DBSession.configure(extension=None)
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
 
@@ -143,7 +148,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # center window
         self.center_window()
-        
+
         logger.debug("finished initializing the interface")
 
     def show(self):
@@ -229,11 +234,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #     QtCore.SIGNAL("currentTextChanged(QString)"),
         #     self.version_types_listWidget_changed
         # )
-        
+
         # tasks_listWidget
         QtCore.QObject.connect(
             self.tasks_treeWidget,
-            QtCore.SIGNAL('currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)'),
+            QtCore.SIGNAL(
+                'currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)'),
             self.tasks_treeWidget_changed
         )
 
@@ -403,12 +409,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.logged_in_user_label.setText(logged_in_user.name)
 
     def logout(self):
-        """logouts the current user
+        """log the current user out
         """
         lsession = LocalSession()
         lsession.delete()
-        logged_in_user = self.get_logged_in_user()
-        self.fill_logged_in_user()
+        # logged_in_user = self.get_logged_in_user()
+        # self.fill_logged_in_user()
+        self.close()
 
     # def _show_assets_tableWidget_context_menu(self, position):
     #     """the custom context menu for the assets_tableWidget
@@ -455,7 +462,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     #                     self.tabWidget_changed(0)
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
-        """the custom context menu for the pervious_versions_tableWidget
+        """the custom context menu for the previous_versions_tableWidget
         """
         # convert the position to global screen position
         global_position = \
@@ -476,16 +483,24 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         #previous_versions_tableWidget_menu.addSeparator()
 
+        version_status_list = StatusList.query \
+            .filter_by(target_entity_type='Version') \
+            .first()
+
+        version_status_names = map(lambda x: x.name,
+                                   version_status_list.statuses)
+
         if not self.mode:
             # add statuses
-            for status in conf.status_list_long_names:
-                action = QtGui.QAction(status, menu)
-                action.setCheckable(True)
-                # set it checked if the status of the version is the current status
-                if version.status == status:
-                    action.setChecked(True)
+            if version_status_list:
+                for status in version_status_list.statuses:
+                    action = QtGui.QAction(status.name, menu)
+                    action.setCheckable(True)
+                    # set it checked if the status of the version is the current status
+                    if version.status == status:
+                        action.setChecked(True)
 
-                menu.addAction(action)
+                    menu.addAction(action)
 
             # add separator
             menu.addSeparator()
@@ -517,11 +532,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             choice = selected_item.text()
 
-            if choice in conf.status_list_long_names:
+            if choice in version_status_names:
                 # change the status of the version
                 if version:
-                    version.status = selected_item.text()
-                    version.save()
+                    version.status = Status.query \
+                        .filter_by(name=selected_item.text()).first()
+                    DBSession.add(version)
+                    DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
@@ -550,8 +567,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
                     if ok:
                         # change the note of the version
-                        version.note = new_note
-                        version.save()
+                        note = None
+                        if version.notes:
+                            note = version.notes[-1]
+
+                        if not note:
+                            note = Note()
+
+                        note.content = new_note
+                        version.notes = [note]
+
+                        DBSession.add(version)
+                        DBSession.commit()
+
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_tableWidget()
             elif choice == 'Copy Path':
@@ -578,27 +606,26 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         # first clear it
         self.tasks_treeWidget.clear()
-        
+
         # create column headers
         self.tasks_treeWidget.setColumnCount(2)
         self.tasks_treeWidget.setHeaderLabels(
             ['Name', 'Type']
         )
-        
+
         # now get the tasks of the current user
         logged_in_user = self.get_logged_in_user()
-        
+
         tasks = logged_in_user.tasks
-        
-        logger.setLevel(logging.DEBUG)
+
         logger.debug(tasks)
-        
+
         # now first fill the projects
         projects = []
         for task in tasks:
             if task.project not in projects:
                 projects.append(task.project)
-        
+
         # add the projects
         root_items = []
         for project in projects:
@@ -607,7 +634,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item.setText(1, project.__class__.__name__)
             item.stalker_entity = project
             root_items.append(item)
-        
+
         # now add the tasks
         for task in tasks:
             # create the item
@@ -615,36 +642,46 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item.setText(0, task.name)
             item.setText(1, task.__class__.__name__)
             item.stalker_entity = task
-            
+
             # now append it to the related project
             for project_item in root_items:
                 if project_item.stalker_entity is task.project:
                     # append the item to that project
                     project_item.addChild(item)
                     break
-        
+
         # congratulate your self
         logger.debug('all items are successfully added to tasks_treeWidget')
-    
-    def tasks_treeWidget_changed(self, from_item, to_item):
+
+    def tasks_treeWidget_changed(self):
         """runs when the tasks_treeWidget item is changed
         """
-        entity = from_item.stalker_entity
+        current_item = self.tasks_treeWidget.currentItem()
+
+        if not current_item:
+            return
+
+        entity = current_item.stalker_entity
+        if not entity:
+            return
+
+        # TODO: There is a problem if user selects a project
+
         # get the versions of the entity
         takes = []
         if entity:
             # clear the takes_listWidget and fill with new data
             self.takes_listWidget.clear()
-            
+
             takes = map(
                 lambda x: x[0],
-                 DBSession.query(distinct(Version.take_name))
-                    .filter(Version.version_of==entity)
-                    .all()
+                DBSession.query(distinct(Version.take_name))
+                .filter(Version.version_of == entity)
+                .all()
             )
-            
+
         logger.debug("len(takes) from db: %s" % len(takes))
-        
+
         if len(takes) == 0:
             # append the default take
             logger.debug("appending the default take name")
@@ -652,17 +689,34 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             logger.debug("adding the takes from db")
             self.takes_listWidget.addItems(takes)
-        
+
         logger.debug("setting the first element selected")
         item = self.takes_listWidget.item(0)
         self.takes_listWidget.setCurrentItem(item)
+
+    def project_changed(self):
+        """updates the assets list_widget and sequences_comboBox for the 
+        """
+        logger.debug("project_comboBox has changed in the UI")
+
+        project = self.get_current_project()
+        if project:
+            # update the client info
+            self.client_name_label.setText(
+                project.client.name if project.client else "N/A"
+            )
+
+        # call tabWidget_changed with the current index
+        curr_tab_index = self.tabWidget.currentIndex()
+
+        self.tabWidget_changed(curr_tab_index)
 
 
     def _set_defaults(self):
         """sets up the defaults for the interface
         """
         logger.debug("started setting up interface defaults")
-        
+
         # check login
         self.fill_logged_in_user()
 
@@ -671,7 +725,18 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # fill the statuses_comboBox
         self.statuses_comboBox.clear()
-        # self.statuses_comboBox.addItems(conf.status_list_long_names)
+
+        version_status_list = StatusList.query \
+            .filter_by(target_entity_type='Version') \
+            .first()
+
+        if version_status_list:
+            status_names = map(
+                lambda x: x.name,
+                version_status_list.statuses
+            )
+
+            self.statuses_comboBox.addItems(status_names)
 
         # fill the tasks
         self.fill_tasks_treeWidget()
@@ -757,65 +822,26 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             return
 
-        # set the versionable
-        versionable = version.version_of
+        # set the task
+        task = version.version_of
 
         # set the tab
-        if isinstance(versionable, Asset):
-            self.tabWidget.setCurrentIndex(0)
-
-            # set the asset name
-            items = self.assets_tableWidget.findItems(
-                versionable.name,
-                QtCore.Qt.MatchExactly
-            )
-            item = None
-            if items:
-                item = items[0]
-            else:
-                return
-
-            logger.debug('*******************************')
-            logger.debug('item: %s' % item)
-
-            self.assets_tableWidget.setCurrentItem(item)
-
-        else:
-            self.tabWidget.setCurrentIndex(1)
-
-            #the sequence
-            index = self.sequences_comboBox.findText(versionable.sequence.name)
-
-            if index != -1:
-                self.sequences_comboBox.setCurrentIndex(index)
-            else:
-                return
-
-            # the shot code
-            items = self.shots_listWidget.findItems(
-                versionable.code,
-                QtCore.Qt.MatchExactly
-            )
-            item = None
-            if items:
-                item = items[0]
-            else:
-                return
-            self.shots_listWidget.setCurrentItem(item)
-
-        # version_type name
-        type_name = version.type.name
-        logger.debug('finding type with name: %s' % type_name)
-        items = self.version_types_listWidget.findItems(
-            type_name,
-            QtCore.Qt.MatchExactly
+        # set the asset name
+        items = self.tasks_treeWidget.findItems(
+            task.name,
+            QtCore.Qt.MatchExactly,
+            0
         )
-
-        if not items:
-            logger.debug('no items found with: %s' % type_name)
+        item = None
+        if items:
+            item = items[0]
+        else:
             return
 
-        self.version_types_listWidget.setCurrentItem(items[0])
+        logger.debug('*******************************')
+        logger.debug('item: %s' % item)
+
+        self.tasks_treeWidget.setCurrentItem(item)
 
         # take_name
         take_name = version.take_name
@@ -825,356 +851,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.Qt.MatchExactly
         )
         self.takes_listWidget.setCurrentItem(items[0])
-
-    def project_changed(self):
-        """updates the assets list_widget and sequences_comboBox for the 
-        """
-        logger.debug("project_comboBox has changed in the UI")
-
-        project = self.get_current_project()
-        if project:
-            # update the client info
-            self.client_name_label.setText(
-                project.client.name if project.client else "N/A"
-            )
-
-        # call tabWidget_changed with the current index
-        curr_tab_index = self.tabWidget.currentIndex()
-
-        self.tabWidget_changed(curr_tab_index)
-
-    def tabWidget_changed(self, index):
-        """called when the tab widget is changed
-        """
-
-        proj = self.get_current_project()
-
-        # clear the thumbnail area
-        self.clear_thumbnail()
-
-        # clear previous_versions_tableWidget
-        self.clear_previous_versions_tableWidget()
-
-        # if assets is the current tab
-        if index == 0:
-            logger.debug("tabWidget index changed to asset")
-
-            # TODO: don't update if the project is the same with the cached one
-
-            # get all the assets of the project
-            assets = Asset.query() \
-                .filter(Asset.project == proj) \
-                .order_by(Asset.type) \
-                .order_by(Asset.name) \
-                .all()
-
-            # add the assets to the assets list
-            self.assets_tableWidget.assets = assets
-
-            # add their names to the list
-            self.assets_tableWidget.clear()
-            self.assets_tableWidget.setRowCount(len(assets))
-            self.assets_tableWidget.setHorizontalHeaderLabels(
-                self.assets_tableWidget.labels
-            )
-
-            for i, asset in enumerate(assets):
-                # type
-                item = QtGui.QTableWidgetItem(asset.type)
-                # align to left and vertical center
-                item.setTextAlignment(0x0001 | 0x0080)
-
-                self.assets_tableWidget.setItem(i, 0, item)
-
-                # name
-                item = QtGui.QTableWidgetItem(asset.name)
-                item.setTextAlignment(0x0001 | 0x0080)
-
-                self.assets_tableWidget.setItem(i, 1, item)
-
-            self.assets_tableWidget.resizeColumnsToContents()
-
-            # set the list to the first asset
-            table_item = self.assets_tableWidget.item(0, 0)
-
-            if table_item is not None:
-                self.assets_tableWidget.selectRow(0)
-
-                # call asset update
-                self.asset_changed()
-
-            #                # enable the asset_description_edit_pushButton
-            #                self.asset_description_edit_pushButton.setEnabled(True)
-            else:
-            #                # disable the asset_description_edit_pushButton
-            #                self.asset_description_edit_pushButton.setEnabled(False)
-
-                # clear the versions comboBox
-                self.version_types_listWidget.clear()
-
-                # set the take to default
-                self.takes_listWidget.clear()
-                self.takes_listWidget.addItem(conf.default_take_name)
-                item = self.takes_listWidget.item(0)
-                self.takes_listWidget.setCurrentItem(item)
-
-
-        elif self.tabWidget.currentIndex() == 1:
-            # TODO: don't update if the project is not changed from the last one
-
-            logger.debug("tabWidget index changed to shots")
-
-            # update the sequence comboBox
-            seqs = Sequence.query().filter(Sequence.project == proj).all()
-
-            self.sequences_comboBox.clear()
-            self.sequences_comboBox.addItems([seq.name for seq in seqs])
-
-            # attach the sequences to the sequences_comboBox
-            self.sequences_comboBox.sequences = seqs
-
-            if self.sequences_comboBox.count():
-                self.sequences_comboBox.setCurrentIndex(0)
-                self.sequences_comboBox_changed(0)
-            else:
-                # there is no sequence
-                # clear the shots_listWidget
-                self.shots_listWidget.clear()
-
-                # clear the version comboBox
-                self.version_types_listWidget.clear()
-
-                # set the take to default
-                self.takes_listWidget.clear()
-                self.takes_listWidget.addItem(conf.default_take_name)
-                item = self.takes_listWidget.item(0)
-                self.takes_listWidget.setCurrentItem(item)
-
-    def sequences_comboBox_changed(self, index):
-        """called when the sequences_comboBox index has changed
-        """
-        logger.debug("sequences_comboBox changed")
-
-        # get the cached sequence instance
-        try:
-            seq = self.sequences_comboBox.sequences[index]
-        except IndexError:
-            logger.debug("there is no sequences cached in sequence_comboBox")
-            return
-
-        # update the shots_listWidget
-        shots = Shot.query().filter(Shot.sequence == seq).all()
-        shots.sort(key=lambda x: utils.embedded_numbers(x.number))
-
-        # add their names to the list
-        self.shots_listWidget.clear()
-        self.shots_listWidget.addItems([shot.code for shot in shots])
-
-        # set the shots cache
-        self.shots_listWidget.shots = shots
-
-        # set the list to the first shot
-        list_item = self.shots_listWidget.item(0)
-
-        # clear the thumbnail area
-        self.clear_thumbnail()
-
-        if list_item is not None:
-            self.shots_listWidget.setCurrentItem(list_item)
-
-            # call shots update
-        #            self.asset_changed(list_item.text())
-
-        #            # enable the asset_description_edit_pushButton
-        #            self.shot_description_edit_pushButton.setEnabled(True)
-        #        else:
-        #            self.shot_description_edit_pushButton.setEnabled(False)
-
-    def asset_changed(self):
-        """updates the asset related fields with the current asset information
-        """
-
-        proj = self.get_current_project()
-
-        #asset = \
-        #    Asset.query().\
-        #    filter(Asset.project==proj).\
-        #    filter_by(name=asset_name).\
-        #    first()
-        asset = self.get_task()
-
-        if asset is None:
-            return
-
-        #        # set the description
-        #        if asset.description is not None:
-        #            self.asset_description_textEdit.setText(asset.description)
-        #        else:
-        #            self.asset_description_textEdit.setText("")
-
-        # update the version data
-        # Types
-        # get all the types for this asset
-        # available in this environment
-
-        if self.environment is None:
-            types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name))
-                .join(Version)
-                .filter(Version.version_of == asset)
-                .all()
-            )
-        else:
-            types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name))
-                .join(VersionTypeEnvironments)
-                .join(Version)
-                .filter(
-                    VersionTypeEnvironments.environment_name == self.environment.name)
-                .filter(Version.version_of == asset)
-                .all()
-            )
-
-        # add the types to the version types list
-        self.version_types_listWidget.clear()
-        self.version_types_listWidget.addItems(types)
-
-        # select the first one
-        item = self.version_types_listWidget.item(0)
-        self.version_types_listWidget.setCurrentItem(item)
-
-        # update thumbnail
-        self.update_thumbnail()
-
-    def get_current_shot(self):
-        """returns the current selected shot in the interface
-        """
-        # get the shot from the index
-        index = self.shots_listWidget.currentIndex().row()
-        shot = self.shots_listWidget.shots[index]
-        return shot
-
-    def shot_changed(self, shot_name):
-        """updates the shot related fields with the current shot information
-        """
-
-        proj = self.get_current_project()
-        shot = self.get_current_shot()
-
-        #        # set the description
-        #        if shot.description is not None:
-        #            self.shot_description_textEdit.setText(shot.description)
-        #        else:
-        #            self.shot_description_textEdit.setText("")
-
-        # update the version data
-        # frame info
-        self.start_frame_spinBox.setValue(shot.start_frame)
-        self.end_frame_spinBox.setValue(shot.end_frame)
-        self.handle_at_start_spinBox.setValue(shot.handle_at_start)
-        self.handle_at_end_spinBox.setValue(shot.handle_at_end)
-
-        # Types
-        # get all the types for this shot
-        if self.environment is None:
-            types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name)).
-                join(Version).
-                filter(Version.version_of == shot).
-                all()
-            )
-        else:
-            types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name))
-                .join(VersionTypeEnvironments)
-                .join(Version)
-                .filter(
-                    VersionTypeEnvironments.environment_name == self.environment.name)
-                .filter(Version.version_of == shot)
-                .all()
-            )
-
-        # clear previous versions tableWidget
-        self.clear_previous_versions_tableWidget()
-
-        # add the types to the version types list
-        self.version_types_listWidget.clear()
-        self.version_types_listWidget.addItems(types)
-
-        # select the first one
-        item = self.version_types_listWidget.item(0)
-        self.version_types_listWidget.setCurrentItem(item)
-
-        # update thumbnail
-        self.update_thumbnail()
-
-    def shot_info_update_pushButton_clicked(self):
-        """runs when the shot_info_update_pushButton is clicked
-        """
-
-        shot = self.get_current_shot()
-
-        # get the info
-        start_frame = self.start_frame_spinBox.value()
-        end_frame = self.end_frame_spinBox.value()
-        handle_at_start = self.handle_at_start_spinBox.value()
-        handle_at_end = self.handle_at_end_spinBox.value()
-
-        # now update the shot
-        shot.start_frame = start_frame
-        shot.end_frame = end_frame
-        shot.handle_at_start = handle_at_start
-        shot.handle_at_end = handle_at_end
-
-        shot.save()
-
-    def version_types_listWidget_changed(self, index):
-        """runs when the asset version types comboBox has changed
-        """
-        versionable = self.get_task()
-
-        # version type name
-        version_type_name = ""
-        item = self.version_types_listWidget.currentItem()
-        if item:
-            version_type_name = item.text()
-
-        self.takes_listWidget.clear()
-        self.clear_previous_versions_tableWidget()
-
-        if version_type_name != '':
-            logger.debug("version_type_name: %s" % version_type_name)
-        else:
-            return
-
-        # Takes
-        # get all the takes of the current asset
-        takes = map(
-            lambda x: x[0],
-            db.query(distinct(Version.take_name))
-            .join(VersionType)
-            .filter(VersionType.name == version_type_name)
-            .filter(Version.version_of == versionable)
-            .all()
-        )
-
-        logger.debug("len(takes) from db: %s" % len(takes))
-
-        if len(takes) == 0:
-            # append the default take
-            logger.debug("appending the default take name")
-            self.takes_listWidget.addItem(conf.default_take_name)
-        else:
-            logger.debug("adding the takes from db")
-            self.takes_listWidget.addItems(takes)
-
-        logger.debug("setting the first element selected")
-        item = self.takes_listWidget.item(0)
-        self.takes_listWidget.setCurrentItem(item)
 
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
@@ -1192,7 +868,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             take_name = item.text()
 
         # query the Versions of this type and take
-        query = Version.query\
+        query = Version.query \
             .filter(Version.version_of == task) \
             .filter(Version.take_name == take_name)
 
@@ -1224,20 +900,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         task = self.get_task()
 
-        # version type name
-        version_type_name = ''
-        # item = self.version_types_listWidget.currentItem()
-        # if item:
-        #     version_type_name = item.text()
-
         self.clear_previous_versions_tableWidget()
 
-        if version_type_name != '':
-            logger.debug("version_type_name: %s" % version_type_name)
-        else:
-            # delete the versions cache
-            self.previous_versions_tableWidget.versions = []
-            return
+        # if version_type_name != '':
+        #     logger.debug("version_type_name: %s" % version_type_name)
+        #else:
+        #    # delete the versions cache
+        #    self.previous_versions_tableWidget.versions = []
+        #    return
 
         # take name
         take_name = ""
@@ -1251,8 +921,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         # query the Versions of this type and take
-        query = Version.query().join(VersionType) \
-            .filter(VersionType.name == version_type_name) \
+        query = Version.query \
             .filter(Version.version_of == task) \
             .filter(Version.take_name == take_name)
 
@@ -1318,7 +987,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # ------------------------------------
             # status
-            item = QtGui.QTableWidgetItem(vers.status)
+            item = QtGui.QTableWidgetItem(vers.status.name)
             # align to left and vertical center
             item.setTextAlignment(0x0004 | 0x0080)
 
@@ -1326,16 +995,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             #    set_font(item)
 
             # colorize the item
-            index = conf.status_list.index(vers.status)
-            bgcolor = conf.status_bg_colors[index]
-            fgcolor = conf.status_fg_colors[index]
+            bgcolor = '#' + hex(vers.status.bg_color)[2:].zfill(6)
+            fgcolor = '#' + hex(vers.status.fg_color)[2:].zfill(6)
 
             bg = item.background()
-            bg.setColor(QtGui.QColor(*bgcolor))
+            bg.setColor(QtGui.QColor(bgcolor))
             item.setBackground(bg)
 
             fg = item.foreground()
-            fg.setColor(QtGui.QColor(*fgcolor))
+            fg.setColor(QtGui.QColor(fgcolor))
 
             try:
                 item.setBackgroundColor(QtGui.QColor(*bgcolor))
@@ -1356,7 +1024,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 file_size = float(
                     os.path.getsize(vers.full_path)) / 1024 / 1024
 
-            item = QtGui.QTableWidgetItem(conf.file_size_format % file_size)
+            item = QtGui.QTableWidgetItem(
+                defaults.file_size_format % file_size)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -1376,7 +1045,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     os.path.getmtime(vers.full_path)
                 )
             item = QtGui.QTableWidgetItem(
-                file_date.strftime(conf.time_format)
+                file_date.strftime(defaults.date_time_format)
             )
 
             # align to left and vertical center
@@ -1390,7 +1059,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # ------------------------------------
             # note
-            item = QtGui.QTableWidgetItem(vers.note)
+            note_content = '' # TODO: There are multiple notes for one version
+            if vers.notes:
+                note_content = vers.notes[-1].content
+            item = QtGui.QTableWidgetItem(note_content)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -1405,216 +1077,65 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.previous_versions_tableWidget.resizeColumnsToContents()
         self.previous_versions_tableWidget.resizeRowsToContents()
 
-    def create_asset_pushButton_clicked(self):
-        """displays an input dialog and creates a new asset if everything is ok
-        """
-
-        dialog = create_asset_dialog.create_asset_dialog(parent=self)
-        dialog.exec_()
-
-        ok = dialog.ok
-        asset_name = dialog.asset_name_lineEdit.text()
-        asset_type_name = dialog.asset_types_comboBox.currentText()
-
-        logger.debug('new asset_name: %s' % asset_name)
-        logger.debug('new asset_type_name: %s' % asset_type_name)
-
-        if not ok:
-            return
-        elif asset_name == "" or asset_type_name == "":
-            error_message = "The given Asset.name or Asset.type is " \
-                            "empty!!!\n\nNot creating any new asset!"
-
-            QtGui.QMessageBox.critical(self, 'Error', error_message)
-            return
-
-        proj = self.get_current_project()
-
-        try:
-            new_asset = Asset(proj, asset_name, type=asset_type_name)
-            new_asset.save()
-
-            # recreate the project structure
-            proj.create()
-
-            # update the assets by calling project_changed
-            self.project_changed()
-
-        except (TypeError, ValueError, IntegrityError) as e:
-            error_message = str(e)
-            if isinstance(e, IntegrityError):
-                # the transaction needs to be rollback
-                db.session.rollback()
-                error_message = "Asset.name or Asset.code is not unique"
-
-            # pop up an Message Dialog to give the error message
-            QtGui.QMessageBox.critical(self, "Error", error_message)
-
-            return
+    # def create_asset_pushButton_clicked(self):
+    #     """displays an input dialog and creates a new asset if everything is ok
+    #     """
+    # 
+    #     dialog = create_asset_dialog.create_asset_dialog(parent=self)
+    #     dialog.exec_()
+    # 
+    #     ok = dialog.ok
+    #     asset_name = dialog.asset_name_lineEdit.text()
+    #     asset_type_name = dialog.asset_types_comboBox.currentText()
+    # 
+    #     logger.debug('new asset_name: %s' % asset_name)
+    #     logger.debug('new asset_type_name: %s' % asset_type_name)
+    # 
+    #     if not ok:
+    #         return
+    #     elif asset_name == "" or asset_type_name == "":
+    #         error_message = "The given Asset.name or Asset.type is " \
+    #                         "empty!!!\n\nNot creating any new asset!"
+    # 
+    #         QtGui.QMessageBox.critical(self, 'Error', error_message)
+    #         return
+    # 
+    #     proj = self.get_current_project()
+    # 
+    #     try:
+    #         new_asset = Asset(proj, asset_name, type=asset_type_name)
+    #         new_asset.save()
+    # 
+    #         # recreate the project structure
+    #         proj.create()
+    # 
+    #         # update the assets by calling project_changed
+    #         self.project_changed()
+    # 
+    #     except (TypeError, ValueError, IntegrityError) as e:
+    #         error_message = str(e)
+    #         if isinstance(e, IntegrityError):
+    #             # the transaction needs to be rollback
+    #             db.session.rollback()
+    #             error_message = "Asset.name or Asset.code is not unique"
+    # 
+    #         # pop up an Message Dialog to give the error message
+    #         QtGui.QMessageBox.critical(self, "Error", error_message)
+    # 
+    #         return
 
     def get_task(self):
-        """returns the task from the UI, it is an task, asset or a shot
+        """returns the task from the UI, it is an task, asset, shot, sequence
+        or project
         """
         task = None
-        assert isinstance(self.tasks_treeWidget, QtGui.QTreeWidget)
-        # self.tasks_treeWidget.
+        current_item = self.tasks_treeWidget.currentItem()
+
+        if current_item:
+            task = current_item.stalker_entity
 
         logger.debug('task: %s' % task)
         return task
-
-    def get_version_type(self):
-        """returns the VersionType instance by looking at the UI elements. It
-        will return the correct VersionType by looking at if it is an Asset or
-        a Shot and picking the name of the VersionType from the comboBox
-        
-        :returns: :class:`~oyProjectManager.models.version.VersionType`
-        """
-
-        project = self.get_current_project()
-        if project is None:
-            return None
-
-        # get the versionable type
-        versionable = self.get_task()
-
-        type_for = versionable.__class__.__name__
-
-        # get the version type name
-        version_type_name = ""
-        item = self.version_types_listWidget.currentItem()
-        if item:
-            version_type_name = item.text()
-
-        # get the version type instance
-        return VersionType.query() \
-            .filter(VersionType.type_for == type_for) \
-            .filter(VersionType.name == version_type_name) \
-            .first()
-
-    # def get_current_project(self):
-    #     """Returns the currently selected project instance in the
-    #     projects_comboBox
-    #     :return: :class:`~oyProjectManager.models.project.Project` instance
-    #     """
-    #     
-    #     index = self.projects_comboBox.currentIndex()
-    #     
-    #     try:
-    #         return self.projects_comboBox.projects[index]
-    #     except IndexError:
-    #         return None
-
-    def add_type(self, version_type):
-        """adds new types to the version_types_listWidget
-        """
-
-        if not isinstance(version_type, VersionType):
-            raise TypeError(
-                "please supply a oyProjectManager.models.version.VersionType "
-                "for the type to be added to the version_types_listWidget"
-            )
-
-        # check if the given type is suitable for the current versionable
-        versionable = self.get_task()
-
-        if versionable.__class__.__name__ != version_type.type_for:
-            raise TypeError("The given version_type is not suitable for %s"
-                            % self.tabWidget.tabText(
-                self.tabWidget.currentIndex()
-            ))
-
-        items = self.version_types_listWidget.findItems(
-            version_type.name,
-            QtCore.Qt.MatchExactly
-        )
-
-        if not len(items):
-            self.version_types_listWidget.addItem(version_type.name)
-
-            # select the last added type
-            index = self.version_types_listWidget.count() - 1
-            item = self.version_types_listWidget.item(index)
-            self.version_types_listWidget.setCurrentItem(item)
-
-    def add_type_toolButton_clicked(self):
-        """adds a new type for the currently selected Asset or Shot
-        """
-        proj = self.get_current_project()
-
-        # get the versionable
-        versionable = self.get_task()
-
-        # get all the version types which doesn't have any version defined
-
-        # get all the current types from the interface
-        current_types = []
-        for index in range(self.version_types_listWidget.count()):
-            current_types.append(
-                self.version_types_listWidget.item(index).text()
-            )
-
-        # available types for Versionable in this environment
-        # if there is an environment given
-        if self.environment:
-            available_types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name))
-                .join(VersionTypeEnvironments)
-                .filter(VersionType.type_for == versionable.__class__.__name__)
-                .filter(
-                    VersionTypeEnvironments.environment_name == self.environment.name)
-                .filter(~ VersionType.name.in_(current_types))
-                .all()
-            )
-        else:
-            # there is no environment
-            # just return all VersionType names
-            # TODO: create test for that case
-            available_types = map(
-                lambda x: x[0],
-                db.query(distinct(VersionType.name))
-                .filter(VersionType.type_for == versionable.__class__.__name__)
-                .filter(~ VersionType.name.in_(current_types))
-                .all()
-            )
-
-
-        # create a QInputDialog with comboBox
-        self.current_dialog = QtGui.QInputDialog(self)
-
-        if self.environment:
-            type_name, ok = self.current_dialog.getItem(
-                self,
-                "Choose a VersionType",
-                "Available Version Types for %ss in %s" %
-                (versionable.__class__.__name__, self.environment.name),
-                available_types,
-                0,
-                False
-            )
-        else:
-            type_name, ok = self.current_dialog.getItem(
-                self,
-                "Choose a VersionType",
-                "Available Version Types for %ss" %
-                versionable.__class__.__name__,
-                available_types,
-                0,
-                False
-            )
-
-            # if ok add the type name to the end of the types_comboBox and make
-            # it the current selection
-        if ok:
-            # get the type
-            vers_type = VersionType.query().filter_by(name=type_name).first()
-
-            try:
-                self.add_type(vers_type)
-            except TypeError:
-                # the given type doesn't exists
-                # just return without doing anything
-                return
 
     def add_take_toolButton_clicked(self):
         """runs when the add_take_toolButton clicked
@@ -1672,29 +1193,32 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         
         :returns: :class:`~oyProjectManager.models.version.Version` instance
         """
-
         # create a new version
-        versionable = self.get_task()
-        version_type = self.get_version_type()
+        task = self.get_task()
+        if not task:
+            return None
+
         take_name = self.takes_listWidget.currentItem().text()
-        user = self.get_user()
+        user = self.get_logged_in_user()
 
         note = self.note_textEdit.toPlainText()
+        notes = []
+        if note:
+            notes.append(note)
 
         published = self.publish_checkBox.isChecked()
 
-        status = self.statuses_comboBox.currentText()
+        status_name = self.statuses_comboBox.currentText()
+        status = Status.query.filter_by(name=status_name).first()
 
         version = Version(
-            versionable,
-            versionable.code,
-            version_type,
-            user,
+            version_of=task,
+            created_by=user,
             take_name=take_name,
-            note=note,
-            is_published=published,
+            notes=notes,
             status=status
         )
+        version.is_published = published
 
         return version
 
@@ -1702,29 +1226,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """returns the :class:`~oyProjectManager.models.version.Version`
         instance from the UI by looking at the previous_versions_tableWidget
         """
-
         index = self.previous_versions_tableWidget.currentRow()
-
         try:
             version = self.previous_versions_tableWidget.versions[index]
             return version
         except IndexError:
             return None
 
-    def get_user(self):
-        """returns the current User instance from the interface by looking at
-        the name of the user from the users comboBox
-        
-        :return: :class:`~oyProjectManager.models.auth.User` instance
-        """
-
-        index = self.users_comboBox.currentIndex()
-        return self.users_comboBox.users[index]
-
     def export_as_pushButton_clicked(self):
         """runs when the export_as_pushButton clicked
         """
-
         logger.debug("exporting the data as a new version")
 
         # get the new version
@@ -1746,7 +1257,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def save_as_pushButton_clicked(self):
         """runs when the save_as_pushButton clicked
         """
-
         logger.debug("saving the data as a new version")
 
         # get the new version
@@ -1780,11 +1290,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 pass
 
             # create the output path
-            try:
-                logger.debug('creating output_path for new version')
-                os.makedirs(new_version.output_path)
-            except OSError: # path already exists
-                pass
+            #try:
+            #    logger.debug('creating output_path for new version')
+            #    os.makedirs(new_version.output_path)
+            #except OSError: # path already exists
+            #    pass
 
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
@@ -1797,18 +1307,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             )
 
         # save the new version to the database
-        db.session.add(new_version)
-        db.session.commit()
-
-        # save the last user
-        conf.last_user_id = new_version.created_by.id
+        DBSession.add(new_version)
+        DBSession.commit()
 
         if self.environment:
             # close the UI
             self.close()
         else:
             # refresh the UI
-            self.project_changed()
+            self.tasks_treeWidget_changed()
 
     def chose_pushButton_clicked(self):
         """runs when the chose_pushButton clicked

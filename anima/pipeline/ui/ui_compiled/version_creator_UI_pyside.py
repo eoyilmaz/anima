@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Tue May 28 17:25:39 2013
+# Created: Thu May 30 16:18:22 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(1312, 838)
+        Dialog.resize(1312, 689)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
