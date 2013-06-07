@@ -12,7 +12,7 @@ from sqlalchemy import distinct
 from stalker.db import DBSession
 from stalker.models.auth import LocalSession
 from stalker.models.env import EnvironmentBase
-
+import transaction
 
 import anima
 from anima.pipeline import utils
@@ -49,7 +49,7 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
     
     """
     DBSession.remove()
-    DBSession.configure(extension=None)
+    # DBSession.configure(extension=None)
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
 
@@ -538,7 +538,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     version.status = Status.query \
                         .filter_by(name=selected_item.text()).first()
                     DBSession.add(version)
-                    DBSession.commit()
+                    transaction.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
@@ -578,7 +578,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         version.notes = [note]
 
                         DBSession.add(version)
-                        DBSession.commit()
+                        transaction.commit()
 
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_tableWidget()
@@ -1308,7 +1308,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # save the new version to the database
         DBSession.add(new_version)
-        DBSession.commit()
+        transaction.commit()
 
         if self.environment:
             # close the UI
