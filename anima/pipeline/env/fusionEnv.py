@@ -11,7 +11,7 @@ import os
 import PeyeonScript
 from anima.pipeline import utils
 
-from anima.pipeline.env import EnvironmentBase
+from stalker.models.env import EnvironmentBase
 
 
 class Fusion(EnvironmentBase):

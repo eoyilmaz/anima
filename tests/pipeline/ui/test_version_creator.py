@@ -31,7 +31,8 @@ elif IS_PYQT4:
     from PyQt4.QtTest import QTest
     from PySide.QtCore import Qt
 
-from stalker import db, defaults, User, Project, Repository, Structure, Status, StatusList, Task, Version
+from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
+                     StatusList, Task, Version)
 from stalker.db.session import DBSession
 from stalker.models.env import EnvironmentBase
 
