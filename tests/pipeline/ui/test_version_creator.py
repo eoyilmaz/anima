@@ -7,14 +7,12 @@ import sys
 import shutil
 import tempfile
 import unittest2
+import logging
 
-import transaction
+logger = logging.getLogger('anima.pipeline.ui.version_creator')
+logger.setLevel(logging.DEBUG)
+
 from stalker.models.auth import LocalSession
-
-
-# from PyQt4 import QtCore, QtGui
-# from PyQt4.QtCore import Qt
-# from PyQt4.QtTest import QTest
 
 from anima.pipeline.ui import login_dialog, IS_PYSIDE, IS_PYQT4
 
@@ -405,6 +403,347 @@ class VersionCreatorTester(unittest2.TestCase):
                 item.text(1)
             )
 
+    def test_tasks_treeWidget_lists_all_tasks_properly(self):
+        """testing if the taks_treeWidget lists all the tasks properly
+        """
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path='T;/TestRepo/',
+            linux_path='/mnt/T/TestRepo/',
+            osx_path='/Volumes/T/TestRepo/'
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t6 = Task(
+            name='Test Task 6',
+            parent=t5,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # no tasks for project 3
+        tasks = [t1, t2, t3, t4, t5, t6]
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5, t6])
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+
+        # check if all the tasks are represented in the tree
+        for task in tasks:
+            items = []
+            iterator = QtGui.QTreeWidgetItemIterator(dialog.tasks_treeWidget)
+            while iterator.value():
+                item = iterator.value()
+                name = item.text(0)
+                if name == task.name:
+                    items.append(item)
+                iterator += 1
+
+            logger.debug('task.name : %s' % task.name)
+            self.assertGreater(len(items), 0)
+            task_item = items[0]
+            self.assertEqual(task_item.stalker_entity, task)
+
+    def test_tasks_treeWidget_lists_only_my_tasks_if_checked(self):
+        """testing if the tasks_treeWidget lists only my tasks if
+        my_tasks_only_checkBox is checked
+        """
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path='T;/TestRepo/',
+            linux_path='/mnt/T/TestRepo/',
+            osx_path='/Volumes/T/TestRepo/'
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p1.users.append(self.admin)
+        p2.users.append(self.admin)
+        p3.users.append(self.admin)
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t6 = Task(
+            name='Test Task 6',
+            parent=t5,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t7 = Task(
+            name='Test Task 7',
+            parent=t5,
+            resources=[],
+            status_list=task_status_list
+        )
+
+        t8 = Task(
+            name='Test Task 8',
+            parent=t5,
+            resources=[],
+            status_list=task_status_list
+        )
+
+        t9 = Task(
+            name='Test Task 9',
+            parent=t5,
+            resources=[],
+            status_list=task_status_list
+        )
+
+
+        # no tasks for project 3
+        tasks = [t1, t2, t3, t4, t5, t6, t7, t8, t9]
+        my_tasks = [t1, t2, t3, t4, t5, t6]
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5, t6, t7,
+                           t8, t9])
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+        
+        # check show my tasks onlly check box
+        dialog.my_tasks_only_checkBox.setChecked(True)
+
+        # check if all my tasks are represented in the tree
+        for task in my_tasks:
+            items = []
+            iterator = QtGui.QTreeWidgetItemIterator(dialog.tasks_treeWidget)
+            while iterator.value():
+                item = iterator.value()
+                name = item.text(0)
+                if name == task.name:
+                    items.append(item)
+                iterator += 1
+
+            logger.debug('task.name : %s' % task.name)
+            self.assertGreater(len(items), 0)
+            task_item = items[0]
+            self.assertEqual(task_item.stalker_entity, task)
+
+        # now un check it and check if all tasks are shown
+        dialog.my_tasks_only_checkBox.setChecked(False)
+        # check if all my tasks are represented in the tree
+        for task in tasks:
+            items = []
+            iterator = QtGui.QTreeWidgetItemIterator(dialog.tasks_treeWidget)
+            while iterator.value():
+                item = iterator.value()
+                name = item.text(0)
+                if name == task.name:
+                    items.append(item)
+                iterator += 1
+
+            logger.debug('task.name : %s' % task.name)
+            self.assertGreater(len(items), 0)
+            task_item = items[0]
+            self.assertEqual(task_item.stalker_entity, task)
+        
+
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
         """
@@ -744,6 +1083,13 @@ class VersionCreatorTester(unittest2.TestCase):
             status_list=task_status_list
         )
 
+        t6 = Task(
+            name='Test Task 6',
+            parent=t5,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
         # no tasks for project 3
 
         # versions
@@ -754,7 +1100,7 @@ class VersionCreatorTester(unittest2.TestCase):
         )
 
         # record them all to the db
-        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5, t6,
                            version_status_list])
         DBSession.commit()
 

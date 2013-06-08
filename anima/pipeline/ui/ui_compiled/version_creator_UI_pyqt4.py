@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Thu May 30 16:18:22 2013
+# Created: Sat Jun  8 18:51:01 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -75,7 +75,12 @@ class Ui_Dialog(object):
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.tasks_groupBox)
         self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
+        self.my_tasks_only_checkBox = QtGui.QCheckBox(self.tasks_groupBox)
+        self.my_tasks_only_checkBox.setChecked(True)
+        self.my_tasks_only_checkBox.setObjectName(_fromUtf8("my_tasks_only_checkBox"))
+        self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
         self.tasks_treeWidget = QtGui.QTreeWidget(self.tasks_groupBox)
+        self.tasks_treeWidget.setAlternatingRowColors(True)
         self.tasks_treeWidget.setObjectName(_fromUtf8("tasks_treeWidget"))
         self.tasks_treeWidget.headerItem().setText(0, _fromUtf8("1"))
         self.verticalLayout_2.addWidget(self.tasks_treeWidget)
@@ -277,6 +282,7 @@ class Ui_Dialog(object):
         self.logged_in_user_label.setText(_translate("Dialog", "TextLabel", None))
         self.logout_pushButton.setText(_translate("Dialog", "Logout", None))
         self.tasks_groupBox.setTitle(_translate("Dialog", "Tasks", None))
+        self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload Thumbnail...", None))
         self.new_version_groupBox.setTitle(_translate("Dialog", "New Version", None))
         self.takes_label.setText(_translate("Dialog", "Take", None))

@@ -9,6 +9,7 @@ the system python.
 """
 
 import os
+import sys
 import subprocess
 import glob
 import logging
@@ -26,12 +27,14 @@ if __name__ == '__main__':
     pyFilePaths_PyQt4 = []
     pyFilePaths_PySide = []
 
+    args = sys.argv[1:]
+
     path = os.path.dirname(__file__)
     ui_path = os.path.join(path, "ui_files")
     
     print 'path    : %s' % path
     print 'ui_path : %s' % ui_path
-
+    
     for ui_file in glob.glob1(ui_path, '*.ui'):
         uicFilePaths.append(os.path.join(ui_path, ui_file))
         # create the PyQt4 file
@@ -50,7 +53,7 @@ if __name__ == '__main__':
                 base_name + '_UI_pyside.py'
             )
         )
-
+    
     print '----------'
     print uicFilePaths
     print pyFilePaths_PyQt4

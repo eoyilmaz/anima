@@ -22,7 +22,7 @@ from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-from stalker import db, defaults, Version, StatusList, Status, Note
+from stalker import db, defaults, Version, StatusList, Status, Note, Project, Task
 
 
 if IS_PYSIDE:
@@ -56,38 +56,38 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
 
 class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     """The main version creation dialog for the pipeline.
-    
+
     This is the main interface that the users of the anima.pipeline will use
     to create a new :class:`~stalker.models.version.Version`\ s.
-    
+
     It is possible to run the version_creator UI in read-only mode where the UI
     is created only for choosing previous versions. There will only be one
     button called "Choose" which returns the chosen Version instance.
-    
+
     :param environment: It is an object which supplies **methods** like
       ``open``, ``save``, ``export``,  ``import`` or ``reference``. The most
       basic way to do this is to pass an instance of a class which is derived
       from the :class:`~stalker.models.env.EnvironmentBase` which has all this
       methods but produces ``NotImplementedError``\ s if the child class has
       not implemented these actions.
-      
+
       The main duty of the Environment object is to introduce the host
       application (Maya, Houdini, Nuke, etc.) to the pipeline scripts and let
-      it to open, save, export, import or reference a file.
-      
-    No Environment Interaction
-    
-      From and after version 0.2.5 the UI is now able to handle the situation
-      of not being bounded to an Environment. So if there is no Environment
-      instance is given then the UI generates new Version instance and will
-      allow the user to "copy" the full path of the newly generated Version.
-      So environments which are not able to run Python code (Photoshop etc.)
-      will also be able to contribute to projects.
-    
+      it to open, save, export, import or reference a version file.
+
+    **No Environment Interaction**
+
+      The UI is able to handle the situation of not being bounded to an
+      Environment. So if there is no Environment instance is given then the UI
+      generates new Version instance and will allow the user to "copy" the full
+      path of the newly generated Version. So environments which are not able
+      to run Python code (Photoshop, ZBrush etc.) will also be able to
+      contribute to projects.
+
     :param parent: The parent ``PySide.QtCore.QObject`` of this interface. It
       is mainly useful if this interface is going to be attached to a parent
       UI, like the Maya or Nuke.
-    
+
     :param mode: Sets the UI in to Read-Write (mode=0) and Read-Only (mode=1)
       mode. Where in Read-Write there are all the buttons you would normally
       have (Export As, Save As, Open, Reference, Import), and in Read-Only mode
@@ -235,12 +235,32 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #     self.version_types_listWidget_changed
         # )
 
+        # my_tasks_only_checkBox
+        QtCore.QObject.connect(
+            self.my_tasks_only_checkBox,
+            QtCore.SIGNAL("stateChanged(int)"),
+            self.fill_tasks_treeWidget
+        )
+
         # tasks_listWidget
         QtCore.QObject.connect(
             self.tasks_treeWidget,
             QtCore.SIGNAL(
                 'currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)'),
             self.tasks_treeWidget_changed
+        )
+
+        # fit column 0 on expand/collapse
+        QtCore.QObject.connect(
+            self.tasks_treeWidget,
+            QtCore.SIGNAL('expanded(QModelIndex)'),
+            self.tasks_treeWidget_auto_fit_column
+        )
+
+        QtCore.QObject.connect(
+            self.tasks_treeWidget,
+            QtCore.SIGNAL('collapsed(QModelIndex)'),
+            self.tasks_treeWidget_auto_fit_column
         )
 
         # take_comboBox
@@ -601,6 +621,64 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         pass
 
+    def addRootItem(self, entity, treeWidget):
+        """adds the given stalker entity to the given treeWidget
+
+        :returns: QTreeWidgetItem
+        """
+        item = QtGui.QTreeWidgetItem(treeWidget)
+        item.setText(0, entity.name)
+        item.setText(1, entity.entity_type)
+        my_font = item.font(0)
+        my_font.setBold(True)
+        item.setFont(0, my_font)
+        item.stalker_entity = entity
+        return item
+
+    def addItem(self, entity, treeWidget):
+        """adds the given stalker entity to the given treeWidget
+        """
+        # create QTreeWidgetItem
+        entity_item = QtGui.QTreeWidgetItem()
+        entity_item.setText(0, entity.name)
+        entity_item.setText(1, entity.__class__.__name__)
+        entity_item.stalker_entity = entity
+
+        # check if it has a parent
+        logger.debug('adding entity: %s' % entity)
+        if entity.parent:
+            # add it under the parent
+            parent = entity.parent
+            logger.debug('has a parent : %s' % parent)
+        else:
+            # add it under the project
+            parent = entity.project
+            logger.debug('has no parent : %s' % entity)
+
+        # find the item of the project
+        # items = treeWidget.findItems(parent.name, QtCore.Qt.MatchExactly, 0)
+        
+        items = []
+        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        while iterator.value():
+            item = iterator.value()
+            name = item.text(0)
+            if name == parent.name:
+                items.append(item)
+            iterator += 1
+
+        logger.debug('items matching name : %s' % items)
+        for item in items:
+            if item.stalker_entity == parent:
+                item.addChild(entity_item)
+                
+                # make parent bold
+                my_font = item.font(0)
+                my_font.setBold(True)
+                item.setFont(0, my_font)
+
+        return entity_item
+
     def fill_tasks_treeWidget(self):
         """fills the tasks_treeWidget
         """
@@ -615,10 +693,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # now get the tasks of the current user
         logged_in_user = self.get_logged_in_user()
+        
+        tasks = []
+        if self.my_tasks_only_checkBox.isChecked():
+            tasks = logged_in_user.tasks
+        else:
+            # show all tasks from the user projects
+            for project in logged_in_user.projects:
+                tasks.extend(project.tasks)
 
-        tasks = logged_in_user.tasks
-
-        logger.debug(tasks)
+        logger.debug('tasks : %s' % tasks)
 
         # now first fill the projects
         projects = []
@@ -626,32 +710,34 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if task.project not in projects:
                 projects.append(task.project)
 
-        # add the projects
-        root_items = []
+        # add the projects first
         for project in projects:
-            item = QtGui.QTreeWidgetItem(self.tasks_treeWidget)
-            item.setText(0, project.name)
-            item.setText(1, project.__class__.__name__)
-            item.stalker_entity = project
-            root_items.append(item)
+            self.addRootItem(project, self.tasks_treeWidget)
 
         # now add the tasks
+        already_added_entities = []
         for task in tasks:
-            # create the item
-            item = QtGui.QTreeWidgetItem()
-            item.setText(0, task.name)
-            item.setText(1, task.__class__.__name__)
-            item.stalker_entity = task
+            logger.debug('adding task: %s' % task)
+            logger.debug('task.parents: %s' % task.parents)
 
-            # now append it to the related project
-            for project_item in root_items:
-                if project_item.stalker_entity is task.project:
-                    # append the item to that project
-                    project_item.addChild(item)
-                    break
+            # add all the parents of the task
+            for parent in task.parents:
+                if parent not in already_added_entities:
+                    logger.debug('adding parent : %s' % parent)
+                    self.addItem(parent, self.tasks_treeWidget)
+                    already_added_entities.append(parent)
 
-        # congratulate your self
+            # and then the task itself
+            self.addItem(task, self.tasks_treeWidget)
+            already_added_entities.append(task)
+
+        # all done, congratulate your self :)
         logger.debug('all items are successfully added to tasks_treeWidget')
+
+    def tasks_treeWidget_auto_fit_column(self):
+        """fits columns to content
+        """
+        self.tasks_treeWidget.resizeColumnToContents(0)
 
     def tasks_treeWidget_changed(self):
         """runs when the tasks_treeWidget item is changed
@@ -672,6 +758,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if entity:
             # clear the takes_listWidget and fill with new data
             self.takes_listWidget.clear()
+            
+            if isinstance(entity, Project):
+                return
 
             takes = map(
                 lambda x: x[0],
@@ -681,6 +770,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             )
 
         logger.debug("len(takes) from db: %s" % len(takes))
+        
+        if defaults.version_take_name not in takes:
+            takes.append(defaults.version_take_name)
 
         if len(takes) == 0:
             # append the default take
@@ -740,6 +832,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # fill the tasks
         self.fill_tasks_treeWidget()
+        self.tasks_treeWidget.setAutoExpandDelay(0)
 
         # add "Main" by default to the takes_listWidget
         self.takes_listWidget.addItem(defaults.version_take_name)
@@ -858,14 +951,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update the previous_versions_tableWidget
         self.update_previous_versions_tableWidget()
 
-        # update the statuses_comboBox
-        task = self.get_task()
-
         # take name
         take_name = ""
         item = self.takes_listWidget.currentItem()
         if item:
             take_name = item.text()
+
+        # update the statuses_comboBox
+        task = self.get_task()
+        if not task:
+            return
 
         # query the Versions of this type and take
         query = Version.query \
@@ -898,9 +993,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def update_previous_versions_tableWidget(self):
         """updates the previous_versions_tableWidget
         """
-        task = self.get_task()
-
         self.clear_previous_versions_tableWidget()
+
+        task = self.get_task()
+        if not task:
+            return
 
         # if version_type_name != '':
         #     logger.debug("version_type_name: %s" % version_type_name)
@@ -944,7 +1041,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         def set_font(item):
             """sets the font for the given item
-            
+
             :param item: the a QTableWidgetItem
             """
             my_font = item.font()
@@ -975,7 +1072,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # ------------------------------------
             # user.name
-            item = QtGui.QTableWidgetItem(vers.created_by.name)
+            created_by = ''
+            if vers.created_by:
+                created_by = vers.created_by.name
+            item = QtGui.QTableWidgetItem(created_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -1132,7 +1232,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         current_item = self.tasks_treeWidget.currentItem()
 
         if current_item:
-            task = current_item.stalker_entity
+            if isinstance(current_item.stalker_entity, Task):
+                task = current_item.stalker_entity
 
         logger.debug('task: %s' % task)
         return task

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Thu May 30 16:18:22 2013
+# Created: Sat Jun  8 18:51:01 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -62,7 +62,12 @@ class Ui_Dialog(object):
         self.verticalLayout_2 = QtGui.QVBoxLayout(self.tasks_groupBox)
         self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.my_tasks_only_checkBox = QtGui.QCheckBox(self.tasks_groupBox)
+        self.my_tasks_only_checkBox.setChecked(True)
+        self.my_tasks_only_checkBox.setObjectName("my_tasks_only_checkBox")
+        self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
         self.tasks_treeWidget = QtGui.QTreeWidget(self.tasks_groupBox)
+        self.tasks_treeWidget.setAlternatingRowColors(True)
         self.tasks_treeWidget.setObjectName("tasks_treeWidget")
         self.tasks_treeWidget.headerItem().setText(0, "1")
         self.verticalLayout_2.addWidget(self.tasks_treeWidget)
@@ -265,6 +270,7 @@ class Ui_Dialog(object):
         self.logged_in_user_label.setText(QtGui.QApplication.translate("Dialog", "TextLabel", None, QtGui.QApplication.UnicodeUTF8))
         self.logout_pushButton.setText(QtGui.QApplication.translate("Dialog", "Logout", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
+        self.my_tasks_only_checkBox.setText(QtGui.QApplication.translate("Dialog", "Show my tasks only", None, QtGui.QApplication.UnicodeUTF8))
         self.upload_thumbnail_pushButton.setText(QtGui.QApplication.translate("Dialog", "Upload Thumbnail...", None, QtGui.QApplication.UnicodeUTF8))
         self.new_version_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "New Version", None, QtGui.QApplication.UnicodeUTF8))
         self.takes_label.setText(QtGui.QApplication.translate("Dialog", "Take", None, QtGui.QApplication.UnicodeUTF8))
