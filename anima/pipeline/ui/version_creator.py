@@ -603,9 +603,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_tableWidget()
             elif choice == 'Copy Path':
-                # just set the clipboard to the version.full_path
+                # just set the clipboard to the version.absolute_full_path
                 clipboard = QtGui.QApplication.clipboard()
-                clipboard.setText(os.path.normpath(version.full_path))
+                clipboard.setText(os.path.normpath(version.absolute_full_path))
             elif choice == 'Copy Output Path':
                 # just set the clipboard to the version.output_path
                 clipboard = QtGui.QApplication.clipboard()
@@ -1383,15 +1383,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             logger.debug('No environment given, just generating paths')
 
-            # just set the clipboard to the new_version.full_path
+            # just set the clipboard to the new_version.absolute_full_path
             clipboard = QtGui.QApplication.clipboard()
-            v_path = os.path.normpath(new_version.full_path)
+            v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
 
             # create the path
             try:
                 logger.debug('creating path for new version')
-                os.makedirs(new_version.path)
+                os.makedirs(new_version.absolute_path)
             except OSError: # path already exists
                 pass
 
