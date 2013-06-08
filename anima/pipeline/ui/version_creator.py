@@ -13,6 +13,7 @@ from stalker.db import DBSession
 from stalker.models.auth import LocalSession
 from stalker.models.env import EnvironmentBase
 import transaction
+from zope.sqlalchemy import ZopeTransactionExtension
 
 import anima
 from anima.pipeline import utils
@@ -48,8 +49,8 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       function. It also passes the created app instance to this executor.
     
     """
-    DBSession.remove()
-    # DBSession.configure(extension=None)
+    #DBSession.remove()
+    DBSession.configure(extension=ZopeTransactionExtension(keep_session=True))
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
 
