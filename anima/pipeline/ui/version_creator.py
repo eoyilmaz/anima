@@ -1365,7 +1365,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             new_version = self.get_new_version()
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
-            QtGui.QMessageBox.critical(self, "Error", e)
+            QtGui.QMessageBox.critical(self, "Error", str(e))
             return None
 
         # call the environments save_as method
