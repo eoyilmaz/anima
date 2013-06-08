@@ -241,12 +241,15 @@ class Fusion(EnvironmentBase):
         
         uses Fusions own python binding
         """
-
         # set the extension to '.comp'
+        from stalker import Version
+        assert isinstance(version, Version)
+        # its a new version please update the paths
+        version.update_paths()
         version.extension = '.comp'
 
         # set project_directory
-        self.project_directory = os.path.dirname(version.path)
+        self.project_directory = os.path.dirname(version.absolute_path)
 
         # create the main write node
         self.create_main_saver_node(version)
@@ -256,12 +259,12 @@ class Fusion(EnvironmentBase):
 
         # create the path before saving
         try:
-            os.makedirs(version.path)
+            os.makedirs(version.absolute_path)
         except OSError:
             # path already exists OSError
             pass
 
-        version_full_path = os.path.normpath(version.full_path)
+        version_full_path = os.path.normpath(version.absolute_full_path)
 
         self.comp.Lock()
         self.comp.Save(version_full_path.encode())
@@ -272,7 +275,9 @@ class Fusion(EnvironmentBase):
     def export_as(self, version):
         """the export action for nuke environment
         """
-        # set the extension to '.nk'
+        # its a new version please update the paths
+        version.update_paths()
+        # set the extension to '.comp'
         version.extension = '.comp'
         #        nuke.nodeCopy(version.fullPath)
         return True
@@ -280,7 +285,7 @@ class Fusion(EnvironmentBase):
     def open_(self, version, force=False):
         """the open action for nuke environment
         """
-        version_full_path = os.path.normpath(version.full_path)
+        version_full_path = os.path.normpath(version.absolute_full_path)
 
         # delete all the comps and open new one
         #comps = self.fusion.GetCompList().values()
@@ -290,7 +295,7 @@ class Fusion(EnvironmentBase):
         self.fusion.LoadComp(version_full_path.encode())
 
         # set the project_directory
-        #self.project_directory = os.path.dirname(version.path)
+        #self.project_directory = os.path.dirname(version.absolute_path)
 
         # TODO: file paths in different OS'es should be replaced with the current one
         # Check if the file paths are starting with a string matching one of the
@@ -312,7 +317,7 @@ class Fusion(EnvironmentBase):
     def import_(self, version):
         """the import action for nuke environment
         """
-        #nuke.nodePaste(version.full_path)
+        #nuke.nodePaste(version.absolute_full_path)
         return True
 
     def get_current_version(self):
@@ -422,6 +427,8 @@ class Fusion(EnvironmentBase):
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
+        from stalker import Version
+        assert isinstance(version, Version)
 
         # list all the save nodes in the current file
         main_saver_node = self.get_main_saver_node()
@@ -440,29 +447,26 @@ class Fusion(EnvironmentBase):
         # set the output path
         output_file_name = ""
 
-        if version.type.type_for == "Shot":
-            output_file_name = version.project.code + "_"
-            output_file_name += version.version_of.sequence.code + "_"
-
-        output_file_name += \
-            version.base_name + "_" + \
-            version.take_name + "_" + \
-            version.type.code + "_" + \
-            "Output_" + \
-            "v%03d" % version.version_number + "_" + \
-            version.created_by.initials + ".001.exr"
+        task = version.version_of
+        project = task.project
+        output_file_name = '%s_%s_%s_Output_v%03d.001.exr' % (
+            task.entity_type, task.id, version.take_name,
+            version.version_number)
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
         output_file_full_path = os.path.join(
-            version.output_path,
+            version.absolute_path,
+            'Outputs',
+            'v%03d' % version.version_number,
+            'exr',
             output_file_name
         ).replace('\\', '/')
 
         # set the path
         main_saver_node.Clip[0] = 'Comp:' + os.path.normpath(
             utils.relpath(
-                os.path.dirname(version.full_path),
+                os.path.dirname(version.absolute_full_path),
                 output_file_full_path,
                 "/",
                 ".."
@@ -543,7 +547,7 @@ class Fusion(EnvironmentBase):
         #if not project_dir:
         #    # set the map for the project dir
         #    if self.version:
-        #        project_dir = os.path.dirname(self.version.path)
+        #        project_dir = os.path.dirname(self.version.absolute_path)
         #        self.project_directory = project_dir
 
         return project_dir
