@@ -563,6 +563,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     self.update_previous_versions_tableWidget()
                     return
             elif choice == 'Browse Output Path...':
+                # TODO: there is no version.output_path/ just list outputs
                 path = os.path.expandvars(version.output_path)
                 try:
                     utils.open_browser_in_location(path)
@@ -607,6 +608,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 clipboard = QtGui.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(version.absolute_full_path))
             elif choice == 'Copy Output Path':
+                # TODO: there is no version.output_path, just list outputs of this version
                 # just set the clipboard to the version.output_path
                 clipboard = QtGui.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(version.output_path))
@@ -1125,9 +1127,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # get the file size
             #file_size_format = "%.2f MB"
             file_size = -1
-            if os.path.exists(vers.full_path):
+            if os.path.exists(vers.absolute_full_path):
                 file_size = float(
-                    os.path.getsize(vers.full_path)) / 1024 / 1024
+                    os.path.getsize(vers.absolute_full_path)) / 1024 / 1024
 
             item = QtGui.QTableWidgetItem(
                 defaults.file_size_format % file_size)
@@ -1145,9 +1147,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # get the file date
             file_date = datetime.datetime.today()
-            if os.path.exists(vers.full_path):
+            if os.path.exists(vers.absolute_full_path):
                 file_date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(vers.full_path)
+                    os.path.getmtime(vers.absolute_full_path)
                 )
             item = QtGui.QTableWidgetItem(
                 file_date.strftime(defaults.date_time_format)
