@@ -676,8 +676,30 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 my_font = item.font(0)
                 my_font.setBold(True)
                 item.setFont(0, my_font)
+                break
 
         return entity_item
+
+    def find_entity_item_in_tree_widget(self, entity, treeWidget):
+        """finds the item related to the stalker entity in the given
+        QtTreeWidget
+        """
+        items = []
+        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        while iterator.value():
+            item = iterator.value()
+            name = item.text(0)
+            if name == entity.name:
+                items.append(item)
+            iterator += 1
+
+        logger.debug('items matching name : %s' % items)
+        for item in items:
+            if item.stalker_entity == entity:
+                return item
+
+        return None
+
 
     def fill_tasks_treeWidget(self):
         """fills the tasks_treeWidget
@@ -904,31 +926,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("restoring ui with the given version: %s", version)
 
         # quit if version is None
-        if version is None or not version.project.active:
-            return
-
-        # set the project
-        index = self.projects_comboBox.findText(version.project.name)
-
-        if index != -1:
-            self.projects_comboBox.setCurrentIndex(index)
-        else:
+        if version is None or not version.version_of.project.active:
             return
 
         # set the task
         task = version.version_of
 
-        # set the tab
-        # set the asset name
-        items = self.tasks_treeWidget.findItems(
-            task.name,
-            QtCore.Qt.MatchExactly,
-            0
-        )
-        item = None
-        if items:
-            item = items[0]
-        else:
+        item = self.find_entity_item_in_tree_widget(task, self.tasks_treeWidget)
+        if not item:
             return
 
         logger.debug('*******************************')
