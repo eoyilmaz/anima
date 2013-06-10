@@ -10,8 +10,9 @@ import os
 import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
-from stalker.models.auth import LocalSession
-from stalker.models.env import EnvironmentBase
+from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
+                     Task, LocalSession, EnvironmentBase)
+
 import transaction
 from zope.sqlalchemy import ZopeTransactionExtension
 
@@ -22,9 +23,6 @@ from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
-from stalker import db, defaults, Version, StatusList, Status, Note, Project, Task
-
 
 if IS_PYSIDE:
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
@@ -1242,6 +1240,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if current_item:
             if isinstance(current_item.stalker_entity, Task):
                 task = current_item.stalker_entity
+                session = DBSession()
+                session.add(task)
 
         logger.debug('task: %s' % task)
         return task
