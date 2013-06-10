@@ -790,7 +790,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             takes = map(
                 lambda x: x[0],
                 DBSession.query(distinct(Version.take_name))
-                .filter(Version.version_of == entity)
+                .filter(Version.task == entity)
                 .all()
             )
 
@@ -929,11 +929,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("restoring ui with the given version: %s", version)
 
         # quit if version is None
-        if version is None or not version.version_of.project.active:
+        if version is None or not version.task.project.active:
             return
 
         # set the task
-        task = version.version_of
+        task = version.task
 
         item = self.find_entity_item_in_tree_widget(task, self.tasks_treeWidget)
         if not item:
@@ -972,7 +972,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # query the Versions of this type and take
         query = Version.query \
-            .filter(Version.version_of == task) \
+            .filter(Version.task == task) \
             .filter(Version.take_name == take_name)
 
         version = query.order_by(Version.version_number.desc()).first()
@@ -1027,7 +1027,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # query the Versions of this type and take
         query = Version.query \
-            .filter(Version.version_of == task) \
+            .filter(Version.task == task) \
             .filter(Version.take_name == take_name)
 
         # get the published only
@@ -1321,7 +1321,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         status = Status.query.filter_by(name=status_name).first()
 
         version = Version(
-            version_of=task,
+            task=task,
             created_by=user,
             take_name=take_name,
             notes=notes,

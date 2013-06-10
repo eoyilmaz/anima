@@ -447,7 +447,7 @@ class Fusion(EnvironmentBase):
         # set the output path
         output_file_name = ""
 
-        task = version.version_of
+        task = version.task
         project = task.project
         output_file_name = '%s_%s_%s_Output_v%03d.001.exr' % (
             task.entity_type, task.id, version.take_name,
@@ -574,7 +574,7 @@ class Fusion(EnvironmentBase):
 #        """
 #        
 #        version = self.get_current_version()
-#        shot = version.version_of
+#        shot = version.task
 #        
 #        # create a jinja2 template
 #        template = jinja2.Template("""Show: {{shot.project.name}}

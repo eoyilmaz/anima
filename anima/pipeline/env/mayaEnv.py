@@ -120,8 +120,8 @@ class Maya(EnvironmentBase):
             # set the render range
             if version.type.type_for == 'Shot':
                 self.set_frame_range(
-                    version.version_of.start_frame,
-                    version.version_of.end_frame
+                    version.task.start_frame,
+                    version.task.end_frame
                 )
                 
         # set the render file name and version
@@ -431,7 +431,7 @@ class Maya(EnvironmentBase):
                                 version.project.code + "_"
         
         if version.type.type_for == "Shot":
-            render_file_full_path += version.version_of.sequence.code + "_"
+            render_file_full_path += version.task.sequence.code + "_"
         
         render_file_full_path += version.base_name + "_" +\
                                  version.take_name + \
@@ -521,9 +521,9 @@ class Maya(EnvironmentBase):
         )
         
         # use project name and sequence name if available
-        playblast_filename = version.version_of.project.code
+        playblast_filename = version.task.project.code
         if version.type.type_for=="Shot":
-            playblast_filename += "_" + version.version_of.sequence.code
+            playblast_filename += "_" + version.task.sequence.code
         playblast_filename += "_" + os.path.splitext(version.filename)[0]
         
         playblast_full_path = os.path.join(

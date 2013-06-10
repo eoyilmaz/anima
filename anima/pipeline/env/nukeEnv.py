@@ -67,8 +67,8 @@ class Nuke(EnvironmentBase):
         # set frame range
         if version.type.type_for == 'Shot':
             self.set_frame_range(
-                version.version_of.start_frame,
-                version.version_of.end_frame
+                version.task.start_frame,
+                version.task.end_frame
             )
         
         nuke.scriptSaveAs(version.full_path)
@@ -231,7 +231,7 @@ class Nuke(EnvironmentBase):
             
             if version.type.type_for == "Shot":
                 output_file_name = version.project.code + "_"
-                #output_file_name += version.version_of.sequence.code + "_"
+                #output_file_name += version.task.sequence.code + "_"
             
             # get the output format
             output_format_enum = \
@@ -355,7 +355,7 @@ class Nuke(EnvironmentBase):
         """
         
         version = self.get_current_version()
-        shot = version.version_of
+        shot = version.task
         
         # create a jinja2 template
         template = jinja2.Template("""Show: {{shot.project.name}}

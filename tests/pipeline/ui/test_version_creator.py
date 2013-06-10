@@ -1107,41 +1107,41 @@ class VersionCreatorTester(unittest2.TestCase):
         # task 1
 
         # default (Main)
-        v1 = Version(version_of=t1, full_path='/some/path')
+        v1 = Version(task=t1, full_path='/some/path')
         DBSession.add(v1)
         DBSession.commit()
 
-        v2 = Version(version_of=t1, full_path='/some/path')
+        v2 = Version(task=t1, full_path='/some/path')
         DBSession.add(v2)
         DBSession.commit()
 
-        v3 = Version(version_of=t1, full_path='/some/path')
+        v3 = Version(task=t1, full_path='/some/path')
         DBSession.add(v3)
         DBSession.commit()
 
         # Take1
-        v4 = Version(version_of=t1, take_name='Take1', full_path='/some/path')
+        v4 = Version(task=t1, take_name='Take1', full_path='/some/path')
         DBSession.add(v4)
         DBSession.commit()
 
-        v5 = Version(version_of=t1, take_name='Take1', full_path='/some/path')
+        v5 = Version(task=t1, take_name='Take1', full_path='/some/path')
         DBSession.add(v5)
         DBSession.commit()
 
-        v6 = Version(version_of=t1, take_name='Take1', full_path='/some/path')
+        v6 = Version(task=t1, take_name='Take1', full_path='/some/path')
         DBSession.add(v6)
         DBSession.commit()
 
         # Take2
-        v7 = Version(version_of=t1, take_name='Take2', full_path='/some/path')
+        v7 = Version(task=t1, take_name='Take2', full_path='/some/path')
         DBSession.add(v7)
         DBSession.commit()
 
-        v8 = Version(version_of=t1, take_name='Take2', full_path='/some/path')
+        v8 = Version(task=t1, take_name='Take2', full_path='/some/path')
         DBSession.add(v8)
         DBSession.commit()
 
-        v9 = Version(version_of=t1, take_name='Take2', full_path='/some/path')
+        v9 = Version(task=t1, take_name='Take2', full_path='/some/path')
         DBSession.add(v9)
         DBSession.commit()
 
@@ -1393,7 +1393,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # default (Main)
         v1 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1401,7 +1401,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v2 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1409,7 +1409,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v3 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1418,7 +1418,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # Take1
         v4 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1427,7 +1427,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v5 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1436,7 +1436,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v6 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1446,7 +1446,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # Take2
         v7 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
@@ -1455,7 +1455,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v8 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
@@ -1464,7 +1464,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v9 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
@@ -1665,7 +1665,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # default (Main)
         v1 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1673,7 +1673,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v2 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1681,7 +1681,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v3 = Version(
-            version_of=t1,
+            task=t1,
             full_path='/some/path',
             created_by=self.admin
         )
@@ -1690,7 +1690,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # Take1
         v4 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1699,7 +1699,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v5 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1708,7 +1708,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v6 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take1',
             full_path='/some/path',
             created_by=self.admin
@@ -1718,7 +1718,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # Take2
         v7 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
@@ -1727,7 +1727,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v8 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
@@ -1736,7 +1736,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         v9 = Version(
-            version_of=t1,
+            task=t1,
             take_name='Take2',
             full_path='/some/path',
             created_by=self.admin
