@@ -10,6 +10,8 @@ Anima Tools Changes
   * Update: login_dialog is now working.
   * New: created a new UI called version_creator for creating new Versions from
     within environments
+  * New: A new field is added to the **version_creator** UI which lets the user
+    to restore the previous version from the given path.
 
 0.1.0.a1
 ========

@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1312</width>
-    <height>689</height>
+    <width>1419</width>
+    <height>769</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -93,7 +93,7 @@
        </widget>
       </item>
       <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="0,0,0,0,1">
+       <layout class="QHBoxLayout" name="horizontalLayout_14" stretch="1,0,0,0,1">
         <item>
          <widget class="QGroupBox" name="tasks_groupBox">
           <property name="title">
@@ -124,6 +124,20 @@
               </property>
              </column>
             </widget>
+           </item>
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>&lt;b&gt;Guess From Path:&lt;/b&gt;</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="guess_from_path_lineEdit"/>
+             </item>
+            </layout>
            </item>
            <item>
             <widget class="QGraphicsView" name="thumbnail_graphicsView">

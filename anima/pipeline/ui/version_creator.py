@@ -176,64 +176,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.logout
         )
 
-        # projects_comboBox
-        # QtCore.QObject.connect(
-        #     self.projects_comboBox,
-        #     QtCore.SIGNAL("currentIndexChanged(int)"),
-        #     self.project_changed
-        # )
-
-        # tabWidget
-        # QtCore.QObject.connect(
-        #     self.tabWidget,
-        #     QtCore.SIGNAL("currentChanged(int)"),
-        #     self.tabWidget_changed
-        # )
-
-        # sequences_comboBox
-        # QtCore.QObject.connect(
-        #     self.sequences_comboBox,
-        #     QtCore.SIGNAL("currentIndexChanged(int)"),
-        #     self.sequences_comboBox_changed
-        # )
-
-        # assets_tableWidget
-        # QtCore.QObject.connect(
-        #     self.assets_tableWidget,
-        #     QtCore.SIGNAL(
-        #         'currentItemChanged(QTableWidgetItem*,QTableWidgetItem*)'
-        #     ),
-        #     self.asset_changed
-        # )
-
-        # shots_listWidget
-        # QtCore.QObject.connect(
-        #     self.shots_listWidget,
-        #     QtCore.SIGNAL("currentTextChanged(QString)"),
-        #     self.shot_changed
-        # )
-
-        #        # asset_description_edit_pushButton
-        #        QtCore.QObject.connect(
-        #            self.asset_description_edit_pushButton,
-        #            QtCore.SIGNAL("clicked()"),
-        #            self.asset_description_edit_pushButton_clicked
-        #        )
-        #        
-        #        # shot_description_edit_pushButton
-        #        QtCore.QObject.connect(
-        #            self.shot_description_edit_pushButton,
-        #            QtCore.SIGNAL("clicked()"),
-        #            self.shot_description_edit_pushButton_clicked
-        #        )
-
-        # types_comboBox
-        # QtCore.QObject.connect(
-        #     self.version_types_listWidget,
-        #     QtCore.SIGNAL("currentTextChanged(QString)"),
-        #     self.version_types_listWidget_changed
-        # )
-
         # my_tasks_only_checkBox
         QtCore.QObject.connect(
             self.my_tasks_only_checkBox,
@@ -267,6 +209,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.takes_listWidget,
             QtCore.SIGNAL("currentTextChanged(QString)"),
             self.takes_listWidget_changed
+        )
+
+        # guess_from_path_lineEdit
+        QtCore.QObject.connect(
+            self.guess_from_path_lineEdit,
+            QtCore.SIGNAL('editingFinished()'),
+            self.guess_from_path_lineEdit_changed
         )
 
         # add_type_toolButton
@@ -432,53 +381,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         lsession = LocalSession()
         lsession.delete()
-        # logged_in_user = self.get_logged_in_user()
-        # self.fill_logged_in_user()
         self.close()
-
-    # def _show_assets_tableWidget_context_menu(self, position):
-    #     """the custom context menu for the assets_tableWidget
-    #     """
-    # 
-    #     if self.mode:
-    #         # do not show in Read-Only mode
-    #         return
-    # 
-    #     # convert the position to global screen position
-    #     global_position = self.assets_tableWidget.mapToGlobal(position)
-    # 
-    #     # create the menu
-    #     menu = QtGui.QMenu()
-    #     menu.addAction("Rename Asset")
-    # 
-    #     selected_item = menu.exec_(global_position)
-    # 
-    #     if selected_item:
-    #         # something is chosen
-    #         if selected_item.text() == "Rename Asset":
-    # 
-    #             asset = self.get_task()
-    # 
-    #             # show a dialog
-    #             self.current_dialog = QtGui.QInputDialog(self)
-    #             new_asset_name, ok = self.current_dialog.getText(
-    #                 self,
-    #                 "Rename Asset",
-    #                 "New Asset Name",
-    #                 QtGui.QLineEdit.Normal,
-    #                 asset.name
-    #             )
-    # 
-    #             if ok:
-    #                 # if it is not empty
-    #                 if new_asset_name != "":
-    #                     # get the asset from the list
-    #                     asset.name = new_asset_name
-    #                     asset.code = new_asset_name
-    #                     asset.save()
-    # 
-    #                     # update assets_tableWidget
-    #                     self.tabWidget_changed(0)
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
         """the custom context menu for the previous_versions_tableWidget
@@ -496,7 +399,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # create the menu
         menu = QtGui.QMenu()
-
+        
+        change_status_menu = menu.addMenu('Change Status')
+        
         #if not version.is_published:
         #    previous_versions_tableWidget_menu.addAction("Publish")
 
@@ -519,21 +424,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     if version.status == status:
                         action.setChecked(True)
 
-                    menu.addAction(action)
+                    change_status_menu.addAction(action)
 
             # add separator
             menu.addSeparator()
 
         # add Browse Outputs
-        menu.addAction("Browse Output Path...")
+        menu.addAction("Browse Path...")
+        menu.addAction("Copy Path")
         menu.addSeparator()
 
         if not self.mode:
             menu.addAction("Change Note...")
             menu.addSeparator()
-
-        menu.addAction("Copy Path")
-        menu.addAction("Copy Output Path")
 
         selected_item = menu.exec_(global_position)
 
@@ -561,9 +464,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
-            elif choice == 'Browse Output Path...':
-                # TODO: there is no version.output_path/ just list outputs
-                path = os.path.expandvars(version.output_path)
+            elif choice == 'Browse Path...':
+                path = os.path.expandvars(version.absolute_path)
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
@@ -577,12 +479,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     # change the note
                     self.current_dialog = QtGui.QInputDialog(self)
 
+                    note = ''
+                    if version.notes:
+                        note = version.notes[-1].content
+
                     new_note, ok = self.current_dialog.getText(
                         self,
                         "Enter the new note",
                         "Please enter the new note:",
                         QtGui.QLineEdit.Normal,
-                        version.note
+                        note
                     )
 
                     if ok:
@@ -606,11 +512,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtGui.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(version.absolute_full_path))
-            elif choice == 'Copy Output Path':
-                # TODO: there is no version.output_path, just list outputs of this version
-                # just set the clipboard to the version.output_path
-                clipboard = QtGui.QApplication.clipboard()
-                clipboard.setText(os.path.normpath(version.output_path))
 
     def rename_asset(self, asset, new_name):
         """Renames the asset with the given new name
@@ -773,8 +674,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         entity = current_item.stalker_entity
         if not entity:
             return
-
-        # TODO: There is a problem if user selects a project
 
         # get the versions of the entity
         takes = []
@@ -950,6 +849,22 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.Qt.MatchExactly
         )
         self.takes_listWidget.setCurrentItem(items[0])
+
+        # select the version in the previous version list
+        index = -1
+        for i, prev_version in enumerate(self.previous_versions_tableWidget.versions):
+            prev_version = self.previous_versions_tableWidget.versions[i]
+            if prev_version == version:
+                index = i
+                break
+
+        logger.debug('current index: %s' % index)
+
+        # select the row
+        if index != -1:
+            item = self.previous_versions_tableWidget.item(index, 0)
+            logger.debug('item : %s' % item)
+            self.previous_versions_tableWidget.setCurrentItem(item)
 
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
@@ -1165,7 +1080,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # ------------------------------------
             # note
-            note_content = '' # TODO: There are multiple notes for one version
+            note_content = ''
             if vers.notes:
                 note_content = vers.notes[-1].content
             item = QtGui.QTableWidgetItem(note_content)
@@ -1182,53 +1097,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.previous_versions_tableWidget.resizeRowsToContents()
         self.previous_versions_tableWidget.resizeColumnsToContents()
         self.previous_versions_tableWidget.resizeRowsToContents()
-
-    # def create_asset_pushButton_clicked(self):
-    #     """displays an input dialog and creates a new asset if everything is ok
-    #     """
-    # 
-    #     dialog = create_asset_dialog.create_asset_dialog(parent=self)
-    #     dialog.exec_()
-    # 
-    #     ok = dialog.ok
-    #     asset_name = dialog.asset_name_lineEdit.text()
-    #     asset_type_name = dialog.asset_types_comboBox.currentText()
-    # 
-    #     logger.debug('new asset_name: %s' % asset_name)
-    #     logger.debug('new asset_type_name: %s' % asset_type_name)
-    # 
-    #     if not ok:
-    #         return
-    #     elif asset_name == "" or asset_type_name == "":
-    #         error_message = "The given Asset.name or Asset.type is " \
-    #                         "empty!!!\n\nNot creating any new asset!"
-    # 
-    #         QtGui.QMessageBox.critical(self, 'Error', error_message)
-    #         return
-    # 
-    #     proj = self.get_current_project()
-    # 
-    #     try:
-    #         new_asset = Asset(proj, asset_name, type=asset_type_name)
-    #         new_asset.save()
-    # 
-    #         # recreate the project structure
-    #         proj.create()
-    # 
-    #         # update the assets by calling project_changed
-    #         self.project_changed()
-    # 
-    #     except (TypeError, ValueError, IntegrityError) as e:
-    #         error_message = str(e)
-    #         if isinstance(e, IntegrityError):
-    #             # the transaction needs to be rollback
-    #             db.session.rollback()
-    #             error_message = "Asset.name or Asset.code is not unique"
-    # 
-    #         # pop up an Message Dialog to give the error message
-    #         QtGui.QMessageBox.critical(self, "Error", error_message)
-    # 
-    #         return
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
@@ -1574,4 +1442,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # update the thumbnail
         self.update_thumbnail()
-    
+
+    def guess_from_path_lineEdit_changed(self):
+        """runs when guess from path is edited
+        """
+        full_path = self.guess_from_path_lineEdit.text()
+        env = EnvironmentBase()
+        version = env.get_version_from_full_path(full_path)
+        self.restore_ui(version)

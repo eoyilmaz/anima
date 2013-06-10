@@ -6,6 +6,7 @@
 import sys
 import shutil
 import tempfile
+import os
 import unittest2
 import logging
 
@@ -30,7 +31,7 @@ elif IS_PYQT4:
     from PySide.QtCore import Qt
 
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
-                     StatusList, Task, Version)
+                     StatusList, Task, Version, FilenameTemplate)
 from stalker.db.session import DBSession
 from stalker.models.env import EnvironmentBase
 
@@ -128,6 +129,8 @@ class VersionCreatorTester(unittest2.TestCase):
         """
         # -----------------------------------------------------------------
         # start of the setUp
+        
+        self.repo_path = tempfile.mkdtemp()
 
         defaults.local_storage_path = tempfile.mktemp()
 
@@ -1785,6 +1788,238 @@ class VersionCreatorTester(unittest2.TestCase):
         # is_published should be True
         self.assertTrue(vers_new.is_published)
 
-    # def test_save_will_not_allow_if_the_user_is_not_one_of_the_resource(self):
-    #     """testing if the UI will not allow to create a new version if the
-    #     """
+    def test_get_new_version_with_publish_checkBox_is_checked_creates_published_Version(
+            self):
+        """testing if checking publish_checkbox will create a published Version
+        instance
+        """
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path=os.path.join(self.repo_path, 'T;/TestRepo/'),
+            linux_path=os.path.join(self.repo_path, '/mnt/T/TestRepo/'),
+            osx_path=os.path.join(self.repo_path, '/Volumes/T/TestRepo/')
+        )
+
+        ft = FilenameTemplate(
+            name='Task Filename Template',
+            target_entity_type='Task',
+            path='{{project.code}}/{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}/{%- endfor -%}',
+            filename='{{task.entity_type}}_{{task.id}}_{{version.take_name}}_v{{"%03d"|format(version.version_number)}}{{extension}}',
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[ft],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # no tasks for project 3
+
+        # versions
+        version_status_list = StatusList(
+            name='Verson Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Version
+        )
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
+                           version_status_list])
+        DBSession.commit()
+        
+        # task 1
+
+        # default (Main)
+        v1 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v1)
+        DBSession.commit()
+        v1.update_paths()
+
+        v2 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v2)
+        DBSession.commit()
+        v2.update_paths()
+
+        v3 = Version(
+            task=t1,
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v3)
+        DBSession.commit()
+        v3.update_paths()
+
+        # Take1
+        v4 = Version(
+            task=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v4)
+        DBSession.commit()
+        v4.update_paths()
+
+        v5 = Version(
+            task=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v5)
+        DBSession.commit()
+        v5.update_paths()
+
+        v6 = Version(
+            task=t1,
+            take_name='Take1',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v6)
+        DBSession.commit()
+        v6.update_paths()
+
+        # Take2
+        v7 = Version(
+            task=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v7)
+        DBSession.commit()
+        v7.update_paths()
+
+        v8 = Version(
+            task=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v8)
+        DBSession.commit()
+        v8.update_paths()
+
+        v9 = Version(
+            task=t1,
+            take_name='Take2',
+            full_path='/some/path',
+            created_by=self.admin
+        )
+        DBSession.add(v9)
+        DBSession.commit()
+        v9.update_paths()
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
+
+        dialog.guess_from_path_lineEdit.setText(v9.absolute_full_path)
+        dialog.guess_from_path_lineEdit_changed()
+
+        # now check if the version is restored
+        v = dialog.get_previous_version()
+        self.assertEqual(v, v9)

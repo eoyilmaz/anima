@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Sat Jun  8 18:51:01 2013
+# Created: Mon Jun 10 15:21:26 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(1312, 689)
+        Dialog.resize(1419, 769)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
@@ -84,6 +84,15 @@ class Ui_Dialog(object):
         self.tasks_treeWidget.setObjectName(_fromUtf8("tasks_treeWidget"))
         self.tasks_treeWidget.headerItem().setText(0, _fromUtf8("1"))
         self.verticalLayout_2.addWidget(self.tasks_treeWidget)
+        self.horizontalLayout_3 = QtGui.QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
+        self.label = QtGui.QLabel(self.tasks_groupBox)
+        self.label.setObjectName(_fromUtf8("label"))
+        self.horizontalLayout_3.addWidget(self.label)
+        self.guess_from_path_lineEdit = QtGui.QLineEdit(self.tasks_groupBox)
+        self.guess_from_path_lineEdit.setObjectName(_fromUtf8("guess_from_path_lineEdit"))
+        self.horizontalLayout_3.addWidget(self.guess_from_path_lineEdit)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
         self.thumbnail_graphicsView = QtGui.QGraphicsView(self.tasks_groupBox)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -262,6 +271,7 @@ class Ui_Dialog(object):
         self.horizontalLayout_5.addWidget(self.close_pushButton)
         self.verticalLayout_7.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_14.addWidget(self.previous_versions_groupBox)
+        self.horizontalLayout_14.setStretch(0, 1)
         self.horizontalLayout_14.setStretch(4, 1)
         self.verticalLayout.addLayout(self.horizontalLayout_14)
         self.horizontalLayout.addWidget(self.verticalWidget)
@@ -283,6 +293,7 @@ class Ui_Dialog(object):
         self.logout_pushButton.setText(_translate("Dialog", "Logout", None))
         self.tasks_groupBox.setTitle(_translate("Dialog", "Tasks", None))
         self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
+        self.label.setText(_translate("Dialog", "<b>Guess From Path:</b>", None))
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload Thumbnail...", None))
         self.new_version_groupBox.setTitle(_translate("Dialog", "New Version", None))
         self.takes_label.setText(_translate("Dialog", "Take", None))

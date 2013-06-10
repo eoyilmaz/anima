@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/login_dialog.ui'
 #
-# Created: Sat Jun  8 18:51:01 2013
+# Created: Mon Jun 10 15:21:26 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
