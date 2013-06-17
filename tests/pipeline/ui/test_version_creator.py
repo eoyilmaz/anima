@@ -2015,7 +2015,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        # self.show_dialog(dialog)
+        self.show_dialog(dialog)
 
         dialog.guess_from_path_lineEdit.setText(v9.absolute_full_path)
         dialog.guess_from_path_lineEdit_changed()
