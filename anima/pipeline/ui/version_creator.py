@@ -24,9 +24,9 @@ from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-if IS_PYSIDE:
+if IS_PYSIDE():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
-elif IS_PYQT4:
+elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 

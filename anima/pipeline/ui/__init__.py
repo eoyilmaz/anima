@@ -18,18 +18,16 @@ qt_lib = PYQT4
 if os.environ.has_key(qt_lib_key):
     qt_lib = os.environ[qt_lib_key]
 
-@property
 def IS_PYSIDE():
     return qt_lib == PYSIDE
 
-@property
 def IS_PYQT4():
     return qt_lib == PYQT4
 
 
-if IS_PYSIDE:
+if IS_PYSIDE():
     from PySide import QtGui, QtCore
-elif IS_PYQT4:
+elif IS_PYQT4():
     import sip
 
     sip.setapi('QString', 2)

@@ -17,11 +17,11 @@ from stalker.models.auth import LocalSession
 
 from anima.pipeline.ui import login_dialog, IS_PYSIDE, IS_PYQT4
 
-if IS_PYSIDE:
+if IS_PYSIDE():
     from PySide import QtCore, QtGui
     from PySide.QtTest import QTest
     from PySide.QtCore import Qt
-elif IS_PYQT4:
+elif IS_PYQT4():
     import sip
 
     sip.setapi('QString', 2)
