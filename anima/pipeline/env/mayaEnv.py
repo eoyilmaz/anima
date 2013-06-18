@@ -13,10 +13,11 @@ from pymel import core as pm
 from stalker.config import defaults
 
 from stalker.models.env import EnvironmentBase
-import transaction
+#import transaction
 
 from anima.pipeline import utils
 
+logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -196,9 +197,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # set the render range
                 self.set_frame_range(shot.cut_in, shot.cut_out)
             else:
-                self.set_resolution(project.width,
-                                    project.height,
-                                    project.pixel_aspect)
+                self.set_resolution(project.image_format.width,
+                                    project.image_format.height,
+                                    project.image_format.pixel_aspect)
 
         # set the render file name and version
         self.set_render_fileName(version)
@@ -492,7 +493,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         render_file_full_path = render_output_folder + "/<Layer>/" + \
                                 version.task.project.code + "_" + \
                                 version.task.entity_type + '_' + \
-                                version.task.id + "_" + \
+                                str(version.task.id) + "_" + \
                                 version.take_name + \
                                 "_<Layer>_<RenderPass>_<Version>"
 
@@ -797,7 +798,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     reference_list.append(data[0])
 
             version.inputs = reference_list
-            transaction.commit()
+            DBSession.commit()
     
     def update_versions(self, version_tuple_list):
         """update versions to the latest version

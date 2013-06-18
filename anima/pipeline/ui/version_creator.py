@@ -13,8 +13,8 @@ from stalker.db import DBSession
 from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
                      Task, LocalSession, EnvironmentBase)
 
-import transaction
-from zope.sqlalchemy import ZopeTransactionExtension
+#import transaction
+#from zope.sqlalchemy import ZopeTransactionExtension
 
 import anima
 from anima.pipeline import utils
@@ -48,7 +48,8 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
     
     """
     #DBSession.remove()
-    DBSession.configure(extension=ZopeTransactionExtension(keep_session=True))
+    #DBSession.configure(extension=ZopeTransactionExtension(keep_session=True))
+    DBSession.configure(extension=None)
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
 
@@ -460,7 +461,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     version.status = Status.query \
                         .filter_by(name=selected_item.text()).first()
                     DBSession.add(version)
-                    transaction.commit()
+                    DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
@@ -504,7 +505,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         version.notes = [note]
 
                         DBSession.add(version)
-                        transaction.commit()
+                        DBSession.commit()
 
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_tableWidget()
@@ -1028,8 +1029,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             try:
                 item.setBackgroundColor(QtGui.QColor(*bgcolor))
-            except AttributeError: # gives error with PySide
-                pass
+            except (AttributeError, TypeError): # gives error with PySide
+                item.setBackgroundColor(QtGui.QColor(int(vers.status.bg_color)))
 
             self.previous_versions_tableWidget.setItem(i, 2, item)
             # ------------------------------------
@@ -1284,8 +1285,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             )
 
         # save the new version to the database
-        DBSession.add(new_version)
-        transaction.commit()
+        DBSession().add(new_version)
+        DBSession.commit()
 
         if self.environment:
             # close the UI
