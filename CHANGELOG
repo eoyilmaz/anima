@@ -32,6 +32,8 @@ Anima Tools Changes
 
       * **Update:** Maya now uses the folder that the current version is saved
         as the project folder.
+      * **Update:** Maya sets the fps and resolution even if it is not the
+        first version in its series.
 
 0.1.0.a2
 ========

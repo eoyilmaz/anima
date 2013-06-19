@@ -175,32 +175,30 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create workspace folders
         self.create_workspace_folders(workspace_path)
 
-        # only if the file is a new version
-        if version.version_number == 1:
-            # set scene fps
-            self.set_fps(project.fps)
+        # set scene fps
+        self.set_fps(project.fps)
 
-            # set render resolution
-            # if this is a shot related task set it to shots resolutsion
-            is_shot_related_task = False
-            shot = None
-            from stalker import Shot
-            for task in version.task.parents:
-                if isinstance(task, Shot):
-                    is_shot_related_task = True
-                    shot = task
-                    break
+        # set render resolution
+        # if this is a shot related task set it to shots resolution
+        is_shot_related_task = False
+        shot = None
+        from stalker import Shot
+        for task in version.task.parents:
+            if isinstance(task, Shot):
+                is_shot_related_task = True
+                shot = task
+                break
 
-            if is_shot_related_task:
-                self.set_resolution(shot.image_format.width,
-                                    shot.image_format.height,
-                                    shot.image_format.pixel_aspect)
-                # set the render range
-                self.set_frame_range(shot.cut_in, shot.cut_out)
-            else:
-                self.set_resolution(project.image_format.width,
-                                    project.image_format.height,
-                                    project.image_format.pixel_aspect)
+        if is_shot_related_task:
+            self.set_resolution(shot.image_format.width,
+                                shot.image_format.height,
+                                shot.image_format.pixel_aspect)
+            # set the render range
+            self.set_frame_range(shot.cut_in, shot.cut_out)
+        else:
+            self.set_resolution(project.image_format.width,
+                                project.image_format.height,
+                                project.image_format.pixel_aspect)
 
         # set the render file name and version
         self.set_render_fileName(version)
