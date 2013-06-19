@@ -142,6 +142,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # set version extension to ma
         version.extension = '.ma'
+        version.created_with = self.name
 
         project = version.task.project
 
@@ -245,6 +246,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # set the extension to ma by default
         version.update_paths()
         version.extension = '.ma'
+        version.created_with = self.name
 
         # create the folder if it doesn't exists
         utils.createFolder(version.absolute_path)

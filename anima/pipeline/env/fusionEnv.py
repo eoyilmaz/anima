@@ -247,6 +247,7 @@ class Fusion(EnvironmentBase):
         # its a new version please update the paths
         version.update_paths()
         version.extension = '.comp'
+        version.created_with = self.name
 
         # set project_directory
         self.project_directory = os.path.dirname(version.absolute_path)
@@ -279,7 +280,9 @@ class Fusion(EnvironmentBase):
         version.update_paths()
         # set the extension to '.comp'
         version.extension = '.comp'
+        version.created_with = self.name
         #        nuke.nodeCopy(version.fullPath)
+        raise NotImplementedError('export_as is not implemented yet for Fusion')
         return True
 
     def open_(self, version, force=False):
