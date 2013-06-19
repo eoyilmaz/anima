@@ -63,6 +63,13 @@ def UICaller(app_in, executor, DialogClass, **kwargs):
         executor.exec_(app, mainDialog)
     return mainDialog
 
+def getIcon(icon_name):
+    """Returns an icon from ui library
+    """
+    here = os.path.abspath(os.path.dirname(__file__))
+    images_path = os.path.join(here, 'images')
+    icon_full_path = os.path.join(images_path, icon_name)
+    return QtGui.QIcon(icon_full_path)
 
 def clear_thumbnail(gView):
     """Clears the thumbnail for the given QGraphicsView

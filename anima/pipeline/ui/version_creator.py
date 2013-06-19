@@ -15,7 +15,8 @@ from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
 
 import anima
 from anima.pipeline import utils
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, utils, login_dialog
+from anima.pipeline.ui import utils as ui_utils
+from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
@@ -135,14 +136,18 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set previous_versions_tableWidget.labels
         self.previous_versions_tableWidget.labels = [
-            "Version",
-            "User",
-            "Status",
-            "File Size",
-            "Date",
-            "Note",
+            'Version',
+            'Created With',
+            'User',
+            'Status',
+            'File Size',
+            'Date',
+            'Note',
             #"Path"
         ]
+        self.previous_versions_tableWidget.setColumnCount(
+            len(self.previous_versions_tableWidget.labels)
+        )
 
         # setup signals
         self._setup_signals()
@@ -1029,6 +1034,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         for i, vers in enumerate(versions):
 
             is_published = vers.is_published
+            
+            c = 0
 
             # ------------------------------------
             # version_number
@@ -1039,7 +1046,20 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if is_published:
                 set_font(item)
 
-            self.previous_versions_tableWidget.setItem(i, 0, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # created_with
+            item = QtGui.QTableWidgetItem()
+            if vers.created_with:
+                item.setIcon(ui_utils.getIcon(vers.created_with.lower()))
+
+            if is_published:
+                set_font(item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
             # ------------------------------------
@@ -1054,7 +1074,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if is_published:
                 set_font(item)
 
-            self.previous_versions_tableWidget.setItem(i, 1, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
             # ------------------------------------
@@ -1082,7 +1103,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             except (AttributeError, TypeError): # gives error with PySide
                 item.setBackgroundColor(QtGui.QColor(int(vers.status.bg_color)))
 
-            self.previous_versions_tableWidget.setItem(i, 2, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
 
@@ -1104,7 +1126,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if is_published:
                 set_font(item)
 
-            self.previous_versions_tableWidget.setItem(i, 3, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
             # ------------------------------------
@@ -1126,7 +1149,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if is_published:
                 set_font(item)
 
-            self.previous_versions_tableWidget.setItem(i, 4, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
             # ------------------------------------
@@ -1141,7 +1165,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if is_published:
                 set_font(item)
 
-            self.previous_versions_tableWidget.setItem(i, 5, item)
+            self.previous_versions_tableWidget.setItem(i, c, item)
+            c += 1
             # ------------------------------------
 
         # resize the first column
@@ -1463,14 +1488,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def clear_thumbnail(self):
         """clears the thumbnail_graphicsView
         """
-        utils.clear_thumbnail(self.thumbnail_graphicsView)
+        ui_utils.clear_thumbnail(self.thumbnail_graphicsView)
 
     def update_thumbnail(self):
         """updates the thumbnail for the selected task
         """
         # get the current task
         task = self.get_task()
-        utils.update_gview_with_version_thumbnail(
+        ui_utils.update_gview_with_version_thumbnail(
             task,
             self.thumbnail_graphicsView
         )
@@ -1478,7 +1503,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def upload_thumbnail_pushButton_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
-        thumbnail_full_path = utils.choose_thumbnail(self)
+        thumbnail_full_path = ui_utils.choose_thumbnail(self)
 
         # if the thumbnail_full_path is empty do not do anything
         if thumbnail_full_path == "":
@@ -1487,7 +1512,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the current task
         task = self.get_task()
 
-        utils.upload_thumbnail(task, thumbnail_full_path)
+        ui_utils.upload_thumbnail(task, thumbnail_full_path)
 
         # update the thumbnail
         self.update_thumbnail()

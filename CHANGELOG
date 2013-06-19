@@ -21,9 +21,10 @@ Anima Tools Changes
         from anima.pipeline.ui.lib import QtCore, QtGui
 
       The default library is PyQt4.
-
     * **Update:** **version_creator.fill_tasks_treeWidget()** now works much
       faster.
+    * **Update:** **version_creator.previous_versions_tableWidget** now
+      displays the icon of the created environment.
 
 0.1.0.a2
 ========
