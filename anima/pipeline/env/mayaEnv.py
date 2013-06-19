@@ -11,9 +11,8 @@ import logging
 from pymel import core as pm
 
 from stalker.config import defaults
-
 from stalker.models.env import EnvironmentBase
-#import transaction
+from stalker.db import DBSession
 
 from anima.pipeline import utils
 
@@ -576,7 +575,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         playblast_path = os.path.join(
             version.absolute_path,
             'Output', "Playblast"
-        )
+        ).replace('\\', '/')
 
         # use project name and sequence name if available
         playblast_filename = version.task.project.code + "_" + \
@@ -1041,7 +1040,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     unresolved_path = os.path.join(
                         workspace_path,
                         unresolved_path
-                    )
+                    ).replace('\\', '/')
 
                 if repo.is_in_repo(unresolved_path):
                     new_ref_path = ""
@@ -1108,7 +1107,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         content = self.maya_workspace_file_content
 
         # check if there is a workspace.mel at the given path
-        full_path = os.path.join(path, "workspace.mel")
+        full_path = os.path.join(path, "workspace.mel").replace('\\', '/')
 
         #if not os.path.exists(full_path):
         try:
@@ -1129,7 +1128,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         for key in pm.workspace.fileRules:
             rule_path = pm.workspace.fileRules[key]
-            full_path = os.path.join(path, rule_path)
+            full_path = os.path.join(path, rule_path).replace('\\', '/')
             print full_path
             try:
                 os.makedirs(
