@@ -26,6 +26,13 @@ Anima Tools Changes
     * **Update:** **version_creator.previous_versions_tableWidget** now
       displays the icon of the created environment.
 
+  * **Environments:**
+
+    * **Maya:**
+
+      * **Update:** Maya now uses the folder that the current version is saved
+        as the project folder.
+
 0.1.0.a2
 ========
 

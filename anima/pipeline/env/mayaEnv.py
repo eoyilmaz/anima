@@ -150,7 +150,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # create a workspace file inside a folder called .maya_files
         # at the parent folder of the current version
-        workspace_path = os.path.dirname(version.absolute_path)
+        # workspace_path = os.path.dirname(version.absolute_path)
+        workspace_path = version.absolute_path
 
         # if the new workspace path is not matching the with the previous one
         # update the external paths to absolute version
@@ -251,7 +252,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create the folder if it doesn't exists
         utils.createFolder(version.absolute_path)
 
-        workspace_path = os.path.dirname(version.absolute_path)
+        # workspace_path = os.path.dirname(version.absolute_path)
+        workspace_path = version.absolute_path
 
         self.create_workspace_file(workspace_path)
         self.create_workspace_folders(workspace_path)
@@ -279,7 +281,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         previous_workspace_path = pm.workspace.path
 
         # set the project
-        new_workspace = os.path.dirname(version.absolute_path)
+        # new_workspace = os.path.dirname(version.absolute_path)
+        new_workspace = version.absolute_path
 
         pm.workspace.open(new_workspace)
 
@@ -480,14 +483,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # assert isinstance(version, Version)
         render_output_folder = os.path.join(
             version.absolute_path,
-            'Output'
+            'Outputs'
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
         # {{project.full_path}}/Sequences/{{seqence.code}}/Shots/{{shot.code}}/.maya_files/rendered_images
         image_folder_from_ws = pm.workspace.fileRules['images'] 
         image_folder_from_ws_full_path = os.path.join(
-            os.path.dirname(version.absolute_path),
+            version.absolute_path,
             image_folder_from_ws
         ).replace("\\", "/")
 
@@ -576,7 +579,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         playblast_path = os.path.join(
             version.absolute_path,
-            'Output', "Playblast"
+            'Outputs', "Playblast"
         ).replace('\\', '/')
 
         # use project name and sequence name if available
@@ -615,9 +618,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         very easily.
         """
         pm.workspace.open(
-            os.path.dirname(
+            # os.path.dirname(
                 version.absolute_path
-            )
+            # )
         )
         # set the current timeUnit to match with the environments
         self.set_fps(version.task.project.fps)
