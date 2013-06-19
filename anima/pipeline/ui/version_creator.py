@@ -635,13 +635,31 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         return None
 
+    def clear_tasks_treeWidget(self):
+        """clears the tasks_treeWidget items and also removes the connection
+        between Stalker entities and ui items
+        """
+        # get the items and their corresponding Stalker entities and clear them
+        # items = []
+        treeWidget = self.tasks_treeWidget
+        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        while iterator.value():
+            item = iterator.value()
+            try:
+                delattr(item.stalker_entity, 'ui_item')
+            except AttributeError:
+                pass
+            iterator += 1
+
+        # now clear the items safely
+        self.tasks_treeWidget.clear()
 
     def fill_tasks_treeWidget(self):
         """fills the tasks_treeWidget
         """
         # first clear it
-        self.tasks_treeWidget.clear()
-
+        self.clear_tasks_treeWidget()
+        
         # create column headers
         self.tasks_treeWidget.setColumnCount(2)
         self.tasks_treeWidget.setHeaderLabels(
@@ -650,7 +668,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # now get the tasks of the current user
         logged_in_user = self.get_logged_in_user()
-        
+
         tasks = []
         if self.my_tasks_only_checkBox.isChecked():
             tasks = logged_in_user.tasks
