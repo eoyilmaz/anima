@@ -5,17 +5,63 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 """Utilities for UI stuff
 """
-
+import sys
 import os
 import logging
-# from oyProjectManager import conf
-# from oyProjectManager.models.entity import VersionableBase
+
 from stalker import Version
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
-from anima.pipeline.ui import QtCore, QtGui
+from anima.pipeline.ui.lib import QtCore, QtGui
+
+
+class AnimaDialogBase(object):
+    """A simple class to hold basic common functions for dialogs
+    """
+
+    def center_window(self):
+        """centers the window to the screen
+        """
+        screen = QtGui.QDesktopWidget().screenGeometry()
+        size = self.geometry()
+        self.move(
+            (screen.width() - size.width()) * 0.5,
+            (screen.height() - size.height()) * 0.5
+        )
+
+
+def UICaller(app_in, executor, DialogClass, **kwargs):
+    global app
+    global mainDialog
+    self_quit = False
+    if QtGui.QApplication.instance() is None:
+        if not app_in:
+            try:
+                app = QtGui.QApplication(sys.argv)
+            except AttributeError: # sys.argv gives argv.error
+                app = QtGui.QApplication([])
+        else:
+            app = app_in
+        self_quit = True
+    else:
+        app = QtGui.QApplication.instance()
+
+    mainDialog = DialogClass(**kwargs)
+    mainDialog.show()
+    if executor is None:
+        app.exec_()
+        if self_quit:
+            app.connect(
+                app,
+                QtCore.SIGNAL("lastWindowClosed()"),
+                app,
+                QtCore.SLOT("quit()")
+            )
+    else:
+        executor.exec_(app, mainDialog)
+    return mainDialog
 
 
 def clear_thumbnail(gView):
@@ -86,13 +132,11 @@ def update_gview_with_image_file(image_full_path, gView):
             scene.addPixmap(pixmap)
 
 
-def upload_thumbnail(versionable, thumbnail_source_full_path):
-    """Uploads the given thumbnail for the given versionable
+def upload_thumbnail(entity, thumbnail_source_full_path):
+    """Uploads the given thumbnail for the given entity
     
-    :param versionable: An instance of
-      :class:`~oyProjectManager.models.entity.VersionableBase` which in
-      practice is an :class:`~oyProjectManager.models.asset.Asset` or
-      a :class:`~oyProjectManager.models.shot.Shot`.
+    :param entity: An instance of :class:`~stalker.models.entity.SimpleEntity`
+      or a derivative.
     
     :param str thumbnail_source_full_path: A string which is showing the path
       of the thumbnail image
@@ -102,7 +146,7 @@ def upload_thumbnail(versionable, thumbnail_source_full_path):
     # width = size[0]
     # height = size[0]
 
-    thumbnail_full_path = versionable.thumbnail_full_path
+    thumbnail_full_path = entity.thumbnail.full_path
 
     # upload the chosen image to the repo, overwrite any image present
     # create the dirs
@@ -115,9 +159,9 @@ def upload_thumbnail(versionable, thumbnail_source_full_path):
     # instead of copying the item
     # just render a resized version to the output path
     pixmap = QtGui.QPixmap(thumbnail_source_full_path, format='JPG')#.scaled(
-        # width, height,
-        # QtCore.Qt.KeepAspectRatio,
-        # QtCore.Qt.SmoothTransformation
+    # width, height,
+    # QtCore.Qt.KeepAspectRatio,
+    # QtCore.Qt.SmoothTransformation
     # )
     # now render it to the path
     # pixmap.save(
@@ -163,3 +207,6 @@ def render_image_from_gview(gview, image_full_path):
         pixmap.save(
             image_full_path
         )
+
+
+

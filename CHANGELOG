@@ -2,16 +2,39 @@
 Anima Tools Changes
 ===================
 
+0.1.0.a3
+========
+
+* **Pipeline:**
+
+  * **UI:**
+
+    * **Fix:** Reorganized and fixed the code that chooses between ``PySide``
+      or ``PyQt4``. To choose one of the libraries, let say to choose
+      ``PySide`` as the library in UI::
+
+        # first import the code that sets the system to pyside
+        from anima.pipeline.ui import SET_PYSIDE
+        SET_PYSIDE()
+
+        # then import QtCore and QtGui as follows
+        from anima.pipeline.ui.lib import QtCore, QtGui
+
+      The default library is PyQt4.
+
+    * **Update:** **version_creator.fill_tasks_treeWidget()** now works much
+      faster.
+
 0.1.0.a2
 ========
 
 * **Pipeline:**
 
   * **Update:** login_dialog is now working.
-  * **New:** created a new UI called version_creator for creating new Versions from
-    within environments
-  * **New:** A new field is added to the **version_creator** UI which lets the user
-    to restore the previous version from the given path.
+  * **New:** created a new UI called version_creator for creating new Versions
+    from within environments
+  * **New:** A new field is added to the **version_creator** UI which lets the
+    user to restore the previous version from the given path.
   * **New:** Created environment class for **Fusion**.
   * **New:** Created environment class for **Maya**.
 

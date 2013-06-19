@@ -8,8 +8,9 @@ import logging
 from sqlalchemy import or_
 
 import anima
-from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
-                               QtGui, QtCore)
+from anima.pipeline.ui import IS_PYQT4, IS_PYSIDE
+from anima.pipeline.ui.lib import QtCore, QtGui
+from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
 # create a logger
 logger = logging.getLogger(__name__)

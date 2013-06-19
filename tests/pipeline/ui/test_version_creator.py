@@ -14,21 +14,23 @@ logger = logging.getLogger('anima.pipeline.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
 from stalker.models.auth import LocalSession
+from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, SET_PYQT4
 
-from anima.pipeline.ui import login_dialog, IS_PYSIDE, IS_PYQT4
+SET_PYSIDE()
 
 if IS_PYSIDE():
+    logger.debug('environment is set to pyside, importing pyside')
     from PySide import QtCore, QtGui
     from PySide.QtTest import QTest
     from PySide.QtCore import Qt
 elif IS_PYQT4():
+    logger.debug('environment is set to pyqt4, importing pyqt4')
     import sip
-
     sip.setapi('QString', 2)
     sip.setapi('QVariant', 2)
     from PyQt4 import QtCore, QtGui
     from PyQt4.QtTest import QTest
-    from PySide.QtCore import Qt
+    from PyQt4.QtCore import Qt
 
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
                      StatusList, Task, Version, FilenameTemplate)
@@ -42,8 +44,6 @@ from anima.pipeline.ui import version_creator
 
 
 # exceptions for test purposes
-from zope.sqlalchemy import ZopeTransactionExtension
-
 
 class ExportAs(Exception):
     pass
@@ -109,7 +109,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # configure with transaction manager
         DBSession.remove()
         DBSession.configure(
-            extension=ZopeTransactionExtension()
+            extension=None
         )
 
     def show_dialog(self, dialog):
@@ -150,12 +150,18 @@ class VersionCreatorTester(unittest2.TestCase):
         self.lsession.store_user(self.admin)
         self.lsession.save()
 
-        if IS_PYQT4:
-            # for PyQt4
-            if not QtGui.qApp:
-                self.app = QtGui.QApplication(sys.argv)
-            else:
-                self.app = QtGui.qApp
+        # if IS_PYQT4():
+        #     logger.debug('it is pyqt4')
+        # for PyQt4
+        if not QtGui.qApp:
+            logger.debug('creating a new QApplication')
+            self.app = QtGui.QApplication(sys.argv)
+        else:
+            logger.debug('using the present QApplication: %s' % QtGui.qApp)
+            self.app = QtGui.qApp
+        # elif IS_PYSIDE():
+        #     logger.debug('it is pyside')
+
 
     def tearDown(self):
         """cleans the test environment
@@ -335,7 +341,6 @@ class VersionCreatorTester(unittest2.TestCase):
         )
 
         # project 1
-
         t1 = Task(
             name='Test Task 1',
             project=p1,
@@ -407,7 +412,7 @@ class VersionCreatorTester(unittest2.TestCase):
             )
 
     def test_tasks_treeWidget_lists_all_tasks_properly(self):
-        """testing if the taks_treeWidget lists all the tasks properly
+        """testing if the tasks_treeWidget lists all the tasks properly
         """
         # create a repository
         repo1 = Repository(
@@ -533,7 +538,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # self.show_dialog(dialog)
 
         # check if all the tasks are represented in the tree
         for task in tasks:
@@ -707,9 +712,9 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # self.show_dialog(dialog)
         
-        # check show my tasks onlly check box
+        # check show my tasks only check box
         dialog.my_tasks_only_checkBox.setChecked(True)
 
         # check if all my tasks are represented in the tree
@@ -2015,7 +2020,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # self.show_dialog(dialog)
 
         dialog.guess_from_path_lineEdit.setText(v9.absolute_full_path)
         dialog.guess_from_path_lineEdit_changed()

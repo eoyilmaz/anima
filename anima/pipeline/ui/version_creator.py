@@ -13,13 +13,11 @@ from stalker.db import DBSession
 from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
                      Task, LocalSession, EnvironmentBase)
 
-#import transaction
-#from zope.sqlalchemy import ZopeTransactionExtension
-
 import anima
 from anima.pipeline import utils
-from anima.pipeline.ui import (UICaller, AnimaDialogBase, IS_PYQT4, IS_PYSIDE,
-                               QtGui, QtCore, ui_utils, login_dialog)
+from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, utils, login_dialog
+from anima.pipeline.ui.lib import QtGui, QtCore
+from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,6 +26,14 @@ if IS_PYSIDE():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
 elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
+
+
+class UIEntity(object):
+    """stores Stalker entity and its corresponding UI item.
+    """
+    def __init__(self):
+        self.entity = None
+        self.item = None
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -47,8 +53,6 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       function. It also passes the created app instance to this executor.
     
     """
-    #DBSession.remove()
-    #DBSession.configure(extension=ZopeTransactionExtension(keep_session=True))
     DBSession.configure(extension=None)
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
@@ -529,6 +533,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         :returns: QTreeWidgetItem
         """
+        if hasattr(entity, 'ui_item'):
+            logger.debug('entity already has ui_item: %s' % entity)
+            return entity.ui_item
+
         item = QtGui.QTreeWidgetItem(treeWidget)
         item.setText(0, entity.name)
         item.setText(1, entity.entity_type)
@@ -536,16 +544,24 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         my_font.setBold(True)
         item.setFont(0, my_font)
         item.stalker_entity = entity
+        entity.ui_item = item
         return item
 
     def addItem(self, entity, treeWidget):
         """adds the given stalker entity to the given treeWidget
         """
+        
+        # skip this entity if it already has an ui_item attached
+        if hasattr(entity, 'ui_item'):
+            logger.debug('entity already has ui_item: %s' % entity)
+            return entity.ui_item
+
         # create QTreeWidgetItem
         entity_item = QtGui.QTreeWidgetItem()
         entity_item.setText(0, entity.name)
         entity_item.setText(1, entity.__class__.__name__)
         entity_item.stalker_entity = entity
+        entity.ui_item = entity_item
 
         # check if it has a parent
         logger.debug('adding entity: %s' % entity)
@@ -553,33 +569,49 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # add it under the parent
             parent = entity.parent
             logger.debug('has a parent : %s' % parent)
+
+            parent_item = None
+            if hasattr(parent, 'ui_item'):
+                parent_item = parent.ui_item
+            else:
+                # add the parent
+                parent_item = self.addItem(parent, treeWidget)
         else:
             # add it under the project
             parent = entity.project
             logger.debug('has no parent : %s' % entity)
+            
+            parent_item = None
+            if hasattr(parent, 'ui_item'):
+                parent_item = parent.ui_item
+            else:
+                # add the parent
+                parent_item = self.addRootItem(parent, treeWidget)
 
-        # find the item of the project
-        # items = treeWidget.findItems(parent.name, QtCore.Qt.MatchExactly, 0)
-        
-        items = []
-        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        while iterator.value():
-            item = iterator.value()
-            name = item.text(0)
-            if name == parent.name:
-                items.append(item)
-            iterator += 1
+        # items = []
+        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        # while iterator.value():
+        #     item = iterator.value()
+        #     name = item.text(0)
+        #     if name == parent.name:
+        #         items.append(item)
+        #     iterator += 1
 
-        logger.debug('items matching name : %s' % items)
-        for item in items:
-            if item.stalker_entity == parent:
-                item.addChild(entity_item)
-                
-                # make parent bold
-                my_font = item.font(0)
-                my_font.setBold(True)
-                item.setFont(0, my_font)
-                break
+        # logger.debug('items matching name : %s' % items)
+        # for item in items:
+        #     if item.stalker_entity == parent:
+        #         item.addChild(entity_item)
+        #         
+        #         # make parent bold
+        #         my_font = item.font(0)
+        #         my_font.setBold(True)
+        #         item.setFont(0, my_font)
+        #         break
+        parent_item.addChild(entity_item)
+        # make parent bold
+        my_font = parent_item.font(0)
+        my_font.setBold(True)
+        parent_item.setFont(0, my_font)
 
         return entity_item
 
@@ -1413,33 +1445,31 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def clear_thumbnail(self):
         """clears the thumbnail_graphicsView
         """
-        ui_utils.clear_thumbnail(self.thumbnail_graphicsView)
+        utils.clear_thumbnail(self.thumbnail_graphicsView)
 
     def update_thumbnail(self):
-        """updates the thumbnail for the selected versionable
+        """updates the thumbnail for the selected task
         """
-
-        # get the current versionable
-        versionable = self.get_task()
-        ui_utils.update_gview_with_version_thumbnail(
-            versionable,
+        # get the current task
+        task = self.get_task()
+        utils.update_gview_with_version_thumbnail(
+            task,
             self.thumbnail_graphicsView
         )
 
     def upload_thumbnail_pushButton_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
+        thumbnail_full_path = utils.choose_thumbnail(self)
 
-        thumbnail_full_path = ui_utils.choose_thumbnail(self)
-
-        # if the tumbnail_full_path is empty do not do anything
+        # if the thumbnail_full_path is empty do not do anything
         if thumbnail_full_path == "":
             return
 
-        # get the current versionable
-        versionable = self.get_task()
+        # get the current task
+        task = self.get_task()
 
-        ui_utils.upload_thumbnail(versionable, thumbnail_full_path)
+        utils.upload_thumbnail(task, thumbnail_full_path)
 
         # update the thumbnail
         self.update_thumbnail()
