@@ -1084,8 +1084,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # align to left and vertical center
             item.setTextAlignment(0x0004 | 0x0080)
 
-            #if is_published:
-            #    set_font(item)
+            if is_published:
+                set_font(item)
 
             # colorize the item
             bgcolor = '#' + hex(vers.status.bg_color)[2:].zfill(6)
@@ -1101,7 +1101,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             try:
                 item.setBackgroundColor(QtGui.QColor(*bgcolor))
             except (AttributeError, TypeError): # gives error with PySide
-                item.setBackgroundColor(QtGui.QColor(int(vers.status.bg_color)))
+                pass
 
             self.previous_versions_tableWidget.setItem(i, c, item)
             c += 1
@@ -1257,7 +1257,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         note = self.note_textEdit.toPlainText()
         notes = []
         if note:
-            notes.append(note)
+            notes.append(Note(content=note))
 
         published = self.publish_checkBox.isChecked()
 
