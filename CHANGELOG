@@ -19,6 +19,8 @@ Anima Tools Changes
     * **Utils:**
       
       * **New:** Added a new class called **UICFile** to manage uic files.
+      * **New:** UICompiler now checks the *.ui* files against their stored md5
+        checksum values to prevent unnecessary compiles of unchanged files.
 
   * **Utils:**
 

@@ -17,4 +17,4 @@ docs/source/static/images/*
 .DS_Store
 .coverage
 *.swp
-
+*.md5

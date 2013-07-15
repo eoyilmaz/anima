@@ -20,7 +20,7 @@ from PyQt4 import uic
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 
 
@@ -33,8 +33,13 @@ class UICFile(object):
         self.path = ''
         self.md5_filename = ''
         self.md5_file_full_path = ''
+        self.pyqt4_filename = ''
+        self.pyqt4_full_path = ''
+        self.pyside_filename = ''
+        self.pyside_full_path = ''
         self.full_path = self._validate_full_path(full_path)
         self.md5 = self.generate_md5()
+        
 
     def generate_md5(self):
         """generates the md5 checksum of the UIC file
@@ -65,83 +70,71 @@ class UICFile(object):
     def _validate_full_path(self, full_path):
         """validates the given full_path
         """
+        if full_path == '' or full_path is None:
+            raise TypeError('UICFile.full_path can not be None or empty '
+                            'string')
+
         # update filename
         self.filename = os.path.basename(full_path)
         self.path = os.path.dirname(full_path)
-        self.md5_filename = os.path.splitext(self.filename)[0] + '.md5'
+        base_name = os.path.splitext(self.filename)[0]
+        self.md5_filename = base_name + '.md5'
         self.md5_file_full_path = os.path.join(
             self.path, self.md5_filename
         )
-
+        self.pyqt4_filename = base_name + '_UI_pyqt4.py'
+        self.pyqt4_full_path = os.path.normpath(
+            os.path.join(self.path, '../ui_compiled', self.pyqt4_filename)
+        )
+        self.pyside_filename = base_name + '_UI_pyside.py'
+        self.pyside_full_path = os.path.normpath(
+            os.path.join(self.path, '../ui_compiled', self.pyside_filename)
+        )
         return full_path
 
 
 
 if __name__ == '__main__':
     # scan for the ui_files directory *.ui files
-    uicFilePaths = []
-    pyFilePaths_PyQt4 = []
-    pyFilePaths_PySide = []
+    uicFiles = []
 
     args = sys.argv[1:]
 
     path = os.path.dirname(__file__)
     ui_path = os.path.join(path, "ui_files")
 
-    print 'path    : %s' % path
-    print 'ui_path : %s' % ui_path
-
     for ui_file in glob.glob1(ui_path, '*.ui'):
-        uicFilePaths.append(os.path.join(ui_path, ui_file))
-        # create the PyQt4 file
-        base_name = os.path.splitext(ui_file)[0]
-        pyFilePaths_PyQt4.append(
-            os.path.join(
-                path,
-                'ui_compiled',
-                base_name + '_UI_pyqt4.py'
-            )
-        )
-        pyFilePaths_PySide.append(
-            os.path.join(
-                path,
-                'ui_compiled',
-                base_name + '_UI_pyside.py'
-            )
+        full_path = os.path.join(ui_path, ui_file)
+        uicFiles.append(
+            UICFile(full_path)
         )
 
-    print '----------'
-    print uicFilePaths
-    print pyFilePaths_PyQt4
-    print pyFilePaths_PySide
-
-    for i, uicFilePath in enumerate(uicFilePaths):
-        pyFilePath_PyQt4 = pyFilePaths_PyQt4[i]
-        pyFilePath_PySide = pyFilePaths_PySide[i]
-
+    for uicFile in uicFiles:
         # if there are already files compare the md5 checksum
         # and decide if it needs to be compiled again
-        if os.path.exists(uicFilePath):
-            # generate md5 checksum for files
-            md5_checksum = utils.md5_checksum(uicFilePath)
-            # get the stored checksum
-            md5_checksum_file_path = os.path.splitext(uicFilePath)[0] + '.md5'
-            
+        assert isinstance(uicFile, UICFile)
+        if uicFile.isNew():
+            # just save the md5 and generate the modules
+            uicFile.update_md5_file()
 
-        # with PySide
-        # call the external pyside-uic tool
-        print "compiling %s to %s for PySide" % (
-        uicFilePath, pyFilePath_PySide)
-        subprocess.call(["pyside-uic", "-o", pyFilePath_PySide, uicFilePath])
+            # with PySide
+            # call the external pyside-uic tool
+            print "compiling %s to %s for PySide" % (uicFile.filename,
+                                                     uicFile.pyside_filename)
+            subprocess.call(["pyside-uic", "-o", uicFile.pyside_full_path,
+                             uicFile.full_path])
 
-        # with PyQt4
-        uicFile = file(uicFilePath)
-        pyFile = file(pyFilePath_PyQt4, 'w')
+            # with PyQt4d
+            temp_uicFile = file(uicFile.full_path)
+            temp_pyqt4_file = file(uicFile.pyqt4_full_path, 'w')
 
-        print "compiling %s to %s for PyQt4" % (uicFilePath, pyFilePath_PyQt4)
+            print "compiling %s to %s for PyQt4" % (uicFile.filename,
+                                                    uicFile.pyqt4_filename)
 
-        uic.compileUi(uicFile, pyFile)
-        uicFile.close()
-        pyFile.close()
+            uic.compileUi(temp_uicFile, temp_pyqt4_file)
+            temp_uicFile.close()
+            temp_pyqt4_file.close()
+        else:
+            print '%s is not changed' % uicFile.full_path
 
     print "finished compiling"

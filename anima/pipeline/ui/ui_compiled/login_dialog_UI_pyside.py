@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './ui_files/login_dialog.ui'
+# Form implementation generated from reading ui file 'ui_files/login_dialog.ui'
 #
-# Created: Mon Jul 15 17:43:26 2013
+# Created: Tue Jul 16 00:55:37 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!

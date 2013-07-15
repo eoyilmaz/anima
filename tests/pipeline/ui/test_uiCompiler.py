@@ -47,7 +47,7 @@ class UIFileTestCase(unittest2.TestCase):
         """testing if a TypeError will be raised when the full_path argument is
         skipped
         """
-        self.fail('test is not implemented yet')
+        self.assertRaises(TypeError, uiCompiler.UICFile)
 
     def test_filename_attribute_initialized_correctly(self):
         """testing if the filename attribute is initialized correctly
@@ -75,6 +75,37 @@ class UIFileTestCase(unittest2.TestCase):
             os.path.basename(self.test_uicFile_path)[:-4] + '.md5'
         )
         self.assertEqual(expected_value, self.test_uicFile.md5_file_full_path)
+
+    def test_pyqt4_filename_attribute_initialized_correctly(self):
+        """testing if the pyqt4_filename attribute is initialized correctly
+        """
+        expected_value = os.path.basename(self.test_uicFile_path)[:-4] + \
+                         '_UI_pyqt4.py'
+        self.assertEqual(expected_value, self.test_uicFile.pyqt4_filename)
+
+    def test_pyqt4_full_path_attribute_initialized_correctly(self):
+        """testing if the pyqt4_full_path attribute is initialized correctly
+        """
+        expected_value = os.path.normpath(os.path.join(
+            self.test_uicFile.path, '../ui_compiled',
+            os.path.basename(self.test_uicFile_path)[:-4] + '_UI_pyqt4.py'))
+        self.assertEqual(expected_value, self.test_uicFile.pyqt4_full_path)
+
+    def test_pyside_filename_attribute_initialized_correctly(self):
+        """testing if the pyside_filename attribute is initialized correctly
+        """
+        expected_value = os.path.basename(self.test_uicFile_path)[:-4] + \
+                         '_UI_pyside.py'
+        self.assertEqual(expected_value, self.test_uicFile.pyside_filename)
+
+    def test_pyside_full_path_attribute_initialized_correctly(self):
+        """testing if the pyside_full_path attribute is initialized correctly
+        """
+        expected_value = os.path.normpath(
+            os.path.join(self.test_uicFile.path, '../ui_compiled',
+            os.path.basename(self.test_uicFile_path)[:-4] + '_UI_pyside.py')
+        )
+        self.assertEqual(expected_value, self.test_uicFile.pyside_full_path)
 
     def test_md5_attribute_is_calculated_correctly(self):
         """testing if the md5 of the uic file is correctly calculated
