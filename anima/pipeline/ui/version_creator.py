@@ -951,9 +951,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
     def set_status(self, status):
         """sets the chosen status on statuses_comboBox
+        
+        :param status: The status as stalker.models.status.Status object
         """
-        # TODO: add this part
-        pass
+        index = self.statuses_comboBox.findText(
+            status.name, QtCore.Qt.MatchExactly
+        )
+        if index != -1:
+            self.statuses_comboBox.setCurrentIndex(index)
 
     def clear_previous_versions_tableWidget(self):
         """clears the previous_versions_tableWidget properly
@@ -1173,6 +1178,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.previous_versions_tableWidget.resizeRowsToContents()
         self.previous_versions_tableWidget.resizeColumnsToContents()
         self.previous_versions_tableWidget.resizeRowsToContents()
+
+        # set the statuses comboBox to the status of the last version
+        if versions:
+            self.set_status(versions[-1].status)
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence

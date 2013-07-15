@@ -26,7 +26,6 @@ def common_prefix(*sequences):
     """return a list of common elements at the start of all sequences, then a
     list of lists that are the unique tails of each sequence.
     """
-    
     # if there are no sequences at all, we're done
     if not sequences: return[], []
     # loop in parallel on the sequences

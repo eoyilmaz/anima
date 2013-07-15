@@ -2,6 +2,16 @@
 Anima Tools Changes
 ===================
 
+0.1.0.a4
+========
+
+* **Pipeline:**
+
+  * **UI:**
+
+    * **Fix:** Version Creator UI now sets the statuses_comboBox to the status
+      of the last version in the previous_version_tableWidget.
+
 0.1.0.a3
 ========
 
