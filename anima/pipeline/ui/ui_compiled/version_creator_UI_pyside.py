@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Jun 10 15:21:26 2013
+# Created: Mon Jul 15 17:43:26 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(1419, 769)
+        Dialog.resize(1704, 769)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
@@ -107,11 +107,6 @@ class Ui_Dialog(object):
         self.horizontalLayout_16.addWidget(self.upload_thumbnail_pushButton)
         self.verticalLayout_2.addLayout(self.horizontalLayout_16)
         self.horizontalLayout_14.addWidget(self.tasks_groupBox)
-        self.line_2 = QtGui.QFrame(self.verticalWidget)
-        self.line_2.setFrameShape(QtGui.QFrame.VLine)
-        self.line_2.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line_2.setObjectName("line_2")
-        self.horizontalLayout_14.addWidget(self.line_2)
         self.new_version_groupBox = QtGui.QGroupBox(self.verticalWidget)
         font = QtGui.QFont()
         font.setWeight(50)
@@ -185,11 +180,6 @@ class Ui_Dialog(object):
         self.horizontalLayout_2.addWidget(self.save_as_pushButton)
         self.verticalLayout_6.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_14.addWidget(self.new_version_groupBox)
-        self.line = QtGui.QFrame(self.verticalWidget)
-        self.line.setFrameShape(QtGui.QFrame.VLine)
-        self.line.setFrameShadow(QtGui.QFrame.Sunken)
-        self.line.setObjectName("line")
-        self.horizontalLayout_14.addWidget(self.line)
         self.previous_versions_groupBox = QtGui.QGroupBox(self.verticalWidget)
         self.previous_versions_groupBox.setObjectName("previous_versions_groupBox")
         self.verticalLayout_7 = QtGui.QVBoxLayout(self.previous_versions_groupBox)
@@ -259,8 +249,7 @@ class Ui_Dialog(object):
         self.horizontalLayout_5.addWidget(self.close_pushButton)
         self.verticalLayout_7.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_14.addWidget(self.previous_versions_groupBox)
-        self.horizontalLayout_14.setStretch(0, 1)
-        self.horizontalLayout_14.setStretch(4, 1)
+        self.horizontalLayout_14.setStretch(2, 1)
         self.verticalLayout.addLayout(self.horizontalLayout_14)
         self.horizontalLayout.addWidget(self.verticalWidget)
 

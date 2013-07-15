@@ -786,6 +786,22 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """sets up the defaults for the interface
         """
         logger.debug("started setting up interface defaults")
+        
+        # before doing anything create a QSplitter for:
+        #   tasks_groupBox
+        #   new_version_groupBox
+        #   previous_versions_groupBox
+        # 
+        # and add it under horizontalLayout_14
+
+        splitter = QtGui.QSplitter()
+        splitter.addWidget(self.tasks_groupBox)
+        splitter.addWidget(self.new_version_groupBox)
+        splitter.addWidget(self.previous_versions_groupBox)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(2, 2)
+        self.horizontalLayout_14.addWidget(splitter)
 
         # check login
         self.fill_logged_in_user()

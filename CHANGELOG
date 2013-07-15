@@ -11,6 +11,9 @@ Anima Tools Changes
 
     * **Fix:** Version Creator UI now sets the statuses_comboBox to the status
       of the last version in the previous_version_tableWidget.
+    * **New:** Version Creator UI now uses a QSplitter for tasks_groupBox,
+      new_version_groupBox and previous_versions_groupBox which allows sizing
+      of the columns.
 
 0.1.0.a3
 ========
