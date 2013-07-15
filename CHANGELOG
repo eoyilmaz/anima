@@ -14,6 +14,8 @@ Anima Tools Changes
     * **New:** Version Creator UI now uses a QSplitter for tasks_groupBox,
       new_version_groupBox and previous_versions_groupBox which allows sizing
       of the columns.
+    * **New:** Version Creator UI now shows the dependent task list in a new
+      column in tasks_treeWidget.
 
   * **Utils:**
 

@@ -2341,7 +2341,8 @@ class VersionCreatorTester(unittest2.TestCase):
             name='Test Task 5',
             project=p2,
             resources=[self.admin],
-            status_list=task_status_list
+            status_list=task_status_list,
+            depends=[t3, t4]
         )
 
         # no tasks for project 3

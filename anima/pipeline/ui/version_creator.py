@@ -571,7 +571,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def addItem(self, entity, treeWidget):
         """adds the given stalker entity to the given treeWidget
         """
-        
         # skip this entity if it already has an ui_item attached
         if hasattr(entity, 'ui_item'):
             logger.debug('entity already has ui_item: %s' % entity)
@@ -581,6 +580,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         entity_item = QtGui.QTreeWidgetItem()
         entity_item.setText(0, entity.name)
         entity_item.setText(1, entity.__class__.__name__)
+        
+        # set dependencies
+        if entity.depends:
+            entity_item.setText(2, ', '.join(map(lambda x: x.name, entity.depends)))
+
         entity_item.stalker_entity = entity
         entity.ui_item = entity_item
 
@@ -591,7 +595,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             parent = entity.parent
             logger.debug('has a parent : %s' % parent)
 
-            parent_item = None
             if hasattr(parent, 'ui_item'):
                 parent_item = parent.ui_item
             else:
@@ -601,33 +604,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # add it under the project
             parent = entity.project
             logger.debug('has no parent : %s' % entity)
-            
-            parent_item = None
+
             if hasattr(parent, 'ui_item'):
                 parent_item = parent.ui_item
             else:
                 # add the parent
                 parent_item = self.addRootItem(parent, treeWidget)
 
-        # items = []
-        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        # while iterator.value():
-        #     item = iterator.value()
-        #     name = item.text(0)
-        #     if name == parent.name:
-        #         items.append(item)
-        #     iterator += 1
-
-        # logger.debug('items matching name : %s' % items)
-        # for item in items:
-        #     if item.stalker_entity == parent:
-        #         item.addChild(entity_item)
-        #         
-        #         # make parent bold
-        #         my_font = item.font(0)
-        #         my_font.setBold(True)
-        #         item.setFont(0, my_font)
-        #         break
         parent_item.addChild(entity_item)
         # make parent bold
         my_font = parent_item.font(0)
@@ -680,11 +663,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         # first clear it
         self.clear_tasks_treeWidget()
-        
+
         # create column headers
-        self.tasks_treeWidget.setColumnCount(2)
+        self.tasks_treeWidget.setColumnCount(3)
         self.tasks_treeWidget.setHeaderLabels(
-            ['Name', 'Type']
+            ['Name', 'Type', 'Dependencies']
         )
 
         # now get the tasks of the current user
@@ -698,7 +681,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             for project in logged_in_user.projects:
                 tasks.extend(project.tasks)
 
-        logger.debug('tasks : %s' % tasks)
+        # logger.debug('tasks : %s' % tasks)
 
         # now first fill the projects
         projects = []
@@ -713,8 +696,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # now add the tasks
         already_added_entities = []
         for task in tasks:
-            logger.debug('adding task: %s' % task)
-            logger.debug('task.parents: %s' % task.parents)
+            # logger.debug('adding task: %s' % task)
+            # logger.debug('task.parents: %s' % task.parents)
 
             # add all the parents of the task
             for parent in task.parents:
