@@ -329,18 +329,24 @@ def open_browser_in_location(path):
     import os
     import subprocess
     import platform
-    
+
     command = []
-    
+
     platform_info = platform.platform()
     
     if platform_info.startswith('Linux'):
         command = 'nautilus ' + path
     elif platform_info.startswith('Windows'):
-        command = 'explorer ' + path.replace('/', '\\')
+        if os.path.isdir(path):
+            command = 'explorer ' + path.replace('/', '\\')
+        elif os.path.isfile(path):
+            command = 'explorer /select,' + path.replace('/', '\\')
     elif platform_info.startswith('Darwin'):
+        # TODO: finder can not open files for now, fix it later
+        if not os.path.isdir(path):
+            path = os.path.dirname(path)
         command = 'open -a /System/Library/CoreServices/Finder.app ' + path
-    
+
     if os.path.exists(path):
         subprocess.call(command, shell=True)
     else:

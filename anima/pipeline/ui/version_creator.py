@@ -412,10 +412,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         
         change_status_menu = menu.addMenu('Change Status')
         
-        #if not version.is_published:
-        #    previous_versions_tableWidget_menu.addAction("Publish")
+        menu.addSeparator()
 
-        #previous_versions_tableWidget_menu.addSeparator()
+        logged_in_user = self.get_logged_in_user()
+        if version.created_by == logged_in_user:
+            if version.is_published:
+                menu.addAction('Un-Publish')
+            else:
+                menu.addAction('Publish')
+            menu.addSeparator()
 
         version_status_list = StatusList.query \
             .filter_by(target_entity_type='Version') \
@@ -451,31 +456,42 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         selected_item = menu.exec_(global_position)
 
         if selected_item:
-            #if selected_item.text() == "Publish":
-            #    # publish the selected version
-            #    if version:
-            #        # publish it
-            #        if not version.is_published:
-            #            version.is_published = True
-            #            version.save()
-            #            # refresh the tableWidget
-            #            self.update_previous_versions_tableWidget()
-            #            return
-
             choice = selected_item.text()
+
+            if version:
+                if choice == "Publish":
+                    # publish the selected version
+                    # publish it
+                    version.is_published = True
+                    version.updated_by = logged_in_user
+                    DBSession.add(version)
+                    DBSession.commit()
+                    # refresh the tableWidget
+                    self.update_previous_versions_tableWidget()
+                    return
+                elif choice == "Un-Publish":
+                    version.is_published = False
+                    version.updated_by = logged_in_user
+                    DBSession.add(version)
+                    DBSession.commit()
+                    # refresh the tableWidget
+                    self.update_previous_versions_tableWidget()
+                    return
+
 
             if choice in version_status_names:
                 # change the status of the version
                 if version:
                     version.status = Status.query \
                         .filter_by(name=selected_item.text()).first()
+                    version.updated_by = logged_in_user
                     DBSession.add(version)
                     DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
             elif choice == 'Browse Path...':
-                path = os.path.expandvars(version.absolute_path)
+                path = os.path.expandvars(version.absolute_full_path)
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:

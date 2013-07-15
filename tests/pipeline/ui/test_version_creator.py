@@ -2225,3 +2225,233 @@ class VersionCreatorTester(unittest2.TestCase):
         # now check if the version is restored
         v = dialog.get_previous_version()
         self.assertEqual(v, v9)
+
+    def test_users_can_change_the_publish_state_if_they_are_the_owner(self):
+        """testing if the users are able to change the publish method if it is
+        their versions
+        """
+        test_user = User(
+            name='Test User',
+            email='testuser@testusers.com',
+            password='secret',
+            login='testuser'
+        )
+        DBSession.add(test_user)
+
+        # create a repository
+        repo1 = Repository(
+            name='Test Repository',
+            windows_path='T;/TestRepo/',
+            linux_path='/mnt/T/TestRepo/',
+            osx_path='/Volumes/T/TestRepo/'
+        )
+
+        structure1 = Structure(
+            name='Test Project Structure',
+            templates=[],
+            custom_template=''
+        )
+
+        status1 = Status(
+            name='Waiting To Start',
+            code='WTS'
+        )
+
+        status2 = Status(
+            name='Work In Progress',
+            code='WIP'
+        )
+
+        status3 = Status(
+            name='Completed',
+            code='CMPL'
+        )
+
+        project_status_list = StatusList(
+            name='Project Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Project
+        )
+
+        # create a couple of projects
+        p1 = Project(
+            name='Project 1',
+            code='P1',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p2 = Project(
+            name='Project 2',
+            code='P2',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        p3 = Project(
+            name='Project 3',
+            code='P3',
+            repository=repo1,
+            structure=structure1,
+            status_list=project_status_list
+        )
+
+        projects = [p1, p2, p3]
+
+        # create tasks for admin user
+        task_status_list = StatusList(
+            name='Task Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Task
+        )
+
+        # project 1
+        t1 = Task(
+            name='Test Task 1',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t2 = Task(
+            name='Test Task 2',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t3 = Task(
+            name='Test Task 3',
+            project=p1,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # project 2
+        t4 = Task(
+            name='Test Task 4',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        t5 = Task(
+            name='Test Task 5',
+            project=p2,
+            resources=[self.admin],
+            status_list=task_status_list
+        )
+
+        # no tasks for project 3
+
+        # versions
+        version_status_list = StatusList(
+            name='Verson Statuses',
+            statuses=[status1, status2, status3],
+            target_entity_type=Version
+        )
+
+        # record them all to the db
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
+                           version_status_list])
+        DBSession.commit()
+        
+        # task 1
+
+        # default (Main)
+        v1 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v1)
+        DBSession.commit()
+
+        v2 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v2)
+        DBSession.commit()
+
+        v3 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v3)
+        DBSession.commit()
+
+        # Take1
+        v4 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v4)
+        DBSession.commit()
+
+        v5 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v5)
+        DBSession.commit()
+
+        v6 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v6)
+        DBSession.commit()
+
+        # Take2
+        v7 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v7)
+        DBSession.commit()
+
+        v8 = Version(
+            task=t1,
+            created_by=self.admin
+        )
+        DBSession.add(v8)
+        DBSession.commit()
+
+        v9 = Version(
+            task=t1,
+            created_by=test_user
+        )
+        DBSession.add(v9)
+        DBSession.commit()
+
+        # now call the dialog and expect to see all these projects as root
+        # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+        
+        # select the t1
+        items = dialog.tasks_treeWidget.findItems(
+            p1.name,
+            QtCore.Qt.MatchExactly,
+            0
+        )
+        self.assertGreater(len(items), 0)
+        p1_item = items[0]
+        self.assertIsNotNone(p1_item)
+        
+        # get task1
+        t1_item = None
+        for i in range(p1_item.childCount()):
+            item = p1_item.child(i)
+            if item.text(0) == t1.name:
+                t1_item = item
+                break
+        self.assertIsNotNone(t1_item)
+        
+        dialog.tasks_treeWidget.setCurrentItem(item)
+
+        # check if the menu item has a publish method for v8
+        self.fail('test is not completed yet')

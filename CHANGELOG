@@ -15,6 +15,11 @@ Anima Tools Changes
       new_version_groupBox and previous_versions_groupBox which allows sizing
       of the columns.
 
+  * **Utils:**
+
+    * **New:** utils.open_browser_in_location() now selects the file if a file
+      path is given.
+
 0.1.0.a3
 ========
 
