@@ -16,6 +16,9 @@ Anima Tools Changes
       of the columns.
     * **New:** Version Creator UI now shows the dependent task list in a new
       column in tasks_treeWidget.
+    * **Utils:**
+      
+      * **New:** Added a new class called **UICFile** to manage uic files.
 
   * **Utils:**
 

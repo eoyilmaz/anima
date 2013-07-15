@@ -32,6 +32,12 @@ class AnimaDialogBase(object):
         )
 
 
+class MultiLineInputDialog(QtGui.QDialog):
+    """A simple dialog with a QPlainTextEdit
+    """
+    pass
+
+
 def UICaller(app_in, executor, DialogClass, **kwargs):
     global app
     global mainDialog
@@ -214,6 +220,3 @@ def render_image_from_gview(gview, image_full_path):
         pixmap.save(
             image_full_path
         )
-
-
-

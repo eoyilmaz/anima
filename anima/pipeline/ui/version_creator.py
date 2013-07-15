@@ -580,10 +580,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         entity_item = QtGui.QTreeWidgetItem()
         entity_item.setText(0, entity.name)
         entity_item.setText(1, entity.__class__.__name__)
-        
+
         # set dependencies
         if entity.depends:
-            entity_item.setText(2, ', '.join(map(lambda x: x.name, entity.depends)))
+            entity_item.setText(
+                2,
+                ', '.join(map(lambda x: x.name, entity.depends))
+            )
 
         entity_item.stalker_entity = entity
         entity.ui_item = entity_item
@@ -1548,3 +1551,5 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         env = EnvironmentBase()
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
+
+    

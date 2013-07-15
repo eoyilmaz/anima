@@ -352,3 +352,17 @@ def open_browser_in_location(path):
     else:
         raise IOError("%s doesn't exists!" % path)
 
+
+def md5_checksum(path):
+    """generates md5 of a file with the given path
+    
+    :param path: absolute path to  the file
+    """
+    import hashlib
+    m = hashlib.md5()
+    with open(path) as f:
+        chunk = f.read(8192)
+        while chunk:
+            m.update(chunk)
+            chunk = f.read(8192)
+    return m.digest()
