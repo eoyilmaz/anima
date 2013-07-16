@@ -33,6 +33,9 @@ class Houdini(EnvironmentBase):
         from stalker import Version
         assert isinstance(version, Version)
 
+        # initialize path variables by using update_paths()
+        version.update_paths()
+
         # set the extension to hip
         version.extension = '.hip'
 
