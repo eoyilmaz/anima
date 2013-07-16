@@ -585,9 +585,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # playblast_filename = version.task.project.code + "_" + \
         #                      os.path.splitext(version.filename)[0]
 
-        playblast_filename = '_'.join(
-            map(lambda x: x.nice_name, version.task.parents)
-        ) + '_' + version.task.nice_name
+        playblast_filename = version.task.project.nice_name + '_' + \
+            '_'.join(map(lambda x: x.nice_name, version.task.parents)) + \
+            '_' + version.task.nice_name + '_' + version.take_name + '_' + \
+            'v%03d' % version.version_number
 
         playblast_full_path = os.path.join(
             playblast_path,
