@@ -582,8 +582,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         ).replace('\\', '/')
 
         # use project name and sequence name if available
-        playblast_filename = version.task.project.code + "_" + \
-                             os.path.splitext(version.filename)[0]
+        # playblast_filename = version.task.project.code + "_" + \
+        #                      os.path.splitext(version.filename)[0]
+
+        playblast_filename = '_'.join(
+            map(lambda x: x.nice_name, version.task.parents)
+        ) + '_' + version.task.nice_name
 
         playblast_full_path = os.path.join(
             playblast_path,
