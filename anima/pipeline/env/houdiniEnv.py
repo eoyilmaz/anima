@@ -260,10 +260,7 @@ class Houdini(EnvironmentBase):
             version.absolute_path,
             'Outputs'
         ).replace("\\", "/")
-        project_code = version.task.project.code
-        take_name = version.take_name
         version_string = 'v%03d' % version.version_number
-        user_initials = version.created_by.initials
 
         output_filename = render_output_folder + '/`$OS`/' + \
                           version.task.project.code + '_' + \
