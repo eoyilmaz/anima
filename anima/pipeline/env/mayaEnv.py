@@ -10,7 +10,6 @@ import logging
 
 from pymel import core as pm
 
-from stalker.config import defaults
 from stalker.models.env import EnvironmentBase
 from stalker.db import DBSession
 
@@ -142,6 +141,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # set version extension to ma
         version.extension = '.ma'
+
+        # define that this version is created with Maya
         version.created_with = self.name
 
         project = version.task.project
@@ -492,12 +493,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             image_folder_from_ws
         ).replace("\\", "/")
 
-        render_file_full_path = render_output_folder + "/<Layer>/" + \
-                                version.task.project.code + "_" + \
+        render_file_full_path = render_output_folder + '/<Layer>/' + \
+                                version.task.project.code + '_' + \
                                 version.task.entity_type + '_' + \
-                                str(version.task.id) + "_" + \
+                                str(version.task.id) + '_' + \
                                 version.take_name + \
-                                "_<Layer>_<RenderPass>_<Version>"
+                                '_<Layer>_<RenderPass>_<Version>'
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path

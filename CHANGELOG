@@ -27,6 +27,10 @@ Anima Tools Changes
     * **New:** utils.open_browser_in_location() now selects the file if a file
       path is given.
 
+  * **Env:**
+
+    * **Fix:** Houdini env is working now.
+
 0.1.0.a3
 ========
 
