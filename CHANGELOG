@@ -18,7 +18,7 @@ Anima Tools Changes
       column in tasks_treeWidget.
     * **Utils:**
       
-      * **New:** Added a new class called **UICFile** to manage uic files.
+      * **New:** Added a new class called **UIFile** to manage ui files.
       * **New:** UICompiler now checks the *.ui* files against their stored md5
         checksum values to prevent unnecessary compiles of unchanged files.
 

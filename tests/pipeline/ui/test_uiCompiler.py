@@ -26,7 +26,7 @@ from anima.pipeline.ui import uiCompiler
 
 
 class UIFileTestCase(unittest2.TestCase):
-    """tests the UICFile class
+    """tests the UIFile class
     """
 
     def setUp(self):
@@ -36,7 +36,7 @@ class UIFileTestCase(unittest2.TestCase):
         # fill test data to the file
         with open(self.test_uicFile_path, 'w+') as f:
             f.write('test')
-        self.test_uicFile = uiCompiler.UICFile(self.test_uicFile_path)
+        self.test_uicFile = uiCompiler.UIFile(self.test_uicFile_path)
 
     def tearDown(self):
         """clear test data
@@ -47,7 +47,7 @@ class UIFileTestCase(unittest2.TestCase):
         """testing if a TypeError will be raised when the full_path argument is
         skipped
         """
-        self.assertRaises(TypeError, uiCompiler.UICFile)
+        self.assertRaises(TypeError, uiCompiler.UIFile)
 
     def test_filename_attribute_initialized_correctly(self):
         """testing if the filename attribute is initialized correctly
