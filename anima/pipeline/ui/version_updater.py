@@ -159,8 +159,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             self.versions_tableWidget.setItem(i, 0, item)
 
             #-------------------------------------
-            # type name
-            item = QtGui.QTableWidgetItem(version.type.name)
+            # task entity type name
+            item = QtGui.QTableWidgetItem(version.task.entity_type)
             # align to horizontal and vertical center
             item.setTextAlignment(
                 QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter

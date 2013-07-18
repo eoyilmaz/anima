@@ -820,7 +820,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version_full_path =  version_tuple[2]
 
             if version_full_path != previous_version_full_path:
-                latest_version = version.latest_version()
+                latest_version = version.latest_version
                 previous_version_full_path = version_full_path
 
             reference.replaceWith(latest_version.absolute_full_path)
