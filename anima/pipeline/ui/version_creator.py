@@ -16,7 +16,7 @@ from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
 import anima
 from anima.pipeline import utils
 from anima.pipeline.ui import utils as ui_utils
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog
+from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
