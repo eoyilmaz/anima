@@ -51,7 +51,7 @@ class Nuke(EnvironmentBase):
         version.extension = '.nk'
 
         # set project_directory
-        self.project_directory = os.path.dirname(version.absolute_path)
+        self.project_directory = os.path.dirnam(version.absolute_path)
 
         # create the main write node
         self.create_main_write_node(version)
@@ -97,7 +97,7 @@ class Nuke(EnvironmentBase):
         #     imf.pixel_aspect
         # )
 
-        nuke.scriptSaveAs(version.absolute_path)
+        nuke.scriptSaveAs(version.absolute_full_path)
 
         return True
 
@@ -107,7 +107,7 @@ class Nuke(EnvironmentBase):
         # set the extension to '.nk'
         version.update_paths()
         version.extension = '.nk'
-        nuke.nodeCopy(version.absolute_fullpath)
+        nuke.nodeCopy(version.absolute_full_path)
         return True
 
     def open_(self, version, force=False):
@@ -279,9 +279,8 @@ class Nuke(EnvironmentBase):
                 output_format_enum = 'mov'
 
             output_file_name += \
-                version.base_name + "_" + \
+                "Task_" + str(version.task.id) + "_" + \
                 version.take_name + "_" + \
-                version.type.code + "_" + \
                 "v%03d" % version.version_number
 
             if output_format_enum != 'mov':
