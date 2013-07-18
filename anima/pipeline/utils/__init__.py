@@ -333,7 +333,7 @@ def open_browser_in_location(path):
     command = []
 
     platform_info = platform.platform()
-    
+
     if platform_info.startswith('Linux'):
         command = 'nautilus ' + path
     elif platform_info.startswith('Windows'):

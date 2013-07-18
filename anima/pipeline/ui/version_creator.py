@@ -1359,6 +1359,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # just set the clipboard to the new_version.absolute_full_path
             clipboard = QtGui.QApplication.clipboard()
+            new_version.update_paths()
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
 
