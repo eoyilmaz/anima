@@ -137,7 +137,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # set previous_versions_tableWidget.labels
         self.previous_versions_tableWidget.labels = [
             'Version',
-            'Created With',
+            'P',
             'User',
             'Status',
             'File Size',
