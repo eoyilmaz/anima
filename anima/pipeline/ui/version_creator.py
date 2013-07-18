@@ -29,14 +29,6 @@ elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 
-class UIEntity(object):
-    """stores Stalker entity and its corresponding UI item.
-    """
-    def __init__(self):
-        self.entity = None
-        self.item = None
-
-
 def UI(environment=None, mode=0, app_in=None, executor=None):
     """
     :param environment: The
@@ -54,7 +46,6 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       function. It also passes the created app instance to this executor.
     
     """
-    DBSession.configure(extension=None)
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
 
