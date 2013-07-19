@@ -30,6 +30,9 @@ Anima Tools Changes
   * **Env:**
 
     * **Fix:** Houdini env is working now.
+    * **Fix:** Nuke env is working now.
+    * **New:** Maya env is now storing the parent version info upon save and
+      updates inputs (references) of the current version properly.
 
 0.1.0.a3
 ========

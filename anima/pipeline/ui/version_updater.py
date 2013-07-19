@@ -122,10 +122,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         return self._version_tuple_list
 
     @version_tuple_list.setter
-    def version_tuple_list(self, assetTupleList):
+    def version_tuple_list(self, version_tuple_list):
         """sets the asset tuple list
         """
-        self._version_tuple_list = assetTupleList
+        self._version_tuple_list = version_tuple_list
         self._num_of_versions = len(self._version_tuple_list)
 
     def _fill_UI(self):

@@ -137,6 +137,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # do not save if there are local files
         self.check_external_files()
 
+        # get the current version, and store it as the parent of the new version
+        current_version = self.get_current_version()
+
         version.update_paths()
 
         # set version extension to ma
@@ -223,6 +226,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             type='mayaAscii'
         )
 
+        # update the parent info
+        version.parent = current_version
+
         # update the reference list
         self.update_references_list(version)
 
@@ -230,6 +236,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.append_to_recent_files(
             version.absolute_full_path
         )
+
+        DBSession.commit()
 
         return True
     
@@ -376,7 +384,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
-            current_version.save()
+            DBSession.commit()
 
         return True
     
@@ -820,10 +828,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version_full_path =  version_tuple[2]
 
             if version_full_path != previous_version_full_path:
-                latest_version = version.latest_version
-                previous_version_full_path = version_full_path
+                latest_published_version = version.latest_published_version
+                previous_version_full_path = latest_published_version.absolute_full_path
 
-            reference.replaceWith(latest_version.absolute_full_path)
+            reference.replaceWith(latest_published_version.absolute_full_path)
 
     def get_frame_range(self):
         """returns the current playback frame range
