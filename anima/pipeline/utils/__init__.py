@@ -4,13 +4,16 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-
-
 import os
 import re
 import itertools
 import shutil
 import glob
+import logging
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 def all_equal(elements):
     """return True if all the elements are equal, otherwise False.
@@ -377,16 +380,12 @@ class StalkerThumbnailCache(object):
         """returns the file either from cache or from stalker server
         """
         from anima import pipeline
-        
+
         # look up in the cache first
         filename = os.path.basename(file_full_path)
-        
-        cached_file_full_path = os.path.expanduser(
-            os.path.join(
-                pipeline.local_cache_folder,
-                filename
-            )
-        )
+
+        cache_path = os.path.expanduser(pipeline.local_cache_folder)
+        cached_file_full_path = os.path.join(cache_path, filename)
 
         if not os.path.exists(cached_file_full_path):
             # download the file and put it on to the cache
@@ -398,7 +397,13 @@ class StalkerThumbnailCache(object):
             # put it in to a file
             # TODO: from header decide ascii or binary mode
             # TODO: use the original file name if necessary
+            if not os.path.exists(cache_path):
+                os.makedirs(cache_path)
+
             with open(cached_file_full_path, 'wb') as f:
                 f.write(data)
+
+        logger.debug('cache_path            : %s' % cache_path)
+        logger.debug('cached_file_full_path : %s' % cached_file_full_path)
 
         return cached_file_full_path

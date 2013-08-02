@@ -7,5 +7,5 @@
 This package contains the pipeline tools developed in Anima.
 """
 
-stalker_server_address = '192.168.0.64:6543'
-local_cache_folder = '~/.anima/Cache/'
+stalker_server_address = 'http://192.168.0.64:6543'
+local_cache_folder = '~/.cache/anima/'

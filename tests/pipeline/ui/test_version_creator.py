@@ -980,8 +980,7 @@ class VersionCreatorTester(unittest2.TestCase):
             dialog.takes_listWidget.currentItem().text()
         )
 
-    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(
-            self):
+    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(self):
         """testing if the takes_listWidget lists all the takes of the current
         task versions
         """
@@ -1681,7 +1680,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # self.show_dialog(dialog)
 
         # set the current item to task1
         # get the corresponding item
@@ -2431,7 +2430,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # level items in tasks_treeWidget
 
         dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # self.show_dialog(dialog)
         
         # select the t1
         items = dialog.tasks_treeWidget.findItems(
@@ -2456,3 +2455,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # check if the menu item has a publish method for v8
         self.fail('test is not completed yet')
+
+    def test_thumbnails_are_displayed_correctly(self):
+        """testing if the thumbnails are displayed correctly
+        """
