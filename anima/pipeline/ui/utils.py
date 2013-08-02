@@ -109,18 +109,21 @@ def update_gview_with_version_thumbnail(task, gView):
     if not isinstance(task, Task) or \
             not isinstance(gView, QtGui.QGraphicsView):
         # do nothing
+        logger.debug('task is not a stalker.models.task.Task instance')
         return
 
     # get the thumbnail full path
     if task.thumbnail:
 
         # use the cache system to get the thumbnail
-        full_path = StalkerThumbnailCache.get(version.task.thumbnail.full_path)
+        full_path = StalkerThumbnailCache.get(task.thumbnail.full_path)
 
         update_gview_with_image_file(
             full_path,
             gView
         )
+    else:
+        logger.debug('there is no thumbnail')
 
 
 def update_gview_with_image_file(image_full_path, gView):
