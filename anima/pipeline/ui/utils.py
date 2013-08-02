@@ -12,7 +12,7 @@ import logging
 from anima.pipeline.utils import StalkerThumbnailCache
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.DEBUG)
 
 from anima.pipeline.ui.lib import QtCore, QtGui
 
@@ -95,12 +95,11 @@ def clear_thumbnail(gView):
     scene.clear()
 
 
-def update_gview_with_version_thumbnail(task, gView):
-    """Updates the given QGraphicsView with the Task thumbnail which is related
-    to the given Version.
+def update_gview_with_task_thumbnail(task, gView):
+    """Updates the given QGraphicsView with the given Task thumbnail
 
-    :param version: A
-      :class:`~stalker.models.version.Version` instance
+    :param task: A
+      :class:`~stalker.models.task.Task` instance
 
     :param gView: A QtGui.QGraphicsView instance
     """
@@ -141,14 +140,19 @@ def update_gview_with_image_file(image_full_path, gView):
         # size = conf.thumbnail_size
         # width = size[0]
         # height = size[1]
+        size = gView.size()
+        width = size.width()
+        height = size.height()
+        logger.debug('width: %s' % width)
+        logger.debug('height: %s' % height)
 
         if os.path.exists(image_full_path):
-            # pixmap = QtGui.QPixmap(image_full_path, format='JPG').scaled(
-            #     width, height,
-            #     QtCore.Qt.KeepAspectRatio,
-            #     QtCore.Qt.SmoothTransformation
-            # )
-            pixmap = QtGui.QPixmap(image_full_path, format='JPG')
+            pixmap = QtGui.QPixmap(image_full_path, format='JPG').scaled(
+                width, height,
+                QtCore.Qt.KeepAspectRatio,
+                QtCore.Qt.SmoothTransformation
+            )
+            # pixmap = QtGui.QPixmap(image_full_path, format='JPG')
 
             scene = gView.scene()
             scene.addPixmap(pixmap)

@@ -388,19 +388,19 @@ class StalkerThumbnailCache(object):
         cache_path = os.path.expanduser(pipeline.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
+        url = pipeline.stalker_server_address + thumbnail_full_path
+
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)
+        logger.debug('url                   : %s' % url)
 
         if not os.path.exists(cached_file_full_path):
             # download the file and put it on to the cache
             import urllib2
-            response = urllib2.urlopen(
-                pipeline.stalker_server_address + '/' + thumbnail_full_path
-            )
+            response = urllib2.urlopen(url)
             data = response.read()
             # put it in to a file
             # TODO: from header decide ascii or binary mode
-            # TODO: use the original file name if necessary
             if not os.path.exists(cache_path):
                 os.makedirs(cache_path)
 

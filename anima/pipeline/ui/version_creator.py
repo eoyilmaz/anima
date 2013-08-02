@@ -729,6 +729,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # update the thumbnail
         # TODO: do it in another thread
+        self.clear_thumbnail()
         self.update_thumbnail()
 
         # get the versions of the entity
@@ -952,7 +953,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # update the statuses_comboBox
         task = self.get_task()
-        if not task:
+        if not task or not isinstance(task, Task):
             return
 
         # query the Versions of this type and take
@@ -994,7 +995,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.clear_previous_versions_tableWidget()
 
         task = self.get_task()
-        if not task:
+        if not task or not isinstance(task, Task):
             return
 
         # if version_type_name != '':
@@ -1207,10 +1208,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         current_item = self.tasks_treeWidget.currentItem()
 
         if current_item:
-            if isinstance(current_item.stalker_entity, Task):
+            if isinstance(current_item.stalker_entity, (Task, Project)):
                 task = current_item.stalker_entity
-                session = DBSession()
-                session.add(task)
+                #session = DBSession()
+                #session.add(task)
 
         logger.debug('task: %s' % task)
         return task
@@ -1273,7 +1274,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         # create a new version
         task = self.get_task()
-        if not task:
+        if not task or not isinstance(task, Task):
             return None
 
         take_name = self.takes_listWidget.currentItem().text()
@@ -1522,7 +1523,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the current task
         task = self.get_task()
         if task:
-            ui_utils.update_gview_with_version_thumbnail(
+            ui_utils.update_gview_with_task_thumbnail(
                 task,
                 self.thumbnail_graphicsView
             )
@@ -1530,19 +1531,21 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def upload_thumbnail_pushButton_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
-        thumbnail_full_path = ui_utils.choose_thumbnail(self)
-
-        # if the thumbnail_full_path is empty do not do anything
-        if thumbnail_full_path == "":
-            return
-
-        # get the current task
-        task = self.get_task()
-
-        ui_utils.upload_thumbnail(task, thumbnail_full_path)
-
-        # update the thumbnail
-        self.update_thumbnail()
+        #thumbnail_full_path = ui_utils.choose_thumbnail(self)
+        #
+        ## if the thumbnail_full_path is empty do not do anything
+        #if thumbnail_full_path == "":
+        #    return
+        #
+        ## get the current task
+        #task = self.get_task()
+        #
+        #ui_utils.upload_thumbnail(task, thumbnail_full_path)
+        #
+        ## update the thumbnail
+        #self.update_thumbnail()
+        # TODO: upload it to stalker server
+        pass
 
     def guess_from_path_lineEdit_changed(self):
         """runs when guess from path is edited
