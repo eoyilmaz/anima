@@ -366,3 +366,39 @@ def md5_checksum(path):
             m.update(chunk)
             chunk = f.read(8192)
     return m.digest()
+
+
+class StalkerThumbnailCache(object):
+    """A simple file cache system
+    """
+
+    @classmethod
+    def get(cls, file_full_path):
+        """returns the file either from cache or from stalker server
+        """
+        from anima import pipeline
+        
+        # look up in the cache first
+        filename = os.path.basename(file_full_path)
+        
+        cached_file_full_path = os.path.expanduser(
+            os.path.join(
+                pipeline.local_cache_folder,
+                filename
+            )
+        )
+
+        if not os.path.exists(cached_file_full_path):
+            # download the file and put it on to the cache
+            import urllib2
+            response = urllib2.urlopen(
+                pipeline.stalker_server_address + '/' + file_full_path
+            )
+            data = response.read()
+            # put it in to a file
+            # TODO: from header decide ascii or binary mode
+            # TODO: use the original file name if necessary
+            with open(cached_file_full_path, 'wb') as f:
+                f.write(data)
+
+        return cached_file_full_path

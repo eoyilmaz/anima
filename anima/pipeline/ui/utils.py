@@ -9,7 +9,7 @@ import sys
 import os
 import logging
 
-from stalker import Version
+from anima.pipeline.utils import StalkerThumbnailCache
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -95,24 +95,30 @@ def clear_thumbnail(gView):
     scene.clear()
 
 
-def update_gview_with_version_thumbnail(version, gView):
-    """Updates the given QGraphicsView with the given Version thumbnail.
-    
+def update_gview_with_version_thumbnail(task, gView):
+    """Updates the given QGraphicsView with the Task thumbnail which is related
+    to the given Version.
+
     :param version: A
       :class:`~stalker.models.version.Version` instance
-    
+
     :param gView: A QtGui.QGraphicsView instance
     """
+    from stalker import Task
 
-    if not isinstance(version, Version) or \
+    if not isinstance(task, Task) or \
             not isinstance(gView, QtGui.QGraphicsView):
         # do nothing
         return
 
     # get the thumbnail full path
-    if version.thumbnail:
+    if task.thumbnail:
+
+        # use the cache system to get the thumbnail
+        full_path = StalkerThumbnailCache.get(version.task.thumbnail.full_path)
+
         update_gview_with_image_file(
-            version.thumbnail.full_path,
+            full_path,
             gView
         )
 

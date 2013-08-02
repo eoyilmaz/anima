@@ -184,7 +184,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.fill_tasks_treeWidget
         )
 
-        # tasks_listWidget
+        # tasks_treeWidget
         QtCore.QObject.connect(
             self.tasks_treeWidget,
             QtCore.SIGNAL(
@@ -689,6 +689,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # now add the tasks
         already_added_entities = []
+        # TODO: optimize this part, by removing already_added_entities
+        #       do not go from child but parent
+        #       This needs to be optimized especially for all tasks.
         for task in tasks:
             # logger.debug('adding task: %s' % task)
             # logger.debug('task.parents: %s' % task.parents)
@@ -723,6 +726,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         entity = current_item.stalker_entity
         if not entity:
             return
+
+        # update the thumbnail
+        # TODO: do it in another thread
+        self.update_thumbnail()
 
         # get the versions of the entity
         takes = []
@@ -1514,10 +1521,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         # get the current task
         task = self.get_task()
-        ui_utils.update_gview_with_version_thumbnail(
-            task,
-            self.thumbnail_graphicsView
-        )
+        if task:
+            ui_utils.update_gview_with_version_thumbnail(
+                task,
+                self.thumbnail_graphicsView
+            )
 
     def upload_thumbnail_pushButton_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
