@@ -376,22 +376,26 @@ class StalkerThumbnailCache(object):
     """
 
     @classmethod
-    def get(cls, file_full_path):
+    def get(cls, thumbnail_full_path):
         """returns the file either from cache or from stalker server
         """
         from anima import pipeline
 
         # look up in the cache first
-        filename = os.path.basename(file_full_path)
+        filename = os.path.basename(thumbnail_full_path)
+        logger.debug('filename : %s' % filename)
 
         cache_path = os.path.expanduser(pipeline.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
+
+        logger.debug('cache_path            : %s' % cache_path)
+        logger.debug('cached_file_full_path : %s' % cached_file_full_path)
 
         if not os.path.exists(cached_file_full_path):
             # download the file and put it on to the cache
             import urllib2
             response = urllib2.urlopen(
-                pipeline.stalker_server_address + '/' + file_full_path
+                pipeline.stalker_server_address + '/' + thumbnail_full_path
             )
             data = response.read()
             # put it in to a file
@@ -403,7 +407,5 @@ class StalkerThumbnailCache(object):
             with open(cached_file_full_path, 'wb') as f:
                 f.write(data)
 
-        logger.debug('cache_path            : %s' % cache_path)
-        logger.debug('cached_file_full_path : %s' % cached_file_full_path)
 
         return cached_file_full_path
