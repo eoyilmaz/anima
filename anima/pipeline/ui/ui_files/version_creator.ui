@@ -246,7 +246,7 @@
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QLabel" name="note_label">
+              <widget class="QLabel" name="description_label">
                <property name="minimumSize">
                 <size>
                  <width>35</width>
@@ -254,7 +254,7 @@
                 </size>
                </property>
                <property name="text">
-                <string>Note</string>
+                <string>Desc.</string>
                </property>
               </widget>
              </item>
@@ -273,7 +273,7 @@
               </layout>
              </item>
              <item row="1" column="1">
-              <widget class="QTextEdit" name="note_textEdit">
+              <widget class="QTextEdit" name="description_textEdit">
                <property name="enabled">
                 <bool>true</bool>
                </property>
@@ -570,7 +570,7 @@ p, li { white-space: pre-wrap; }
  </widget>
  <tabstops>
   <tabstop>add_take_toolButton</tabstop>
-  <tabstop>note_textEdit</tabstop>
+  <tabstop>description_textEdit</tabstop>
   <tabstop>export_as_pushButton</tabstop>
   <tabstop>save_as_pushButton</tabstop>
   <tabstop>previous_versions_tableWidget</tabstop>

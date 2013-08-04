@@ -10,7 +10,7 @@ import os
 import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, StatusList, Status, Note, Project,
+from stalker import (db, defaults, Version, StatusList, Status, Project,
                      Task, LocalSession, EnvironmentBase)
 
 import anima
@@ -131,9 +131,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             'P',
             'User',
             'Status',
-            'File Size',
+            'Size',
             'Date',
-            'Note',
+            'Description',
             #"Path"
         ]
         self.previous_versions_tableWidget.setColumnCount(
@@ -441,7 +441,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         menu.addSeparator()
 
         if not self.mode:
-            menu.addAction("Change Note...")
+            menu.addAction("Change Description...")
             menu.addSeparator()
 
         selected_item = menu.exec_(global_position)
@@ -491,34 +491,22 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         "Error",
                         "Path doesn't exists:\n" + path
                     )
-            elif choice == 'Change Note...':
+            elif choice == 'Change Description...':
                 if version:
-                    # change the note
+                    # change the description
                     self.current_dialog = QtGui.QInputDialog(self)
 
-                    note = ''
-                    if version.notes:
-                        note = version.notes[-1].content
-
-                    new_note, ok = self.current_dialog.getText(
+                    new_description, ok = self.current_dialog.getText(
                         self,
-                        "Enter the new note",
-                        "Please enter the new note:",
+                        "Enter the new description",
+                        "Please enter the new description:",
                         QtGui.QLineEdit.Normal,
-                        note
+                        version.description
                     )
 
                     if ok:
-                        # change the note of the version
-                        note = None
-                        if version.notes:
-                            note = version.notes[-1]
-
-                        if not note:
-                            note = Note()
-
-                        note.content = new_note
-                        version.notes = [note]
+                        # change the description of the version
+                        version.description = new_description
 
                         DBSession.add(version)
                         DBSession.commit()
@@ -860,8 +848,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # self.create_asset_pushButton.setVisible(False)
             # self.add_type_toolButton.setVisible(False)
             self.add_take_toolButton.setVisible(False)
-            self.note_label.setVisible(False)
-            self.note_textEdit.setVisible(False)
+            self.description_label.setVisible(False)
+            self.description_textEdit.setVisible(False)
             self.status_label.setVisible(False)
             self.statuses_comboBox.setVisible(False)
             self.publish_checkBox.setVisible(False)
@@ -884,8 +872,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             self.chose_pushButton.setVisible(False)
 
-        # update note field
-        self.note_textEdit.setText('')
+        # update description field
+        self.description_textEdit.setText('')
 
         logger.debug("finished setting up interface defaults")
 
@@ -1176,11 +1164,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # ------------------------------------
 
             # ------------------------------------
-            # note
-            note_content = ''
-            if vers.notes:
-                note_content = vers.notes[-1].content
-            item = QtGui.QTableWidgetItem(note_content)
+            # description
+            item = QtGui.QTableWidgetItem(vers.description)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -1279,14 +1264,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         take_name = self.takes_listWidget.currentItem().text()
         user = self.get_logged_in_user()
-
-        note = self.note_textEdit.toPlainText()
-        notes = []
-        if note:
-            notes.append(Note(content=note))
-
+        description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
-
         status_name = self.statuses_comboBox.currentText()
         status = Status.query.filter_by(name=status_name).first()
 
@@ -1294,7 +1273,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             task=task,
             created_by=user,
             take_name=take_name,
-            notes=notes,
+            description=description,
             status=status
         )
         version.is_published = published

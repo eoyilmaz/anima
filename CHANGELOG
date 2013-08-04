@@ -16,8 +16,13 @@ Anima Tools Changes
       of the columns.
     * **New:** Version Creator UI now shows the dependent task list in a new
       column in tasks_treeWidget.
+    * **New:** Version Creator UI can now display task thumbnails through
+      Stalker Pyramid server.
+    * **Update:** In Version Creator UI, Version notes are now saved in
+      **Version.description** attribute instead of creating a new **Note**
+      instance.
     * **Utils:**
-      
+
       * **New:** Added a new class called **UIFile** to manage ui files.
       * **New:** UICompiler now checks the *.ui* files against their stored md5
         checksum values to prevent unnecessary compiles of unchanged files.
@@ -26,6 +31,8 @@ Anima Tools Changes
 
     * **New:** utils.open_browser_in_location() now selects the file if a file
       path is given.
+    * **New:** Added **StalkerThumbnailCache** class, which can read thumbnails
+      from Stalker Pyramid server through ``urllib2`` and cache them locally.
 
   * **Env:**
 

@@ -136,6 +136,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         db.setup({'sqlalchemy.url': 'sqlite:///:memory:',
                   'sqlalchemy.echo': 'false'})
+        db.init()
 
         # create the environment variable and point it to a temp directory
         # self.temp_config_folder = tempfile.mkdtemp()
@@ -2459,3 +2460,4 @@ class VersionCreatorTester(unittest2.TestCase):
     def test_thumbnails_are_displayed_correctly(self):
         """testing if the thumbnails are displayed correctly
         """
+        self.fail('test is not implemented yet')

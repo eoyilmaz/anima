@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './ui_files/version_creator.ui'
+# Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Mon Jul 15 17:43:26 2013
+# Created: Sun Aug  4 12:45:06 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -138,10 +138,10 @@ class Ui_Dialog(object):
         self.takes_label.setFont(font)
         self.takes_label.setObjectName(_fromUtf8("takes_label"))
         self.gridLayout_3.addWidget(self.takes_label, 0, 0, 1, 1)
-        self.note_label = QtGui.QLabel(self.new_version_groupBox)
-        self.note_label.setMinimumSize(QtCore.QSize(35, 0))
-        self.note_label.setObjectName(_fromUtf8("note_label"))
-        self.gridLayout_3.addWidget(self.note_label, 1, 0, 1, 1)
+        self.description_label = QtGui.QLabel(self.new_version_groupBox)
+        self.description_label.setMinimumSize(QtCore.QSize(35, 0))
+        self.description_label.setObjectName(_fromUtf8("description_label"))
+        self.gridLayout_3.addWidget(self.description_label, 1, 0, 1, 1)
         self.horizontalLayout_6 = QtGui.QHBoxLayout()
         self.horizontalLayout_6.setObjectName(_fromUtf8("horizontalLayout_6"))
         self.takes_listWidget = QtGui.QListWidget(self.new_version_groupBox)
@@ -151,11 +151,11 @@ class Ui_Dialog(object):
         self.add_take_toolButton.setObjectName(_fromUtf8("add_take_toolButton"))
         self.horizontalLayout_6.addWidget(self.add_take_toolButton)
         self.gridLayout_3.addLayout(self.horizontalLayout_6, 0, 1, 1, 1)
-        self.note_textEdit = QtGui.QTextEdit(self.new_version_groupBox)
-        self.note_textEdit.setEnabled(True)
-        self.note_textEdit.setTabChangesFocus(True)
-        self.note_textEdit.setObjectName(_fromUtf8("note_textEdit"))
-        self.gridLayout_3.addWidget(self.note_textEdit, 1, 1, 1, 1)
+        self.description_textEdit = QtGui.QTextEdit(self.new_version_groupBox)
+        self.description_textEdit.setEnabled(True)
+        self.description_textEdit.setTabChangesFocus(True)
+        self.description_textEdit.setObjectName(_fromUtf8("description_textEdit"))
+        self.gridLayout_3.addWidget(self.description_textEdit, 1, 1, 1, 1)
         self.verticalLayout_6.addLayout(self.gridLayout_3)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName(_fromUtf8("horizontalLayout_7"))
@@ -267,8 +267,8 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        Dialog.setTabOrder(self.add_take_toolButton, self.note_textEdit)
-        Dialog.setTabOrder(self.note_textEdit, self.export_as_pushButton)
+        Dialog.setTabOrder(self.add_take_toolButton, self.description_textEdit)
+        Dialog.setTabOrder(self.description_textEdit, self.export_as_pushButton)
         Dialog.setTabOrder(self.export_as_pushButton, self.save_as_pushButton)
         Dialog.setTabOrder(self.save_as_pushButton, self.previous_versions_tableWidget)
         Dialog.setTabOrder(self.previous_versions_tableWidget, self.open_pushButton)
@@ -276,7 +276,7 @@ class Ui_Dialog(object):
         Dialog.setTabOrder(self.reference_pushButton, self.import_pushButton)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Version Creator - oyProjectManager", None))
+        Dialog.setWindowTitle(_translate("Dialog", "Version Creator - Stalker", None))
         self.logged_in_as_label.setText(_translate("Dialog", "<b>Logged In As:</b>", None))
         self.logged_in_user_label.setText(_translate("Dialog", "TextLabel", None))
         self.logout_pushButton.setText(_translate("Dialog", "Logout", None))
@@ -286,9 +286,9 @@ class Ui_Dialog(object):
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload Thumbnail...", None))
         self.new_version_groupBox.setTitle(_translate("Dialog", "New Version", None))
         self.takes_label.setText(_translate("Dialog", "Take", None))
-        self.note_label.setText(_translate("Dialog", "Note", None))
+        self.description_label.setText(_translate("Dialog", "Desc.", None))
         self.add_take_toolButton.setText(_translate("Dialog", "+", None))
-        self.note_textEdit.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+        self.description_textEdit.setHtml(_translate("Dialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Cantarell\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
