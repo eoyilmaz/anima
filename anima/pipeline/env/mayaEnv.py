@@ -6,6 +6,7 @@
 
 
 import os
+import shutil
 import logging
 
 from pymel import core as pm
@@ -125,7 +126,7 @@ workspace -fr "templates" ".mayaFiles/assets/";
 workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
-    
+
     def save_as(self, version):
         """The save_as action for maya environment.
         
@@ -134,9 +135,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         from stalker import Version
         assert isinstance(version, Version)
 
-        # do not save if there are local files
-        self.check_external_files()
-
         # get the current version, and store it as the parent of the new version
         current_version = self.get_current_version()
 
@@ -144,6 +142,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # set version extension to ma
         version.extension = '.ma'
+
+        # do not save if there are local files
+        self.check_external_files(version)
 
         # define that this version is created with Maya
         version.created_with = self.name
@@ -249,7 +250,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             raise RuntimeError("There is nothing selected to export")
 
         # do not save if there are local files
-        self.check_external_files()
+        self.check_external_files(version)
 
         # set the extension to ma by default
         version.update_paths()
@@ -501,12 +502,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             image_folder_from_ws
         ).replace("\\", "/")
 
-        render_file_full_path = render_output_folder + '/<Layer>/' + \
+        render_file_full_path = render_output_folder + '/<RenderLayer>/' + \
                                 version.task.project.code + '_' + \
                                 version.task.entity_type + '_' + \
                                 str(version.task.id) + '_' + \
                                 version.take_name + \
-                                '_<Layer>_<RenderPass>_<Version>'
+                                '_<RenderLayer>_<RenderPass>_<Version>'
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path
@@ -652,7 +653,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         #assert(isinstance(recentFiles,pm.OptionVarList))
         recentFiles.appendVar( path )
 
-    def check_external_files(self):
+    def check_external_files(self, version):
         """checks for external files in the current scene and raises
         RuntimeError if there are local files in the current scene, used as:
             
@@ -673,6 +674,30 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             repo = self.find_repo(path)
             return repo is not None
 
+        def move_to_local(file_path, type_name):
+            """moves the files to the local "external" path
+            """
+            local_path = version.absolute_path + '/external_files/' + type_name
+            filename = os.path.basename(file_path)
+            destination_full_path = os.path.join(local_path, filename)
+            # create the dirs
+            try:
+                os.makedirs(local_path)
+            except OSError: # dir exists
+                pass
+
+            if not os.path.exists(destination_full_path):
+                # move the file
+                logger.debug('moving to: %s' % destination_full_path)
+                try:
+                    shutil.copy(file_path, local_path)
+                except IOError: # no write permission
+                    return None
+                return destination_full_path
+            else: # file already exists do not overwrite
+                logger.debug('file already exists, not moving')
+                return None
+
         external_nodes = []
 
         # check for file textures
@@ -683,7 +708,33 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                and os.path.isabs(path) \
                and not is_in_repo(path):
                 logger.debug('is not in repo: %s' % path)
-                external_nodes.append(file_texture)
+                new_path = move_to_local(path, 'Textures')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(file_texture)
+                else:
+                    # succesfully copied
+                    # update the path
+                    logger.debug('updating texture path to: %s' % new_path)
+                    file_texture.attr('fileTextureName').set(new_path)
+
+        # check for arnold textures
+        for arnold_texture in pm.ls(type='aiImage'):
+            path = arnold_texture.attr('filename').get()
+            logger.debug('checking path: %s' % path)
+            if path is not None \
+               and os.path.isabs(path) \
+               and not is_in_repo(path):
+                logger.debug('is not in repo: %s' % path)
+                new_path = move_to_local(path, 'Textures')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(arnold_texture)
+                else:
+                    # succesfully copied
+                    # update the path
+                    logger.debug('updating texture path to: %s' % new_path)
+                    arnold_texture.attr('filename').set(new_path)
 
         # check for mentalray textures
         for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
@@ -692,7 +743,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if path is not None \
                and os.path.isabs(path) \
                and not is_in_repo(path):
-                external_nodes.append(mr_texture)
+                logger.debug('is not in repo: %s' % path)
+                new_path = move_to_local(path, 'Textures')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(mr_texture)
+                else:
+                    # succesfully copied
+                    # update the path
+                    logger.debug('updating texture path to: %s' % new_path)
+                    mr_texture.attr('fileTextureName').set(new_path)
 
         # check for ImagePlanes
         for image_plane in pm.ls(type=pm.nt.ImagePlane):
@@ -700,7 +760,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if path is not None \
                and os.path.isabs(path) \
                and not is_in_repo(path):
-                external_nodes.append(image_plane)
+                logger.debug('is not in repo: %s' % path)
+                new_path = move_to_local(path, 'ImagePlanes')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(image_plane)
+                else:
+                    # succesfully copied
+                    # update the path
+                    logger.debug('updating image plane path to: %s' % new_path)
+                    image_plane.attr('imageName').set(new_path)
 
         # check for IBL nodes
         for ibl in pm.ls(type=pm.nt.MentalrayIblShape):
@@ -708,14 +777,23 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if path is not None \
                and os.path.isabs(path) \
                and not is_in_repo(path):
-                external_nodes.append(ibl)
+                logger.debug('is not in repo: %s' % path)
+                new_path = move_to_local(path, 'IBL')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(ibl)
+                else:
+                    # succesfully copied
+                    # update the path
+                    logger.debug('updating ibl path to: %s' % new_path)
+                    ibl.attr('texture').set(new_path)
 
         if external_nodes:
             pm.select(external_nodes)
             raise RuntimeError(
                 'There are external references in your scene!!!\n\n'
                 'The problematic nodes are:\n\n' +
-                "\n\t".join(map(lambda x: x.name(), external_nodes)) +
+                ", ".join(map(lambda x: x.name(), external_nodes)) +
                 '\n\nThese nodes are added in to your selection list,\n'
                 'Please correct them!\n\n'
                 'YOUR FILE IS NOT GOING TO BE SAVED!!!'

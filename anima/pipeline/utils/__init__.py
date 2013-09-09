@@ -388,7 +388,7 @@ class StalkerThumbnailCache(object):
         cache_path = os.path.expanduser(pipeline.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
-        url = pipeline.stalker_server_address + thumbnail_full_path
+        url = pipeline.stalker_server_address + '/' + thumbnail_full_path
 
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)
