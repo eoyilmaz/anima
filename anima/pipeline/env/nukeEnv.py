@@ -51,7 +51,7 @@ class Nuke(EnvironmentBase):
         version.extension = '.nk'
 
         # set project_directory
-        self.project_directory = os.path.dirnam(version.absolute_path)
+        self.project_directory = os.path.dirname(version.absolute_path)
 
         # create the main write node
         self.create_main_write_node(version)

@@ -155,7 +155,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """overridden show method
         """
         logged_in_user = self.get_logged_in_user()
-        return super(MainDialog, self).show()
+        if not logged_in_user:
+            self.close()
+            return None
+        else:
+            return super(MainDialog, self).show()
 
     def _setup_signals(self):
         """sets up the signals
@@ -361,13 +365,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             dialog = login_dialog.MainDialog(parent=self)
             self.current_dialog = dialog
             dialog.exec_()
-            if dialog.DialogCode: #Accepted (1) or Rejected (0)
+            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
+            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
                 local_session = LocalSession()
                 logged_in_user = local_session.logged_in_user
                 self.current_dialog = None
             else:
-                # recurse
-                logged_in_user = self.get_logged_in_user()
+                # close the ui
+                #logged_in_user = self.get_logged_in_user()
+                logger.debug("no logged in user")
+                self.close()
 
         return logged_in_user
 
@@ -375,7 +382,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """fills the logged in user label
         """
         logged_in_user = self.get_logged_in_user()
-        self.logged_in_user_label.setText(logged_in_user.name)
+        if logged_in_user:
+            self.logged_in_user_label.setText(logged_in_user.name)
 
     def logout(self):
         """log the current user out
@@ -406,6 +414,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         menu.addSeparator()
 
         logged_in_user = self.get_logged_in_user()
+        
         if version.created_by == logged_in_user:
             if version.is_published:
                 menu.addAction('Un-Publish')
@@ -1264,6 +1273,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         take_name = self.takes_listWidget.currentItem().text()
         user = self.get_logged_in_user()
+        if not user:
+            self.close()
+
         description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
         status_name = self.statuses_comboBox.currentText()
