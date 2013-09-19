@@ -134,7 +134,7 @@ if __name__ == '__main__':
             uic.compileUi(temp_uiFile, temp_pyqt4_file)
             temp_uiFile.close()
             temp_pyqt4_file.close()
-        else:
-            print '%s is not changed' % uiFile.full_path
+        #else:
+        #    #print '%s is not changed' % uiFile.full_path
 
     print "finished compiling"

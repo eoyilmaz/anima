@@ -119,14 +119,18 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
-              <widget class="QLabel" name="label">
-               <property name="text">
-                <string>&lt;b&gt;Guess From Path:&lt;/b&gt;</string>
+              <widget class="QLineEdit" name="find_from_path_lineEdit">
+               <property name="placeholderText">
+                <string>Find From Path</string>
                </property>
               </widget>
              </item>
              <item>
-              <widget class="QLineEdit" name="guess_from_path_lineEdit"/>
+              <widget class="QPushButton" name="find_from_path_pushButton">
+               <property name="text">
+                <string>Find</string>
+               </property>
+              </widget>
              </item>
             </layout>
            </item>
@@ -149,6 +153,9 @@
                <width>320</width>
                <height>180</height>
               </size>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
              </property>
              <property name="verticalScrollBarPolicy">
               <enum>Qt::ScrollBarAlwaysOff</enum>
@@ -285,41 +292,7 @@ p, li { white-space: pre-wrap; }
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_7">
              <item>
-              <widget class="QLabel" name="status_label">
-               <property name="text">
-                <string>Status</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="statuses_comboBox"/>
-             </item>
-             <item>
               <spacer name="horizontalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="publish_checkBox">
-               <property name="text">
-                <string>Publish</string>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_17">
-             <item>
-              <spacer name="horizontalSpacer_3">
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
@@ -338,6 +311,13 @@ p, li { white-space: pre-wrap; }
                </property>
                <property name="checked">
                 <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="publish_checkBox">
+               <property name="text">
+                <string>Publish</string>
                </property>
               </widget>
              </item>
@@ -448,7 +428,7 @@ p, li { white-space: pre-wrap; }
               <bool>false</bool>
              </property>
              <property name="columnCount">
-              <number>6</number>
+              <number>5</number>
              </property>
              <attribute name="horizontalHeaderStretchLastSection">
               <bool>true</bool>
@@ -468,11 +448,6 @@ p, li { white-space: pre-wrap; }
              </column>
              <column>
               <property name="text">
-               <string>Status</string>
-              </property>
-             </column>
-             <column>
-              <property name="text">
                <string>File Size</string>
               </property>
              </column>
@@ -483,7 +458,7 @@ p, li { white-space: pre-wrap; }
              </column>
              <column>
               <property name="text">
-               <string>Note</string>
+               <string>Description</string>
               </property>
              </column>
             </widget>

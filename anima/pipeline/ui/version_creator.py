@@ -10,7 +10,7 @@ import os
 import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, StatusList, Status, Project,
+from stalker import (db, defaults, Version, StatusList, Project,
                      Task, LocalSession, EnvironmentBase)
 
 import anima
@@ -264,7 +264,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             'Version',
             'P',
             'User',
-            'Status',
             'Size',
             'Date',
             'Description',
@@ -349,11 +348,25 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.takes_listWidget_changed
         )
 
-        # guess_from_path_lineEdit
+        # # fine_from_path_lineEdit
+        # QtCore.QObject.connect(
+        #     self.find_from_path_lineEdit,
+        #     QtCore.SIGNAL('editingFinished()'),
+        #     self.find_from_path_lineEdit_changed
+        # )
+
+        # # find_from_path_lineEdit
+        # QtCore.QObject.connect(
+        #     self.find_from_path_lineEdit,
+        #     QtCore.SIGNAL('textEdited(QString)'),
+        #     self.find_from_path_lineEdit_changed
+        # )
+
+        # find_from_path_lineEdit
         QtCore.QObject.connect(
-            self.guess_from_path_lineEdit,
-            QtCore.SIGNAL('editingFinished()'),
-            self.guess_from_path_lineEdit_changed
+            self.find_from_path_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.find_from_path_pushButton_clicked
         )
 
         # add_type_toolButton
@@ -542,9 +555,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # create the menu
         menu = QtGui.QMenu()
         
-        change_status_menu = menu.addMenu('Change Status')
-        
-        menu.addSeparator()
+        #change_status_menu = menu.addMenu('Change Status')
+        #menu.addSeparator()
 
         logged_in_user = self.get_logged_in_user()
         
@@ -553,28 +565,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 menu.addAction('Un-Publish')
             else:
                 menu.addAction('Publish')
-            menu.addSeparator()
-
-        version_status_list = StatusList.query \
-            .filter_by(target_entity_type='Version') \
-            .first()
-
-        version_status_names = map(lambda x: x.name,
-                                   version_status_list.statuses)
-
-        if not self.mode:
-            # add statuses
-            if version_status_list:
-                for status in version_status_list.statuses:
-                    action = QtGui.QAction(status.name, menu)
-                    action.setCheckable(True)
-                    # set it checked if the status of the version is the current status
-                    if version.status == status:
-                        action.setChecked(True)
-
-                    change_status_menu.addAction(action)
-
-            # add separator
             menu.addSeparator()
 
         # add Browse Outputs
@@ -611,19 +601,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     self.update_previous_versions_tableWidget()
                     return
 
-
-            if choice in version_status_names:
-                # change the status of the version
-                if version:
-                    version.status = Status.query \
-                        .filter_by(name=selected_item.text()).first()
-                    version.updated_by = logged_in_user
-                    DBSession.add(version)
-                    DBSession.commit()
-                    # refresh the tableWidget
-                    self.update_previous_versions_tableWidget()
-                    return
-            elif choice == 'Browse Path...':
+            if choice == 'Browse Path...':
                 path = os.path.expandvars(version.absolute_full_path)
                 try:
                     utils.open_browser_in_location(path)
@@ -748,7 +726,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         self.tasks_treeView.resizeColumnToContents(0)
 
-    def tasks_treeView_changed(self, selected, deselected):
+    def tasks_treeView_changed(self):
         """runs when the tasks_treeView item is changed
         """
         logger.debug('tasks_treeView_changed running')
@@ -840,21 +818,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # clear the thumbnail area
         self.clear_thumbnail()
 
-        # fill the statuses_comboBox
-        self.statuses_comboBox.clear()
-
-        version_status_list = StatusList.query \
-            .filter_by(target_entity_type='Version') \
-            .first()
-
-        if version_status_list:
-            status_names = map(
-                lambda x: x.name,
-                version_status_list.statuses
-            )
-
-            self.statuses_comboBox.addItems(status_names)
-
         # fill the tasks
         self.fill_tasks_treeView()
         self.tasks_treeView.setAutoExpandDelay(0)
@@ -887,13 +850,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if self.mode:
             # run in read-only mode
             # hide buttons
-            # self.create_asset_pushButton.setVisible(False)
-            # self.add_type_toolButton.setVisible(False)
             self.add_take_toolButton.setVisible(False)
             self.description_label.setVisible(False)
             self.description_textEdit.setVisible(False)
-            self.status_label.setVisible(False)
-            self.statuses_comboBox.setVisible(False)
             self.publish_checkBox.setVisible(False)
             self.update_paths_checkBox.setVisible(False)
             self.export_as_pushButton.setVisible(False)
@@ -903,7 +862,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.import_pushButton.setVisible(False)
             self.upload_thumbnail_pushButton.setVisible(False)
             self.user_label.setVisible(False)
-            # self.users_comboBox.setVisible(False)
             self.shot_info_update_pushButton.setVisible(False)
             self.frame_range_label.setVisible(False)
             self.handles_label.setVisible(False)
@@ -971,7 +929,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('item: %s' % item)
 
         self.tasks_treeView.selectionModel().select(
-            item.index(), QtGui.QItemSelectionModel.SelectCurrent
+            # item.index(), QtGui.QItemSelectionModel.SelectCurrent
+            item.index(), QtGui.QItemSelectionModel.ClearAndSelect
         )
 
         # take_name
@@ -1005,38 +964,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('takes_listWidget_changed running')
         # update the previous_versions_tableWidget
         self.update_previous_versions_tableWidget()
-
-        # take name
-        take_name = ""
-        item = self.takes_listWidget.currentItem()
-        if item:
-            take_name = item.text()
-
-        # update the statuses_comboBox
-        task = self.get_task()
-        if not task or not isinstance(task, Task):
-            return
-
-        # query the Versions of this type and take
-        query = Version.query \
-            .filter(Version.task == task) \
-            .filter(Version.take_name == take_name)
-
-        version = query.order_by(Version.version_number.desc()).first()
-
-        if version:
-            self.set_status(version.status)
-
-    def set_status(self, status):
-        """sets the chosen status on statuses_comboBox
-        
-        :param status: The status as stalker.models.status.Status object
-        """
-        index = self.statuses_comboBox.findText(
-            status.name, QtCore.Qt.MatchExactly
-        )
-        if index != -1:
-            self.statuses_comboBox.setCurrentIndex(index)
 
     def clear_previous_versions_tableWidget(self):
         """clears the previous_versions_tableWidget properly
@@ -1114,15 +1041,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item.setForeground(foreground)
 
         # update the previous versions list
-        for i, vers in enumerate(versions):
+        for i, version in enumerate(versions):
 
-            is_published = vers.is_published
+            is_published = version.is_published
             
             c = 0
 
             # ------------------------------------
             # version_number
-            item = QtGui.QTableWidgetItem(str(vers.version_number))
+            item = QtGui.QTableWidgetItem(str(version.version_number))
             # align to center and vertical center
             item.setTextAlignment(0x0004 | 0x0080)
 
@@ -1136,8 +1063,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # ------------------------------------
             # created_with
             item = QtGui.QTableWidgetItem()
-            if vers.created_with:
-                item.setIcon(ui_utils.getIcon(vers.created_with.lower()))
+            if version.created_with:
+                item.setIcon(ui_utils.getIcon(version.created_with.lower()))
 
             if is_published:
                 set_font(item)
@@ -1148,8 +1075,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # ------------------------------------
             # user.name
             created_by = ''
-            if vers.created_by:
-                created_by = vers.created_by.name
+            if version.created_by:
+                created_by = version.created_by.name
             item = QtGui.QTableWidgetItem(created_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -1162,44 +1089,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # ------------------------------------
 
             # ------------------------------------
-            # status
-            item = QtGui.QTableWidgetItem(vers.status.name)
-            # align to left and vertical center
-            item.setTextAlignment(0x0004 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            # colorize the item
-            bgcolor = '#' + hex(vers.status.bg_color)[2:].zfill(6)
-            fgcolor = '#' + hex(vers.status.fg_color)[2:].zfill(6)
-
-            bg = item.background()
-            bg.setColor(QtGui.QColor(bgcolor))
-            item.setBackground(bg)
-
-            fg = item.foreground()
-            fg.setColor(QtGui.QColor(fgcolor))
-
-            try:
-                item.setBackgroundColor(QtGui.QColor(*bgcolor))
-            except (AttributeError, TypeError): # gives error with PySide
-                pass
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-
-            # ------------------------------------
             # filesize
 
             # get the file size
             #file_size_format = "%.2f MB"
             file_size = -1
-            if os.path.exists(vers.absolute_full_path):
+            if os.path.exists(version.absolute_full_path):
                 file_size = float(
-                    os.path.getsize(vers.absolute_full_path)) / 1024 / 1024
+                    os.path.getsize(version.absolute_full_path)) / 1024 / 1024
 
             item = QtGui.QTableWidgetItem(
                 defaults.file_size_format % file_size)
@@ -1218,9 +1115,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # get the file date
             file_date = datetime.datetime.today()
-            if os.path.exists(vers.absolute_full_path):
+            if os.path.exists(version.absolute_full_path):
                 file_date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(vers.absolute_full_path)
+                    os.path.getmtime(version.absolute_full_path)
                 )
             item = QtGui.QTableWidgetItem(
                 file_date.strftime(defaults.date_time_format)
@@ -1238,7 +1135,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # ------------------------------------
             # description
-            item = QtGui.QTableWidgetItem(vers.description)
+            item = QtGui.QTableWidgetItem(version.description)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -1253,10 +1150,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.previous_versions_tableWidget.resizeRowsToContents()
         self.previous_versions_tableWidget.resizeColumnsToContents()
         self.previous_versions_tableWidget.resizeRowsToContents()
-
-        # set the statuses comboBox to the status of the last version
-        if versions:
-            self.set_status(versions[-1].status)
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
@@ -1345,8 +1238,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
-        status_name = self.statuses_comboBox.currentText()
-        status = Status.query.filter_by(name=status_name).first()
+        
+        # TODO: version statuses will be removed from Stalker, so later on delete this part
+        # status_name = self.statuses_comboBox.currentText()
+        versions_status_list = StatusList.query\
+            .filter(StatusList.target_entity_type=='Version').first()
+        status = versions_status_list.statuses[0]
 
         version = Version(
             task=task,
@@ -1605,10 +1502,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # TODO: upload it to stalker server
         pass
 
-    def guess_from_path_lineEdit_changed(self):
-        """runs when guess from path is edited
+    def find_from_path_pushButton_clicked(self):
+        """runs when find_from_path_pushButton is clicked
         """
-        full_path = self.guess_from_path_lineEdit.text()
+        full_path = self.find_from_path_lineEdit.text()
         env = EnvironmentBase()
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
