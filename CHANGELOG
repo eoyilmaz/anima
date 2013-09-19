@@ -2,6 +2,37 @@
 Anima Tools Changes
 ===================
 
+0.1.0.a5
+========
+
+* **Pipeline:**
+
+  * **UI:**
+
+    * **Version Creator:**
+
+      * **New:** Version Creator now tries to allow the user to cancel login,
+        but it is not completely working for now.
+      * **New:** Version Creator UI is now using QTreeView to display tasks on
+        demand.
+      * **New:** Version Creator UI is now able to restore the ui for a deeper
+        task hierarchy with not yet loaded task items in the tasks_treeView.
+      * **New:** Removed the statuses_comboBox from Version Creator UI.
+      * **New:** Added a new context menu to the items in the tasks_treeView
+        where the user is able to go to the dependent or dependee tasks of the
+        clicked item in Version Creator UI.
+
+  * **Env:**
+
+    * **MayaEnv:**
+
+      * **New:** External files are now moved to the
+        version.absolute_path/external_files folder
+
+    * **NukeEnv:**
+
+      * **Fix:** Fixed a typo
+
 0.1.0.a4
 ========
 
