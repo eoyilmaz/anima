@@ -1156,6 +1156,11 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.add(v9)
         DBSession.commit()
 
+        # For t6
+        v10 = Version(task=t6, take_name='Take2', full_path='/some/path/t6')
+        DBSession.add(v10)
+        DBSession.commit()
+
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeWidget
 

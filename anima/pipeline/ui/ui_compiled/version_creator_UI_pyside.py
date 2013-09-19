@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Wed Sep 18 17:02:27 2013
+# Created: Thu Sep 19 20:07:29 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -63,17 +63,12 @@ class Ui_Dialog(object):
         self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
         self.my_tasks_only_checkBox = QtGui.QCheckBox(self.tasks_groupBox)
-        self.my_tasks_only_checkBox.setChecked(True)
+        self.my_tasks_only_checkBox.setChecked(False)
         self.my_tasks_only_checkBox.setObjectName("my_tasks_only_checkBox")
         self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
         self.tasks_treeView = QtGui.QTreeView(self.tasks_groupBox)
         self.tasks_treeView.setObjectName("tasks_treeView")
         self.verticalLayout_2.addWidget(self.tasks_treeView)
-        self.tasks_treeWidget = QtGui.QTreeWidget(self.tasks_groupBox)
-        self.tasks_treeWidget.setAlternatingRowColors(True)
-        self.tasks_treeWidget.setObjectName("tasks_treeWidget")
-        self.tasks_treeWidget.headerItem().setText(0, "1")
-        self.verticalLayout_2.addWidget(self.tasks_treeWidget)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.label = QtGui.QLabel(self.tasks_groupBox)

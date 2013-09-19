@@ -38,6 +38,7 @@ class TaskItem(QtGui.QStandardItem):
         self.task = None
         self.parent = None
         self.fetched_all = False
+        self.setEditable(False)
 
     def clone(self):
         """returns a copy of this item
@@ -111,9 +112,9 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.root.fetched_all = False
 
     def canFetchMore(self, index):
-        # logger.debug('canFetchMore is running for index: %s' % index)
+        logger.debug('canFetchMore is running for index: %s' % index)
         if not index.isValid():
-            # logger.debug('index is not valid')
+            logger.debug('index is not valid')
             return not self.root.fetched_all
         else:
             item = self.itemFromIndex(index)
@@ -122,7 +123,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
     def fetchMore(self, index):
         """fetches more elements
         """
-        # logger.debug('fetchMore is running for index: %s' % index)
+        logger.debug('fetchMore is running for index: %s' % index)
         if not index.isValid():
             # it is the root
             # return the projects
@@ -224,7 +225,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     """
 
     def __init__(self, environment=None, parent=None, mode=0):
-        # logger.debug("initializing the interface")
+        logger.debug("initializing the interface")
 
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
@@ -282,7 +283,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # center window
         self.center_window()
 
-        # logger.debug("finished initializing the interface")
+        logger.debug("finished initializing the interface")
 
     def show(self):
         """overridden show method
@@ -297,7 +298,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def _setup_signals(self):
         """sets up the signals
         """
-        # logger.debug("start setting up interface signals")
+        logger.debug("start setting up interface signals")
 
         # close button
         QtCore.QObject.connect(
@@ -322,19 +323,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # fit column 0 on expand/collapse
         QtCore.QObject.connect(
-            self.tasks_treeWidget,
-            QtCore.SIGNAL('expanded(QModelIndex)'),
-            self.tasks_treeWidget_auto_fit_column
-        )
-
-        QtCore.QObject.connect(
-            self.tasks_treeWidget,
-            QtCore.SIGNAL('collapsed(QModelIndex)'),
-            self.tasks_treeWidget_auto_fit_column
-        )
-
-        # fit column 0 on expand/collapse
-        QtCore.QObject.connect(
             self.tasks_treeView,
             QtCore.SIGNAL('expanded(QModelIndex)'),
             self.tasks_treeView_auto_fit_column
@@ -351,6 +339,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.takes_listWidget,
             QtCore.SIGNAL("currentTextChanged(QString)"),
+            self.takes_listWidget_changed
+        )
+
+        # takes_listWidget
+        QtCore.QObject.connect(
+            self.takes_listWidget,
+            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
             self.takes_listWidget_changed
         )
 
@@ -491,8 +486,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.upload_thumbnail_pushButton_clicked
         )
 
-        # logger.debug("finished setting up interface signals")
-
+        logger.debug("finished setting up interface signals")
+    
 
     def get_logged_in_user(self):
         """returns the logged in user
@@ -503,7 +498,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             dialog = login_dialog.MainDialog(parent=self)
             self.current_dialog = dialog
             dialog.exec_()
-            # logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
+            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
             if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
                 local_session = LocalSession()
                 logged_in_user = local_session.logged_in_user
@@ -511,7 +506,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             else:
                 # close the ui
                 #logged_in_user = self.get_logged_in_user()
-                # logger.debug("no logged in user")
+                logger.debug("no logged in user")
                 self.close()
 
         return logged_in_user
@@ -675,117 +670,57 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         pass
 
-    def addRootItem(self, entity, treeWidget):
-        """adds the given stalker entity to the given treeWidget
-
-        :returns: QTreeWidgetItem
-        """
-        if hasattr(entity, 'ui_item'):
-            # logger.debug('entity already has ui_item: %s' % entity)
-            return entity.ui_item
-
-        item = QtGui.QTreeWidgetItem(treeWidget)
-        item.setText(0, entity.name)
-        item.setText(1, entity.entity_type)
-        my_font = item.font(0)
-        my_font.setBold(True)
-        item.setFont(0, my_font)
-        item.stalker_entity = entity
-        entity.ui_item = item
-        return item
-
-    def addItem(self, entity, treeWidget):
-        """adds the given stalker entity to the given treeWidget
-        """
-        # skip this entity if it already has an ui_item attached
-        if hasattr(entity, 'ui_item'):
-            # logger.debug('entity already has ui_item: %s' % entity)
-            return entity.ui_item
-
-        # create QTreeWidgetItem
-        entity_item = QtGui.QTreeWidgetItem()
-        entity_item.setText(0, entity.name)
-        entity_item.setText(1, entity.__class__.__name__)
-
-        # set dependencies
-        if entity.depends:
-            entity_item.setText(
-                2,
-                ', '.join(map(lambda x: x.name, entity.depends))
-            )
-
-        entity_item.stalker_entity = entity
-        entity.ui_item = entity_item
-
-        # check if it has a parent
-        # logger.debug('adding entity: %s' % entity)
-        if entity.parent:
-            # add it under the parent
-            parent = entity.parent
-            # logger.debug('has a parent : %s' % parent)
-
-            if hasattr(parent, 'ui_item'):
-                parent_item = parent.ui_item
-            else:
-                # add the parent
-                parent_item = self.addItem(parent, treeWidget)
-        else:
-            # add it under the project
-            parent = entity.project
-            # logger.debug('has no parent : %s' % entity)
-
-            if hasattr(parent, 'ui_item'):
-                parent_item = parent.ui_item
-            else:
-                # add the parent
-                parent_item = self.addRootItem(parent, treeWidget)
-
-        parent_item.addChild(entity_item)
-        # make parent bold
-        my_font = parent_item.font(0)
-        my_font.setBold(True)
-        parent_item.setFont(0, my_font)
-
-        return entity_item
-
-    def find_entity_item_in_tree_widget(self, entity, treeWidget):
+    def find_entity_item_in_tree_view(self, entity, treeView):
         """finds the item related to the stalker entity in the given
-        QtTreeWidget
+        QtTreeView
         """
-        items = []
-        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        while iterator.value():
-            item = iterator.value()
-            name = item.text(0)
-            if name == entity.name:
-                items.append(item)
-            iterator += 1
+        # items = []
+        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        # while iterator.value():
+        #     item = iterator.value()
+        #     name = item.text(0)
+        #     if name == entity.name:
+        #         items.append(item)
+        #     iterator += 1
 
-        # logger.debug('items matching name : %s' % items)
-        for item in items:
-            if item.stalker_entity == entity:
-                return item
+        model = treeView.model()
+        indexes = model.match(
+            # 0, 0, entity.name, QtCore.Qt.MatchExactly, QtCore.Qt.MatchRecursive
+            model.index(0, 0),
+            0,
+            entity.name,
+            2,
+            QtCore.Qt.MatchRecursive
+        )
+
+        logger.debug('items matching name : %s' % indexes)
+        for index in indexes:
+            item = model.itemFromIndex(index)
+            if item:
+                if item.task == entity:
+                    return item
 
         return None
 
-    def clear_tasks_treeWidget(self):
-        """clears the tasks_treeWidget items and also removes the connection
+    def clear_tasks_treeView(self):
+        """clears the tasks_treeView items and also removes the connection
         between Stalker entities and ui items
         """
-        # get the items and their corresponding Stalker entities and clear them
-        # items = []
-        treeWidget = self.tasks_treeWidget
-        iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        while iterator.value():
-            item = iterator.value()
-            try:
-                delattr(item.stalker_entity, 'ui_item')
-            except AttributeError:
-                pass
-            iterator += 1
-
-        # now clear the items safely
-        self.tasks_treeWidget.clear()
+        # # get the items and their corresponding Stalker entities and clear them
+        # # items = []
+        # treeView = self.tasks_treeView
+        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
+        # while iterator.value():
+        #     item = iterator.value()
+        #     try:
+        #         delattr(item.stalker_entity, 'ui_item')
+        #     except AttributeError:
+        #         pass
+        #     iterator += 1
+        # 
+        # # now clear the items safely
+        # self.tasks_treeWidget.clear()
+        pass
 
     def fill_tasks_treeView(self):
         """sets up the tasks_treeView
@@ -794,8 +729,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         task_tree_model = TaskTreeModel()
         self.tasks_treeView.setModel(task_tree_model)
-        # logger.debug('self.tasks_treeView.selectionModel(): %s' %
-        #               self.tasks_treeView.selectionModel())
+        logger.debug('self.tasks_treeView.selectionModel(): %s' %
+                      self.tasks_treeView.selectionModel())
 
         task_tree_model.user = logged_in_user
         task_tree_model.populateTree()
@@ -808,141 +743,17 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView_changed
         )
 
-
-    def fill_tasks_treeWidget(self):
-        """fills the tasks_treeWidget
-        """
-        # first clear it
-        self.clear_tasks_treeWidget()
-
-        # create column headers
-        self.tasks_treeWidget.setColumnCount(3)
-        self.tasks_treeWidget.setHeaderLabels(
-            ['Name', 'Type', 'Dependencies']
-        )
-
-        # now get the tasks of the current user
-        logged_in_user = self.get_logged_in_user()
-
-        tasks = []
-        projects = logged_in_user.projects
-        # logger.debug('projects: %s' % projects)
-        # just add projects
-
-        # if self.my_tasks_only_checkBox.isChecked():
-        #     for task in logged_in_user.tasks:
-        #         # append the root
-        #         assert isinstance(task, Task)
-        #         if task.is_root:
-        #             tasks.append(task)
-        #         else:
-        #             tasks.append(task.parents[-1])
-        # else:
-        #     # show all tasks from the user projects
-        #     for project in logged_in_user.projects:
-        #         tasks.extend(project.root_tasks)
-
-        # logger.debug('tasks : %s' % tasks)
-
-        # now first fill the projects
-        # projects = []
-        # for task in tasks:
-        #     if task.project not in projects:
-        #         projects.append(task.project)
-
-        # add the projects first
-        for project in projects:
-            self.addRootItem(project, self.tasks_treeWidget)
-
-        # do not add any child for now
-
-        # # now add the tasks
-        # already_added_entities = []
-        # # TODO: optimize this part, by removing already_added_entities
-        # #       do not go from child but parent
-        # #       This needs to be optimized especially for all tasks.
-        # for task in tasks:
-        #     # logger.debug('adding task: %s' % task)
-        #     # logger.debug('task.parents: %s' % task.parents)
-        # 
-        #     # add all the parents of the task
-        #     for parent in task.parents:
-        #         if parent not in already_added_entities:
-        #             logger.debug('adding parent : %s' % parent)
-        #             self.addItem(parent, self.tasks_treeWidget)
-        #             already_added_entities.append(parent)
-        # 
-        #     # and then the task itself
-        #     self.addItem(task, self.tasks_treeWidget)
-        #     already_added_entities.append(task)
-
-        # all done, congratulate your self :)
-        # logger.debug('all items are successfully added to tasks_treeWidget')
-
-    def tasks_treeWidget_auto_fit_column(self):
-        """fits columns to content
-        """
-        self.tasks_treeWidget.resizeColumnToContents(0)
-
     def tasks_treeView_auto_fit_column(self):
         """fits columns to content
         """
         self.tasks_treeView.resizeColumnToContents(0)
 
-    def tasks_treeWidget_changed(self):
-        """runs when the tasks_treeWidget item is changed
-        """
-        current_item = self.tasks_treeWidget.currentItem()
-
-        if not current_item:
-            return
-
-        entity = current_item.stalker_entity
-        if not entity:
-            return
-
-        # update the thumbnail
-        # TODO: do it in another thread
-        self.clear_thumbnail()
-        self.update_thumbnail()
-
-        # get the versions of the entity
-        takes = []
-        if entity:
-            # clear the takes_listWidget and fill with new data
-            self.takes_listWidget.clear()
-            
-            if isinstance(entity, Project):
-                return
-
-            takes = map(
-                lambda x: x[0],
-                DBSession.query(distinct(Version.take_name))
-                .filter(Version.task == entity)
-                .all()
-            )
-
-        logger.debug("len(takes) from db: %s" % len(takes))
-        
-        if defaults.version_take_name not in takes:
-            takes.append(defaults.version_take_name)
-
-        if len(takes) == 0:
-            # append the default take
-            logger.debug("appending the default take name")
-            self.takes_listWidget.addItem(defaults.version_take_name)
-        else:
-            logger.debug("adding the takes from db")
-            self.takes_listWidget.addItems(takes)
-
-        logger.debug("setting the first element selected")
-        item = self.takes_listWidget.item(0)
-        self.takes_listWidget.setCurrentItem(item)
-
     def tasks_treeView_changed(self, selected, deselected):
         """runs when the tasks_treeView item is changed
         """
+        logger.debug('tasks_treeView_changed running')
         task = self.get_task()
+        logger.debug('task : %s' % task)
 
         # update the thumbnail
         # TODO: do it in another thread
@@ -951,8 +762,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # get the versions of the entity
         takes = []
+
         if task:
             # clear the takes_listWidget and fill with new data
+            logger.debug('clear takes widget')
             self.takes_listWidget.clear()
 
             if isinstance(task, Project):
@@ -1044,10 +857,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # fill the tasks
         self.fill_tasks_treeView()
-
-        # fill the tasks
-        self.fill_tasks_treeWidget()
-        self.tasks_treeWidget.setAutoExpandDelay(0)
+        self.tasks_treeView.setAutoExpandDelay(0)
 
         # add "Main" by default to the takes_listWidget
         self.takes_listWidget.addItem(defaults.version_take_name)
@@ -1125,14 +935,44 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # set the task
         task = version.task
 
-        item = self.find_entity_item_in_tree_widget(task, self.tasks_treeWidget)
+        item = self.find_entity_item_in_tree_view(task, self.tasks_treeView)
+        # TODO: simplify this part
         if not item:
-            return
+            # the item is not loaded to the UI yet
+            # start loading its parents
+            # start from the project
+            item = self.find_entity_item_in_tree_view(
+                task.project,
+                self.tasks_treeView
+            )
+
+            if item:
+                self.tasks_treeView.setExpanded(item.index(), True)
+
+            if task.parents:
+                # now starting from the most outer parent expand the tasks
+                for parent in task.parents:
+                    item = self.find_entity_item_in_tree_view(
+                        parent,
+                        self.tasks_treeView
+                    )
+
+                    if item:
+                        self.tasks_treeView.setExpanded(item.index(), True)
+
+            # finally select the task
+            item = self.find_entity_item_in_tree_view(task, self.tasks_treeView)
+
+            if not item:
+                # still no item
+                return
 
         logger.debug('*******************************')
         logger.debug('item: %s' % item)
 
-        self.tasks_treeWidget.setCurrentItem(item)
+        self.tasks_treeView.selectionModel().select(
+            item.index(), QtGui.QItemSelectionModel.SelectCurrent
+        )
 
         # take_name
         take_name = version.take_name
@@ -1162,6 +1002,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
         """
+        logger.debug('takes_listWidget_changed running')
         # update the previous_versions_tableWidget
         self.update_previous_versions_tableWidget()
 
@@ -1422,15 +1263,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         or project
         """
         task = None
+        indexes = self.tasks_treeView.selectionModel().selectedIndexes()
+        if indexes:
+            current_index = indexes[0]
+            logger.debug('current_index : %s' % current_index)
 
-        #current_item = self.tasks_treeWidget.currentItem()
+            item_model = self.tasks_treeView.model()
+            current_item = item_model.itemFromIndex(current_index)
 
-        current_index = self.tasks_treeView.selectionModel().currentIndex()
-        item_model = self.tasks_treeView.model()
-        current_item = item_model.itemFromIndex(current_index)
-
-        if current_item:
-            task = current_item.task
+            if current_item:
+                task = current_item.task
 
         # logger.debug('task: %s' % task)
         return task
@@ -1611,7 +1453,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.close()
         else:
             # refresh the UI
-            self.tasks_treeWidget_changed()
+            self.tasks_treeView_changed()
 
     def chose_pushButton_clicked(self):
         """runs when the chose_pushButton clicked
