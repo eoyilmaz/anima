@@ -114,6 +114,9 @@
             </widget>
            </item>
            <item>
+            <widget class="QTreeView" name="tasks_treeView"/>
+           </item>
+           <item>
             <widget class="QTreeWidget" name="tasks_treeWidget">
              <property name="alternatingRowColors">
               <bool>true</bool>
