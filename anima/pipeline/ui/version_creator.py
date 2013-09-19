@@ -261,7 +261,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set previous_versions_tableWidget.labels
         self.previous_versions_tableWidget.labels = [
-            'Version',
+            '#',
             'P',
             'User',
             'Size',
@@ -333,7 +333,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView_auto_fit_column
         )
 
-
         # takes_listWidget
         QtCore.QObject.connect(
             self.takes_listWidget,
@@ -348,20 +347,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.takes_listWidget_changed
         )
 
-        # # fine_from_path_lineEdit
-        # QtCore.QObject.connect(
-        #     self.find_from_path_lineEdit,
-        #     QtCore.SIGNAL('editingFinished()'),
-        #     self.find_from_path_lineEdit_changed
-        # )
-
-        # # find_from_path_lineEdit
-        # QtCore.QObject.connect(
-        #     self.find_from_path_lineEdit,
-        #     QtCore.SIGNAL('textEdited(QString)'),
-        #     self.find_from_path_lineEdit_changed
-        # )
-
         # find_from_path_lineEdit
         QtCore.QObject.connect(
             self.find_from_path_pushButton,
@@ -369,23 +354,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.find_from_path_pushButton_clicked
         )
 
-        # add_type_toolButton
-        # QtCore.QObject.connect(
-        #     self.add_type_toolButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.add_type_toolButton_clicked
-        # )
+        # custom context menu for the tasks_treeView
+        self.tasks_treeView.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
 
-        # custom context menu for the assets_tableWidget
-        # self.assets_tableWidget.setContextMenuPolicy(
-        #     QtCore.Qt.CustomContextMenu
-        # )
-
-        # QtCore.QObject.connect(
-        #     self.assets_tableWidget,
-        #     QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-        #     self._show_assets_tableWidget_context_menu
-        # )
+        QtCore.QObject.connect(
+            self.tasks_treeView,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self._show_tasks_treeView_context_menu
+        )
 
         # custom context menu for the previous_versions_tableWidget
         self.previous_versions_tableWidget.setContextMenuPolicy(
@@ -397,13 +375,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
             self._show_previous_versions_tableWidget_context_menu
         )
-
-        # create_asset_pushButton
-        # QtCore.QObject.connect(
-        #     self.create_asset_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.create_asset_pushButton_clicked
-        # )
 
         # add_take_toolButton
         QtCore.QObject.connect(
@@ -484,13 +455,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.SIGNAL("valueChanged(int)"),
             self.update_previous_versions_tableWidget
         )
-
-        # shot_info_update_pushButton 
-        # QtCore.QObject.connect(
-        #     self.shot_info_update_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.shot_info_update_pushButton_clicked
-        # )
 
         # upload_thumbnail_pushButton
         QtCore.QObject.connect(
@@ -638,29 +602,58 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 clipboard = QtGui.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(version.absolute_full_path))
 
-    def rename_asset(self, asset, new_name):
-        """Renames the asset with the given new name
-        
-        :param asset: The :class:`~oyProjectManager.models.asset.Asset` instance
-          to be renamed.
-        
-        :param new_name: The desired new name for the asset.
+    def _show_tasks_treeView_context_menu(self, position):
+        """the custom context menu for the tasks_treeView
         """
-        pass
+        # convert the position to global screen position
+        global_position = \
+            self.tasks_treeView.mapToGlobal(position)
+
+        index = self.tasks_treeView.indexAt(position)
+        model = self.tasks_treeView.model()
+        item = model.itemFromIndex(index)
+        logger.debug('itemAt(position) : %s' % item)
+
+        if not item:
+            return
+
+        task = item.task
+
+        # create the menu
+        menu = QtGui.QMenu()
+
+        # Add Depends To menu
+        depends = task.depends
+        if depends:
+            depends_to_menu = menu.addMenu('Depends To')
+
+            for dTask in depends:
+                action = depends_to_menu.addAction(dTask.name)
+                action.task = dTask
+
+        # Add Dependent Of Menu
+        dependent_of = task.dependent_of
+        if dependent_of:
+            dependent_of_menu = menu.addMenu('Dependent Of')
+
+            for dTask in dependent_of:
+                action = dependent_of_menu.addAction(dTask.name)
+                action.task = dTask
+
+        selected_item = menu.exec_(global_position)
+
+        if selected_item:
+            choice = selected_item.text()
+            task = selected_item.task
+            self.find_and_select_entity_item_in_treeView(
+                task,
+                self.tasks_treeView
+            )
 
     def find_entity_item_in_tree_view(self, entity, treeView):
         """finds the item related to the stalker entity in the given
         QtTreeView
         """
-        # items = []
-        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        # while iterator.value():
-        #     item = iterator.value()
-        #     name = item.text(0)
-        #     if name == entity.name:
-        #         items.append(item)
-        #     iterator += 1
-
         model = treeView.model()
         indexes = model.match(
             # 0, 0, entity.name, QtCore.Qt.MatchExactly, QtCore.Qt.MatchRecursive
@@ -684,20 +677,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """clears the tasks_treeView items and also removes the connection
         between Stalker entities and ui items
         """
-        # # get the items and their corresponding Stalker entities and clear them
-        # # items = []
-        # treeView = self.tasks_treeView
-        # iterator = QtGui.QTreeWidgetItemIterator(treeWidget)
-        # while iterator.value():
-        #     item = iterator.value()
-        #     try:
-        #         delattr(item.stalker_entity, 'ui_item')
-        #     except AttributeError:
-        #         pass
-        #     iterator += 1
-        # 
-        # # now clear the items safely
-        # self.tasks_treeWidget.clear()
         pass
 
     def fill_tasks_treeView(self):
@@ -795,7 +774,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """sets up the defaults for the interface
         """
         logger.debug("started setting up interface defaults")
-        
+
         # before doing anything create a QSplitter for:
         #   tasks_groupBox
         #   new_version_groupBox
@@ -811,6 +790,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 2)
         self.horizontalLayout_14.addWidget(splitter)
+
+        # disable my_tasks_only_checkBox
+        # TODO: re-enable my_tasks_only_checkBox
+        self.my_tasks_only_checkBox.setVisible(False)
+
+        # disable update_paths_checkBox
+        self.update_paths_checkBox.setVisible(False)
 
         # check login
         self.fill_logged_in_user()
@@ -892,46 +878,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set the task
         task = version.task
-
-        item = self.find_entity_item_in_tree_view(task, self.tasks_treeView)
-        # TODO: simplify this part
-        if not item:
-            # the item is not loaded to the UI yet
-            # start loading its parents
-            # start from the project
-            item = self.find_entity_item_in_tree_view(
-                task.project,
-                self.tasks_treeView
-            )
-
-            if item:
-                self.tasks_treeView.setExpanded(item.index(), True)
-
-            if task.parents:
-                # now starting from the most outer parent expand the tasks
-                for parent in task.parents:
-                    item = self.find_entity_item_in_tree_view(
-                        parent,
-                        self.tasks_treeView
-                    )
-
-                    if item:
-                        self.tasks_treeView.setExpanded(item.index(), True)
-
-            # finally select the task
-            item = self.find_entity_item_in_tree_view(task, self.tasks_treeView)
-
-            if not item:
-                # still no item
-                return
-
-        logger.debug('*******************************')
-        logger.debug('item: %s' % item)
-
-        self.tasks_treeView.selectionModel().select(
-            # item.index(), QtGui.QItemSelectionModel.SelectCurrent
-            item.index(), QtGui.QItemSelectionModel.ClearAndSelect
-        )
+        self.find_and_select_entity_item_in_treeView(task, self.tasks_treeView)
 
         # take_name
         take_name = version.take_name
@@ -957,6 +904,42 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item = self.previous_versions_tableWidget.item(index, 0)
             logger.debug('item : %s' % item)
             self.previous_versions_tableWidget.setCurrentItem(item)
+
+    def find_and_select_entity_item_in_treeView(self, task, treeView):
+        """finds and selects the task in the given treeView item
+        """
+        item = self.find_entity_item_in_tree_view(task, treeView)
+        # TODO: simplify this part
+        if not item:
+            # the item is not loaded to the UI yet
+            # start loading its parents
+            # start from the project
+            item = self.find_entity_item_in_tree_view(task.project, treeView)
+
+            if item:
+                self.tasks_treeView.setExpanded(item.index(), True)
+
+            if task.parents:
+                # now starting from the most outer parent expand the tasks
+                for parent in task.parents:
+                    item = self.find_entity_item_in_tree_view(parent, treeView)
+
+                    if item:
+                        treeView.setExpanded(item.index(), True)
+
+            # finally select the task
+            item = self.find_entity_item_in_tree_view(task, treeView)
+
+            if not item:
+                # still no item
+                return
+
+        logger.debug('*******************************')
+        logger.debug('item: %s' % item)
+
+        self.tasks_treeView.selectionModel().select(
+            item.index(), QtGui.QItemSelectionModel.ClearAndSelect
+        )
 
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed

@@ -1081,21 +1081,24 @@ class VersionCreatorTester(unittest2.TestCase):
             name='Test Task 4',
             project=p2,
             resources=[self.admin],
-            status_list=task_status_list
+            status_list=task_status_list,
+            depends=[t1, t2]
         )
 
         t5 = Task(
             name='Test Task 5',
             project=p2,
             resources=[self.admin],
-            status_list=task_status_list
+            status_list=task_status_list,
+            depends=[t2, t1]
         )
 
         t6 = Task(
             name='Test Task 6',
             parent=t5,
             resources=[self.admin],
-            status_list=task_status_list
+            status_list=task_status_list,
+            depends=[t4, t3]
         )
 
         # no tasks for project 3

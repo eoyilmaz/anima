@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Thu Sep 19 23:52:57 2013
+# Created: Fri Sep 20 00:52:43 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -256,6 +256,7 @@ class Ui_Dialog(object):
         self.logout_pushButton.setText(QtGui.QApplication.translate("Dialog", "Logout", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
         self.my_tasks_only_checkBox.setText(QtGui.QApplication.translate("Dialog", "Show my tasks only", None, QtGui.QApplication.UnicodeUTF8))
+        self.tasks_treeView.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_lineEdit.setPlaceholderText(QtGui.QApplication.translate("Dialog", "Find From Path", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_pushButton.setText(QtGui.QApplication.translate("Dialog", "Find", None, QtGui.QApplication.UnicodeUTF8))
         self.upload_thumbnail_pushButton.setText(QtGui.QApplication.translate("Dialog", "Upload Thumbnail...", None, QtGui.QApplication.UnicodeUTF8))
@@ -275,7 +276,7 @@ class Ui_Dialog(object):
         self.previous_versions_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Previous Versions", None, QtGui.QApplication.UnicodeUTF8))
         self.show_published_only_checkBox.setText(QtGui.QApplication.translate("Dialog", "Show Published Only", None, QtGui.QApplication.UnicodeUTF8))
         self.show_only_label.setText(QtGui.QApplication.translate("Dialog", "Show Only", None, QtGui.QApplication.UnicodeUTF8))
-        self.previous_versions_tableWidget.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Change Status</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Browse Outputs</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.previous_versions_tableWidget.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" font-weight:600;\">Copy Path</span></li><li><span style=\" font-weight:600;\">Browse Path</span></li><li><span style=\" font-weight:600;\">Change Description</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.previous_versions_tableWidget.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("Dialog", "Version", None, QtGui.QApplication.UnicodeUTF8))
         self.previous_versions_tableWidget.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("Dialog", "User", None, QtGui.QApplication.UnicodeUTF8))
         self.previous_versions_tableWidget.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Dialog", "File Size", None, QtGui.QApplication.UnicodeUTF8))

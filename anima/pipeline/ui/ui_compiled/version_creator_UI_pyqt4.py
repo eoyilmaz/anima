@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Thu Sep 19 23:52:57 2013
+# Created: Fri Sep 20 00:52:43 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -268,6 +268,7 @@ class Ui_Dialog(object):
         self.logout_pushButton.setText(_translate("Dialog", "Logout", None))
         self.tasks_groupBox.setTitle(_translate("Dialog", "Tasks", None))
         self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
+        self.tasks_treeView.setToolTip(_translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None))
         self.find_from_path_lineEdit.setPlaceholderText(_translate("Dialog", "Find From Path", None))
         self.find_from_path_pushButton.setText(_translate("Dialog", "Find", None))
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload Thumbnail...", None))
@@ -287,7 +288,7 @@ class Ui_Dialog(object):
         self.previous_versions_groupBox.setTitle(_translate("Dialog", "Previous Versions", None))
         self.show_published_only_checkBox.setText(_translate("Dialog", "Show Published Only", None))
         self.show_only_label.setText(_translate("Dialog", "Show Only", None))
-        self.previous_versions_tableWidget.setToolTip(_translate("Dialog", "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Change Status</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Browse Outputs</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>", None))
+        self.previous_versions_tableWidget.setToolTip(_translate("Dialog", "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" font-weight:600;\">Copy Path</span></li><li><span style=\" font-weight:600;\">Browse Path</span></li><li><span style=\" font-weight:600;\">Change Description</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>", None))
         item = self.previous_versions_tableWidget.horizontalHeaderItem(0)
         item.setText(_translate("Dialog", "Version", None))
         item = self.previous_versions_tableWidget.horizontalHeaderItem(1)
