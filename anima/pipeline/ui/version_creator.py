@@ -20,8 +20,14 @@ from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
+import tempfile
+
 logger = logging.getLogger(__name__)
+fh = logging.FileHandler(
+    os.path.join(tempfile.gettempdir(), 'version_creator.log')
+)
 logger.setLevel(logging.DEBUG)
+logger.addHandler(fh)
 
 if IS_PYSIDE():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
@@ -34,24 +40,42 @@ class TaskItem(QtGui.QStandardItem):
     """
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
+        logger.debug('TaskItem.__init__() is started for item: %s' % self.text())
         self.loaded = False
         self.task = None
         self.parent = None
         self.fetched_all = False
         self.setEditable(False)
+        logger.debug('TaskItem.__init__() is finished for item: %s' % self.text())
 
     def clone(self):
         """returns a copy of this item
         """
+        logger.debug('TaskItem.clone() is started for item: %s' % self.text())
         new_item = TaskItem()
         new_item.task = self.task
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
+        logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
         return new_item
+
+    def canFetchMore(self):
+        logger.debug('TaskItem.canFetchMore() is started for item: %s' % self.text())
+        return_value = False
+        if self.task and not self.fetched_all:
+            if isinstance(self.task, Task):
+                return_value = self.task.is_container
+            elif isinstance(self.task, Project):
+                return_value = bool(len(self.task.root_tasks))
+        else:
+            return_value = False
+        logger.debug('TaskItem.canFetchMore() is finished for item: %s' % self.text())
+        return return_value
 
     def fetchMore(self):
         """
         """
+        logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
         if self.task and not self.fetched_all:
             tasks = []
             if isinstance(self.task, Task):
@@ -91,15 +115,24 @@ class TaskItem(QtGui.QStandardItem):
             model.endInsertRows()
 
             self.fetched_all = True
+        logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
 
     def hasChildren(self):
+        """
+        """
+        logger.debug('TaskItem.hasChildren() is started for item: %s' % self.text())
+        return_value = False
         if self.task:
             if isinstance(self.task, Task):
-                return self.task.is_container
+                return_value = self.task.is_container
             elif isinstance(self.task, Project):
-                return bool(len(self.task.root_tasks))
+                return_value = len(self.task.root_tasks) > 0
+            else:
+                return_value = False
         else:
-            return False
+            return_value = False
+        logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
+        return return_value
 
 
 class TaskTreeModel(QtGui.QStandardItemModel):
@@ -107,82 +140,98 @@ class TaskTreeModel(QtGui.QStandardItemModel):
     """
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
+        logger.debug('TaskTreeModel.__init__() is started')
         self.user = None
         self.root = None
         self.user_tasks_only = False
+        logger.debug('TaskTreeModel.__init__() is finished')
 
     def populateTree(self):
         """populates tree with user projects
         """
-        logger.debug('start populating tree')
-        self.setColumnCount(3)
-        self.setHorizontalHeaderLabels(
-            ['Name', 'Type', 'Dependencies']
-        )
+        logger.debug('TaskTreeModel.populateTree() is started')
+        #self.setColumnCount(3)
+        #self.setHorizontalHeaderLabels(
+        #    ['Name', 'Type', 'Dependencies']
+        #)
 
         #item_prototype = TaskItem()
         #self.setItemPrototype(item_prototype)
 
-        self.root = self.invisibleRootItem()
+        self.clear()
+        self.root = self.invisibleRootItem()        
         self.root.fetched_all = False
         self.fetchMore(self.root.index())
-        logger.debug('finished populating tree')
+        logger.debug('TaskTreeModel.populateTree() is finished')
 
     def canFetchMore(self, index):
-        logger.debug('canFetchMore is running for index: %s' % index)
+        logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
+        return_value = False
         if not index.isValid():
             logger.debug('index is not valid')
             if hasattr(self.root, 'fetched_all'):
-                return not self.root.fetched_all
+                return_value = not self.root.fetched_all
             else:
                 self.root.fetched_all = False
-                return False
+                return_value = False
         else:
             item = self.itemFromIndex(index)
-            return item.hasChildren()
+            return_value = item.canFetchMore()
+        logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+        return return_value
 
     def fetchMore(self, index):
         """fetches more elements
         """
-        logger.debug('fetchMore is running for index: %s' % index)
+        logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
         if not index.isValid():
-            # it is the root
-            # return the projects
-            projects = self.user.projects
-            self.beginInsertRows(self.root.index(), 0, len(projects) - 1)
-            for project in projects:
-                project_item = TaskItem()
-                project_item.parent = self.root
-                # project_item.setColumnCount(3)
-                project_item.setText(project.name)
+            if not self.root.fetched_all:
+                logger.debug('fetchMore for root')
+                # it is the root
+                # return the projects
+                projects = self.user.projects
+                self.beginInsertRows(self.root.index(), 0, len(projects) - 1)
+                for project in projects:
+                    project_item = TaskItem()
+                    project_item.parent = self.root
+                    # project_item.setColumnCount(3)
+                    project_item.setText(project.name)
 
-                project_item.task = project
-                
-                # set the font
-                # project_item.setText(0, entity.name)
-                # project_item.setText(1, entity.entity_type)
-                project_item.setText(project.name)
-                my_font = project_item.font()
-                my_font.setBold(True)
-                project_item.setFont(my_font)
+                    project_item.task = project
+                    
+                    # set the font
+                    # project_item.setText(0, entity.name)
+                    # project_item.setText(1, entity.entity_type)
+                    project_item.setText(project.name)
+                    my_font = project_item.font()
+                    my_font.setBold(True)
+                    project_item.setFont(my_font)
 
-                self.root.appendRow(project_item)
-            self.endInsertRows()
-            self.root.fetched_all = True
+                    self.root.appendRow(project_item)
+                self.endInsertRows()
+                self.root.fetched_all = True
+            else:
+                logger.debug('already fetched for root')
         else:
             item = self.itemFromIndex(index)
             item.fetchMore()
+        logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
+        logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
+        return_value = False
         if not index.isValid():
             projects = self.user.projects
-            return bool(len(projects) > 0)
+            return_value = bool(len(projects) > 0)
         else:
             item = self.itemFromIndex(index)
-            return (item.hasChildren())
+            if item:
+                return_value = item.hasChildren()
+        logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
+        return return_value
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -307,6 +356,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("finished initializing the interface")
 
     def close(self):
+        logger.debug('closing the ui')
         model = self.tasks_treeView.model()
         model.clear()
         super(MainDialog, self).close()
@@ -314,12 +364,17 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def show(self):
         """overridden show method
         """
-        logged_in_user = self.get_logged_in_user()
-        if not logged_in_user:
-            self.close()
-            return None
-        else:
-            return super(MainDialog, self).show()
+        logger.debug('MainDialog.show is started')
+        #logged_in_user = self.get_logged_in_user()
+        #if not logged_in_user:
+        #    self.close()
+        #    return None
+        #else:
+        #    return super(MainDialog, self).show()
+        # self.tasks_treeView.model().clear()
+        return_val = super(MainDialog, self).show()
+        logger.debug('MainDialog.show is finished')
+        return return_val
 
     def _setup_signals(self):
         """sets up the signals
@@ -715,6 +770,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         task_tree_model = TaskTreeModel()
         task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
         self.tasks_treeView.setModel(task_tree_model)
+        task_tree_model.clear()
 
         task_tree_model.user = logged_in_user
         task_tree_model.populateTree()
@@ -738,48 +794,52 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """runs when the tasks_treeView item is changed
         """
         logger.debug('tasks_treeView_changed running')
-        task = self.get_task()
-        logger.debug('task : %s' % task)
+        if self.tasks_treeView.is_updating:
+            logger.debug('tasks_treeView is updating, so returning early')
+            return
+
+        # task = self.get_task()
+        # logger.debug('task : %s' % task)
 
         # update the thumbnail
         # TODO: do it in another thread
-        self.clear_thumbnail()
-        self.update_thumbnail()
+        # self.clear_thumbnail()
+        # self.update_thumbnail()
 
         # get the versions of the entity
-        takes = []
+        # takes = []
 
-        if task:
-            # clear the takes_listWidget and fill with new data
-            logger.debug('clear takes widget')
-            self.takes_listWidget.clear()
-
-            if isinstance(task, Project):
-                return
-
-            takes = map(
-                lambda x: x[0],
-                DBSession.query(distinct(Version.take_name))
-                .filter(Version.task == task)
-                .all()
-            )
-
-        logger.debug("len(takes) from db: %s" % len(takes))
-        
-        if defaults.version_take_name not in takes:
-            takes.append(defaults.version_take_name)
-
-        if len(takes) == 0:
-            # append the default take
-            logger.debug("appending the default take name")
-            self.takes_listWidget.addItem(defaults.version_take_name)
-        else:
-            logger.debug("adding the takes from db")
-            self.takes_listWidget.addItems(takes)
-
-        logger.debug("setting the first element selected")
-        item = self.takes_listWidget.item(0)
-        self.takes_listWidget.setCurrentItem(item)
+        # if task:
+        #     # clear the takes_listWidget and fill with new data
+        #     logger.debug('clear takes widget')
+        #     self.takes_listWidget.clear()
+        # 
+        #     if isinstance(task, Project):
+        #         return
+        # 
+        #     takes = map(
+        #         lambda x: x[0],
+        #         DBSession.query(distinct(Version.take_name))
+        #         .filter(Version.task == task)
+        #         .all()
+        #     )
+        # 
+        # logger.debug("len(takes) from db: %s" % len(takes))
+        # 
+        # if defaults.version_take_name not in takes:
+        #     takes.append(defaults.version_take_name)
+        # 
+        # if len(takes) == 0:
+        #     # append the default take
+        #     logger.debug("appending the default take name")
+        #     self.takes_listWidget.addItem(defaults.version_take_name)
+        # else:
+        #     logger.debug("adding the takes from db")
+        #     self.takes_listWidget.addItems(takes)
+        # 
+        # logger.debug("setting the first element selected")
+        # item = self.takes_listWidget.item(0)
+        # self.takes_listWidget.setCurrentItem(item)
 
     def project_changed(self):
         """updates the assets list_widget and sequences_comboBox for the 
@@ -895,7 +955,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         :param version: :class:`~oyProjectManager.models.version.Version`
           instance
         """
-
         logger.debug("restoring ui with the given version: %s", version)
 
         # quit if version is None
@@ -938,6 +997,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def find_and_select_entity_item_in_treeView(self, task, treeView):
         """finds and selects the task in the given treeView item
         """
+        self.tasks_treeView.is_updating = True
         item = self.find_entity_item_in_tree_view(task, treeView)
         if not item:
             # the item is not loaded to the UI yet
@@ -968,16 +1028,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('*******************************')
         logger.debug('item: %s' % item)
 
+        self.tasks_treeView.is_updating = False
         self.tasks_treeView.selectionModel().select(
             item.index(), QtGui.QItemSelectionModel.ClearAndSelect
         )
+        return item
 
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
         """
-        logger.debug('takes_listWidget_changed running')
+        logger.debug('takes_listWidget_changed started')
         # update the previous_versions_tableWidget
         self.update_previous_versions_tableWidget()
+        logger.debug('takes_listWidget_changed finished')
 
     def clear_previous_versions_tableWidget(self):
         """clears the previous_versions_tableWidget properly
@@ -994,6 +1057,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def update_previous_versions_tableWidget(self):
         """updates the previous_versions_tableWidget
         """
+        logger.debug('update_previous_versions_tableWidget is started')
         self.clear_previous_versions_tableWidget()
 
         task = self.get_task()
@@ -1164,6 +1228,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.previous_versions_tableWidget.resizeRowsToContents()
         self.previous_versions_tableWidget.resizeColumnsToContents()
         self.previous_versions_tableWidget.resizeRowsToContents()
+        logger.debug('update_previous_versions_tableWidget is finished')
+
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence

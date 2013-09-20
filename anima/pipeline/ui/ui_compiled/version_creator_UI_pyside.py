@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Fri Sep 20 00:52:43 2013
+# Created: Fri Sep 20 17:43:54 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -67,6 +67,7 @@ class Ui_Dialog(object):
         self.my_tasks_only_checkBox.setObjectName("my_tasks_only_checkBox")
         self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
         self.tasks_treeView = QtGui.QTreeView(self.tasks_groupBox)
+        self.tasks_treeView.setUniformRowHeights(True)
         self.tasks_treeView.setObjectName("tasks_treeView")
         self.verticalLayout_2.addWidget(self.tasks_treeView)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
