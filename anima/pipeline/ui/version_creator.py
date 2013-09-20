@@ -59,6 +59,18 @@ class TaskItem(QtGui.QStandardItem):
             elif isinstance(self.task, Project):
                 tasks = self.task.root_tasks
 
+            model = self.model()
+            if model.user_tasks_only:
+                user_tasks_and_parents = []
+                # need to filter tasks which do not belong to user
+                for task in tasks:
+                    for user_task in model.user.tasks:
+                        if task in user_task.parents or task is user_task:
+                            user_tasks_and_parents.append(task)
+                            break
+
+                tasks = user_tasks_and_parents
+
             for task in tasks:
                 task_item = TaskItem()
                 task_item.parent = self
@@ -95,6 +107,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
         self.user = None
         self.root = None
+        self.user_tasks_only = False
 
     def populateTree(self):
         """populates tree with user projects
@@ -108,7 +121,6 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.setItemPrototype(item_prototype)
 
         self.root = self.invisibleRootItem()
-        # assert isinstance(self.root, TaskItem)
         self.root.fetched_all = False
 
     def canFetchMore(self, index):
@@ -685,9 +697,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logged_in_user = self.get_logged_in_user()
 
         task_tree_model = TaskTreeModel()
+        task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
         self.tasks_treeView.setModel(task_tree_model)
-        logger.debug('self.tasks_treeView.selectionModel(): %s' %
-                      self.tasks_treeView.selectionModel())
 
         task_tree_model.user = logged_in_user
         task_tree_model.populateTree()
@@ -791,10 +802,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         splitter.setStretchFactor(2, 2)
         self.horizontalLayout_14.addWidget(splitter)
 
-        # disable my_tasks_only_checkBox
-        # TODO: re-enable my_tasks_only_checkBox
-        self.my_tasks_only_checkBox.setVisible(False)
-
         # disable update_paths_checkBox
         self.update_paths_checkBox.setVisible(False)
 
@@ -887,6 +894,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             take_name,
             QtCore.Qt.MatchExactly
         )
+        if not items:
+            return
+
         self.takes_listWidget.setCurrentItem(items[0])
 
         # select the version in the previous version list

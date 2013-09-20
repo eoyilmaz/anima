@@ -1101,6 +1101,14 @@ class VersionCreatorTester(unittest2.TestCase):
             depends=[t4, t3]
         )
 
+        t7 = Task(
+            name='Test Task 7',
+            parent=t5,
+            resources=[],
+            status_list=task_status_list,
+            depends=[t2]
+        )
+
         # no tasks for project 3
         self.admin.projects.append(p1)
         self.admin.projects.append(p2)

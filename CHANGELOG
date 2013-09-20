@@ -21,6 +21,7 @@ Anima Tools Changes
       * **New:** Added a new context menu to the items in the tasks_treeView
         where the user is able to go to the dependent or dependee tasks of the
         clicked item in Version Creator UI.
+      * **Fix:** 'my_tasks_only_checkBox' is back with the functionality.
 
   * **Env:**
 
