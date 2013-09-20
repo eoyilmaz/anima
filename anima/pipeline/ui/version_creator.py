@@ -127,7 +127,10 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug('canFetchMore is running for index: %s' % index)
         if not index.isValid():
             logger.debug('index is not valid')
-            return not self.root.fetched_all
+            if hasattr(self.root, 'fetched_all'):
+                return not self.root.fetched_all
+            else:
+                return False
         else:
             item = self.itemFromIndex(index)
             return item.hasChildren()
