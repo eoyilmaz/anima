@@ -71,7 +71,7 @@ class TaskItem(QtGui.QStandardItem):
 
                 tasks = user_tasks_and_parents
 
-            self.beginInsertRows(self, 0, len(tasks) - 1)
+            self.beginInsertRows(self.index(), 0, len(tasks) - 1)
             for task in tasks:
                 task_item = TaskItem()
                 task_item.parent = self
@@ -145,7 +145,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             # it is the root
             # return the projects
             projects = self.user.projects
-            self.beginInsertRows(self.root, 0, len(projects) - 1)
+            self.beginInsertRows(self.root.index(), 0, len(projects) - 1)
             for project in projects:
                 project_item = TaskItem()
                 project_item.parent = self.root
