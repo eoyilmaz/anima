@@ -177,7 +177,6 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             return (item.hasChildren())
 
 
-
 def UI(environment=None, mode=0, app_in=None, executor=None):
     """
     :param environment: The
@@ -888,7 +887,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set the task
         task = version.task
-        self.find_and_select_entity_item_in_treeView(task, self.tasks_treeView)
+        if not self.find_and_select_entity_item_in_treeView(task, self.tasks_treeView):
+            return
 
         # take_name
         take_name = version.take_name
@@ -922,7 +922,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """finds and selects the task in the given treeView item
         """
         item = self.find_entity_item_in_tree_view(task, treeView)
-        # TODO: simplify this part
+
         if not item:
             # the item is not loaded to the UI yet
             # start loading its parents
@@ -930,7 +930,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item = self.find_entity_item_in_tree_view(task.project, treeView)
 
             if item:
-                self.tasks_treeView.setExpanded(item.index(), True)
+                treeView.setExpanded(item.index(), True)
 
             if task.parents:
                 # now starting from the most outer parent expand the tasks
@@ -945,6 +945,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             if not item:
                 # still no item
+                logger.debug('can not find item')
                 return
 
         logger.debug('*******************************')
