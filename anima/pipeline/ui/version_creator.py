@@ -71,7 +71,7 @@ class TaskItem(QtGui.QStandardItem):
 
                 tasks = user_tasks_and_parents
 
-            self.beginInsertRows(self.index(), 0, len(tasks) - 1)
+            model.beginInsertRows(self.index(), 0, len(tasks) - 1)
             for task in tasks:
                 task_item = TaskItem()
                 task_item.parent = self
@@ -88,7 +88,7 @@ class TaskItem(QtGui.QStandardItem):
                     task_item.setFont(my_font)
                 
                 self.appendRow(task_item)
-            self.endInsertRows()
+            model.endInsertRows()
 
             self.fetched_all = True
 
@@ -114,16 +114,19 @@ class TaskTreeModel(QtGui.QStandardItemModel):
     def populateTree(self):
         """populates tree with user projects
         """
+        logger.debug('start populating tree')
         self.setColumnCount(3)
         self.setHorizontalHeaderLabels(
             ['Name', 'Type', 'Dependencies']
         )
 
-        item_prototype = TaskItem()
-        self.setItemPrototype(item_prototype)
+        #item_prototype = TaskItem()
+        #self.setItemPrototype(item_prototype)
 
         self.root = self.invisibleRootItem()
         self.root.fetched_all = False
+        self.fetchMore(self.root.index())
+        logger.debug('finished populating tree')
 
     def canFetchMore(self, index):
         logger.debug('canFetchMore is running for index: %s' % index)
@@ -132,6 +135,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             if hasattr(self.root, 'fetched_all'):
                 return not self.root.fetched_all
             else:
+                self.root.fetched_all = False
                 return False
         else:
             item = self.itemFromIndex(index)
@@ -301,6 +305,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.center_window()
 
         logger.debug("finished initializing the interface")
+
+    def close(self):
+        model = self.tasks_treeView.model()
+        model.clear()
+        super(MainDialog, self).close()
 
     def show(self):
         """overridden show method
@@ -673,6 +682,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         QtTreeView
         """
         model = treeView.model()
+        logger.debug('searching for name : %s' % entity.name)
         indexes = model.match(
             model.index(0, 0),
             0,
@@ -699,6 +709,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def fill_tasks_treeView(self):
         """sets up the tasks_treeView
         """
+        logger.debug('start filling tasks_treeView')
         logged_in_user = self.get_logged_in_user()
 
         task_tree_model = TaskTreeModel()
@@ -708,6 +719,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         task_tree_model.user = logged_in_user
         task_tree_model.populateTree()
 
+        logger.debug('setting up signals for tasks_treeView_changed')
         # tasks_treeView
         QtCore.QObject.connect(
             self.tasks_treeView.selectionModel(),
@@ -715,6 +727,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 'selectionChanged(const QItemSelection &, const QItemSelection &)'),
             self.tasks_treeView_changed
         )
+        logger.debug('finished filling tasks_treeView')
 
     def tasks_treeView_auto_fit_column(self):
         """fits columns to content
@@ -806,6 +819,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 2)
         self.horizontalLayout_14.addWidget(splitter)
+        logger.debug('finished creating splitter')
 
         # disable update_paths_checkBox
         self.update_paths_checkBox.setVisible(False)
@@ -817,8 +831,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.clear_thumbnail()
 
         # fill the tasks
-        self.fill_tasks_treeView()
         self.tasks_treeView.setAutoExpandDelay(0)
+        self.fill_tasks_treeView()
 
         # add "Main" by default to the takes_listWidget
         self.takes_listWidget.addItem(defaults.version_take_name)
@@ -925,12 +939,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """finds and selects the task in the given treeView item
         """
         item = self.find_entity_item_in_tree_view(task, treeView)
-
         if not item:
             # the item is not loaded to the UI yet
             # start loading its parents
             # start from the project
             item = self.find_entity_item_in_tree_view(task.project, treeView)
+            logger.debug('item for project: %s' % item)
 
             if item:
                 treeView.setExpanded(item.index(), True)
