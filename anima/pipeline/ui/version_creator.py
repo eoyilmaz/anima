@@ -71,6 +71,7 @@ class TaskItem(QtGui.QStandardItem):
 
                 tasks = user_tasks_and_parents
 
+            self.beginInsertRows(self, 0, len(tasks) - 1)
             for task in tasks:
                 task_item = TaskItem()
                 task_item.parent = self
@@ -87,6 +88,7 @@ class TaskItem(QtGui.QStandardItem):
                     task_item.setFont(my_font)
                 
                 self.appendRow(task_item)
+            self.endInsertRows()
 
             self.fetched_all = True
 
@@ -143,6 +145,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             # it is the root
             # return the projects
             projects = self.user.projects
+            self.beginInsertRows(self.root, 0, len(projects) - 1)
             for project in projects:
                 project_item = TaskItem()
                 project_item.parent = self.root
@@ -160,6 +163,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
                 project_item.setFont(my_font)
 
                 self.root.appendRow(project_item)
+            self.endInsertRows()
             self.root.fetched_all = True
         else:
             item = self.itemFromIndex(index)
@@ -670,11 +674,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         model = treeView.model()
         indexes = model.match(
-            # 0, 0, entity.name, QtCore.Qt.MatchExactly, QtCore.Qt.MatchRecursive
             model.index(0, 0),
             0,
             entity.name,
-            2,
+            -1,
             QtCore.Qt.MatchRecursive
         )
 
