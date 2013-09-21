@@ -76,28 +76,31 @@ class TaskItem(QtGui.QStandardItem):
         """
         """
         logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
-        if self.task and not self.fetched_all:
+        # if self.task and not self.fetched_all:
+        if not self.fetched_all:
             tasks = []
+            model = self.model()
             if isinstance(self.task, Task):
                 tasks = self.task.children
             elif isinstance(self.task, Project):
                 tasks = self.task.root_tasks
+            else:
+                # should be the root
+                tasks = model.user.projects
 
-            model = self.model()
             if model.user_tasks_only:
                 user_tasks_and_parents = []
                 # need to filter tasks which do not belong to user
                 for task in tasks:
                     for user_task in model.user.tasks:
-                        if task in user_task.parents or task is user_task:
+                        if task in user_task.parents or task is user_task or task in model.user.projects:
                             user_tasks_and_parents.append(task)
                             break
 
                 tasks = user_tasks_and_parents
 
-            model.beginInsertRows(self.index(), 0, len(tasks) - 1)
-            for task in tasks:
-                task_item = TaskItem()
+            for i, task in enumerate(tasks):
+                task_item = TaskItem(0, 0)
                 task_item.parent = self
                 task_item.task = task
                 
@@ -106,13 +109,19 @@ class TaskItem(QtGui.QStandardItem):
                 # task_item.setText(1, entity.entity_type)
                 task_item.setText(task.name)
                 
-                if task.is_container:
+                make_bold = False
+                if isinstance(task, Task):
+                    if task.is_container:
+                        make_bold = True
+                elif isinstance(task, Project):
+                    make_bold = True
+                
+                if make_bold:
                     my_font = task_item.font()
                     my_font.setBold(True)
                     task_item.setFont(my_font)
                 
                 self.appendRow(task_item)
-            model.endInsertRows()
 
             self.fetched_all = True
         logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
@@ -159,21 +168,80 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         #self.setItemPrototype(item_prototype)
 
         self.clear()
-        self.root = self.invisibleRootItem()        
-        self.root.fetched_all = False
-        self.fetchMore(self.root.index())
+        for i, project in enumerate(self.user.projects):
+            project_item = TaskItem(0, 0)
+            project_item.parent = None
+            # project_item.setColumnCount(3)
+            project_item.setText(project.name)
+
+            project_item.task = project
+            
+            # set the font
+            # project_item.setText(0, entity.name)
+            # project_item.setText(1, entity.entity_type)
+            project_item.setText(project.name)
+            my_font = project_item.font()
+            my_font.setBold(True)
+            project_item.setFont(my_font)
+            
+            for task in project.root_tasks:
+                task_item = TaskItem(0, 0)
+                task_item.parent = self
+                task_item.task = task
+                
+                # set the font
+                # task_item.setText(0, entity.name)
+                # task_item.setText(1, entity.entity_type)
+                task_item.setText(task.name)
+                
+                make_bold = False
+                if isinstance(task, Task):
+                    if task.is_container:
+                        make_bold = True
+                elif isinstance(task, Project):
+                    make_bold = True
+                
+                if make_bold:
+                    my_font = task_item.font()
+                    my_font.setBold(True)
+                    task_item.setFont(my_font)
+                
+                for sub_task in task.children:
+                    sub_task_item = TaskItem(0, 0)
+                    sub_task_item.parent = self
+                    sub_task_item.task = sub_task
+                    
+                    # set the font
+                    # task_item.setText(0, entity.name)
+                    # task_item.setText(1, entity.entity_type)
+                    sub_task_item.setText(sub_task.name)
+                    
+                    make_bold = False
+                    if isinstance(sub_task, Task):
+                        if sub_task.is_container:
+                            make_bold = True
+                    elif isinstance(sub_task, Project):
+                        make_bold = True
+                    
+                    if make_bold:
+                        my_font = sub_task_item.font()
+                        my_font.setBold(True)
+                        sub_task_item.setFont(my_font)
+                    
+                    task_item.appendRow(sub_task_item)
+                
+                task_item.fetched_all = True
+                project_item.appendRow(task_item)
+            project_item.fetched_all = True
+
+            self.appendRow(project_item)
+
         logger.debug('TaskTreeModel.populateTree() is finished')
 
     def canFetchMore(self, index):
         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
-        return_value = False
         if not index.isValid():
-            logger.debug('index is not valid')
-            if hasattr(self.root, 'fetched_all'):
-                return_value = not self.root.fetched_all
-            else:
-                self.root.fetched_all = False
-                return_value = False
+            return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
@@ -184,35 +252,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """fetches more elements
         """
         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
-        if not index.isValid():
-            if not self.root.fetched_all:
-                logger.debug('fetchMore for root')
-                # it is the root
-                # return the projects
-                projects = self.user.projects
-                self.beginInsertRows(self.root.index(), 0, len(projects) - 1)
-                for project in projects:
-                    project_item = TaskItem()
-                    project_item.parent = self.root
-                    # project_item.setColumnCount(3)
-                    project_item.setText(project.name)
-
-                    project_item.task = project
-                    
-                    # set the font
-                    # project_item.setText(0, entity.name)
-                    # project_item.setText(1, entity.entity_type)
-                    project_item.setText(project.name)
-                    my_font = project_item.font()
-                    my_font.setBold(True)
-                    project_item.setFont(my_font)
-
-                    self.root.appendRow(project_item)
-                self.endInsertRows()
-                self.root.fetched_all = True
-            else:
-                logger.debug('already fetched for root')
-        else:
+        if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
         logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
@@ -222,12 +262,13 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         index
         """
         logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
-        return_value = False
         if not index.isValid():
             projects = self.user.projects
-            return_value = bool(len(projects) > 0)
+            return_value = len(projects) > 0
+            # return_value = 0
         else:
             item = self.itemFromIndex(index)
+            return_value = False
             if item:
                 return_value = item.hasChildren()
         logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
@@ -794,9 +835,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """runs when the tasks_treeView item is changed
         """
         logger.debug('tasks_treeView_changed running')
-        if self.tasks_treeView.is_updating:
-            logger.debug('tasks_treeView is updating, so returning early')
-            return
+        # if self.tasks_treeView.is_updating:
+        #     logger.debug('tasks_treeView is updating, so returning early')
+        #     return
 
         # task = self.get_task()
         # logger.debug('task : %s' % task)

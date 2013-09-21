@@ -17,6 +17,7 @@ from stalker.models.auth import LocalSession
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, SET_PYQT4
 
 SET_PYSIDE()
+# SET_PYQT4()
 
 if IS_PYSIDE():
     logger.debug('environment is set to pyside, importing pyside')
@@ -154,12 +155,15 @@ class VersionCreatorTester(unittest2.TestCase):
         # if IS_PYQT4():
         #     logger.debug('it is pyqt4')
         # for PyQt4
-        if not QtGui.qApp:
+        # self.app = QtGui.QApplication(sys.argv)
+        # if not QtGui.qApp:
+        if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
             self.app = QtGui.QApplication(sys.argv)
         else:
             logger.debug('using the present QApplication: %s' % QtGui.qApp)
-            self.app = QtGui.qApp
+            # self.app = QtGui.qApp
+            self.app = QtGui.QApplication.instance()
         # elif IS_PYSIDE():
         #     logger.debug('it is pyside')
 
@@ -1174,6 +1178,9 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeWidget
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
 
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
