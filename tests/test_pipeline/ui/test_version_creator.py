@@ -1181,6 +1181,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
+        dialog.run_once = True
 
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
