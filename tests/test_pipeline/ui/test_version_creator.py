@@ -1234,6 +1234,18 @@ class VersionCreatorTester(unittest2.TestCase):
         #     'Take2'
         # )
 
+    def test_tasks_treeView_do_not_cause_a_segfault(self):
+        """
+        """
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+
     def test_statuses_comboBox_filled_with_version_statuses(self):
         """testing if the status_comboBox is filled with statuses suitable for
         Versions

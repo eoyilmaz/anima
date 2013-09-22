@@ -10,8 +10,8 @@ import os
 import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, StatusList, Project,
-                     Task, LocalSession, EnvironmentBase)
+# from stalker import (db, defaults, Version, StatusList, Project,
+#                      Task, LocalSession, EnvironmentBase)
 
 import anima
 from anima.pipeline import utils
@@ -34,6 +34,19 @@ if IS_PYSIDE():
 elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
+
+class Task(object):
+    def __init__(self, parent=None, name=''):
+        self.parent = parent
+        if self.parent:
+            self.parent.children.append(self)
+
+        self.children = []
+        self.name = name
+
+    @property
+    def is_container(self):
+        return len(self.children) > 0
 
 class TaskItem(QtGui.QStandardItem):
     """Implements the Task as a QStandardItem
@@ -63,61 +76,27 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug('TaskItem.canFetchMore() is started for item: %s' % self.text())
         return_value = False
         if self.task and not self.fetched_all:
-            if isinstance(self.task, Task):
-                return_value = self.task.is_container
-            elif isinstance(self.task, Project):
-                return_value = bool(len(self.task.root_tasks))
+            return_value = self.task.is_container
         else:
             return_value = False
         logger.debug('TaskItem.canFetchMore() is finished for item: %s' % self.text())
         return return_value
 
     def fetchMore(self):
-        """
-        """
         logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
         # if self.task and not self.fetched_all:
         # if not self.fetched_all:
         if self.canFetchMore():
-            tasks = []
-            model = self.model()
-            if isinstance(self.task, Task):
-                tasks = self.task.children
-            elif isinstance(self.task, Project):
-                tasks = self.task.root_tasks
-            else:
-                # should be the root
-                tasks = model.user.projects
-
-            if model.user_tasks_only:
-                user_tasks_and_parents = []
-                # need to filter tasks which do not belong to user
-                for task in tasks:
-                    for user_task in model.user.tasks:
-                        if task in user_task.parents or task is user_task or task in model.user.projects:
-                            user_tasks_and_parents.append(task)
-                            break
-
-                tasks = user_tasks_and_parents
-
-            for i, task in enumerate(tasks):
+            tasks = self.task.children
+            for task in tasks:
                 task_item = TaskItem(0, 0)
                 task_item.parent = self
                 task_item.task = task
                 
                 # set the font
-                # task_item.setText(0, entity.name)
-                # task_item.setText(1, entity.entity_type)
                 task_item.setText(task.name)
                 
-                make_bold = False
-                if isinstance(task, Task):
-                    if task.is_container:
-                        make_bold = True
-                elif isinstance(task, Project):
-                    make_bold = True
-                
-                if make_bold:
+                if task.is_container:
                     my_font = task_item.font()
                     my_font.setBold(True)
                     task_item.setFont(my_font)
@@ -128,16 +107,9 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
 
     def hasChildren(self):
-        """
-        """
         logger.debug('TaskItem.hasChildren() is started for item: %s' % self.text())
         if self.task:
-            if isinstance(self.task, Task):
-                return_value = self.task.is_container
-            elif isinstance(self.task, Project):
-                return_value = len(self.task.root_tasks) > 0
-            else:
-                return_value = False
+            return_value = self.task.is_container
         else:
             return_value = False
         logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
@@ -155,36 +127,25 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.user_tasks_only = False
         logger.debug('TaskTreeModel.__init__() is finished')
 
-    def populateTree(self):
-        """populates tree with user projects
+    def populateTree(self, root_tasks):
+        """populates tree with tasks
         """
         logger.debug('TaskTreeModel.populateTree() is started')
-        #self.setColumnCount(3)
-        #self.setHorizontalHeaderLabels(
-        #    ['Name', 'Type', 'Dependencies']
-        #)
-
-        #item_prototype = TaskItem()
-        #self.setItemPrototype(item_prototype)
-
         self.clear()
-        for i, project in enumerate(self.user.projects):
-            project_item = TaskItem(0, 0)
-            project_item.parent = None
-            # project_item.setColumnCount(3)
-            project_item.setText(project.name)
+        for task in root_tasks:
+            task_item = TaskItem(0, 0)
+            task_item.parent = None
+            task_item.setText(task.name)
 
-            project_item.task = project
+            task_item.task = task
             
             # set the font
-            # project_item.setText(0, entity.name)
-            # project_item.setText(1, entity.entity_type)
-            project_item.setText(project.name)
-            my_font = project_item.font()
+            task_item.setText(task.name)
+            my_font = task_item.font()
             my_font.setBold(True)
-            project_item.setFont(my_font)
+            task_item.setFont(my_font)
 
-            self.appendRow(project_item)
+            self.appendRow(task_item)
 
         logger.debug('TaskTreeModel.populateTree() is finished')
 
@@ -213,9 +174,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """
         logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
         if not index.isValid():
-            projects = self.user.projects
-            return_value = len(projects) > 0
-            # return_value = 0
+            return_value = True
         else:
             item = self.itemFromIndex(index)
             return_value = False
@@ -223,6 +182,197 @@ class TaskTreeModel(QtGui.QStandardItemModel):
                 return_value = item.hasChildren()
         logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
         return return_value
+
+# 
+# 
+# class TaskItem(QtGui.QStandardItem):
+#     """Implements the Task as a QStandardItem
+#     """
+#     def __init__(self, *args, **kwargs):
+#         QtGui.QStandardItem.__init__(self, *args, **kwargs)
+#         logger.debug('TaskItem.__init__() is started for item: %s' % self.text())
+#         self.loaded = False
+#         self.task = None
+#         self.parent = None
+#         self.fetched_all = False
+#         self.setEditable(False)
+#         logger.debug('TaskItem.__init__() is finished for item: %s' % self.text())
+# 
+#     def clone(self):
+#         """returns a copy of this item
+#         """
+#         logger.debug('TaskItem.clone() is started for item: %s' % self.text())
+#         new_item = TaskItem()
+#         new_item.task = self.task
+#         new_item.parent = self.parent
+#         new_item.fetched_all = self.fetched_all
+#         logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
+#         return new_item
+# 
+#     def canFetchMore(self):
+#         logger.debug('TaskItem.canFetchMore() is started for item: %s' % self.text())
+#         return_value = False
+#         if self.task and not self.fetched_all:
+#             if isinstance(self.task, Task):
+#                 return_value = self.task.is_container
+#             elif isinstance(self.task, Project):
+#                 return_value = bool(len(self.task.root_tasks))
+#         else:
+#             return_value = False
+#         logger.debug('TaskItem.canFetchMore() is finished for item: %s' % self.text())
+#         return return_value
+# 
+#     def fetchMore(self):
+#         """
+#         """
+#         logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
+#         # if self.task and not self.fetched_all:
+#         # if not self.fetched_all:
+#         if self.canFetchMore():
+#             tasks = []
+#             model = self.model()
+#             if isinstance(self.task, Task):
+#                 tasks = self.task.children
+#             elif isinstance(self.task, Project):
+#                 tasks = self.task.root_tasks
+#             else:
+#                 # should be the root
+#                 tasks = model.user.projects
+# 
+#             if model.user_tasks_only:
+#                 user_tasks_and_parents = []
+#                 # need to filter tasks which do not belong to user
+#                 for task in tasks:
+#                     for user_task in model.user.tasks:
+#                         if task in user_task.parents or task is user_task or task in model.user.projects:
+#                             user_tasks_and_parents.append(task)
+#                             break
+# 
+#                 tasks = user_tasks_and_parents
+# 
+#             for i, task in enumerate(tasks):
+#                 task_item = TaskItem(0, 0)
+#                 task_item.parent = self
+#                 task_item.task = task
+#                 
+#                 # set the font
+#                 # task_item.setText(0, entity.name)
+#                 # task_item.setText(1, entity.entity_type)
+#                 task_item.setText(task.name)
+#                 
+#                 make_bold = False
+#                 if isinstance(task, Task):
+#                     if task.is_container:
+#                         make_bold = True
+#                 elif isinstance(task, Project):
+#                     make_bold = True
+#                 
+#                 if make_bold:
+#                     my_font = task_item.font()
+#                     my_font.setBold(True)
+#                     task_item.setFont(my_font)
+#                 
+#                 self.appendRow(task_item)
+# 
+#             self.fetched_all = True
+#         logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
+# 
+#     def hasChildren(self):
+#         """
+#         """
+#         logger.debug('TaskItem.hasChildren() is started for item: %s' % self.text())
+#         if self.task:
+#             if isinstance(self.task, Task):
+#                 return_value = self.task.is_container
+#             elif isinstance(self.task, Project):
+#                 return_value = len(self.task.root_tasks) > 0
+#             else:
+#                 return_value = False
+#         else:
+#             return_value = False
+#         logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
+#         return return_value
+# 
+# 
+# class TaskTreeModel(QtGui.QStandardItemModel):
+#     """Implements the model view for the task hierarchy
+#     """
+#     def __init__(self, *args, **kwargs):
+#         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
+#         logger.debug('TaskTreeModel.__init__() is started')
+#         self.user = None
+#         self.root = None
+#         self.user_tasks_only = False
+#         logger.debug('TaskTreeModel.__init__() is finished')
+# 
+#     def populateTree(self):
+#         """populates tree with user projects
+#         """
+#         logger.debug('TaskTreeModel.populateTree() is started')
+#         #self.setColumnCount(3)
+#         #self.setHorizontalHeaderLabels(
+#         #    ['Name', 'Type', 'Dependencies']
+#         #)
+# 
+#         #item_prototype = TaskItem()
+#         #self.setItemPrototype(item_prototype)
+# 
+#         self.clear()
+#         for i, project in enumerate(self.user.projects):
+#             project_item = TaskItem(0, 0)
+#             project_item.parent = None
+#             # project_item.setColumnCount(3)
+#             project_item.setText(project.name)
+# 
+#             project_item.task = project
+#             
+#             # set the font
+#             # project_item.setText(0, entity.name)
+#             # project_item.setText(1, entity.entity_type)
+#             project_item.setText(project.name)
+#             my_font = project_item.font()
+#             my_font.setBold(True)
+#             project_item.setFont(my_font)
+# 
+#             self.appendRow(project_item)
+# 
+#         logger.debug('TaskTreeModel.populateTree() is finished')
+# 
+#     def canFetchMore(self, index):
+#         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
+#         if not index.isValid():
+#             return_value = False
+#         else:
+#             item = self.itemFromIndex(index)
+#             return_value = item.canFetchMore()
+#         logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+#         return return_value
+# 
+#     def fetchMore(self, index):
+#         """fetches more elements
+#         """
+#         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
+#         if index.isValid():
+#             item = self.itemFromIndex(index)
+#             item.fetchMore()
+#         logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+# 
+#     def hasChildren(self, index):
+#         """returns True or False depending on to the index and the item on the
+#         index
+#         """
+#         logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
+#         if not index.isValid():
+#             projects = self.user.projects
+#             return_value = len(projects) > 0
+#             # return_value = 0
+#         else:
+#             item = self.itemFromIndex(index)
+#             return_value = False
+#             if item:
+#                 return_value = item.hasChildren()
+#         logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
+#         return return_value
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -312,8 +462,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.setWindowTitle(window_title)
 
         # setup the database
-        if DBSession is None:
-            db.setup()
+        # if DBSession is None:
+        #     db.setup()
 
         self.environment = environment
 
@@ -544,24 +694,25 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def get_logged_in_user(self):
         """returns the logged in user
         """
-        local_session = LocalSession()
-        logged_in_user = local_session.logged_in_user
-        if not logged_in_user:
-            dialog = login_dialog.MainDialog(parent=self)
-            self.current_dialog = dialog
-            dialog.exec_()
-            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
-            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
-                local_session = LocalSession()
-                logged_in_user = local_session.logged_in_user
-                self.current_dialog = None
-            else:
-                # close the ui
-                #logged_in_user = self.get_logged_in_user()
-                logger.debug("no logged in user")
-                self.close()
-
-        return logged_in_user
+        # local_session = LocalSession()
+        # logged_in_user = local_session.logged_in_user
+        # if not logged_in_user:
+        #     dialog = login_dialog.MainDialog(parent=self)
+        #     self.current_dialog = dialog
+        #     dialog.exec_()
+        #     logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
+        #     if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
+        #         local_session = LocalSession()
+        #         logged_in_user = local_session.logged_in_user
+        #         self.current_dialog = None
+        #     else:
+        #         # close the ui
+        #         #logged_in_user = self.get_logged_in_user()
+        #         logger.debug("no logged in user")
+        #         self.close()
+        # 
+        # return logged_in_user
+        return None
 
     def fill_logged_in_user(self):
         """fills the logged in user label
@@ -573,8 +724,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def logout(self):
         """log the current user out
         """
-        lsession = LocalSession()
-        lsession.delete()
+        # lsession = LocalSession()
+        # lsession.delete()
         self.close()
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
@@ -760,20 +911,28 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('start filling tasks_treeView')
         logged_in_user = self.get_logged_in_user()
 
-        model = self.tasks_treeView.model()
-        if not model:
-            logger.debug('creating a new model')
-            task_tree_model = TaskTreeModel()
-            task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
-            self.tasks_treeView.setModel(task_tree_model)
-        else:
-            logger.debug('there is a model already : %s' % model)
-            task_tree_model = self.tasks_treeView.model()
+        logger.debug('creating a new model')
+        # task_tree_model = TaskTreeModel()
+        # task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
+        # self.tasks_treeView.setModel(task_tree_model)
+        # task_tree_model.clear()
 
-        task_tree_model.clear()
-
-        task_tree_model.user = logged_in_user
-        task_tree_model.populateTree()
+        # task_tree_model.user = logged_in_user
+        # task_tree_model.populateTree()
+        
+        task1 = Task(name='Task 1')
+        task2 = Task(name='Task 2')
+        task3 = Task(name='Task 3')
+    
+        task4 = Task(parent=task1, name='Task 4')
+        task5 = Task(parent=task1, name='Task 5')
+    
+        task6 = Task(parent=task5, name='Task 6')
+    
+        treeViewModel = TaskTreeModel()
+        treeViewModel.populateTree([task1, task2, task3])
+        
+        self.tasks_treeView.setModel(treeViewModel)
 
         logger.debug('setting up signals for tasks_treeView_changed')
         # tasks_treeView
