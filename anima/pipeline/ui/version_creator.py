@@ -34,195 +34,6 @@ if IS_PYSIDE():
 elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
-# class TaskItem(QtGui.QStandardItem):
-#     """Implements the Task as a QStandardItem
-#     """
-#     def __init__(self, *args, **kwargs):
-#         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-#         logger.debug('TaskItem.__init__() is started for item: %s' % self.text())
-#         self.loaded = False
-#         self.task = None
-#         self.parent = None
-#         self.fetched_all = False
-#         self.setEditable(False)
-#         logger.debug('TaskItem.__init__() is finished for item: %s' % self.text())
-# 
-#     def clone(self):
-#         """returns a copy of this item
-#         """
-#         logger.debug('TaskItem.clone() is started for item: %s' % self.text())
-#         new_item = TaskItem()
-#         new_item.task = self.task
-#         new_item.parent = self.parent
-#         new_item.fetched_all = self.fetched_all
-#         logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
-#         return new_item
-# 
-#     def canFetchMore(self):
-#         logger.debug('TaskItem.canFetchMore() is started for item: %s' % self.text())
-#         return_value = False
-#         if self.task and not self.fetched_all:
-#             if isinstance(self.task, Task):
-#                 return_value = self.task.is_container
-#             elif isinstance(self.task, Project):
-#                 return_value = bool(len(self.task.root_tasks))
-#         else:
-#             return_value = False
-#         logger.debug('TaskItem.canFetchMore() is finished for item: %s' % self.text())
-#         return return_value
-# 
-#     def fetchMore(self):
-#         """
-#         """
-#         logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
-#         # if self.task and not self.fetched_all:
-#         # if not self.fetched_all:
-#         if self.canFetchMore():
-#             tasks = []
-#             model = self.model()
-#             if isinstance(self.task, Task):
-#                 tasks = self.task.children
-#             elif isinstance(self.task, Project):
-#                 tasks = self.task.root_tasks
-#             else:
-#                 # should be the root
-#                 tasks = model.user.projects
-# 
-#             if model.user_tasks_only:
-#                 user_tasks_and_parents = []
-#                 # need to filter tasks which do not belong to user
-#                 for task in tasks:
-#                     for user_task in model.user.tasks:
-#                         if task in user_task.parents or task is user_task or task in model.user.projects:
-#                             user_tasks_and_parents.append(task)
-#                             break
-# 
-#                 tasks = user_tasks_and_parents
-# 
-#             for i, task in enumerate(tasks):
-#                 task_item = TaskItem(0, 0)
-#                 task_item.parent = self
-#                 task_item.task = task
-#                 
-#                 # set the font
-#                 # task_item.setText(0, entity.name)
-#                 # task_item.setText(1, entity.entity_type)
-#                 task_item.setText(task.name)
-#                 
-#                 make_bold = False
-#                 if isinstance(task, Task):
-#                     if task.is_container:
-#                         make_bold = True
-#                 elif isinstance(task, Project):
-#                     make_bold = True
-#                 
-#                 if make_bold:
-#                     my_font = task_item.font()
-#                     my_font.setBold(True)
-#                     task_item.setFont(my_font)
-#                 
-#                 self.appendRow(task_item)
-# 
-#             self.fetched_all = True
-#         logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
-# 
-#     def hasChildren(self):
-#         """
-#         """
-#         logger.debug('TaskItem.hasChildren() is started for item: %s' % self.text())
-#         if self.task:
-#             if isinstance(self.task, Task):
-#                 return_value = self.task.is_container
-#             elif isinstance(self.task, Project):
-#                 return_value = len(self.task.root_tasks) > 0
-#             else:
-#                 return_value = False
-#         else:
-#             return_value = False
-#         logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
-#         return return_value
-# 
-# 
-# class TaskTreeModel(QtGui.QStandardItemModel):
-#     """Implements the model view for the task hierarchy
-#     """
-#     def __init__(self, *args, **kwargs):
-#         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
-#         logger.debug('TaskTreeModel.__init__() is started')
-#         self.user = None
-#         self.root = None
-#         self.user_tasks_only = False
-#         logger.debug('TaskTreeModel.__init__() is finished')
-# 
-#     def populateTree(self):
-#         """populates tree with user projects
-#         """
-#         logger.debug('TaskTreeModel.populateTree() is started')
-#         #self.setColumnCount(3)
-#         #self.setHorizontalHeaderLabels(
-#         #    ['Name', 'Type', 'Dependencies']
-#         #)
-# 
-#         #item_prototype = TaskItem()
-#         #self.setItemPrototype(item_prototype)
-# 
-#         self.clear()
-#         for i, project in enumerate(self.user.projects):
-#             project_item = TaskItem(0, 0)
-#             project_item.parent = None
-#             # project_item.setColumnCount(3)
-#             project_item.setText(project.name)
-# 
-#             project_item.task = project
-#             
-#             # set the font
-#             # project_item.setText(0, entity.name)
-#             # project_item.setText(1, entity.entity_type)
-#             project_item.setText(project.name)
-#             my_font = project_item.font()
-#             my_font.setBold(True)
-#             project_item.setFont(my_font)
-# 
-#             self.appendRow(project_item)
-# 
-#         logger.debug('TaskTreeModel.populateTree() is finished')
-# 
-#     def canFetchMore(self, index):
-#         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
-#         if not index.isValid():
-#             return_value = False
-#         else:
-#             item = self.itemFromIndex(index)
-#             return_value = item.canFetchMore()
-#         logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
-#         return return_value
-# 
-#     def fetchMore(self, index):
-#         """fetches more elements
-#         """
-#         logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
-#         if index.isValid():
-#             item = self.itemFromIndex(index)
-#             item.fetchMore()
-#         logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
-# 
-#     def hasChildren(self, index):
-#         """returns True or False depending on to the index and the item on the
-#         index
-#         """
-#         logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
-#         if not index.isValid():
-#             projects = self.user.projects
-#             return_value = len(projects) > 0
-#             # return_value = 0
-#         else:
-#             item = self.itemFromIndex(index)
-#             return_value = False
-#             if item:
-#                 return_value = item.hasChildren()
-#         logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
-#         return return_value
-
 
 class TaskItem(QtGui.QStandardItem):
     """Implements the Task as a QStandardItem
@@ -235,6 +46,8 @@ class TaskItem(QtGui.QStandardItem):
         self.parent = None
         self.fetched_all = False
         self.setEditable(False)
+        self.user = None
+        self.user_tasks_only = False
         logger.debug('TaskItem.__init__() is finished for item: %s' % self.text())
 
     def clone(self):
@@ -271,15 +84,38 @@ class TaskItem(QtGui.QStandardItem):
             elif isinstance(self.task, Project):
                 tasks = self.task.root_tasks
 
+            # model = self.model()
+            if self.user_tasks_only:
+                user_tasks_and_parents = []
+                # need to filter tasks which do not belong to user
+                for task in tasks:
+                    for user_task in self.user.tasks:
+                        if task in user_task.parents or task is user_task or task in self.user.projects:
+                            user_tasks_and_parents.append(task)
+                            break
+
+                tasks = user_tasks_and_parents
+
             for task in tasks:
                 task_item = TaskItem(0, 0)
                 task_item.parent = self
                 task_item.task = task
-                
+                task_item.user = self.user
+                task_item.user_tasks_only = self.user_tasks_only
+
                 # set the font
+                # task_item.setText(0, entity.name)
+                # task_item.setText(1, entity.entity_type)
                 task_item.setText(task.name)
                 
-                if task.is_container:
+                make_bold = False
+                if isinstance(task, Task):
+                    if task.is_container:
+                        make_bold = True
+                elif isinstance(task, Project):
+                    make_bold = True
+
+                if make_bold:
                     my_font = task_item.font()
                     my_font.setBold(True)
                     task_item.setFont(my_font)
@@ -296,6 +132,8 @@ class TaskItem(QtGui.QStandardItem):
                 return_value = self.task.is_container
             elif isinstance(self.task, Project):
                 return_value = len(self.task.root_tasks) > 0
+            else:
+                return_value = False
         else:
             return_value = False
         logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
@@ -314,18 +152,31 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug('TaskTreeModel.__init__() is finished')
 
     def populateTree(self, projects):
-        """populates tree with tasks
+        """populates tree with user projects
         """
         logger.debug('TaskTreeModel.populateTree() is started')
-        self.clear()
+        #self.setColumnCount(3)
+        #self.setHorizontalHeaderLabels(
+        #    ['Name', 'Type', 'Dependencies']
+        #)
+
+        #item_prototype = TaskItem()
+        #self.setItemPrototype(item_prototype)
+
+        #self.clear()
         for project in projects:
             project_item = TaskItem(0, 0)
             project_item.parent = None
+            # project_item.setColumnCount(3)
             project_item.setText(project.name)
 
             project_item.task = project
+            project_item.user = self.user
+            project_item.user_tasks_only = self.user_tasks_only
 
             # set the font
+            # project_item.setText(0, entity.name)
+            # project_item.setText(1, entity.entity_type)
             project_item.setText(project.name)
             my_font = project_item.font()
             my_font.setBold(True)
@@ -360,7 +211,8 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """
         logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
         if not index.isValid():
-            return_value = True
+            projects = self.user.projects
+            return_value = len(projects) > 0
         else:
             item = self.itemFromIndex(index)
             return_value = False
@@ -368,8 +220,6 @@ class TaskTreeModel(QtGui.QStandardItemModel):
                 return_value = item.hasChildren()
         logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
         return return_value
-
-
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -483,11 +333,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         )
 
         # setup signals
-        if not hasattr(self, 'run_once'):
-            self._setup_signals()
+        self._setup_signals()
 
-            # setup defaults
-            self._set_defaults()
+        # setup defaults
+        self._set_defaults()
 
         # center window
         self.center_window()
@@ -496,23 +345,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
     def close(self):
         logger.debug('closing the ui')
-        #model = self.tasks_treeView.model()
-        #model.clear()
-        self.tasks_treeView.already_initialized = True
         super(MainDialog, self).close()
 
     def show(self):
         """overridden show method
         """
         logger.debug('MainDialog.show is started')
-        #logged_in_user = self.get_logged_in_user()
-        #if not logged_in_user:
-        #    self.close()
-        #    return None
-        #else:
-        #    return super(MainDialog, self).show()
-        # self.tasks_treeView.model().clear()
-        return_val = super(MainDialog, self).show()
+        logged_in_user = self.get_logged_in_user()
+        if not logged_in_user:
+           self.close()
+           return_val = None
+        else:
+           return_val = super(MainDialog, self).show()
+
         logger.debug('MainDialog.show is finished')
         return return_val
 
@@ -528,162 +373,162 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.close
         )
 
-        # #logout button
-        # QtCore.QObject.connect(
-        #     self.logout_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.logout
-        # )
+        #logout button
+        QtCore.QObject.connect(
+            self.logout_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.logout
+        )
 
         # my_tasks_only_checkBox
-        # QtCore.QObject.connect(
-        #     self.my_tasks_only_checkBox,
-        #     QtCore.SIGNAL("stateChanged(int)"),
-        #     self.fill_tasks_treeView
-        # )
+        QtCore.QObject.connect(
+            self.my_tasks_only_checkBox,
+            QtCore.SIGNAL("stateChanged(int)"),
+            self.fill_tasks_treeView
+        )
 
-        # # fit column 0 on expand/collapse
-        # QtCore.QObject.connect(
-        #     self.tasks_treeView,
-        #     QtCore.SIGNAL('expanded(QModelIndex)'),
-        #     self.tasks_treeView_auto_fit_column
-        # )
+        # fit column 0 on expand/collapse
+        QtCore.QObject.connect(
+            self.tasks_treeView,
+            QtCore.SIGNAL('expanded(QModelIndex)'),
+            self.tasks_treeView_auto_fit_column
+        )
 
-        # QtCore.QObject.connect(
-        #     self.tasks_treeView,
-        #     QtCore.SIGNAL('collapsed(QModelIndex)'),
-        #     self.tasks_treeView_auto_fit_column
-        # )
+        QtCore.QObject.connect(
+            self.tasks_treeView,
+            QtCore.SIGNAL('collapsed(QModelIndex)'),
+            self.tasks_treeView_auto_fit_column
+        )
 
-        # # takes_listWidget
-        # QtCore.QObject.connect(
-        #     self.takes_listWidget,
-        #     QtCore.SIGNAL("currentTextChanged(QString)"),
-        #     self.takes_listWidget_changed
-        # )
+        # takes_listWidget
+        QtCore.QObject.connect(
+            self.takes_listWidget,
+            QtCore.SIGNAL("currentTextChanged(QString)"),
+            self.takes_listWidget_changed
+        )
 
-        # # takes_listWidget
-        # QtCore.QObject.connect(
-        #     self.takes_listWidget,
-        #     QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-        #     self.takes_listWidget_changed
-        # )
+        # takes_listWidget
+        QtCore.QObject.connect(
+            self.takes_listWidget,
+            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
+            self.takes_listWidget_changed
+        )
 
-        # # find_from_path_lineEdit
-        # QtCore.QObject.connect(
-        #     self.find_from_path_pushButton,
-        #     QtCore.SIGNAL('clicked()'),
-        #     self.find_from_path_pushButton_clicked
-        # )
+        # find_from_path_lineEdit
+        QtCore.QObject.connect(
+            self.find_from_path_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.find_from_path_pushButton_clicked
+        )
 
-        # # custom context menu for the tasks_treeView
-        # self.tasks_treeView.setContextMenuPolicy(
-        #     QtCore.Qt.CustomContextMenu
-        # )
-        # 
-        # QtCore.QObject.connect(
-        #     self.tasks_treeView,
-        #     QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-        #     self._show_tasks_treeView_context_menu
-        # )
+        # custom context menu for the tasks_treeView
+        self.tasks_treeView.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
 
-        # # custom context menu for the previous_versions_tableWidget
-        # self.previous_versions_tableWidget.setContextMenuPolicy(
-        #     QtCore.Qt.CustomContextMenu
-        # )
+        QtCore.QObject.connect(
+            self.tasks_treeView,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self._show_tasks_treeView_context_menu
+        )
 
-        # QtCore.QObject.connect(
-        #     self.previous_versions_tableWidget,
-        #     QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-        #     self._show_previous_versions_tableWidget_context_menu
-        # )
+        # custom context menu for the previous_versions_tableWidget
+        self.previous_versions_tableWidget.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
 
-        # # add_take_toolButton
-        # QtCore.QObject.connect(
-        #     self.add_take_toolButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.add_take_toolButton_clicked
-        # )
+        QtCore.QObject.connect(
+            self.previous_versions_tableWidget,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self._show_previous_versions_tableWidget_context_menu
+        )
 
-        # # export_as
-        # QtCore.QObject.connect(
-        #     self.export_as_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.export_as_pushButton_clicked
-        # )
+        # add_take_toolButton
+        QtCore.QObject.connect(
+            self.add_take_toolButton,
+            QtCore.SIGNAL("clicked()"),
+            self.add_take_toolButton_clicked
+        )
 
-        # # save_as
-        # QtCore.QObject.connect(
-        #     self.save_as_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.save_as_pushButton_clicked
-        # )
-        # 
-        # # open
-        # QtCore.QObject.connect(
-        #     self.open_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.open_pushButton_clicked
-        # )
-        # 
-        # # chose
-        # QtCore.QObject.connect(
-        #     self.chose_pushButton,
-        #     QtCore.SIGNAL("cliched()"),
-        #     self.chose_pushButton_clicked
-        # )
+        # export_as
+        QtCore.QObject.connect(
+            self.export_as_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.export_as_pushButton_clicked
+        )
 
-        # if self.mode:
-        #     # Read-Only mode, Choose the version
-        #     # add double clicking to previous_versions_tableWidget
-        #     QtCore.QObject.connect(
-        #         self.previous_versions_tableWidget,
-        #         QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-        #         self.chose_pushButton_clicked
-        #     )
-        # else:
-        #     # Read-Write mode, Open the version
-        #     # add double clicking to previous_versions_tableWidget
-        #     QtCore.QObject.connect(
-        #         self.previous_versions_tableWidget,
-        #         QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-        #         self.open_pushButton_clicked
-        #     )
+        # save_as
+        QtCore.QObject.connect(
+            self.save_as_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.save_as_pushButton_clicked
+        )
 
-        # # reference
-        # QtCore.QObject.connect(
-        #     self.reference_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.reference_pushButton_clicked
-        # )
-        # 
-        # # import
-        # QtCore.QObject.connect(
-        #     self.import_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.import_pushButton_clicked
-        # )
+        # open
+        QtCore.QObject.connect(
+            self.open_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.open_pushButton_clicked
+        )
 
-        # # show_only_published_checkBox
-        # QtCore.QObject.connect(
-        #     self.show_published_only_checkBox,
-        #     QtCore.SIGNAL("stateChanged(int)"),
-        #     self.update_previous_versions_tableWidget
-        # )
+        # chose
+        QtCore.QObject.connect(
+            self.chose_pushButton,
+            QtCore.SIGNAL("cliched()"),
+            self.chose_pushButton_clicked
+        )
 
-        # # show_only_published_checkBox
-        # QtCore.QObject.connect(
-        #     self.version_count_spinBox,
-        #     QtCore.SIGNAL("valueChanged(int)"),
-        #     self.update_previous_versions_tableWidget
-        # )
+        if self.mode:
+            # Read-Only mode, Choose the version
+            # add double clicking to previous_versions_tableWidget
+            QtCore.QObject.connect(
+                self.previous_versions_tableWidget,
+                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+                self.chose_pushButton_clicked
+            )
+        else:
+            # Read-Write mode, Open the version
+            # add double clicking to previous_versions_tableWidget
+            QtCore.QObject.connect(
+                self.previous_versions_tableWidget,
+                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+                self.open_pushButton_clicked
+            )
 
-        # # upload_thumbnail_pushButton
-        # QtCore.QObject.connect(
-        #     self.upload_thumbnail_pushButton,
-        #     QtCore.SIGNAL("clicked()"),
-        #     self.upload_thumbnail_pushButton_clicked
-        # )
+        # reference
+        QtCore.QObject.connect(
+            self.reference_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.reference_pushButton_clicked
+        )
+
+        # import
+        QtCore.QObject.connect(
+            self.import_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.import_pushButton_clicked
+        )
+
+        # show_only_published_checkBox
+        QtCore.QObject.connect(
+            self.show_published_only_checkBox,
+            QtCore.SIGNAL("stateChanged(int)"),
+            self.update_previous_versions_tableWidget
+        )
+
+        # show_only_published_checkBox
+        QtCore.QObject.connect(
+            self.version_count_spinBox,
+            QtCore.SIGNAL("valueChanged(int)"),
+            self.update_previous_versions_tableWidget
+        )
+
+        # upload_thumbnail_pushButton
+        QtCore.QObject.connect(
+            self.upload_thumbnail_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.upload_thumbnail_pushButton_clicked
+        )
 
         logger.debug("finished setting up interface signals")
     
@@ -691,25 +536,24 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def get_logged_in_user(self):
         """returns the logged in user
         """
-        # local_session = LocalSession()
-        # logged_in_user = local_session.logged_in_user
-        # if not logged_in_user:
-        #     dialog = login_dialog.MainDialog(parent=self)
-        #     self.current_dialog = dialog
-        #     dialog.exec_()
-        #     logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
-        #     if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
-        #         local_session = LocalSession()
-        #         logged_in_user = local_session.logged_in_user
-        #         self.current_dialog = None
-        #     else:
-        #         # close the ui
-        #         #logged_in_user = self.get_logged_in_user()
-        #         logger.debug("no logged in user")
-        #         self.close()
-        # 
-        # return logged_in_user
-        return None
+        local_session = LocalSession()
+        logged_in_user = local_session.logged_in_user
+        if not logged_in_user:
+            dialog = login_dialog.MainDialog(parent=self)
+            self.current_dialog = dialog
+            dialog.exec_()
+            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
+            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
+                local_session = LocalSession()
+                logged_in_user = local_session.logged_in_user
+                self.current_dialog = None
+            else:
+                # close the ui
+                #logged_in_user = self.get_logged_in_user()
+                logger.debug("no logged in user")
+                self.close()
+
+        return logged_in_user
 
     def fill_logged_in_user(self):
         """fills the logged in user label
@@ -721,8 +565,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def logout(self):
         """log the current user out
         """
-        # lsession = LocalSession()
-        # lsession.delete()
+        lsession = LocalSession()
+        lsession.delete()
         self.close()
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
@@ -909,36 +753,25 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logged_in_user = self.get_logged_in_user()
 
         logger.debug('creating a new model')
-        # task_tree_model = TaskTreeModel()
-        # task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
-        # self.tasks_treeView.setModel(task_tree_model)
-        # task_tree_model.clear()
-
-        # task_tree_model.user = logged_in_user
-        # task_tree_model.populateTree()
-
         projects = Project.query.all()
-        logger.debug('projects : %s' % projects)
-        
-        # tasks = []
-        # for project in projects:
-        #     tasks.extend(project.root_tasks)
-        # logger.debug('tasks : %s' % tasks)
 
-        treeViewModel = TaskTreeModel()
-        treeViewModel.populateTree(projects)
+        task_tree_model = TaskTreeModel()
+        task_tree_model.user = logged_in_user
+        task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
+        task_tree_model.populateTree(projects)
 
-        self.tasks_treeView.setModel(treeViewModel)
+        self.tasks_treeView.setModel(task_tree_model)
 
         logger.debug('setting up signals for tasks_treeView_changed')
         # tasks_treeView
-        # QtCore.QObject.connect(
-        #     self.tasks_treeView.selectionModel(),
-        #     QtCore.SIGNAL(
-        #         'selectionChanged(const QItemSelection &, const QItemSelection &)'),
-        #     self.tasks_treeView_changed
-        # )
-        self.tasks_treeView.already_initialized = True
+        QtCore.QObject.connect(
+            self.tasks_treeView.selectionModel(),
+            QtCore.SIGNAL(
+                'selectionChanged(const QItemSelection &, const QItemSelection &)'),
+            self.tasks_treeView_changed
+        )
+
+        self.tasks_treeView.is_updating = False
         logger.debug('finished filling tasks_treeView')
 
     def tasks_treeView_auto_fit_column(self):
@@ -950,52 +783,52 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """runs when the tasks_treeView item is changed
         """
         logger.debug('tasks_treeView_changed running')
-        # if self.tasks_treeView.is_updating:
-        #     logger.debug('tasks_treeView is updating, so returning early')
-        #     return
+        if self.tasks_treeView.is_updating:
+            logger.debug('tasks_treeView is updating, so returning early')
+            return
 
-        # task = self.get_task()
-        # logger.debug('task : %s' % task)
+        task = self.get_task()
+        logger.debug('task : %s' % task)
 
         # update the thumbnail
         # TODO: do it in another thread
-        # self.clear_thumbnail()
-        # self.update_thumbnail()
+        self.clear_thumbnail()
+        self.update_thumbnail()
 
         # get the versions of the entity
-        # takes = []
+        takes = []
 
-        # if task:
-        #     # clear the takes_listWidget and fill with new data
-        #     logger.debug('clear takes widget')
-        #     self.takes_listWidget.clear()
-        # 
-        #     if isinstance(task, Project):
-        #         return
-        # 
-        #     takes = map(
-        #         lambda x: x[0],
-        #         DBSession.query(distinct(Version.take_name))
-        #         .filter(Version.task == task)
-        #         .all()
-        #     )
-        # 
-        # logger.debug("len(takes) from db: %s" % len(takes))
-        # 
-        # if defaults.version_take_name not in takes:
-        #     takes.append(defaults.version_take_name)
-        # 
-        # if len(takes) == 0:
-        #     # append the default take
-        #     logger.debug("appending the default take name")
-        #     self.takes_listWidget.addItem(defaults.version_take_name)
-        # else:
-        #     logger.debug("adding the takes from db")
-        #     self.takes_listWidget.addItems(takes)
-        # 
-        # logger.debug("setting the first element selected")
-        # item = self.takes_listWidget.item(0)
-        # self.takes_listWidget.setCurrentItem(item)
+        if task:
+            # clear the takes_listWidget and fill with new data
+            logger.debug('clear takes widget')
+            self.takes_listWidget.clear()
+
+            if isinstance(task, Project):
+                return
+
+            takes = map(
+                lambda x: x[0],
+                DBSession.query(distinct(Version.take_name))
+                .filter(Version.task == task)
+                .all()
+            )
+
+        logger.debug("len(takes) from db: %s" % len(takes))
+
+        if defaults.version_take_name not in takes:
+            takes.append(defaults.version_take_name)
+
+        if len(takes) == 0:
+            # append the default take
+            logger.debug("appending the default take name")
+            self.takes_listWidget.addItem(defaults.version_take_name)
+        else:
+            logger.debug("adding the takes from db")
+            self.takes_listWidget.addItems(takes)
+
+        logger.debug("setting the first element selected")
+        item = self.takes_listWidget.item(0)
+        self.takes_listWidget.setCurrentItem(item)
 
     def project_changed(self):
         """updates the assets list_widget and sequences_comboBox for the 
@@ -1027,57 +860,52 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # 
         # and add it under horizontalLayout_14
 
-        # splitter = QtGui.QSplitter()
-        # splitter.addWidget(self.tasks_groupBox)
-        # splitter.addWidget(self.new_version_groupBox)
-        # splitter.addWidget(self.previous_versions_groupBox)
-        # splitter.setStretchFactor(0, 1)
-        # splitter.setStretchFactor(1, 1)
-        # splitter.setStretchFactor(2, 2)
-        # self.horizontalLayout_14.addWidget(splitter)
-        # logger.debug('finished creating splitter')
+        splitter = QtGui.QSplitter()
+        splitter.addWidget(self.tasks_groupBox)
+        splitter.addWidget(self.new_version_groupBox)
+        splitter.addWidget(self.previous_versions_groupBox)
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
+        splitter.setStretchFactor(2, 2)
+        self.horizontalLayout_14.addWidget(splitter)
+        logger.debug('finished creating splitter')
 
         # disable update_paths_checkBox
         self.update_paths_checkBox.setVisible(False)
 
         # check login
-        #self.fill_logged_in_user()
+        self.fill_logged_in_user()
 
         # clear the thumbnail area
-        #self.clear_thumbnail()
+        self.clear_thumbnail()
 
         # fill the tasks
-        self.tasks_treeView.setAutoExpandDelay(-1)
-        if not hasattr(self.tasks_treeView, 'already_initialized'):
-            logger.debug('tasks_treeView is not initialized yet!')
-            self.fill_tasks_treeView()
-        else:
-            logger.debug('Not running fill_tasks_treeView() again!')
+        self.fill_tasks_treeView()
 
-        # # add "Main" by default to the takes_listWidget
-        # self.takes_listWidget.addItem(defaults.version_take_name)
-        # # select it
-        # item = self.takes_listWidget.item(0)
-        # self.takes_listWidget.setCurrentItem(item)
+        # add "Main" by default to the takes_listWidget
+        self.takes_listWidget.addItem(defaults.version_take_name)
+        # select it
+        item = self.takes_listWidget.item(0)
+        self.takes_listWidget.setCurrentItem(item)
 
         # run the project changed item for the first time
         # self.project_changed()
 
-        # if self.environment and isinstance(self.environment, EnvironmentBase):
-        #     logger.debug("restoring the ui with the version from environment")
-        # 
-        #     # get the last version from the environment
-        #     version_from_env = self.environment.get_last_version()
-        # 
-        #     logger.debug("version_from_env: %s" % version_from_env)
-        # 
-        #     self.restore_ui(version_from_env)
-        # else:
-        #     # hide some buttons
-        #     self.export_as_pushButton.setVisible(False)
-        #     #self.open_pushButton.setVisible(False)
-        #     self.reference_pushButton.setVisible(False)
-        #     self.import_pushButton.setVisible(False)
+        if self.environment and isinstance(self.environment, EnvironmentBase):
+            logger.debug("restoring the ui with the version from environment")
+
+            # get the last version from the environment
+            version_from_env = self.environment.get_last_version()
+
+            logger.debug("version_from_env: %s" % version_from_env)
+
+            self.restore_ui(version_from_env)
+        else:
+            # hide some buttons
+            self.export_as_pushButton.setVisible(False)
+            #self.open_pushButton.setVisible(False)
+            self.reference_pushButton.setVisible(False)
+            self.import_pushButton.setVisible(False)
 
         if self.mode:
             # run in read-only mode
@@ -1396,7 +1224,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         or project
         """
         task = None
-        indexes = self.tasks_treeView.selectionModel().selectedIndexes()
+        selection_model = self.tasks_treeView.selectionModel()
+        logger.debug('selection_model: %s' % selection_model)
+        indexes = selection_model.selectedIndexes()
+        logger.debug('selected indexes : %s' % indexes)
         if indexes:
             current_index = indexes[0]
             logger.debug('current_index : %s' % current_index)
@@ -1407,7 +1238,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if current_item:
                 task = current_item.task
 
-        # logger.debug('task: %s' % task)
+        logger.debug('task: %s' % task)
         return task
 
     def add_take_toolButton_clicked(self):

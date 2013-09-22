@@ -1189,13 +1189,12 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
-        dialog.run_once = True
 
-        dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
-
-        dialog = version_creator.MainDialog()
-        self.show_dialog(dialog)
+        # dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
+        # 
+        # dialog = version_creator.MainDialog()
+        # self.show_dialog(dialog)
 
         # # set the current item to task1
         # # get the corresponding item
