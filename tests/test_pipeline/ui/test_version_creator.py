@@ -1113,6 +1113,14 @@ class VersionCreatorTester(unittest2.TestCase):
             depends=[t2]
         )
 
+        t8 = Task(
+            name='Test Task 8',
+            parent=t7,
+            resources=[],
+            status_list=task_status_list,
+            depends=[t2]
+        )
+
         # no tasks for project 3
         self.admin.projects.append(p1)
         self.admin.projects.append(p2)
@@ -1126,8 +1134,8 @@ class VersionCreatorTester(unittest2.TestCase):
         )
 
         # record them all to the db
-        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5, t6,
-                           version_status_list])
+        DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5, t6, t7,
+                           t8, version_status_list])
         DBSession.commit()
 
         # task 1
