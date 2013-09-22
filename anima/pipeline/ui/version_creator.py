@@ -76,38 +76,42 @@ class TaskItem(QtGui.QStandardItem):
 
     def fetchMore(self):
         logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
-        # if self.task and not self.fetched_all:
-        # if not self.fetched_all:
+
         if self.canFetchMore():
+            tasks = []
             if isinstance(self.task, Task):
                 tasks = self.task.children
             elif isinstance(self.task, Project):
                 tasks = self.task.root_tasks
 
-            # model = self.model()
+            # model = self.model() # This will cause a SEGFAULT
             if self.user_tasks_only:
                 user_tasks_and_parents = []
                 # need to filter tasks which do not belong to user
                 for task in tasks:
                     for user_task in self.user.tasks:
-                        if task in user_task.parents or task is user_task or task in self.user.projects:
+                        if task in user_task.parents or \
+                            task is user_task or \
+                            task in self.user.projects:
                             user_tasks_and_parents.append(task)
                             break
 
                 tasks = user_tasks_and_parents
 
             for task in tasks:
-                task_item = TaskItem(0, 0)
+                task_item = TaskItem(0, 2)
                 task_item.parent = self
                 task_item.task = task
                 task_item.user = self.user
                 task_item.user_tasks_only = self.user_tasks_only
 
                 # set the font
-                # task_item.setText(0, entity.name)
-                # task_item.setText(1, entity.entity_type)
+                # name_item = QtGui.QStandardItem(task.name)
+                # entity_type_item = QtGui.QStandardItem(task.entity_type)
+                # task_item.setItem(0, 0, name_item)
+                # task_item.setItem(0, 1, entity_type_item)
                 task_item.setText(task.name)
-                
+
                 make_bold = False
                 if isinstance(task, Task):
                     if task.is_container:
@@ -155,21 +159,19 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """populates tree with user projects
         """
         logger.debug('TaskTreeModel.populateTree() is started')
-        #self.setColumnCount(3)
-        #self.setHorizontalHeaderLabels(
-        #    ['Name', 'Type', 'Dependencies']
-        #)
+        self.setColumnCount(3)
+        self.setHorizontalHeaderLabels(
+           ['Name', 'Type', 'Dependencies']
+        )
 
         #item_prototype = TaskItem()
         #self.setItemPrototype(item_prototype)
 
-        #self.clear()
         for project in projects:
-            project_item = TaskItem(0, 0)
+            project_item = TaskItem(0, 2)
             project_item.parent = None
-            # project_item.setColumnCount(3)
+            project_item.setColumnCount(2)
             project_item.setText(project.name)
-
             project_item.task = project
             project_item.user = self.user
             project_item.user_tasks_only = self.user_tasks_only
@@ -177,7 +179,14 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             # set the font
             # project_item.setText(0, entity.name)
             # project_item.setText(1, entity.entity_type)
-            project_item.setText(project.name)
+            # name_item = QtGui.QStandardItem()
+            # name_item.setText(project.name)
+            # entity_type_item = QtGui.QStandardItem()
+            # entity_type_item.setText(project.entity_type)
+            # project_item.appendColumn([name_item, entity_type_item])
+
+            # Set Font
+            # project_item.setText(project.name)
             my_font = project_item.font()
             my_font.setBold(True)
             project_item.setFont(my_font)
@@ -321,7 +330,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # set previous_versions_tableWidget.labels
         self.previous_versions_tableWidget.labels = [
             '#',
-            'P',
+            'App',
             'User',
             'Size',
             'Date',
@@ -766,8 +775,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # tasks_treeView
         QtCore.QObject.connect(
             self.tasks_treeView.selectionModel(),
-            QtCore.SIGNAL(
-                'selectionChanged(const QItemSelection &, const QItemSelection &)'),
+            QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
+                          'const QItemSelection &)'),
             self.tasks_treeView_changed
         )
 
