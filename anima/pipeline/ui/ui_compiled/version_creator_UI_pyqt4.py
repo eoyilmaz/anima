@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Fri Sep 20 17:43:54 2013
+# Created: Mon Sep 23 02:55:18 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -79,9 +79,22 @@ class Ui_Dialog(object):
         self.my_tasks_only_checkBox.setChecked(False)
         self.my_tasks_only_checkBox.setObjectName(_fromUtf8("my_tasks_only_checkBox"))
         self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
+        self.horizontalLayout_4 = QtGui.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(_fromUtf8("horizontalLayout_4"))
+        self.search_task_lineEdit = QtGui.QLineEdit(self.tasks_groupBox)
+        self.search_task_lineEdit.setObjectName(_fromUtf8("search_task_lineEdit"))
+        self.horizontalLayout_4.addWidget(self.search_task_lineEdit)
+        self.search_task_toolButton = QtGui.QToolButton(self.tasks_groupBox)
+        self.search_task_toolButton.setText(_fromUtf8(""))
+        self.search_task_toolButton.setObjectName(_fromUtf8("search_task_toolButton"))
+        self.horizontalLayout_4.addWidget(self.search_task_toolButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
         self.tasks_treeView = QtGui.QTreeView(self.tasks_groupBox)
+        self.tasks_treeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.tasks_treeView.setAlternatingRowColors(True)
         self.tasks_treeView.setUniformRowHeights(True)
         self.tasks_treeView.setObjectName(_fromUtf8("tasks_treeView"))
+        self.tasks_treeView.header().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tasks_treeView)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
@@ -269,6 +282,7 @@ class Ui_Dialog(object):
         self.logout_pushButton.setText(_translate("Dialog", "Logout", None))
         self.tasks_groupBox.setTitle(_translate("Dialog", "Tasks", None))
         self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
+        self.search_task_lineEdit.setPlaceholderText(_translate("Dialog", "Search For Tasks", None))
         self.tasks_treeView.setToolTip(_translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None))
         self.find_from_path_lineEdit.setPlaceholderText(_translate("Dialog", "Find From Path", None))
         self.find_from_path_pushButton.setText(_translate("Dialog", "Find", None))

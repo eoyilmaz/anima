@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files/version_creator.ui'
 #
-# Created: Fri Sep 20 17:43:54 2013
+# Created: Mon Sep 23 02:55:18 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,9 +66,22 @@ class Ui_Dialog(object):
         self.my_tasks_only_checkBox.setChecked(False)
         self.my_tasks_only_checkBox.setObjectName("my_tasks_only_checkBox")
         self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
+        self.horizontalLayout_4 = QtGui.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.search_task_lineEdit = QtGui.QLineEdit(self.tasks_groupBox)
+        self.search_task_lineEdit.setObjectName("search_task_lineEdit")
+        self.horizontalLayout_4.addWidget(self.search_task_lineEdit)
+        self.search_task_toolButton = QtGui.QToolButton(self.tasks_groupBox)
+        self.search_task_toolButton.setText("")
+        self.search_task_toolButton.setObjectName("search_task_toolButton")
+        self.horizontalLayout_4.addWidget(self.search_task_toolButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
         self.tasks_treeView = QtGui.QTreeView(self.tasks_groupBox)
+        self.tasks_treeView.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.tasks_treeView.setAlternatingRowColors(True)
         self.tasks_treeView.setUniformRowHeights(True)
         self.tasks_treeView.setObjectName("tasks_treeView")
+        self.tasks_treeView.header().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tasks_treeView)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
@@ -257,6 +270,7 @@ class Ui_Dialog(object):
         self.logout_pushButton.setText(QtGui.QApplication.translate("Dialog", "Logout", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
         self.my_tasks_only_checkBox.setText(QtGui.QApplication.translate("Dialog", "Show my tasks only", None, QtGui.QApplication.UnicodeUTF8))
+        self.search_task_lineEdit.setPlaceholderText(QtGui.QApplication.translate("Dialog", "Search For Tasks", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_treeView.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_lineEdit.setPlaceholderText(QtGui.QApplication.translate("Dialog", "Find From Path", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_pushButton.setText(QtGui.QApplication.translate("Dialog", "Find", None, QtGui.QApplication.UnicodeUTF8))

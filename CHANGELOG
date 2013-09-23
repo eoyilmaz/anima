@@ -22,6 +22,8 @@ Anima Tools Changes
         where the user is able to go to the dependent or dependee tasks of the
         clicked item in Version Creator UI.
       * **Fix:** 'my_tasks_only_checkBox' is back with the functionality.
+      * **New:** Added a new and simple search field for the tasks_treeView. It
+        needs to be greatly enhanced.
 
   * **Env:**
 

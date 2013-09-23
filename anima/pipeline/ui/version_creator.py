@@ -99,7 +99,7 @@ class TaskItem(QtGui.QStandardItem):
                 tasks = user_tasks_and_parents
 
             for task in tasks:
-                task_item = TaskItem(0, 2)
+                task_item = TaskItem(0, 3)
                 task_item.parent = self
                 task_item.task = task
                 task_item.user = self.user
@@ -168,9 +168,9 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         #self.setItemPrototype(item_prototype)
 
         for project in projects:
-            project_item = TaskItem(0, 2)
+            project_item = TaskItem(0, 3)
             project_item.parent = None
-            project_item.setColumnCount(2)
+            project_item.setColumnCount(3)
             project_item.setText(project.name)
             project_item.task = project
             project_item.user = self.user
@@ -394,6 +394,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.my_tasks_only_checkBox,
             QtCore.SIGNAL("stateChanged(int)"),
             self.fill_tasks_treeView
+        )
+
+        # search for tasks
+        QtCore.QObject.connect(
+            self.search_task_toolButton,
+            QtCore.SIGNAL("clicked()"),
+            self.search_task_toolButton_clicked
         )
 
         # fit column 0 on expand/collapse
@@ -726,27 +733,31 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 self.tasks_treeView
             )
 
-    def find_entity_item_in_tree_view(self, entity, treeView):
-        """finds the item related to the stalker entity in the given
-        QtTreeView
+    def get_item_indices_containing_text(self, text, treeView):
+        """returns the indexes of the item indices containing the given text
         """
         model = treeView.model()
-        logger.debug('searching for name : %s' % entity.name)
-        indexes = model.match(
+        logger.debug('searching for text : %s' % text)
+        return model.match(
             model.index(0, 0),
             0,
-            entity.name,
+            text,
             -1,
             QtCore.Qt.MatchRecursive
         )
 
+    def find_entity_item_in_tree_view(self, entity, treeView):
+        """finds the item related to the stalker entity in the given
+        QtTreeView
+        """
+        indexes = self.get_item_indices_containing_text(entity.name, treeView)
+        model = treeView.model()
         logger.debug('items matching name : %s' % indexes)
         for index in indexes:
             item = model.itemFromIndex(index)
             if item:
                 if item.task == entity:
                     return item
-
         return None
 
     def clear_tasks_treeView(self):
@@ -879,6 +890,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.horizontalLayout_14.addWidget(splitter)
         logger.debug('finished creating splitter')
 
+        # set icon for search_task_toolButton
+        # icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_DirOpenIcon)
+        logger.debug(dir(QtGui.QStyle))
+        icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_BrowserReload)
+        self.search_task_toolButton.setIcon(icon)
+
         # disable update_paths_checkBox
         self.update_paths_checkBox.setVisible(False)
 
@@ -991,8 +1008,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             logger.debug('item : %s' % item)
             self.previous_versions_tableWidget.setCurrentItem(item)
 
-    def find_and_select_entity_item_in_treeView(self, task, treeView):
-        """finds and selects the task in the given treeView item
+    def load_task_item_hierarchy(self, task, treeView):
+        """loads the TaskItem related to the given task in the given treeView
+        
+        :return: TaskItem instance
         """
         self.tasks_treeView.is_updating = True
         item = self.find_entity_item_in_tree_view(task, treeView)
@@ -1020,12 +1039,18 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if not item:
                 # still no item
                 logger.debug('can not find item')
-                return
+
+        self.tasks_treeView.is_updating = False
+        return item
+
+    def find_and_select_entity_item_in_treeView(self, task, treeView):
+        """finds and selects the task in the given treeView item
+        """
+        item = self.load_task_item_hierarchy(task, treeView)
 
         logger.debug('*******************************')
         logger.debug('item: %s' % item)
 
-        self.tasks_treeView.is_updating = False
         self.tasks_treeView.selectionModel().select(
             item.index(), QtGui.QItemSelectionModel.ClearAndSelect
         )
@@ -1590,4 +1615,20 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
 
-    
+    def search_task_toolButton_clicked(self):
+        """runs when search_task_lineEdit_changed
+        """
+        text = self.search_task_lineEdit.text().strip()
+        if not text:
+            return
+        tasks = Task.query.filter(Task.name.contains(text)).all()
+        logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
+        # load all the tasks and their parents so we are going to be able to
+        # find them later on
+        for task in tasks:
+            self.load_task_item_hierarchy(task, self.tasks_treeView)
+
+        # now get the indices
+        indices = self.get_item_indices_containing_text(text,
+                                                        self.tasks_treeView)
+        logger.debug('indices containing the given text are : %s' % indices)
