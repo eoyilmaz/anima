@@ -116,18 +116,7 @@
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_4">
              <item>
-              <widget class="QLineEdit" name="search_task_lineEdit">
-               <property name="placeholderText">
-                <string>Search For Tasks</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QToolButton" name="search_task_toolButton">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
+              <widget class="QLineEdit" name="search_task_lineEdit"/>
              </item>
             </layout>
            </item>

@@ -8,7 +8,7 @@ import logging
 import datetime
 import os
 import re
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
 from stalker.db import DBSession
 from stalker import (db, defaults, Version, StatusList, Project,
                      Task, LocalSession, EnvironmentBase)
@@ -231,6 +231,24 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return return_value
 
 
+class TaskNameCompleter(QtGui.QCompleter):
+    def __init__(self, parent):
+        QtGui.QCompleter.__init__(self, [], parent)
+ 
+    def update(self, completion_prefix):
+        tasks = Task.query\
+            .filter(Task.name.ilike('%'+completion_prefix+'%'))\
+            .all()
+        logger.debug('completer tasks : %s' % tasks)
+        task_names = [task.name for task in tasks]
+        model = QtGui.QStringListModel(task_names)
+        self.setModel(model)
+        # self.setCompletionPrefix(completion_prefix)
+        self.setCompletionPrefix('')
+
+        # if completion_prefix.strip() != '':
+        self.complete()
+
 def UI(environment=None, mode=0, app_in=None, executor=None):
     """
     :param environment: The
@@ -397,11 +415,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         )
 
         # search for tasks
-        QtCore.QObject.connect(
-            self.search_task_toolButton,
-            QtCore.SIGNAL("clicked()"),
-            self.search_task_toolButton_clicked
-        )
+        # QtCore.QObject.connect(
+        #     self.search_task_comboBox,
+        #     QtCore.SIGNAL("editTextChanged(QString)"),
+        #     self.search_task_comboBox_textChanged
+        # )
 
         # fit column 0 on expand/collapse
         QtCore.QObject.connect(
@@ -891,10 +909,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('finished creating splitter')
 
         # set icon for search_task_toolButton
-        # icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_DirOpenIcon)
-        logger.debug(dir(QtGui.QStyle))
-        icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_BrowserReload)
-        self.search_task_toolButton.setIcon(icon)
+        # icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_BrowserReload)
+        # self.search_task_toolButton.setIcon(icon)
 
         # disable update_paths_checkBox
         self.update_paths_checkBox.setVisible(False)
@@ -916,6 +932,17 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # run the project changed item for the first time
         # self.project_changed()
+
+        # set the completer for the search_task_lineEdit
+        # completer = TaskNameCompleter(self)
+        # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        # self.search_task_lineEdit.setCompleter(completer)
+        # self.search_task_lineEdit.textChanged.connect(completer.update)
+        # 
+        # completer.activated.connect(self.search_task_lineEdit.setText)
+        # completer.setWidget(self.search_task_lineEdit)
+        # # self.search_task_lineEdit.editingFinished.connect()
+        self.search_task_lineEdit.setVisible(False)
 
         if self.environment and isinstance(self.environment, EnvironmentBase):
             logger.debug("restoring the ui with the version from environment")
@@ -1615,20 +1642,33 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
 
-    def search_task_toolButton_clicked(self):
-        """runs when search_task_lineEdit_changed
-        """
-        text = self.search_task_lineEdit.text().strip()
-        if not text:
-            return
-        tasks = Task.query.filter(Task.name.contains(text)).all()
-        logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
-        # load all the tasks and their parents so we are going to be able to
-        # find them later on
-        for task in tasks:
-            self.load_task_item_hierarchy(task, self.tasks_treeView)
-
-        # now get the indices
-        indices = self.get_item_indices_containing_text(text,
-                                                        self.tasks_treeView)
-        logger.debug('indices containing the given text are : %s' % indices)
+    # def search_task_comboBox_textChanged(self, text):
+    #     """runs when search_task_comboBox text changed
+    #     """
+    #     # text = self.search_task_lineEdit.text().strip()
+    #     self.search_task_comboBox.clear()
+    #     if not text:
+    #         return
+    #     tasks = Task.query.filter(Task.name.contains(text)).all()
+    #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
+    #     # load all the tasks and their parents so we are going to be able to
+    #     # find them later on
+    #     # for task in tasks:
+    #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
+    #     # 
+    #     # # now get the indices
+    #     # indices = self.get_item_indices_containing_text(text,
+    #     #                                                 self.tasks_treeView)
+    #     # logger.debug('indices containing the given text are : %s' % indices)
+    # 
+    #     # self.search_task_comboBox.addItems(
+    #     #     [
+    #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
+    #     #     ]
+    #     # )
+    #     items = []
+    #     for task in tasks:
+    #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
+    #         items.append(hierarchy_name)
+    #     self.search_task_comboBox.addItems(items)
+    # 

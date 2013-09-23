@@ -17,7 +17,6 @@ from stalker.models.auth import LocalSession
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, SET_PYQT4
 
 SET_PYSIDE()
-# SET_PYQT4()
 
 if IS_PYSIDE():
     logger.debug('environment is set to pyside, importing pyside')
