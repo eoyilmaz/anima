@@ -637,7 +637,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logged_in_user = self.get_logged_in_user()
 
-        if version.created_by == logged_in_user or self.is_power_user(logged_in_user):
+        if version.created_by == logged_in_user:
             if version.is_published:
                 menu.addAction('Un-Publish')
             else:
@@ -1567,7 +1567,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def reference_pushButton_clicked(self):
         """runs when the reference_pushButton clicked
         """
-
         # get the new version
         previous_version = self.get_previous_version()
 
@@ -1576,7 +1575,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtGui.QMessageBox.critical(
                 self,
                 "Critical Error",
-                "Referencing <b>un-published versions</b> are not allowed!\n"
+                "Referencing <b>un-published versions</b> are only "
+                "allowed for Power Users!\n"
                 "Please reference a published version of the same Asset/Shot",
                 QtGui.QMessageBox.Ok
             )
