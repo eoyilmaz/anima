@@ -8,7 +8,7 @@ import logging
 import datetime
 import os
 import re
-from sqlalchemy import distinct, func
+from sqlalchemy import distinct
 from stalker.db import DBSession
 from stalker import (db, defaults, Version, StatusList, Project,
                      Task, LocalSession, EnvironmentBase)

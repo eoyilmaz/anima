@@ -25,6 +25,11 @@ Anima Tools Changes
       * **New:** Added a new and simple search field for the tasks_treeView. It
         needs to be greatly enhanced.
 
+    * **Version Updater:**
+
+      * **Fix:** Fixed check state checking for PySide by using
+        QtCore.Qt.CheckState.
+
   * **Env:**
 
     * **MayaEnv:**

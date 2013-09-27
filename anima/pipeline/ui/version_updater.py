@@ -237,14 +237,14 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         """
         for i in range(self.versions_tableWidget.rowCount()):
             item = self.versions_tableWidget.item(i, 5)
-            item.setCheckState(2)
+            item.setCheckState(QtCore.Qt.Checked)
 
     def _select_no_version(self):
         """deselects all versions in the tableWidget
         """
         for i in range(self.versions_tableWidget.rowCount()):
             item = self.versions_tableWidget.item(i, 5)
-            item.setCheckState(0)
+            item.setCheckState(QtCore.Qt.Unchecked)
 
     def update_versions(self):
         """updates the versions if it is checked in the UI
@@ -267,7 +267,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         for i in range(self._num_of_versions):
             checkBox_tableItem = self.versions_tableWidget.item(i, 5)
 
-            if checkBox_tableItem.checkState() == 2:
+            if checkBox_tableItem.checkState() == QtCore.Qt.Checked:
                 # get the ith number of the asset
                 marked_version_list.append(self._version_tuple_list[i])
 
