@@ -11,10 +11,10 @@ import re
 from sqlalchemy import distinct
 from stalker.db import DBSession
 from stalker import (db, defaults, Version, StatusList, Project,
-                     Task, LocalSession, EnvironmentBase)
+                     Task, LocalSession, EnvironmentBase, Group)
 
 import anima
-from anima.pipeline import utils
+from anima.pipeline import utils, power_users_group_names
 from anima.pipeline.ui import utils as ui_utils
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
 from anima.pipeline.ui.lib import QtGui, QtCore
@@ -603,6 +603,18 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         lsession.delete()
         self.close()
 
+    def is_power_user(self, user):
+        """A predicate that retuns if the user is a poweruser
+        """
+        power_users_groups = Group.query\
+            .filter(Group.name.in_(power_users_group_names))\
+            .all()
+        if power_users_groups:
+            for group in power_users_groups:
+                if  group in user.groups:
+                    return True
+        return False
+
     def _show_previous_versions_tableWidget_context_menu(self, position):
         """the custom context menu for the previous_versions_tableWidget
         """
@@ -624,8 +636,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #menu.addSeparator()
 
         logged_in_user = self.get_logged_in_user()
-        
-        if version.created_by == logged_in_user:
+
+        if version.created_by == logged_in_user or self.is_power_user(logged_in_user):
             if version.is_published:
                 menu.addAction('Un-Publish')
             else:
@@ -718,7 +730,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if not item:
             return
 
+        if not hasattr(item, 'task'):
+            return
+
         task = item.task
+        if not isinstance(task, Task):
+            return
 
         # create the menu
         menu = QtGui.QMenu()
@@ -740,6 +757,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             for dTask in dependent_of:
                 action = dependent_of_menu.addAction(dTask.name)
                 action.task = dTask
+
+        if not depends and not dependent_of:
+            no_deps_action = menu.addAction('No Dependencies')
+            no_deps_action.setEnabled(False)
 
         selected_item = menu.exec_(global_position)
 
@@ -850,19 +871,20 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 .filter(Version.task == task)
                 .all()
             )
+            takes.sort()
 
         logger.debug("len(takes) from db: %s" % len(takes))
 
-        if defaults.version_take_name not in takes:
-            takes.append(defaults.version_take_name)
+        # get the index of 'Main'
+        if defaults.version_take_name in takes:
+            index_of_main = takes.index(defaults.version_take_name)
+            takes.pop(index_of_main)
 
-        if len(takes) == 0:
-            # append the default take
-            logger.debug("appending the default take name")
-            self.takes_listWidget.addItem(defaults.version_take_name)
-        else:
-            logger.debug("adding the takes from db")
-            self.takes_listWidget.addItems(takes)
+        # insert the default take name to the start
+        takes.insert(0, defaults.version_take_name)
+
+        logger.debug("adding the takes from db")
+        self.takes_listWidget.addItems(takes)
 
         logger.debug("setting the first element selected")
         item = self.takes_listWidget.item(0)
@@ -1328,7 +1350,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if take_name != "":
                 # TODO: there are no tests for take_name conditioning
                 # if the given take name is in the list don't add it
-                take_name = take_name.title()
+                take_name = take_name[0].upper() + take_name[1:] #take_name.title()
                 # replace spaces with underscores
                 take_name = re.sub(r'[\s\-]+', '_', take_name)
                 take_name = re.sub(r'[^a-zA-Z0-9_]+', '', take_name)

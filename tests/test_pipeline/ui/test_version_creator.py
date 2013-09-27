@@ -33,7 +33,7 @@ elif IS_PYQT4():
     from PyQt4.QtCore import Qt
 
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
-                     StatusList, Task, Version, FilenameTemplate)
+                     StatusList, Task, Version, FilenameTemplate, Group)
 from stalker.db.session import DBSession
 from stalker.models.env import EnvironmentBase
 
@@ -137,6 +137,11 @@ class VersionCreatorTester(unittest2.TestCase):
         db.setup({'sqlalchemy.url': 'sqlite:///:memory:',
                   'sqlalchemy.echo': 'false'})
         db.init()
+
+        # create Power Users Group
+        self.power_users_group = Group(name='Power Users')
+        db.DBSession.add(self.power_users_group)
+        db.DBSession.commit()
 
         # create the environment variable and point it to a temp directory
         # self.temp_config_folder = tempfile.mkdtemp()
@@ -988,6 +993,17 @@ class VersionCreatorTester(unittest2.TestCase):
         """testing if the takes_listWidget lists all the takes of the current
         task versions
         """
+        # create a test user
+        user1 = User(
+            name='Test User',
+            groups=[self.power_users_group],
+            login='tuser',
+            email='tuser@tusers.com',
+            password='secret'
+        )
+        DBSession.add(user1)
+        DBSession.commit()
+        
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -1101,7 +1117,7 @@ class VersionCreatorTester(unittest2.TestCase):
             parent=t5,
             resources=[self.admin],
             status_list=task_status_list,
-            depends=[t4, t3]
+            #depends=[t4, t3]
         )
 
         t7 = Task(
@@ -1124,6 +1140,9 @@ class VersionCreatorTester(unittest2.TestCase):
         self.admin.projects.append(p1)
         self.admin.projects.append(p2)
         self.admin.projects.append(p3)
+        user1.projects.append(p1)
+        user1.projects.append(p2)
+        user1.projects.append(p3)
 
         # versions
         version_status_list = StatusList(
@@ -1153,45 +1172,49 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.commit()
 
         # Take1
-        v4 = Version(task=t1, take_name='Take1', full_path='/some/path',
+        v4 = Version(task=t1, take_name='ATake1', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v4)
         DBSession.commit()
 
-        v5 = Version(task=t1, take_name='Take1', full_path='/some/path',
+        v5 = Version(task=t1, take_name='ATake1', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v5)
         DBSession.commit()
 
-        v6 = Version(task=t1, take_name='Take1', full_path='/some/path',
+        v6 = Version(task=t1, take_name='ATake1', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v6)
         DBSession.commit()
 
         # Take2
-        v7 = Version(task=t1, take_name='Take2', full_path='/some/path',
+        v7 = Version(task=t1, take_name='ATake2', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v7)
         DBSession.commit()
 
-        v8 = Version(task=t1, take_name='Take2', full_path='/some/path',
+        v8 = Version(task=t1, take_name='ATake2', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v8)
         DBSession.commit()
 
-        v9 = Version(task=t1, take_name='Take2', full_path='/some/path',
+        v9 = Version(task=t1, take_name='ATake2', full_path='/some/path',
                      created_by=self.admin)
         DBSession.add(v9)
         DBSession.commit()
 
         # For t6
-        v10 = Version(task=t6, take_name='Take2', full_path='/some/path/t6',
+        v10 = Version(task=t6, take_name='ATake2', full_path='/some/path/t6',
                      created_by=self.admin)
         DBSession.add(v10)
         DBSession.commit()
 
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeWidget
+
+        # login as user1
+        self.lsession.store_user(user1)
+        self.lsession.save()
 
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)

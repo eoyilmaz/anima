@@ -24,6 +24,14 @@ Anima Tools Changes
       * **Fix:** 'my_tasks_only_checkBox' is back with the functionality.
       * **New:** Added a new and simple search field for the tasks_treeView. It
         needs to be greatly enhanced.
+      * **Fix:** The default take name is now inserted at the top of the takes
+        list.
+      * **New:** It is now possible to use CamelCase in take names.
+      * **New:** Added permission group check for publish state change, so
+        users in 'Power Users' group can change publish state of versions of
+        other users.
+      * **New:** Added a disabled 'No Dependencies' menu action for tasks with
+        no dependencies or dependees.
 
     * **Version Updater:**
 
