@@ -137,7 +137,9 @@ class Houdini(EnvironmentBase):
         version = None
         recent_files = self.get_recent_file_list()
         for i in range(len(recent_files) - 1, 0, -1):
-            version = self.get_version_from_full_path(recent_files[i])
+            version = self.get_version_from_full_path(
+                os.path.expandvars(recent_files[i])
+            )
             if version:
                 break
         return version
