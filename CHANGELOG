@@ -47,6 +47,14 @@ Anima Tools Changes
     * **NukeEnv:**
 
       * **Fix:** Fixed a typo
+      * **New:** Now also in Nuke, the current version is set as the parent of
+        the newly created version.
+
+    * **HoudiniEnv:**
+
+      * **New:** Now also in Nuke, the current version is set as the parent of
+        the newly created version.
+      * **Fix:** The file is not saved twice to store environment variables.
 
 0.1.0.a4
 ========

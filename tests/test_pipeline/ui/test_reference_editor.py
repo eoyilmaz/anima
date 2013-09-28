@@ -66,8 +66,8 @@ class ReferenceEditorTestCase(unittest.TestCase):
         """testing if the close button is closing the UI when clicked
         """
         dialog = reference_editor.MainDialog()
-        #self.show_dialog(dialog)
-        QTest.mouseClick(dialog.buttonBox.buttons()[0], Qt.LeftButton)
+        self.show_dialog(dialog)
+        #QTest.mouseClick(dialog.buttonBox.buttons()[0], Qt.LeftButton)
         self.assertFalse(dialog.isVisible())
 
     

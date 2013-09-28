@@ -11,6 +11,7 @@ import platform
 import jinja2
 
 import nuke
+from stalker.db import DBSession
 from anima.pipeline import utils
 from stalker.models.env import EnvironmentBase
 
@@ -44,6 +45,11 @@ class Nuke(EnvironmentBase):
         
         uses Nukes own python binding
         """
+        
+        # get the current version, and store it as the parent of the new version
+        current_version = self.get_current_version()
+
+        
         # first initialize the version path
         version.update_paths()
 
@@ -98,6 +104,13 @@ class Nuke(EnvironmentBase):
         # )
 
         nuke.scriptSaveAs(version.absolute_full_path)
+
+        if current_version:
+            # update the parent info
+            version.parent = current_version
+
+            # update database with new version info
+            DBSession.commit()
 
         return True
 

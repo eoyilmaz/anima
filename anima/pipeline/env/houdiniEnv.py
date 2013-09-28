@@ -8,6 +8,7 @@ import os
 import re
 
 import hou
+from stalker.db import DBSession
 
 from anima.pipeline import utils
 from stalker.models.env import EnvironmentBase
@@ -32,6 +33,9 @@ class Houdini(EnvironmentBase):
 
         from stalker import Version
         assert isinstance(version, Version)
+
+        # get the current version, and store it as the parent of the new version
+        current_version = self.get_current_version()
 
         # initialize path variables by using update_paths()
         version.update_paths()
@@ -61,10 +65,10 @@ class Houdini(EnvironmentBase):
         # saved before creates an error
         # so save the file two times if it is not saved before
 
-        ## check if the HIP environment variable has some data
-        #if os.environ["HIP"] == os.environ["HOME"]:
-        # save the file to create a meaningful HIP variable
-        hou.hipFile.save(file_name=str(version.absolute_full_path))
+        # check if the HIP environment variable has some data
+        if os.environ["HIP"] == os.environ["HOME"]:
+            # save the file to create a meaningful HIP variable
+            hou.hipFile.save(file_name=str(version.absolute_full_path))
 
         # set the environment variables
         self.set_environment_variables(version)
@@ -76,8 +80,15 @@ class Houdini(EnvironmentBase):
         # see
         hou.hipFile.save(file_name=str(version.absolute_full_path))
 
-        # set the environment variables
+        # set the environment variables again
         self.set_environment_variables(version)
+
+        # update the parent info
+        if current_version:
+            version.parent = current_version
+
+            # update database with new version info
+            DBSession.commit()
 
         return True
 
