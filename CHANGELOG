@@ -43,6 +43,7 @@ Anima Tools Changes
         version.absolute_path/external_files folder
       * **Fix:** Fixed a bug where the references where reloaded over and over
         again when saving a new version.
+      * **New:** Added support for Arnold Renderer.
 
     * **NukeEnv:**
 

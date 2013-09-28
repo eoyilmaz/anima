@@ -60,16 +60,6 @@ class Houdini(EnvironmentBase):
         # houdini uses / instead of \ under windows
         # lets fix it
 
-        # *************************************************************
-        # trying to set the render file name while the file has not been
-        # saved before creates an error
-        # so save the file two times if it is not saved before
-
-        # check if the HIP environment variable has some data
-        #if os.environ["HIP"] == os.environ["HOME"]:
-        #    # save the file to create a meaningful HIP variable
-        #    hou.hipFile.save(file_name=str(version.absolute_full_path))
-
         # set the environment variables
         self.set_environment_variables(version)
 
