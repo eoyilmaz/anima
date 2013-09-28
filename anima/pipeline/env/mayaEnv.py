@@ -164,9 +164,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.debug("next workspace: %s" % workspace_path)
 
         if current_workspace_path != workspace_path:
-            logger.debug("changing workspace detected!")
-            logger.debug("converting paths to absolute, to be able to "
-                         "preserve external paths")
+            logger.warning("changing workspace detected!")
+            logger.warning("converting paths to absolute, to be able to "
+                           "preserve external paths")
 
             # replace external paths with absolute ones
             self.replace_external_paths(mode=1)
@@ -1096,7 +1096,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
     def replace_external_paths(self, mode=0):
         """Replaces all the external paths
-        
+
         replaces:
           references: replaces Windows, Linux or OSX paths with native one
                       (the one that the current user has) in absolute mode and
@@ -1123,19 +1123,19 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create a repository
         workspace_path = pm.workspace.path
 
-        # replace reference paths with $REPO
+        # replace reference paths with absolute path
         for ref in pm.listReferences():
             unresolved_path = ref.unresolvedPath().replace("\\", "/")
             repo = self.find_repo(unresolved_path)
 
             if repo:
                 # make it absolute
-                if not os.path.isabs(unresolved_path):
-                    # TODO: This is weird, it should not find a repo if this is not an absolute path
-                    unresolved_path = os.path.join(
-                        workspace_path,
-                        unresolved_path
-                    ).replace('\\', '/')
+                #if not os.path.isabs(unresolved_path):
+                #    # TODO: This is weird, it should not find a repo if this is not an absolute path
+                #    unresolved_path = os.path.join(
+                #        workspace_path,
+                #        unresolved_path
+                #    ).replace('\\', '/')
 
                 if repo.is_in_repo(unresolved_path):
                     new_ref_path = ""
@@ -1150,22 +1150,22 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                             ref.path
                         )
 
-                    logger.info("replacing reference:", ref.path)
-                    logger.info("replacing with:", new_ref_path)
-
-                    ref.replaceWith(new_ref_path)
+                    if new_ref_path != unresolved_path:
+                        logger.info("replacing reference: %s" % ref.path)
+                        logger.info("replacing with: %s" % new_ref_path)
+                        ref.replaceWith(new_ref_path)
 
         # texture files
-        # replace with $REPO
+        # replace with absolute path
         for image_file in pm.ls(type="file"):
-            file_texture_path = image_file.getAttr("fileTextureName")
-            file_texture_path = file_texture_path.replace("\\", "/")
+            orig_file_texture_path = image_file.getAttr("fileTextureName")
+            orig_file_texture_path = orig_file_texture_path.replace("\\", "/")
 
-            logger.info("replacing file texture: %s" % file_texture_path)
+            logger.info("replacing file texture: %s" % orig_file_texture_path)
 
             file_texture_path = os.path.normpath(
                 os.path.expandvars(
-                    file_texture_path
+                    orig_file_texture_path
                 )
             )
             file_texture_path = file_texture_path.replace("\\", "/")
@@ -1192,9 +1192,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         "/", ".."
                     )
 
-                logger.info("with: %s" % new_path)
 
-                image_file.setAttr("fileTextureName", new_path)
+                if new_path != orig_file_texture_path:
+                    logger.info("with: %s" % new_path)
+                    image_file.setAttr("fileTextureName", new_path)
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path

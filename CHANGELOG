@@ -41,6 +41,8 @@ Anima Tools Changes
 
       * **New:** External files are now moved to the
         version.absolute_path/external_files folder
+      * **Fix:** Fixed a bug where the references where reloaded over and over
+        again when saving a new version.
 
     * **NukeEnv:**
 
