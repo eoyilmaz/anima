@@ -1205,18 +1205,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # check if there is a workspace.mel at the given path
         full_path = os.path.join(path, "workspace.mel").replace('\\', '/')
 
-        #if not os.path.exists(full_path):
-        try:
-            os.makedirs(
-                os.path.dirname(full_path)
-            )
-        except OSError:
-            # dir exists
-            pass
-
-        workspace_file = file(full_path, "w")
-        workspace_file.write(content)
-        workspace_file.close()
+        if not os.path.exists(full_path):
+            try:
+                os.makedirs(
+                    os.path.dirname(full_path)
+                )
+            except OSError:
+                # dir exists
+                pass
+    
+            with open(full_path, "w") as workspace_file:
+                workspace_file.write(content)
 
     def create_workspace_folders(self, path):
         """creates the workspace folders
