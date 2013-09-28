@@ -66,9 +66,9 @@ class Houdini(EnvironmentBase):
         # so save the file two times if it is not saved before
 
         # check if the HIP environment variable has some data
-        if os.environ["HIP"] == os.environ["HOME"]:
-            # save the file to create a meaningful HIP variable
-            hou.hipFile.save(file_name=str(version.absolute_full_path))
+        #if os.environ["HIP"] == os.environ["HOME"]:
+        #    # save the file to create a meaningful HIP variable
+        #    hou.hipFile.save(file_name=str(version.absolute_full_path))
 
         # set the environment variables
         self.set_environment_variables(version)
@@ -175,20 +175,33 @@ class Houdini(EnvironmentBase):
                      ).replace("\\", "/")
         )
         job = str(version.absolute_path)
+        hip = job
+        hipName = os.path.basename(str(version.absolute_full_path))
 
-        logger.debug('job: %s' % job)
+        logger.debug('job     : %s' % job)
+        logger.debug('hip     : %s' % hip)
+        logger.debug('hipName : %s' % hipName)
 
-        # update the environment variables
-        #os.environ.update({"JOB": job})
-        os.environ["JOB"] = job
-
-        # also set it using hscript, hou is a little bit problematic
-        hou.hscript("set -g JOB = '" + job + "'")
         try:
             hou.allowEnvironmentVariableToOverwriteVariable("JOB", True)
+            hou.allowEnvironmentVariableToOverwriteVariable("HIP", True)
+            hou.allowEnvironmentVariableToOverwriteVariable("HIPNAME", True)
         except AttributeError:
             # should be Houdini 12
             hou.allowEnvironmentToOverwriteVariable('JOB', True)
+            hou.allowEnvironmentToOverwriteVariable('HIP', True)
+            hou.allowEnvironmentToOverwriteVariable('HIPNAME', True)
+
+        # update the environment variables
+        os.environ["JOB"] = job
+        os.environ["HIP"] = hip
+        os.environ["HIPNAME"] = hipName
+
+        # also set it using hscript, hou is a little bit problematic
+        hou.hscript("set -g JOB = '%s'" % job)
+        hou.hscript("set -g HIP = '%s'" % hip)
+        hou.hscript("set -g HIPNAME = '%s'" % hipName)
+        
 
     def get_recent_file_list(self):
         """returns the recent HIP files list from the houdini
