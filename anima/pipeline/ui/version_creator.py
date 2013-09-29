@@ -249,6 +249,98 @@ class TaskNameCompleter(QtGui.QCompleter):
         # if completion_prefix.strip() != '':
         self.complete()
 
+
+class TakesListWidget(QtGui.QListWidget):
+    """A specialized QListWidget variant used in Take names.
+    """
+
+    def __init__(self, parent=None, *args, **kwargs):
+        QtGui.QListWidget.__init__(self, parent)
+        self._take_names = []
+        self.take_names = []
+
+    @property
+    def take_names(self):
+        return self._take_names
+
+    @take_names.setter
+    def take_names(self, take_names_in):
+        logger.debug('setting take names')
+        self.clear()
+        self._take_names = take_names_in
+        main = defaults.version_take_name
+        if main in self._take_names:
+            logger.debug('removing default take name from list')
+            index_of_main = self._take_names.index(main)
+            self._take_names.pop(index_of_main)
+
+        # insert the default take name to the start
+        self._take_names.insert(0, main)
+
+        # clear the list and new items
+        logger.debug('adding supplied take names: %s' % self._take_names)
+        self.addItems(self._take_names)
+
+        # select the first item
+        self.setCurrentItem(self.item(0))
+
+    def add_take(self, take_name):
+        """adds a new take to the takes list
+        """
+        # condition the input
+        # TODO: there are no tests for take_name conditioning
+        # if the given take name is in the list don't add it
+        take_name = take_name[0].upper() + take_name[1:]
+        # replace spaces with underscores
+        take_name = re.sub(r'[\s\-]+', '_', take_name)
+        take_name = re.sub(r'[^a-zA-Z0-9_]+', '', take_name)
+        take_name = re.sub(r'[_]+', '_', take_name)
+        take_name = re.sub(r'[_]+$', '', take_name)
+
+        if take_name not in self._take_names:
+            # add the item via property
+            new_take_list = self._take_names
+            new_take_list.append(take_name)
+            new_take_list.sort()
+            self.take_names = new_take_list
+
+            # select the newly added take name
+            items = self.findItems(take_name, QtCore.Qt.MatchExactly)
+            if items:
+                item = items[0]
+                # set the take to the new one
+                self.setCurrentItem(item)
+
+    @property
+    def current_take_name(self):
+        """gets the current take name
+        """
+        take_name = ''
+        item = self.currentItem()
+        if item:
+            take_name = item.text()
+        return take_name
+
+    @current_take_name.setter
+    def current_take_name(self, take_name):
+        """sets the current take name
+        """
+        logger.debug('finding take with name: %s' % take_name)
+        items = self.findItems(
+            take_name,
+            QtCore.Qt.MatchExactly
+        )
+        if items:
+            self.setCurrentItem(items[0])
+
+    def clear(self):
+        """overridden clear method
+        """
+        self._take_names = []
+        # call the super
+        QtGui.QListWidget.clear(self)
+
+
 def UI(environment=None, mode=0, app_in=None, executor=None):
     """
     :param environment: The
@@ -875,20 +967,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logger.debug("len(takes) from db: %s" % len(takes))
 
-        # get the index of 'Main'
-        if defaults.version_take_name in takes:
-            index_of_main = takes.index(defaults.version_take_name)
-            takes.pop(index_of_main)
-
-        # insert the default take name to the start
-        takes.insert(0, defaults.version_take_name)
-
         logger.debug("adding the takes from db")
-        self.takes_listWidget.addItems(takes)
-
-        logger.debug("setting the first element selected")
-        item = self.takes_listWidget.item(0)
-        self.takes_listWidget.setCurrentItem(item)
+        self.takes_listWidget.take_names = takes
 
     def project_changed(self):
         """updates the assets list_widget and sequences_comboBox for the 
@@ -946,11 +1026,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # fill the tasks
         self.fill_tasks_treeView()
 
-        # add "Main" by default to the takes_listWidget
-        self.takes_listWidget.addItem(defaults.version_take_name)
-        # select it
-        item = self.takes_listWidget.item(0)
-        self.takes_listWidget.setCurrentItem(item)
+        # use the new TakeListWidget
+        self.takes_listWidget.deleteLater()
+        self.takes_listWidget = TakesListWidget()
+        self.takes_listWidget.setObjectName("takes_listWidget")
+        self.horizontalLayout_6.insertWidget(1, self.takes_listWidget)
 
         # run the project changed item for the first time
         # self.project_changed()
@@ -1031,15 +1111,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # take_name
         take_name = version.take_name
-        logger.debug('finding take with name: %s' % take_name)
-        items = self.takes_listWidget.findItems(
-            take_name,
-            QtCore.Qt.MatchExactly
-        )
-        if not items:
-            return
-
-        self.takes_listWidget.setCurrentItem(items[0])
+        self.takes_listWidget.current_take_name = take_name
 
         # select the version in the previous version list
         index = -1
@@ -1143,10 +1215,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #    return
 
         # take name
-        take_name = ""
-        item = self.takes_listWidget.currentItem()
-        if item:
-            take_name = item.text()
+        take_name = self.takes_listWidget.current_take_name
 
         if take_name != '':
             logger.debug("take_name: %s" % take_name)
@@ -1334,7 +1403,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         self.current_dialog = QtGui.QInputDialog(self)
 
-        current_take_name = self.takes_listWidget.currentItem().text()
+        current_take_name = self.takes_listWidget.current_take_name
 
         take_name, ok = self.current_dialog.getText(
             self,
@@ -1348,31 +1417,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # add the given text to the takes_listWidget
             # if it is not empty
             if take_name != "":
-                # TODO: there are no tests for take_name conditioning
-                # if the given take name is in the list don't add it
-                take_name = take_name[0].upper() + take_name[1:] #take_name.title()
-                # replace spaces with underscores
-                take_name = re.sub(r'[\s\-]+', '_', take_name)
-                take_name = re.sub(r'[^a-zA-Z0-9_]+', '', take_name)
-                take_name = re.sub(r'[_]+', '_', take_name)
-                take_name = re.sub(r'[_]+$', '', take_name)
-                in_list = False
-                for i in range(self.takes_listWidget.count()):
-                    item = self.takes_listWidget.item(i)
-                    if item.text() == take_name:
-                        in_list = True
-                if not in_list:
-                    self.takes_listWidget.addItem(take_name)
-                    # sort the list
-                    self.takes_listWidget.sortItems()
-                    items = self.takes_listWidget.findItems(
-                        take_name,
-                        QtCore.Qt.MatchExactly
-                    )
-                    if items:
-                        item = items[0]
-                        # set the take to the new one
-                        self.takes_listWidget.setCurrentItem(item)
+                self.takes_listWidget.add_take(take_name)
 
     def get_new_version(self):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
@@ -1385,7 +1430,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if not task or not isinstance(task, Task):
             return None
 
-        take_name = self.takes_listWidget.currentItem().text()
+        take_name = self.takes_listWidget.current_take_name
         user = self.get_logged_in_user()
         if not user:
             self.close()
