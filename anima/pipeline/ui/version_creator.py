@@ -1032,6 +1032,21 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.takes_listWidget.setObjectName("takes_listWidget")
         self.horizontalLayout_6.insertWidget(1, self.takes_listWidget)
 
+        # reconnect signals
+        # takes_listWidget
+        QtCore.QObject.connect(
+            self.takes_listWidget,
+            QtCore.SIGNAL("currentTextChanged(QString)"),
+            self.takes_listWidget_changed
+        )
+
+        # takes_listWidget
+        QtCore.QObject.connect(
+            self.takes_listWidget,
+            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
+            self.takes_listWidget_changed
+        )
+
         # run the project changed item for the first time
         # self.project_changed()
 
@@ -1437,7 +1452,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
-        
+
         # TODO: version statuses will be removed from Stalker, so later on delete this part
         # status_name = self.statuses_comboBox.currentText()
         versions_status_list = StatusList.query\
