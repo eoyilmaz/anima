@@ -38,9 +38,11 @@ elif IS_PYQT4():
 class TaskItem(QtGui.QStandardItem):
     """Implements the Task as a QStandardItem
     """
+
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug('TaskItem.__init__() is started for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.__init__() is started for item: %s' % self.text())
         self.loaded = False
         self.task = None
         self.parent = None
@@ -48,7 +50,8 @@ class TaskItem(QtGui.QStandardItem):
         self.setEditable(False)
         self.user = None
         self.user_tasks_only = False
-        logger.debug('TaskItem.__init__() is finished for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.__init__() is finished for item: %s' % self.text())
 
     def clone(self):
         """returns a copy of this item
@@ -62,7 +65,8 @@ class TaskItem(QtGui.QStandardItem):
         return new_item
 
     def canFetchMore(self):
-        logger.debug('TaskItem.canFetchMore() is started for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.canFetchMore() is started for item: %s' % self.text())
         return_value = False
         if self.task and not self.fetched_all:
             if isinstance(self.task, Task):
@@ -71,11 +75,13 @@ class TaskItem(QtGui.QStandardItem):
                 return_value = len(self.task.root_tasks) > 0
         else:
             return_value = False
-        logger.debug('TaskItem.canFetchMore() is finished for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.canFetchMore() is finished for item: %s' % self.text())
         return return_value
 
     def fetchMore(self):
-        logger.debug('TaskItem.fetchMore() is started for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.fetchMore() is started for item: %s' % self.text())
 
         if self.canFetchMore():
             tasks = []
@@ -91,8 +97,8 @@ class TaskItem(QtGui.QStandardItem):
                 for task in tasks:
                     for user_task in self.user.tasks:
                         if task in user_task.parents or \
-                            task is user_task or \
-                            task in self.user.projects:
+                                        task is user_task or \
+                                        task in self.user.projects:
                             user_tasks_and_parents.append(task)
                             break
 
@@ -123,14 +129,16 @@ class TaskItem(QtGui.QStandardItem):
                     my_font = task_item.font()
                     my_font.setBold(True)
                     task_item.setFont(my_font)
-                
+
                 self.appendRow(task_item)
 
             self.fetched_all = True
-        logger.debug('TaskItem.fetchMore() is finished for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.fetchMore() is finished for item: %s' % self.text())
 
     def hasChildren(self):
-        logger.debug('TaskItem.hasChildren() is started for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.hasChildren() is started for item: %s' % self.text())
         if self.task:
             if isinstance(self.task, Task):
                 return_value = self.task.is_container
@@ -140,13 +148,15 @@ class TaskItem(QtGui.QStandardItem):
                 return_value = False
         else:
             return_value = False
-        logger.debug('TaskItem.hasChildren() is finished for item: %s' % self.text())
+        logger.debug(
+            'TaskItem.hasChildren() is finished for item: %s' % self.text())
         return return_value
 
 
 class TaskTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the task hierarchy
     """
+
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
         logger.debug('TaskTreeModel.__init__() is started')
@@ -161,7 +171,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug('TaskTreeModel.populateTree() is started')
         self.setColumnCount(3)
         self.setHorizontalHeaderLabels(
-           ['Name', 'Type', 'Dependencies']
+            ['Name', 'Type', 'Dependencies']
         )
 
         #item_prototype = TaskItem()
@@ -196,29 +206,34 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug('TaskTreeModel.populateTree() is finished')
 
     def canFetchMore(self, index):
-        logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.canFetchMore() is started for index: %s' % index)
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
-        logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.canFetchMore() is finished for index: %s' % index)
         return return_value
 
     def fetchMore(self, index):
         """fetches more elements
         """
-        logger.debug('TaskTreeModel.canFetchMore() is started for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.canFetchMore() is started for index: %s' % index)
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
-        logger.debug('TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.canFetchMore() is finished for index: %s' % index)
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
-        logger.debug('TaskTreeModel.hasChildren() is started for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.hasChildren() is started for index: %s' % index)
         if not index.isValid():
             projects = self.user.projects
             return_value = len(projects) > 0
@@ -227,17 +242,18 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             return_value = False
             if item:
                 return_value = item.hasChildren()
-        logger.debug('TaskTreeModel.hasChildren() is finished for index: %s' % index)
+        logger.debug(
+            'TaskTreeModel.hasChildren() is finished for index: %s' % index)
         return return_value
 
 
 class TaskNameCompleter(QtGui.QCompleter):
     def __init__(self, parent):
         QtGui.QCompleter.__init__(self, [], parent)
- 
+
     def update(self, completion_prefix):
-        tasks = Task.query\
-            .filter(Task.name.ilike('%'+completion_prefix+'%'))\
+        tasks = Task.query \
+            .filter(Task.name.ilike('%' + completion_prefix + '%')) \
             .all()
         logger.debug('completer tasks : %s' % tasks)
         task_names = [task.name for task in tasks]
@@ -255,7 +271,7 @@ class TakesListWidget(QtGui.QListWidget):
     """
 
     def __init__(self, parent=None, *args, **kwargs):
-        QtGui.QListWidget.__init__(self, parent)
+        QtGui.QListWidget.__init__(self, parent, *args, **kwargs)
         self._take_names = []
         self.take_names = []
 
@@ -344,7 +360,218 @@ class TakesListWidget(QtGui.QListWidget):
 class VersionsTableWidget(QtGui.QTableWidget):
     """A QTableWidget derivative specialized to hold version data
     """
-    pass
+
+    def __init__(self, parent=None, *args, **kwargs):
+        QtGui.QTableWidget.__init__(self, parent, *args, **kwargs)
+
+        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.setAlternatingRowColors(True)
+        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.setShowGrid(False)
+        self.setColumnCount(5)
+        self.setObjectName("previous_versions_tableWidget")
+        self.setColumnCount(5)
+        self.setRowCount(0)
+        self.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem())
+        self.setHorizontalHeaderItem(1, QtGui.QTableWidgetItem())
+        self.setHorizontalHeaderItem(2, QtGui.QTableWidgetItem())
+        self.setHorizontalHeaderItem(3, QtGui.QTableWidgetItem())
+        self.setHorizontalHeaderItem(4, QtGui.QTableWidgetItem())
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setStretchLastSection(False)
+
+        self.setToolTip(
+            QtGui.QApplication.translate(
+                "Dialog",
+                "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" font-weight:600;\">Copy Path</span></li><li><span style=\" font-weight:600;\">Browse Path</span></li><li><span style=\" font-weight:600;\">Change Description</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>",
+                None,
+                QtGui.QApplication.UnicodeUTF8
+            )
+        )
+
+        self.versions = []
+        self.labels = [
+            '#',
+            'App',
+            'User',
+            'Size',
+            'Date',
+            'Description',
+        ]
+        self.setColumnCount(len(self.labels))
+
+    def clear(self):
+        """overridden clear method
+        """
+        QtGui.QTableWidget.clear(self)
+        self.versions = []
+
+        # reset the labels
+        self.setHorizontalHeaderLabels(self.labels)
+
+    def select_version(self, version):
+        """selects the given version in the list
+        """
+        # select the version in the previous version list
+        index = -1
+        for i, prev_version in enumerate(self.versions):
+            if self.versions[i] == version:
+                index = i
+                break
+
+        logger.debug('current index: %s' % index)
+
+        # select the row
+        if index != -1:
+            item = self.item(index, 0)
+            logger.debug('item : %s' % item)
+            self.setCurrentItem(item)
+
+    @property
+    def current_version(self):
+        """returns the current selected version from the table
+        """
+        index = self.currentRow()
+        try:
+            version = self.versions[index]
+            return version
+        except IndexError:
+            return None
+
+    def update_content(self, versions):
+        """updates the content with the given versions data
+        """
+        logger.debug('update_previous_versions_tableWidget is started')
+
+        self.clear()
+        self.versions = versions
+        self.setRowCount(len(versions))
+
+        def set_font(item):
+            """sets the font for the given item
+
+            :param item: the a QTableWidgetItem
+            """
+            my_font = item.font()
+            my_font.setBold(True)
+
+            item.setFont(my_font)
+
+            foreground = item.foreground()
+            foreground.setColor(QtGui.QColor(0, 192, 0))
+            item.setForeground(foreground)
+
+        # update the previous versions list
+        for i, version in enumerate(versions):
+            is_published = version.is_published
+
+            c = 0
+
+            # ------------------------------------
+            # version_number
+            item = QtGui.QTableWidgetItem(str(version.version_number))
+            # align to center and vertical center
+            item.setTextAlignment(0x0004 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # created_with
+            item = QtGui.QTableWidgetItem()
+            if version.created_with:
+                item.setIcon(ui_utils.getIcon(version.created_with.lower()))
+
+            if is_published:
+                set_font(item)
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # user.name
+            created_by = ''
+            if version.created_by:
+                created_by = version.created_by.name
+            item = QtGui.QTableWidgetItem(created_by)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # filesize
+
+            # get the file size
+            #file_size_format = "%.2f MB"
+            file_size = -1
+            if os.path.exists(version.absolute_full_path):
+                file_size = float(
+                    os.path.getsize(version.absolute_full_path)) / 1024 / 1024
+
+            item = QtGui.QTableWidgetItem(
+                defaults.file_size_format % file_size)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # date
+
+            # get the file date
+            file_date = datetime.datetime.today()
+            if os.path.exists(version.absolute_full_path):
+                file_date = datetime.datetime.fromtimestamp(
+                    os.path.getmtime(version.absolute_full_path)
+                )
+            item = QtGui.QTableWidgetItem(
+                file_date.strftime(defaults.date_time_format)
+            )
+
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # description
+            item = QtGui.QTableWidgetItem(version.description)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+        # resize the first column
+        self.resizeRowsToContents()
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        logger.debug('update_previous_versions_tableWidget is finished')
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -441,21 +668,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # create the project attribute in projects_comboBox
         self.current_dialog = None
-        self.previous_versions_tableWidget.versions = []
-
-        # set previous_versions_tableWidget.labels
-        self.previous_versions_tableWidget.labels = [
-            '#',
-            'App',
-            'User',
-            'Size',
-            'Date',
-            'Description',
-            #"Path"
-        ]
-        self.previous_versions_tableWidget.setColumnCount(
-            len(self.previous_versions_tableWidget.labels)
-        )
 
         # setup signals
         self._setup_signals()
@@ -478,10 +690,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('MainDialog.show is started')
         logged_in_user = self.get_logged_in_user()
         if not logged_in_user:
-           self.close()
-           return_val = None
+            self.close()
+            return_val = None
         else:
-           return_val = super(MainDialog, self).show()
+            return_val = super(MainDialog, self).show()
 
         logger.debug('MainDialog.show is finished')
         return return_val
@@ -542,7 +754,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # takes_listWidget
         QtCore.QObject.connect(
             self.takes_listWidget,
-            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
+            QtCore.SIGNAL(
+                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
             self.takes_listWidget_changed
         )
 
@@ -562,17 +775,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView,
             QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
             self._show_tasks_treeView_context_menu
-        )
-
-        # custom context menu for the previous_versions_tableWidget
-        self.previous_versions_tableWidget.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu
-        )
-
-        QtCore.QObject.connect(
-            self.previous_versions_tableWidget,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self._show_previous_versions_tableWidget_context_menu
         )
 
         # add_take_toolButton
@@ -610,22 +812,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.chose_pushButton_clicked
         )
 
-        if self.mode:
-            # Read-Only mode, Choose the version
-            # add double clicking to previous_versions_tableWidget
-            QtCore.QObject.connect(
-                self.previous_versions_tableWidget,
-                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.chose_pushButton_clicked
-            )
-        else:
-            # Read-Write mode, Open the version
-            # add double clicking to previous_versions_tableWidget
-            QtCore.QObject.connect(
-                self.previous_versions_tableWidget,
-                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.open_pushButton_clicked
-            )
 
         # reference
         QtCore.QObject.connect(
@@ -663,7 +849,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         )
 
         logger.debug("finished setting up interface signals")
-    
+
 
     def get_logged_in_user(self):
         """returns the logged in user
@@ -704,12 +890,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def is_power_user(self, user):
         """A predicate that retuns if the user is a poweruser
         """
-        power_users_groups = Group.query\
-            .filter(Group.name.in_(power_users_group_names))\
+        power_users_groups = Group.query \
+            .filter(Group.name.in_(power_users_group_names)) \
             .all()
         if power_users_groups:
             for group in power_users_groups:
-                if  group in user.groups:
+                if group in user.groups:
                     return True
         return False
 
@@ -729,7 +915,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # create the menu
         menu = QtGui.QMenu()
-        
+
         #change_status_menu = menu.addMenu('Change Status')
         #menu.addSeparator()
 
@@ -1032,6 +1218,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # fill the tasks
         self.fill_tasks_treeView()
 
+        # *********************************************************************
         # use the new TakeListWidget
         self.takes_listWidget.deleteLater()
         self.takes_listWidget = TakesListWidget()
@@ -1049,9 +1236,57 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # takes_listWidget
         QtCore.QObject.connect(
             self.takes_listWidget,
-            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
+            QtCore.SIGNAL(
+                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
             self.takes_listWidget_changed
         )
+        # *********************************************************************
+
+
+
+        # *********************************************************************
+        # previous_versions_tableWidget
+        self.previous_versions_tableWidget.deleteLater()
+        self.previous_versions_tableWidget = VersionsTableWidget(
+            self.previous_versions_groupBox
+        )
+        self.verticalLayout_7.insertWidget(1, self.previous_versions_tableWidget)
+        self.setTabOrder(self.save_as_pushButton,
+                         self.previous_versions_tableWidget)
+        self.setTabOrder(self.previous_versions_tableWidget,
+                         self.open_pushButton)
+
+        # custom context menu for the previous_versions_tableWidget
+        self.previous_versions_tableWidget.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
+
+        QtCore.QObject.connect(
+            self.previous_versions_tableWidget,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self._show_previous_versions_tableWidget_context_menu
+        )
+
+        if self.mode:
+            # Read-Only mode, Choose the version
+            # add double clicking to previous_versions_tableWidget
+            QtCore.QObject.connect(
+                self.previous_versions_tableWidget,
+                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+                self.chose_pushButton_clicked
+            )
+        else:
+            # Read-Write mode, Open the version
+            # add double clicking to previous_versions_tableWidget
+            QtCore.QObject.connect(
+                self.previous_versions_tableWidget,
+                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+                self.open_pushButton_clicked
+            )
+        # *********************************************************************
+
+
+
 
         # run the project changed item for the first time
         # self.project_changed()
@@ -1127,7 +1362,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set the task
         task = version.task
-        if not self.find_and_select_entity_item_in_treeView(task, self.tasks_treeView):
+        if not self.find_and_select_entity_item_in_treeView(task,
+                                                            self.tasks_treeView):
             return
 
         # take_name
@@ -1135,20 +1371,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.takes_listWidget.current_take_name = take_name
 
         # select the version in the previous version list
-        index = -1
-        for i, prev_version in enumerate(self.previous_versions_tableWidget.versions):
-            prev_version = self.previous_versions_tableWidget.versions[i]
-            if prev_version == version:
-                index = i
-                break
-
-        logger.debug('current index: %s' % index)
-
-        # select the row
-        if index != -1:
-            item = self.previous_versions_tableWidget.item(index, 0)
-            logger.debug('item : %s' % item)
-            self.previous_versions_tableWidget.setCurrentItem(item)
+        self.previous_versions_tableWidget.select_version(version)
 
     def load_task_item_hierarchy(self, task, treeView):
         """loads the TaskItem related to the given task in the given treeView
@@ -1206,34 +1429,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.update_previous_versions_tableWidget()
         logger.debug('takes_listWidget_changed finished')
 
-    def clear_previous_versions_tableWidget(self):
-        """clears the previous_versions_tableWidget properly
-        """
-        # clear the data
-        self.previous_versions_tableWidget.clear()
-        self.previous_versions_tableWidget.versions = []
-
-        # reset the labels
-        self.previous_versions_tableWidget.setHorizontalHeaderLabels(
-            self.previous_versions_tableWidget.labels
-        )
-
     def update_previous_versions_tableWidget(self):
         """updates the previous_versions_tableWidget
         """
         logger.debug('update_previous_versions_tableWidget is started')
-        self.clear_previous_versions_tableWidget()
+        self.previous_versions_tableWidget.clear()
 
         task = self.get_task()
         if not task or not isinstance(task, Task):
             return
-
-        # if version_type_name != '':
-        #     logger.debug("version_type_name: %s" % version_type_name)
-        #else:
-        #    # delete the versions cache
-        #    self.previous_versions_tableWidget.versions = []
-        #    return
 
         # take name
         take_name = self.takes_listWidget.current_take_name
@@ -1257,140 +1461,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         versions = query.order_by(Version.version_number.desc()) \
             .limit(count).all()
-
         versions.reverse()
 
-        # set the versions cache by adding them to the widget
-        self.previous_versions_tableWidget.versions = versions
-
-        self.previous_versions_tableWidget.setRowCount(len(versions))
-
-        def set_font(item):
-            """sets the font for the given item
-
-            :param item: the a QTableWidgetItem
-            """
-            my_font = item.font()
-            my_font.setBold(True)
-
-            item.setFont(my_font)
-
-            foreground = item.foreground()
-            foreground.setColor(QtGui.QColor(0, 192, 0))
-            item.setForeground(foreground)
-
-        # update the previous versions list
-        for i, version in enumerate(versions):
-
-            is_published = version.is_published
-            
-            c = 0
-
-            # ------------------------------------
-            # version_number
-            item = QtGui.QTableWidgetItem(str(version.version_number))
-            # align to center and vertical center
-            item.setTextAlignment(0x0004 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # created_with
-            item = QtGui.QTableWidgetItem()
-            if version.created_with:
-                item.setIcon(ui_utils.getIcon(version.created_with.lower()))
-
-            if is_published:
-                set_font(item)
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # user.name
-            created_by = ''
-            if version.created_by:
-                created_by = version.created_by.name
-            item = QtGui.QTableWidgetItem(created_by)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # filesize
-
-            # get the file size
-            #file_size_format = "%.2f MB"
-            file_size = -1
-            if os.path.exists(version.absolute_full_path):
-                file_size = float(
-                    os.path.getsize(version.absolute_full_path)) / 1024 / 1024
-
-            item = QtGui.QTableWidgetItem(
-                defaults.file_size_format % file_size)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # date
-
-            # get the file date
-            file_date = datetime.datetime.today()
-            if os.path.exists(version.absolute_full_path):
-                file_date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(version.absolute_full_path)
-                )
-            item = QtGui.QTableWidgetItem(
-                file_date.strftime(defaults.date_time_format)
-            )
-
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # description
-            item = QtGui.QTableWidgetItem(version.description)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.previous_versions_tableWidget.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-        # resize the first column
-        self.previous_versions_tableWidget.resizeRowsToContents()
-        self.previous_versions_tableWidget.resizeColumnsToContents()
-        self.previous_versions_tableWidget.resizeRowsToContents()
-        logger.debug('update_previous_versions_tableWidget is finished')
-
+        self.previous_versions_tableWidget.update_content(versions)
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
@@ -1461,8 +1534,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # TODO: version statuses will be removed from Stalker, so later on delete this part
         # status_name = self.statuses_comboBox.currentText()
-        versions_status_list = StatusList.query\
-            .filter(StatusList.target_entity_type=='Version').first()
+        versions_status_list = StatusList.query \
+            .filter(StatusList.target_entity_type == 'Version').first()
         status = versions_status_list.statuses[0]
 
         version = Version(
@@ -1475,17 +1548,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version.is_published = published
 
         return version
-
-    def get_previous_version(self):
-        """returns the :class:`~oyProjectManager.models.version.Version`
-        instance from the UI by looking at the previous_versions_tableWidget
-        """
-        index = self.previous_versions_tableWidget.currentRow()
-        try:
-            version = self.previous_versions_tableWidget.versions[index]
-            return version
-        except IndexError:
-            return None
 
     def export_as_pushButton_clicked(self):
         """runs when the export_as_pushButton clicked
@@ -1575,7 +1637,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def chose_pushButton_clicked(self):
         """runs when the chose_pushButton clicked
         """
-        self.chosen_version = self.get_previous_version()
+        self.chosen_version = self.previous_versions_tableWidget.current_version
         if self.chosen_version:
             logger.debug(self.chosen_version)
             self.close()
@@ -1584,7 +1646,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """runs when the open_pushButton clicked
         """
         # get the new version
-        old_version = self.get_previous_version()
+        old_version = self.previous_versions_tableWidget.current_version
 
         logger.debug("opening version %s" % old_version)
 
@@ -1634,7 +1696,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """runs when the reference_pushButton clicked
         """
         # get the new version
-        previous_version = self.get_previous_version()
+        previous_version = self.previous_versions_tableWidget.current_version
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
@@ -1669,7 +1731,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
 
         # get the previous version
-        previous_version = self.get_previous_version()
+        previous_version = self.previous_versions_tableWidget.current_version
 
         logger.debug("importing version %s" % previous_version)
 
@@ -1730,33 +1792,33 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
 
-    # def search_task_comboBox_textChanged(self, text):
-    #     """runs when search_task_comboBox text changed
-    #     """
-    #     # text = self.search_task_lineEdit.text().strip()
-    #     self.search_task_comboBox.clear()
-    #     if not text:
-    #         return
-    #     tasks = Task.query.filter(Task.name.contains(text)).all()
-    #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
-    #     # load all the tasks and their parents so we are going to be able to
-    #     # find them later on
-    #     # for task in tasks:
-    #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
-    #     # 
-    #     # # now get the indices
-    #     # indices = self.get_item_indices_containing_text(text,
-    #     #                                                 self.tasks_treeView)
-    #     # logger.debug('indices containing the given text are : %s' % indices)
-    # 
-    #     # self.search_task_comboBox.addItems(
-    #     #     [
-    #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
-    #     #     ]
-    #     # )
-    #     items = []
-    #     for task in tasks:
-    #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
-    #         items.append(hierarchy_name)
-    #     self.search_task_comboBox.addItems(items)
-    # 
+        # def search_task_comboBox_textChanged(self, text):
+        #     """runs when search_task_comboBox text changed
+        #     """
+        #     # text = self.search_task_lineEdit.text().strip()
+        #     self.search_task_comboBox.clear()
+        #     if not text:
+        #         return
+        #     tasks = Task.query.filter(Task.name.contains(text)).all()
+        #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
+        #     # load all the tasks and their parents so we are going to be able to
+        #     # find them later on
+        #     # for task in tasks:
+        #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
+        #     # 
+        #     # # now get the indices
+        #     # indices = self.get_item_indices_containing_text(text,
+        #     #                                                 self.tasks_treeView)
+        #     # logger.debug('indices containing the given text are : %s' % indices)
+        # 
+        #     # self.search_task_comboBox.addItems(
+        #     #     [
+        #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
+        #     #     ]
+        #     # )
+        #     items = []
+        #     for task in tasks:
+        #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
+        #         items.append(hierarchy_name)
+        #     self.search_task_comboBox.addItems(items)
+        # 
