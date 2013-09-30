@@ -878,8 +878,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 temp_version = self.get_version_from_full_path(full_path)
 
                 if temp_version:
-                    # TODO: don't use the full_path here, it can be get from version instance itself
-                    valid_versions.append((temp_version, reference, full_path))
+                    valid_versions.append((temp_version, reference, temp_version.absolute_full_path))
 
                     prev_version = temp_version
                     prev_full_path = full_path
@@ -1131,6 +1130,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create a repository
         workspace_path = pm.workspace.path
 
+        # *********************************************************************
+        # References
         # replace reference paths with absolute path
         for ref in pm.listReferences():
             unresolved_path = ref.unresolvedPath().replace("\\", "/")
@@ -1138,13 +1139,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             if repo:
                 # make it absolute
-                #if not os.path.isabs(unresolved_path):
-                #    # TODO: This is weird, it should not find a repo if this is not an absolute path
-                #    unresolved_path = os.path.join(
-                #        workspace_path,
-                #        unresolved_path
-                #    ).replace('\\', '/')
-
                 if repo.is_in_repo(unresolved_path):
                     new_ref_path = ""
 
@@ -1163,7 +1157,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         logger.info("replacing with: %s" % new_ref_path)
                         ref.replaceWith(new_ref_path)
 
-        # texture files
+        # *********************************************************************
+        # Texture Files
         # replace with absolute path
         for image_file in pm.ls(type="file"):
             orig_file_texture_path = image_file.getAttr("fileTextureName")
