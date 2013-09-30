@@ -341,6 +341,12 @@ class TakesListWidget(QtGui.QListWidget):
         QtGui.QListWidget.clear(self)
 
 
+class VersionsTableWidget(QtGui.QTableWidget):
+    """A QTableWidget derivative specialized to hold version data
+    """
+    pass
+
+
 def UI(environment=None, mode=0, app_in=None, executor=None):
     """
     :param environment: The
