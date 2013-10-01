@@ -442,7 +442,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
     def update_content(self, versions):
         """updates the content with the given versions data
         """
-        logger.debug('update_previous_versions_tableWidget is started')
+        logger.debug('VersionsTableWidget.update_content() is started')
 
         self.clear()
         self.versions = versions
@@ -517,7 +517,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
             file_size = -1
             if os.path.exists(version.absolute_full_path):
                 file_size = float(
-                    os.path.getsize(version.absolute_full_path)) / 1024 / 1024
+                    os.path.getsize(version.absolute_full_path)) / 1048576
 
             item = QtGui.QTableWidgetItem(
                 defaults.file_size_format % file_size)
@@ -571,7 +571,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
-        logger.debug('update_previous_versions_tableWidget is finished')
+        logger.debug('VersionsTableWidget.update_content() is finished')
 
 
 def UI(environment=None, mode=0, app_in=None, executor=None):
@@ -1464,6 +1464,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         versions.reverse()
 
         self.previous_versions_tableWidget.update_content(versions)
+        logger.debug('update_previous_versions_tableWidget is finished')
 
     def get_task(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
