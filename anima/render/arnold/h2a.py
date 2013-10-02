@@ -1,7 +1,10 @@
 # This code is called when instances of this SOP cook.
 import os
 import gzip
-import hou
+try:
+    import hou
+except ImportError:
+    hou = None
 from cStringIO import StringIO
 
 
@@ -14,27 +17,29 @@ class Buffer(object):
     """
 
     def __init__(self, str_buffer_size=1000):
-        self.file_str = StringIO()
-        self.str_buffer = []
-        self.str_buffer_size = str_buffer_size
         self.i = 0
+        self.str_buffer = []
+        self.file_str = StringIO()
         self.file_str_write = self.file_str.write
         self.str_buffer_append = self.str_buffer.append
+        self.str_buffer_size = str_buffer_size
+
+    def flush(self):
+        """flushes the data to the StringIO buffer and resets the counter
+        """
+        self.file_str_write(' '.join(self.str_buffer))
+        self.str_buffer = []
+        self.i = 0
 
     def append(self, data):
         """appends the data to the str_buffer if the limit is reached then the
         data in the buffer is flushed to the cStringIO
         """
+        self.i += 1
         if self.i == self.str_buffer_size:
             # do a flush
             self.flush()
         self.str_buffer.append(`data`)
-        self.i += 1
-
-    def flush(self):
-        self.file_str_write(' '.join(self.str_buffer))
-        self.str_buffer = []
-        self.i = 0
 
     def getvalue(self):
         """returns the string data
@@ -149,9 +154,8 @@ MayaShadingEngine
     curve_count = geo.intrinsicValue('primitivecount')
     real_point_count = geo.intrinsicValue('pointcount')
 
-    # Export the root point three times
-    # And the tip point twice
-    # so we will have 3 extra points per curve
+    # The root and tip points are going to be used twice for the start and end tangents
+    # so there will be 2 extra points per curve
     point_count = real_point_count + curve_count * 2
 
     # write down the radius for the tip twice
@@ -191,7 +195,7 @@ MayaShadingEngine
         point_positions_append(point_position[0])
         point_positions_append(point_position[1])
         point_positions_append(point_position[2])
-        for vertex in curve.vertices():
+        for vertex in curve_vertices:
             point_position = vertex.point().position()
             point_positions_append(point_position[0])
             point_positions_append(point_position[1])
@@ -209,7 +213,7 @@ MayaShadingEngine
         'number_of_points_per_curve': number_of_points_per_curve.getvalue(),
         'point_count': point_count,
         'point_positions': point_positions.getvalue(),
-        'radius': ' '.radius.getvalue(),
+        'radius': radius.getvalue(),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
         'uparamcoord': uparamcoord.getvalue(),
