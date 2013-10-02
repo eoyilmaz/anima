@@ -1,9 +1,47 @@
 # This code is called when instances of this SOP cook.
-import gzip
-
-import hou
 import os
-from sqlalchemy.sql.expression import false
+import gzip
+import hou
+from cStringIO import StringIO
+
+
+class Buffer(object):
+    """Buffer class for efficient string concatenation.
+    
+    This class uses cStringIO for the general store and a string buffer as an
+    intermediate storage, then concatenates every 1000 element in to the
+    cStringIO file handler.
+    """
+
+    def __init__(self, str_buffer_size=1000):
+        self.file_str = StringIO()
+        self.str_buffer = []
+        self.str_buffer_size = str_buffer_size
+        self.i = 0
+        self.file_str_write = self.file_str.write
+        self.str_buffer_append = self.str_buffer.append
+
+    def append(self, data):
+        """appends the data to the str_buffer if the limit is reached then the
+        data in the buffer is flushed to the cStringIO
+        """
+        if self.i == self.str_buffer_size:
+            # do a flush
+            self.flush()
+        self.str_buffer.append(`data`)
+        self.i += 1
+
+    def flush(self):
+        self.file_str_write(' '.join(self.str_buffer))
+        self.str_buffer = []
+        self.i = 0
+
+    def getvalue(self):
+        """returns the string data
+        """
+        # do a last flush
+        self.flush()
+        return self.file_str.getvalue()
 
 
 def curves2ass(ass_path):
@@ -119,53 +157,63 @@ MayaShadingEngine
     # write down the radius for the tip twice
     radius_count = real_point_count
 
-    number_of_points_per_curve = []
-    point_positions = []
-    curve_ids = range(curve_count)
-    radius = []
-    uparamcoord = []
-    vparamcoord = []
+    #number_of_points_per_curve = []
+    number_of_points_per_curve = Buffer()
+    number_of_points_per_curve_append = number_of_points_per_curve.append
+    
+    #point_positions = []
+    point_positions = Buffer()
+    point_positions_append = point_positions.append
+    curve_ids = ' '.join(`id` for id in xrange(curve_count))
+    #radius = []
+    radius = Buffer()
+    radius_append = radius.append
+
+    #uparamcoord = []
+    #vparamcoord = []
+    uparamcoord = Buffer()
+    uparamcoord_append = uparamcoord.append
+    vparamcoord = Buffer()
+    vparamcoord_append = vparamcoord.append
+
     for prim in geo.prims():
         curve = prim
         numVertices = curve.numVertices() + 2
-        number_of_points_per_curve.append(numVertices)
+        number_of_points_per_curve_append(numVertices)
 
-        uv = prim.attribValue('uv')
-        uparamcoord.append(uv[0])
-        vparamcoord.append(uv[1])
+        uv = curve.attribValue('uv')
+        uparamcoord_append(uv[0])
+        vparamcoord_append(uv[1])
 
-        temp_point_positions = []
-        for vertex in prim.vertices():
-            point = vertex.point()
-            temp_point_positions.extend(point.position())
-            radius.append(vertex.attribValue('width'))
-
-        # insert the root two more times
-        first_point_position = temp_point_positions[0:3]
-        temp_point_positions.insert(0, first_point_position[2])
-        temp_point_positions.insert(0, first_point_position[1])
-        temp_point_positions.insert(0, first_point_position[0])
-
-        # insert the tip one more time
-        temp_point_positions.extend(temp_point_positions[-3:])
-
-        # finally write it down
-        point_positions.extend(temp_point_positions)
-
-        # extend the radius with the last radius again
-        #radius.append(radius[-1])
+        curve_vertices = curve.vertices()
+        vertex = curve_vertices[0]
+        point_position = vertex.point().position()
+        point_positions_append(point_position[0])
+        point_positions_append(point_position[1])
+        point_positions_append(point_position[2])
+        for vertex in curve.vertices():
+            point_position = vertex.point().position()
+            point_positions_append(point_position[0])
+            point_positions_append(point_position[1])
+            point_positions_append(point_position[2])
+            radius_append(vertex.attribValue('width'))
+        vertex = curve_vertices[-1]
+        point_position = vertex.point().position()
+        point_positions_append(point_position[0])
+        point_positions_append(point_position[1])
+        point_positions_append(point_position[2])
 
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
         'curve_count': curve_count,
-        'number_of_points_per_curve': ' '.join(map(str, number_of_points_per_curve)),
+        'number_of_points_per_curve': number_of_points_per_curve.getvalue(),
         'point_count': point_count,
-        'point_positions': ' '.join(map(str, point_positions)),
-        'radius': ' '.join(map(str, radius)),
+        'point_positions': point_positions.getvalue(),
+        'radius': ' '.radius.getvalue(),
         'radius_count': radius_count,
-        'curve_ids': ' '.join(map(str, curve_ids)),
-        'uparamcoord': ' '.join(map(str, uparamcoord)),
-        'vparamcoord': ' '.join(map(str, vparamcoord))
+        'curve_ids': curve_ids,
+        'uparamcoord': uparamcoord.getvalue(),
+        'vparamcoord': vparamcoord.getvalue()
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
