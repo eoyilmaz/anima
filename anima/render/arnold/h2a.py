@@ -35,11 +35,11 @@ class Buffer(object):
         """appends the data to the str_buffer if the limit is reached then the
         data in the buffer is flushed to the cStringIO
         """
-        self.i += 1
-        if self.i == self.str_buffer_size:
-            # do a flush
+        self_i = self.i
+        self_i += 1
+        if self_i == self.str_buffer_size:
             self.flush()
-        self.str_buffer.append(`data`)
+        self.str_buffer_append(`data`)
 
     def getvalue(self):
         """returns the string data
@@ -47,6 +47,8 @@ class Buffer(object):
         # do a last flush
         self.flush()
         return self.file_str.getvalue()
+
+
 
 
 def curves2ass(ass_path):
@@ -161,63 +163,132 @@ MayaShadingEngine
     # write down the radius for the tip twice
     radius_count = real_point_count
 
-    #number_of_points_per_curve = []
-    number_of_points_per_curve = Buffer()
+    #number_of_points_per_curve = Buffer()
+    number_of_points_per_curve = []
+    number_of_points_per_curve_i = 0
+    number_of_points_per_curve_str_buffer = []
+    number_of_points_per_curve_file_str = StringIO()
+    number_of_points_per_curve_file_str_write = number_of_points_per_curve_file_str.write
     number_of_points_per_curve_append = number_of_points_per_curve.append
-    
-    #point_positions = []
-    point_positions = Buffer()
+
+    #point_positions = Buffer()
+    point_positions = []
+    point_positions_i = 0
+    point_positions_str_buffer = []
+    point_positions_file_str = StringIO()
+    point_positions_file_str_write = point_positions_file_str.write
     point_positions_append = point_positions.append
+
     curve_ids = ' '.join(`id` for id in xrange(curve_count))
-    #radius = []
-    radius = Buffer()
+
+    #radius = Buffer()
+    radius = []
+    radius_i = 0
+    radius_str_buffer = []
+    radius_file_str = StringIO()
+    radius_file_str_write = radius_file_str.write
     radius_append = radius.append
 
-    #uparamcoord = []
-    #vparamcoord = []
-    uparamcoord = Buffer()
+    #uparamcoord = Buffer()
+    uparamcoord = []
+    uparamcoord_i = 0
+    uparamcoord_str_buffer = []
+    uparamcoord_file_str = StringIO()
+    uparamcoord_file_str_write = uparamcoord_file_str.write
     uparamcoord_append = uparamcoord.append
-    vparamcoord = Buffer()
+
+    #vparamcoord = Buffer()
+    vparamcoord = []
+    vparamcoord_i = 0
+    vparamcoord_str_buffer = []
+    vparamcoord_file_str = StringIO()
+    vparamcoord_file_str_write = vparamcoord_file_str.write
     vparamcoord_append = vparamcoord.append
 
     for prim in geo.prims():
         curve = prim
-        numVertices = curve.numVertices() + 2
-        number_of_points_per_curve_append(numVertices)
+        real_numVertices = curve.numVertices()
+        numVertices = real_numVertices + 2
+
+        # number_of_points_per_curve
+        number_of_points_per_curve_i += 1
+        if number_of_points_per_curve_i == 1000:
+            number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
+            number_of_points_per_curve_str_buffer = []
+            number_of_points_per_curve_i = 0
+        number_of_points_per_curve_append(`numVertices`)
 
         uv = curve.attribValue('uv')
+
+        # uparamcoord
+        uparamcoord_i += 1
+        if uparamcoord_i == 1000:
+            uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
+            uparamcoord_str_buffer = []
+            uparamcoord_i = 0
         uparamcoord_append(uv[0])
+
+        vparamcoord_i += 1
+        if vparamcoord_i == 1000:
+            vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
+            vparamcoord_str_buffer = []
+            vparamcoord_i = 0
         vparamcoord_append(uv[1])
 
         curve_vertices = curve.vertices()
         vertex = curve_vertices[0]
         point_position = vertex.point().position()
+        
+        # point_positions
+        point_positions_i += numVertices
+        if point_positions_i == 1000:
+            point_positions_file_str_write(' '.join(point_positions_str_buffer))
+            point_positions_str_buffer = []
+            point_positions_i = 0
         point_positions_append(point_position[0])
         point_positions_append(point_position[1])
         point_positions_append(point_position[2])
+
+        # radius
+        radius_i += real_numVertices
+        if radius_i == 1000:
+            radius_file_str_write(' '.join(radius_str_buffer))
+            radius_str_buffer = []
+            radius_i = 0
+
         for vertex in curve_vertices:
             point_position = vertex.point().position()
             point_positions_append(point_position[0])
             point_positions_append(point_position[1])
             point_positions_append(point_position[2])
+
             radius_append(vertex.attribValue('width'))
+
+
         vertex = curve_vertices[-1]
         point_position = vertex.point().position()
         point_positions_append(point_position[0])
         point_positions_append(point_position[1])
         point_positions_append(point_position[2])
 
+    # do flushes again before getting the values
+    number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
+    uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
+    vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
+    point_positions_file_str_write(' '.join(point_positions_str_buffer))
+    radius_file_str_write(' '.join(radius_str_buffer))
+
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
         'curve_count': curve_count,
-        'number_of_points_per_curve': number_of_points_per_curve.getvalue(),
+        'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
-        'point_positions': point_positions.getvalue(),
-        'radius': radius.getvalue(),
+        'point_positions': point_positions_file_str.getvalue(),
+        'radius': radius_file_str.getvalue(),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
-        'uparamcoord': uparamcoord.getvalue(),
-        'vparamcoord': vparamcoord.getvalue()
+        'uparamcoord': uparamcoord_file_str.getvalue(),
+        'vparamcoord': vparamcoord_file_str.getvalue()
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
