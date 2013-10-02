@@ -164,46 +164,46 @@ MayaShadingEngine
     radius_count = real_point_count
 
     #number_of_points_per_curve = Buffer()
-    number_of_points_per_curve = []
+    #number_of_points_per_curve = []
     number_of_points_per_curve_i = 0
     number_of_points_per_curve_str_buffer = []
     number_of_points_per_curve_file_str = StringIO()
     number_of_points_per_curve_file_str_write = number_of_points_per_curve_file_str.write
-    number_of_points_per_curve_append = number_of_points_per_curve.append
+    number_of_points_per_curve_str_buffer_append = number_of_points_per_curve_str_buffer.append
 
     #point_positions = Buffer()
-    point_positions = []
+    #point_positions = []
     point_positions_i = 0
     point_positions_str_buffer = []
     point_positions_file_str = StringIO()
     point_positions_file_str_write = point_positions_file_str.write
-    point_positions_append = point_positions.append
+    point_positions_str_buffer_append = point_positions_str_buffer.append
 
     curve_ids = ' '.join(`id` for id in xrange(curve_count))
 
     #radius = Buffer()
-    radius = []
+    #radius = []
     radius_i = 0
     radius_str_buffer = []
     radius_file_str = StringIO()
     radius_file_str_write = radius_file_str.write
-    radius_append = radius.append
+    radius_str_buffer_append = radius_str_buffer.append
 
     #uparamcoord = Buffer()
-    uparamcoord = []
+    #uparamcoord = []
     uparamcoord_i = 0
     uparamcoord_str_buffer = []
     uparamcoord_file_str = StringIO()
     uparamcoord_file_str_write = uparamcoord_file_str.write
-    uparamcoord_append = uparamcoord.append
+    uparamcoord_str_buffer_append = uparamcoord_str_buffer.append
 
     #vparamcoord = Buffer()
-    vparamcoord = []
+    #vparamcoord = []
     vparamcoord_i = 0
     vparamcoord_str_buffer = []
     vparamcoord_file_str = StringIO()
     vparamcoord_file_str_write = vparamcoord_file_str.write
-    vparamcoord_append = vparamcoord.append
+    vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
 
     for prim in geo.prims():
         curve = prim
@@ -212,28 +212,34 @@ MayaShadingEngine
 
         # number_of_points_per_curve
         number_of_points_per_curve_i += 1
-        if number_of_points_per_curve_i == 1000:
+        if number_of_points_per_curve_i >= 1000:
             number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
+            number_of_points_per_curve_file_str_write(' ')
             number_of_points_per_curve_str_buffer = []
+            number_of_points_per_curve_str_buffer_append = number_of_points_per_curve_str_buffer.append
             number_of_points_per_curve_i = 0
-        number_of_points_per_curve_append(`numVertices`)
+        number_of_points_per_curve_str_buffer_append(`numVertices`)
 
         uv = curve.attribValue('uv')
 
         # uparamcoord
         uparamcoord_i += 1
-        if uparamcoord_i == 1000:
+        if uparamcoord_i >= 1000:
             uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
+            uparamcoord_file_str_write(' ')
             uparamcoord_str_buffer = []
+            uparamcoord_str_buffer_append = uparamcoord_str_buffer.append
             uparamcoord_i = 0
-        uparamcoord_append(uv[0])
+        uparamcoord_str_buffer_append(`uv[0]`)
 
         vparamcoord_i += 1
-        if vparamcoord_i == 1000:
+        if vparamcoord_i >= 1000:
             vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
+            vparamcoord_file_str_write(' ')
             vparamcoord_str_buffer = []
+            vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
             vparamcoord_i = 0
-        vparamcoord_append(uv[1])
+        vparamcoord_str_buffer_append(`uv[1]`)
 
         curve_vertices = curve.vertices()
         vertex = curve_vertices[0]
@@ -241,35 +247,39 @@ MayaShadingEngine
         
         # point_positions
         point_positions_i += numVertices
-        if point_positions_i == 1000:
+        if point_positions_i >= 1000:
             point_positions_file_str_write(' '.join(point_positions_str_buffer))
+            point_positions_file_str_write(' ')
             point_positions_str_buffer = []
+            point_positions_str_buffer_append = point_positions_str_buffer.append
             point_positions_i = 0
-        point_positions_append(point_position[0])
-        point_positions_append(point_position[1])
-        point_positions_append(point_position[2])
+        point_positions_str_buffer_append(`point_position[0]`)
+        point_positions_str_buffer_append(`point_position[1]`)
+        point_positions_str_buffer_append(`point_position[2]`)
 
         # radius
         radius_i += real_numVertices
-        if radius_i == 1000:
+        if radius_i >= 1000:
             radius_file_str_write(' '.join(radius_str_buffer))
+            radius_file_str_write(' ')
             radius_str_buffer = []
+            radius_str_buffer_append = radius_str_buffer.append
             radius_i = 0
 
         for vertex in curve_vertices:
             point_position = vertex.point().position()
-            point_positions_append(point_position[0])
-            point_positions_append(point_position[1])
-            point_positions_append(point_position[2])
+            point_positions_str_buffer_append(`point_position[0]`)
+            point_positions_str_buffer_append(`point_position[1]`)
+            point_positions_str_buffer_append(`point_position[2]`)
 
-            radius_append(vertex.attribValue('width'))
+            radius_str_buffer_append(`vertex.attribValue('width')`)
 
 
         vertex = curve_vertices[-1]
         point_position = vertex.point().position()
-        point_positions_append(point_position[0])
-        point_positions_append(point_position[1])
-        point_positions_append(point_position[2])
+        point_positions_str_buffer_append(`point_position[0]`)
+        point_positions_str_buffer_append(`point_position[1]`)
+        point_positions_str_buffer_append(`point_position[2]`)
 
     # do flushes again before getting the values
     number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
