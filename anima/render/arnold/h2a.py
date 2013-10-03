@@ -3,6 +3,7 @@ import gzip
 import struct
 import time
 
+import base64
 from anima.render.arnold import b85
 
 try:
