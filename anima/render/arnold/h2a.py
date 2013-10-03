@@ -1,6 +1,10 @@
-# This code is called when instances of this SOP cook.
 import os
 import gzip
+import struct
+import time
+
+from anima.render.arnold import b85
+
 try:
     import hou
 except ImportError:
@@ -54,6 +58,8 @@ class Buffer(object):
 def curves2ass(ass_path):
     """exports the node content to ass file
     """
+
+    start_time = time.time()
 
     # MyFur.ass
     # MyFur.ass.gz
@@ -124,8 +130,9 @@ MayaShadingEngine
  name %(name)s
  num_points %(curve_count)i 1 UINT
   %(number_of_points_per_curve)s
- points %(point_count)s 1 POINT
-  %(point_positions)s
+ points %(point_count)s 1 b85POINT
+ %(point_positions)s
+
  radius %(radius_count)s 1 FLOAT
   %(radius)s
  basis "catmull-rom"
@@ -244,18 +251,17 @@ MayaShadingEngine
         curve_vertices = curve.vertices()
         vertex = curve_vertices[0]
         point_position = vertex.point().position()
-        
+
         # point_positions
         point_positions_i += numVertices
         if point_positions_i >= 1000:
-            point_positions_file_str_write(' '.join(point_positions_str_buffer))
-            point_positions_file_str_write(' ')
+            point_positions_file_str_write(''.join(point_positions_str_buffer))
             point_positions_str_buffer = []
             point_positions_str_buffer_append = point_positions_str_buffer.append
             point_positions_i = 0
-        point_positions_str_buffer_append(`point_position[0]`)
-        point_positions_str_buffer_append(`point_position[1]`)
-        point_positions_str_buffer_append(`point_position[2]`)
+        point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
+        point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
+        point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
 
         # radius
         radius_i += real_numVertices
@@ -268,24 +274,24 @@ MayaShadingEngine
 
         for vertex in curve_vertices:
             point_position = vertex.point().position()
-            point_positions_str_buffer_append(`point_position[0]`)
-            point_positions_str_buffer_append(`point_position[1]`)
-            point_positions_str_buffer_append(`point_position[2]`)
+            point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
+            point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
+            point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
 
             radius_str_buffer_append(`vertex.attribValue('width')`)
 
 
         vertex = curve_vertices[-1]
         point_position = vertex.point().position()
-        point_positions_str_buffer_append(`point_position[0]`)
-        point_positions_str_buffer_append(`point_position[1]`)
-        point_positions_str_buffer_append(`point_position[2]`)
+        point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
+        point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
+        point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
 
     # do flushes again before getting the values
     number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
     uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
     vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
-    point_positions_file_str_write(' '.join(point_positions_str_buffer))
+    point_positions_file_str_write(''.join(point_positions_str_buffer))
     radius_file_str_write(' '.join(radius_str_buffer))
 
     rendered_curve_data = curve_data % {
@@ -293,7 +299,7 @@ MayaShadingEngine
         'curve_count': curve_count,
         'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
-        'point_positions': point_positions_file_str.getvalue(),
+        'point_positions': b85.b85_encode(point_positions_file_str.getvalue()),
         'radius': radius_file_str.getvalue(),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
@@ -320,3 +326,5 @@ MayaShadingEngine
     with open(asstoc_path, 'w') as asstoc_file:
         asstoc_file.write(bounding_box_info)
 
+    end_time = time.time()
+    print 'All Conversion took: %s sec' % (end_time - start_time)
