@@ -2,6 +2,25 @@
 Anima Tools Changes
 ===================
 
+0.1.0.a6
+========
+
+* **Render:**
+
+  * **Arnold:**
+
+    * **Base85:**
+
+        * **New:** This is a new module which is doing Arnold compatible Base85
+          encoding and decoding along with the Standard and RFC1924 formats. It
+          is mainly used in producing Binary data for *.ass files.
+
+    * **H2A:**
+
+      * **New:** This is a new module which contains necessary code to be used
+        in "Houdini To Arnold" Python SOP which exports fur data (for now) to
+        arnold compatible *.ass file for Houdini.
+
 0.1.0.a5
 ========
 

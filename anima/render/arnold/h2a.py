@@ -1,12 +1,16 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2012-2013, Anima Istanbul
+# 
+# This module is part of anima-tools and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+
 import os
 import gzip
 import struct
 import time
 import re
 
-import base64
-from anima.render.arnold import b85
-reload(b85)
+from anima.render.arnold import base85
 
 try:
     import hou
@@ -304,12 +308,12 @@ MayaShadingEngine
         'curve_count': curve_count,
         'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
-        'point_positions': re.sub("(.{500})", "\\1\n", b85.b85_encode(point_positions_file_str.getvalue()), 0),
-        'radius': re.sub("(.{500})", "\\1\n", b85.b85_encode(radius_file_str.getvalue()), 0),
+        'point_positions': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(point_positions_file_str.getvalue()), 0),
+        'radius': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(radius_file_str.getvalue()), 0),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
-        'uparamcoord': re.sub("(.{500})", "\\1\n", b85.b85_encode(uparamcoord_file_str.getvalue()), 0),
-        'vparamcoord': re.sub("(.{500})", "\\1\n", b85.b85_encode(vparamcoord_file_str.getvalue()), 0)
+        'uparamcoord': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(uparamcoord_file_str.getvalue()), 0),
+        'vparamcoord': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(vparamcoord_file_str.getvalue()), 0)
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
