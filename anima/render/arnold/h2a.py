@@ -5,6 +5,7 @@ import time
 
 import base64
 from anima.render.arnold import b85
+reload(b85)
 
 try:
     import hou
