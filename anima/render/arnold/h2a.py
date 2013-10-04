@@ -134,8 +134,8 @@ MayaShadingEngine
  points %(point_count)s 1 b85POINT
  %(point_positions)s
 
- radius %(radius_count)s 1 FLOAT
-  %(radius)s
+ radius %(radius_count)s 1 b85FLOAT
+ %(radius)s
  basis "catmull-rom"
  mode "ribbon"
  min_pixel_width 0
@@ -152,11 +152,11 @@ MayaShadingEngine
  sss_sample_spacing 0.100000001
  sss_sample_distribution "blue_noise"
  declare uparamcoord uniform FLOAT
- uparamcoord %(curve_count)i 1 FLOAT
-  %(uparamcoord)s
+ uparamcoord %(curve_count)i 1 b85FLOAT
+ %(uparamcoord)s
  declare vparamcoord uniform FLOAT
- vparamcoord %(curve_count)i 1 FLOAT
-  %(vparamcoord)s
+ vparamcoord %(curve_count)i 1 b85FLOAT
+ %(vparamcoord)s
  declare curve_id uniform UINT
  curve_id %(curve_count)i 1 UINT
   %(curve_ids)s"""
@@ -213,6 +213,9 @@ MayaShadingEngine
     vparamcoord_file_str_write = vparamcoord_file_str.write
     vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
 
+    pack = struct.pack
+    unpack = struct.unpack
+
     for prim in geo.prims():
         curve = prim
         real_numVertices = curve.numVertices()
@@ -233,21 +236,21 @@ MayaShadingEngine
         # uparamcoord
         uparamcoord_i += 1
         if uparamcoord_i >= 1000:
-            uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
-            uparamcoord_file_str_write(' ')
+            uparamcoord_file_str_write(''.join(uparamcoord_str_buffer))
+            #uparamcoord_file_str_write(' ')
             uparamcoord_str_buffer = []
             uparamcoord_str_buffer_append = uparamcoord_str_buffer.append
             uparamcoord_i = 0
-        uparamcoord_str_buffer_append(`uv[0]`)
+        uparamcoord_str_buffer_append(pack('f', uv[0]))
 
         vparamcoord_i += 1
         if vparamcoord_i >= 1000:
-            vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
-            vparamcoord_file_str_write(' ')
+            vparamcoord_file_str_write(''.join(vparamcoord_str_buffer))
+            #vparamcoord_file_str_write(' ')
             vparamcoord_str_buffer = []
             vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
             vparamcoord_i = 0
-        vparamcoord_str_buffer_append(`uv[1]`)
+        vparamcoord_str_buffer_append(pack('f', uv[1]))
 
         curve_vertices = curve.vertices()
         vertex = curve_vertices[0]
@@ -260,40 +263,38 @@ MayaShadingEngine
             point_positions_str_buffer = []
             point_positions_str_buffer_append = point_positions_str_buffer.append
             point_positions_i = 0
-        point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
-        point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
-        point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
+        point_positions_str_buffer_append(pack('f', point_position[0]))
+        point_positions_str_buffer_append(pack('f', point_position[1]))
+        point_positions_str_buffer_append(pack('f', point_position[2]))
 
         # radius
         radius_i += real_numVertices
         if radius_i >= 1000:
-            radius_file_str_write(' '.join(radius_str_buffer))
-            radius_file_str_write(' ')
+            radius_file_str_write(''.join(radius_str_buffer))
             radius_str_buffer = []
             radius_str_buffer_append = radius_str_buffer.append
             radius_i = 0
 
         for vertex in curve_vertices:
             point_position = vertex.point().position()
-            point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
-            point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
-            point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
+            point_positions_str_buffer_append(pack('f', point_position[0]))
+            point_positions_str_buffer_append(pack('f', point_position[1]))
+            point_positions_str_buffer_append(pack('f', point_position[2]))
 
-            radius_str_buffer_append(`vertex.attribValue('width')`)
-
+            radius_str_buffer_append(pack('f', vertex.attribValue('width')))
 
         vertex = curve_vertices[-1]
         point_position = vertex.point().position()
-        point_positions_str_buffer_append(struct.pack('!f', point_position[0]))
-        point_positions_str_buffer_append(struct.pack('!f', point_position[1]))
-        point_positions_str_buffer_append(struct.pack('!f', point_position[2]))
+        point_positions_str_buffer_append(pack('f', point_position[0]))
+        point_positions_str_buffer_append(pack('f', point_position[1]))
+        point_positions_str_buffer_append(pack('f', point_position[2]))
 
     # do flushes again before getting the values
     number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
-    uparamcoord_file_str_write(' '.join(uparamcoord_str_buffer))
-    vparamcoord_file_str_write(' '.join(vparamcoord_str_buffer))
+    uparamcoord_file_str_write(''.join(uparamcoord_str_buffer))
+    vparamcoord_file_str_write(''.join(vparamcoord_str_buffer))
     point_positions_file_str_write(''.join(point_positions_str_buffer))
-    radius_file_str_write(' '.join(radius_str_buffer))
+    radius_file_str_write(''.join(radius_str_buffer))
 
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
@@ -301,11 +302,11 @@ MayaShadingEngine
         'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
         'point_positions': b85.b85_encode(point_positions_file_str.getvalue()),
-        'radius': radius_file_str.getvalue(),
+        'radius': b85.b85_encode(radius_file_str.getvalue()),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
-        'uparamcoord': uparamcoord_file_str.getvalue(),
-        'vparamcoord': vparamcoord_file_str.getvalue()
+        'uparamcoord': b85.b85_encode(uparamcoord_file_str.getvalue()),
+        'vparamcoord': b85.b85_encode(vparamcoord_file_str.getvalue())
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
