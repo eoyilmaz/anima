@@ -77,16 +77,17 @@ from struct import unpack, pack
 # covert 4 characters into 5
 def b85_encode(s):
     parts = []
+    parts_append = parts.append
     numchunks = len(s) // 4
-    format = '!' + str(numchunks) + 'I'
+    format = '' + str(numchunks) + 'i'
     for x in unpack(format, s):
         # network order (big endian), 32-bit unsigned integer
         # note: x86 is little endian
-        parts.append(gsIntToChar(x // 52200625))
-        parts.append(gsIntToChar((x // 614125) % 85))
-        parts.append(gsIntToChar((x // 7225) % 85))
-        parts.append(gsIntToChar((x // 85) % 85))
-        parts.append(gsIntToChar(x % 85))
+        parts_append(gsIntToChar[(x // 52200625)])
+        parts_append(gsIntToChar[(x // 614125) % 85])
+        parts_append(gsIntToChar[(x // 7225) % 85])
+        parts_append(gsIntToChar[(x // 85) % 85])
+        parts_append(gsIntToChar[x % 85])
     return ''.join(parts)
 
 #
@@ -107,24 +108,24 @@ def b85_encode2(s):
 
         # network order (big endian), 32-bit unsigned integer
         # note: x86 is little endian
-        parts.append(mChr(x // 52200625 + 33))
-        parts.append(mChr((x // 614125) % 85 + 33))
-        parts.append(mChr((x // 7225) % 85 + 33))
-        parts.append(mChr((x // 85) % 85 + 33))
-        parts.append(mChr(x % 85 + 33))
+        parts_append(mChr(x // 52200625 + 33))
+        parts_append(mChr((x // 614125) % 85 + 33))
+        parts_append(mChr((x // 7225) % 85 + 33))
+        parts_append(mChr((x // 85) % 85 + 33))
+        parts_append(mChr(x % 85 + 33))
     return ''.join(parts)
 
 # convert 5 characters to 4
 def b85_decode(s):
+    s = s.replace('\x00\x00\x00\x00', 'z')
     parts = []
     parts_append = parts.append
-    mChr = chr
     for i in xrange(0, len(s), 5):
         bsum = 0;
         for j in xrange(0, 5):
             val = gsCharToInt[s[i + j]]
             bsum = 85 * bsum + val
-        tmp = pack('!I', bsum)
+        tmp = pack('i', bsum)
         parts_append(tmp)
         #parts += tmp 
         #parts += unpack('cccc', tmp)
