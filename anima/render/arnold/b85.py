@@ -117,7 +117,7 @@ def b85_encode2(s):
 
 # convert 5 characters to 4
 def b85_decode(s):
-    s = s.replace('\x00\x00\x00\x00', 'z')
+    #s = s.replace('\x00\x00\x00\x00', 'z')
     parts = []
     parts_append = parts.append
     for i in xrange(0, len(s), 5):
@@ -125,7 +125,7 @@ def b85_decode(s):
         for j in xrange(0, 5):
             val = gsCharToInt[s[i + j]]
             bsum = 85 * bsum + val
-        tmp = pack('i', bsum)
+        tmp = pack('I', bsum)
         parts_append(tmp)
         #parts += tmp 
         #parts += unpack('cccc', tmp)
