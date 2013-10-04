@@ -2,6 +2,7 @@ import os
 import gzip
 import struct
 import time
+import re
 
 import base64
 from anima.render.arnold import b85
@@ -297,17 +298,18 @@ MayaShadingEngine
     point_positions_file_str_write(''.join(point_positions_str_buffer))
     radius_file_str_write(''.join(radius_str_buffer))
 
+    
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
         'curve_count': curve_count,
         'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
-        'point_positions': b85.b85_encode(point_positions_file_str.getvalue()),
-        'radius': b85.b85_encode(radius_file_str.getvalue()),
+        'point_positions': re.sub("(.{500})", "\\1\n", b85.b85_encode(point_positions_file_str.getvalue()), 0, re.DOTALL),
+        'radius': re.sub("(.{500})", "\\1\n", b85.b85_encode(radius_file_str.getvalue()), 0, re.DOTALL),
         'radius_count': radius_count,
         'curve_ids': curve_ids,
-        'uparamcoord': b85.b85_encode(uparamcoord_file_str.getvalue()),
-        'vparamcoord': b85.b85_encode(vparamcoord_file_str.getvalue())
+        'uparamcoord': re.sub("(.{500})", "\\1\n", b85.b85_encode(uparamcoord_file_str.getvalue()), 0, re.DOTALL),
+        'vparamcoord': re.sub("(.{500})", "\\1\n", b85.b85_encode(vparamcoord_file_str.getvalue()), 0, re.DOTALL)
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
