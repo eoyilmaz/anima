@@ -28,29 +28,6 @@
 #import psyco
 #psyco.full()
 
-#gsCharToInt = {'!': 62, '#': 63, '%': 65, '$': 64, '&': 66, ')': 68, '(': 67,
-#               '+': 70, '*': 69, '-': 71, '1': 1, '0': 0, '3': 3, '2': 2,
-#               '5': 5, '4': 4, '7': 7, '6': 6, '9': 9, '8': 8, ';': 72,
-#               '=': 74, '<': 73, '?': 76, '>': 75, 'A': 10, '@': 77, 'C': 12,
-#               'B': 11, 'E': 14, 'D': 13, 'G': 16, 'F': 15, 'I': 18, 'H': 17,
-#               'K': 20, 'J': 19, 'M': 22, 'L': 21, 'O': 24, 'N': 23, 'Q': 26,
-#               'P': 25, 'S': 28, 'R': 27, 'U': 30, 'T': 29, 'W': 32, 'V': 31,
-#               'Y': 34, 'X': 33, 'Z': 35, '_': 79, '^': 78, 'a': 36, '`': 80,
-#               'c': 38, 'b': 37, 'e': 40, 'd': 39, 'g': 42, 'f': 41, 'i': 44,
-#               'h': 43, 'k': 46, 'j': 45, 'm': 48, 'l': 47, 'o': 50, 'n': 49,
-#               'q': 52, 'p': 51, 's': 54, 'r': 53, 'u': 56, 't': 55, 'w': 58,
-#               'v': 57, 'y': 60, 'x': 59, '{': 81, 'z': 61, '}': 83, '|': 82,
-#               '~': 84}
-
-#gsIntToChar = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C',
-#               'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-#               'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c',
-#               'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
-#               'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '!', '#', '$',
-#               '%', '&', '(', ')', '*', '+', '-', ';', '<', '=', '>', '?', '@',
-#               '^', '_', '`', '{', '|', '}', '~']
-
-
 # doesn't matter if it is big or little endian
 gsCharToInt = {'%': 1, '$': 0, "'": 3, '&': 2, ')': 5, '(': 4, '+': 7, '*': 6,
                '-': 9, ',': 8, '/': 11, '.': 10, '1': 13, '0': 12, '3': 15,
@@ -73,13 +50,14 @@ gsIntToChar = ['$', '%', '&', "'", '(', ')', '*', '+', ',', '-', '.', '/', '0',
                'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
                'q', 'r', 's', 't', 'u', 'v', 'w', 'x']
 
-from struct import unpack, pack
+import struct
 # covert 4 characters into 5
 def b85_encode(s):
     parts = []
     parts_append = parts.append
     numchunks = len(s) // 4
-    format = '' + str(numchunks) + 'i'
+    format = '%sI' % numchunks
+    unpack = struct.unpack
     for x in unpack(format, s):
         # network order (big endian), 32-bit unsigned integer
         # note: x86 is little endian
@@ -120,6 +98,7 @@ def b85_decode(s):
     #s = s.replace('\x00\x00\x00\x00', 'z')
     parts = []
     parts_append = parts.append
+    pack = struct.pack
     for i in xrange(0, len(s), 5):
         bsum = 0;
         for j in xrange(0, 5):
@@ -171,6 +150,8 @@ def mapper(data_in, corresponding_numbers):
 
     # half encode to base85, without using a lut
     half_encoded = []
+    unpack = struct.unpack
+    pack = struct.pack
     for i in xrange(0, len(corresponding_numbers)):
         # get the unencoded base85 of the
         # integer corresponding of the float number
@@ -180,11 +161,6 @@ def mapper(data_in, corresponding_numbers):
         half_encoded.append((unencoded_base85 // 7225) % 85)
         half_encoded.append((unencoded_base85 // 85) % 85)
         half_encoded.append(unencoded_base85 % 85)
-
-    #print half_encoded
-    #print data
-    #print len(half_encoded)
-    #print len(data)
 
     lut = {}
     for i in range(len(half_encoded)):
