@@ -16,6 +16,7 @@ try:
     import hou
 except ImportError:
     hou = None
+
 from cStringIO import StringIO
 
 
@@ -58,8 +59,6 @@ class Buffer(object):
         # do a last flush
         self.flush()
         return self.file_str.getvalue()
-
-
 
 
 def curves2ass(ass_path):
