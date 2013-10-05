@@ -301,22 +301,62 @@ MayaShadingEngine
     point_positions_file_str_write(''.join(point_positions_str_buffer))
     radius_file_str_write(''.join(radius_str_buffer))
 
-    
+    encode_start = time.time()
+    encoded_point_positions = base85.arnold_b85_encode(point_positions_file_str.getvalue())
+    encode_end = time.time()
+    print 'Encoding Point Position    : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
+    split_end = time.time()
+    print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
+
+    encode_start = time.time()
+    encoded_radius = base85.arnold_b85_encode(radius_file_str.getvalue())
+    encode_end = time.time()
+    print 'Radius encode              : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_radius = re.sub("(.{500})", "\\1\n", encoded_radius, 0)
+    split_end = time.time()
+    print 'Splitting Radius           : %3.3f' % (split_end - split_start)
+
+    encode_start = time.time()
+    encoded_u = base85.arnold_b85_encode(uparamcoord_file_str.getvalue())
+    encode_end = time.time()
+    print 'Encoding UParamcoord       : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_u = re.sub("(.{500})", "\\1\n", encoded_u, 0)
+    split_end = time.time()
+    print 'Splitting UParamCoord      : %3.3f' % (split_end - split_start)
+
+    encode_start = time.time()
+    encoded_v = base85.arnold_b85_encode(vparamcoord_file_str.getvalue())
+    encode_end = time.time()
+    print 'Encoding VParamcoord       : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_v = re.sub("(.{500})", "\\1\n", encoded_v, 0)
+    split_end = time.time()
+    print 'Splitting VParamCoord      : %3.3f' % (split_end - split_start)
+
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
         'curve_count': curve_count,
         'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
         'point_count': point_count,
-        'point_positions': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(point_positions_file_str.getvalue()), 0),
-        'radius': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(radius_file_str.getvalue()), 0),
+        'point_positions': splitted_point_positions,
+        'radius': splitted_radius,
         'radius_count': radius_count,
         'curve_ids': curve_ids,
-        'uparamcoord': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(uparamcoord_file_str.getvalue()), 0),
-        'vparamcoord': re.sub("(.{500})", "\\1\n", base85.arnold_b85_encode(vparamcoord_file_str.getvalue()), 0)
+        'uparamcoord': splitted_u,
+        'vparamcoord': splitted_v
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
 
+    write_start = time.time()
     filehandler = open
     if use_gzip:
         filehandler = gzip.open
@@ -324,6 +364,9 @@ MayaShadingEngine
     ass_file = filehandler(ass_path, 'w')
     ass_file.write(rendered_base_template)
     ass_file.close()
+    write_end = time.time()
+
+    print 'Writing to file            : %3.3f' % (write_end - write_start)
 
     bounding_box = geo.intrinsicValue('bounds')
     bounding_box_info = 'bounds %s %s %s %s %s %s' % (
@@ -335,4 +378,4 @@ MayaShadingEngine
         asstoc_file.write(bounding_box_info)
 
     end_time = time.time()
-    print 'All Conversion took: %s sec' % (end_time - start_time)
+    print 'All Conversion took       : %3.3f sec' % (end_time - start_time)
