@@ -153,7 +153,6 @@ MayaShadingEngine
   0 1 0 0
   0 0 1 0
   0 0 0 1
- shader "curveShape1@SG"
  opaque on
  sss_sample_spacing 0.100000001
  sss_sample_distribution "blue_noise"
@@ -291,7 +290,7 @@ MayaShadingEngine
     print 'len(encoded_v)               : %s' % len(encoded_v)
 
     rendered_curve_data = curve_data % {
-        'name': 'sero_fur',
+        'name': node.path().replace('/', '_'),
         'curve_count': number_of_curves,
         'number_of_points_per_curve': ' '.join(number_of_points_per_curve),
         'point_count': point_count,
