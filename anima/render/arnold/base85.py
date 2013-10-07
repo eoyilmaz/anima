@@ -63,6 +63,10 @@ LUTS = {
     'arnold': {
         'byte_order': '<',
         'expansion_char': '!',
+        'special_values' : {
+            '$$$$$' : 'z', # 0.0
+            '8Fcb9': 'y' # 1.0
+        },
         'char_to_int': {
             '%': 1, '$': 0, "'": 3, '&': 2, ')': 5, '(': 4, '+': 7, '*': 6,
             '-': 9, ',': 8, '/': 11, '.': 10, '1': 13, '0': 12, '3': 15,
@@ -90,13 +94,14 @@ LUTS = {
 }
 
 
-def __b85_encode(data, lut, byte_order, zero_pack=True):
+def __b85_encode(data, lut, byte_order, special_values=None):
     """Encodes the given string data in to Base85 using the given LUT
 
     :param str data: A string which contains a string to be encoded in Base85
     :param dict lut: The lut to be used in encoding
     :param str byte_order: The byte order character for struct.unpack
-    :param bool zero_pack: If true the value of 0 will be encoded to "z"
+    :param dict special_values: If given, pre defined special values are going
+      to be replaced with corresponding special characters
     :returns: str
     """
     # pad data
@@ -116,8 +121,10 @@ def __b85_encode(data, lut, byte_order, zero_pack=True):
         parts_append(lut[(x // 85) % 85])
         parts_append(lut[x % 85])
     return_val = ''.join(parts)
-    if zero_pack:
-        return return_val.replace(lut[0] * 5, 'z')
+    if special_values:
+        for key in special_values.keys():
+            return_val = return_val.replace(key, special_values[key])
+            #return_val = special_values[key].join(return_val.split(key))
     return return_val
 
 
@@ -129,7 +136,7 @@ def b85_encode(data):
     """
     lut = LUTS['standard']['int_to_char']
     byte_order = LUTS['standard']['byte_order']
-    return __b85_encode(data, lut, byte_order, False)
+    return __b85_encode(data, lut, byte_order)
 
 
 def rfc1924_b85_encode(data):
@@ -140,7 +147,7 @@ def rfc1924_b85_encode(data):
     """
     lut = LUTS['rfc1924']['int_to_char']
     byte_order = LUTS['rfc1924']['byte_order']
-    return __b85_encode(data, lut, byte_order, False)
+    return __b85_encode(data, lut, byte_order)
 
 def arnold_b85_encode(data):
     """Encodes the given string data in to Base85 using the arnold LUT
@@ -150,9 +157,11 @@ def arnold_b85_encode(data):
     """
     lut = LUTS['arnold']['int_to_char']
     byte_order = LUTS['arnold']['byte_order']
-    return __b85_encode(data, lut, byte_order, True)
+    special_values = LUTS['arnold']['special_values']
+    #return __b85_encode(data, lut, byte_order, special_values)
+    return __b85_encode(data, lut, byte_order)
 
-def __b85_decode(data, lut, byte_order, unpack_z=True):
+def __b85_decode(data, lut, byte_order, special_values=None):
     """Decodes the given string data by using the given LUT and byte order
 
     :param str data: A string which contains the encoded data
@@ -164,14 +173,12 @@ def __b85_decode(data, lut, byte_order, unpack_z=True):
       for the "0 special case" (where it is not converted to a 5 character
       string but "z")
     """
-    if unpack_z:
-        zero_key = None
-        for key in lut.keys():
-            if lut[key] == 0:
-                zero_key = key
-                break
-        if zero_key:
-            data = data.replace('z', zero_key * 5)
+    if special_values:
+        for key in special_values.keys():
+            # if the data is massive, then we are using twice the memory
+            # use key.join(data.split(special_values[key]))
+            data = data.replace(special_values[key], key)
+            #data = key.join(data.split(special_values[key]))
 
     parts = []
     parts_append = parts.append
@@ -204,7 +211,7 @@ def rfc1924_b85_decode(data):
     """
     lut = LUTS['rfc1924']['char_to_int']
     byte_order = LUTS['rfc1924']['byte_order']
-    return __b85_decode(data, lut, byte_order, unpack_z=False)
+    return __b85_decode(data, lut, byte_order)
 
 def arnold_b85_decode(data):
     """Decodes the given string data by using the Arnold LUT and network (=
@@ -214,20 +221,22 @@ def arnold_b85_decode(data):
     """
     lut = LUTS['arnold']['char_to_int']
     byte_order = LUTS['arnold']['byte_order']
+    special_values = LUTS['arnold']['special_values']
+    #return __b85_decode(data, lut, byte_order, special_values)
     return __b85_decode(data, lut, byte_order)
 
-def mapper(encoded_data, raw_data, strip_z=True):
+def mapper(encoded_data, raw_data, special_values=None):
     """A simple utility to create a lut for known Base85 encoding
 
     :param str encoded_data: The path of the encoded file,
     :param list raw_data: A list of raw data, showing the unencoded data
     """
-    
-    if strip_z:
+    data = encoded_data
+    if special_values:
         # special case replace 'z's with '!!!!!'
-        data = encoded_data.replace('z', '!!!!!').strip()
-    else:
         data = encoded_data
+        for key in special_values.keys():
+            data = data.replace(special_values[key], key)
 
     # half encode to base85, without using a lut
     half_encoded = []

@@ -11,6 +11,7 @@ import time
 import re
 
 from anima.render.arnold import base85
+reload(base85)
 
 try:
     import hou
@@ -64,7 +65,7 @@ class Buffer(object):
 def curves2ass(ass_path):
     """exports the node content to ass file
     """
-
+    print '*******************************************************************' 
     start_time = time.time()
 
     # MyFur.ass
@@ -143,7 +144,7 @@ MayaShadingEngine
  %(radius)s
  basis "catmull-rom"
  mode "ribbon"
- min_pixel_width 0
+ min_pixel_width 0.5
  visibility 65523
  receive_shadows on
  self_shadows on
@@ -166,143 +167,77 @@ MayaShadingEngine
  curve_id %(curve_count)i 1 UINT
   %(curve_ids)s"""
 
-    curve_count = geo.intrinsicValue('primitivecount')
+    number_of_curves = geo.intrinsicValue('primitivecount')
     real_point_count = geo.intrinsicValue('pointcount')
 
     # The root and tip points are going to be used twice for the start and end tangents
     # so there will be 2 extra points per curve
-    point_count = real_point_count + curve_count * 2
+    point_count = real_point_count + number_of_curves * 2
 
     # write down the radius for the tip twice
     radius_count = real_point_count
 
-    #number_of_points_per_curve = Buffer()
-    #number_of_points_per_curve = []
-    number_of_points_per_curve_i = 0
-    number_of_points_per_curve_str_buffer = []
-    number_of_points_per_curve_file_str = StringIO()
-    number_of_points_per_curve_file_str_write = number_of_points_per_curve_file_str.write
-    number_of_points_per_curve_str_buffer_append = number_of_points_per_curve_str_buffer.append
+    real_number_of_points_in_one_curve = real_point_count / number_of_curves
+    number_of_points_in_one_curve = real_number_of_points_in_one_curve + 2
+    number_of_points_per_curve = [`number_of_points_in_one_curve`] * number_of_curves
 
-    #point_positions = Buffer()
-    #point_positions = []
-    point_positions_i = 0
-    point_positions_str_buffer = []
-    point_positions_file_str = StringIO()
-    point_positions_file_str_write = point_positions_file_str.write
-    point_positions_str_buffer_append = point_positions_str_buffer.append
+    curve_ids = ' '.join(`id` for id in xrange(number_of_curves))
 
-    curve_ids = ' '.join(`id` for id in xrange(curve_count))
-
-    #radius = Buffer()
-    #radius = []
-    radius_i = 0
-    radius_str_buffer = []
-    radius_file_str = StringIO()
-    radius_file_str_write = radius_file_str.write
-    radius_str_buffer_append = radius_str_buffer.append
-
-    #uparamcoord = Buffer()
-    #uparamcoord = []
-    uparamcoord_i = 0
-    uparamcoord_str_buffer = []
-    uparamcoord_file_str = StringIO()
-    uparamcoord_file_str_write = uparamcoord_file_str.write
-    uparamcoord_str_buffer_append = uparamcoord_str_buffer.append
-
-    #vparamcoord = Buffer()
-    #vparamcoord = []
-    vparamcoord_i = 0
-    vparamcoord_str_buffer = []
-    vparamcoord_file_str = StringIO()
-    vparamcoord_file_str_write = vparamcoord_file_str.write
-    vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
+    radius = None
 
     pack = struct.pack
-    unpack = struct.unpack
+    
+    # try to find the width as a point attribute to speed things up
+    getting_radius_start = time.time()
+    radius_attribute = geo.findPointAttrib('width')
+    if radius_attribute:
+        # this one works 100 times faster then iterating over each vertex
+        radius = geo.pointFloatAttribValuesAsString('width')
+    else:
+        # no radius in points, so iterate over each vertex
+        radius_i = 0
+        radius_str_buffer = []
+        radius_file_str = StringIO()
+        radius_file_str_write = radius_file_str.write
+        radius_str_buffer_append = radius_str_buffer.append
+        for prim in geo.prims():
+            prim_vertices = prim.vertices()
 
-    for prim in geo.prims():
-        curve = prim
-        real_numVertices = curve.numVertices()
-        numVertices = real_numVertices + 2
+            # radius
+            radius_i += real_number_of_points_in_one_curve
+            if radius_i >= 1000:
+                radius_file_str_write(''.join(radius_str_buffer))
+                radius_str_buffer = []
+                radius_str_buffer_append = radius_str_buffer.append
+                radius_i = 0
+    
+            for vertex in prim_vertices:
+                # TODO: copy vertex attributes to point attributes and get it directly
+                radius_str_buffer_append(pack('f', vertex.attribValue('width')))
 
-        # number_of_points_per_curve
-        number_of_points_per_curve_i += 1
-        if number_of_points_per_curve_i >= 1000:
-            number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
-            number_of_points_per_curve_file_str_write(' ')
-            number_of_points_per_curve_str_buffer = []
-            number_of_points_per_curve_str_buffer_append = number_of_points_per_curve_str_buffer.append
-            number_of_points_per_curve_i = 0
-        number_of_points_per_curve_str_buffer_append(`numVertices`)
+        # do flushes again before getting the values
+        radius_file_str_write(''.join(radius_str_buffer))
+        radius = radius_file_str.getvalue()
+    getting_radius_end = time.time()
+    print 'Getting Radius Info        : %3.3f' % (getting_radius_end - getting_radius_start)
 
-        uv = curve.attribValue('uv')
-
-        # uparamcoord
-        uparamcoord_i += 1
-        if uparamcoord_i >= 1000:
-            uparamcoord_file_str_write(''.join(uparamcoord_str_buffer))
-            #uparamcoord_file_str_write(' ')
-            uparamcoord_str_buffer = []
-            uparamcoord_str_buffer_append = uparamcoord_str_buffer.append
-            uparamcoord_i = 0
-        uparamcoord_str_buffer_append(pack('f', uv[0]))
-
-        vparamcoord_i += 1
-        if vparamcoord_i >= 1000:
-            vparamcoord_file_str_write(''.join(vparamcoord_str_buffer))
-            #vparamcoord_file_str_write(' ')
-            vparamcoord_str_buffer = []
-            vparamcoord_str_buffer_append = vparamcoord_str_buffer.append
-            vparamcoord_i = 0
-        vparamcoord_str_buffer_append(pack('f', uv[1]))
-
-        curve_vertices = curve.vertices()
-        vertex = curve_vertices[0]
-        point_position = vertex.point().position()
-
-        # point_positions
-        point_positions_i += numVertices
-        if point_positions_i >= 1000:
-            point_positions_file_str_write(''.join(point_positions_str_buffer))
-            point_positions_str_buffer = []
-            point_positions_str_buffer_append = point_positions_str_buffer.append
-            point_positions_i = 0
-        point_positions_str_buffer_append(pack('f', point_position[0]))
-        point_positions_str_buffer_append(pack('f', point_position[1]))
-        point_positions_str_buffer_append(pack('f', point_position[2]))
-
-        # radius
-        radius_i += real_numVertices
-        if radius_i >= 1000:
-            radius_file_str_write(''.join(radius_str_buffer))
-            radius_str_buffer = []
-            radius_str_buffer_append = radius_str_buffer.append
-            radius_i = 0
-
-        for vertex in curve_vertices:
-            point_position = vertex.point().position()
-            point_positions_str_buffer_append(pack('f', point_position[0]))
-            point_positions_str_buffer_append(pack('f', point_position[1]))
-            point_positions_str_buffer_append(pack('f', point_position[2]))
-
-            radius_str_buffer_append(pack('f', vertex.attribValue('width')))
-
-        vertex = curve_vertices[-1]
-        point_position = vertex.point().position()
-        point_positions_str_buffer_append(pack('f', point_position[0]))
-        point_positions_str_buffer_append(pack('f', point_position[1]))
-        point_positions_str_buffer_append(pack('f', point_position[2]))
-
-    # do flushes again before getting the values
-    number_of_points_per_curve_file_str_write(' '.join(number_of_points_per_curve_str_buffer))
-    uparamcoord_file_str_write(''.join(uparamcoord_str_buffer))
-    vparamcoord_file_str_write(''.join(vparamcoord_str_buffer))
-    point_positions_file_str_write(''.join(point_positions_str_buffer))
-    radius_file_str_write(''.join(radius_str_buffer))
-
+    # point positions
     encode_start = time.time()
-    encoded_point_positions = base85.arnold_b85_encode(point_positions_file_str.getvalue())
+    point_positions = geo.pointFloatAttribValuesAsString('P')
+    # repeat every first and last point coordinates
+    # (3 value each 3 * 4 = 12 characters) of every curve
+    zip_start = time.time()
+    point_positions = ''.join(
+        map(lambda x: '%s%s%s' % (x[:12], x, x[-12:]),
+            map(''.join,
+                zip(*[iter(point_positions)]*(real_number_of_points_in_one_curve*4*3))
+            )
+        )
+    )
+    zip_end = time.time()
+    print 'Zipping Point Position     : %3.3f' % (zip_end - zip_start)
+
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
     print 'Encoding Point Position    : %3.3f' % (encode_end - encode_start)
 
@@ -311,8 +246,9 @@ MayaShadingEngine
     split_end = time.time()
     print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
 
+    # radius
     encode_start = time.time()
-    encoded_radius = base85.arnold_b85_encode(radius_file_str.getvalue())
+    encoded_radius = base85.arnold_b85_encode(radius)
     encode_end = time.time()
     print 'Radius encode              : %3.3f' % (encode_end - encode_start)
 
@@ -321,8 +257,14 @@ MayaShadingEngine
     split_end = time.time()
     print 'Splitting Radius           : %3.3f' % (split_end - split_start)
 
+    # uv
+    uv = geo.primFloatAttribValuesAsString('uv')
+    # TODO: find a better way of doing the following two lines
+    u = ''.join(map(''.join, zip(*[iter(uv)] * 4))[::3])
+    v = ''.join(map(''.join, zip(*[iter(uv)] * 4))[1::3])
+
     encode_start = time.time()
-    encoded_u = base85.arnold_b85_encode(uparamcoord_file_str.getvalue())
+    encoded_u = base85.arnold_b85_encode(u)
     encode_end = time.time()
     print 'Encoding UParamcoord       : %3.3f' % (encode_end - encode_start)
 
@@ -332,7 +274,7 @@ MayaShadingEngine
     print 'Splitting UParamCoord      : %3.3f' % (split_end - split_start)
 
     encode_start = time.time()
-    encoded_v = base85.arnold_b85_encode(vparamcoord_file_str.getvalue())
+    encoded_v = base85.arnold_b85_encode(v)
     encode_end = time.time()
     print 'Encoding VParamcoord       : %3.3f' % (encode_end - encode_start)
 
@@ -341,10 +283,17 @@ MayaShadingEngine
     split_end = time.time()
     print 'Splitting VParamCoord      : %3.3f' % (split_end - split_start)
 
+    print 'len(encoded_point_positions) : %s' % len(encoded_point_positions)
+    print '(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3)
+    print 'len(encoded_radius)          : %s' % len(encoded_radius)
+    print 'len(uv)                      : %s' % len(uv)
+    print 'len(encoded_u)               : %s' % len(encoded_u)
+    print 'len(encoded_v)               : %s' % len(encoded_v)
+
     rendered_curve_data = curve_data % {
         'name': 'sero_fur',
-        'curve_count': curve_count,
-        'number_of_points_per_curve': number_of_points_per_curve_file_str.getvalue(),
+        'curve_count': number_of_curves,
+        'number_of_points_per_curve': ' '.join(number_of_points_per_curve),
         'point_count': point_count,
         'point_positions': splitted_point_positions,
         'radius': splitted_radius,
@@ -379,3 +328,4 @@ MayaShadingEngine
 
     end_time = time.time()
     print 'All Conversion took       : %3.3f sec' % (end_time - start_time)
+    print '*******************************************************************' 
