@@ -269,8 +269,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # export the file
         pm.exportSelected(version.absolute_full_path, type='mayaAscii')
 
-        # save the version
-        version.save()
+        # save the version to database
+        DBSession.add(version)
+        DBSession.commit()
 
         return True
 

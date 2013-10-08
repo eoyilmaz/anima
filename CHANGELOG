@@ -21,6 +21,15 @@ Anima Tools Changes
         in "Houdini To Arnold" Python SOP which exports fur data (for now) to
         arnold compatible *.ass file for Houdini.
 
+* **Pipeline:**
+
+  * **Env:**
+
+    * **MayaEnv:**
+
+      * **Fix:** Fixed MayaEnv.export(), it is now committing the data to the
+        database.
+
 0.1.0.a5
 ========
 
