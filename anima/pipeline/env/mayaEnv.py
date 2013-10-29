@@ -198,8 +198,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             self.set_resolution(shot.image_format.width,
                                 shot.image_format.height,
                                 shot.image_format.pixel_aspect)
-            # set the render range
-            self.set_frame_range(shot.cut_in, shot.cut_out)
+            # set the render range if it is the first version
+            if version.version_number == 1:
+                self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             self.set_resolution(project.image_format.width,
                                 project.image_format.height,
