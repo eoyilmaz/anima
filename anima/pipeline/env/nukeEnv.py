@@ -418,7 +418,7 @@ Frame Range: {{shot.cut_in}}-{{shot.cut_out}}
 Handles: +{{shot.handle_at_start}}, -{{shot.handle_at_end}}
 Artist: {% for resource in shot.resources %}{{resource.name}}{%- if loop.index != 1%}, {% endif -%}{% endfor %}
 Version: v{{'%03d'|format(version.version_number)}}
-Status: {{version.status.name}}
+Status: {{version.task.status.name}}
         """)
 
         template_vars = {

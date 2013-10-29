@@ -1533,18 +1533,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
 
-        # TODO: version statuses will be removed from Stalker, so later on delete this part
-        # status_name = self.statuses_comboBox.currentText()
-        versions_status_list = StatusList.query \
-            .filter(StatusList.target_entity_type == 'Version').first()
-        status = versions_status_list.statuses[0]
-
         version = Version(
             task=task,
             created_by=user,
             take_name=take_name,
-            description=description,
-            status=status
+            description=description
         )
         version.is_published = published
 
