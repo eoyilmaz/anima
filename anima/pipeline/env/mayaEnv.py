@@ -300,9 +300,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.info("opening file: %s" % version.absolute_full_path)
 
         try:
-            pm.openFile(
-                version.absolute_full_path, f=force, #loadReferenceDepth='none'
-            )
+            pm.openFile(version.absolute_full_path, f=force)  #, loadReferenceDepth='none')
         except RuntimeError as e:
             # restore the previous workspace
             pm.workspace.open(previous_workspace_path)
@@ -370,7 +368,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         ref = pm.createReference(
             new_version_full_path,
             gl=True,
-            loadReferenceDepth='none',
+            #loadReferenceDepth='none',
             namespace=namespace,
             options='v=0'
         )
