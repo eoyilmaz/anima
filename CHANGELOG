@@ -13,6 +13,8 @@ Anima Tools Changes
 
       * **New:** MayaEnv now uses the significant name for playblast file name
         and render output filename.
+      * **Update:** MayaEnv now will leave the reference load state in the same
+        state as it was saved.
 
 0.1.0.a6
 ========
