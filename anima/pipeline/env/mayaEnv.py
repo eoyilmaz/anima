@@ -784,22 +784,25 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     arnold_texture.attr('filename').set(new_path)
 
         # check for mentalray textures
-        for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
-            path = mr_texture.attr('fileTextureName').get()
-            logger.debug("path of %s: %s" % (mr_texture, path))
-            if path is not None \
-               and os.path.isabs(path) \
-               and not is_in_repo(path):
-                logger.debug('is not in repo: %s' % path)
-                new_path = move_to_local(path, 'Textures')
-                if not new_path:
-                    # it was not copied
-                    external_nodes.append(mr_texture)
-                else:
-                    # succesfully copied
-                    # update the path
-                    logger.debug('updating texture path to: %s' % new_path)
-                    mr_texture.attr('fileTextureName').set(new_path)
+        try:
+            for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
+                path = mr_texture.attr('fileTextureName').get()
+                logger.debug("path of %s: %s" % (mr_texture, path))
+                if path is not None \
+                   and os.path.isabs(path) \
+                   and not is_in_repo(path):
+                    logger.debug('is not in repo: %s' % path)
+                    new_path = move_to_local(path, 'Textures')
+                    if not new_path:
+                        # it was not copied
+                        external_nodes.append(mr_texture)
+                    else:
+                        # succesfully copied
+                        # update the path
+                        logger.debug('updating texture path to: %s' % new_path)
+                        mr_texture.attr('fileTextureName').set(new_path)
+        except AttributeError: # MentalRay not loaded
+            pass
 
         # check for ImagePlanes
         for image_plane in pm.ls(type=pm.nt.ImagePlane):
@@ -819,21 +822,24 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     image_plane.attr('imageName').set(new_path)
 
         # check for IBL nodes
-        for ibl in pm.ls(type=pm.nt.MentalrayIblShape):
-            path = ibl.attr('texture').get()
-            if path is not None \
-               and os.path.isabs(path) \
-               and not is_in_repo(path):
-                logger.debug('is not in repo: %s' % path)
-                new_path = move_to_local(path, 'IBL')
-                if not new_path:
-                    # it was not copied
-                    external_nodes.append(ibl)
-                else:
-                    # succesfully copied
-                    # update the path
-                    logger.debug('updating ibl path to: %s' % new_path)
-                    ibl.attr('texture').set(new_path)
+        try:
+            for ibl in pm.ls(type=pm.nt.MentalrayIblShape):
+                path = ibl.attr('texture').get()
+                if path is not None \
+                   and os.path.isabs(path) \
+                   and not is_in_repo(path):
+                    logger.debug('is not in repo: %s' % path)
+                    new_path = move_to_local(path, 'IBL')
+                    if not new_path:
+                        # it was not copied
+                        external_nodes.append(ibl)
+                    else:
+                        # succesfully copied
+                        # update the path
+                        logger.debug('updating ibl path to: %s' % new_path)
+                        ibl.attr('texture').set(new_path)
+        except AttributeError: # mentalray not loaded
+            pass
 
         if external_nodes:
             pm.select(external_nodes)
