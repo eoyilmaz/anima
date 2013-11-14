@@ -1097,7 +1097,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logged_in_user = self.get_logged_in_user()
 
         logger.debug('creating a new model')
-        projects = Project.query.all()
+        projects = Project.query.order_by(Project.name).all()
 
         task_tree_model = TaskTreeModel()
         task_tree_model.user = logged_in_user

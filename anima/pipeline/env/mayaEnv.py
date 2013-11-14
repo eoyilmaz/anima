@@ -504,11 +504,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             image_folder_from_ws
         ).replace("\\", "/")
 
+        version_sig_name = self.get_significant_name(version)
+
         render_file_full_path = render_output_folder + '/<RenderLayer>/' + \
-                                version.task.project.code + '_' + \
-                                version.task.entity_type + '_' + \
-                                str(version.task.id) + '_' + \
-                                version.take_name + \
+                                version_sig_name + \
                                 '_<RenderLayer>_<RenderPass>_<Version>'
 
         # convert the render_file_full_path to a relative path to the
@@ -591,7 +590,48 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         #for renderLayer in pm.ls(type='renderLayer'):
             ## if the renderer is set to mayaSoftware (which is very rare)
             #if dRG.getAttr('currentRenderer') == 'mayaSoftware':
-    
+
+    def get_naming_parents(self, version):
+        """returns a list of parents which start from the nearest Asset, Shot
+        or Sequence
+        """
+        # find a Asset, Shot or Sequence, and store it as the significant
+        # parent, and name the task starting from that entity
+        naming_parents = version.task.parents
+        if version.task.parents:
+            significant_parent = version.task.parents[0]
+
+            for parent in reversed(version.task.parents):
+                if parent.entity_type in ['Asset', 'Shot', 'Sequence']:
+                    significant_parent = parent
+                    break
+
+            # now start from that parent towards the task
+            past_significant_parent = False
+            naming_parents = []
+            for parent in version.task.parents:
+                if parent is significant_parent:
+                    past_significant_parent = True
+                if past_significant_parent:
+                    naming_parents.append(parent)
+        return naming_parents
+
+    def get_significant_name(self, version, include_version_number=True):
+        """returns a significant name starting from the closest parent which is
+        an Asset, Shot or Sequence and includes the Project.code
+
+        :rtype : basestring
+        """
+        naming_parents = self.get_naming_parents(version)
+        sig_name = version.task.project.code + '_' + \
+            '_'.join(map(lambda x: x.nice_name, naming_parents)) + \
+            '_' + version.task.nice_name + '_' + version.take_name
+
+        if include_version_number:
+           sig_name += '_v%03d' % version.version_number
+
+        return sig_name
+
     def set_playblast_file_name(self, version):
         """sets the playblast file name
         """
@@ -604,10 +644,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # playblast_filename = version.task.project.code + "_" + \
         #                      os.path.splitext(version.filename)[0]
 
-        playblast_filename = version.task.project.nice_name + '_' + \
-            '_'.join(map(lambda x: x.nice_name, version.task.parents)) + \
-            '_' + version.task.nice_name + '_' + version.take_name + '_' + \
-            'v%03d' % version.version_number
+        playblast_filename = self.get_significant_name(version)
 
         playblast_full_path = os.path.join(
             playblast_path,

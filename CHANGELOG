@@ -2,6 +2,18 @@
 Anima Tools Changes
 ===================
 
+0.1.0
+=====
+
+* **Pipeline:**
+
+  * **Env:**
+
+    * **MayaEnv:**
+
+      * **New:** MayaEnv now uses the significant name for playblast file name
+        and render output filename.
+
 0.1.0.a6
 ========
 
