@@ -102,7 +102,7 @@ class TaskItem(QtGui.QStandardItem):
                             user_tasks_and_parents.append(task)
                             break
 
-                tasks = user_tasks_and_parents
+                tasks = sorted(user_tasks_and_parents, key=lambda x: x.name)
 
             for task in tasks:
                 task_item = TaskItem(0, 3)
