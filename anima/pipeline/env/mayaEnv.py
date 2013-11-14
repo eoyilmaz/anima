@@ -508,7 +508,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         render_file_full_path = render_output_folder + '/<RenderLayer>/' + \
                                 version_sig_name + \
-                                '_<RenderLayer>_<RenderPass>_<Version>'
+                                '_<RenderLayer>_<RenderPass>'
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path
