@@ -2,6 +2,18 @@
 Anima Tools Changes
 ===================
 
+0.1.1
+=====
+
+* **Pipeline:**
+
+  * **UI:**
+
+    * **Version Creator:**
+
+      * **New:** Added "Use Namespace" option to allow importing/referencing to
+        root namespace especially important for maya and alembic caches.
+
 0.1.0
 =====
 

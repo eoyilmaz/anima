@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files/version_creator.ui'
+# Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Sep 23 11:47:38 2013
+# Created: Sun Nov 24 15:52:50 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -235,6 +235,10 @@ class Ui_Dialog(object):
         self.verticalLayout_7.addWidget(self.previous_versions_tableWidget)
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
         self.horizontalLayout_5.setObjectName(_fromUtf8("horizontalLayout_5"))
+        self.useNameSpace_checkBox = QtGui.QCheckBox(self.previous_versions_groupBox)
+        self.useNameSpace_checkBox.setChecked(True)
+        self.useNameSpace_checkBox.setObjectName(_fromUtf8("useNameSpace_checkBox"))
+        self.horizontalLayout_5.addWidget(self.useNameSpace_checkBox)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.chose_pushButton = QtGui.QPushButton(self.previous_versions_groupBox)
@@ -309,6 +313,8 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Date", None))
         item = self.previous_versions_tableWidget.horizontalHeaderItem(4)
         item.setText(_translate("Dialog", "Description", None))
+        self.useNameSpace_checkBox.setToolTip(_translate("Dialog", "<html><head/><body><p>Uncheck it if you are going to use <span style=\" font-weight:600;\">Alembic Cache</span>.</p></body></html>", None))
+        self.useNameSpace_checkBox.setText(_translate("Dialog", "Use Namespace", None))
         self.chose_pushButton.setText(_translate("Dialog", "Choose", None))
         self.open_pushButton.setText(_translate("Dialog", "Open", None))
         self.reference_pushButton.setText(_translate("Dialog", "Reference", None))

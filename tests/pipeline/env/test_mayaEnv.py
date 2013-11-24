@@ -21,9 +21,12 @@
 import unittest2
 import tempfile
 
+import pymel.core as pm
+
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,\
                      Task, Sequence)
 from anima.pipeline.env import mayaEnv
+
 
 
 class MayaEnvTestCase(unittest2.TestCase):
@@ -195,10 +198,10 @@ class MayaEnvTestCase(unittest2.TestCase):
         """
         # set the db.session to None
         db.DBSession.remove()
-        
+
         # delete the temp folder
         shutil.rmtree(self.temp_repo_path)
-        
+
         # quit maya
         pm.runtime.Quit()
     

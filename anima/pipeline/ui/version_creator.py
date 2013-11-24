@@ -1709,7 +1709,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # call the environments reference method
         if self.environment is not None:
-            self.environment.reference(previous_version)
+            # get the use namespace state
+            use_namespace = self.useNameSpace_checkBox.isChecked()
+
+            self.environment.reference(previous_version, use_namespace)
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
@@ -1732,7 +1735,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # call the environments import_ method
         if self.environment is not None:
-            self.environment.import_(previous_version)
+            # get the use namespace state
+            use_namespace = self.useNameSpace_checkBox.isChecked()
+
+            self.environment.import_(previous_version, use_namespace)
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:

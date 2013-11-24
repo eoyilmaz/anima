@@ -300,7 +300,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.info("opening file: %s" % version.absolute_full_path)
 
         try:
-            pm.openFile(version.absolute_full_path, f=force)  #, loadReferenceDepth='none')
+            pm.openFile(
+                version.absolute_full_path,
+                f=force,
+                #loadReferenceDepth='none'
+            )
         except RuntimeError as e:
             # restore the previous workspace
             pm.workspace.open(previous_workspace_path)
@@ -333,17 +337,21 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.load_referenced_versions()
         self.update_references_list(version)
 
-    def import_(self, version):
+    def import_(self, version, use_namespace=True):
         """Imports the content of the given Version instance to the current
         scene.
         
         :param version: The desired
           :class:`~stalker.models.version.Version` to be imported
         """
-        pm.importFile(version.absolute_full_path)
+        default_namespace = not use_namespace
+        pm.importFile(
+            version.absolute_full_path,
+            defaultNamespace=default_namespace
+        )
         return True
 
-    def reference(self, version):
+    def reference(self, version, use_namespace=True):
         """References the given Version instance to the current Maya scene.
 
         :param version: The desired
@@ -365,13 +373,20 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # replace the path with environment variable
         #new_version_full_path = repo.relative_path(new_version_full_path)
 
-        ref = pm.createReference(
-            new_version_full_path,
-            gl=True,
-            #loadReferenceDepth='none',
-            namespace=namespace,
-            options='v=0'
-        )
+        if use_namespace:
+            ref = pm.createReference(
+                new_version_full_path,
+                gl=True,
+                namespace=namespace,
+                options='v=0'
+            )
+        else:
+            ref = pm.createReference(
+                new_version_full_path,
+                gl=True,
+                defaultNamespace=True,
+                options='v=0'
+            )
 
         # replace external paths
         self.replace_external_paths(1)

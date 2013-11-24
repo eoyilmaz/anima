@@ -6,8 +6,8 @@
 
 import os
 import re
-
 import hou
+
 from stalker.db import DBSession
 
 from anima.pipeline import utils
@@ -106,7 +106,7 @@ class Houdini(EnvironmentBase):
         """
         return
 
-    def import_(self, version):
+    def import_(self, version, use_namespace=True):
         """the import action for houdini environment
         """
         hou.hipFile.merge(str(version.absolute_full_path))

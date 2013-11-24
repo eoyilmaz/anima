@@ -6,11 +6,9 @@
 
 
 import os
-import platform
-
 import jinja2
-
 import nuke
+
 from stalker.db import DBSession
 from anima.pipeline import utils
 from stalker.models.env import EnvironmentBase
@@ -148,7 +146,7 @@ class Nuke(EnvironmentBase):
         """
         pass
 
-    def import_(self, version):
+    def import_(self, version, use_namespace=True):
         """the import action for nuke environment
         """
         nuke.nodePaste(version.absolute_full_path)

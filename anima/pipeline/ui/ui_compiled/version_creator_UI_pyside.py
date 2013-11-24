@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files/version_creator.ui'
+# Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Sep 23 11:47:38 2013
+# Created: Sun Nov 24 15:52:50 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -223,6 +223,10 @@ class Ui_Dialog(object):
         self.verticalLayout_7.addWidget(self.previous_versions_tableWidget)
         self.horizontalLayout_5 = QtGui.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.useNameSpace_checkBox = QtGui.QCheckBox(self.previous_versions_groupBox)
+        self.useNameSpace_checkBox.setChecked(True)
+        self.useNameSpace_checkBox.setObjectName("useNameSpace_checkBox")
+        self.horizontalLayout_5.addWidget(self.useNameSpace_checkBox)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.chose_pushButton = QtGui.QPushButton(self.previous_versions_groupBox)
@@ -292,6 +296,8 @@ class Ui_Dialog(object):
         self.previous_versions_tableWidget.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Dialog", "File Size", None, QtGui.QApplication.UnicodeUTF8))
         self.previous_versions_tableWidget.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("Dialog", "Date", None, QtGui.QApplication.UnicodeUTF8))
         self.previous_versions_tableWidget.horizontalHeaderItem(4).setText(QtGui.QApplication.translate("Dialog", "Description", None, QtGui.QApplication.UnicodeUTF8))
+        self.useNameSpace_checkBox.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Uncheck it if you are going to use <span style=\" font-weight:600;\">Alembic Cache</span>.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.useNameSpace_checkBox.setText(QtGui.QApplication.translate("Dialog", "Use Namespace", None, QtGui.QApplication.UnicodeUTF8))
         self.chose_pushButton.setText(QtGui.QApplication.translate("Dialog", "Choose", None, QtGui.QApplication.UnicodeUTF8))
         self.open_pushButton.setText(QtGui.QApplication.translate("Dialog", "Open", None, QtGui.QApplication.UnicodeUTF8))
         self.reference_pushButton.setText(QtGui.QApplication.translate("Dialog", "Reference", None, QtGui.QApplication.UnicodeUTF8))
