@@ -334,7 +334,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def post_open(self, version):
         """Runs after opening a file
         """
-        self.load_referenced_versions()
+        #self.load_referenced_versions()
         self.update_references_list(version)
 
     def import_(self, version, use_namespace=True):
