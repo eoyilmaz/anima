@@ -344,11 +344,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :param version: The desired
           :class:`~stalker.models.version.Version` to be imported
         """
-        default_namespace = not use_namespace
-        pm.importFile(
-            version.absolute_full_path,
-            defaultNamespace=default_namespace
-        )
+        if use_namespace:
+            namespace = os.path.basename(version.filename)
+            pm.importFile(
+                version.absolute_full_path,
+                namespace=namespace
+            )
+        else:
+            pm.importFile(
+                version.absolute_full_path,
+                defaultNamespace=True
+            )
         return True
 
     def reference(self, version, use_namespace=True):
