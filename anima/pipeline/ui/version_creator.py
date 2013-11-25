@@ -1552,6 +1552,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the new version
         new_version = self.get_new_version()
 
+        if not new_version:
+            return
+
+        # check if the task is a leaf task
+        if not new_version.task.is_leaf:
+            QtGui.QMessageBox.critical(
+                self, 'Error', 'Please select a <strong>leaf</strong> task!'
+            )
+
         # call the environments export_as method
         if self.environment is not None:
             self.environment.export_as(new_version)
@@ -1578,6 +1587,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtGui.QMessageBox.critical(self, "Error", str(e))
             return None
 
+        if not new_version:
+            return
+
+        # check if the task is a leaf task
+        if not new_version.task.is_leaf:
+            QtGui.QMessageBox.critical(
+                self, 'Error', 'Please select a <strong>leaf</strong> task!'
+            )
+
         # call the environments save_as method
         if self.environment and isinstance(self.environment, EnvironmentBase):
             try:
@@ -1590,7 +1608,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # just set the clipboard to the new_version.absolute_full_path
             clipboard = QtGui.QApplication.clipboard()
-            new_version.update_paths()
+            try:
+                new_version.update_paths()
+            except RuntimeError as e:
+                QtGui.QMessageBox.critical(self, 'Error', str(e))
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
 

@@ -14,6 +14,9 @@ Anima Tools Changes
       * **New:** Added "Use Namespace" option to allow importing/referencing to
         root namespace especially important for maya and alembic caches.
 
+      * **Update:** It is not possible to save a version to a container task
+        any more.
+
 0.1.0
 =====
 

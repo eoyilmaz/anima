@@ -44,4 +44,3 @@ class TicketGenerator(object):
     """
     pass
 
-
