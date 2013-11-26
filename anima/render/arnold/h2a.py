@@ -3,6 +3,7 @@
 # 
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import shutil
 
 import os
 import gzip
@@ -279,6 +280,11 @@ curves
     filehandler = open
     if use_gzip:
         filehandler = gzip.open
+
+    try:
+        os.makedirs(os.path.dirname(ass_path))
+    except OSError: # path exists
+        pass
 
     ass_file = filehandler(ass_path, 'w')
     ass_file.write(rendered_base_template)
