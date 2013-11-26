@@ -62,7 +62,7 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def curves2ass(ass_path):
+def curves2ass(ass_path, hair_name, min_pixel_width=0.5):
     """exports the node content to ass file
     """
     print '*******************************************************************' 
@@ -101,37 +101,7 @@ curves
 {
  %(curve_data)s
 }
-
-hair
-{
- name aiHair1
- rootcolor 0.1 0.1 0.1
- tipcolor 0.5 0.5 0.5
- opacity 1 1 1
- ambdiff 0.6
- spec 1
- spec_color 1 1 1
- spec_shift 0
- gloss 10
- spec2 0
- spec2_color 1 0.4 0.1
- spec2_shift 0
- gloss2 7
- kd_ind 0
- uparam "uparamcoord"
- vparam "vparamcoord"
- diffuse_cache off
- aov_direct_diffuse "direct_diffuse"
- aov_direct_specular "direct_specular"
- aov_indirect_diffuse "indirect_diffuse"
-}
-
-MayaShadingEngine
-{
- name curveShape1@SG
- beauty aiHair1
-}
-    """
+"""
 
     curve_data = """
  name %(name)s
@@ -144,7 +114,7 @@ MayaShadingEngine
  %(radius)s
  basis "catmull-rom"
  mode "ribbon"
- min_pixel_width 0.5
+ min_pixel_width %(min_pixel_width)s
  visibility 65523
  receive_shadows on
  self_shadows on
@@ -299,7 +269,8 @@ MayaShadingEngine
         'radius_count': radius_count,
         'curve_ids': curve_ids,
         'uparamcoord': splitted_u,
-        'vparamcoord': splitted_v
+        'vparamcoord': splitted_v,
+        'min_pixel_width': min_pixel_width
     }
 
     rendered_base_template = base_template % {'curve_data': rendered_curve_data}
