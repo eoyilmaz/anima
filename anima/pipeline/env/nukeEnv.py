@@ -47,12 +47,14 @@ class Nuke(EnvironmentBase):
         # get the current version, and store it as the parent of the new version
         current_version = self.get_current_version()
 
-        
         # first initialize the version path
         version.update_paths()
 
         # set the extension to '.nk'
         version.extension = '.nk'
+
+        # set created_with to let the UI show Nuke icon in versions list
+        version.created_with = self.name
 
         # set project_directory
         self.project_directory = os.path.dirname(version.absolute_path)
