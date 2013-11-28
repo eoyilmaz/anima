@@ -307,7 +307,7 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
     """tests ExternalEnvFactory class
     """
 
-    def test_get_env_names_method_is_returning_all_environment_names_properly(self):
+    def test_get_env_names_method_will_return_all_environment_names_properly(self):
         """testing if ExternalEnvFactory.get_env_names() method will
         return all the environment names as a list of strings
         """
@@ -316,6 +316,22 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         ext_env_factory = ExternalEnvFactory()
         result = ext_env_factory.get_env_names()
         self.assertEqual(expected_result, result)
+
+    def test_get_env_names_method_will_return_complex_environment_names_properly(self):
+        """testing if ExternalEnvFactory.get_env_names() method will
+        return all the environment names as a list of strings in desired format
+        when name_format is set
+        """
+        name_format = '%e - %n'
+        expected_result = [
+            '.zpr - ZBrush Project',
+            '.ztl - ZBrush Tool',
+            '.mud - MudBox',
+            '.psd - Photoshop'
+        ]
+        ext_env_factory = ExternalEnvFactory()
+        result = ext_env_factory.get_env_names(name_format=name_format)
+        self.assertItemsEqual(expected_result, result)
 
     def test_get_env_method_name_argument_is_not_a_string(self):
         """testing if a TypeError will be raised when the name argument is not
@@ -360,5 +376,76 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         self.assertEqual(mudbox.name, 'MudBox')
         self.assertEqual(mudbox.extension, '.mud')
         self.assertEqual(mudbox.structure, ['Outputs'])
+
+    def test_get_env_method_will_return_desired_environment_even_with_complex_formats(self):
+        """testing if ExternalEnvFactory.get_env() will return desired
+        ExternalEnvironment instance even with names like "MudBox (.mud)"
+        """
+        ext_env_factory = ExternalEnvFactory()
+
+        photoshop = ext_env_factory.get_env('Photoshop (.psd)',
+                                            name_format='%n (%e)')
+        self.assertIsInstance(photoshop, ExternalEnv)
+        self.assertEqual(photoshop.name, 'Photoshop')
+        self.assertEqual(photoshop.extension, '.psd')
+        self.assertEqual(photoshop.structure, ['Outputs'])
+
+        zbrush_project = ext_env_factory.get_env('ZBrush Project (.zpr)',
+                                                 name_format='%n (%e)')
+        self.assertIsInstance(zbrush_project, ExternalEnv)
+        self.assertEqual(zbrush_project.name, 'ZBrush Project')
+        self.assertEqual(zbrush_project.extension, '.zpr')
+        self.assertEqual(zbrush_project.structure, ['Outputs'])
+
+        zbrush_tool = ext_env_factory.get_env('ZBrush Tool (.ztl)',
+                                              name_format='%n (%e)')
+        self.assertIsInstance(zbrush_tool, ExternalEnv)
+        self.assertEqual(zbrush_tool.name, 'ZBrush Tool')
+        self.assertEqual(zbrush_tool.extension, '.ztl')
+        self.assertEqual(zbrush_tool.structure, ['Outputs'])
+
+        mudbox = ext_env_factory.get_env('MudBox (.mud)',
+                                         name_format='%n (%e)')
+        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertEqual(mudbox.name, 'MudBox')
+        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.structure, ['Outputs'])
+
+    def test_get_env_method_will_return_desired_environment_even_with_custom_formats(self):
+        """testing if ExternalEnvFactory.get_env() will return desired
+        ExternalEnvironment instance even with names like "MudBox (.mud)"
+        """
+        ext_env_factory = ExternalEnvFactory()
+
+        name_format = '(%e) - %n'
+
+        photoshop = ext_env_factory.get_env('(.psd) - Photoshop',
+                                            name_format=name_format)
+        self.assertIsInstance(photoshop, ExternalEnv)
+        self.assertEqual(photoshop.name, 'Photoshop')
+        self.assertEqual(photoshop.extension, '.psd')
+        self.assertEqual(photoshop.structure, ['Outputs'])
+
+        zbrush_project = ext_env_factory.get_env('(.zpr) ZBrush Project',
+                                                 name_format=name_format)
+        self.assertIsInstance(zbrush_project, ExternalEnv)
+        self.assertEqual(zbrush_project.name, 'ZBrush Project')
+        self.assertEqual(zbrush_project.extension, '.zpr')
+        self.assertEqual(zbrush_project.structure, ['Outputs'])
+
+        zbrush_tool = ext_env_factory.get_env('(.ztl) ZBrush Tool',
+                                              name_format=name_format)
+        self.assertIsInstance(zbrush_tool, ExternalEnv)
+        self.assertEqual(zbrush_tool.name, 'ZBrush Tool')
+        self.assertEqual(zbrush_tool.extension, '.ztl')
+        self.assertEqual(zbrush_tool.structure, ['Outputs'])
+
+        mudbox = ext_env_factory.get_env('(.mud) MudBox',
+                                         name_format=name_format)
+        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertEqual(mudbox.name, 'MudBox')
+        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.structure, ['Outputs'])
+
 
 

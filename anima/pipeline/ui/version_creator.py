@@ -15,6 +15,7 @@ from stalker import (db, defaults, Version, StatusList, Project,
 
 import anima
 from anima.pipeline import utils, power_users_group_names
+from anima.pipeline.env.externalEnv import ExternalEnvFactory
 from anima.pipeline.ui import utils as ui_utils
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
 from anima.pipeline.ui.lib import QtGui, QtCore
@@ -1348,7 +1349,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.description_textEdit.setText('')
 
         # fill programs list
-        
+        env_factory = ExternalEnvFactory()
+        env_names = env_factory.get_env_names()
+        self.environment_comboBox.addItems(env_names)
 
         logger.debug("finished setting up interface defaults")
 

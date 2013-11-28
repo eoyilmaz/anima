@@ -219,15 +219,30 @@ class ExternalEnvFactory(object):
     instances.
     """
 
-    def get_env_names(self):
+    @classmethod
+    def get_env_names(cls, name_format="%n"):
         """returns a list of environment names which it is possible to create
         one environment.
+        
+        :param str name_format: A string showing the format of the output
+          variables:
+            %n : the name of the Environment
+            %e : the extension of the Environment
 
         :return list: list
         """
-        return external_environments.keys()
+        env_names = []
+        for env_name in external_environments.keys():
+            env_data = external_environments[env_name]
+            env_names.append(
+                name_format
+                    .replace('%n', env_data['name'])
+                    .replace('%e', env_data['extension'])
+            )
+        return env_names
 
-    def get_env(self, name):
+    @classmethod
+    def get_env(cls, name, name_format="%n"):
         """Creates an environment with the given name
 
         :param str name: The name of the environment, should be a value from
@@ -238,15 +253,31 @@ class ExternalEnvFactory(object):
         if not isinstance(name, str):
             raise TypeError('"name" argument in %s.get_env() should be an '
                             'instance of str, not %s' % (
-                self.__class__.__name__, name.__class__.__name__
+                cls.__name__, name.__class__.__name__
             ))
 
+        # filter the name
+        import re
+        
+        # replace anything that doesn't start with '%' with [\s\(\)\-]+
+        pattern = re.sub(r'[^%\w]+', '[\s\(\)\-]+', name_format)
+
+        pattern = pattern\
+            .replace('%n', '(?P<name>[\w\s]+)')\
+            .replace('%e', '(?P<extension>\.\w+)')
+        logger.debug('pattern : %s' % pattern)
+
+        match = re.search(pattern, name)
+        env_name = None
+        if match:
+            env_name = match.group('name').strip()
+
         env_names = external_environments.keys()
-        if name not in env_names:
+        if env_name not in env_names:
             raise ValueError(
                 '%s is not in '
                 'anima.pipeline.env.externalEnv.environment_names list, '
                 'please supply a value from %s' % (name, env_names))
 
-        env = external_environments[name]
+        env = external_environments[env_name]
         return ExternalEnv(**env)
