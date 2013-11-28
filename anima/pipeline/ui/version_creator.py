@@ -1647,7 +1647,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             )
 
         # save the new version to the database
-        DBSession().add(new_version)
+        DBSession.add(new_version)
         DBSession.commit()
 
         if self.environment:
