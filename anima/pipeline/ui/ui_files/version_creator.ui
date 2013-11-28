@@ -362,6 +362,9 @@ p, li { white-space: pre-wrap; }
               </spacer>
              </item>
              <item>
+              <widget class="QComboBox" name="environment_comboBox"/>
+             </item>
+             <item>
               <widget class="QPushButton" name="export_as_pushButton">
                <property name="text">
                 <string>Export Selection As</string>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Sun Nov 24 15:52:50 2013
+# Created: Thu Nov 28 16:31:19 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -182,6 +182,9 @@ class Ui_Dialog(object):
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
         spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem3)
+        self.environment_comboBox = QtGui.QComboBox(self.new_version_groupBox)
+        self.environment_comboBox.setObjectName(_fromUtf8("environment_comboBox"))
+        self.horizontalLayout_2.addWidget(self.environment_comboBox)
         self.export_as_pushButton = QtGui.QPushButton(self.new_version_groupBox)
         self.export_as_pushButton.setObjectName(_fromUtf8("export_as_pushButton"))
         self.horizontalLayout_2.addWidget(self.export_as_pushButton)

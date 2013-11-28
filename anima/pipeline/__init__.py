@@ -12,3 +12,4 @@ local_cache_folder = '~/.cache/anima/'
 
 normal_users_group_names = ['Normal Users']
 power_users_group_names = ['Power Users', 'admins']
+

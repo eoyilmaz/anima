@@ -1347,6 +1347,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update description field
         self.description_textEdit.setText('')
 
+        # fill programs list
+        
+
         logger.debug("finished setting up interface defaults")
 
     def restore_ui(self, version):
