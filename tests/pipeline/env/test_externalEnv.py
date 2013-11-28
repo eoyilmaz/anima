@@ -6,7 +6,7 @@
 import shutil
 import tempfile
 import os
-from stalker import Version, Task, Project, Structure, StatusList, Repository, Status
+from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
 
 import unittest2
 from anima.pipeline.env.externalEnv import ExternalEnv
@@ -34,7 +34,18 @@ class ExternalEnvTestCase(unittest2.TestCase):
             name='Project Statuses',
             statuses=[self.status_new, self.status_wip, self.status_cmpl]
         )
-        self.project_structure = Structure(name='Project Structure')
+        self.task_filename_template = FilenameTemplate(
+            name='Task Filename Template',
+            target_entity_type='Task',
+            path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
+                 '{{parent_task.nice_name}}/{%- endfor -%}',
+            filename='{{task.nice_name}}_{{version.take_name}}'
+                     '_v{{"%03d"|format(version.version_number)}}{{extension}}'
+        )
+        self.project_structure = Structure(
+            name='Project Structure',
+            templates=[self.task_filename_template]
+        )
         self.project = Project(
             name='Test Project',
             code='TP',
@@ -109,14 +120,14 @@ class ExternalEnvTestCase(unittest2.TestCase):
         test_value = 'ZBrush'
         self.kwargs['name'] = test_value
         external_env = ExternalEnv(**self.kwargs)
-        self.assertEqual(test_value, external_env)
+        self.assertEqual(test_value, external_env.name)
 
     def test_name_attribute_is_working_properly(self):
         """testing if the name attribute value is correctly set
         """
         test_value = 'ZBrush'
-        self.external_env = test_value
-        self.assertEqual(test_value, self.external_env)
+        self.external_env.name = test_value
+        self.assertEqual(test_value, self.external_env.name)
 
     def test_extension_argument_cannot_be_skipped(self):
         """testing if a TypeError will raised when the extension argument is
@@ -155,17 +166,17 @@ class ExternalEnvTestCase(unittest2.TestCase):
         """testing if the extension argument value is correctly passed to the
         extension attribute
         """
-        test_value = 'ztl'
+        test_value = '.ztl'
         self.kwargs['extension'] = test_value
         external_env = ExternalEnv(**self.kwargs)
-        self.assertEqual(test_value, external_env)
+        self.assertEqual(test_value, external_env.extension)
 
     def test_extension_attribute_is_working_properly(self):
         """testing if the extension attribute value is correctly set
         """
-        test_value = 'ztl'
+        test_value = '.ztl'
         self.external_env.extension = test_value
-        self.assertEqual(test_value, self.external_env)
+        self.assertEqual(test_value, self.external_env.extension)
 
     def test_structure_argument_can_be_skipped(self):
         """testing if the structure argument can be skipped
@@ -267,20 +278,29 @@ class ExternalEnvTestCase(unittest2.TestCase):
         """testing if a TypeError will be raised when the version argument in
         initialize_structure method is not a Version instance
         """
-        self.assertRaises(TypeError, self.external_env.conform,
+        self.assertRaises(TypeError, self.external_env.initialize_structure,
                           version='not a version instance')
 
-    def test_initialize_structure_will_create_the_folders_of_the_environemnt(self):
+    def test_initialize_structure_will_create_the_folders_of_the_environment(self):
         """testing if the initialize_structure method will create the folders
         at the given Version instance path
         """
-        self.external_env.conform(self.version)
+        self.external_env.initialize_structure(self.version)
         for folder in self.external_env.structure:
             self.assertTrue(
                 os.path.exists(
                     os.path.join(self.version.absolute_path, folder)
                 )
             )
+
+    def test_initialize_structure_will_handle_OSErrors(self):
+        """testing if the initialize_structure method will handle OSErrors when
+        creating folders which are already there
+        """
+        # call it multiple times
+        self.external_env.initialize_structure(self.version)
+        self.external_env.initialize_structure(self.version)
+        self.external_env.initialize_structure(self.version)
 
 
 class ExternalEnvFactoryTestCase(unittest2.TestCase):
