@@ -265,7 +265,7 @@ class ExternalEnvTestCase(unittest2.TestCase):
                           version='not a version instance')
 
     def test_conform_method_will_set_the_version_extension(self):
-        """testing if the conform method will set the method extension to the
+        """testing if the conform method will set the version extension to the
         environment extension correctly
         """
         self.assertNotEqual(self.version.extension, '.ztl')
@@ -273,6 +273,16 @@ class ExternalEnvTestCase(unittest2.TestCase):
 
         external_env.conform(self.version)
         self.assertEqual(self.version.extension, '.ztl')
+
+    def test_conform_method_will_set_the_version_created_with(self):
+        """testing if the conform method will set the version extension to the
+        environment name
+        """
+        self.assertNotEqual(self.version.extension, '.ztl')
+        external_env = ExternalEnv(name='ZBrush', extension='.ztl')
+
+        external_env.conform(self.version)
+        self.assertEqual(self.version.created_with, 'ZBrush')
 
     def test_initialize_structure_version_argument_accepts_Version_instances_only(self):
         """testing if a TypeError will be raised when the version argument in
@@ -320,7 +330,7 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
     def test_get_env_names_method_will_return_complex_environment_names_properly(self):
         """testing if ExternalEnvFactory.get_env_names() method will
         return all the environment names as a list of strings in desired format
-        when name_format is set
+        when environment_name_format is set
         """
         name_format = '%e - %n'
         expected_result = [

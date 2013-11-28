@@ -2,6 +2,32 @@
 Anima Tools Changes
 ===================
 
+0.1.2
+=====
+
+* **Pipeline:**
+
+ * **UI:**
+
+   * **General:**
+
+     * **New:** Added icons for ZBrush, Photoshop and MudBox.
+
+   * **Version Creator:**
+
+     * **New:** Version creator now supports External environments through
+       environmentless mode and added presets for ZBrush, Photoshop and
+       Mudbox.
+
+ * **Env:**
+
+   * **ExternalEnv:**
+
+     * **New:** Added ExternalEnv and ExternalEnvFactory classes to handle
+       external environments (which doesn't support python by default). For
+       now there are three external environments: Photoshop, ZBrush and
+       Mudbox.
+
 0.1.1
 =====
 

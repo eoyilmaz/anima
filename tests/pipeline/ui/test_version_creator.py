@@ -180,10 +180,7 @@ class VersionCreatorTester(unittest2.TestCase):
             True
         )
 
-        # shutil.rmtree(
-        #     self.temp_config_folder,
-        #     self.temp_projects_folder
-        # )
+        shutil.rmtree(self.repo_path)
 
     def test_close_button_closes_ui(self):
         """testing if the close button is closing the ui
@@ -1286,14 +1283,23 @@ class VersionCreatorTester(unittest2.TestCase):
         # create a repository
         repo1 = Repository(
             name='Test Repository',
-            windows_path='T;/TestRepo/',
-            linux_path='/mnt/T/TestRepo/',
-            osx_path='/Volumes/T/TestRepo/'
+            windows_path=self.repo_path,
+            linux_path=self.repo_path,
+            osx_path=self.repo_path
+        )
+
+        task_filename_template = FilenameTemplate(
+            name='Task Filename Template',
+            target_entity_type='Task',
+            path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
+                 '{{parent_task.nice_name}}/{%- endfor -%}',
+            filename='{{task.nice_name}}_{{version.take_name}}'
+                     '_v{{"%03d"|format(version.version_number)}}{{extension}}'
         )
 
         structure1 = Structure(
             name='Test Project Structure',
-            templates=[],
+            templates=[task_filename_template],
             custom_template=''
         )
 

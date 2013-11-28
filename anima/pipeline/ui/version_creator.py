@@ -645,6 +645,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         self.mode = mode
         self.chosen_version = None
+        self.environment_name_format = '%n (%e)'
 
         window_title = 'Version Creator | ' + \
                        'Anima Pipeline v' + anima.__version__
@@ -1350,9 +1351,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # fill programs list
         env_factory = ExternalEnvFactory()
-        env_names = env_factory.get_env_names()
+        env_names = env_factory.get_env_names(
+            name_format=self.environment_name_format
+        )
         self.environment_comboBox.addItems(env_names)
-
         logger.debug("finished setting up interface defaults")
 
     def restore_ui(self, version):
@@ -1612,28 +1614,27 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             logger.debug('No environment given, just generating paths')
 
-            # just set the clipboard to the new_version.absolute_full_path
-            clipboard = QtGui.QApplication.clipboard()
+            # get the environment
+            env_name = self.environment_comboBox.currentText()
+            env_factory = ExternalEnvFactory()
+            env = env_factory.get_env(env_name, self.environment_name_format)
+            logger.debug('env: %s' % env.name)
+
             try:
-                new_version.update_paths()
+                env.conform(new_version)
+                env.initialize_structure(new_version)
             except RuntimeError as e:
                 QtGui.QMessageBox.critical(self, 'Error', str(e))
+                return None
+
+            # and set the clipboard to the new_version.absolute_full_path
+            clipboard = QtGui.QApplication.clipboard()
+
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
 
-            # create the path
-            try:
-                logger.debug('creating path for new version')
-                os.makedirs(new_version.absolute_path)
-            except OSError: # path already exists
-                pass
-
-            # create the output path
-            #try:
-            #    logger.debug('creating output_path for new version')
-            #    os.makedirs(new_version.output_path)
-            #except OSError: # path already exists
-            #    pass
+            # initialize environment structure
+            env.initialize_structure(new_version)
 
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path

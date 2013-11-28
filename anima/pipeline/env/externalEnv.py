@@ -13,6 +13,11 @@ logger.setLevel(logging.DEBUG)
 external_environments = {
     'MudBox': {
         'name': 'MudBox',
+        'icon': 'mudbox.png',
+        'executable': {
+            'linux': 'mudbox',
+            'windows': 'mudbox.exe',
+        },
         'extension': '.mud',
         'structure': [
             'Outputs',
@@ -20,20 +25,29 @@ external_environments = {
     },
     'Photoshop': {
         'name': 'Photoshop',
+        'icon': 'photoshop.png',
+        'executable': {
+            'windows': 'photoshop.exe',
+        },
         'extension': '.psd',
         'structure': [
             'Outputs',
         ]
     },
-    'ZBrush Project' : {
-        'name': 'ZBrush Project',
-        'extension': '.zpr',
-        'structure': [
-            'Outputs',
-        ]
-    },
-    'ZBrush Tool': {
-        'name': 'ZBrush Tool',
+    #'ZBrush Project' : {
+    #    'name': 'ZBrush Project',
+    #    'icon': 'zbrush.png',
+    #    'extension': '.zpr',
+    #    'structure': [
+    #        'Outputs',
+    #    ]
+    #},
+    'ZBrush': {
+        'name': 'ZBrush',
+        'icon': 'zbrush.png',
+        'executable': {
+            'windows': 'zbrush.exe',
+        },
         'extension': '.ztl',
         'structure': [
             'Outputs',
@@ -50,7 +64,7 @@ class ExternalEnv(object):
     environment by setting its file extension etc.
     """
 
-    def __init__(self, name, extension, structure=None):
+    def __init__(self, name, extension, structure=None, **kwargs):
         """
 
         :param name: The name of this environment
@@ -72,9 +86,9 @@ class ExternalEnv(object):
         :param name: the desired name
         :return: str
         """
-        if not isinstance(name, str):
+        if not isinstance(name, basestring):
             raise TypeError('%s.name should be an instance of '
-                            'str, not %s' % (
+                            'basestring, not %s' % (
                 self.__class__.__name__, name.__class__.__name__)
             )
         return name
@@ -103,9 +117,9 @@ class ExternalEnv(object):
         :param extension: the desired extension
         :return: str
         """
-        if not isinstance(extension, str):
+        if not isinstance(extension, basestring):
             raise TypeError('%s.extension should be an instance of '
-                            'str, not %s' % (
+                            'basestring, not %s' % (
                 self.__class__.__name__, extension.__class__.__name__)
             )
         return extension
@@ -144,9 +158,9 @@ class ExternalEnv(object):
                              structure.__class__.__name__))
 
         for item in structure:
-            if not isinstance(item, str):
+            if not isinstance(item, basestring):
                 raise TypeError('All items in %s.structure should be an '
-                                'instance of str, an not %s' % 
+                                'instance of basestring, an not %s' % 
                                 (self.__class__.__name__,
                                  item.__class__.__name__))
 
@@ -181,6 +195,7 @@ class ExternalEnv(object):
                             version.__class__.__name__)
         version.update_paths()
         version.extension = self.extension
+        version.created_with = self.name
         logger.debug('finished conforming version extension to: %s' % 
                      self.extension)
 
@@ -250,9 +265,9 @@ class ExternalEnvFactory(object):
 
         :return ExternalEnv: ExternalEnv instance
         """
-        if not isinstance(name, str):
+        if not isinstance(name, basestring):
             raise TypeError('"name" argument in %s.get_env() should be an '
-                            'instance of str, not %s' % (
+                            'instance of basestring, not %s' % (
                 cls.__name__, name.__class__.__name__
             ))
 
