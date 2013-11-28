@@ -9,7 +9,7 @@ import os
 from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
 
 import unittest2
-from anima.pipeline.env.externalEnv import ExternalEnv
+from anima.pipeline.env.externalEnv import ExternalEnv, ExternalEnvFactory
 
 
 class ExternalEnvTestCase(unittest2.TestCase):
@@ -307,6 +307,58 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
     """tests ExternalEnvFactory class
     """
 
-    pass
+    def test_get_env_names_method_is_returning_all_environment_names_properly(self):
+        """testing if ExternalEnvFactory.get_env_names() method will
+        return all the environment names as a list of strings
+        """
+        from anima.pipeline.env.externalEnv import external_environments
+        expected_result = external_environments.keys()
+        ext_env_factory = ExternalEnvFactory()
+        result = ext_env_factory.get_env_names()
+        self.assertEqual(expected_result, result)
+
+    def test_get_env_method_name_argument_is_not_a_string(self):
+        """testing if a TypeError will be raised when the name argument is not
+        a string in ExternalEnvironmentFactory.get_env() method
+        """
+        ext_env_factory = ExternalEnvFactory()
+        self.assertRaises(TypeError, ext_env_factory.get_env, 234)
+
+    def test_get_env_method_name_is_not_in_list(self):
+        """testing if a ValueError will be raised when the name argument value
+        is not in the anima.pipeline.env.external_environments list
+        """
+        ext_env_factory = ExternalEnvFactory()
+        self.assertRaises(ValueError, ext_env_factory.get_env, 'Modo')
+
+    def test_get_env_method_will_return_desired_environment(self):
+        """testing if ExternalEnvFactory.get_env() will return desired
+        ExternalEnvironment instance
+        """
+        ext_env_factory = ExternalEnvFactory()
+
+        photoshop = ext_env_factory.get_env('Photoshop')
+        self.assertIsInstance(photoshop, ExternalEnv)
+        self.assertEqual(photoshop.name, 'Photoshop')
+        self.assertEqual(photoshop.extension, '.psd')
+        self.assertEqual(photoshop.structure, ['Outputs'])
+
+        zbrush_project = ext_env_factory.get_env('ZBrush Project')
+        self.assertIsInstance(zbrush_project, ExternalEnv)
+        self.assertEqual(zbrush_project.name, 'ZBrush Project')
+        self.assertEqual(zbrush_project.extension, '.zpr')
+        self.assertEqual(zbrush_project.structure, ['Outputs'])
+
+        zbrush_tool = ext_env_factory.get_env('ZBrush Tool')
+        self.assertIsInstance(zbrush_tool, ExternalEnv)
+        self.assertEqual(zbrush_tool.name, 'ZBrush Tool')
+        self.assertEqual(zbrush_tool.extension, '.ztl')
+        self.assertEqual(zbrush_tool.structure, ['Outputs'])
+
+        mudbox = ext_env_factory.get_env('MudBox')
+        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertEqual(mudbox.name, 'MudBox')
+        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.structure, ['Outputs'])
 
 

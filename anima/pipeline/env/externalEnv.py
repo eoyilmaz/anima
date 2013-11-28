@@ -10,36 +10,36 @@ import os
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-external_environments = [
-    {
+external_environments = {
+    'MudBox': {
         'name': 'MudBox',
         'extension': '.mud',
         'structure': [
             'Outputs',
         ]
     },
-    {
+    'Photoshop': {
         'name': 'Photoshop',
         'extension': '.psd',
         'structure': [
             'Outputs',
         ]
     },
-    {
+    'ZBrush Project' : {
         'name': 'ZBrush Project',
         'extension': '.zpr',
         'structure': [
             'Outputs',
         ]
     },
-    {
+    'ZBrush Tool': {
         'name': 'ZBrush Tool',
         'extension': '.ztl',
         'structure': [
             'Outputs',
         ]
     },
-]
+}
 
 
 class ExternalEnv(object):
@@ -72,9 +72,9 @@ class ExternalEnv(object):
         :param name: the desired name
         :return: str
         """
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             raise TypeError('%s.name should be an instance of '
-                            'basestring, not %s' % (
+                            'str, not %s' % (
                 self.__class__.__name__, name.__class__.__name__)
             )
         return name
@@ -103,9 +103,9 @@ class ExternalEnv(object):
         :param extension: the desired extension
         :return: str
         """
-        if not isinstance(extension, basestring):
+        if not isinstance(extension, str):
             raise TypeError('%s.extension should be an instance of '
-                            'basestring, not %s' % (
+                            'str, not %s' % (
                 self.__class__.__name__, extension.__class__.__name__)
             )
         return extension
@@ -144,9 +144,9 @@ class ExternalEnv(object):
                              structure.__class__.__name__))
 
         for item in structure:
-            if not isinstance(item, basestring):
+            if not isinstance(item, str):
                 raise TypeError('All items in %s.structure should be an '
-                                'instance of basestring, an not %s' % 
+                                'instance of str, an not %s' % 
                                 (self.__class__.__name__,
                                  item.__class__.__name__))
 
@@ -219,18 +219,34 @@ class ExternalEnvFactory(object):
     instances.
     """
 
-    def get_environment_names(self):
+    def get_env_names(self):
         """returns a list of environment names which it is possible to create
         one environment.
 
         :return list: list
         """
-        pass
+        return external_environments.keys()
 
     def get_env(self, name):
         """Creates an environment with the given name
 
-        :param name:
-        :return:
+        :param str name: The name of the environment, should be a value from
+          anima.pipeline.env.externalEnv.environment_names list
+
+        :return ExternalEnv: ExternalEnv instance
         """
-        pass
+        if not isinstance(name, str):
+            raise TypeError('"name" argument in %s.get_env() should be an '
+                            'instance of str, not %s' % (
+                self.__class__.__name__, name.__class__.__name__
+            ))
+
+        env_names = external_environments.keys()
+        if name not in env_names:
+            raise ValueError(
+                '%s is not in '
+                'anima.pipeline.env.externalEnv.environment_names list, '
+                'please supply a value from %s' % (name, env_names))
+
+        env = external_environments[name]
+        return ExternalEnv(**env)
