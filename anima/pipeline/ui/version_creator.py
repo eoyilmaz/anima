@@ -1633,7 +1633,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # get the environment
             env_name = self.environment_comboBox.currentText()
             env_factory = ExternalEnvFactory()
-            environment = env_factory.get_env(env_name, self.environment_name_format)
+            environment = env_factory.get_env(env_name,
+                                              self.environment_name_format)
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
