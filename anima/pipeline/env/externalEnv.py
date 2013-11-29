@@ -208,6 +208,8 @@ class ExternalEnv(EnvironmentBase):
         version.update_paths()
         version.extension = self.extension
         version.created_with = self.name
+        logger.debug('version.absolute_full_path : %s' % 
+                     version.absolute_full_path)
         logger.debug('finished conforming version extension to: %s' % 
                      self.extension)
 
@@ -228,7 +230,9 @@ class ExternalEnv(EnvironmentBase):
             )
 
         # create the folder in version.absolute_path
+        extension = version.extension
         version.update_paths()
+        version.extension = extension
         for folder in self.structure:
             folder_path = os.path.join(version.absolute_path, folder)
             logger.debug('creating: %s' % folder_path)
