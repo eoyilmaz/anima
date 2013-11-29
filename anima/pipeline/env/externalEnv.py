@@ -6,6 +6,7 @@
 
 import logging
 import os
+from stalker import EnvironmentBase
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -56,7 +57,7 @@ external_environments = {
 }
 
 
-class ExternalEnv(object):
+class ExternalEnv(EnvironmentBase):
     """An external environment which doesn't support Python
 
     A very simple object that handles external environments. For now it just
@@ -122,6 +123,17 @@ class ExternalEnv(object):
                             'basestring, not %s' % (
                 self.__class__.__name__, extension.__class__.__name__)
             )
+        return self._format_extension(extension)
+
+    @classmethod
+    def _format_extension(cls, extension):
+        """formats the given extension
+
+        :param extension: a string containing the desired extension
+        :return:
+        """
+        if not extension.startswith('.'):
+            extension = '.' + extension
         return extension
 
     @property
@@ -225,6 +237,63 @@ class ExternalEnv(object):
             except OSError:
                 # dir exists
                 pass
+
+    def save_as(self, version):
+        """A compatibility method which will allow this environment to be used
+        in place of stalker.model.env.EnvironmentBase derivatives.
+
+        :param version: 
+        :return:
+        """
+        # just conform the version and initialize_structure
+        self.conform(version)
+        self.initialize_structure(version)
+        self.append_to_recent_files(version)
+
+    @classmethod
+    def get_settings_file_path(cls):
+        """returns the settings file path
+        :return:
+        """
+        # append to .atrc file
+        atrc_path = os.path.expanduser('~/.atrc/')
+        last_version_filename = 'last_version'
+        return os.path.join(atrc_path, last_version_filename)
+
+    def append_to_recent_files(self, version):
+        """Appends the given version info to the recent files list
+
+        :param version: A :class:`~stalker.models.version.Version` instance.
+        :return:
+        """
+        from stalker import Version
+        if not isinstance(version, Version):
+            raise TypeError('"version" argument in %s.append_to_recent_files '
+                           'method should be an instance of '
+                           'stalker.models.version.Version, not %s' %
+                            (self.__class__.__name__,
+                             version.__class__.__name__))
+        last_version_file_full_path = self.get_settings_file_path()
+        try:
+            os.makedirs(os.path.dirname(last_version_file_full_path))
+        except OSError:
+            pass
+
+        with open(last_version_file_full_path, 'w') as f:
+            f.write(str(version.id))
+
+    def get_last_version(self):
+        """returns the current version
+        """
+        last_version_file_full_path = self.get_settings_file_path()
+        try:
+            with open(last_version_file_full_path, 'r') as f:
+                lines = f.readlines()
+                vid = lines[0]
+            from stalker import Version
+            return Version.query.filter(Version.id==vid).first()
+        except (IOError, IndexError):
+            return None
 
 
 class ExternalEnvFactory(object):

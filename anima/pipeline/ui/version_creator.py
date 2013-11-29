@@ -8,10 +8,13 @@ import logging
 import datetime
 import os
 import re
+import tempfile
+
 from sqlalchemy import distinct
+
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, StatusList, Project,
-                     Task, LocalSession, EnvironmentBase, Group)
+from stalker import (db, defaults, Version, Project, Task, LocalSession,
+                     EnvironmentBase, Group)
 
 import anima
 from anima.pipeline import utils, power_users_group_names
@@ -21,7 +24,6 @@ from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 
-import tempfile
 
 logger = logging.getLogger(__name__)
 fh = logging.FileHandler(
@@ -1288,9 +1290,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             )
         # *********************************************************************
 
-
-
-
         # run the project changed item for the first time
         # self.project_changed()
 
@@ -1305,16 +1304,29 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # # self.search_task_lineEdit.editingFinished.connect()
         self.search_task_lineEdit.setVisible(False)
 
-        if self.environment and isinstance(self.environment, EnvironmentBase):
-            logger.debug("restoring the ui with the version from environment")
+        # fill programs list
+        env_factory = ExternalEnvFactory()
+        env_names = env_factory.get_env_names(
+            name_format=self.environment_name_format
+        )
+        self.environment_comboBox.addItems(env_names)
 
-            # get the last version from the environment
-            version_from_env = self.environment.get_last_version()
+        is_external_env = False
+        env = self.environment
+        if not self.environment:
+            is_external_env = True
+            # just get one random environment
+            env = env_factory.get_env(env_names[0])
 
-            logger.debug("version_from_env: %s" % version_from_env)
+        logger.debug("restoring the ui with the version from environment")
 
-            self.restore_ui(version_from_env)
-        else:
+        # get the last version from the environment
+        version_from_env = env.get_last_version()
+
+        logger.debug("version_from_env: %s" % version_from_env)
+        self.restore_ui(version_from_env)
+
+        if is_external_env:
             # hide some buttons
             self.export_as_pushButton.setVisible(False)
             #self.open_pushButton.setVisible(False)
@@ -1349,12 +1361,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update description field
         self.description_textEdit.setText('')
 
-        # fill programs list
-        env_factory = ExternalEnvFactory()
-        env_names = env_factory.get_env_names(
-            name_format=self.environment_name_format
-        )
-        self.environment_comboBox.addItems(env_names)
         logger.debug("finished setting up interface defaults")
 
     def restore_ui(self, version):
@@ -1568,6 +1574,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtGui.QMessageBox.critical(
                 self, 'Error', 'Please select a <strong>leaf</strong> task!'
             )
+            return
 
         # call the environments export_as method
         if self.environment is not None:
@@ -1603,39 +1610,38 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtGui.QMessageBox.critical(
                 self, 'Error', 'Please select a <strong>leaf</strong> task!'
             )
+            return
 
         # call the environments save_as method
-        if self.environment and isinstance(self.environment, EnvironmentBase):
-            try:
-                self.environment.save_as(new_version)
-            except RuntimeError as e:
-                QtGui.QMessageBox.critical(self, 'Error', str(e))
-                return None
-        else:
-            logger.debug('No environment given, just generating paths')
-
+        is_external_env = False
+        environment = self.environment
+        if not environment:
             # get the environment
             env_name = self.environment_comboBox.currentText()
             env_factory = ExternalEnvFactory()
-            env = env_factory.get_env(env_name, self.environment_name_format)
-            logger.debug('env: %s' % env.name)
+            environment = env_factory.get_env(env_name, self.environment_name_format)
+            is_external_env = True
+            if not environment:
+                logger.debug('no env found with name: %s' % env_name)
+                return
+            logger.debug('env: %s' % environment.name)
 
-            try:
-                env.conform(new_version)
-                env.initialize_structure(new_version)
-            except RuntimeError as e:
-                QtGui.QMessageBox.critical(self, 'Error', str(e))
-                return None
+        try:
+            environment.save_as(new_version)
+        except RuntimeError as e:
+            QtGui.QMessageBox.critical(self, 'Error', str(e))
+            return
 
-            # and set the clipboard to the new_version.absolute_full_path
+        if is_external_env:
+            # set the clipboard to the new_version.absolute_full_path
             clipboard = QtGui.QApplication.clipboard()
+
+            logger.debug('new_version.absolute_full_path: %s' %
+                         new_version.absolute_full_path)
 
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
-
-            # initialize environment structure
-            env.initialize_structure(new_version)
-
+    
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
             QtGui.QMessageBox.warning(
@@ -1650,12 +1656,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         DBSession.add(new_version)
         DBSession.commit()
 
-        if self.environment:
-            # close the UI
-            self.close()
-        else:
+        if is_external_env:
             # refresh the UI
             self.tasks_treeView_changed()
+        else:
+            # close the UI
+            self.close()
 
     def chose_pushButton_clicked(self):
         """runs when the chose_pushButton clicked

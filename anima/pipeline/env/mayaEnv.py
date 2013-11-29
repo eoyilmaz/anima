@@ -600,9 +600,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         elif currentRenderer == 'arnold':
             dRG.imageFormat.set(51) # exr
             dAD = pm.PyNode('defaultArnoldDriver')
-            dAD.exrCompression.set(3) # zip
+            dAD.exrCompression.set(2) # zips
             dAD.halfPrecision.set(1) # half
-            dAD.tiled.set(0) # scanline (not tiled)
+            dAD.tiled.set(0) # not tiled
             dAD.autocrop.set(1) # will enhance file load times in Nuke
 
         ## check all the render layers and try to get if any of them are using

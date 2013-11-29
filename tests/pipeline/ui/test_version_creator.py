@@ -1504,6 +1504,11 @@ class VersionCreatorTester(unittest2.TestCase):
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
 
+        # show again
+        dialog = version_creator.MainDialog()
+        self.show_dialog(dialog)
+
+
     def test_tasks_treeView_do_not_cause_a_segfault(self):
         """
         """
