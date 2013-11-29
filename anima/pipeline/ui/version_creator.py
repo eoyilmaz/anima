@@ -1388,18 +1388,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # select the version in the previous version list
         self.previous_versions_tableWidget.select_version(version)
 
-        # set the environment_comboBox
-        env_factory = ExternalEnvFactory()
-        try:
-            env = env_factory.get_env(version.created_with)
-        except ValueError:
-            pass
-        else:
-            # find it in the comboBox
-            index = self.environment_comboBox.findText(env.name,
-                                                       QtCore.Qt.MatchContains)
-            if index:
-                self.environment_comboBox.setCurrentIndex(index)
+        if not self.environment:
+            # set the environment_comboBox
+            env_factory = ExternalEnvFactory()
+            try:
+                env = env_factory.get_env(version.created_with)
+            except ValueError:
+                pass
+            else:
+                # find it in the comboBox
+                index = self.environment_comboBox.findText(
+                    env.name, QtCore.Qt.MatchContains)
+                if index:
+                    self.environment_comboBox.setCurrentIndex(index)
 
     def load_task_item_hierarchy(self, task, treeView):
         """loads the TaskItem related to the given task in the given treeView
