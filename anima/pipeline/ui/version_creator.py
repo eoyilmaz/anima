@@ -1332,6 +1332,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             #self.open_pushButton.setVisible(False)
             self.reference_pushButton.setVisible(False)
             self.import_pushButton.setVisible(False)
+        else:
+            self.environment_comboBox.setVisible(False)
 
         if self.mode:
             # run in read-only mode
