@@ -9,9 +9,8 @@ import os
 #import jinja2
 
 import PeyeonScript
-from anima.pipeline import utils
-
-from stalker.models.env import EnvironmentBase
+from .. import utils
+from base import EnvironmentBase
 
 
 class Fusion(EnvironmentBase):
@@ -238,7 +237,7 @@ class Fusion(EnvironmentBase):
 
     def save_as(self, version):
         """"the save action for fusion environment
-        
+
         uses Fusions own python binding
         """
         # set the extension to '.comp'
@@ -282,8 +281,9 @@ class Fusion(EnvironmentBase):
         version.extension = '.comp'
         version.created_with = self.name
         #        nuke.nodeCopy(version.fullPath)
-        raise NotImplementedError('export_as is not implemented yet for Fusion')
-        return True
+        raise NotImplementedError(
+            'export_as() is not implemented yet for Fusion'
+        )
 
     def open_(self, version, force=False):
         """the open action for nuke environment
@@ -301,9 +301,9 @@ class Fusion(EnvironmentBase):
         #self.project_directory = os.path.dirname(version.absolute_path)
 
         # TODO: file paths in different OS'es should be replaced with the current one
-        # Check if the file paths are starting with a string matching one of the
-        # OS'es project_directory path and replace them with a relative one
-        # matching the current OS 
+        # Check if the file paths are starting with a string matching one of
+        # the OS'es project_directory path and replace them with a relative one
+        # matching the current OS
 
         # replace paths
         #self.replace_external_paths()
@@ -325,9 +325,9 @@ class Fusion(EnvironmentBase):
 
     def get_current_version(self):
         """Finds the Version instance from the current open file.
-        
+
         If it can't find any then returns None.
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         #full_path = self._root.knob('name').value()
@@ -340,9 +340,9 @@ class Fusion(EnvironmentBase):
         """It will try to create a
         :class:`~oyProjectManager.models.version.Version` instance by looking
         at the recent files list.
-        
+
         It will return None if it can not find one.
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         full_path = self.fusion_prefs["LastCompFile"]
@@ -350,7 +350,7 @@ class Fusion(EnvironmentBase):
 
     def get_version_from_project_dir(self):
         """Tries to find a Version from the current project directory
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         versions = self.get_versions_from_path(self.project_directory)
@@ -454,7 +454,8 @@ class Fusion(EnvironmentBase):
         project = task.project
         output_file_name = '%s_%s_%s_Output_v%03d.001.exr' % (
             task.entity_type, task.id, version.take_name,
-            version.version_number)
+            version.version_number
+        )
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
@@ -486,55 +487,10 @@ class Fusion(EnvironmentBase):
             # path already exists
             pass
 
-    def replace_external_paths(self, mode=0):
-        """replaces file paths with environment variable scripts
-        """
-
-        # TODO: replace file paths if project_directory changes
-        # check if the project_directory is still the same
-        # if it is do the regular replacement
-        # but if it is not then expand all the paths to absolute paths
-
-        # convert the given path to tcl environment script
-        def repPath(path):
-            return utils.relpath(self.project_directory, path, "/", "..")
-
-        # get all read nodes
-        allNodes = nuke.allNodes()
-
-        readNodes = [node for node in allNodes if node.Class() == "Read"]
-        writeNodes = [node for node in allNodes if node.Class() == "Write"]
-        readGeoNodes = [node for node in allNodes if node.Class() == "ReadGeo"]
-        readGeo2Nodes = [node for node in allNodes if
-                         node.Class() == "ReadGeo2"]
-        writeGeoNodes = [node for node in allNodes if
-                         node.Class() == "WriteGeo"]
-
-        def nodeRep(nodes):
-            [node["file"].setValue(
-                repPath(
-                    os.path.expandvars(
-                        os.path.expanduser(
-                            node["file"].getValue()
-                        )
-                    )
-                )
-            ) for node in nodes]
-
-        nodeRep(readNodes)
-        # the fucking windows is complaining about back-slashes again
-        # in the write nodes so the write nodes are going to be absolute
-        # path
-        if os.name != "nt":
-            nodeRep(writeNodes)
-        nodeRep(readGeoNodes)
-        nodeRep(readGeo2Nodes)
-        nodeRep(writeGeoNodes)
-
     @property
     def project_directory(self):
         """The project directory.
-        
+
         Set it to the project root, and set all your paths relative to this
         directory.
         """
@@ -568,30 +524,3 @@ class Fusion(EnvironmentBase):
                 }
             }
         )
-
-#    def create_slate_info(self):
-#        """Returns info about the current shot which will contribute to the
-#        shot slate
-#        
-#        :return: string
-#        """
-#        
-#        version = self.get_current_version()
-#        shot = version.task
-#        
-#        # create a jinja2 template
-#        template = jinja2.Template("""Show: {{shot.project.name}}
-#Shot: {{shot.number}}
-#Frame Range: {{shot.start_frame}}-{{shot.end_frame}}
-#Handles: +{{shot.handle_at_start}}, -{{shot.handle_at_end}}
-#Artist: {{version.created_by.name}}
-#Version: v{{'%03d'|format(version.version_number)}}
-#Status: WIP
-#        """)
-#        
-#        template_vars = {
-#            "shot": shot,
-#            "version": version
-#        }
-#        
-#        return template.render(**template_vars)

@@ -13,11 +13,11 @@ import tempfile
 from sqlalchemy import distinct
 
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, Project, Task, LocalSession,
-                     EnvironmentBase, Group)
+from stalker import (db, defaults, Version, Project, Task, LocalSession, Group)
 
 import anima
 from anima.pipeline import utils, power_users_group_names
+from anima.pipeline.env.base import EnvironmentBase
 from anima.pipeline.env.externalEnv import ExternalEnvFactory
 from anima.pipeline.ui import utils as ui_utils
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, login_dialog, version_updater
@@ -584,16 +584,16 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
       work in "environmentless" mode in which it only creates data in database
       and copies the resultant version file path to clipboard.
-    
+
     :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
       mode.
 
     :param app_in: A Qt Application instance, which you can pass to let the UI
       be attached to the given applications event process.
-    
+
     :param executor: Instead of calling app.exec_ the UI will call this given
       function. It also passes the created app instance to this executor.
-    
+
     """
     return UICaller(app_in, executor, MainDialog, environment=environment,
                     mode=mode)
@@ -854,7 +854,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         )
 
         logger.debug("finished setting up interface signals")
-
 
     def get_logged_in_user(self):
         """returns the logged in user
@@ -1247,8 +1246,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         )
         # *********************************************************************
 
-
-
         # *********************************************************************
         # previous_versions_tableWidget
         self.previous_versions_tableWidget.deleteLater()
@@ -1298,7 +1295,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         # self.search_task_lineEdit.setCompleter(completer)
         # self.search_task_lineEdit.textChanged.connect(completer.update)
-        # 
+        #
         # completer.activated.connect(self.search_task_lineEdit.setText)
         # completer.setWidget(self.search_task_lineEdit)
         # # self.search_task_lineEdit.editingFinished.connect()
@@ -1367,7 +1364,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
     def restore_ui(self, version):
         """Restores the UI with the given Version instance
-        
+
         :param version: :class:`~oyProjectManager.models.version.Version`
           instance
         """
@@ -1406,7 +1403,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
     def load_task_item_hierarchy(self, task, treeView):
         """loads the TaskItem related to the given task in the given treeView
-        
+
         :return: TaskItem instance
         """
         self.tasks_treeView.is_updating = True
@@ -1548,7 +1545,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def get_new_version(self):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
         from the UI by looking at the input fields
-        
+
         :returns: :class:`~oyProjectManager.models.version.Version` instance
         """
         # create a new version
@@ -1658,7 +1655,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
-    
+
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
             QtGui.QMessageBox.warning(
@@ -1844,33 +1841,33 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
 
-        # def search_task_comboBox_textChanged(self, text):
-        #     """runs when search_task_comboBox text changed
-        #     """
-        #     # text = self.search_task_lineEdit.text().strip()
-        #     self.search_task_comboBox.clear()
-        #     if not text:
-        #         return
-        #     tasks = Task.query.filter(Task.name.contains(text)).all()
-        #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
-        #     # load all the tasks and their parents so we are going to be able to
-        #     # find them later on
-        #     # for task in tasks:
-        #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
-        #     # 
-        #     # # now get the indices
-        #     # indices = self.get_item_indices_containing_text(text,
-        #     #                                                 self.tasks_treeView)
-        #     # logger.debug('indices containing the given text are : %s' % indices)
-        # 
-        #     # self.search_task_comboBox.addItems(
-        #     #     [
-        #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
-        #     #     ]
-        #     # )
-        #     items = []
-        #     for task in tasks:
-        #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
-        #         items.append(hierarchy_name)
-        #     self.search_task_comboBox.addItems(items)
-        # 
+    # def search_task_comboBox_textChanged(self, text):
+    #     """runs when search_task_comboBox text changed
+    #     """
+    #     # text = self.search_task_lineEdit.text().strip()
+    #     self.search_task_comboBox.clear()
+    #     if not text:
+    #         return
+    #     tasks = Task.query.filter(Task.name.contains(text)).all()
+    #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
+    #     # load all the tasks and their parents so we are going to be able to
+    #     # find them later on
+    #     # for task in tasks:
+    #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
+    #     #
+    #     # # now get the indices
+    #     # indices = self.get_item_indices_containing_text(text,
+    #     #                                                 self.tasks_treeView)
+    #     # logger.debug('indices containing the given text are : %s' % indices)
+    #
+    #     # self.search_task_comboBox.addItems(
+    #     #     [
+    #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
+    #     #     ]
+    #     # )
+    #     items = []
+    #     for task in tasks:
+    #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
+    #         items.append(hierarchy_name)
+    #     self.search_task_comboBox.addItems(items)
+    #

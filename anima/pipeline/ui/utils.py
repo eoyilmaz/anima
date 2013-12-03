@@ -69,6 +69,7 @@ def UICaller(app_in, executor, DialogClass, **kwargs):
         executor.exec_(app, mainDialog)
     return mainDialog
 
+
 def getIcon(icon_name):
     """Returns an icon from ui library
     """
@@ -77,9 +78,10 @@ def getIcon(icon_name):
     icon_full_path = os.path.join(images_path, icon_name)
     return QtGui.QIcon(icon_full_path)
 
+
 def clear_thumbnail(gView):
     """Clears the thumbnail for the given QGraphicsView
-    
+
     :param gView: The QGraphicsView instance
     """
 
@@ -160,10 +162,10 @@ def update_gview_with_image_file(image_full_path, gView):
 
 def upload_thumbnail(entity, thumbnail_source_full_path):
     """Uploads the given thumbnail for the given entity
-    
+
     :param entity: An instance of :class:`~stalker.models.entity.SimpleEntity`
       or a derivative.
-    
+
     :param str thumbnail_source_full_path: A string which is showing the path
       of the thumbnail image
     """

@@ -14,7 +14,7 @@ logger = logging.getLogger('anima.pipeline.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
 from stalker.models.auth import LocalSession
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, SET_PYQT4
+from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
 
 SET_PYSIDE()
 
@@ -35,7 +35,7 @@ elif IS_PYQT4():
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
                      StatusList, Task, Version, FilenameTemplate, Group)
 from stalker.db.session import DBSession
-from stalker.models.env import EnvironmentBase
+from anima.pipeline.env.base import EnvironmentBase
 
 from anima.pipeline.ui import version_creator
 
@@ -129,7 +129,7 @@ class VersionCreatorTester(unittest2.TestCase):
         """
         # -----------------------------------------------------------------
         # start of the setUp
-        
+
         self.repo_path = tempfile.mkdtemp()
 
         defaults.local_storage_path = tempfile.mktemp()
@@ -148,8 +148,7 @@ class VersionCreatorTester(unittest2.TestCase):
         # self.temp_projects_folder = tempfile.mkdtemp()
 
         # os.environ["STALKER_PATH"] = self.temp_config_folder
-        
-        
+
         # create a LocalSession first
         self.admin = User.query.all()[0]
         self.lsession = LocalSession()
@@ -170,7 +169,6 @@ class VersionCreatorTester(unittest2.TestCase):
             self.app = QtGui.QApplication.instance()
         # elif IS_PYSIDE():
         #     logger.debug('it is pyside')
-
 
     def tearDown(self):
         """cleans the test environment
@@ -719,7 +717,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
-        
+
         # check show my tasks only check box
         dialog.my_tasks_only_checkBox.setChecked(True)
 
@@ -756,7 +754,6 @@ class VersionCreatorTester(unittest2.TestCase):
             self.assertGreater(len(items), 0)
             task_item = items[0]
             self.assertEqual(task_item.stalker_entity, task)
-        
 
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
@@ -1000,7 +997,7 @@ class VersionCreatorTester(unittest2.TestCase):
         )
         DBSession.add(user1)
         DBSession.commit()
-        
+
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -1226,7 +1223,7 @@ class VersionCreatorTester(unittest2.TestCase):
         self.assertGreater(len(items), 0)
         p1_item = items[0]
         self.assertIsNotNone(p1_item)
-        
+
         # get task1
         t1_item = None
         for i in range(p1_item.childCount()):
@@ -1235,36 +1232,37 @@ class VersionCreatorTester(unittest2.TestCase):
                  t1_item = item
                  break
         self.assertIsNotNone(t1_item)
-        
+
         dialog.tasks_treeWidget.setCurrentItem(item)
-        
+
         # now check if the takes_listWidget lists all the takes of the
         # t1 versions
         takes = ['Main', 'Take1', 'Take2']
         self.assertEqual(
-             dialog.takes_listWidget.count(),
-             3
-        )
-        
-        self.assertTrue(
-             dialog.takes_listWidget.item(0).text(),
-             'Main'
-        )
-        
-        self.assertTrue(
-             dialog.takes_listWidget.item(1).text(),
-             'Take1'
-        )
-        
-        self.assertTrue(
-             dialog.takes_listWidget.item(2).text(),
-             'Take2'
+            dialog.takes_listWidget.count(),
+            3
         )
 
-    def test_tasks_treeView_tasks_are_sorted(self):
-        """testing if tasks in tasks_treeView are sorted according to their
-        names
-        """
+        self.assertTrue(
+            dialog.takes_listWidget.item(0).text(),
+            'Main'
+        )
+
+        self.assertTrue(
+            dialog.takes_listWidget.item(1).text(),
+            'Take1'
+        )
+
+        self.assertTrue(
+            dialog.takes_listWidget.item(2).text(),
+            'Take2'
+        )
+
+    #def test_tasks_treeView_tasks_are_sorted(self):
+    #    """testing if tasks in tasks_treeView are sorted according to their
+    #    names
+    #    """
+
     def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(self):
         """testing if the takes_listWidget lists all the takes of the current
         task versions
@@ -1279,7 +1277,7 @@ class VersionCreatorTester(unittest2.TestCase):
         )
         DBSession.add(user1)
         DBSession.commit()
-        
+
         # create a repository
         repo1 = Repository(
             name='Test Repository',
@@ -1293,7 +1291,7 @@ class VersionCreatorTester(unittest2.TestCase):
             target_entity_type='Task',
             path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
-            filename='{{task.nice_name}}_{{version.take_name}}'
+            filename='{{version.nice_name}}_{{version.take_name}}'
                      '_v{{"%03d"|format(version.version_number)}}{{extension}}'
         )
 
@@ -1490,7 +1488,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         # For t6
         v10 = Version(task=t6, take_name='ATake2', full_path='/some/path/t6',
-                     created_by=self.admin)
+                      created_by=self.admin)
         DBSession.add(v10)
         DBSession.commit()
 
@@ -1507,7 +1505,6 @@ class VersionCreatorTester(unittest2.TestCase):
         # show again
         dialog = version_creator.MainDialog()
         self.show_dialog(dialog)
-
 
     def test_tasks_treeView_do_not_cause_a_segfault(self):
         """
@@ -2182,9 +2179,8 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
                            version_status_list])
         DBSession.commit()
-        
-        # task 1
 
+        # task 1
         # default (Main)
         v1 = Version(
             task=t1,
@@ -2271,7 +2267,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
-        
+
         # select the t1
         items = dialog.tasks_treeWidget.findItems(
             p1.name,
@@ -2281,7 +2277,7 @@ class VersionCreatorTester(unittest2.TestCase):
         self.assertGreater(len(items), 0)
         p1_item = items[0]
         self.assertIsNotNone(p1_item)
-        
+
         # get task1
         t1_item = None
         for i in range(p1_item.childCount()):
@@ -2290,25 +2286,24 @@ class VersionCreatorTester(unittest2.TestCase):
                 t1_item = item
                 break
         self.assertIsNotNone(t1_item)
-        
+
         dialog.tasks_treeWidget.setCurrentItem(item)
-        
+
         # first check if unpublished
         vers_new = dialog.get_new_version()
-        
+
         # is_published should be True
         self.assertFalse(vers_new.is_published)
-        
+
         # check the publish checkbox
         dialog.publish_checkBox.setChecked(True)
-        
+
         vers_new = dialog.get_new_version()
-        
+
         # is_published should be True
         self.assertTrue(vers_new.is_published)
 
-    def test_get_new_version_with_publish_checkBox_is_checked_creates_published_Version(
-            self):
+    def test_get_new_version_with_publish_checkBox_is_checked_creates_published_Version(self):
         """testing if checking publish_checkbox will create a published Version
         instance
         """
@@ -2438,7 +2433,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
                            version_status_list])
         DBSession.commit()
-        
+
         # task 1
 
         # default (Main)
@@ -2675,7 +2670,7 @@ class VersionCreatorTester(unittest2.TestCase):
         DBSession.add_all([self.admin, p1, p2, p3, t1, t2, t3, t4, t5,
                            version_status_list])
         DBSession.commit()
-        
+
         # task 1
 
         # default (Main)
@@ -2749,7 +2744,7 @@ class VersionCreatorTester(unittest2.TestCase):
 
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
-        
+
         # select the t1
         items = dialog.tasks_treeWidget.findItems(
             p1.name,
@@ -2759,7 +2754,7 @@ class VersionCreatorTester(unittest2.TestCase):
         self.assertGreater(len(items), 0)
         p1_item = items[0]
         self.assertIsNotNone(p1_item)
-        
+
         # get task1
         t1_item = None
         for i in range(p1_item.childCount()):
@@ -2768,7 +2763,7 @@ class VersionCreatorTester(unittest2.TestCase):
                 t1_item = item
                 break
         self.assertIsNotNone(t1_item)
-        
+
         dialog.tasks_treeWidget.setCurrentItem(item)
 
         # check if the menu item has a publish method for v8

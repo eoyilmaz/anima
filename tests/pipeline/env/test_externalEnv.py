@@ -39,7 +39,7 @@ class ExternalEnvTestCase(unittest2.TestCase):
             target_entity_type='Task',
             path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
-            filename='{{task.nice_name}}_{{version.take_name}}'
+            filename='{{version.nice_name}}'
                      '_v{{"%03d"|format(version.version_number)}}{{extension}}'
         )
         self.project_structure = Structure(
@@ -407,7 +407,7 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         expected_result = [
             '.ztl - ZBrush',
             '.mud - MudBox',
-            '.psd - Photoshop'
+            #'.psd - Photoshop'
         ]
         ext_env_factory = ExternalEnvFactory()
         result = ext_env_factory.get_env_names(name_format=name_format)
@@ -433,11 +433,11 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         """
         ext_env_factory = ExternalEnvFactory()
 
-        photoshop = ext_env_factory.get_env('Photoshop')
-        self.assertIsInstance(photoshop, ExternalEnv)
-        self.assertEqual(photoshop.name, 'Photoshop')
-        self.assertEqual(photoshop.extension, '.psd')
-        self.assertEqual(photoshop.structure, ['Outputs'])
+        #photoshop = ext_env_factory.get_env('Photoshop')
+        #self.assertIsInstance(photoshop, ExternalEnv)
+        #self.assertEqual(photoshop.name, 'Photoshop')
+        #self.assertEqual(photoshop.extension, '.psd')
+        #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush_tool = ext_env_factory.get_env('ZBrush')
         self.assertIsInstance(zbrush_tool, ExternalEnv)
@@ -456,13 +456,13 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         ExternalEnvironment instance even with names like "MudBox (.mud)"
         """
         ext_env_factory = ExternalEnvFactory()
-
-        photoshop = ext_env_factory.get_env('Photoshop (.psd)',
-                                            name_format='%n (%e)')
-        self.assertIsInstance(photoshop, ExternalEnv)
-        self.assertEqual(photoshop.name, 'Photoshop')
-        self.assertEqual(photoshop.extension, '.psd')
-        self.assertEqual(photoshop.structure, ['Outputs'])
+        #
+        #photoshop = ext_env_factory.get_env('Photoshop (.psd)',
+        #                                    name_format='%n (%e)')
+        #self.assertIsInstance(photoshop, ExternalEnv)
+        #self.assertEqual(photoshop.name, 'Photoshop')
+        #self.assertEqual(photoshop.extension, '.psd')
+        #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush = ext_env_factory.get_env('ZBrush (.ztl)',
                                               name_format='%n (%e)')
@@ -486,12 +486,12 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
 
         name_format = '(%e) - %n'
 
-        photoshop = ext_env_factory.get_env('(.psd) - Photoshop',
-                                            name_format=name_format)
-        self.assertIsInstance(photoshop, ExternalEnv)
-        self.assertEqual(photoshop.name, 'Photoshop')
-        self.assertEqual(photoshop.extension, '.psd')
-        self.assertEqual(photoshop.structure, ['Outputs'])
+        #photoshop = ext_env_factory.get_env('(.psd) - Photoshop',
+        #                                    name_format=name_format)
+        #self.assertIsInstance(photoshop, ExternalEnv)
+        #self.assertEqual(photoshop.name, 'Photoshop')
+        #self.assertEqual(photoshop.extension, '.psd')
+        #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush = ext_env_factory.get_env('(.ztl) ZBrush',
                                               name_format=name_format)

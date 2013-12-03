@@ -10,8 +10,8 @@ import jinja2
 import nuke
 
 from stalker.db import DBSession
-from anima.pipeline import utils
-from stalker.models.env import EnvironmentBase
+from .. import utils
+from base import EnvironmentBase
 
 
 class Nuke(EnvironmentBase):

@@ -2,6 +2,25 @@
 Anima Tools Changes
 ===================
 
+0.1.3
+=====
+
+* **Pipeline:**
+
+  * **Env:**
+
+    * **New:** Moved ``stalker.models.env.EnvironmentBase`` to
+      ``anima.pipeline.env.base.EnvironmentBase``.
+    * **New:** Added ``stalker.models.env.photoshopEnv.Photoshop`` class for
+      Photoshop.
+
+  * **UI:**
+  
+    * **Version Creator:**
+
+      * **Update:** Version Creator now use ``version.nice_name`` attribute to
+        name the new versions.
+
 0.1.2
 =====
 

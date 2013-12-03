@@ -6,7 +6,7 @@
 
 import logging
 import os
-from stalker import EnvironmentBase
+from base import EnvironmentBase
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -24,17 +24,17 @@ external_environments = {
             'Outputs',
         ]
     },
-    'Photoshop': {
-        'name': 'Photoshop',
-        'icon': 'photoshop.png',
-        'executable': {
-            'windows': 'photoshop.exe',
-        },
-        'extension': '.psd',
-        'structure': [
-            'Outputs',
-        ]
-    },
+    #'Photoshop': {
+    #    'name': 'Photoshop',
+    #    'icon': 'photoshop.png',
+    #    'executable': {
+    #        'windows': 'photoshop.exe',
+    #    },
+    #    'extension': '.psd',
+    #    'structure': [
+    #        'Outputs',
+    #    ]
+    #},
     #'ZBrush Project' : {
     #    'name': 'ZBrush Project',
     #    'icon': 'zbrush.png',
@@ -208,9 +208,9 @@ class ExternalEnv(EnvironmentBase):
         version.update_paths()
         version.extension = self.extension
         version.created_with = self.name
-        logger.debug('version.absolute_full_path : %s' % 
+        logger.debug('version.absolute_full_path : %s' %
                      version.absolute_full_path)
-        logger.debug('finished conforming version extension to: %s' % 
+        logger.debug('finished conforming version extension to: %s' %
                      self.extension)
 
     def initialize_structure(self, version):
@@ -246,7 +246,7 @@ class ExternalEnv(EnvironmentBase):
         """A compatibility method which will allow this environment to be used
         in place of stalker.model.env.EnvironmentBase derivatives.
 
-        :param version: 
+        :param version: stalker.models.version.Version instance
         :return:
         """
         # just conform the version and initialize_structure
@@ -273,8 +273,8 @@ class ExternalEnv(EnvironmentBase):
         from stalker import Version
         if not isinstance(version, Version):
             raise TypeError('"version" argument in %s.append_to_recent_files '
-                           'method should be an instance of '
-                           'stalker.models.version.Version, not %s' %
+                            'method should be an instance of '
+                            'stalker.models.version.Version, not %s' %
                             (self.__class__.__name__,
                              version.__class__.__name__))
         last_version_file_full_path = self.get_settings_file_path()
@@ -311,7 +311,7 @@ class ExternalEnvFactory(object):
     def get_env_names(cls, name_format="%n"):
         """returns a list of environment names which it is possible to create
         one environment.
-        
+
         :param str name_format: A string showing the format of the output
           variables:
             %n : the name of the Environment
@@ -346,7 +346,7 @@ class ExternalEnvFactory(object):
 
         # filter the name
         import re
-        
+
         # replace anything that doesn't start with '%' with [\s\(\)\-]+
         pattern = re.sub(r'[^%\w]+', '[\s\(\)\-]+', name_format)
 
