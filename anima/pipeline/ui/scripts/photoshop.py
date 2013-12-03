@@ -28,6 +28,11 @@ def version_creator(lib='PySide'):
     :param str lib: choose a lib, one of ["PySide", "PyQt4"]
     :return: None
     """
+    from stalker import db
+    from stalker.db import DBSession
+    DBSession.remove()
+    db.setup()
+
     from anima.pipeline.ui import SET_PYSIDE, SET_PYQT4
     if lib == 'PySide':
         SET_PYSIDE()
