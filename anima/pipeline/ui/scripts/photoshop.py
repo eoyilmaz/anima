@@ -43,5 +43,12 @@ def version_creator(lib='PySide'):
     pEnv = PhotoshopEnv()
 
     from anima.pipeline.ui import version_creator
+    # paste only warning messages
+    import logging
+    logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(logging.WARNING)
+    logging.getLogger("stalker.db").setLevel(logging.WARNING)
+
     return version_creator.UI(pEnv)
 

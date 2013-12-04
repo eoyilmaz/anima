@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-
+from _ctypes import COMError
 
 import os
 import logging
@@ -132,7 +132,7 @@ class PhotoshopEnv(EnvironmentBase):
         version_full_path = version_full_path.replace('/', '\\')
         self.photoshop.Load(version_full_path)
 
-        return True
+        return True, []
 
     def post_open(self, version):
         """do nothing
@@ -151,8 +151,13 @@ class PhotoshopEnv(EnvironmentBase):
         """
         version = None
 
-        doc = self.photoshop.activeDocument
-        full_path = doc.FullName
+        try:
+            doc = self.photoshop.activeDocument
+            full_path = doc.FullName
+        except COMError:
+            # no active document
+            return None
+
         logger.debug('full_path : %s' % full_path)
         # try to get it from the current open scene
         if full_path != '':
