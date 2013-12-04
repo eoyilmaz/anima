@@ -875,10 +875,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 logger.debug("no logged in user")
                 self.close()
 
-        # it is a detached instance attach it to the Session
-        from stalker import User
-        logged_in_user = User.query.get(logged_in_user.id)
-
         return logged_in_user
 
     def fill_logged_in_user(self):
