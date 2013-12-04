@@ -63,7 +63,7 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def curves2ass(ass_path, hair_name, min_pixel_width=0.5):
+def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon'):
     """exports the node content to ass file
     """
     print '*******************************************************************' 
@@ -114,7 +114,7 @@ curves
  radius %(radius_count)s 1 b85FLOAT
  %(radius)s
  basis "catmull-rom"
- mode "ribbon"
+ mode "%(mode)s"
  min_pixel_width %(min_pixel_width)s
  visibility 65523
  receive_shadows on
@@ -271,10 +271,13 @@ curves
         'curve_ids': curve_ids,
         'uparamcoord': splitted_u,
         'vparamcoord': splitted_v,
-        'min_pixel_width': min_pixel_width
+        'min_pixel_width': min_pixel_width,
+        'mode': mode
     }
 
-    rendered_base_template = base_template % {'curve_data': rendered_curve_data}
+    rendered_base_template = base_template % {
+        'curve_data': rendered_curve_data
+    }
 
     write_start = time.time()
     filehandler = open
@@ -283,7 +286,7 @@ curves
 
     try:
         os.makedirs(os.path.dirname(ass_path))
-    except OSError: # path exists
+    except OSError:  # path exists
         pass
 
     ass_file = filehandler(ass_path, 'w')
