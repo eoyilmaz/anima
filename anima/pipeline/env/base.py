@@ -395,3 +395,57 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
+    def reference_filters(self, version, options):
+        """Checks the given version against the given options
+
+        :param options: a dictionary object showing the reference options
+        :return:
+        """
+        pass
+
+
+class Filter(object):
+    """A filter class filters given options against the given versions related
+    task type.
+
+    :param version: :class:`~stalker.models.version.Version` instance. The
+      related :class:`~stalker.models.task.Task`\ s
+      :attr:`~stalker.models.task.Task.type` attribute is key here. It defines
+      which filter to apply to.
+
+    :param options: A dictionary with keys are the name of the option and the
+      value is the value of that option.
+    """
+
+    def __init__(self):
+        pass
+
+
+class OpenFilter(Filter):
+    """A filter for Open operations
+    """
+    pass
+
+
+class ReferenceFilter(Filter):
+    """A filter for Reference operations
+    """
+    pass
+
+
+class ImportFilter(Filter):
+    """A filter for Import operations
+    """
+    pass
+
+
+class ExportFilter(Filter):
+    """A filter for Export operations
+    """
+    pass
+
+
+class SaveAsFilter(Filter):
+    """A Filter for Save As operations
+    """
+    pass

@@ -32,10 +32,10 @@ def UI(environment=None, app_in=None, executor=None):
 
 class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
     """The main dialog of the version updater system
-    
+
     The version_tuple list consist of a Version instance and a reference
     object.
-    
+
     For Maya environment the reference object is the PyMel Reference node,
     for other environments reference object type will be as native as it can be
     """
@@ -51,6 +51,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         self.center_window()
 
         self._horizontalLabels = [
+            'Parents',
             'Task',
             'Type',
             'Take',
@@ -109,7 +110,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
     def get_version_tuple_from_environment(self):
         """gets the references from environment
-        
+
         returns a tuple consist of an asset and the environments representation
         of the asset
         """
@@ -148,6 +149,15 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 # just skip this one or at least warn the user
                 unpublished_versions.append(version)
                 continue
+
+            # ------------------------------------
+            # the parent names
+            item = QtGui.QTableWidgetItem(version.nice_name)
+            # align to left and vertical center
+            item.setTextAlignment(
+                QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
+            )
+            self.versions_tableWidget.setItem(i, 0, item)
 
             # ------------------------------------
             # the task name
@@ -272,4 +282,3 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 marked_version_list.append(self._version_tuple_list[i])
 
         return marked_version_list
-        

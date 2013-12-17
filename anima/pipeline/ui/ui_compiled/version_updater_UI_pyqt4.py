@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_files/version_updater.ui'
+# Form implementation generated from reading ui file './ui_files/version_updater.ui'
 #
-# Created: Thu Jul 18 17:51:48 2013
+# Created: Tue Dec 17 14:17:09 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(658, 442)
+        Dialog.resize(940, 442)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.label = QtGui.QLabel(Dialog)
@@ -42,7 +42,7 @@ class Ui_Dialog(object):
         self.versions_tableWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.versions_tableWidget.setAlternatingRowColors(True)
         self.versions_tableWidget.setCornerButtonEnabled(False)
-        self.versions_tableWidget.setColumnCount(6)
+        self.versions_tableWidget.setColumnCount(7)
         self.versions_tableWidget.setObjectName(_fromUtf8("versions_tableWidget"))
         self.versions_tableWidget.setRowCount(0)
         item = QtGui.QTableWidgetItem()
@@ -57,6 +57,8 @@ class Ui_Dialog(object):
         self.versions_tableWidget.setHorizontalHeaderItem(4, item)
         item = QtGui.QTableWidgetItem()
         self.versions_tableWidget.setHorizontalHeaderItem(5, item)
+        item = QtGui.QTableWidgetItem()
+        self.versions_tableWidget.setHorizontalHeaderItem(6, item)
         self.versions_tableWidget.horizontalHeader().setVisible(True)
         self.versions_tableWidget.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.versions_tableWidget)
@@ -93,16 +95,18 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(_translate("Dialog", "Version Updater", None))
         self.label.setText(_translate("Dialog", "Please check the Versions that needs to be updated", None))
         item = self.versions_tableWidget.horizontalHeaderItem(0)
-        item.setText(_translate("Dialog", "Versionable", None))
+        item.setText(_translate("Dialog", "Parents", None))
         item = self.versions_tableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("Dialog", "Type", None))
+        item.setText(_translate("Dialog", "Task", None))
         item = self.versions_tableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("Dialog", "Take", None))
+        item.setText(_translate("Dialog", "Type", None))
         item = self.versions_tableWidget.horizontalHeaderItem(3)
-        item.setText(_translate("Dialog", "Current", None))
+        item.setText(_translate("Dialog", "Take", None))
         item = self.versions_tableWidget.horizontalHeaderItem(4)
-        item.setText(_translate("Dialog", "Latest", None))
+        item.setText(_translate("Dialog", "Current", None))
         item = self.versions_tableWidget.horizontalHeaderItem(5)
+        item.setText(_translate("Dialog", "Latest", None))
+        item = self.versions_tableWidget.horizontalHeaderItem(6)
         item.setText(_translate("Dialog", "Do Update?", None))
         self.selectNone_pushButton.setText(_translate("Dialog", "Select None", None))
         self.selectAll_pushButton.setText(_translate("Dialog", "Select All", None))
