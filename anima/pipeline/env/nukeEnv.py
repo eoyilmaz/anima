@@ -23,6 +23,7 @@ class Nuke(EnvironmentBase):
     def __init__(self, version=None, name='', extensions=None):
         """nuke specific init
         """
+        EnvironmentBase.__init__(self, name=name)
         #        # call the supers __init__
         #        super(Nuke, self).__init__(asset, name, extensions)
 
@@ -32,7 +33,6 @@ class Nuke(EnvironmentBase):
 
         self._main_output_node_name = "MAIN_OUTPUT"
 
-
     def get_root_node(self):
         """returns the root node of the current nuke session
         """
@@ -40,10 +40,10 @@ class Nuke(EnvironmentBase):
 
     def save_as(self, version):
         """"the save action for nuke environment
-        
+
         uses Nukes own python binding
         """
-        
+
         # get the current version, and store it as the parent of the new version
         current_version = self.get_current_version()
 
@@ -57,13 +57,13 @@ class Nuke(EnvironmentBase):
         version.created_with = self.name
 
         # set project_directory
-        self.project_directory = os.path.dirname(version.absolute_path)
+        # self.project_directory = os.path.dirname(version.absolute_path)
 
         # create the main write node
         self.create_main_write_node(version)
 
         # replace read and write node paths
-        self.replace_external_paths()
+        # self.replace_external_paths()
 
         # create the path before saving
         try:
@@ -129,7 +129,7 @@ class Nuke(EnvironmentBase):
         nuke.scriptOpen(version.absolute_full_path)
 
         # set the project_directory
-        self.project_directory = os.path.dirname(version.absolute_path)
+        # self.project_directory = os.path.dirname(version.absolute_path)
 
         # TODO: file paths in different OS'es should be replaced with the current one
         # Check if the file paths are starting with a string matching one of the
@@ -137,7 +137,7 @@ class Nuke(EnvironmentBase):
         # matching the current OS 
 
         # replace paths
-        self.replace_external_paths()
+        # self.replace_external_paths()
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
@@ -156,9 +156,9 @@ class Nuke(EnvironmentBase):
 
     def get_current_version(self):
         """Finds the Version instance from the current open file.
-        
+
         If it can't find any then returns None.
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         full_path = self._root.knob('name').value()
@@ -168,9 +168,9 @@ class Nuke(EnvironmentBase):
         """It will try to create a
         :class:`~oyProjectManager.models.version.Version` instance by looking at
         the recent files list.
-        
+
         It will return None if it can not find one.
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         # use the last file from the recent file list
@@ -189,7 +189,7 @@ class Nuke(EnvironmentBase):
 
     def get_version_from_project_dir(self):
         """Tries to find a Version from the current project directory
-        
+
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         versions = self.get_versions_from_path(self.project_directory)
@@ -264,7 +264,6 @@ class Nuke(EnvironmentBase):
     def create_main_write_node(self, version):
         """creates the default write node if there is no one created before.
         """
-
         # list all the write nodes in the current file
         main_write_nodes = self.get_main_write_nodes()
 
@@ -291,10 +290,9 @@ class Nuke(EnvironmentBase):
             elif output_format_enum == 'ffmpeg':
                 output_format_enum = 'mov'
 
-            output_file_name += \
-                "Task_" + str(version.task.id) + "_" + \
-                version.take_name + "_" + \
-                "v%03d" % version.version_number
+            output_file_name += '%s_v%03d' % (
+                version.nice_name, version.version_number
+            )
 
             if output_format_enum != 'mov':
                 output_file_name += ".####." + output_format_enum
@@ -373,7 +371,7 @@ class Nuke(EnvironmentBase):
     @property
     def project_directory(self):
         """The project directory.
-        
+
         Set it to the project root, and set all your paths relative to this
         directory.
         """
@@ -404,7 +402,7 @@ class Nuke(EnvironmentBase):
     def create_slate_info(self):
         """Returns info about the current shot which will contribute to the
         shot slate
-        
+
         :return: string
         """
 
