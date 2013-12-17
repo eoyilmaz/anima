@@ -51,7 +51,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         self.center_window()
 
         self._horizontalLabels = [
-            'Parents',
             'Task',
             'Type',
             'Take',
@@ -151,17 +150,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 continue
 
             # ------------------------------------
-            # the parent names
+            # the task nice name
             item = QtGui.QTableWidgetItem(version.nice_name)
-            # align to left and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 0, item)
-
-            # ------------------------------------
-            # the task name
-            item = QtGui.QTableWidgetItem(version.task.name)
             # align to left and vertical center
             item.setTextAlignment(
                 QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
