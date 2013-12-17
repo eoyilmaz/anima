@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_updater.ui'
 #
-# Created: Tue Dec 17 14:17:09 2013
+# Created: Tue Dec 17 14:54:45 2013
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(940, 442)
+        Dialog.resize(1182, 442)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
         self.label = QtGui.QLabel(Dialog)

@@ -216,6 +216,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
             self.versions_tableWidget.versions.append(version)
 
+        self.versions_tableWidget.resizeColumnsToContents()
+
         if len(unpublished_versions):
             QtGui.QMessageBox.warning(
                 self,
