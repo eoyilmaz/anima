@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_updater.ui'
 #
-# Created: Tue Dec 17 14:54:45 2013
+# Created: Tue Dec 17 20:34:38 2013
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(1182, 442)
+        Dialog.resize(909, 442)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtGui.QLabel(Dialog)
@@ -28,9 +28,9 @@ class Ui_Dialog(object):
         self.versions_tableWidget.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
         self.versions_tableWidget.setAlternatingRowColors(True)
         self.versions_tableWidget.setCornerButtonEnabled(False)
-        self.versions_tableWidget.setColumnCount(7)
+        self.versions_tableWidget.setColumnCount(6)
         self.versions_tableWidget.setObjectName("versions_tableWidget")
-        self.versions_tableWidget.setColumnCount(7)
+        self.versions_tableWidget.setColumnCount(6)
         self.versions_tableWidget.setRowCount(0)
         item = QtGui.QTableWidgetItem()
         self.versions_tableWidget.setHorizontalHeaderItem(0, item)
@@ -44,8 +44,6 @@ class Ui_Dialog(object):
         self.versions_tableWidget.setHorizontalHeaderItem(4, item)
         item = QtGui.QTableWidgetItem()
         self.versions_tableWidget.setHorizontalHeaderItem(5, item)
-        item = QtGui.QTableWidgetItem()
-        self.versions_tableWidget.setHorizontalHeaderItem(6, item)
         self.versions_tableWidget.horizontalHeader().setVisible(True)
         self.versions_tableWidget.horizontalHeader().setStretchLastSection(True)
         self.verticalLayout.addWidget(self.versions_tableWidget)
@@ -81,13 +79,12 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Version Updater", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dialog", "Please check the Versions that needs to be updated", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("Dialog", "Parents", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Dialog", "Type", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("Dialog", "Take", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(4).setText(QtGui.QApplication.translate("Dialog", "Current", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(5).setText(QtGui.QApplication.translate("Dialog", "Latest", None, QtGui.QApplication.UnicodeUTF8))
-        self.versions_tableWidget.horizontalHeaderItem(6).setText(QtGui.QApplication.translate("Dialog", "Do Update?", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(0).setText(QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(1).setText(QtGui.QApplication.translate("Dialog", "Type", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(2).setText(QtGui.QApplication.translate("Dialog", "Take", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(3).setText(QtGui.QApplication.translate("Dialog", "Current", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(4).setText(QtGui.QApplication.translate("Dialog", "Latest", None, QtGui.QApplication.UnicodeUTF8))
+        self.versions_tableWidget.horizontalHeaderItem(5).setText(QtGui.QApplication.translate("Dialog", "Do Update?", None, QtGui.QApplication.UnicodeUTF8))
         self.selectNone_pushButton.setText(QtGui.QApplication.translate("Dialog", "Select None", None, QtGui.QApplication.UnicodeUTF8))
         self.selectAll_pushButton.setText(QtGui.QApplication.translate("Dialog", "Select All", None, QtGui.QApplication.UnicodeUTF8))
         self.update_pushButton.setText(QtGui.QApplication.translate("Dialog", "Update", None, QtGui.QApplication.UnicodeUTF8))

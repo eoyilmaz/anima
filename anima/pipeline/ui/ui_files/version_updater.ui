@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1182</width>
+    <width>909</width>
     <height>442</height>
    </rect>
   </property>
@@ -42,7 +42,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>7</number>
+      <number>6</number>
      </property>
      <attribute name="horizontalHeaderVisible">
       <bool>true</bool>
@@ -50,11 +50,6 @@
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
      </attribute>
-     <column>
-      <property name="text">
-       <string>Parents</string>
-      </property>
-     </column>
      <column>
       <property name="text">
        <string>Task</string>
