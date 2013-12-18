@@ -621,10 +621,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :rtype : basestring
         """
-        sig_name = version.task.project.code + version.nice_name
+        sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
 
         if include_version_number:
-           sig_name += '_v%03d' % version.version_number
+           sig_name = '%s_v%03d' % (sig_name, version.version_number)
 
         return sig_name
 
