@@ -62,11 +62,13 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon'):
+def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon', export_motion=False):
     """exports the node content to ass file
     """
     print '*******************************************************************' 
     start_time = time.time()
+
+    template_vars = dict()
 
     # MyFur.ass
     # MyFur.ass.gz
@@ -135,9 +137,7 @@ curves
  declare curve_id uniform UINT
  curve_id %(curve_count)i 1 UINT
   %(curve_ids)s
- declare motionvector uniform VECTOR
- motionvector %(curve_count)i 1 b85VECTOR
- %(motionvector)s"""
+"""
 
     number_of_curves = geo.intrinsicValue('primitivecount')
     real_point_count = geo.intrinsicValue('pointcount')
@@ -158,7 +158,7 @@ curves
     radius = None
 
     pack = struct.pack
-    
+
     # try to find the width as a point attribute to speed things up
     getting_radius_start = time.time()
     radius_attribute = geo.findPointAttrib('width')
@@ -218,17 +218,27 @@ curves
     split_end = time.time()
     print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
 
-    # motion vector
-    encode_start = time.time()
-    motion_vector = geo.primFloatAttribValuesAsString('v')
-    encoded_motion_vector = base85.arnold_b85_encode(motion_vector)
-    encode_end = time.time()
-    print 'motionvector encode        : %3.3f' % (encode_end - encode_start)
 
-    split_start = time.time()
-    splitted_motion_vector = re.sub("(.{500})", "\\1\n", encoded_motion_vector, 0)
-    split_end = time.time()
-    print 'Splitting motionvector     : %3.3f' % (split_end - split_start)
+    if export_motion:
+        motion_data_template = """
+ declare motionvector uniform VECTOR
+ motionvector %(curve_count)i 1 b85VECTOR
+ %(motionvector)s"""
+        curve_data += motion_data_template
+
+        # motion vector
+        encode_start = time.time()
+        motion_vector = geo.primFloatAttribValuesAsString('v')
+        encoded_motion_vector = base85.arnold_b85_encode(motion_vector)
+        encode_end = time.time()
+        print 'motionvector encode        : %3.3f' % (encode_end - encode_start)
+
+        split_start = time.time()
+        splitted_motion_vector = re.sub("(.{500})", "\\1\n", encoded_motion_vector, 0)
+        split_end = time.time()
+        print 'Splitting motionvector     : %3.3f' % (split_end - split_start)
+
+        template_vars.update({'motionvector': splitted_motion_vector})
 
     # radius
     encode_start = time.time()
@@ -274,7 +284,7 @@ curves
     print 'len(encoded_u)               : %s' % len(encoded_u)
     print 'len(encoded_v)               : %s' % len(encoded_v)
 
-    rendered_curve_data = curve_data % {
+    template_vars.update({
         'name': node.path().replace('/', '_'),
         'curve_count': number_of_curves,
         'number_of_points_per_curve': ' '.join(number_of_points_per_curve),
@@ -287,8 +297,9 @@ curves
         'vparamcoord': splitted_v,
         'min_pixel_width': min_pixel_width,
         'mode': mode,
-        'motionvector': splitted_motion_vector,
-    }
+    })
+
+    rendered_curve_data = curve_data % template_vars
 
     rendered_base_template = base_template % {
         'curve_data': rendered_curve_data
