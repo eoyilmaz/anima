@@ -3,7 +3,6 @@
 # 
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import shutil
 
 import os
 import gzip
@@ -135,7 +134,10 @@ curves
  %(vparamcoord)s
  declare curve_id uniform UINT
  curve_id %(curve_count)i 1 UINT
-  %(curve_ids)s"""
+  %(curve_ids)s
+ declare motionvector uniform VECTOR
+ motionvector %(curve_count)i 1 b85VECTOR
+ %(motionvector)s"""
 
     number_of_curves = geo.intrinsicValue('primitivecount')
     real_point_count = geo.intrinsicValue('pointcount')
@@ -216,6 +218,18 @@ curves
     split_end = time.time()
     print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
 
+    # motion vector
+    encode_start = time.time()
+    motion_vector = geo.primFloatAttribValuesAsString('v')
+    encoded_motion_vector = base85.arnold_b85_encode(motion_vector)
+    encode_end = time.time()
+    print 'motionvector encode        : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_motion_vector = re.sub("(.{500})", "\\1\n", encoded_motion_vector, 0)
+    split_end = time.time()
+    print 'Splitting motionvector     : %3.3f' % (split_end - split_start)
+
     # radius
     encode_start = time.time()
     encoded_radius = base85.arnold_b85_encode(radius)
@@ -272,7 +286,8 @@ curves
         'uparamcoord': splitted_u,
         'vparamcoord': splitted_v,
         'min_pixel_width': min_pixel_width,
-        'mode': mode
+        'mode': mode,
+        'motionvector': splitted_motion_vector,
     }
 
     rendered_base_template = base_template % {

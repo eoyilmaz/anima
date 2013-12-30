@@ -2,6 +2,17 @@
 Anima Tools Changes
 ===================
 
+0.1.3.2
+=======
+
+* **Render:**
+
+  * **Arnold:**
+
+    * **New:** H2A now includes world space motion vector information to the
+      file. Although it is not usable in current form, further work needs to be
+      done to convert the world space data to camera space data.
+
 0.1.3.1
 =======
 
