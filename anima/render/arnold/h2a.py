@@ -62,17 +62,17 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon', export_motion=False):
+def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon',
+               export_motion=False):
     """exports the node content to ass file
     """
-    print '*******************************************************************' 
+    sample_count = 2 if export_motion else 1
+
+    print '*******************************************************************'
     start_time = time.time()
 
     template_vars = dict()
 
-    # MyFur.ass
-    # MyFur.ass.gz
-    # MyFur.asstoc
     parts = os.path.splitext(ass_path)
     extension = parts[1]
     use_gzip = False
@@ -107,12 +107,12 @@ curves
 
     curve_data = """
  name %(name)s
- num_points %(curve_count)i 1 UINT
+ num_points %(curve_count)i %(sample_count)s UINT
   %(number_of_points_per_curve)s
- points %(point_count)s 1 b85POINT
+ points %(point_count)s %(sample_count)s b85POINT
  %(point_positions)s
 
- radius %(radius_count)s 1 b85FLOAT
+ radius %(radius_count)s %(sample_count)s b85FLOAT
  %(radius)s
  basis "catmull-rom"
  mode "%(mode)s"
@@ -129,13 +129,13 @@ curves
  sss_sample_spacing 0.100000001
  sss_sample_distribution "blue_noise"
  declare uparamcoord uniform FLOAT
- uparamcoord %(curve_count)i 1 b85FLOAT
+ uparamcoord %(real_point_count)i %(sample_count)s b85FLOAT
  %(uparamcoord)s
  declare vparamcoord uniform FLOAT
- vparamcoord %(curve_count)i 1 b85FLOAT
+ vparamcoord %(real_point_count)i %(sample_count)s b85FLOAT
  %(vparamcoord)s
  declare curve_id uniform UINT
- curve_id %(curve_count)i 1 UINT
+ curve_id %(curve_count)i %(sample_count)s UINT
   %(curve_ids)s
 """
 
@@ -182,7 +182,7 @@ curves
                 radius_str_buffer = []
                 radius_str_buffer_append = radius_str_buffer.append
                 radius_i = 0
-    
+
             for vertex in prim_vertices:
                 # TODO: copy vertex attributes to point attributes and get it directly
                 radius_str_buffer_append(pack('f', vertex.attribValue('width')))
@@ -195,7 +195,19 @@ curves
 
     # point positions
     encode_start = time.time()
+
+    # for motion blur use pprime
+    getting_point_positions_start = time.time()
     point_positions = geo.pointFloatAttribValuesAsString('P')
+
+    if export_motion:
+        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
+        point_positions = '%s%s' % (point_positions, point_prime_positions)
+
+    getting_point_positions_end = time.time()
+    print 'Getting Point Position     : %3.3f' % \
+          (getting_point_positions_end - getting_point_positions_start)
+
     # repeat every first and last point coordinates
     # (3 value each 3 * 4 = 12 characters) of every curve
     zip_start = time.time()
@@ -218,28 +230,6 @@ curves
     split_end = time.time()
     print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
 
-
-    if export_motion:
-        motion_data_template = """
- declare motionvector uniform VECTOR
- motionvector %(curve_count)i 1 b85VECTOR
- %(motionvector)s"""
-        curve_data += motion_data_template
-
-        # motion vector
-        encode_start = time.time()
-        motion_vector = geo.primFloatAttribValuesAsString('v')
-        encoded_motion_vector = base85.arnold_b85_encode(motion_vector)
-        encode_end = time.time()
-        print 'motionvector encode        : %3.3f' % (encode_end - encode_start)
-
-        split_start = time.time()
-        splitted_motion_vector = re.sub("(.{500})", "\\1\n", encoded_motion_vector, 0)
-        split_end = time.time()
-        print 'Splitting motionvector     : %3.3f' % (split_end - split_start)
-
-        template_vars.update({'motionvector': splitted_motion_vector})
-
     # radius
     encode_start = time.time()
     encoded_radius = base85.arnold_b85_encode(radius)
@@ -248,14 +238,23 @@ curves
 
     split_start = time.time()
     splitted_radius = re.sub("(.{500})", "\\1\n", encoded_radius, 0)
+    # extend for motion blur
+    if export_motion:
+        splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
     split_end = time.time()
     print 'Splitting Radius           : %3.3f' % (split_end - split_start)
 
     # uv
-    uv = geo.primFloatAttribValuesAsString('uv')
+    getting_uv_start = time.time()
+    uv = geo.pointFloatAttribValuesAsString('uv')
     # TODO: find a better way of doing the following two lines
-    u = ''.join(map(''.join, zip(*[iter(uv)] * 4))[::3])
-    v = ''.join(map(''.join, zip(*[iter(uv)] * 4))[1::3])
+    #u = ''.join(map(''.join, zip(*[iter(uv)] * 4))[::3])
+    #v = ''.join(map(''.join, zip(*[iter(uv)] * 4))[1::3])
+    u = geo.pointFloatAttribValuesAsString('uv_u')
+    v = geo.pointFloatAttribValuesAsString('uv_v')
+    getting_uv_end = time.time()
+    print 'Getting uv                 : %3.3f' % \
+          (getting_uv_end - getting_uv_start)
 
     encode_start = time.time()
     encoded_u = base85.arnold_b85_encode(u)
@@ -264,6 +263,8 @@ curves
 
     split_start = time.time()
     splitted_u = re.sub("(.{500})", "\\1\n", encoded_u, 0)
+    if export_motion:
+        splitted_u = '%(data)s%(data)s' % {'data': splitted_u}
     split_end = time.time()
     print 'Splitting UParamCoord      : %3.3f' % (split_end - split_start)
 
@@ -274,6 +275,8 @@ curves
 
     split_start = time.time()
     splitted_v = re.sub("(.{500})", "\\1\n", encoded_v, 0)
+    if export_motion:
+        splitted_v = '%(data)s%(data)s' % {'data': splitted_v}
     split_end = time.time()
     print 'Splitting VParamCoord      : %3.3f' % (split_end - split_start)
 
@@ -284,9 +287,14 @@ curves
     print 'len(encoded_u)               : %s' % len(encoded_u)
     print 'len(encoded_v)               : %s' % len(encoded_v)
 
+    # extend for motion blur
+    if export_motion:
+        number_of_points_per_curve.extend(number_of_points_per_curve)
+
     template_vars.update({
         'name': node.path().replace('/', '_'),
         'curve_count': number_of_curves,
+        'real_point_count': real_point_count,
         'number_of_points_per_curve': ' '.join(number_of_points_per_curve),
         'point_count': point_count,
         'point_positions': splitted_point_positions,
@@ -297,6 +305,7 @@ curves
         'vparamcoord': splitted_v,
         'min_pixel_width': min_pixel_width,
         'mode': mode,
+        'sample_count': sample_count
     })
 
     rendered_curve_data = curve_data % template_vars
@@ -310,6 +319,8 @@ curves
     if use_gzip:
         filehandler = gzip.open
 
+    # normalize path
+    ass_path = os.path.normpath(ass_path)
     try:
         os.makedirs(os.path.dirname(ass_path))
     except OSError:  # path exists
@@ -322,7 +333,15 @@ curves
 
     print 'Writing to file            : %3.3f' % (write_end - write_start)
 
-    bounding_box = geo.intrinsicValue('bounds')
+    node_inputs = node.inputs()
+    second_input_geo = node_inputs[1].geometry()
+
+    # use second input for bounding box if connected
+    if export_motion and second_input_geo:
+        bounding_box = second_input_geo.intrinsicValue('bounds')
+    else:
+        bounding_box = geo.intrinsicValue('bounds')
+
     bounding_box_info = 'bounds %s %s %s %s %s %s' % (
         bounding_box[0], bounding_box[2], bounding_box[4],
         bounding_box[1], bounding_box[3], bounding_box[5]
