@@ -88,17 +88,6 @@ def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon',
     geo = node.geometry()
 
     base_template = """
-options
-{
- name options
- xres 1920
- yres 1080
- aspect_ratio 1.0
- preserve_scene_data on
- procedural_force_expand on
- binary_ass off
-}
-
 curves
 {
  %(curve_data)s
@@ -120,14 +109,9 @@ curves
  visibility 65523
  receive_shadows on
  self_shadows on
- matrix
-  1 0 0 0
-  0 1 0 0
-  0 0 1 0
-  0 0 0 1
+ matrix 1 %(sample_count)s MATRIX
+  %(matrix)s
  opaque on
- sss_sample_spacing 0.100000001
- sss_sample_distribution "blue_noise"
  declare uparamcoord uniform FLOAT
  uparamcoord %(real_point_count)i %(sample_count)s b85FLOAT
  %(uparamcoord)s
@@ -288,8 +272,14 @@ curves
     print 'len(encoded_v)               : %s' % len(encoded_v)
 
     # extend for motion blur
+    matrix = """1 0 0 0
+  0 1 0 0
+  0 0 1 0
+  0 0 0 1
+"""
     if export_motion:
         number_of_points_per_curve.extend(number_of_points_per_curve)
+        matrix += matrix
 
     template_vars.update({
         'name': node.path().replace('/', '_'),
@@ -305,7 +295,8 @@ curves
         'vparamcoord': splitted_v,
         'min_pixel_width': min_pixel_width,
         'mode': mode,
-        'sample_count': sample_count
+        'sample_count': sample_count,
+        'matrix': matrix
     })
 
     rendered_curve_data = curve_data % template_vars
