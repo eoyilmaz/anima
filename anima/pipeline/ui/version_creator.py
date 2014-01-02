@@ -1448,7 +1448,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             item.index(), QtGui.QItemSelectionModel.ClearAndSelect
         )
         self.tasks_treeView.scrollTo(
-            item.index(), QtGui.QAbstractItemView.PositionAtCenter
+            item.index(), QtGui.QAbstractItemView.PositionAtBottom
         )
         return item
 
