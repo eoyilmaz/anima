@@ -126,6 +126,7 @@ def update_gview_with_task_thumbnail(task, gView):
                 full_path = StalkerThumbnailCache.get(
                     parent.thumbnail.full_path
                 )
+                logger.debug('found parent thumbnail at: %s' % full_path)
                 break
 
     if full_path:
