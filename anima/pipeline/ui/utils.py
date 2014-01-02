@@ -114,17 +114,25 @@ def update_gview_with_task_thumbnail(task, gView):
         return
 
     # get the thumbnail full path
+    full_path = None
     if task.thumbnail:
-
         # use the cache system to get the thumbnail
         full_path = StalkerThumbnailCache.get(task.thumbnail.full_path)
+    else:
+        logger.debug('there is no thumbnail')
+        # try to get the thumbnail from parents
+        for parent in task.parents:
+            if parent.thumbnail:
+                full_path = StalkerThumbnailCache.get(
+                    parent.thumbnail.full_path
+                )
+                break
 
+    if full_path:
         update_gview_with_image_file(
             full_path,
             gView
         )
-    else:
-        logger.debug('there is no thumbnail')
 
 
 def update_gview_with_image_file(image_full_path, gView):
