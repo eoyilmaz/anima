@@ -1447,7 +1447,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.tasks_treeView.selectionModel().select(
             item.index(), QtGui.QItemSelectionModel.ClearAndSelect
         )
-        self.tasks_treeView.scrollTo(item.index(), 3)
+        self.tasks_treeView.scrollTo(
+            item.index(), QtGui.QAbstractItemView.PositionAtCenter
+        )
         return item
 
     def takes_listWidget_changed(self, index):
