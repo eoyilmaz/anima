@@ -113,10 +113,10 @@ curves
   %(matrix)s
  opaque on
  declare uparamcoord uniform FLOAT
- uparamcoord %(real_point_count)i %(sample_count)s b85FLOAT
+ uparamcoord %(curve_count)i %(sample_count)s b85FLOAT
  %(uparamcoord)s
  declare vparamcoord uniform FLOAT
- vparamcoord %(real_point_count)i %(sample_count)s b85FLOAT
+ vparamcoord %(curve_count)i %(sample_count)s b85FLOAT
  %(vparamcoord)s
  declare curve_id uniform UINT
  curve_id %(curve_count)i %(sample_count)s UINT
@@ -230,12 +230,8 @@ curves
 
     # uv
     getting_uv_start = time.time()
-    uv = geo.pointFloatAttribValuesAsString('uv')
-    # TODO: find a better way of doing the following two lines
-    #u = ''.join(map(''.join, zip(*[iter(uv)] * 4))[::3])
-    #v = ''.join(map(''.join, zip(*[iter(uv)] * 4))[1::3])
-    u = geo.pointFloatAttribValuesAsString('uv_u')
-    v = geo.pointFloatAttribValuesAsString('uv_v')
+    u = geo.primFloatAttribValuesAsString('uv_u')
+    v = geo.primFloatAttribValuesAsString('uv_v')
     getting_uv_end = time.time()
     print 'Getting uv                 : %3.3f' % \
           (getting_uv_end - getting_uv_start)
@@ -267,7 +263,7 @@ curves
     print 'len(encoded_point_positions) : %s' % len(encoded_point_positions)
     print '(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3)
     print 'len(encoded_radius)          : %s' % len(encoded_radius)
-    print 'len(uv)                      : %s' % len(uv)
+    print 'len(uv)                      : %s' % len(u)
     print 'len(encoded_u)               : %s' % len(encoded_u)
     print 'len(encoded_v)               : %s' % len(encoded_v)
 
