@@ -87,21 +87,22 @@ class Nuke(EnvironmentBase):
         project = version.task.project
         self.set_fps(project.fps)
 
-        if is_shot_related_task:
-            self.set_frame_range(
-                shot.cut_in,
-                shot.cut_out
-            )
-            imf = shot.image_format
-        else:
-            imf = project.image_format
+        if version.version_number > 1:
+            if is_shot_related_task:
+                self.set_frame_range(
+                    shot.cut_in,
+                    shot.cut_out
+                )
+                imf = shot.image_format
+            else:
+                imf = project.image_format
 
-        # TODO: set the render resolution later
-        # self.set_resolution(
-        #     imf.width,
-        #     imf.height,
-        #     imf.pixel_aspect
-        # )
+            # TODO: set the render resolution later
+            # self.set_resolution(
+            #     imf.width,
+            #     imf.height,
+            #     imf.pixel_aspect
+            # )
 
         nuke.scriptSaveAs(version.absolute_full_path)
 
