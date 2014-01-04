@@ -87,7 +87,7 @@ class Nuke(EnvironmentBase):
         project = version.task.project
         self.set_fps(project.fps)
 
-        if version.version_number > 1:
+        if version.version_number == 1:
             if is_shot_related_task:
                 self.set_frame_range(
                     shot.cut_in,
