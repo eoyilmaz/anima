@@ -726,7 +726,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # create the dirs
             try:
                 os.makedirs(local_path)
-            except OSError: # dir exists
+            except OSError:  # dir exists
                 pass
 
             if not os.path.exists(destination_full_path):
