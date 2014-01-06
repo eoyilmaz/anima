@@ -89,10 +89,12 @@ class Nuke(EnvironmentBase):
 
         if version.version_number == 1:
             if is_shot_related_task:
-                self.set_frame_range(
-                    shot.cut_in,
-                    shot.cut_out
-                )
+                # just set if the frame range is not 1-1
+                if shot.cut_in != 1 and shot.cut_out != 1:
+                    self.set_frame_range(
+                        shot.cut_in,
+                        shot.cut_out
+                    )
                 imf = shot.image_format
             else:
                 imf = project.image_format
