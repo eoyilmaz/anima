@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Thu Nov 28 16:31:19 2013
+# Created: Mon Jan  6 17:29:39 2014
 #      by: PyQt4 UI code generator 4.10.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -242,6 +242,9 @@ class Ui_Dialog(object):
         self.useNameSpace_checkBox.setChecked(True)
         self.useNameSpace_checkBox.setObjectName(_fromUtf8("useNameSpace_checkBox"))
         self.horizontalLayout_5.addWidget(self.useNameSpace_checkBox)
+        self.load_settings_comboBox = QtGui.QComboBox(self.previous_versions_groupBox)
+        self.load_settings_comboBox.setObjectName(_fromUtf8("load_settings_comboBox"))
+        self.horizontalLayout_5.addWidget(self.load_settings_comboBox)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.chose_pushButton = QtGui.QPushButton(self.previous_versions_groupBox)
