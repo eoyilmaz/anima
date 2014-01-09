@@ -242,6 +242,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.absolute_full_path
         )
 
+        DBSession.add(version)
         DBSession.commit()
 
         return True
