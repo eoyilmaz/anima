@@ -27,7 +27,7 @@ def version_creator():
     reload(version_creator)
     reload(models)
     mEnv = mayaEnv.Maya()
-    mEnv.name = "Maya%s" % str(pymel.versions.current()[0:4])
+    mEnv.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     import logging
     logger = logging.getLogger('anima.pipeline.ui.version_creator')
