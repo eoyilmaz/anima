@@ -139,3 +139,42 @@ class RecentFileManagerTestCase(unittest2.TestCase):
             rfm1['Env2'],
             ['Path6', 'Path5', 'Path4']
         )
+
+    def test_remove_method_removes_files_from_given_env(self):
+        """testing if the given path will be removed from the given environment
+        """
+        rfm1 = RecentFileManager()
+        rfm1.add('Env1', 'Path1')
+        rfm1.add('Env1', 'Path2')
+        rfm1.add('Env1', 'Path3')
+
+        rfm1.add('Env2', 'Path4')
+        rfm1.add('Env2', 'Path5')
+        rfm1.add('Env2', 'Path6')
+
+        self.assertEqual(
+            rfm1['Env1'],
+            ['Path3', 'Path2', 'Path1']
+        )
+        self.assertEqual(
+            rfm1['Env2'],
+            ['Path6', 'Path5', 'Path4']
+        )
+
+        rfm1.remove('Env1', 'Path1')
+        self.assertEqual(
+            rfm1['Env1'],
+            ['Path3', 'Path2']
+        )
+
+        rfm1.remove('Env1', 'Path3')
+        self.assertEqual(
+            rfm1['Env1'],
+            ['Path2']
+        )
+
+        rfm1.remove('Env2', 'Path5')
+        self.assertEqual(
+            rfm1['Env2'],
+            ['Path6', 'Path4']
+        )

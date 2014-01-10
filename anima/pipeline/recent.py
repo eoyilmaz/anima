@@ -110,7 +110,7 @@ class RecentFileManager(object):
     def remove(self, env_name, file_path):
         """Removes the given path from the recent files list
         """
-        pass
+        self[env_name].remove(file_path)
 
     def __getitem__(self, item):
         """
