@@ -71,6 +71,26 @@ class RecentFileManagerTestCase(unittest2.TestCase):
             ['some path']
         )
 
+    def test_add_method_pops_previous_versions_and_inserts_them_to_0(self):
+        """testing if an entry will be popped from the recent_files list if it
+        is added to the list again
+        """
+        rfm1 = RecentFileManager()
+        rfm1.add('Env1', 'path1')
+        rfm1.add('Env1', 'path2')
+        rfm1.add('Env1', 'path3')
+
+        self.assertEqual(
+            rfm1['Env1'],
+            ['path3', 'path2', 'path1']
+        )
+
+        rfm1.add('Env1', 'path1')
+        self.assertEqual(
+            rfm1['Env1'],
+            ['path1', 'path3', 'path2']
+        )
+
     def test_recent_files_attribute_is_working_properly(self):
         """testing if the recent_files attribute is working properly
         """

@@ -101,6 +101,9 @@ class RecentFileManager(object):
         if not self.recent_files.has_key(env_name):
             self.recent_files[env_name] = []
 
+        if file_path in self.recent_files[env_name]:
+            self.recent_files[env_name].remove(file_path)
+
         self.recent_files[env_name].insert(0, file_path)
         self.save()
 
