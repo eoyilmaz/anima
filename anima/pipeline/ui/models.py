@@ -10,7 +10,7 @@ from PySide import __all__
 import re
 
 from stalker import Task, Project, defaults
-from anima.pipeline.ui.lib import QtGui
+from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui.version_creator import logger
 
 logger = logging.getLogger(__name__)
