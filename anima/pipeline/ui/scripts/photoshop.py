@@ -47,6 +47,7 @@ def version_creator(lib='PySide'):
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 

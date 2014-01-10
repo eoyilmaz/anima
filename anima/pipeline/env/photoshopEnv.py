@@ -9,6 +9,7 @@ import os
 import logging
 
 import comtypes.client
+from anima.pipeline.recent import RecentFileManager
 from base import EnvironmentBase
 
 
@@ -132,6 +133,9 @@ class PhotoshopEnv(EnvironmentBase):
         version_full_path = version_full_path.replace('/', '\\')
         self.photoshop.Load(version_full_path)
 
+        rfm = RecentFileManager()
+        rfm.add(self.name, version.absolute_full_path)
+
         return True, []
 
     def post_open(self, version):
@@ -182,7 +186,6 @@ class PhotoshopEnv(EnvironmentBase):
         # read the fileName from recent files list
         # try to get the a valid asset file from starting the last recent file
 
-        from anima.pipeline.recent import RecentFileManager
         rfm = RecentFileManager()
 
         try:
