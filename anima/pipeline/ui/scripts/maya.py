@@ -35,4 +35,4 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI()
+    version_creator.UI(mEnv)
