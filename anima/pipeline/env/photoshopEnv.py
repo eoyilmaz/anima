@@ -182,14 +182,17 @@ class PhotoshopEnv(EnvironmentBase):
         # read the fileName from recent files list
         # try to get the a valid asset file from starting the last recent file
 
+        from anima.pipeline.recent import RecentFileManager
+        rfm = RecentFileManager()
+
         try:
-            recent_files = self.photoshop.RecentFiles
+            recent_files = rfm['Photoshop']
         except KeyError:
             logger.debug("no recent files")
             recent_files = None
 
         if recent_files is not None:
-            for i in range(len(recent_files)-1, -1, -1):
+            for i in range(len(recent_files)):
                 version = self.get_version_from_full_path(recent_files[i])
                 if version is not None:
                     break

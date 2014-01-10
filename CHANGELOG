@@ -17,6 +17,8 @@ Anima Tools Changes
 
  * **Fix:** Fixed the 'already maximum connection' error by closing the
    database session when the UI is closed.
+ * **New:** Added a new class called RecentFilesManager to manage recent files
+   in an environment internally.
 
 0.1.3.1
 =======
