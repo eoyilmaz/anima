@@ -22,14 +22,17 @@ def version_creator():
     except AttributeError:
         pass
 
-    from anima.pipeline.ui import version_creator
+    from anima.pipeline.ui import version_creator, models
     from anima.pipeline.env import mayaEnv
     reload(version_creator)
+    reload(models)
     mEnv = mayaEnv.Maya()
     mEnv.name = "Maya%s" % str(pymel.versions.current()[0:4])
 
     import logging
     logger = logging.getLogger('anima.pipeline.ui.version_creator')
+    logger.setLevel(logging.WARNING)
+    logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
     version_creator.UI()

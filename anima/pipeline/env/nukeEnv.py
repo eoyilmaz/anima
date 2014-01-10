@@ -389,7 +389,7 @@ class Nuke(EnvironmentBase):
         #            # I can't find the source
         #            # so instead of using the root node,
         #            # just return the os.path.dirname(version.path)
-        #            
+        #
         #            return os.path.dirname(self.version.path)
 
         return root["project_directory"].getValue()

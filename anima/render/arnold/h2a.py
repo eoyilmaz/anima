@@ -168,7 +168,6 @@ curves
                 radius_i = 0
 
             for vertex in prim_vertices:
-                # TODO: copy vertex attributes to point attributes and get it directly
                 radius_str_buffer_append(pack('f', vertex.attribValue('width')))
 
         # do flushes again before getting the values
