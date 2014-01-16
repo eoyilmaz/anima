@@ -63,9 +63,9 @@ LUTS = {
     'arnold': {
         'byte_order': '<',
         'expansion_char': '!',
-        'special_values' : {
-            '$$$$$' : 'z', # 0.0
-            '8Fcb9': 'y' # 1.0
+        'special_values': {
+            '$$$$$': 'z',  # 0.0
+            '8Fcb9': 'y'  # 1.0
         },
         'char_to_int': {
             '%': 1, '$': 0, "'": 3, '&': 2, ')': 5, '(': 4, '+': 7, '*': 6,

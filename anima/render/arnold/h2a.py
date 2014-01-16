@@ -62,16 +62,18 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon',
-               export_motion=False):
-    """exports the node content to ass file
+def geometry2ass(**kwargs):
+    """exports geometry to ass format
     """
-    sample_count = 2 if export_motion else 1
+    ass_path = kwargs['path']
+    name = kwargs['name']
+    min_pixel_width = kwargs['min_pixel_width']
+    mode = kwargs['mode']
+    export_type = kwargs['export_type']
+    export_motion = kwargs['export_motion']
 
     print '*******************************************************************'
     start_time = time.time()
-
-    template_vars = dict()
 
     parts = os.path.splitext(ass_path)
     extension = parts[1]
@@ -85,16 +87,270 @@ def curves2ass(ass_path, hair_name, min_pixel_width=0.5, mode='ribbon',
     asstoc_path = basename + '.asstoc'
 
     node = hou.pwd()
+
+    write_start = time.time()
+    filehandler = open
+    if use_gzip:
+        filehandler = gzip.open
+
+    # normalize path
+    ass_path = os.path.normpath(ass_path)
+    try:
+        os.makedirs(os.path.dirname(ass_path))
+    except OSError:  # path exists
+        pass
+
+    data = ''
+    if export_type == 0:
+        data = curves2ass(node, name, min_pixel_width, mode, export_motion)
+    elif export_type == 1:
+        data = polygon2ass(node, name, export_motion)
+
+    ass_file = filehandler(ass_path, 'w')
+    ass_file.write(data)
+    ass_file.close()
+    write_end = time.time()
+
+    print 'Writing to file            : %3.3f' % (write_end - write_start)
+
+    node_inputs = node.inputs()
+    try:
+        second_input_geo = node_inputs[1].geometry()
+    except IndexError:
+        second_input_geo = None
+
+    # use second input for bounding box if connected
+    if export_motion and second_input_geo:
+        bounding_box = second_input_geo.intrinsicValue('bounds')
+    else:
+        bounding_box = node.geometry().intrinsicValue('bounds')
+
+    bounding_box_info = 'bounds %s %s %s %s %s %s' % (
+        bounding_box[0], bounding_box[2], bounding_box[4],
+        bounding_box[1], bounding_box[3], bounding_box[5]
+    )
+
+    with open(asstoc_path, 'w') as asstoc_file:
+        asstoc_file.write(bounding_box_info)
+
+    end_time = time.time()
+    print 'All Conversion took       : %3.3f sec' % (end_time - start_time)
+    print '*******************************************************************'
+
+
+def polygon2ass(node, name, export_motion=False):
+    """exports polygon geometry to ass format
+    """
+    sample_count = 2 if export_motion else 1
+
+    geo = node.geometry()
+    base_template = """
+polymesh
+{
+ name %(name)s
+ nsides %(primitive_count)i %(sample_count)s UINT
+%(number_of_points_per_primitive)s
+ vidxs %(vertex_count)s %(sample_count)s UINT
+%(vertex_ids)s
+ vlist %(point_count)s %(sample_count)s b85POINT
+%(point_positions)s
+ smoothing on
+ visibility 255
+ sidedness 255
+ receive_shadows on
+ self_shadows on
+ matrix
+%(matrix)s
+ opaque on
+ id 683108022
+}"""
+    #    """
+    #polymesh
+    #{
+    # name %(name)s
+    # nsides %(primitive_count)i %(sample_count)s UINT
+    #  %(number_of_points_per_primitive)s
+    # vidxs %(vertex_count) %(sample_count)s b85UINT
+    #%(vertex_ids)s
+    # uvidxs %(vertex_count)s %(sample_count)s b85UINT
+    #%(uv_ids)s
+    # vlist %(point_count) %(sample_count)s b85POINT
+    #%(point_positions)s
+    # nlist %(point_count) %(sample_count)s b85VECTOR
+    #%(point_normals)s
+    # uvlist %(vertex_count)s %(sample_count)s b85POINT2
+    #%(uv_positions)s
+    # smoothing on
+    # visibility 255
+    # sidedness 255
+    # receive_shadows on
+    # self_shadows on
+    # matrix
+    #%(matrix)s
+    # opaque on
+    # id 683108022
+    #}
+    #"""
+    # skip attributes
+    skip_normals = False
+    skip_uvs = False
+
+    intrinsic_values = geo.intrinsicValueDict()
+
+    primitive_count = intrinsic_values['primitivecount']
+    point_count = intrinsic_values['pointcount']
+    vertex_count = intrinsic_values['vertexcount']
+
+    number_of_points_per_primitive = []
+    vertex_ids = []
+
+    # just for the first vertex try to read the uv to determine if we should
+    # skip the uvs or not
+    skip_uvs = True
+
+    i = 0
+    j = 0
+    combined_vertex_ids = []
+    combined_number_of_points_per_primitive = []
+
+    for prim in geo.iterPrims():
+        number_of_points_per_primitive.append(`prim.numVertices()`)
+        i += 1
+        if i > 500:
+            i = 0
+            combined_number_of_points_per_primitive.append(' '.join(number_of_points_per_primitive))
+            number_of_points_per_primitive = []
+        for vertex in prim.vertices():
+            point = vertex.point()
+            point_id = point.number()
+            vertex_ids.append(`point_id`)
+            j += 1
+            if j > 500:
+                j = 0
+                combined_vertex_ids.append(' '.join(vertex_ids))
+                vertex_ids = []
+
+    # join for a last time
+    if number_of_points_per_primitive:
+        combined_number_of_points_per_primitive.append(' '.join(number_of_points_per_primitive))
+        number_of_points_per_primitive = []
+
+    if vertex_ids:
+        combined_vertex_ids.append(' '.join(vertex_ids))
+        vertex_ids = []
+
+    point_positions = geo.pointFloatAttribValuesAsString('P')
+
+    #try:
+    #    point_normals = geo.pointFloatAttribValuesAsString('N')
+    #except hou.OperationFailed:
+    #    # no normal attribute skip it
+    #    skip_normals = True
+    #    point_normals = []
+
+    #
+    # Number Of Points Per Primitive
+    #
+    encode_start = time.time()
+    #encoded_number_of_points_per_primitive = 'B%s' % base85.arnold_b85_encode(
+    #    struct.pack(
+    #        '>%sB' % len(number_of_points_per_primitive),
+    #        *number_of_points_per_primitive
+    #    )
+    #)
+    encoded_number_of_points_per_primitive = '\n'.join(combined_number_of_points_per_primitive)
+    encode_end = time.time()
+    print 'Encoding Number of Points  : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    #splitted_number_of_points_per_primitive = \
+    #    re.sub(
+    #        "(.{500})", "\\1\n",
+    #        #' '.join(number_of_points_per_primitive),
+    #        encoded_number_of_points_per_primitive,
+    #        0
+    #    )
+    #splitted_number_of_points_per_primitive = ' '.join(encoded_number_of_points_per_primitive)
+    splitted_number_of_points_per_primitive = encoded_number_of_points_per_primitive
+    split_end = time.time()
+    print 'Splitting Number of Points : %3.3f' % (split_end - split_start)
+
+
+    #
+    # Point Positions
+    #
+    encode_start = time.time()
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
+    encode_end = time.time()
+    print 'Encoding Point Position    : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
+    split_end = time.time()
+    print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
+
+    #
+    # Vertex Ids
+    #
+    encode_start = time.time()
+    #encoded_vertex_ids = 'B%s' % base85.arnold_b85_encode(
+    #    struct.pack(
+    #        '>%sB' % len(vertex_ids),
+    #        *vertex_ids
+    #    )
+    #)
+    encoded_vertex_ids = '\n'.join(combined_vertex_ids)
+    encode_end = time.time()
+    print 'Encoding Vertex Ids        : %3.3f' % (encode_end - encode_start)
+
+    split_start = time.time()
+    #splitted_vertex_ids = re.sub(
+    #    "(.{500})", "\\1\n",
+    #    #' '.join(vertex_ids),
+    #    encoded_vertex_ids,
+    #    0
+    #)
+    #splitted_vertex_ids = ' '.join(encoded_vertex_ids)
+    splitted_vertex_ids = encoded_vertex_ids
+    split_end = time.time()
+    print 'Splitting Vertex Ids       : %3.3f' % (split_end - split_start)
+
+    matrix = """1 0 0 0
+0 1 0 0
+0 0 1 0
+0 0 0 1"""
+    if export_motion:
+        matrix = '%s%s' % (matrix, matrix)
+
+    data = base_template % {
+        'name': name,
+        'point_count': point_count,
+        'vertex_count': vertex_count,
+        'primitive_count': primitive_count,
+        'sample_count': sample_count,
+        'number_of_points_per_primitive': splitted_number_of_points_per_primitive,
+        'vertex_ids': splitted_vertex_ids,
+        'point_positions': splitted_point_positions,
+        'matrix': matrix
+        #'point_normals': point_normals,
+        #'uv_ids': uv_ids,
+        #'uv_positions': uv_positions
+    }
+
+    return data
+
+
+def curves2ass(node, hair_name, min_pixel_width=0.5, mode='ribbon',
+               export_motion=False):
+    """exports the node content to ass file
+    """
+    sample_count = 2 if export_motion else 1
+    template_vars = dict()
     geo = node.geometry()
 
     base_template = """
 curves
 {
- %(curve_data)s
-}
-"""
-
-    curve_data = """
  name %(name)s
  num_points %(curve_count)i %(sample_count)s UINT
   %(number_of_points_per_curve)s
@@ -121,6 +377,7 @@ curves
  declare curve_id uniform UINT
  curve_id %(curve_count)i %(sample_count)s UINT
   %(curve_ids)s
+}
 """
 
     number_of_curves = geo.intrinsicValue('primitivecount')
@@ -294,48 +551,6 @@ curves
         'matrix': matrix
     })
 
-    rendered_curve_data = curve_data % template_vars
+    rendered_curve_data = base_template % template_vars
 
-    rendered_base_template = base_template % {
-        'curve_data': rendered_curve_data
-    }
-
-    write_start = time.time()
-    filehandler = open
-    if use_gzip:
-        filehandler = gzip.open
-
-    # normalize path
-    ass_path = os.path.normpath(ass_path)
-    try:
-        os.makedirs(os.path.dirname(ass_path))
-    except OSError:  # path exists
-        pass
-
-    ass_file = filehandler(ass_path, 'w')
-    ass_file.write(rendered_base_template)
-    ass_file.close()
-    write_end = time.time()
-
-    print 'Writing to file            : %3.3f' % (write_end - write_start)
-
-    node_inputs = node.inputs()
-    second_input_geo = node_inputs[1].geometry()
-
-    # use second input for bounding box if connected
-    if export_motion and second_input_geo:
-        bounding_box = second_input_geo.intrinsicValue('bounds')
-    else:
-        bounding_box = geo.intrinsicValue('bounds')
-
-    bounding_box_info = 'bounds %s %s %s %s %s %s' % (
-        bounding_box[0], bounding_box[2], bounding_box[4],
-        bounding_box[1], bounding_box[3], bounding_box[5]
-    )
-
-    with open(asstoc_path, 'w') as asstoc_file:
-        asstoc_file.write(bounding_box_info)
-
-    end_time = time.time()
-    print 'All Conversion took       : %3.3f sec' % (end_time - start_time)
-    print '*******************************************************************' 
+    return rendered_curve_data
