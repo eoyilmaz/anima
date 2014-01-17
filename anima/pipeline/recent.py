@@ -26,8 +26,6 @@ class RecentFileManager(object):
 
     The RecentFileManager instance is restored from the cache folder when a new
     one is created. So it is kind of a Singleton.
-
-    Also the 
     """
 
     def __new__(cls):
@@ -127,5 +125,3 @@ class RecentFileManager(object):
         :return:
         """
         self.recent_files[key] = value
-
-

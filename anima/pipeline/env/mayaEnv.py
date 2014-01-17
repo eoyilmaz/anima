@@ -1298,3 +1298,4 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             except OSError:
                 # dir exists
                 pass
+
