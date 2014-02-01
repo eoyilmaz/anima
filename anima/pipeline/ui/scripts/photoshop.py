@@ -52,8 +52,8 @@ def version_creator(lib='PySide'):
     logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    try:
-        version_creator.UI(pEnv)
-    finally:
-        DBSession.remove()
+    #try:
+    version_creator.UI(pEnv)
+    #finally:
+    #    DBSession.remove()
 

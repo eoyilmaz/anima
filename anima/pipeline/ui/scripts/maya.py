@@ -36,8 +36,8 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    try:
-        version_creator.UI(mEnv)
-    finally:
-        # after everything has finished remove the DBSession
-        DBSession.remove()
+    #try:
+    version_creator.UI(mEnv)
+    #finally:
+    #    # after everything has finished remove the DBSession
+    #    DBSession.remove()
