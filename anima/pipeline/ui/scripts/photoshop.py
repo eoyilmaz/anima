@@ -31,6 +31,7 @@ def version_creator(lib='PySide'):
     from stalker import db
     from stalker.db import DBSession
     DBSession.remove()
+    DBSession.close()
     db.setup()
 
     from anima.pipeline.ui import SET_PYSIDE, SET_PYQT4
@@ -51,5 +52,8 @@ def version_creator(lib='PySide'):
     logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    return version_creator.UI(pEnv)
+    try:
+        version_creator.UI(pEnv)
+    finally:
+        DBSession.remove()
 

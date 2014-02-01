@@ -342,9 +342,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # change the window title
         self.setWindowTitle(window_title)
 
-        # setup the database session
-        db.setup()
-
         self.environment = environment
 
         # create the project attribute in projects_comboBox

@@ -11,6 +11,7 @@ def version_creator():
     from stalker import db
     from stalker.db import DBSession
     DBSession.remove()
+    DBSession.close()
     db.setup()
 
     # use PySide for Maya 2014
@@ -35,4 +36,8 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(mEnv)
+    try:
+        version_creator.UI(mEnv)
+    finally:
+        # after everything has finished remove the DBSession
+        DBSession.remove()

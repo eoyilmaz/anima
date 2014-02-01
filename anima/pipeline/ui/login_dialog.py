@@ -65,7 +65,6 @@ class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def _setup_signals(self):
         """sets up the signals
         """
-
         logger.debug("start setting up interface signals")
 
         # cancel button
@@ -87,12 +86,8 @@ class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def login(self):
         """does the nasty details for user to login
         """
-
         # check the given user password
-        from stalker import db, User
-
-        # connect to the default database
-        db.setup()
+        from stalker import User
 
         # get the user first
         login = self.login_or_email_lineEdit.text()

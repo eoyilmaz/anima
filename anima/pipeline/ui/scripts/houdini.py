@@ -11,6 +11,7 @@ def version_creator():
     from stalker import db
     from stalker.db import DBSession
     DBSession.remove()
+    DBSession.close()
     db.setup()
 
     from anima.pipeline.ui import version_creator
@@ -23,4 +24,7 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(hEnv)
+    try:
+        version_creator.UI(hEnv)
+    finally:
+        DBSession.remove()
