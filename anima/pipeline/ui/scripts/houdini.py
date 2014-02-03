@@ -3,16 +3,14 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.pipeline.ui.scripts import do_db_setup
 
 
 def version_creator():
     """helper function to display version_creator in houdini
     """
-    from stalker import db
-    from stalker.db import DBSession
-    DBSession.remove()
-    DBSession.close()
-    db.setup()
+    # connect to db
+    do_db_setup()
 
     from anima.pipeline.ui import version_creator
     from anima.pipeline.env import houdiniEnv
@@ -24,7 +22,4 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    #try:
     version_creator.UI(hEnv)
-    #finally:
-    #    DBSession.remove()

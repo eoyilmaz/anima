@@ -3,16 +3,14 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.pipeline.ui.scripts import do_db_setup
 
 
 def version_creator():
     """helper class that has all the methods to display the UI
     """
-    from stalker import db
-    from stalker.db import DBSession
-    DBSession.remove()
-    DBSession.close()
-    db.setup()
+    # connect to db
+    do_db_setup()
 
     # use PySide for Maya 2014
     import pymel
@@ -36,8 +34,4 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    #try:
     version_creator.UI(mEnv)
-    #finally:
-    #    # after everything has finished remove the DBSession
-    #    DBSession.remove()
