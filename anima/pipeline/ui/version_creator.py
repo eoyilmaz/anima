@@ -360,6 +360,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
     def close(self):
         logger.debug('closing DBSession')
+        db.DBSession.close()
         db.DBSession.remove()
         logger.debug('closing the ui')
         super(MainDialog, self).close()
