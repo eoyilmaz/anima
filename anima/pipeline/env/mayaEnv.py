@@ -3,12 +3,11 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-
-
 import os
 import shutil
 import logging
 
+import pymel
 from pymel import core as pm
 
 from stalker.db import DBSession
@@ -172,7 +171,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                            "preserve external paths")
 
             # replace external paths with absolute ones
-            self.replace_external_paths(mode=1)
+            self.replace_external_paths()
 
         # create the workspace folders
         self.create_workspace_file(workspace_path)
@@ -205,9 +204,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if version.version_number == 1:
                 self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
-            self.set_resolution(project.image_format.width,
-                                project.image_format.height,
-                                project.image_format.pixel_aspect)
+            if version.version_number == 1:
+                self.set_resolution(project.image_format.width,
+                                    project.image_format.height,
+                                    project.image_format.pixel_aspect)
 
         # set the render file name and version
         self.set_render_fileName(version)
@@ -223,7 +223,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pm.delete(unknownNodes)
 
         # set the file paths for external resources
-        self.replace_external_paths(mode=1)
+        self.replace_external_paths()
 
         # save the file
         pm.saveAs(
@@ -232,7 +232,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         )
 
         # update the parent info
-        version.parent = current_version
+        if version != current_version:  # prevent CircularDependency
+            version.parent = current_version
 
         # update the reference list
         self.update_references_list(version)
@@ -323,13 +324,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.append_to_recent_files(version.absolute_full_path)
 
         # replace_external_paths
-        self.replace_external_paths(mode=1)
+        self.replace_external_paths()
 
         # check the referenced assets for newer version
         to_update_list = self.check_referenced_versions()
-
-        #for update_info in to_update_list:
-        #    version = update_info[0]
 
         self.update_references_list(version)
 
@@ -370,36 +368,25 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         # use the file name without extension as the namespace
         namespace = os.path.basename(version.filename)
-
-        workspace_path = pm.workspace.path
-
-        new_version_full_path = version.absolute_full_path
-        if new_version_full_path.startswith(workspace_path):
-            new_version_full_path = utils.relpath(
-                workspace_path,
-                new_version_full_path.replace("\\", "/"), "/", ".."
-            )
-
-        # replace the path with environment variable
-        #new_version_full_path = repo.relative_path(new_version_full_path)
+        namespace = namespace.replace('.', '_')
 
         if use_namespace:
             ref = pm.createReference(
-                new_version_full_path,
+                version.absolute_full_path,
                 gl=True,
                 namespace=namespace,
                 options='v=0'
             )
         else:
             ref = pm.createReference(
-                new_version_full_path,
+                version.absolute_full_path,
                 gl=True,
                 defaultNamespace=True,
                 options='v=0'
             )
 
         # replace external paths
-        self.replace_external_paths(1)
+        self.replace_external_paths()
 
         # set the reference state to loaded
         if not ref.isLoaded():
@@ -521,7 +508,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
-        # {{project.full_path}}/Sequences/{{seqence.code}}/Shots/{{shot.code}}/.maya_files/rendered_images
         image_folder_from_ws = pm.workspace.fileRules['images']
         image_folder_from_ws_full_path = os.path.join(
             version.absolute_path,
@@ -573,7 +559,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             dRG.imfkey.set('exr')
             # check the maya version and set it if maya version is equal or
             # greater than 2012
-            import pymel
+            import pymel.versions
             try:
                 if pymel.versions.current() >= pymel.versions.v2012:
                     try:
@@ -692,10 +678,46 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # there is no recent files list so create one
             # normally it is Maya's job
             # but somehow it is not working for new installations
-            recent_files = pm.OptionVarList( [], 'RecentFilesList' )
+            recent_files = pm.OptionVarList([], 'RecentFilesList')
 
         #assert(isinstance(recentFiles,pm.OptionVarList))
-        recent_files.appendVar( path )
+        recent_files.appendVar(path)
+
+    @classmethod
+    def is_in_repo(cls, path):
+        """checks if the given path is in repository
+        :param path: the path which wanted to be checked
+        :return: True or False
+        """
+        assert isinstance(path, (str, unicode))
+        path = os.path.expandvars(path)
+        repo = cls.find_repo(path)
+        return repo is not None
+
+    @classmethod
+    def move_to_local(cls, version, file_path, type_name):
+        """moves the files to the local "external" path
+        """
+        local_path = version.absolute_path + '/external_files/' + type_name
+        filename = os.path.basename(file_path)
+        destination_full_path = os.path.join(local_path, filename)
+        # create the dirs
+        try:
+            os.makedirs(local_path)
+        except OSError:  # dir exists
+            pass
+
+        if not os.path.exists(destination_full_path):
+            # move the file
+            logger.debug('moving to: %s' % destination_full_path)
+            try:
+                shutil.copy(file_path, local_path)
+            except IOError:  # no write permission
+                return None
+            return destination_full_path
+        else:  # file already exists do not overwrite
+            logger.debug('file already exists, not moving')
+            return None
 
     def check_external_files(self, version):
         """checks for external files in the current scene and raises
@@ -707,41 +729,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             - IBL nodes
             - References
         """
-
-        def is_in_repo(path):
-            """checks if the given path is in repository
-            :param path: the path which wanted to be checked
-            :return: True or False
-            """
-            assert isinstance(path, (str, unicode))
-            path = os.path.expandvars(path)
-            repo = self.find_repo(path)
-            return repo is not None
-
-        def move_to_local(file_path, type_name):
-            """moves the files to the local "external" path
-            """
-            local_path = version.absolute_path + '/external_files/' + type_name
-            filename = os.path.basename(file_path)
-            destination_full_path = os.path.join(local_path, filename)
-            # create the dirs
-            try:
-                os.makedirs(local_path)
-            except OSError:  # dir exists
-                pass
-
-            if not os.path.exists(destination_full_path):
-                # move the file
-                logger.debug('moving to: %s' % destination_full_path)
-                try:
-                    shutil.copy(file_path, local_path)
-                except IOError: # no write permission
-                    return None
-                return destination_full_path
-            else: # file already exists do not overwrite
-                logger.debug('file already exists, not moving')
-                return None
-
         external_nodes = []
 
         # check for file textures
@@ -750,14 +737,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             logger.debug('checking path: %s' % path)
             if path is not None \
                and os.path.isabs(path) \
-               and not is_in_repo(path):
+               and not self.is_in_repo(path):
                 logger.debug('is not in repo: %s' % path)
-                new_path = move_to_local(path, 'Textures')
+                new_path = self.move_to_local(version, path, 'Textures')
                 if not new_path:
                     # it was not copied
                     external_nodes.append(file_texture)
                 else:
-                    # succesfully copied
+                    # successfully copied
                     # update the path
                     logger.debug('updating texture path to: %s' % new_path)
                     file_texture.attr('fileTextureName').set(new_path)
@@ -768,14 +755,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             logger.debug('checking path: %s' % path)
             if path is not None \
                and os.path.isabs(path) \
-               and not is_in_repo(path):
+               and not self.is_in_repo(path):
                 logger.debug('is not in repo: %s' % path)
-                new_path = move_to_local(path, 'Textures')
+                new_path = self.move_to_local(version, path, 'Textures')
                 if not new_path:
                     # it was not copied
                     external_nodes.append(arnold_texture)
                 else:
-                    # succesfully copied
+                    # successfully copied
                     # update the path
                     logger.debug('updating texture path to: %s' % new_path)
                     arnold_texture.attr('filename').set(new_path)
@@ -787,14 +774,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 logger.debug("path of %s: %s" % (mr_texture, path))
                 if path is not None \
                    and os.path.isabs(path) \
-                   and not is_in_repo(path):
+                   and not self.is_in_repo(path):
                     logger.debug('is not in repo: %s' % path)
-                    new_path = move_to_local(path, 'Textures')
+                    new_path = self.move_to_local(version, path, 'Textures')
                     if not new_path:
                         # it was not copied
                         external_nodes.append(mr_texture)
                     else:
-                        # succesfully copied
+                        # successfully copied
                         # update the path
                         logger.debug('updating texture path to: %s' % new_path)
                         mr_texture.attr('fileTextureName').set(new_path)
@@ -806,14 +793,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             path = image_plane.attr('imageName').get()
             if path is not None \
                and os.path.isabs(path) \
-               and not is_in_repo(path):
+               and not self.is_in_repo(path):
                 logger.debug('is not in repo: %s' % path)
-                new_path = move_to_local(path, 'ImagePlanes')
+                new_path = self.move_to_local(version, path, 'ImagePlanes')
                 if not new_path:
                     # it was not copied
                     external_nodes.append(image_plane)
                 else:
-                    # succesfully copied
+                    # successfully copied
                     # update the path
                     logger.debug('updating image plane path to: %s' % new_path)
                     image_plane.attr('imageName').set(new_path)
@@ -824,18 +811,18 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 path = ibl.attr('texture').get()
                 if path is not None \
                    and os.path.isabs(path) \
-                   and not is_in_repo(path):
+                   and not self.is_in_repo(path):
                     logger.debug('is not in repo: %s' % path)
-                    new_path = move_to_local(path, 'IBL')
+                    new_path = self.move_to_local(version, path, 'IBL')
                     if not new_path:
                         # it was not copied
                         external_nodes.append(ibl)
                     else:
-                        # succesfully copied
+                        # successfully copied
                         # update the path
                         logger.debug('updating ibl path to: %s' % new_path)
                         ibl.attr('texture').set(new_path)
-        except AttributeError: # mentalray not loaded
+        except AttributeError:  # mentalray not loaded
             pass
 
         if external_nodes:
@@ -1164,15 +1151,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # to have a stereoCamera rig
             return False
 
-    def replace_external_paths(self, mode=0):
+    def replace_external_paths(self):
         """Replaces all the external paths
 
         replaces:
           references: replaces Windows, Linux or OSX paths with native one
-                      (the one that the current user has) in absolute mode and
-                      with a workspace relative path in relative mode.
-          files     : absolute path in absolute mode and a workspace relative
-                      path in relative mode
+                      (the one that the current user has).
+          files     : converts to absolute mode
 
         Absolute mode works best for now.
 
@@ -1182,43 +1167,54 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           lack of a good environment variable support from that node. Use
           regular maya file nodes with mib_texture_filter_lookup nodes to have
           the same sharp results.
-
-        :param mode: Defines the process mode:
-          if mode == 0 : replaces with relative paths
-          if mode == 1 : replaces with absolute paths
         """
         # TODO: Also check for image planes and replace the path
-        logger.debug("replacing paths with mode: %i" % mode)
-
         # create a repository
         workspace_path = pm.workspace.path
 
         # *********************************************************************
         # References
         # replace reference paths with absolute path
+        from stalker import Repository
         for ref in pm.listReferences():
             unresolved_path = ref.unresolvedPath().replace("\\", "/")
+            # keep the load state
+            # load_state = ref.isLoded()
             repo = self.find_repo(unresolved_path)
+            if False:
+                assert isinstance(repo, Repository)
+            # TODO: Please request Repository.is_native(path) from Stalker
+            # Windows paths doesn't seem to be absolute under linux and osx
 
             if repo:
-                # make it absolute
-                if repo.is_in_repo(unresolved_path):
-                    new_ref_path = ""
+                update_path = False
+                if not os.path.isabs(unresolved_path):
+                    # update anyway
+                    # either the path is really relative, or it is a windows
+                    # path and we are under linux or osx
+                    # or it is a linux or osx path and we are under windows
+                    # so update it
+                    update_path = True
+                else:
+                    # it seems the path is absolute
+                    # but double check if the file path and the os is matching
+                    path = unresolved_path
+                    if not (path == repo.to_native_path(path)):
+                        # again the path was osx and the os is linux or
+                        # the path was linux and the os is osx
+                        # so update it
+                        update_path = True
 
-                    if mode:
+                if update_path:
+                    if repo.is_in_repo(unresolved_path):
                         # convert to absolute path
                         new_ref_path = repo.to_native_path(ref.path)
-                    else:
-                        # convert to relative path
-                        new_ref_path = utils.relpath(
-                            workspace_path,
-                            ref.path
-                        )
 
-                    if new_ref_path != unresolved_path:
-                        logger.info("replacing reference: %s" % ref.path)
-                        logger.info("replacing with: %s" % new_ref_path)
-                        ref.replaceWith(new_ref_path)
+                        if new_ref_path != unresolved_path:
+                            logger.info("replacing reference: %s" % ref.path)
+                            logger.info("replacing with: %s" % new_ref_path)
+                            assert isinstance(ref, pm.system.FileReference)
+                            ref.replaceWith(new_ref_path)
 
         # *********************************************************************
         # Texture Files
@@ -1243,21 +1239,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     file_texture_path
                 ).replace("\\", "/")
 
-            new_path = ""
             repo = self.find_repo(file_texture_path)
 
             if repo:
-                if mode:
-                    # convert to absolute
-                    new_path = repo.to_native_path(file_texture_path)
-                else:
-                    # convert to relative
-                    new_path = utils.relpath(
-                        workspace_path,
-                        file_texture_path,
-                        "/", ".."
-                    )
-
+                # convert to absolute
+                new_path = repo.to_native_path(file_texture_path)
 
                 if new_path != orig_file_texture_path:
                     logger.info("with: %s" % new_path)
