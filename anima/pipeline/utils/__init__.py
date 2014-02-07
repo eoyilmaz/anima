@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2013, Anima Istanbul
+# Copyright (c) 2012-2014, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -444,3 +444,24 @@ class StalkerThumbnailCache(object):
                 f.write(data)
 
         return cached_file_full_path
+
+
+def walk_version_hierarchy(version, direction=0):
+    """Walks the inputs of the referenced versions
+
+    :param version: Starting Version
+    :param direction: Depth first (0) or Breadth First (1)
+    :return:
+    """
+    versions_to_visit = list([version])
+    if not direction:  # DFS
+        while len(versions_to_visit):
+            current_version = versions_to_visit.pop(0)
+            for child in reversed(current_version.inputs):
+                versions_to_visit.insert(0, child)
+            yield current_version
+    else:  # BFS
+        while len(versions_to_visit):
+            current_version = versions_to_visit.pop(0)
+            versions_to_visit.extend(current_version.inputs)
+            yield current_version

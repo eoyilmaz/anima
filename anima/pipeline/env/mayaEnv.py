@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2013, Anima Istanbul
+# Copyright (c) 2012-2014, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -1285,3 +1285,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
 
+    def deep_reference_update(self, version):
+        """Updates the given maya version with deep reference checks.
+
+        This method uses the database connection to check the referenced
+        versions, instead of the reference editor. So please save you file and
+        then run this method.
+
+        :param version: Version instance
+        :return:
+        """
+        dfs_version_references = []
+        for v in utils.walk_version_hierarchy(version):
+            pass
