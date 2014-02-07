@@ -1140,7 +1140,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             name='Task Template',
             target_entity_type='Task',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -1151,7 +1151,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             name='Asset Template',
             target_entity_type='Asset',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -1162,7 +1162,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             name='Shot Template',
             target_entity_type='Shot',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -1173,7 +1173,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             name='Sequence Template',
             target_entity_type='Sequence',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -1415,7 +1415,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         # |  |     +- Take1
         # |  |        +- version4
         # |  |        +- version5 (P)
-        # |  |        +- version6
+        # |  |        +- version6 (P)
         # |  |
         # |  +- task5
         # |  |  +- Main
@@ -1425,7 +1425,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         # |  |  +- Take1
         # |  |     +- version10
         # |  |     +- version11
-        # |  |     +- version12
+        # |  |     +- version12 (P)
         # |  |
         # |  +- task6
         # |     +- Main
@@ -1519,23 +1519,55 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         # quit maya
         pymel.core.runtime.Quit()
 
-    def test_deep_reference_update_is_working_properly(self):
-        """testing if deep_reference_update is working properly in an
-        environment with highly complex relations of versions, where there are
-        new published versions in the middle of the hierarchy where versions
-        referencing them also has new versions but not using those published
-        versions.
+    def test_deep_reference_update_is_working_properly_case_1(self):
+        """testing if deep_reference_update is working properly in following
+        condition:
+
+        Start Condition:
+
+        version12
+          version5
+            version2 -> has new published version (version3)
+
+        Expected Result:
+
+        version12a (new version based on version12)
+          version5A (new version based on version5)
+            version3
         """
         # create a deep relation
         self.version2.is_published = True
+        # self.version3.is_published = True
+        #
+        # self.version5.inputs.append(self.version2)
+        # self.version5.is_published = True
+        #
+        # # leave version6 as not published
+        # self.version12.inputs.append(self.version5)
+        # db.DBSession.commit()
+
+        # new scene
+        # version5 references version2
+        self.maya_env.open_(self.version5)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+        self.version5.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version12 references version5
+        self.maya_env.open_(self.version12)
+        self.maya_env.reference(self.version5)
+        pymel.core.saveFile()
+        self.version12.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version3 set published
         self.version3.is_published = True
 
-        self.version5.inputs.append(self.version2)
-        self.version5.is_published = True
-
-        # leave version6 as not published
-        self.version12.inputs.append(self.version5)
-        db.DBSession.commit()
+        print "version2  : %s" % self.version2
+        print "version3  : %s" % self.version3
+        print "version5  : %s" % self.version5
+        print "version12 : %s" % self.version12
 
         # check the setup
         visited_versions = []
@@ -1548,15 +1580,292 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-        self.maya_env.deep_reference_update(self.version12)
+        updated_versions = self.maya_env.deep_reference_update(self.version12)
+        print 'updated_versions: %s' % updated_versions
+
+        self.assertEqual(2, len(updated_versions))
 
         # and expect maya to update to
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version12.latest_published_version):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version12.latest_published_version,
+             self.version5.latest_published_version,
+             self.version3]
+        print expected_visited_versions
+        print visited_versions
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+    def test_deep_reference_update_is_working_properly_case_2(self):
+        """testing if deep_reference_update is working properly in following
+        condition:
+
+        Start Condition:
+
+        version6
+          version3 (so version6 is already using version3 and both are
+                    published)
+
+        version12
+          version5 -> has new publeshed version (version6)
+            version2 -> has new published version (version3)
+
+        Expected Final Result
+        version12a (new version based on version12)
+          version6
+            version3
+        """
+        # create a deep relation
+        self.version2.is_published = True
+
+        # new scene
+        # version5 references version2
+        self.maya_env.open_(self.version5)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+        self.version5.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version6 references version3
+        self.maya_env.open_(self.version6)
+        self.maya_env.reference(self.version3)
+        pymel.core.saveFile()
+        self.version6.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version12 references version5
+        self.maya_env.open_(self.version12)
+        self.maya_env.reference(self.version5)
+        pymel.core.saveFile()
+        self.version12.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version3 set published
+        self.version3.is_published = True
+        self.version6.is_published = True
+
+        print "version2  : %s" % self.version2
+        print "version3  : %s" % self.version3
+        print "version5  : %s" % self.version5
+        print "version6  : %s" % self.version6
+        print "version12 : %s" % self.version12
+
+        # check the setup
         visited_versions = []
         for v in walk_version_hierarchy(self.version12):
             visited_versions.append(v)
         expected_visited_versions = \
-            [self.version12, self.version5.latest_published_version,
+            [self.version12, self.version5, self.version2]
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+        updated_versions = self.maya_env.deep_reference_update(self.version12)
+        print 'updated_versions: %s' % updated_versions
+        self.assertEqual(1, len(updated_versions))
+
+        # and expect maya to update to
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version12.latest_published_version):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version12.latest_published_version,
+             self.version6,
              self.version3]
+        print expected_visited_versions
+        print visited_versions
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+    def test_deep_reference_update_is_working_properly_case_3(self):
+        """testing if deep_reference_update is working properly in following
+        condition:
+
+        Start Condition:
+
+        version15
+          version12
+            version5
+              version2 -> has new published version (version3)
+          version12 -> referenced a second time
+            version5
+              version2 -> has new published version (version3)
+
+        Expected Final Result
+        version15A -> Derived from version15
+          version12A -> Derived from version12
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+          version12A -> Derived from version12 - The second reference
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+        """
+        # create a deep relation
+        self.version2.is_published = True
+        self.version3.is_published = True
+
+        # new scene
+        # version5 references version2
+        self.maya_env.open_(self.version5)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+        self.version5.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version12 references version5
+        self.maya_env.open_(self.version12)
+        self.maya_env.reference(self.version5)
+        pymel.core.saveFile()
+        self.version12.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version15 references version12 two times
+        self.maya_env.open_(self.version15)
+        self.maya_env.reference(self.version12)
+        self.maya_env.reference(self.version12)
+        pymel.core.saveFile()
+        pymel.core.newFile(force=True)
+
+        print "version2  : %s" % self.version2
+        print "version5  : %s" % self.version5
+        print "version12 : %s" % self.version12
+        print "version15 : %s" % self.version15
+
+        # check the setup
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version15):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version15, self.version12, self.version5, self.version2]
+
+        print expected_visited_versions
+        print visited_versions
+
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+        updated_versions = self.maya_env.deep_reference_update(self.version15)
+        print 'updated_versions: %s' % updated_versions
+        self.assertEqual(3, len(updated_versions))
+
+        # and expect maya to update to
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version15.latest_published_version):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version15.latest_published_version,
+             self.version12.latest_published_version,
+             self.version5.latest_published_version,
+             self.version3]
+        print expected_visited_versions
+        print visited_versions
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+    def test_deep_reference_update_is_working_properly_case_4(self):
+        """testing if deep_reference_update is working properly in following
+        condition:
+
+        Start Condition:
+
+        version15
+          version12
+            version5
+              version2 -> has new published version (version3)
+            version5 -> Referenced a second time
+              version2 -> has new published version (version3)
+          version12 -> Referenced a second time
+            version5
+              version2 -> has new published version (version3)
+            version5
+              version2 -> has new published version (version3)
+
+        Expected Final Result
+        version15A -> Derived from version15
+          version12A -> Derived from version12
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+          version12A -> Derived from version12 - The second reference
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+            version5A -> Derived from version5
+              version3 -> has new published version (version3)
+        """
+        # create a deep relation
+        self.version2.is_published = True
+        self.version3.is_published = True
+
+        # new scene
+        # version5 references version2
+        self.maya_env.open_(self.version5)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+        self.version5.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version12 references version5
+        self.maya_env.open_(self.version12)
+        self.maya_env.reference(self.version5)
+        self.maya_env.reference(self.version5)  # reference a second time
+        pymel.core.saveFile()
+        self.version12.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version15 references version12 two times
+        self.maya_env.open_(self.version15)
+        self.maya_env.reference(self.version12)
+        self.maya_env.reference(self.version12)
+        pymel.core.saveFile()
+        pymel.core.newFile(force=True)
+
+        print "version2  : %s" % self.version2
+        print "version5  : %s" % self.version5
+        print "version12 : %s" % self.version12
+        print "version15 : %s" % self.version15
+
+        # check the setup
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version15):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version15, self.version12, self.version5, self.version2]
+
+        print expected_visited_versions
+        print visited_versions
+
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+        updated_versions = self.maya_env.deep_reference_update(self.version15)
+        print 'updated_versions: %s' % updated_versions
+        self.assertEqual(3, len(updated_versions))
+
+        # and expect maya to update to
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version15.latest_published_version):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version15.latest_published_version,
+             self.version12.latest_published_version,
+             self.version5.latest_published_version,
+             self.version3]
+        print expected_visited_versions
+        print visited_versions
         self.assertEqual(
             expected_visited_versions,
             visited_versions

@@ -9,6 +9,7 @@ import logging
 
 import pymel
 from pymel import core as pm
+from stalker import Version
 
 from stalker.db import DBSession
 
@@ -839,8 +840,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def check_referenced_versions(self):
         """checks the referenced assets versions
 
-        returns a list of Version instances and maya Reference objects in a
-        tuple
+        :return (Version, FileReference): Returns a list of Version instances
+          and maya Reference objects in a tuple
         """
         # get all the valid version references
         version_tuple_list = self.get_referenced_versions()
@@ -930,7 +931,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.inputs = reference_list
             DBSession.commit()
 
-    def update_versions(self, version_tuple_list):
+    @classmethod
+    def update_versions(cls, version_tuple_list):
         """update versions to the latest version
         """
         previous_version_full_path = ''
@@ -939,11 +941,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         for version_tuple in version_tuple_list:
             version = version_tuple[0]
             reference = version_tuple[1]
-            version_full_path =  version_tuple[2]
+            version_full_path = version_tuple[2]
 
             if version_full_path != previous_version_full_path:
                 latest_published_version = version.latest_published_version
-                previous_version_full_path = latest_published_version.absolute_full_path
+                previous_version_full_path = \
+                    latest_published_version.absolute_full_path
 
             reference.replaceWith(latest_published_version.absolute_full_path)
 
@@ -1289,12 +1292,72 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """Updates the given maya version with deep reference checks.
 
         This method uses the database connection to check the referenced
-        versions, instead of the reference editor. So please save you file and
-        then run this method.
+        versions, instead of the reference editor. So please save your file
+        with self.save_as() before running this method.
 
         :param version: Version instance
-        :return:
+        :return list: A list of Version instances if created any
         """
+        # get a Version list which is the result of a Depth First Search in
+        # Version.inputs attribute
+
+        # force new scene
+        pymel.core.newFile(force=True)
+
+        new_versions = []
+
         dfs_version_references = []
         for v in utils.walk_version_hierarchy(version):
-            pass
+            dfs_version_references.append(v)
+
+        # iterate back in the list
+        for v in reversed(dfs_version_references):
+            # check if it has a child ref
+            if not v.inputs:
+                continue
+
+            # open the file
+            success, to_be_updated_list = self.open_(v, force=True)
+
+            if to_be_updated_list:
+                do_create_a_new_version = True
+                # assert isinstance(v, Version)
+                # check if there is a new published version of this version
+                # and it is not this version
+                latest_published_version = v.latest_published_version
+                if latest_published_version and \
+                   not v.is_latest_published_version():
+                    # so there is a new published version, check if all the
+                    # latest_published_versions of all the elements in
+                    # to_be_updated_list are in the new published version's
+                    # inputs list
+                    if not all([ref_v[0].latest_published_version in latest_published_version.inputs
+                                for ref_v in to_be_updated_list]):
+                        # not all references are in the inputs
+                        # create a new version as usual
+                        # and re-reference the new versions
+                        do_create_a_new_version = True
+                    else:
+                        # just skip this it will be updated by its parent
+                        do_create_a_new_version = False
+
+                if do_create_a_new_version:
+                    # update the references
+                    self.update_versions(to_be_updated_list)
+
+                    # save as a new version
+                    version = self.get_current_version()
+                    #assert isinstance(version, Version)
+
+                    new_version = Version(
+                        task=version.task,
+                        take_name=version.take_name,
+                        parent=version,
+                        description='Automatically created with '
+                                    'Deep Reference Update'
+                    )
+                    new_version.is_published = True
+                    self.save_as(new_version)
+                    new_versions.append(new_version)
+
+        return new_versions
