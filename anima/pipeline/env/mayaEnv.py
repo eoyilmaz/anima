@@ -211,7 +211,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                                     project.image_format.pixel_aspect)
 
         # set the render file name and version
-        self.set_render_fileName(version)
+        self.set_render_filename(version)
 
         # set the playblast file name
         self.set_playblast_file_name(version)
@@ -233,11 +233,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         )
 
         # update the parent info
-        if version != current_version:  # prevent CircularDependency
+        if version != current_version:  # prevent CircularDependencyError
             version.parent = current_version
 
         # update the reference list
-        self.update_references_list(version)
+        self.update_version_inputs()
 
         # append it to the recent file list
         self.append_to_recent_files(
@@ -282,7 +282,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return True
 
-    def open_(self, version, force=False):
+    def open(self, version, force=False):
         """The open action for Maya environment.
 
         Opens the given Version file, sets the workspace etc.
@@ -330,15 +330,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # check the referenced assets for newer version
         to_update_list = self.check_referenced_versions()
 
-        self.update_references_list(version)
+        self.update_version_inputs()
 
         return True, to_update_list
 
-    def post_open(self, version):
+    def post_open(self):
         """Runs after opening a file
         """
         #self.load_referenced_versions()
-        self.update_references_list(version)
+        self.update_version_inputs()
 
     def import_(self, version, use_namespace=True):
         """Imports the content of the given Version instance to the current
@@ -395,11 +395,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # append the referenced version to the current versions references
         # attribute
-
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
             DBSession.commit()
+
+        # also update version.inputs for the referenced input
+        self.update_version_inputs(ref)
 
         return True
 
@@ -499,7 +501,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return version
 
-    def set_render_fileName(self, version):
+    def set_render_filename(self, version):
         """sets the render file name
         """
         # assert isinstance(version, Version)
@@ -517,8 +519,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         version_sig_name = self.get_significant_name(version)
 
-        render_file_full_path = render_output_folder + '/<RenderLayer>/' + \
-            version_sig_name + '_<RenderLayer>_<RenderPass>'
+        render_file_full_path = \
+            '%(render_output_folder)s/<RenderLayer>/%(version_sig_name)s_' \
+            '<RenderLayer>_<RenderPass>' % {
+                'render_output_folder': render_output_folder,
+                'version_sig_name': version_sig_name
+            }
 
         # convert the render_file_full_path to a relative path to the
         # imageFolderFromWS_full_path
@@ -537,11 +543,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # defaultRenderGlobals
         dRG = pm.PyNode('defaultRenderGlobals')
         dRG.setAttr('imageFilePrefix', render_file_rel_path)
-        dRG.setAttr('renderVersion', "v%03d" % version.version_number )
+        dRG.setAttr('renderVersion', "v%03d" % version.version_number)
         dRG.setAttr('animation', 1)
-        dRG.setAttr('outFormatControl', 0 )
-        dRG.setAttr('extensionPadding', 4 )
-        dRG.setAttr('imageFormat', 7 ) # force the format to iff
+        dRG.setAttr('outFormatControl', 0)
+        dRG.setAttr('extensionPadding', 4)
+        dRG.setAttr('imageFormat', 7) # force the format to iff
         dRG.setAttr('pff', 1)
 
         self.set_output_file_format()
@@ -857,20 +863,24 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # sort the list according to full_path
         return sorted(to_be_updated_list, key=lambda x: x[2])
 
-    def get_referenced_versions(self):
+    def get_referenced_versions(self, parent_ref=None):
         """Returns the versions those been referenced to the current scene
 
         Returns Version instances and the corresponding Reference instance as a
-        tupple in a list, and a string showing the path of the Reference.
+        tuple in a list, and a string showing the path of the Reference.
         Replaces all the relative paths to absolute paths.
 
         The returned tuple format is as follows:
         (Version, Reference, full_path)
+
+        :param parent_ref: The parent ref to start from. So the final list will
+          be gathered from the references that are sub references of this
+          parent ref.
         """
         valid_versions = []
 
         # get all the references
-        references = pm.listReferences()
+        references = pm.listReferences(parent_ref)
 
         refs_and_paths = []
         # iterate over them to find valid assets
@@ -891,7 +901,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # sort them according to path
         # to make same paths together
-
         refs_and_paths = sorted(refs_and_paths, None, lambda x: x[1])
 
         prev_version = None
@@ -908,7 +917,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 temp_version = self.get_version_from_full_path(full_path)
 
                 if temp_version:
-                    valid_versions.append((temp_version, reference, temp_version.absolute_full_path))
+                    valid_versions.append(
+                        (temp_version,
+                         reference,
+                         temp_version.absolute_full_path)
+                    )
 
                     prev_version = temp_version
                     prev_full_path = full_path
@@ -916,14 +929,22 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # return a sorted list
         return sorted(valid_versions, None, lambda x: x[2])
 
-    def update_references_list(self, version=None):
+    def update_version_inputs(self, parent_ref=None):
         """updates the references list of the current version
-        :param version: the version to be checked
+
+        :param parent_ref: the parent ref, if given will override the given
+          version argument and a Version instance will be get from the given
+          parent_ref.path.
         """
-        if version is not None:
+        if not parent_ref:
+            version = self.get_current_version()
+        else:
+            version = self.get_version_from_full_path(parent_ref.path)
+
+        if version:
             # update the reference list
             reference_list = []
-            reference_info = self.get_referenced_versions()
+            reference_info = self.get_referenced_versions(parent_ref)
             for data in reference_info:
                 if data[0] not in reference_list:
                     reference_list.append(data[0])
@@ -936,7 +957,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """update versions to the latest version
         """
         previous_version_full_path = ''
-        latest_version = None
+        latest_published_version = None
 
         for version_tuple in version_tuple_list:
             version = version_tuple[0]
@@ -965,12 +986,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pm.playbackOptions(ast=start_frame, aet=end_frame)
 
         if adjust_frame_range:
-            pm.playbackOptions( min=start_frame, max=end_frame )
+            pm.playbackOptions(min=start_frame, max=end_frame)
 
         # set in the render range
         dRG = pm.PyNode('defaultRenderGlobals')
-        dRG.setAttr('startFrame', start_frame )
-        dRG.setAttr('endFrame', end_frame )
+        dRG.setAttr('startFrame', start_frame)
+        dRG.setAttr('endFrame', end_frame)
 
     def get_fps(self):
         """returns the fps of the environment
@@ -1033,32 +1054,34 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # if the source_reference has referenced files do a dirty edit
         # by applying all the edits to the referenced node (the old way of
-        # replacing references )
-        subReferences = cls.get_all_sub_references(source_reference)
+        # replacing references)
+        sub_references = cls.get_all_sub_references(source_reference)
 #        logger.debug("subReferences count: %s" % len(subReferences))
 
-        if len(subReferences) > 0:
+        if len(sub_references) > 0:
             # for all subReferences get the editString and apply it to the
             # replaced file with new namespace
-            allEdits = []
-            for subRef in subReferences:
-                allEdits += subRef.getReferenceEdits(orn= base_reference_node)
+            all_edits = []
+            for subRef in sub_references:
+                all_edits += subRef.getReferenceEdits(orn=base_reference_node)
 
             # replace the reference
             source_reference.replaceWith(target_file)
 
             # try to find the new namespace
-            subReferences = cls.get_all_sub_references(source_reference)
-            newNS = cls.get_full_namespace_from_node_name(
-                subReferences[0].nodes()[0]
+            sub_references = cls.get_all_sub_references(source_reference)
+            new_namespace = cls.get_full_namespace_from_node_name(
+                sub_references[0].nodes()[0]
             )  # possible bug here, fix it later
 
             # replace the old namespace with the new namespace in all the edits
-            allEdits = [edit.replace(previous_namespace + ":", newNS + ":")
-                        for edit in allEdits]
+            all_edits = [
+                edit.replace(previous_namespace + ":", new_namespace + ":")
+                for edit in all_edits
+            ]
 
             # apply all the edits
-            for edit in allEdits:
+            for edit in all_edits:
                 try:
                     pm.mel.eval(edit)
                 except pm.MelError:
@@ -1068,36 +1091,37 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             source_reference.replaceWith(target_file)
 
             # try to find the new namespace
-            subReferences = cls.get_all_sub_references(source_reference)
-            newNS = cls.get_full_namespace_from_node_name(
-                subReferences[0].nodes()[0]
+            sub_references = cls.get_all_sub_references(source_reference)
+            new_namespace = cls.get_full_namespace_from_node_name(
+                sub_references[0].nodes()[0]
             )  # possible bug here, fix it later
 
             #subReferences = source_reference.subReferences()
             #for subRefData in subReferences.iteritems():
                 #refNode = subRefData[1]
-                #newNS = self.get_full_namespace_from_node_name( refNode.nodes()[0] )
+                #newNS = \
+                #  self.get_full_namespace_from_node_name(refNode.nodes()[0])
 
             # if the new namespace is different than the previous one
             # also change the edit targets
-            if previous_namespace != newNS:
+            if previous_namespace != new_namespace:
 #                logger.debug("prevNS: %s" % previous_namespace)
 #                logger.debug("newNS : %s" % newNS)
 
                 # get the new sub references
-                for subRef in cls.get_all_sub_references( source_reference ):
+                for subRef in cls.get_all_sub_references(source_reference):
                     # for all the nodes in sub references
                     # change the edit targets with new namespace
                     for node in subRef.nodes():
                         # use the long name -- suggested by maya help
-                        nodeNewName = node.longName()
-                        nodeOldName = nodeNewName.replace(
-                            newNS + ':', previous_namespace + ':'
+                        node_new_name = node.longName()
+                        node_old_name = node_new_name.replace(
+                            new_namespace + ':', previous_namespace + ':'
                         )
 
                         pm.referenceEdit(
                             base_reference_node,
-                            changeEditTarget=(nodeOldName, nodeNewName)
+                            changeEditTarget=(node_old_name, node_new_name)
                         )
                         #pm.referenceEdit(
                         #    baseRefNode,
@@ -1111,9 +1135,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         #)
                         #for aRefNode in pm.ls(type='reference'):
                             #if len(aRefNode.attr('sharedReference').listConnections(s=0,d=1)) == 0: # not a shared reference
-                                #pm.referenceEdit( aRefNode, orn=baseRefNode, changeEditTarget=( nodeOldName, nodeNewName), scs=1, fld=1 )
-                                ##pm.referenceEdit( aRefNode, applyFailedEdits=True )
-                    #pm.referenceEdit( subRef, applyFailedEdits=True )
+                                #pm.referenceEdit(aRefNode, orn=baseRefNode, changeEditTarget=(nodeOldName, nodeNewName), scs=1, fld=1)
+                                ##pm.referenceEdit(aRefNode, applyFailedEdits=True)
+                    #pm.referenceEdit(subRef, applyFailedEdits=True)
 
                 # apply all the failed edits again
                 pm.referenceEdit(base_reference_node, applyFailedEdits=True)
@@ -1123,17 +1147,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """returns the recursive sub references as a list of FileReference
         objects for the given file reference
         """
-        allRefs = []
-        subRefDict = ref.subReferences()
+        all_refs = []
+        sub_ref_dict = ref.subReferences()
 
-        if len(subRefDict) > 0:
-            for subRefData in subRefDict.iteritems():
+        if len(sub_ref_dict) > 0:
+            for subRefData in sub_ref_dict.iteritems():
                 # first convert the sub ref dictionary to a normal ref object
-                subRef = subRefData[1]
-                allRefs.append(subRef)
-                allRefs += cls.get_all_sub_references(subRef)
+                sub_ref = subRefData[1]
+                all_refs.append(sub_ref)
+                all_refs += cls.get_all_sub_references(sub_ref)
 
-        return allRefs
+        return all_refs
 
     @classmethod
     def get_full_namespace_from_node_name(cls, node):
@@ -1154,8 +1178,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # to have a stereoCamera rig
             return False
 
-    def replace_external_paths(self):
-        """Replaces all the external paths
+    def replace_external_paths(self, mode=0):
+        """Replaces all the external paths. Because absolute mode is the
+        default and only mode, the 'mode' parameter is not used.
 
         replaces:
           references: replaces Windows, Linux or OSX paths with native one
@@ -1288,6 +1313,19 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
 
+    def deep_version_inputs_update(self):
+        """updates the inputs of the references of the current scene
+        """
+        # first update the current scene
+        self.update_version_inputs()
+
+        # the go to the references
+        references_list = pm.listReferences()
+        while len(references_list):
+            current_ref = references_list.pop(0)
+            self.update_version_inputs(current_ref)
+            references_list.extend(pm.listReferences(current_ref))
+
     def deep_reference_update(self, version):
         """Updates the given maya version with deep reference checks.
 
@@ -1301,12 +1339,18 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # get a Version list which is the result of a Depth First Search in
         # Version.inputs attribute
 
+        # Because in one of our test case we got a recursion in Version.inputs
+        # attribute, it is the best solution to update the Version.inputs
+        # from the current references before diving in to deep_reference_update
+        self.deep_version_inputs_update()
+
         # force new scene
         pymel.core.newFile(force=True)
 
         new_versions = []
 
         dfs_version_references = []
+        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
         for v in utils.walk_version_hierarchy(version):
             dfs_version_references.append(v)
 
@@ -1317,7 +1361,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 continue
 
             # open the file
-            success, to_be_updated_list = self.open_(v, force=True)
+            success, to_be_updated_list = self.open(v, force=True)
 
             if to_be_updated_list:
                 do_create_a_new_version = True

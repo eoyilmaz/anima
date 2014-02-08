@@ -59,7 +59,7 @@ class TestEnvironment(EnvironmentBase):
     test_data = {
         "export_as": {"call count": 0, "data": None},
         "save_as": {"call count": 0, "data": None},
-        "open_": {"call count": 0, "data": None},
+        "open": {"call count": 0, "data": None},
         "reference": {"call count": 0, "data": None},
         "import_": {"call count": 0, "data": None},
     }
@@ -72,9 +72,9 @@ class TestEnvironment(EnvironmentBase):
         self.test_data["save_as"]["call count"] += 1
         self.test_data["save_as"]["data"] = version
 
-    def open_(self, version, force=False):
-        self.test_data["open_"]["call count"] += 1
-        self.test_data["open_"]["data"] = version
+    def open(self, version, force=False):
+        self.test_data["open"]["call count"] += 1
+        self.test_data["open"]["data"] = version
 
     def reference(self, version):
         self.test_data["reference"]["call count"] += 1

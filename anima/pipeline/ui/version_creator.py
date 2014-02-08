@@ -1372,7 +1372,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logger.debug("opening version %s" % old_version)
 
-        # call the environments open_ method
+        # call the environments open method
         if self.environment is not None:
             to_update_list = []
             # environment can throw RuntimeError for unsaved changes
@@ -1409,7 +1409,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
                 version_updater_mainDialog.exec_()
 
-            self.environment.post_open(old_version)
+            self.environment.post_open()
 
         # close the dialog
         self.close()

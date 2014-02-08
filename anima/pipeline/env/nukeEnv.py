@@ -126,7 +126,7 @@ class Nuke(EnvironmentBase):
         nuke.nodeCopy(version.absolute_full_path)
         return True
 
-    def open_(self, version, force=False):
+    def open(self, version, force=False):
         """the open action for nuke environment
         """
         nuke.scriptOpen(version.absolute_full_path)
@@ -146,7 +146,7 @@ class Nuke(EnvironmentBase):
         # for the versions those needs to be updated
         return True, []
 
-    def post_open(self, version):
+    def post_open(self):
         """the post open action for the nuke environment
         """
         pass

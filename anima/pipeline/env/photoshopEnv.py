@@ -122,7 +122,7 @@ class PhotoshopEnv(EnvironmentBase):
         )
         return True
 
-    def open_(self, version, force=False):
+    def open(self, version, force=False):
         """open action for photoshop environment
 
         :param version: stalker.models.version.Version instance
@@ -138,11 +138,8 @@ class PhotoshopEnv(EnvironmentBase):
 
         return True, []
 
-    def post_open(self, version):
+    def post_open(self):
         """do nothing
-
-        :param version: stalker.models.version.Version instance
-        :return:
         """
         return True
 

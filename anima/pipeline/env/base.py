@@ -113,12 +113,12 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def open_(self, version, force=False):
+    def open(self, version, force=False):
         """the open action
         """
         raise NotImplementedError
 
-    def post_open(self, version):
+    def post_open(self):
         """Runs after opening a file
         """
         raise NotImplementedError

@@ -453,7 +453,7 @@ def walk_version_hierarchy(version, direction=0):
     :param direction: Depth first (0) or Breadth First (1)
     :return:
     """
-    versions_to_visit = list([version])
+    versions_to_visit = [version]
     if not direction:  # DFS
         while len(versions_to_visit):
             current_version = versions_to_visit.pop(0)

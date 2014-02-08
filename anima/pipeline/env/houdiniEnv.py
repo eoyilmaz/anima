@@ -82,7 +82,7 @@ class Houdini(EnvironmentBase):
 
         return True
 
-    def open_(self, version, force=False):
+    def open(self, version, force=False):
         """the open action for houdini environment
         """
         if not version:
@@ -101,7 +101,7 @@ class Houdini(EnvironmentBase):
 
         return True, []
 
-    def post_open(self, version):
+    def post_open(self):
         """just skip it
         """
         return

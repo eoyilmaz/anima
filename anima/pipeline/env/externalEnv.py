@@ -24,17 +24,6 @@ external_environments = {
             'Outputs',
         ]
     },
-    #'Photoshop': {
-    #    'name': 'Photoshop',
-    #    'icon': 'photoshop.png',
-    #    'executable': {
-    #        'windows': 'photoshop.exe',
-    #    },
-    #    'extension': '.psd',
-    #    'structure': [
-    #        'Outputs',
-    #    ]
-    #},
     #'ZBrush Project' : {
     #    'name': 'ZBrush Project',
     #    'icon': 'zbrush.png',
