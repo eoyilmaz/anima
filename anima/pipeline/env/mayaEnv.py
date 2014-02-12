@@ -27,35 +27,47 @@ class ReferenceInfo(object):
 
     This is just a basic data object.
 
-    :param ref: The maya FileReference
+    :param refs: A list of maya FileReference instances
     :param version: The corresponding Stalker Version
     :param action: one of ['leave', 'create', 'update']
     """
 
     default_actions = ['leave', 'create', 'update']
 
-    def __init__(self, ref, version, action=None):
-        self.reference = self._validate_reference(ref)
+    def __init__(self, version=None, refs=None, action=None):
+        if refs is None:
+            refs = []
         self.version = self._validate_version(version)
+        self.references = self._validate_references(refs)
         self.action = self._validate_action(action)
 
     @classmethod
-    def _validate_reference(cls, ref):
-        """Validates the given ref instance
+    def _validate_references(cls, refs):
+        """Validates the given refs value
 
-        :param ref: A Maya FileReference object
+        :param refs: A list of Maya FileReference instances
         :return:
         """
-        if not isinstance(ref, pymel.core.system.FileReference):
+
+        if not isinstance(refs, list):
             raise TypeError(
-                '%(class)s.reference should be an instance of '
-                'pymel.core.nt.FileReference, not %(ref_class)s' % {
+                '%(class)s.references should be a list, not %(refs_class)s' % {
                     'class': cls.__name__,
-                    'ref_class': ref.__class__.__name__
+                    'refs_class': refs.__class__.__name__
                 }
             )
 
-        return ref
+        for ref in refs:
+            if not isinstance(ref, pymel.core.system.FileReference):
+                raise TypeError(
+                    '%(class)s.references should be an instance of '
+                    'pymel.core.nt.FileReference, not %(ref_class)s' % {
+                        'class': cls.__name__,
+                        'ref_class': ref.__class__.__name__
+                    }
+                )
+
+        return refs
 
     @classmethod
     def _validate_version(cls, version):
@@ -67,7 +79,7 @@ class ReferenceInfo(object):
         from stalker import Version
         if not isinstance(version, Version):
             raise TypeError(
-                '%(class)s.reference should be an instance of '
+                '%(class)s.version should be an instance of '
                 'stalker.models.version.Version, not %(ver_class)s' % {
                     'class': cls.__name__,
                     'ver_class': version.__class__.__name__
@@ -114,7 +126,8 @@ class ReferenceInfo(object):
         :return:
         """
         return isinstance(other, ReferenceInfo) \
-            and self.reference == other.reference \
+            and all(map(lambda x, y: x.path == y.path,
+                        self.references, other.references))\
             and self.version == other.version
 
 
@@ -955,28 +968,26 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           instance and a Version in a list
         """
         # get all the valid version references
-        ref_info_list = self.get_reference_info(parent_ref)
+        referenced_versions = self.get_referenced_versions(parent_ref)
 
         to_be_updated_list = []
 
-        for ref_info in ref_info_list:
+        for ref_info in referenced_versions:
             version = ref_info.version
             if not version.is_latest_published_version():
                 # add version to the update list
                 to_be_updated_list.append(ref_info)
 
-        # sort the list according to full_path
-        return sorted(to_be_updated_list, key=lambda x: x.reference.path)
+        # no need to sort it, it is already a sorted list
+        return to_be_updated_list
 
-    def get_reference_info(self, parent_ref=None):
-        """Returns the versions those been referenced to the current scene
+    def get_referenced_versions(self, parent_ref=None):
+        """Returns the versions those been referenced to the current scene as
+        ReferenceInfo instances.
 
         Returns Version instances and the corresponding Reference instance as a
-        list of lists, and a string showing the path of the Reference. Replaces
-        all the relative paths to absolute paths.
-
-        The returned list format is as follows:
-        [Reference, Version]
+        list of ReferenceInfo instances. Replaces all the relative paths to
+        absolute paths.
 
         :param parent_ref: The parent ref to start from. So the final list will
           be gathered from the references that are sub references of this
@@ -984,37 +995,32 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :returns: A list of ReferenceInfo instances
         """
-        reference_info_instances = []
 
         # get all the references
         references = pymel.core.listReferences(parent_ref)
 
         # sort them according to path
         # to make same paths together
-        refs_and_paths = sorted(references, None, lambda x: x.path)
+        refs = sorted(references, key=lambda x: x.path)
 
-        prev_version = None
+        prev_ref_info = None
         prev_path = ''
+        reference_info_instances = []
 
-        for reference in refs_and_paths:
-            path = reference.path
+        for ref in refs:
+            path = ref.path
             if path == prev_path:
-                # directly append the version to the list
-                reference_info_instances.append(
-                    ReferenceInfo(reference, prev_version)
-                )
+                # directly append the ref to the refs list
+                prev_ref_info.references.append(ref)
             else:
                 # try to get a version with the given path
                 version = self.get_version_from_full_path(path)
                 if version:
-                    reference_info_instances.append(
-                        ReferenceInfo(reference, version)
-                    )
-                    prev_version = version
+                    prev_ref_info = ReferenceInfo(version, [ref])
+                    reference_info_instances.append(prev_ref_info)
                     prev_path = path
 
-        # return a sorted list
-        return sorted(reference_info_instances, None, lambda x: x.reference.path)
+        return reference_info_instances
 
     def update_version_inputs(self, parent_ref=None):
         """updates the references list of the current version
@@ -1031,10 +1037,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         if version:
             # update the reference list
             referenced_versions_list = []
-            reference_info = self.get_reference_info(parent_ref)
+            reference_info = self.get_referenced_versions(parent_ref)
             for data in reference_info:
-                if data.version not in referenced_versions_list:
-                    referenced_versions_list.append(data.version)
+                referenced_versions_list.append(data.version)
             version.inputs = referenced_versions_list
             db.DBSession.commit()
 
@@ -1042,20 +1047,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def update_versions(cls, version_info_list):
         """update versions to the latest version
         """
-        previous_version_full_path = ''
-        latest_published_version = None
-
         for version_info in version_info_list:
             version = version_info.version
-            reference = version_info.reference
-            version_full_path = version.absolute_full_path
+            references = version_info.references
+            latest_published_version = version.latest_published_version
 
-            if version_full_path != previous_version_full_path:
-                latest_published_version = version.latest_published_version
-                previous_version_full_path = \
-                    latest_published_version.absolute_full_path
-
-            reference.replaceWith(latest_published_version.absolute_full_path)
+            absolute_full_path = latest_published_version.absolute_full_path
+            for reference in references:
+                reference.replaceWith(absolute_full_path)
 
     def get_frame_range(self):
         """returns the current playback frame range
@@ -1407,14 +1406,31 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # the go to the references
         references_list = pymel.core.listReferences()
+
+        prev_ref_path = None
         while len(references_list):
             current_ref = references_list.pop(0)
             self.update_version_inputs(current_ref)
-            references_list.extend(pymel.core.listReferences(current_ref))
+            # optimize it by only appending one instance of the same referenced
+            # file
+            # sort the references according to their paths so, all the
+            # references of the same file will be got together
+            all_refs = sorted(
+                pymel.core.listReferences(current_ref),
+                key=lambda x: x.path
+            )
+            for ref in all_refs:
+                if ref.path != prev_ref_path:
+                    prev_ref_path = ref.path
+                    references_list.append(ref)
+            prev_ref_path = None
 
     def deep_reference_check(self):
         """Deeply checks all the references in the scene and returns a list of
         :class:`.ReferenceInfo` instances.
+
+        Uses the top level references to get a Stalker Version instance and
+        then tracks all the changes from these Version instances.
 
         :return: list
         """
@@ -1422,20 +1438,23 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.deep_version_inputs_update()
 
         # reverse walk in DFS
-        visited_refs = []
-        refs = pymel.core.listReferences()
-        while refs:
-            current_ref = refs.pop(0)
-            visited_refs.append(current_ref)
-            for r in reversed(pymel.core.listReferences(current_ref)):
-                refs.insert(0, r)
+        dfs_version_references = []
+        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
+        resolution_dictionary = {}
 
-        ref_info_instances = []
-        for ref in reversed(visited_refs):
-            v = self.get_version_from_full_path(ref.path)
+        version = self.get_current_version()
+        for v in utils.walk_version_hierarchy(version):
+            # store with id
+            resolution_dictionary[v.id] = 'leave'
+            dfs_version_references.append(v)
 
-            action = 'leave'  # remove this line, it is unnecessary
-            to_be_updated_list = self.check_referenced_versions(ref)
+        # iterate back in the list
+        for v in reversed(dfs_version_references):
+            # check inputs first
+            to_be_updated_list = []
+            for ref_v in v.inputs:
+                if not ref_v.is_latest_published_version():
+                    to_be_updated_list.append(ref_v)
 
             if to_be_updated_list:
                 action = 'create'
@@ -1448,15 +1467,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # so there is a new version check if its children needs any
                     # update and the updated child versions are already
                     # referenced to the latest version of this version
-                    if not all([ref_info.version.latest_published_version
+                    if not all([ref_v.latest_published_version
                                 in latest_published_version.inputs
-                                for ref_info in to_be_updated_list]):
+                                for ref_v in to_be_updated_list]):
                         # not all references are in the inputs
                         # create a new version as usual
                         # and re-reference the new versions
                         action = 'create'
                     else:
-                        # just skip this it will be updated by its parent
+                        # so just update to the latest published version
                         action = 'update'
             else:
                 # there could be no reference under this referenced version
@@ -1468,9 +1487,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # update to latest published version
                     action = 'update'
 
-            ref_info_instances.append(ReferenceInfo(ref, v, action))
+                # before setting the action check all the inputs in
+                # resolution_dictionary, if any of them are update, or create
+                # then set this one to 'create'
+                if any(resolution_dictionary[rev_v.id] in ['update', 'create']
+                       for rev_v in v.inputs):
+                    action = 'create'
 
-        return ref_info_instances
+            resolution_dictionary[v.id] = action
+
+        return resolution_dictionary
 
     def deep_reference_update(self, version):
         """Updates the given maya version with deep reference checks.

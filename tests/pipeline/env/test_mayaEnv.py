@@ -2004,8 +2004,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             self.version6.inputs
         )
 
-    def test_get_reference_info_returns_a_list_of_ReferenceInfo_instances(self):
-        """testing if Maya.get_reference_info returns a list of tuples
+    def test_get_referenced_versions_returns_a_list_of_ReferenceInfo_instances(self):
+        """testing if Maya.get_referenced_versions returns a list of tuples
         of Versions referenced in the current scene
         """
         # create references to various versions
@@ -2018,16 +2018,15 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         self.maya_env.reference(self.version3)
 
         # now try to get the referenced versions
-        ref_info_data = self.maya_env.get_reference_info()
+        ref_info_data = self.maya_env.get_referenced_versions()
 
         self.assertItemsEqual(
             map(lambda x: x.version, ref_info_data),
-            [self.version3, self.version4, self.version5, self.version4,
-             self.version5]
+            [self.version3, self.version4, self.version5]
         )
 
-    def test_get_reference_info_returns_a_list_of_ReferenceInfo_for_under_the_given_reference(self):
-        """testing if Maya.get_reference_info returns a list of tuples
+    def test_get_referenced_versions_returns_a_list_of_ReferenceInfo_for_under_the_given_reference(self):
+        """testing if Maya.get_referenced_versions returns a list of tuples
         of Versions referenced in the current scene under the given reference
         """
         # create references to various versions
@@ -2047,7 +2046,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         self.maya_env.reference(self.version6)
 
         # now try to get the referenced versions
-        ref_info_data = self.maya_env.get_reference_info()
+        ref_info_data = self.maya_env.get_referenced_versions()
 
         self.assertItemsEqual(
             map(lambda x: x.version, ref_info_data),
@@ -2056,12 +2055,13 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         # and get a deeper one
         ref_info_data = \
-            self.maya_env.get_reference_info(ref_info_data[0].reference)
+            self.maya_env.get_referenced_versions(
+                ref_info_data[0].references[0]
+            )
 
         self.assertItemsEqual(
             map(lambda x: x.version, ref_info_data),
-            [self.version3, self.version4, self.version4, self.version5,
-             self.version5]
+            [self.version3, self.version4, self.version5]
         )
 
     def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(self):
@@ -2335,17 +2335,13 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         version11_ref_2 = root_refs[1]
 
         expected_to_be_updated_list = [
-            ReferenceInfo(version11_ref_1, self.version11),
-            ReferenceInfo(version11_ref_2, self.version11),
+            ReferenceInfo(self.version11, [version11_ref_1, version11_ref_2]),
         ]
 
         result = \
             self.maya_env.check_referenced_versions()
 
-        print expected_to_be_updated_list
-        print result
-
-        self.assertEqual(2, len(result))
+        self.assertEqual(1, len(result))
         self.assertEqual(
             expected_to_be_updated_list,
             result
@@ -2475,7 +2471,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         result = self.maya_env.check_referenced_versions(version21_ref)
         expected_to_be_updated_list = \
-            [ReferenceInfo(version16_ref, self.version16)]
+            [ReferenceInfo(self.version16, [version16_ref])]
         self.assertEqual(1, len(result))
         self.assertEqual(
             expected_to_be_updated_list,
@@ -2627,40 +2623,122 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         self.assertFalse(self.version2.is_latest_published_version())
 
-        expected_to_be_updated_list = [
-            ReferenceInfo(version11_ref_1, self.version11, 'update'),
-            ReferenceInfo(version4_ref_1, self.version4, 'update'),
-            ReferenceInfo(version2_ref_1, self.version2, 'update'),
-            ReferenceInfo(version4_ref_2, self.version4, 'update'),
-            ReferenceInfo(version2_ref_2, self.version2, 'update'),
+        expected_to_be_updated_list = {
+            self.version27.id: 'leave',
+            self.version38.id: 'leave',
 
-            ReferenceInfo(version11_ref_2, self.version11, 'update'),
-            ReferenceInfo(version4_ref_3, self.version4, 'update'),
-            ReferenceInfo(version2_ref_3, self.version2, 'update'),
-            ReferenceInfo(version4_ref_4, self.version4, 'update'),
-            ReferenceInfo(version2_ref_4, self.version2, 'update'),
+            self.version16.id: 'update',
+            self.version21.id: 'create',
 
-            ReferenceInfo(version21_ref, self.version21, 'create'),
-            ReferenceInfo(version16_ref, self.version16, 'update'),
-
-            ReferenceInfo(version38_ref, self.version38, 'leave'),
-            ReferenceInfo(version27_ref, self.version27, 'leave'),
-        ]
+            self.version2.id: 'update',
+            self.version4.id: 'update',
+            self.version11.id: 'update',
+            self.version15.id: 'create',
+        }
 
         result = \
             self.maya_env.deep_reference_check()
 
-        # need to do a custom test
-        for item1 in result:
-            for item2 in expected_to_be_updated_list:
-                if item1 == item2:
-                    expected_to_be_updated_list.remove(item2)
-                    break
+        print 'self.version27.id: %s' % self.version27.id
+        print 'self.version38.id: %s' % self.version38.id
+        print 'self.version16.id: %s' % self.version16.id
+        print 'self.version21.id: %s' % self.version21.id
+        print 'self.version2.id : %s' % self.version2.id
+        print 'self.version4.id : %s' % self.version4.id
+        print 'self.version11.id: %s' % self.version11.id
+        print 'self.version15.id: %s' % self.version15.id
 
-        self.assertEqual(len(expected_to_be_updated_list), 0)
+        print expected_to_be_updated_list
+        print '--------------------------'
+        print result
 
-    def test_deep_reference_update_is_using_the_ReferenceInfo_list(self):
-        """testing if
+        self.assertEqual(
+            expected_to_be_updated_list,
+            result
+        )
+
+    def test_deep_reference_check_is_working_properly_case_2(self):
+        """testing if deep_reference_check will return a dictionary holding
+        info like which ref needs to be updated or which reference needs a new
+        version, what is the corresponding Version instance and what is the
+        final action, even if the 2nd level of references has an update
+
+        Start Condition:
+
+        version15 -> has no new version
+          version11 -> has no new version
+            version4 -> has no new version
+              version2 -> has new published version (version3)
+
+        Expected Final Result (generates only one new version)
+        version15 -> create
+          version11 -> create
+            version4 -> create
+              version2 -> update
         """
+        # create a deep relation
+        self.version2.is_published = True
+        self.version3.is_published = True
+
+        # version4 references version2
+        self.maya_env.open(self.version4)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+        self.version4.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version11 references version4
+        self.maya_env.open(self.version11)
+        self.maya_env.reference(self.version4)
+        pymel.core.saveFile()
+        self.version11.is_published = True
+        pymel.core.newFile(force=True)
+
+        # version15 references version11 two times
+        self.maya_env.open(self.version15)
+        self.maya_env.reference(self.version11)
+        pymel.core.saveFile()
+
+        db.DBSession.commit()
+
+        # check the setup
+        visited_versions = []
+        for v in walk_version_hierarchy(self.version15):
+            visited_versions.append(v)
+        expected_visited_versions = \
+            [self.version15, self.version11, self.version4, self.version2]
+
+        self.assertEqual(
+            expected_visited_versions,
+            visited_versions
+        )
+
+        expected_to_be_updated_list = {
+            self.version15.id: 'create',
+            self.version11.id: 'create',
+            self.version4.id: 'create',
+            self.version2.id: 'update',
+        }
+
+        result = \
+            self.maya_env.deep_reference_check()
+
+        print 'self.version15.id: %s' % self.version15.id
+        print 'self.version11.id: %s' % self.version11.id
+        print 'self.version4.id : %s' % self.version4.id
+        print 'self.version2.id : %s' % self.version2.id
+
+        print expected_to_be_updated_list
+        print '--------------------------'
+        print result
+
+        self.assertEqual(
+            expected_to_be_updated_list,
+            result
+        )
+
+    # def test_deep_reference_update_is_using_the_ReferenceInfo_list(self):
+    #     """testing if
+    #     """
 
 
