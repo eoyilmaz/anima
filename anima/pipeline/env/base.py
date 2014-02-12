@@ -298,7 +298,7 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def get_referenced_versions(self):
+    def get_reference_info(self):
         """Returns the :class:`~stalker.models.version.Version` instances which
         are referenced in to the current scene
 

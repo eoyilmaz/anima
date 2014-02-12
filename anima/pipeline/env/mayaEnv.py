@@ -7,11 +7,11 @@ import os
 import shutil
 import logging
 
-import pymel
-from pymel import core as pm
-from stalker import Version
+import pymel.core
+import pymel.versions
 
-from stalker.db import DBSession
+
+from stalker import db, Version
 
 from .. import utils
 from base import EnvironmentBase
@@ -19,6 +19,103 @@ from base import EnvironmentBase
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+
+class ReferenceInfo(object):
+    """A helper class to hold References, their corresponding Versions and if
+    any update, what is the update decision.
+
+    This is just a basic data object.
+
+    :param ref: The maya FileReference
+    :param version: The corresponding Stalker Version
+    :param action: one of ['leave', 'create', 'update']
+    """
+
+    default_actions = ['leave', 'create', 'update']
+
+    def __init__(self, ref, version, action=None):
+        self.reference = self._validate_reference(ref)
+        self.version = self._validate_version(version)
+        self.action = self._validate_action(action)
+
+    @classmethod
+    def _validate_reference(cls, ref):
+        """Validates the given ref instance
+
+        :param ref: A Maya FileReference object
+        :return:
+        """
+        if not isinstance(ref, pymel.core.system.FileReference):
+            raise TypeError(
+                '%(class)s.reference should be an instance of '
+                'pymel.core.nt.FileReference, not %(ref_class)s' % {
+                    'class': cls.__name__,
+                    'ref_class': ref.__class__.__name__
+                }
+            )
+
+        return ref
+
+    @classmethod
+    def _validate_version(cls, version):
+        """Validates the given version instance
+
+        :param version: A Stalker Version instance
+        :return:
+        """
+        from stalker import Version
+        if not isinstance(version, Version):
+            raise TypeError(
+                '%(class)s.reference should be an instance of '
+                'stalker.models.version.Version, not %(ver_class)s' % {
+                    'class': cls.__name__,
+                    'ver_class': version.__class__.__name__
+                }
+            )
+
+        return version
+
+    def _validate_action(self, action):
+        """Validates the given action value
+
+        :param action: A string one of ['leave', 'create', update']
+        :return:
+        """
+        if action is None:
+            action = self.default_actions[0]
+
+        if not isinstance(action, str):
+            raise TypeError(
+                '%(class)s.action should be a string one of '
+                '%(default_actions)s, not %(action)s' % {
+                    'class': self.__class__.__name__,
+                    'default_actions': self.default_actions,
+                    'action': action.__class__.__name__
+                }
+            )
+
+        if action not in ['leave', 'create', 'update']:
+            raise ValueError(
+                '%(class)s.action should be a string one of '
+                '%(default_actions)s, not %(action)s' % {
+                    'class': self.__class__.__name__,
+                    'default_actions': self.default_actions,
+                    'action': action
+                }
+            )
+
+        return action
+
+    def __eq__(self, other):
+        """The overridden __eq__ method
+
+        :param other: A ReferenceInfo object
+        :return:
+        """
+        return isinstance(other, ReferenceInfo) \
+            and self.reference == other.reference \
+            and self.version == other.version
 
 
 class Maya(EnvironmentBase):
@@ -154,7 +251,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         project = version.task.project
 
-        current_workspace_path = pm.workspace.path
+        current_workspace_path = pymel.core.workspace.path
 
         # create a workspace file inside a folder called .maya_files
         # at the parent folder of the current version
@@ -178,7 +275,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.create_workspace_file(workspace_path)
 
         # this sets the project
-        pm.workspace.open(workspace_path)
+        pymel.core.workspace.open(workspace_path)
 
         # create workspace folders
         self.create_workspace_folders(workspace_path)
@@ -220,14 +317,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         utils.createFolder(version.absolute_path)
 
         # delete the unknown nodes
-        unknownNodes = pm.ls(type='unknown')
-        pm.delete(unknownNodes)
+        unknownNodes = pymel.core.ls(type='unknown')
+        pymel.core.delete(unknownNodes)
 
         # set the file paths for external resources
         self.replace_external_paths()
 
         # save the file
-        pm.saveAs(
+        pymel.core.saveAs(
             version.absolute_full_path,
             type='mayaAscii'
         )
@@ -244,8 +341,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.absolute_full_path
         )
 
-        DBSession.add(version)
-        DBSession.commit()
+        db.DBSession.add(version)
+        db.DBSession.commit()
 
         return True
 
@@ -253,7 +350,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """the export action for maya environment
         """
         # check if there is something selected
-        if len(pm.ls(sl=True)) < 1:
+        if len(pymel.core.ls(sl=True)) < 1:
             raise RuntimeError("There is nothing selected to export")
 
         # do not save if there are local files
@@ -274,11 +371,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.create_workspace_folders(workspace_path)
 
         # export the file
-        pm.exportSelected(version.absolute_full_path, type='mayaAscii')
+        pymel.core.exportSelected(version.absolute_full_path, type='mayaAscii')
 
         # save the version to database
-        DBSession.add(version)
-        DBSession.commit()
+        db.DBSession.add(version)
+        db.DBSession.commit()
 
         return True
 
@@ -294,26 +391,26 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           need to be updated
         """
         # store current workspace path
-        previous_workspace_path = pm.workspace.path
+        previous_workspace_path = pymel.core.workspace.path
 
         # set the project
         # new_workspace = os.path.dirname(version.absolute_path)
         new_workspace = version.absolute_path
 
-        pm.workspace.open(new_workspace)
+        pymel.core.workspace.open(new_workspace)
 
         # check for unsaved changes
         logger.info("opening file: %s" % version.absolute_full_path)
 
         try:
-            pm.openFile(
+            pymel.core.openFile(
                 version.absolute_full_path,
                 f=force,
                 #loadReferenceDepth='none'
             )
         except RuntimeError as e:
             # restore the previous workspace
-            pm.workspace.open(previous_workspace_path)
+            pymel.core.workspace.open(previous_workspace_path)
 
             # raise the RuntimeError again
             # for the interface
@@ -349,12 +446,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         if use_namespace:
             namespace = os.path.basename(version.filename)
-            pm.importFile(
+            pymel.core.importFile(
                 version.absolute_full_path,
                 namespace=namespace
             )
         else:
-            pm.importFile(
+            pymel.core.importFile(
                 version.absolute_full_path,
                 defaultNamespace=True
             )
@@ -372,14 +469,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         namespace = namespace.replace('.', '_')
 
         if use_namespace:
-            ref = pm.createReference(
+            ref = pymel.core.createReference(
                 version.absolute_full_path,
                 gl=True,
                 namespace=namespace,
                 options='v=0'
             )
         else:
-            ref = pm.createReference(
+            ref = pymel.core.createReference(
                 version.absolute_full_path,
                 gl=True,
                 defaultNamespace=True,
@@ -398,7 +495,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
-            DBSession.commit()
+            db.DBSession.commit()
 
         # also update version.inputs for the referenced input
         self.update_version_inputs(ref)
@@ -411,7 +508,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.debug("trying to get the version from workspace")
 
         # get the workspace path
-        workspace_path = pm.workspace.path
+        workspace_path = pymel.core.workspace.path
         logger.debug("workspace_path: %s" % workspace_path)
 
         versions = self.get_versions_from_path(workspace_path)
@@ -432,8 +529,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         version = None
 
-        # pm.env.sceneName() always uses "/"
-        full_path = pm.env.sceneName()
+        # pymel.core.env.sceneName() always uses "/"
+        full_path = pymel.core.env.sceneName()
         logger.debug('full_path : %s' % full_path)
         # try to get it from the current open scene
         if full_path != '':
@@ -459,7 +556,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # try to get the a valid asset file from starting the last recent file
 
         try:
-            recent_files = pm.optionVar['RecentFilesList']
+            recent_files = pymel.core.optionVar['RecentFilesList']
         except KeyError:
             logger.debug("no recent files")
             recent_files = None
@@ -511,7 +608,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
-        image_folder_from_ws = pm.workspace.fileRules['images']
+        image_folder_from_ws = pymel.core.workspace.fileRules['images']
         image_folder_from_ws_full_path = os.path.join(
             version.absolute_path,
             image_folder_from_ws
@@ -541,7 +638,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # SHOTS/ToonShading/TestTransition/incidence/ToonShading_TestTransition_incidence_MasterPass_v050.####.iff
 
         # defaultRenderGlobals
-        dRG = pm.PyNode('defaultRenderGlobals')
+        dRG = pymel.core.PyNode('defaultRenderGlobals')
         dRG.setAttr('imageFilePrefix', render_file_rel_path)
         dRG.setAttr('renderVersion', "v%03d" % version.version_number)
         dRG.setAttr('animation', 1)
@@ -556,7 +653,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def set_output_file_format(cls):
         """sets the output file format
         """
-        dRG = pm.PyNode('defaultRenderGlobals')
+        dRG = pymel.core.PyNode('defaultRenderGlobals')
 
         # check the current renderer
         current_renderer = dRG.currentRenderer.get()
@@ -566,37 +663,36 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             dRG.imfkey.set('exr')
             # check the maya version and set it if maya version is equal or
             # greater than 2012
-            import pymel.versions
             try:
                 if pymel.versions.current() >= pymel.versions.v2012:
                     try:
-                        mrG = pm.PyNode("mentalrayGlobals")
-                    except pm.general.MayaNodeError:
+                        mrG = pymel.core.PyNode("mentalrayGlobals")
+                    except pymel.core.general.MayaNodeError:
                         # the renderer is set to mentalray but it is not loaded
                         # so there is no mentalrayGlobals
                         # create them
 
                         # dirty little maya tricks
-                        pm.mel.miCreateDefaultNodes()
+                        pymel.core.mel.miCreateDefaultNodes()
 
                         # get it again
-                        mrG = pm.PyNode("mentalrayGlobals")
+                        mrG = pymel.core.PyNode("mentalrayGlobals")
 
                     mrG.imageCompression.set(4)
-            except AttributeError, pm.general.MayaNodeError:
+            except AttributeError, pymel.core.general.MayaNodeError:
                 pass
 
             # if the renderer is not registered this causes a _objectError
             # and the frame buffer to 16bit half
             try:
-                miDF = pm.PyNode('miDefaultFramebuffer')
+                miDF = pymel.core.PyNode('miDefaultFramebuffer')
                 miDF.datatype.set(16)
-            except TypeError, pm.general.MayaNodeError:
+            except TypeError, pymel.core.general.MayaNodeError:
                 # just don't do anything
                 pass
         elif current_renderer == 'arnold':
             dRG.imageFormat.set(51)  # exr
-            dAD = pm.PyNode('defaultArnoldDriver')
+            dAD = pymel.core.PyNode('defaultArnoldDriver')
             dAD.exrCompression.set(2)  # zips
             dAD.halfPrecision.set(1)  # half
             dAD.tiled.set(0)  # not tiled
@@ -604,7 +700,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         ## check all the render layers and try to get if any of them are using
         ## mayaSoftware as the renderer, and set the render output to iff if any
-        #for renderLayer in pm.ls(type='renderLayer'):
+        #for renderLayer in pymel.core.ls(type='renderLayer'):
             ## if the renderer is set to mayaSoftware (which is very rare)
             #if dRG.getAttr('currentRenderer') == 'mayaSoftware':
 
@@ -644,7 +740,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # create the folder
         utils.mkdir(playblast_path)
-        pm.optionVar['playblastFile'] = playblast_full_path
+        pymel.core.optionVar['playblastFile'] = playblast_full_path
 
     @classmethod
     def set_resolution(cls, width, height, pixel_aspect=1.0):
@@ -654,7 +750,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :param height: The height of the output image
         :param pixel_aspect: The pixel aspect ratio
         """
-        dRes = pm.PyNode("defaultResolution")
+        dRes = pymel.core.PyNode("defaultResolution")
         dRes.width.set(width)
         dRes.height.set(height)
         dRes.pixelAspect.set(pixel_aspect)
@@ -670,7 +766,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         the the Asset or Shot which can be derived from the Version instance
         very easily.
         """
-        pm.workspace.open(version.absolute_path)
+        pymel.core.workspace.open(version.absolute_path)
         # set the current timeUnit to match with the environments
         cls.set_fps(version.task.project.fps)
 
@@ -680,14 +776,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         # add the file to the recent file list
         try:
-            recent_files = pm.optionVar['RecentFilesList']
+            recent_files = pymel.core.optionVar['RecentFilesList']
         except KeyError:
             # there is no recent files list so create one
             # normally it is Maya's job
             # but somehow it is not working for new installations
-            recent_files = pm.OptionVarList([], 'RecentFilesList')
+            recent_files = pymel.core.OptionVarList([], 'RecentFilesList')
 
-        #assert(isinstance(recentFiles,pm.OptionVarList))
+        #assert(isinstance(recentFiles,pymel.core.OptionVarList))
         recent_files.appendVar(path)
 
     @classmethod
@@ -739,7 +835,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         external_nodes = []
 
         # check for file textures
-        for file_texture in pm.ls(type=pm.nt.File):
+        for file_texture in pymel.core.ls(type=pymel.core.nt.File):
             path = file_texture.attr('fileTextureName').get()
             logger.debug('checking path: %s' % path)
             if path is not None \
@@ -757,7 +853,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     file_texture.attr('fileTextureName').set(new_path)
 
         # check for arnold textures
-        for arnold_texture in pm.ls(type='aiImage'):
+        for arnold_texture in pymel.core.ls(type='aiImage'):
             path = arnold_texture.attr('filename').get()
             logger.debug('checking path: %s' % path)
             if path is not None \
@@ -776,7 +872,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # check for mentalray textures
         try:
-            for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
+            for mr_texture in pymel.core.ls(type=pymel.core.nt.MentalrayTexture):
                 path = mr_texture.attr('fileTextureName').get()
                 logger.debug("path of %s: %s" % (mr_texture, path))
                 if path is not None \
@@ -796,7 +892,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             pass
 
         # check for ImagePlanes
-        for image_plane in pm.ls(type=pm.nt.ImagePlane):
+        for image_plane in pymel.core.ls(type=pymel.core.nt.ImagePlane):
             path = image_plane.attr('imageName').get()
             if path is not None \
                and os.path.isabs(path) \
@@ -814,7 +910,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # check for IBL nodes
         try:
-            for ibl in pm.ls(type=pm.nt.MentalrayIblShape):
+            for ibl in pymel.core.ls(type=pymel.core.nt.MentalrayIblShape):
                 path = ibl.attr('texture').get()
                 if path is not None \
                    and os.path.isabs(path) \
@@ -833,7 +929,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             pass
 
         if external_nodes:
-            pm.select(external_nodes)
+            pymel.core.select(external_nodes)
             raise RuntimeError(
                 'There are external references in your scene!!!\n\n'
                 'The problematic nodes are:\n\n' +
@@ -843,91 +939,82 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 'YOUR FILE IS NOT GOING TO BE SAVED!!!'
             )
 
-    def check_referenced_versions(self):
-        """checks the referenced assets versions
+    def check_referenced_versions(self, parent_ref=None):
+        """Checks the referenced versions.
 
-        :return (Version, FileReference): Returns a list of Version instances
-          and maya Reference objects in a tuple
+        Returns a list of ReferenceInfo instances containing only the
+        references with new published versions. It doesn't check for child
+        reference states etc.
+
+        This one is very simple. To have a deeper information use
+        Maya.deep_reference_check() method, which is more robust then this one.
+
+        :param parent_ref: If given will return the versions under the given
+          parent reference.
+        :return (FileReference, Version): Returns a list of FileReference
+          instance and a Version in a list
         """
         # get all the valid version references
-        version_tuple_list = self.get_referenced_versions()
+        ref_info_list = self.get_reference_info(parent_ref)
 
         to_be_updated_list = []
 
-        for version_tuple in version_tuple_list:
-            version = version_tuple[0]
+        for ref_info in ref_info_list:
+            version = ref_info.version
             if not version.is_latest_published_version():
                 # add version to the update list
-                to_be_updated_list.append(version_tuple)
+                to_be_updated_list.append(ref_info)
 
         # sort the list according to full_path
-        return sorted(to_be_updated_list, key=lambda x: x[2])
+        return sorted(to_be_updated_list, key=lambda x: x.reference.path)
 
-    def get_referenced_versions(self, parent_ref=None):
+    def get_reference_info(self, parent_ref=None):
         """Returns the versions those been referenced to the current scene
 
         Returns Version instances and the corresponding Reference instance as a
-        tuple in a list, and a string showing the path of the Reference.
-        Replaces all the relative paths to absolute paths.
+        list of lists, and a string showing the path of the Reference. Replaces
+        all the relative paths to absolute paths.
 
-        The returned tuple format is as follows:
-        (Version, Reference, full_path)
+        The returned list format is as follows:
+        [Reference, Version]
 
         :param parent_ref: The parent ref to start from. So the final list will
           be gathered from the references that are sub references of this
           parent ref.
+
+        :returns: A list of ReferenceInfo instances
         """
-        valid_versions = []
+        reference_info_instances = []
 
         # get all the references
-        references = pm.listReferences(parent_ref)
-
-        refs_and_paths = []
-        # iterate over them to find valid assets
-        for reference in references:
-            # it is a dictionary
-            temp_version_full_path = reference.path
-
-            temp_version_full_path = \
-                os.path.expandvars(
-                    os.path.expanduser(
-                        os.path.normpath(
-                            temp_version_full_path
-                        )
-                    )
-                ).replace("\\", "/")
-
-            refs_and_paths.append((reference, temp_version_full_path))
+        references = pymel.core.listReferences(parent_ref)
 
         # sort them according to path
         # to make same paths together
-        refs_and_paths = sorted(refs_and_paths, None, lambda x: x[1])
+        refs_and_paths = sorted(references, None, lambda x: x.path)
 
         prev_version = None
-        prev_full_path = ''
+        prev_path = ''
 
-        for reference, full_path in refs_and_paths:
-            if full_path == prev_full_path:
+        for reference in refs_and_paths:
+            path = reference.path
+            if path == prev_path:
                 # directly append the version to the list
-                valid_versions.append(
-                    (prev_version, reference, prev_full_path)
+                reference_info_instances.append(
+                    ReferenceInfo(reference, prev_version)
                 )
             else:
                 # try to get a version with the given path
-                temp_version = self.get_version_from_full_path(full_path)
-
-                if temp_version:
-                    valid_versions.append(
-                        (temp_version,
-                         reference,
-                         temp_version.absolute_full_path)
+                version = self.get_version_from_full_path(path)
+                if version:
+                    reference_info_instances.append(
+                        ReferenceInfo(reference, version)
                     )
-
-                    prev_version = temp_version
-                    prev_full_path = full_path
+                    prev_version = version
+                    prev_path = path
 
         # return a sorted list
-        return sorted(valid_versions, None, lambda x: x[2])
+        return sorted(reference_info_instances, None, lambda x: x.reference.path)
 
     def update_version_inputs(self, parent_ref=None):
         """updates the references list of the current version
@@ -943,26 +1030,25 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         if version:
             # update the reference list
-            reference_list = []
-            reference_info = self.get_referenced_versions(parent_ref)
+            referenced_versions_list = []
+            reference_info = self.get_reference_info(parent_ref)
             for data in reference_info:
-                if data[0] not in reference_list:
-                    reference_list.append(data[0])
-
-            version.inputs = reference_list
-            DBSession.commit()
+                if data.version not in referenced_versions_list:
+                    referenced_versions_list.append(data.version)
+            version.inputs = referenced_versions_list
+            db.DBSession.commit()
 
     @classmethod
-    def update_versions(cls, version_tuple_list):
+    def update_versions(cls, version_info_list):
         """update versions to the latest version
         """
         previous_version_full_path = ''
         latest_published_version = None
 
-        for version_tuple in version_tuple_list:
-            version = version_tuple[0]
-            reference = version_tuple[1]
-            version_full_path = version_tuple[2]
+        for version_info in version_info_list:
+            version = version_info.version
+            reference = version_info.reference
+            version_full_path = version.absolute_full_path
 
             if version_full_path != previous_version_full_path:
                 latest_published_version = version.latest_published_version
@@ -974,8 +1060,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def get_frame_range(self):
         """returns the current playback frame range
         """
-        start_frame = int(pm.playbackOptions(q=True, ast=True))
-        end_frame = int(pm.playbackOptions(q=True, aet=True))
+        start_frame = int(pymel.core.playbackOptions(q=True, ast=True))
+        end_frame = int(pymel.core.playbackOptions(q=True, aet=True))
         return start_frame, end_frame
 
     def set_frame_range(self, start_frame=1, end_frame=100,
@@ -983,13 +1069,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """sets the start and end frame range
         """
         # set it in the playback
-        pm.playbackOptions(ast=start_frame, aet=end_frame)
+        pymel.core.playbackOptions(ast=start_frame, aet=end_frame)
 
         if adjust_frame_range:
-            pm.playbackOptions(min=start_frame, max=end_frame)
+            pymel.core.playbackOptions(min=start_frame, max=end_frame)
 
         # set in the render range
-        dRG = pm.PyNode('defaultRenderGlobals')
+        dRG = pymel.core.PyNode('defaultRenderGlobals')
         dRG.setAttr('startFrame', start_frame)
         dRG.setAttr('endFrame', end_frame)
 
@@ -997,7 +1083,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """returns the fps of the environment
         """
         # return directly from maya, it uses the same format
-        return self.time_to_fps[pm.currentUnit(q=1, t=1)]
+        return self.time_to_fps[pymel.core.currentUnit(q=1, t=1)]
 
     @classmethod
     def set_fps(cls, fps=25):
@@ -1005,11 +1091,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         # get the current time, current playback min and max (because maya
         # changes them, try to restore the limits)
-        current_time = pm.currentTime(q=1)
-        pMin = pm.playbackOptions(q=1, min=1)
-        pMax = pm.playbackOptions(q=1, max=1)
-        pAst = pm.playbackOptions(q=1, ast=1)
-        pAet = pm.playbackOptions(q=1, aet=1)
+        current_time = pymel.core.currentTime(q=1)
+        pMin = pymel.core.playbackOptions(q=1, min=1)
+        pMax = pymel.core.playbackOptions(q=1, max=1)
+        pAst = pymel.core.playbackOptions(q=1, ast=1)
+        pAet = pymel.core.playbackOptions(q=1, aet=1)
 
         # set the time unit, do not change the keyframe times
         # use the timeUnit as it is
@@ -1022,21 +1108,21 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 time_unit = key
                 break
 
-        pm.currentUnit(t=time_unit, ua=0)
+        pymel.core.currentUnit(t=time_unit, ua=0)
         # to be sure
-        pm.optionVar['workingUnitTime'] = time_unit
+        pymel.core.optionVar['workingUnitTime'] = time_unit
 
         # update the playback ranges
-        pm.currentTime(current_time)
-        pm.playbackOptions(ast=pAst, aet=pAet)
-        pm.playbackOptions(min=pMin, max=pMax)
+        pymel.core.currentTime(current_time)
+        pymel.core.playbackOptions(ast=pAst, aet=pAet)
+        pymel.core.playbackOptions(min=pMin, max=pMax)
 
     @classmethod
     def load_referenced_versions(cls):
         """loads all the references
         """
         # get all the references
-        for reference in pm.listReferences():
+        for reference in pymel.core.listReferences():
             reference.load()
 
     @classmethod
@@ -1083,8 +1169,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # apply all the edits
             for edit in all_edits:
                 try:
-                    pm.mel.eval(edit)
-                except pm.MelError:
+                    pymel.core.mel.eval(edit)
+                except pymel.core.MelError:
                     pass
         else:
             # replace the reference
@@ -1119,28 +1205,28 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                             new_namespace + ':', previous_namespace + ':'
                         )
 
-                        pm.referenceEdit(
+                        pymel.core.referenceEdit(
                             base_reference_node,
                             changeEditTarget=(node_old_name, node_new_name)
                         )
-                        #pm.referenceEdit(
+                        #pymel.core.referenceEdit(
                         #    baseRefNode,
                         #    orn=baseRefNode,
                         #    changeEditTarget=(nodeOldName, nodeNewName)
                         #)
-                        #pm.referenceEdit(
+                        #pymel.core.referenceEdit(
                         #     subRef,
                         #     orn=baseRefNode,
                         #     changeEditTarget=(nodeOldName, nodeNewName)
                         #)
-                        #for aRefNode in pm.ls(type='reference'):
+                        #for aRefNode in pymel.core.ls(type='reference'):
                             #if len(aRefNode.attr('sharedReference').listConnections(s=0,d=1)) == 0: # not a shared reference
-                                #pm.referenceEdit(aRefNode, orn=baseRefNode, changeEditTarget=(nodeOldName, nodeNewName), scs=1, fld=1)
-                                ##pm.referenceEdit(aRefNode, applyFailedEdits=True)
-                    #pm.referenceEdit(subRef, applyFailedEdits=True)
+                                #pymel.core.referenceEdit(aRefNode, orn=baseRefNode, changeEditTarget=(nodeOldName, nodeNewName), scs=1, fld=1)
+                                ##pymel.core.referenceEdit(aRefNode, applyFailedEdits=True)
+                    #pymel.core.referenceEdit(subRef, applyFailedEdits=True)
 
                 # apply all the failed edits again
-                pm.referenceEdit(base_reference_node, applyFailedEdits=True)
+                pymel.core.referenceEdit(base_reference_node, applyFailedEdits=True)
 
     @classmethod
     def get_all_sub_references(cls, ref):
@@ -1171,8 +1257,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         returns True if any
         """
         # check if the stereoCameraRig plugin is loaded
-        if pm.pluginInfo('stereoCamera', q=True, l=True):
-            return len(pm.ls(type='stereoRigTransform')) > 0
+        if pymel.core.pluginInfo('stereoCamera', q=True, l=True):
+            return len(pymel.core.ls(type='stereoRigTransform')) > 0
         else:
             # return False because it is impossible without stereoCamera plugin
             # to have a stereoCamera rig
@@ -1198,13 +1284,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         # TODO: Also check for image planes and replace the path
         # create a repository
-        workspace_path = pm.workspace.path
+        workspace_path = pymel.core.workspace.path
 
         # *********************************************************************
         # References
         # replace reference paths with absolute path
         from stalker import Repository
-        for ref in pm.listReferences():
+        for ref in pymel.core.listReferences():
             unresolved_path = ref.unresolvedPath().replace("\\", "/")
             # keep the load state
             # load_state = ref.isLoded()
@@ -1241,13 +1327,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         if new_ref_path != unresolved_path:
                             logger.info("replacing reference: %s" % ref.path)
                             logger.info("replacing with: %s" % new_ref_path)
-                            assert isinstance(ref, pm.system.FileReference)
+                            assert isinstance(ref, pymel.core.system.FileReference)
                             ref.replaceWith(new_ref_path)
 
         # *********************************************************************
         # Texture Files
         # replace with absolute path
-        for image_file in pm.ls(type="file"):
+        for image_file in pymel.core.ls(type="file"):
             orig_file_texture_path = image_file.getAttr("fileTextureName")
             orig_file_texture_path = orig_file_texture_path.replace("\\", "/")
 
@@ -1303,8 +1389,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :param path: the root of the workspace
         """
-        for key in pm.workspace.fileRules:
-            rule_path = pm.workspace.fileRules[key]
+        for key in pymel.core.workspace.fileRules:
+            rule_path = pymel.core.workspace.fileRules[key]
             full_path = os.path.join(path, rule_path).replace('\\', '/')
             logger.debug(full_path)
             try:
@@ -1320,11 +1406,71 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.update_version_inputs()
 
         # the go to the references
-        references_list = pm.listReferences()
+        references_list = pymel.core.listReferences()
         while len(references_list):
             current_ref = references_list.pop(0)
             self.update_version_inputs(current_ref)
-            references_list.extend(pm.listReferences(current_ref))
+            references_list.extend(pymel.core.listReferences(current_ref))
+
+    def deep_reference_check(self):
+        """Deeply checks all the references in the scene and returns a list of
+        :class:`.ReferenceInfo` instances.
+
+        :return: list
+        """
+        # recreate version.inputs list from current scene
+        self.deep_version_inputs_update()
+
+        # reverse walk in DFS
+        visited_refs = []
+        refs = pymel.core.listReferences()
+        while refs:
+            current_ref = refs.pop(0)
+            visited_refs.append(current_ref)
+            for r in reversed(pymel.core.listReferences(current_ref)):
+                refs.insert(0, r)
+
+        ref_info_instances = []
+        for ref in reversed(visited_refs):
+            v = self.get_version_from_full_path(ref.path)
+
+            action = 'leave'  # remove this line, it is unnecessary
+            to_be_updated_list = self.check_referenced_versions(ref)
+
+            if to_be_updated_list:
+                action = 'create'
+                # check if there is a new published version of this version
+                # and it is not this version
+
+                latest_published_version = v.latest_published_version
+                if latest_published_version and \
+                   not v.is_latest_published_version():
+                    # so there is a new version check if its children needs any
+                    # update and the updated child versions are already
+                    # referenced to the latest version of this version
+                    if not all([ref_info.version.latest_published_version
+                                in latest_published_version.inputs
+                                for ref_info in to_be_updated_list]):
+                        # not all references are in the inputs
+                        # create a new version as usual
+                        # and re-reference the new versions
+                        action = 'create'
+                    else:
+                        # just skip this it will be updated by its parent
+                        action = 'update'
+            else:
+                # there could be no reference under this referenced version
+                # so check if it has a new version
+                if v.is_latest_published_version():
+                    # do nothing
+                    action = 'leave'
+                else:
+                    # update to latest published version
+                    action = 'update'
+
+            ref_info_instances.append(ReferenceInfo(ref, v, action))
+
+        return ref_info_instances
 
     def deep_reference_update(self, version):
         """Updates the given maya version with deep reference checks.
@@ -1332,6 +1478,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         This method uses the database connection to check the referenced
         versions, instead of the reference editor. So please save your file
         with self.save_as() before running this method.
+
+        (ref, parent_ref, version, 'action':['none', 'create', 'update'])
 
         :param version: Version instance
         :return list: A list of Version instances if created any
@@ -1375,8 +1523,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # latest_published_versions of all the elements in
                     # to_be_updated_list are in the new published version's
                     # inputs list
-                    if not all([ref_v[0].latest_published_version in latest_published_version.inputs
-                                for ref_v in to_be_updated_list]):
+                    if not all([ref_info.version.latest_published_version
+                                in latest_published_version.inputs
+                                for ref_info in to_be_updated_list]):
                         # not all references are in the inputs
                         # create a new version as usual
                         # and re-reference the new versions
