@@ -220,8 +220,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         utils.createFolder(version.absolute_path)
 
         # delete the unknown nodes
-        unknownNodes = pymel.core.ls(type='unknown')
-        pymel.core.delete(unknownNodes)
+        unknown_nodes = pymel.core.ls(type='unknown')
+        pymel.core.delete(unknown_nodes)
 
         # set the file paths for external resources
         self.replace_external_paths()
@@ -287,11 +287,19 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         Opens the given Version file, sets the workspace etc.
 
-        It also updates the referenced Version on open.
+        Returns a tuple of Bool and a Dictionary. The Bool value shows if
+        everything went alright and the scene is opened without any problem.
+        The Dictionary is called the Reference Resolution Dictionary, and has
+        three keys ['leave', 'update', 'create'] and each of the keys is
+        related with a list of Version instances. These Version instances are
+        gathered from all the references in the opened scene no matter how
+        deeply they've been referenced. So passing this dictionary to
+        :meth:`.deep_reference_update` will update or create new versions as
+        necessary. You can also modify this dictionary before passing it to
+        :meth:`.deep_reference_update`, so only desired version instances are
+        updated or a new version is created for them.
 
-        :returns: list of :class:`~stalker.models.version.Version`
-          instances which are referenced in to the opened version and those
-          need to be updated
+        :returns: (Bool, Dictionary)
         """
         # store current workspace path
         previous_workspace_path = pymel.core.workspace.path
@@ -328,11 +336,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.replace_external_paths()
 
         # check the referenced versions for any possible updates
-        resolution_dictionary = self.check_referenced_versions()
+        reference_resolution = self.check_referenced_versions()
 
         self.update_version_inputs()
 
-        return True, resolution_dictionary
+        return True, reference_resolution
 
     def post_open(self):
         """Runs after opening a file
@@ -889,19 +897,37 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.inputs = referenced_versions
             db.DBSession.commit()
 
-    def update_versions(self, resolution):
-        """update versions to the latest version
+    def update_versions(self, reference_resolution):
+        """Updates the versions to the latest version
+
+        :param reference_resolution: A dictionary with keys 'leave', 'update'
+          and 'create' with a list of :class:`~stalker.models.version.Version`
+          instances in each of them. Only 'update' key is used and if the
+          Version instance is in the 'update' list the reference is updated to
+          the latest version.
         """
         # list only first level references
         references = sorted(pymel.core.listReferences(), key=lambda x: x.path)
 
-        # get direct references
+        # optimize it:
+        #   do only one search for each references to the same version
+        previous_ref_path = None
+        previous_full_path = None
+
         for reference in references:
-            version = self.get_version_from_full_path(reference.path)
-            if version in resolution['update']:
+            path = reference.path
+            if path == previous_ref_path:
+                full_path = previous_full_path
+            else:
+                version = self.get_version_from_full_path(path)
                 latest_published_version = version.latest_published_version
-                absolute_full_path = latest_published_version.absolute_full_path
-                reference.replaceWith(absolute_full_path)
+                if version in reference_resolution['update']:
+                    full_path = latest_published_version.absolute_full_path
+                else:
+                    full_path = None
+
+            if full_path:
+                reference.replaceWith(full_path)
 
     def get_frame_range(self):
         """returns the current playback frame range
