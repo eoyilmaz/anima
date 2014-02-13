@@ -21,116 +21,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-class ReferenceInfo(object):
-    """A helper class to hold References, their corresponding Versions and if
-    any update, what is the update decision.
-
-    This is just a basic data object.
-
-    :param refs: A list of maya FileReference instances
-    :param version: The corresponding Stalker Version
-    :param action: one of ['leave', 'create', 'update']
-    """
-
-    default_actions = ['leave', 'create', 'update']
-
-    def __init__(self, version=None, refs=None, action=None):
-        if refs is None:
-            refs = []
-        self.version = self._validate_version(version)
-        self.references = self._validate_references(refs)
-        self.action = self._validate_action(action)
-
-    @classmethod
-    def _validate_references(cls, refs):
-        """Validates the given refs value
-
-        :param refs: A list of Maya FileReference instances
-        :return:
-        """
-
-        if not isinstance(refs, list):
-            raise TypeError(
-                '%(class)s.references should be a list, not %(refs_class)s' % {
-                    'class': cls.__name__,
-                    'refs_class': refs.__class__.__name__
-                }
-            )
-
-        for ref in refs:
-            if not isinstance(ref, pymel.core.system.FileReference):
-                raise TypeError(
-                    '%(class)s.references should be an instance of '
-                    'pymel.core.nt.FileReference, not %(ref_class)s' % {
-                        'class': cls.__name__,
-                        'ref_class': ref.__class__.__name__
-                    }
-                )
-
-        return refs
-
-    @classmethod
-    def _validate_version(cls, version):
-        """Validates the given version instance
-
-        :param version: A Stalker Version instance
-        :return:
-        """
-        from stalker import Version
-        if not isinstance(version, Version):
-            raise TypeError(
-                '%(class)s.version should be an instance of '
-                'stalker.models.version.Version, not %(ver_class)s' % {
-                    'class': cls.__name__,
-                    'ver_class': version.__class__.__name__
-                }
-            )
-
-        return version
-
-    def _validate_action(self, action):
-        """Validates the given action value
-
-        :param action: A string one of ['leave', 'create', update']
-        :return:
-        """
-        if action is None:
-            action = self.default_actions[0]
-
-        if not isinstance(action, str):
-            raise TypeError(
-                '%(class)s.action should be a string one of '
-                '%(default_actions)s, not %(action)s' % {
-                    'class': self.__class__.__name__,
-                    'default_actions': self.default_actions,
-                    'action': action.__class__.__name__
-                }
-            )
-
-        if action not in ['leave', 'create', 'update']:
-            raise ValueError(
-                '%(class)s.action should be a string one of '
-                '%(default_actions)s, not %(action)s' % {
-                    'class': self.__class__.__name__,
-                    'default_actions': self.default_actions,
-                    'action': action
-                }
-            )
-
-        return action
-
-    def __eq__(self, other):
-        """The overridden __eq__ method
-
-        :param other: A ReferenceInfo object
-        :return:
-        """
-        return isinstance(other, ReferenceInfo) \
-            and all(map(lambda x, y: x.path == y.path,
-                        self.references, other.references))\
-            and self.version == other.version
-
-
 class Maya(EnvironmentBase):
     """the maya environment class
     """
@@ -437,12 +327,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # replace_external_paths
         self.replace_external_paths()
 
-        # check the referenced assets for newer version
-        to_update_list = self.check_referenced_versions()
+        # check the referenced versions for any possible updates
+        resolution_dictionary = self.check_referenced_versions()
 
         self.update_version_inputs()
 
-        return True, to_update_list
+        return True, resolution_dictionary
 
     def post_open(self):
         """Runs after opening a file
@@ -952,48 +842,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 'YOUR FILE IS NOT GOING TO BE SAVED!!!'
             )
 
-    def check_referenced_versions(self, parent_ref=None):
-        """Checks the referenced versions.
-
-        Returns a list of ReferenceInfo instances containing only the
-        references with new published versions. It doesn't check for child
-        reference states etc.
-
-        This one is very simple. To have a deeper information use
-        Maya.deep_reference_check() method, which is more robust then this one.
-
-        :param parent_ref: If given will return the versions under the given
-          parent reference.
-        :return (FileReference, Version): Returns a list of FileReference
-          instance and a Version in a list
-        """
-        # get all the valid version references
-        referenced_versions = self.get_referenced_versions(parent_ref)
-
-        to_be_updated_list = []
-
-        for ref_info in referenced_versions:
-            version = ref_info.version
-            if not version.is_latest_published_version():
-                # add version to the update list
-                to_be_updated_list.append(ref_info)
-
-        # no need to sort it, it is already a sorted list
-        return to_be_updated_list
-
     def get_referenced_versions(self, parent_ref=None):
-        """Returns the versions those been referenced to the current scene as
-        ReferenceInfo instances.
-
-        Returns Version instances and the corresponding Reference instance as a
-        list of ReferenceInfo instances. Replaces all the relative paths to
-        absolute paths.
+        """Returns the versions those been referenced to the current scene.
 
         :param parent_ref: The parent ref to start from. So the final list will
           be gathered from the references that are sub references of this
           parent ref.
 
-        :returns: A list of ReferenceInfo instances
+        :returns: A list of Version instances
         """
 
         # get all the references
@@ -1003,24 +859,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # to make same paths together
         refs = sorted(references, key=lambda x: x.path)
 
-        prev_ref_info = None
         prev_path = ''
-        reference_info_instances = []
-
+        versions = []
         for ref in refs:
             path = ref.path
-            if path == prev_path:
-                # directly append the ref to the refs list
-                prev_ref_info.references.append(ref)
-            else:
+            if path != prev_path:
                 # try to get a version with the given path
                 version = self.get_version_from_full_path(path)
                 if version:
-                    prev_ref_info = ReferenceInfo(version, [ref])
-                    reference_info_instances.append(prev_ref_info)
+                    versions.append(version)
                     prev_path = path
-
-        return reference_info_instances
+        return versions
 
     def update_version_inputs(self, parent_ref=None):
         """updates the references list of the current version
@@ -1036,24 +885,22 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         if version:
             # update the reference list
-            referenced_versions_list = []
-            reference_info = self.get_referenced_versions(parent_ref)
-            for data in reference_info:
-                referenced_versions_list.append(data.version)
-            version.inputs = referenced_versions_list
+            referenced_versions = self.get_referenced_versions(parent_ref)
+            version.inputs = referenced_versions
             db.DBSession.commit()
 
-    @classmethod
-    def update_versions(cls, version_info_list):
+    def update_versions(self, resolution):
         """update versions to the latest version
         """
-        for version_info in version_info_list:
-            version = version_info.version
-            references = version_info.references
-            latest_published_version = version.latest_published_version
+        # list only first level references
+        references = sorted(pymel.core.listReferences(), key=lambda x: x.path)
 
-            absolute_full_path = latest_published_version.absolute_full_path
-            for reference in references:
+        # get direct references
+        for reference in references:
+            version = self.get_version_from_full_path(reference.path)
+            if version in resolution['update']:
+                latest_published_version = version.latest_published_version
+                absolute_full_path = latest_published_version.absolute_full_path
                 reference.replaceWith(absolute_full_path)
 
     def get_frame_range(self):
@@ -1140,7 +987,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # if the source_reference has referenced files do a dirty edit
         # by applying all the edits to the referenced node (the old way of
         # replacing references)
-        sub_references = cls.get_all_sub_references(source_reference)
+        sub_references = pymel.core.listReferences(
+            source_reference, resursive=True
+        )
 #        logger.debug("subReferences count: %s" % len(subReferences))
 
         if len(sub_references) > 0:
@@ -1154,7 +1003,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             source_reference.replaceWith(target_file)
 
             # try to find the new namespace
-            sub_references = cls.get_all_sub_references(source_reference)
+            sub_references = pymel.core.listReferences(
+                source_reference, recursive=True
+            )
             new_namespace = cls.get_full_namespace_from_node_name(
                 sub_references[0].nodes()[0]
             )  # possible bug here, fix it later
@@ -1176,7 +1027,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             source_reference.replaceWith(target_file)
 
             # try to find the new namespace
-            sub_references = cls.get_all_sub_references(source_reference)
+            sub_references = pymel.core.listReferences(
+                source_reference, recursive=True
+            )
             new_namespace = cls.get_full_namespace_from_node_name(
                 sub_references[0].nodes()[0]
             )  # possible bug here, fix it later
@@ -1194,7 +1047,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 #                logger.debug("newNS : %s" % newNS)
 
                 # get the new sub references
-                for subRef in cls.get_all_sub_references(source_reference):
+                for subRef in pymel.core.listReferences(source_reference):
                     # for all the nodes in sub references
                     # change the edit targets with new namespace
                     for node in subRef.nodes():
@@ -1226,23 +1079,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
                 # apply all the failed edits again
                 pymel.core.referenceEdit(base_reference_node, applyFailedEdits=True)
-
-    @classmethod
-    def get_all_sub_references(cls, ref):
-        """returns the recursive sub references as a list of FileReference
-        objects for the given file reference
-        """
-        all_refs = []
-        sub_ref_dict = ref.subReferences()
-
-        if len(sub_ref_dict) > 0:
-            for subRefData in sub_ref_dict.iteritems():
-                # first convert the sub ref dictionary to a normal ref object
-                sub_ref = subRefData[1]
-                all_refs.append(sub_ref)
-                all_refs += cls.get_all_sub_references(sub_ref)
-
-        return all_refs
 
     @classmethod
     def get_full_namespace_from_node_name(cls, node):
@@ -1425,9 +1261,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     references_list.append(ref)
             prev_ref_path = None
 
-    def deep_reference_check(self):
-        """Deeply checks all the references in the scene and returns a list of
-        :class:`.ReferenceInfo` instances.
+    def check_referenced_versions(self):
+        """Deeply checks all the references in the scene and returns a
+        dictionary which uses the ids of the Versions as key and the action as
+        value.
 
         Uses the top level references to get a Stalker Version instance and
         then tracks all the changes from these Version instances.
@@ -1440,12 +1277,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # reverse walk in DFS
         dfs_version_references = []
         # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        resolution_dictionary = {}
+        resolution_dictionary = {
+            'leave': [],
+            'update': [],
+            'create': []
+        }
 
         version = self.get_current_version()
         for v in utils.walk_version_hierarchy(version):
-            # store with id
-            resolution_dictionary[v.id] = 'leave'
             dfs_version_references.append(v)
 
         # iterate back in the list
@@ -1459,27 +1298,30 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if to_be_updated_list:
                 action = 'create'
                 # check if there is a new published version of this version
-                # and it is not this version
-
+                # that is using all the updated versions of the references
                 latest_published_version = v.latest_published_version
                 if latest_published_version and \
                    not v.is_latest_published_version():
-                    # so there is a new version check if its children needs any
-                    # update and the updated child versions are already
-                    # referenced to the latest version of this version
-                    if not all([ref_v.latest_published_version
-                                in latest_published_version.inputs
-                                for ref_v in to_be_updated_list]):
-                        # not all references are in the inputs
-                        # create a new version as usual
-                        # and re-reference the new versions
-                        action = 'create'
-                    else:
-                        # so just update to the latest published version
+                    # so there is a new published version
+                    # check if its children needs any update
+                    # and the updated child versions are already
+                    # referenced to the this published version
+                    if all([ref_v.latest_published_version
+                            in latest_published_version.inputs
+                            for ref_v in to_be_updated_list]):
+                        # so all new versions are referenced to this published
+                        # version, just update to this latest published version
                         action = 'update'
+                    else:
+                        # not all references are in the inputs
+                        # so we need to create a new version as usual
+                        # and update the references to the latest versions
+                        action = 'create'
             else:
-                # there could be no reference under this referenced version
-                # so check if it has a new version
+                # nothing needs to be updated,
+                # so check if this version has a new version,
+                # also there could be no reference under this referenced
+                # version
                 if v.is_latest_published_version():
                     # do nothing
                     action = 'leave'
@@ -1490,93 +1332,70 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # before setting the action check all the inputs in
                 # resolution_dictionary, if any of them are update, or create
                 # then set this one to 'create'
-                if any(resolution_dictionary[rev_v.id] in ['update', 'create']
+                if any(rev_v in resolution_dictionary['update'] or
+                       rev_v in resolution_dictionary['create']
                        for rev_v in v.inputs):
                     action = 'create'
 
-            resolution_dictionary[v.id] = action
+            # so append this v to the related action list
+            resolution_dictionary[action].append(v)
 
         return resolution_dictionary
 
-    def deep_reference_update(self, version):
-        """Updates the given maya version with deep reference checks.
+    def deep_reference_update(self, reference_resolution):
+        """Updates maya versions given with the reference_resolution dictionary.
 
-        This method uses the database connection to check the referenced
-        versions, instead of the reference editor. So please save your file
-        with self.save_as() before running this method.
+        The reference_resolution should be a dictionary in the following
+        format::
 
-        (ref, parent_ref, version, 'action':['none', 'create', 'update'])
+          reference_resolution = {
+              'leave': [versionL1, versionL2, ..., versionLN],
+              'update': [versionU1, versionU2, ..., versionUN],
+              'create': [versionC1, versionC2, ..., versionCN],
+          }
 
-        :param version: Version instance
-        :return list: A list of Version instances if created any
+        All the references in the 'create' key will be opened and then the all
+        references will be updated to the latest version and then a new
+        :class:`~stalker.models.version.Version` instance will be created for
+        each of them, and the newly created versions will be returned.
+
+        The Version instances in 'leave' list will not be touched.
+
+        The Version instances in 'update' list are there because the Version
+        instances in 'create' list needs them to be updated. So practically
+        these are Versions with already new versions so they will also not be
+        touched.
+
+        :param reference_resolution: A dictionary with keys 'leave', 'update'
+          or 'create' and values of list of
+          :class:`~stalker.models.version.Version` instances.
+        :return list: A list of :class:`~stalker.models.version.Version`
+          instances if created any.
         """
-        # get a Version list which is the result of a Depth First Search in
-        # Version.inputs attribute
-
-        # Because in one of our test case we got a recursion in Version.inputs
-        # attribute, it is the best solution to update the Version.inputs
-        # from the current references before diving in to deep_reference_update
-        self.deep_version_inputs_update()
-
-        # force new scene
+        # first get the resolution list
+        new_versions = []
         pymel.core.newFile(force=True)
 
-        new_versions = []
+        # loop through 'create' versions and update their references
+        # and create a new version for each of them
+        for version in reference_resolution['create']:
+            success, local_reference_resolution = \
+                self.open(version, force=True)
 
-        dfs_version_references = []
-        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        for v in utils.walk_version_hierarchy(version):
-            dfs_version_references.append(v)
+            # replace each 'update' reference in the
+            # local_reference_resolution list
+            self.update_versions(local_reference_resolution)
 
-        # iterate back in the list
-        for v in reversed(dfs_version_references):
-            # check if it has a child ref
-            if not v.inputs:
-                continue
-
-            # open the file
-            success, to_be_updated_list = self.open(v, force=True)
-
-            if to_be_updated_list:
-                do_create_a_new_version = True
-                # assert isinstance(v, Version)
-                # check if there is a new published version of this version
-                # and it is not this version
-                latest_published_version = v.latest_published_version
-                if latest_published_version and \
-                   not v.is_latest_published_version():
-                    # so there is a new published version, check if all the
-                    # latest_published_versions of all the elements in
-                    # to_be_updated_list are in the new published version's
-                    # inputs list
-                    if not all([ref_info.version.latest_published_version
-                                in latest_published_version.inputs
-                                for ref_info in to_be_updated_list]):
-                        # not all references are in the inputs
-                        # create a new version as usual
-                        # and re-reference the new versions
-                        do_create_a_new_version = True
-                    else:
-                        # just skip this it will be updated by its parent
-                        do_create_a_new_version = False
-
-                if do_create_a_new_version:
-                    # update the references
-                    self.update_versions(to_be_updated_list)
-
-                    # save as a new version
-                    version = self.get_current_version()
-                    #assert isinstance(version, Version)
-
-                    new_version = Version(
-                        task=version.task,
-                        take_name=version.take_name,
-                        parent=version,
-                        description='Automatically created with '
-                                    'Deep Reference Update'
-                    )
-                    new_version.is_published = True
-                    self.save_as(new_version)
-                    new_versions.append(new_version)
+            # save as a new version
+            new_version = Version(
+                task=version.task,
+                take_name=version.take_name,
+                parent=version,
+                description='Automatically created with '
+                            'Deep Reference Update'
+            )
+            new_version.is_published = True
+            self.save_as(new_version)
+            new_versions.append(new_version)
 
         return new_versions

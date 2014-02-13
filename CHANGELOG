@@ -30,6 +30,15 @@ Anima Tools Changes
     Version (or simply to an empty maya scene) the referenced Versions inputs
     attribute is updated.
 
+  * **New:** Replaced Maya.check_references() with Maya.deep_reference_check(),
+    now the default action is to do a deep reference check.
+
+  * **Update:** Maya.check_references() now returns a dictionary (Reference
+    Resolution Dictionary) with three keys: ['leave', 'update', 'create'] with
+    a list of Version instances in each one of them (or an empty list). This
+    dictionary can be modified and then passed to Maya.deep_reference_update(),
+    which in return will update or create new versions as desired.
+
 0.1.3.2
 =======
 
