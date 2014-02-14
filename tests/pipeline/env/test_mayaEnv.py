@@ -1519,8 +1519,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         # quit maya
         pymel.core.runtime.Quit()
 
-    def test_deep_reference_update_is_working_properly_case_1(self):
-        """testing if deep_reference_update is working properly in following
+    def test_update_versions_is_working_properly_case_1(self):
+        """testing if update_versions is working properly in following
         condition:
 
         Start Condition:
@@ -1582,7 +1582,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         success, reference_resolution = self.maya_env.open(self.version12)
         updated_versions = \
-            self.maya_env.deep_reference_update(reference_resolution)
+            self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
 
@@ -1603,8 +1603,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-    def test_deep_reference_update_is_working_properly_case_2(self):
-        """testing if deep_reference_update is working properly in following
+    def test_update_versions_is_working_properly_case_2(self):
+        """testing if update_versions is working properly in following
         condition:
 
         Start Condition:
@@ -1672,7 +1672,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         success, reference_resolution = self.maya_env.open(self.version12)
         created_versions = \
-            self.maya_env.deep_reference_update(reference_resolution)
+            self.maya_env.update_versions(reference_resolution)
 
         print 'created_versions: %s' % created_versions
 
@@ -1693,8 +1693,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-    def test_deep_reference_update_is_working_properly_case_3(self):
-        """testing if deep_reference_update is working properly in following
+    def test_update_versions_is_working_properly_case_3(self):
+        """testing if update_versions is working properly in following
         condition:
 
         Start Condition:
@@ -1763,7 +1763,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         )
         success, reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
-            self.maya_env.deep_reference_update(reference_resolution)
+            self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
         self.assertEqual(3, len(updated_versions))
@@ -1784,8 +1784,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-    def test_deep_reference_update_is_working_properly_case_4(self):
-        """testing if deep_reference_update is working properly in following
+    def test_update_versions_is_working_properly_case_4(self):
+        """testing if update_versions is working properly in following
         condition:
 
         Start Condition:
@@ -1864,7 +1864,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         success, reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
-            self.maya_env.deep_reference_update(reference_resolution)
+            self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
 
@@ -1886,8 +1886,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-    def test_deep_reference_update_is_working_properly_case_5(self):
-        """testing if deep_reference_update is working properly in following
+    def test_update_versions_is_working_properly_case_5(self):
+        """testing if update_versions is working properly in following
         condition:
 
         Start Condition:
@@ -1984,7 +1984,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         success, reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
-            self.maya_env.deep_reference_update(reference_resolution)
+            self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
         self.assertEqual(1, len(updated_versions))
@@ -2481,7 +2481,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             result
         )
 
-    # def test_deep_reference_update_is_using_the_list(self):
+    # def test_update_versions_is_using_the_list(self):
     #     """testing if
     #     """
 

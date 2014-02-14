@@ -294,10 +294,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         related with a list of Version instances. These Version instances are
         gathered from all the references in the opened scene no matter how
         deeply they've been referenced. So passing this dictionary to
-        :meth:`.deep_reference_update` will update or create new versions as
+        :meth:`.update_verions` will update or create new versions as
         necessary. You can also modify this dictionary before passing it to
-        :meth:`.deep_reference_update`, so only desired version instances are
-        updated or a new version is created for them.
+        :meth:`.update_verions`, so only desired version instances are updated
+        or a new version is created for them.
 
         :returns: (Bool, Dictionary)
         """
@@ -897,8 +897,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.inputs = referenced_versions
             db.DBSession.commit()
 
-    def update_versions(self, reference_resolution):
-        """Updates the versions to the latest version
+    def update_first_level_versions(self, reference_resolution):
+        """Updates the versions to the latest version.
 
         :param reference_resolution: A dictionary with keys 'leave', 'update'
           and 'create' with a list of :class:`~stalker.models.version.Version`
@@ -1368,8 +1368,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return resolution_dictionary
 
-    def deep_reference_update(self, reference_resolution):
-        """Updates maya versions given with the reference_resolution dictionary.
+    def update_versions(self, reference_resolution):
+        """Updates maya versions given with the reference_resolution
+        dictionary.
 
         The reference_resolution should be a dictionary in the following
         format::
@@ -1400,7 +1401,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         # first get the resolution list
         new_versions = []
-        pymel.core.newFile(force=True)
+        #pymel.core.newFile(force=True)
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them
@@ -1410,7 +1411,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # replace each 'update' reference in the
             # local_reference_resolution list
-            self.update_versions(local_reference_resolution)
+            self.update_first_level_versions(local_reference_resolution)
 
             # save as a new version
             new_version = Version(

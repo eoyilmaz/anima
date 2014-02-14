@@ -7,9 +7,10 @@ Anima Tools Changes
 
 * **Pipeline:**
 
-  * **New:** mayaEnv.Maya.deep_reference_update() updates all the references no
+  * **New:** mayaEnv.Maya.update_versions() updates all the references no
     matter how deeply they have been referenced to the current scene. It will
-    create new Versions if necessary.
+    create new Versions if necessary and return them as a list of Version
+    instances.
 
   * **Update:** ``open_()`` method in ``base.EnvironmentBase`` class renamed to
     open, thus updated all the inherited classes (Maya, Nuke, Photoshop,
@@ -36,8 +37,8 @@ Anima Tools Changes
   * **Update:** Maya.check_references() now returns a dictionary (Reference
     Resolution Dictionary) with three keys: ['leave', 'update', 'create'] with
     a list of Version instances in each one of them (or an empty list). This
-    dictionary can be modified and then passed to Maya.deep_reference_update(),
-    which in return will update or create new versions as desired.
+    dictionary can be modified and then passed to Maya.update_versions(), which
+    in return will update or create new versions as desired.
 
 0.1.3.2
 =======
