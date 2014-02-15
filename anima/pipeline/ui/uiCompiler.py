@@ -16,12 +16,8 @@ import logging
 
 from anima.pipeline import utils
 
-from PyQt4 import uic
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
-
 
 
 class UIFile(object):
@@ -39,7 +35,6 @@ class UIFile(object):
         self.pyside_full_path = ''
         self.full_path = self._validate_full_path(full_path)
         self.md5 = self.generate_md5()
-        
 
     def generate_md5(self):
         """generates the md5 checksum of the UI file
@@ -92,8 +87,6 @@ class UIFile(object):
         )
         return full_path
 
-
-
 if __name__ == '__main__':
     # scan for the ui_files directory *.ui files
     uiFiles = []
@@ -108,6 +101,8 @@ if __name__ == '__main__':
         uiFiles.append(
             UIFile(full_path)
         )
+
+    from PyQt4 import uic
 
     for uiFile in uiFiles:
         # if there are already files compare the md5 checksum

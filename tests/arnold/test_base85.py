@@ -8,6 +8,7 @@ from anima.render.arnold import base85
 import unittest2
 import struct
 
+
 class Base85TestCase(unittest2.TestCase):
     """tests the base85 module
     """
@@ -188,5 +189,3 @@ class Base85TestCase(unittest2.TestCase):
             list(struct.unpack('%sf' % len(raw_data),
                                base85.arnold_b85_decode(encoded_data)))
         )
-
-        

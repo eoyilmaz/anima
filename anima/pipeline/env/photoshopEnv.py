@@ -136,12 +136,7 @@ class PhotoshopEnv(EnvironmentBase):
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
 
-        return True, []
-
-    def post_open(self):
-        """do nothing
-        """
-        return True
+        return {}
 
     def get_current_version(self):
         """Finds the Version instance from the current ActiveDocument.

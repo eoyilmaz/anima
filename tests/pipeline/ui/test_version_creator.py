@@ -35,7 +35,6 @@ elif IS_PYQT4():
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
                      StatusList, Task, Version, FilenameTemplate, Group)
 from stalker.db.session import DBSession
-from anima.pipeline.env.base import EnvironmentBase
 
 from anima.pipeline.ui import version_creator
 
@@ -43,51 +42,45 @@ from anima.pipeline.ui import version_creator
 # logger.setLevel(logging.DEBUG)
 
 
-# exceptions for test purposes
-
-class ExportAs(Exception):
-    pass
-
-
-class TestEnvironment(EnvironmentBase):
-    """A test environment which just raises errors to check if the correct
-    method has been called
-    """
-
-    name = "TestEnv"
-
-    test_data = {
-        "export_as": {"call count": 0, "data": None},
-        "save_as": {"call count": 0, "data": None},
-        "open": {"call count": 0, "data": None},
-        "reference": {"call count": 0, "data": None},
-        "import_": {"call count": 0, "data": None},
-    }
-
-    def export_as(self, version):
-        self.test_data["export_as"]["call count"] += 1
-        self.test_data["export_as"]["data"] = version
-
-    def save_as(self, version):
-        self.test_data["save_as"]["call count"] += 1
-        self.test_data["save_as"]["data"] = version
-
-    def open(self, version, force=False):
-        self.test_data["open"]["call count"] += 1
-        self.test_data["open"]["data"] = version
-
-    def reference(self, version):
-        self.test_data["reference"]["call count"] += 1
-        self.test_data["reference"]["data"] = version
-
-    def import_(self, version):
-        self.test_data["import_"]["call count"] += 1
-        self.test_data["import_"]["data"] = version
-
-    def get_last_version(self):
-        """mock version of the original this returns None all the time
-        """
-        return None
+# class TestEnvironment(EnvironmentBase):
+#     """A test environment which just raises errors to check if the correct
+#     method has been called
+#     """
+# 
+#     name = "TestEnv"
+# 
+#     test_data = {
+#         "export_as": {"call count": 0, "data": None},
+#         "save_as": {"call count": 0, "data": None},
+#         "open": {"call count": 0, "data": None},
+#         "reference": {"call count": 0, "data": None},
+#         "import_": {"call count": 0, "data": None},
+#     }
+# 
+#     def export_as(self, version):
+#         self.test_data["export_as"]["call count"] += 1
+#         self.test_data["export_as"]["data"] = version
+# 
+#     def save_as(self, version):
+#         self.test_data["save_as"]["call count"] += 1
+#         self.test_data["save_as"]["data"] = version
+# 
+#     def open(self, version, force=False):
+#         self.test_data["open"]["call count"] += 1
+#         self.test_data["open"]["data"] = version
+# 
+#     def reference(self, version):
+#         self.test_data["reference"]["call count"] += 1
+#         self.test_data["reference"]["data"] = version
+# 
+#     def import_(self, version):
+#         self.test_data["import_"]["call count"] += 1
+#         self.test_data["import_"]["data"] = version
+# 
+#     def get_last_version(self):
+#         """mock version of the original this returns None all the time
+#         """
+#         return None
 
 
 class VersionCreatorTester(unittest2.TestCase):

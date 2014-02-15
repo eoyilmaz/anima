@@ -859,7 +859,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         self.tabWidget_changed(curr_tab_index)
 
-
     def _set_defaults(self):
         """sets up the defaults for the interface
         """
@@ -1374,11 +1373,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # call the environments open method
         if self.environment is not None:
-            to_update_list = []
+            reference_resolution = {'leave': [], 'create': [], 'update': []}
             # environment can throw RuntimeError for unsaved changes
             try:
-                envStatus, to_update_list = \
-                    self.environment.open_(old_version)
+                reference_resolution = self.environment.open(old_version)
             except RuntimeError as e:
                 # pop a dialog and ask if the user really wants to open the
                 # file
@@ -1392,24 +1390,25 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     QtGui.QMessageBox.No
                 )
 
-                envStatus = False
-
                 if answer == QtGui.QMessageBox.Yes:
-                    envStatus, to_update_list = \
-                        self.environment.open_(old_version, True)
+                    reference_resolution =\
+                        self.environment.open(old_version, True)
                 else:
                     # no, just return
                     return
 
-            # check the to_update_list to update old versions
-            if len(to_update_list):
-                # invoke the assetUpdater for this scene
+            # check the reference_resolution to update old versions
+            if reference_resolution['create'] \
+               or reference_resolution['update']:
+                # invoke the version_updater for this scene
                 version_updater_mainDialog = \
-                    version_updater.MainDialog(self.environment, self)
+                    version_updater.MainDialog(
+                        environment=self.environment,
+                        parent=self,
+                        reference_resolution=reference_resolution
+                    )
 
                 version_updater_mainDialog.exec_()
-
-            self.environment.post_open()
 
         # close the dialog
         self.close()

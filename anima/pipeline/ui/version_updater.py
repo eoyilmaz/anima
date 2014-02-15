@@ -3,10 +3,20 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.pipeline.env import empty_reference_resolution
+
+from anima.pipeline.ui.models import VersionTreeModel
 
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4
+
+import logging
+from anima.pipeline.utils import walk_version_hierarchy
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 if IS_PYSIDE():
     from anima.pipeline.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
@@ -40,7 +50,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
     for other environments reference object type will be as native as it can be
     """
 
-    def __init__(self, environment=None, parent=None):
+    def __init__(self, environment=None, parent=None,
+                 reference_resolution=None):
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
 
@@ -50,29 +61,19 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         # center to the window
         self.center_window()
 
-        self._horizontalLabels = [
-            'Task',
-            'Type',
-            'Take',
-            'Current',
-            'Latest Published',
-            'Do Update?'
-        ]
+        if reference_resolution is None:
+            reference_resolution = empty_reference_resolution()
 
-        self.versions_tableWidget.setHorizontalHeaderLabels(
-            self._horizontalLabels
-        )
-        self.versions_tableWidget.versions = []
+        self.reference_resolution = reference_resolution
 
         self.setup_signals()
 
-        self._version_tuple_list = []
+        # self._version_tuple_list = []
         self._num_of_versions = 0
 
         # setup the environment
         self.environment = environment
 
-        self._do_env_read()
         self._fill_UI()
 
     def setup_signals(self):
@@ -107,170 +108,143 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             self.update_versions
         )
 
-    def get_version_tuple_from_environment(self):
-        """gets the references from environment
+        # fit column 0 on expand/collapse
+        QtCore.QObject.connect(
+            self.versions_treeView,
+            QtCore.SIGNAL('expanded(QModelIndex)'),
+            self.versions_treeView_auto_fit_column
+        )
 
-        returns a tuple consist of an asset and the environments representation
-        of the asset
-        """
-        return self.environment.check_referenced_versions()
+        QtCore.QObject.connect(
+            self.versions_treeView,
+            QtCore.SIGNAL('collapsed(QModelIndex)'),
+            self.versions_treeView_auto_fit_column
+        )
 
-    @property
-    def version_tuple_list(self):
-        """returns the asset tuple list
+    def versions_treeView_auto_fit_column(self):
+        """fits columns to content
         """
-        return self._version_tuple_list
+        self.versions_treeView.resizeColumnToContents(0)
+        self.versions_treeView.resizeColumnToContents(1)
+        self.versions_treeView.resizeColumnToContents(2)
+        self.versions_treeView.resizeColumnToContents(3)
+        self.versions_treeView.resizeColumnToContents(4)
+        self.versions_treeView.resizeColumnToContents(5)
+        self.versions_treeView.resizeColumnToContents(6)
 
-    @version_tuple_list.setter
-    def version_tuple_list(self, version_tuple_list):
-        """sets the asset tuple list
+    def fill_versions_treeView(self):
+        """sets up the versions_treeView
         """
-        self._version_tuple_list = version_tuple_list
-        self._num_of_versions = len(self._version_tuple_list)
+        logger.debug('start filling versions_treeView')
+        logger.debug('creating a new model')
+
+        version_tree_model = VersionTreeModel()
+        version_tree_model.reference_resolution = self.reference_resolution
+        version_tree_model.populateTree(self.reference_resolution['root'])
+
+        self.versions_treeView.setModel(version_tree_model)
+
+        logger.debug('setting up signals for versions_treeView_changed')
+        # versions_treeView
+        # QtCore.QObject.connect(
+        #     self.versions_treeView.selectionModel(),
+        #     QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
+        #                   'const QItemSelection &)'),
+        #     self.versions_treeView_changed
+        # )
+
+        self.versions_treeView.is_updating = False
+        self.versions_treeView_auto_fit_column()
+        logger.debug('finished filling versions_treeView')
 
     def _fill_UI(self):
         """fills the UI with the asset data
         """
         # set the row count
-        self.versions_tableWidget.setRowCount(self._num_of_versions)
-        self.versions_tableWidget.versions = []
+        self.fill_versions_treeView()
 
-        unpublished_versions = []
-
-        for i, version_info in enumerate(self._version_tuple_list):
-            version = version_info[0]
-            # from stalker import Version
-            # assert isinstance(version, Version)
-
-            # TODO: there is a problem about unpublished versions
-            latest_published_version = version.latest_published_version
-            if latest_published_version is None:
-                # just skip this one or at least warn the user
-                unpublished_versions.append(version)
-                continue
-
-            # ------------------------------------
-            # the task nice name
-            item = QtGui.QTableWidgetItem(version.nice_name)
-            # align to left and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 0, item)
-
-            #-------------------------------------
-            # task entity type name
-            item = QtGui.QTableWidgetItem(version.task.entity_type)
-            # align to horizontal and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 1, item)
-
-            #-------------------------------------
-            # take name
-            item = QtGui.QTableWidgetItem(version.take_name)
-            # align to horizontal and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 2, item)
-
-            # ------------------------------------
-            # current version
-            current_version_number = str(version.version_number)
-            item = QtGui.QTableWidgetItem(current_version_number)
-            # align to horizontal and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 3, item)
-
-            # ------------------------------------
-            # latest version
-            latest_published_version_number = \
-                str(version.latest_published_version.version_number)
-            item = \
-                QtGui.QTableWidgetItem(latest_published_version_number)
-            # align to horizontal and vertical center
-            item.setTextAlignment(
-                QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-            )
-            self.versions_tableWidget.setItem(i, 4, item)
-            # ------------------------------------
-
-            # ------------------------------------
-            # do update ?
-            item = QtGui.QTableWidgetItem('')
-            item.setTextAlignment(
-                QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter
-            )
-            try:
-                # for PyQt
-                item.setCheckState(QtCore.Qt.Unchecked)
-            except AttributeError:
-                # for PyCharm
-                item.setCheckState(0)
-            self.versions_tableWidget.setItem(i, 5, item)
-            # ------------------------------------
-
-            self.versions_tableWidget.versions.append(version)
-
-        self.versions_tableWidget.resizeColumnsToContents()
-
-        if len(unpublished_versions):
-            QtGui.QMessageBox.warning(
-                self,
-                "Warning",
-                "The following references have no published versions:\n\n" +
-                "\n".join([vers.filename for vers in unpublished_versions]) +
-                "\n\nPlease publish them and re-open the current file.",
-                QtGui.QMessageBox.Ok
-            )
-
-    def _do_env_read(self):
-        """gets the asset tuple from env
-        """
-        self._version_tuple_list = self.get_version_tuple_from_environment()
-        self._num_of_versions = len(self._version_tuple_list)
+        # if len(unpublished_versions):
+        #     QtGui.QMessageBox.warning(
+        #         self,
+        #         "Warning",
+        #         "The following references have no published versions:\n\n" +
+        #         "\n".join([vers.filename for vers in unpublished_versions]) +
+        #         "\n\nPlease publish them and re-open the current file.",
+        #         QtGui.QMessageBox.Ok
+        #     )
 
     def _select_all_versions(self):
         """selects all the versions in the tableWidget
         """
-        for i in range(self.versions_tableWidget.rowCount()):
-            item = self.versions_tableWidget.item(i, 5)
-            item.setCheckState(QtCore.Qt.Checked)
+        version_tree_model = self.versions_treeView.model()
+        for i in range(version_tree_model.rowCount()):
+            index = version_tree_model.index(i, 0)
+            version_item = version_tree_model.itemFromIndex(index)
+            version_item.setCheckState(QtCore.Qt.Checked)
 
     def _select_no_version(self):
         """deselects all versions in the tableWidget
         """
-        for i in range(self.versions_tableWidget.rowCount()):
-            item = self.versions_tableWidget.item(i, 5)
-            item.setCheckState(QtCore.Qt.Unchecked)
+        version_tree_model = self.versions_treeView.model()
+        for i in range(version_tree_model.rowCount()):
+            index = version_tree_model.index(i, 0)
+            version_item = version_tree_model.itemFromIndex(index)
+            version_item.setCheckState(QtCore.Qt.Unchecked)
 
     def update_versions(self):
         """updates the versions if it is checked in the UI
         """
-        # get the marked versions from UI first
-        marked_versions = self.get_marked_versions()
+        print "reference_resolution before: %s" % self.reference_resolution
+        reference_resolution = self.generate_reference_resolution()
+        print "reference_resolution after: %s" % reference_resolution
 
         # send them back to environment
-        self.environment.update_versions(marked_versions)
+        self.environment.update_versions(reference_resolution)
 
         # close the interface
         self.close()
 
-    def get_marked_versions(self):
-        """returns the assets as tuple again, if it is checked in the interface
+    def generate_reference_resolution(self):
+        """Generates a reference_resolution dictionary from the UI
+
+        Modifies a copy of the original reference_resolution dictionary
+
+        :return: dictionary
         """
-        marked_version_list = []
+        import copy
+        generated_reference_resolution = copy.copy(self.reference_resolution)
 
-        # find the marked versions
-        for i in range(self._num_of_versions):
-            checkBox_tableItem = self.versions_tableWidget.item(i, 5)
+        # get the checkState of the first level ModelItems
+        # remove anything under it from the reference_resolution list
 
-            if checkBox_tableItem.checkState() == QtCore.Qt.Checked:
-                # get the ith number of the asset
-                marked_version_list.append(self._version_tuple_list[i])
+        version_tree_model = self.versions_treeView.model()
 
-        return marked_version_list
+        def remove_version(ver):
+            try:
+                generated_reference_resolution['leave'].remove(ver)
+            except ValueError:
+                pass
+
+            try:
+                generated_reference_resolution['update'].remove(ver)
+            except ValueError:
+                pass
+
+            try:
+                generated_reference_resolution['create'].remove(ver)
+            except ValueError:
+                pass
+
+        for i in range(version_tree_model.rowCount()):
+            index = version_tree_model.index(i, 0)
+            version_item = version_tree_model.itemFromIndex(index)
+            if version_item.checkState() == QtCore.Qt.CheckState.Unchecked:
+                version = version_item.version
+                # remove it from the generated_reference_resolution
+                remove_version(version)
+
+                # and all decedents
+                for v in walk_version_hierarchy(version):
+                    remove_version(v)
+
+        return generated_reference_resolution

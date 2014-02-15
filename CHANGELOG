@@ -13,11 +13,8 @@ Anima Tools Changes
     instances.
 
   * **Update:** ``open_()`` method in ``base.EnvironmentBase`` class renamed to
-    open, thus updated all the inherited classes (Maya, Nuke, Photoshop,
+    ``open()``, thus updated all the inherited classes (Maya, Nuke, Photoshop,
     Fusion, Houdini).
-
-  * **Update:** EnvironmentBase.post_open() doesn't require a version instance
-    anymore.
 
   * **Update:** ``update_references_list`` in mayaEnv.Maya class is renamed to
     ``update_version_inputs`` to make it clear what it does.
@@ -39,6 +36,9 @@ Anima Tools Changes
     a list of Version instances in each one of them (or an empty list). This
     dictionary can be modified and then passed to Maya.update_versions(), which
     in return will update or create new versions as desired.
+
+  * **Update:** Removed EnvironmentBase.post_open() method as it was getting
+    useless, also reflected this change in all the derived classes.
 
 0.1.3.2
 =======

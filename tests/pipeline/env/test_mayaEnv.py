@@ -781,7 +781,6 @@ class MayaEnvTestCase(unittest2.TestCase):
 
         # re-open the file
         self.maya_env.open(version_base, force=True)
-        self.maya_env.post_open()
 
         # check if the references are loaded
         refs = pymel.core.listReferences()
@@ -1105,6 +1104,14 @@ class MayaEnvTestCase(unittest2.TestCase):
 class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
     """tests the maya env with deep reference updates
     """
+
+    @classmethod
+    def setUpClass(cls):
+        """setup in class level
+        """
+        import logging
+        logger = logging.getLogger('anima.pipeline.env.mayaEnv')
+        logger.setLevel(logging.DEBUG)
 
     def setUp(self):
         """setup the tests
@@ -1537,14 +1544,6 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         """
         # create a deep relation
         self.version2.is_published = True
-        # self.version3.is_published = True
-        #
-        # self.version5.inputs.append(self.version2)
-        # self.version5.is_published = True
-        #
-        # # leave version6 as not published
-        # self.version12.inputs.append(self.version5)
-        # db.DBSession.commit()
 
         # new scene
         # version5 references version2
@@ -1580,27 +1579,31 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-        success, reference_resolution = self.maya_env.open(self.version12)
+        reference_resolution = self.maya_env.open(self.version12)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
 
-        self.assertEqual(2, len(updated_versions))
-
-        # and expect maya to update to
-        visited_versions = []
-        for v in walk_version_hierarchy(self.version12.latest_published_version):
-            visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version12.latest_published_version,
-             self.version5.latest_published_version,
-             self.version3]
-        print expected_visited_versions
-        print visited_versions
+        # we should be still in version12 scene
         self.assertEqual(
-            expected_visited_versions,
-            visited_versions
+            self.version12,
+            self.maya_env.get_current_version()
+        )
+
+        # check references
+        # we should have a new version5A referenced
+        refs = pymel.core.listReferences()
+        self.assertEqual(
+            self.version5.latest_published_version,
+            self.maya_env.get_version_from_full_path(refs[0].path)
+        )
+
+        # and it should have referenced version3
+        refs = pymel.core.listReferences(refs[0])
+        self.assertEqual(
+            self.version3,
+            self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
     def test_update_versions_is_working_properly_case_2(self):
@@ -1670,27 +1673,33 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-        success, reference_resolution = self.maya_env.open(self.version12)
+        reference_resolution = self.maya_env.open(self.version12)
         created_versions = \
             self.maya_env.update_versions(reference_resolution)
 
         print 'created_versions: %s' % created_versions
 
-        self.assertEqual(1, len(created_versions))
+        # no new versions should have been created
+        self.assertEqual(0, len(created_versions))
 
-        # and expect maya to update to
-        visited_versions = []
-        for v in walk_version_hierarchy(self.version12.latest_published_version):
-            visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version12.latest_published_version,
-             self.version6,
-             self.version3]
-        print expected_visited_versions
-        print visited_versions
+        # check if we are still in version12 scene
         self.assertEqual(
-            expected_visited_versions,
-            visited_versions
+            self.version12,
+            self.maya_env.get_current_version()
+        )
+
+        # and expect maya have the updated references
+        refs = pymel.core.listReferences()
+        self.assertEqual(
+            self.version6,
+            self.maya_env.get_version_from_full_path(refs[0].path)
+        )
+
+        # and it should have referenced version3
+        refs = pymel.core.listReferences(refs[0])
+        self.assertEqual(
+            self.version3,
+            self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
     def test_update_versions_is_working_properly_case_3(self):
@@ -1708,7 +1717,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
               version2 -> has new published version (version3)
 
         Expected Final Result
-        version15A -> Derived from version15
+        version15 -> Doesn't saved yet!
           version12A -> Derived from version12
             version5A -> Derived from version5
               version3 -> has new published version (version3)
@@ -1761,27 +1770,56 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             expected_visited_versions,
             visited_versions
         )
-        success, reference_resolution = self.maya_env.open(self.version15)
+        reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
-        self.assertEqual(3, len(updated_versions))
+        self.assertEqual(2, len(updated_versions))
 
-        # and expect maya to update to
-        visited_versions = []
-        for v in walk_version_hierarchy(self.version15.latest_published_version):
-            visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version15.latest_published_version,
-             self.version12.latest_published_version,
-             self.version5.latest_published_version,
-             self.version3]
-        print expected_visited_versions
-        print visited_versions
+        # check if we are still in version15 scene
         self.assertEqual(
-            expected_visited_versions,
-            visited_versions
+            self.version15,
+            self.maya_env.get_current_version()
+        )
+
+        # and expect maya have the updated references
+        refs_level1 = pymel.core.listReferences()
+        self.assertEqual(
+            self.version12.latest_published_version,
+            self.maya_env.get_version_from_full_path(refs_level1[0].path)
+        )
+        self.assertEqual(
+            self.version12.latest_published_version,
+            self.maya_env.get_version_from_full_path(refs_level1[1].path)
+        )
+
+        # and it should have referenced version5A
+        refs_level2 = pymel.core.listReferences(refs_level1[0])
+        self.assertEqual(
+            self.version5.latest_published_version,
+            self.maya_env.get_version_from_full_path(refs_level2[0].path)
+        )
+
+        # and it should have referenced version5A
+        refs_level3 = pymel.core.listReferences(refs_level2[0])
+        self.assertEqual(
+            self.version3,
+            self.maya_env.get_version_from_full_path(refs_level3[0].path)
+        )
+
+        # the other version5A
+        refs_level2 = pymel.core.listReferences(refs_level1[1])
+        self.assertEqual(
+            self.version5.latest_published_version,
+            self.maya_env.get_version_from_full_path(refs_level2[0].path)
+        )
+
+        # and it should have referenced version5A
+        refs_level3 = pymel.core.listReferences(refs_level2[0])
+        self.assertEqual(
+            self.version3,
+            self.maya_env.get_version_from_full_path(refs_level3[0].path)
         )
 
     def test_update_versions_is_working_properly_case_4(self):
@@ -1862,28 +1900,85 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-        success, reference_resolution = self.maya_env.open(self.version15)
+        reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
 
-        self.assertEqual(3, len(updated_versions))
+        self.assertEqual(2, len(updated_versions))
 
-        # and expect maya to update to
-        visited_versions = []
-        for v in walk_version_hierarchy(self.version15.latest_published_version):
-            visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version15.latest_published_version,
-             self.version12.latest_published_version,
-             self.version5.latest_published_version,
-             self.version3]
-        print expected_visited_versions
-        print visited_versions
+        # check if we are still in version15 scene
         self.assertEqual(
-            expected_visited_versions,
-            visited_versions
+            self.version15,
+            self.maya_env.get_current_version()
+        )
+
+        # and expect maya have the updated references
+        refs = pymel.core.listReferences()
+        version12_ref1 = refs[0]
+        version12_ref2 = refs[1]
+
+        refs = pymel.core.listReferences(version12_ref1)
+        version5_ref1 = refs[0]
+        version5_ref2 = refs[1]
+
+        refs = pymel.core.listReferences(version12_ref2)
+        version5_ref3 = refs[0]
+        version5_ref4 = refs[1]
+
+        version2_ref1 = pymel.core.listReferences(version5_ref1)[0]
+        version2_ref2 = pymel.core.listReferences(version5_ref2)[0]
+        version2_ref3 = pymel.core.listReferences(version5_ref3)[0]
+        version2_ref4 = pymel.core.listReferences(version5_ref4)[0]
+
+        # Version12
+        published_version = self.version12.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version12_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version12_ref2.path)
+        )
+
+        # Version5
+        published_version = self.version5.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version5_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version5_ref2.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version5_ref3.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version5_ref4.path)
+        )
+
+        # Version2
+        published_version = self.version2.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version2_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version2_ref2.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version2_ref3.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version2_ref4.path)
         )
 
     def test_update_versions_is_working_properly_case_5(self):
@@ -1982,27 +2077,84 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
 
-        success, reference_resolution = self.maya_env.open(self.version15)
+        reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
         print 'updated_versions: %s' % updated_versions
-        self.assertEqual(1, len(updated_versions))
+        self.assertEqual(0, len(updated_versions))
 
-        # and expect maya to update to
-        visited_versions = []
-        for v in walk_version_hierarchy(self.version15.latest_published_version):
-            visited_versions.append(v)
-        expected_visited_versions = \
-            [self.version15.latest_published_version,
-             self.version12,
-             self.version6,
-             self.version3]
-        print expected_visited_versions
-        print visited_versions
+        # check if we are still in version15 scene
         self.assertEqual(
-            expected_visited_versions,
-            visited_versions
+            self.version15,
+            self.maya_env.get_current_version()
+        )
+
+        # and expect maya have the updated references
+        refs = pymel.core.listReferences()
+        version12_ref1 = refs[0]
+        version12_ref2 = refs[1]
+
+        refs = pymel.core.listReferences(version12_ref1)
+        version6_ref1 = refs[0]
+        version6_ref2 = refs[1]
+
+        refs = pymel.core.listReferences(version12_ref2)
+        version6_ref3 = refs[0]
+        version6_ref4 = refs[1]
+
+        version3_ref1 = pymel.core.listReferences(version6_ref1)[0]
+        version3_ref2 = pymel.core.listReferences(version6_ref2)[0]
+        version3_ref3 = pymel.core.listReferences(version6_ref3)[0]
+        version3_ref4 = pymel.core.listReferences(version6_ref4)[0]
+
+        # Version12
+        published_version = self.version12.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version12_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version12_ref2.path)
+        )
+
+        # Version5
+        published_version = self.version5.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version6_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version6_ref2.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version6_ref3.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version6_ref4.path)
+        )
+
+        # Version2
+        published_version = self.version2.latest_published_version
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version3_ref1.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version3_ref2.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version3_ref3.path)
+        )
+        self.assertEqual(
+            published_version,
+            self.maya_env.get_version_from_full_path(version3_ref4.path)
         )
 
     def test_reference_updates_version_inputs_attribute(self):
@@ -2265,6 +2417,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
               version3
           version21A -> derived from version21
             version18
+          version38 -> no update
+            version27 -> no update
         """
         # create a deep relation
         self.version2.is_published = True
@@ -2364,10 +2518,15 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
 
         self.assertFalse(self.version2.is_latest_published_version())
 
-        expected_to_be_updated_list = {
+        expected_reference_resolution = {
+            'root': [
+                self.version38,
+                self.version11,
+                self.version21
+            ],
             'leave': [
                 self.version27,
-                self.version38,
+                self.version38
             ],
             'update': [
                 self.version16,
@@ -2376,8 +2535,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
                 self.version11
             ],
             'create': [
-                self.version21,
-                self.version15
+                self.version21
             ]
         }
 
@@ -2393,12 +2551,12 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         print 'self.version11.id: %s' % self.version11.id
         print 'self.version15.id: %s' % self.version15.id
 
-        print expected_to_be_updated_list
+        print expected_reference_resolution
         print '--------------------------'
         print result
 
         self.assertEqual(
-            expected_to_be_updated_list,
+            expected_reference_resolution,
             result
         )
 
@@ -2459,9 +2617,12 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         )
 
         expected_to_be_updated_list = {
+            'root': [self.version11],
             'leave': [],
             'update': [self.version2],
-            'create': [self.version4, self.version11, self.version15]
+            'create': [self.version4, self.version11,
+                       # self.version15
+            ]
         }
 
         result = \

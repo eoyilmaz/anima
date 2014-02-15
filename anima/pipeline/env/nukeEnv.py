@@ -144,12 +144,7 @@ class Nuke(EnvironmentBase):
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
-        return True, []
-
-    def post_open(self):
-        """the post open action for the nuke environment
-        """
-        pass
+        return {}
 
     def import_(self, version, use_namespace=True):
         """the import action for nuke environment

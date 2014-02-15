@@ -14,6 +14,7 @@ import pymel.versions
 from stalker import db, Version
 
 from .. import utils
+from anima.pipeline.env import empty_reference_resolution
 from base import EnvironmentBase
 
 logging.basicConfig()
@@ -336,17 +337,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.replace_external_paths()
 
         # check the referenced versions for any possible updates
-        reference_resolution = self.check_referenced_versions()
-
-        self.update_version_inputs()
-
-        return True, reference_resolution
-
-    def post_open(self):
-        """Runs after opening a file
-        """
-        #self.load_referenced_versions()
-        self.update_version_inputs()
+        return self.check_referenced_versions()
 
     def import_(self, version, use_namespace=True):
         """Imports the content of the given Version instance to the current
@@ -1289,29 +1280,40 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
-        dictionary which uses the ids of the Versions as key and the action as
-        value.
+        dictionary which has three keys called 'leave', 'update' and 'create'.
+        Each of these keys correspond to a value of a list of
+        :class:`~stalker.model.version.Version`\ s. Where the list in 'leave'
+        key shows the Versions referenced (or deeply referenced) to the
+        current scene which doesn't need to be changed. The list in 'update'
+        key holds Versions those need to be updated to a newer version which
+        are already exist. The list in 'create' key holds Version instance
+        which needs to have its references to be updated to the never versions
+        thus need a new version for them self. All the Versions in the list
+        are sorted from the deepest to shallowest reference, so processing the
+        list from 0th element to nth will always guarantee up to date info for
+        the currently processed Version instance.
 
         Uses the top level references to get a Stalker Version instance and
         then tracks all the changes from these Version instances.
 
-        :return: list
+        :return: dictionary
         """
         # recreate version.inputs list from current scene
         self.deep_version_inputs_update()
 
+        reference_resolution = \
+            empty_reference_resolution(root=self.get_referenced_versions())
+
         # reverse walk in DFS
         dfs_version_references = []
-        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        resolution_dictionary = {
-            'leave': [],
-            'update': [],
-            'create': []
-        }
 
         version = self.get_current_version()
+        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
         for v in utils.walk_version_hierarchy(version):
             dfs_version_references.append(v)
+
+        # pop the first element which is the current scene
+        dfs_version_references.pop(0)
 
         # iterate back in the list
         for v in reversed(dfs_version_references):
@@ -1358,24 +1360,24 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # before setting the action check all the inputs in
                 # resolution_dictionary, if any of them are update, or create
                 # then set this one to 'create'
-                if any(rev_v in resolution_dictionary['update'] or
-                       rev_v in resolution_dictionary['create']
+                if any(rev_v in reference_resolution['update'] or
+                       rev_v in reference_resolution['create']
                        for rev_v in v.inputs):
                     action = 'create'
 
             # so append this v to the related action list
-            resolution_dictionary[action].append(v)
+            reference_resolution[action].append(v)
 
-        return resolution_dictionary
+        return reference_resolution
 
     def update_versions(self, reference_resolution):
-        """Updates maya versions given with the reference_resolution
-        dictionary.
+        """Updates maya versions with the given reference_resolution.
 
         The reference_resolution should be a dictionary in the following
         format::
 
           reference_resolution = {
+              'root": [versionLM, versionUM, versionCM, ..., VersionXM],
               'leave': [versionL1, versionL2, ..., versionLN],
               'update': [versionU1, versionU2, ..., versionUN],
               'create': [versionC1, versionC2, ..., versionCN],
@@ -1399,14 +1401,20 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :return list: A list of :class:`~stalker.models.version.Version`
           instances if created any.
         """
+        logger.debug(
+            'updating to new versions with: %s' % reference_resolution
+        )
+
         # first get the resolution list
         new_versions = []
-        #pymel.core.newFile(force=True)
+
+        # store the current version
+        current_version = self.get_current_version()
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them
         for version in reference_resolution['create']:
-            success, local_reference_resolution = \
+            local_reference_resolution = \
                 self.open(version, force=True)
 
             # replace each 'update' reference in the
@@ -1424,5 +1432,30 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             new_version.is_published = True
             self.save_as(new_version)
             new_versions.append(new_version)
+
+            # renew scene
+            pymel.core.newFile(f=True)
+
+        # check if we are still in the same scene
+        current_version_after_create = self.get_current_version()
+
+        # now open up the current scene again and update all the references
+        # in 'update' list
+        logger.debug('current_version: %s' % current_version)
+        logger.debug('current_version_after_create: %s' % current_version)
+        if current_version:
+            logger.debug('we got a current_version')
+            if current_version != current_version_after_create:
+                # so we are in a different scene just reopen the previous scene
+                local_reference_resolution = self.open(current_version)
+            # we got a new local_reference_resolution but we should have given
+            # a previous one, so use it,
+            #
+            # append all the 'create' items to 'update' items,
+            # so we can update them with update_first_level_versions()
+            reference_resolution['update'].extend(
+                reference_resolution['create']
+            )
+            self.update_first_level_versions(reference_resolution)
 
         return new_versions
