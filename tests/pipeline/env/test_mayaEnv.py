@@ -1100,6 +1100,71 @@ class MayaEnvTestCase(unittest2.TestCase):
             os.path.exists(new_path)
         )
 
+    def test_update_first_level_versions_also_updates_namespaces(self):
+        """testing if update_first_level_versions method also updates the
+        namespaces
+        """
+        vers1 = Version(task=self.asset1, created_by=self.user1)
+        db.DBSession.add(vers1)
+        db.DBSession.commit()
+
+        vers2 = Version(task=self.asset1, created_by=self.user1, take_name='A')
+        vers2.is_published = True
+        db.DBSession.add(vers2)
+        db.DBSession.commit()
+
+        vers3 = Version(task=self.asset1, created_by=self.user1, take_name='A')
+        vers3.is_published = True
+        db.DBSession.add(vers3)
+        db.DBSession.commit()
+
+        pymel.core.newFile(force=True)
+        self.maya_env.save_as(vers2)
+
+        pymel.core.newFile(force=True)
+        self.maya_env.save_as(vers3)
+
+        self.maya_env.save_as(vers1)
+
+        # reference vers2 to vers1
+        self.maya_env.reference(vers2)
+
+        # now check if the referenced files unresolved path is equal to
+        # ver2.absolute_full_path
+        refs = pymel.core.listReferences()
+
+        # there should be only one reference
+        self.assertEqual(len(refs), 1)
+
+        # the unresolved path should be an absolute path
+        self.assertEqual(
+            vers2.absolute_full_path,
+            refs[0].unresolvedPath()
+        )
+
+        self.assertTrue(refs[0].isLoaded())
+
+        # update version to latest published version
+        reference_resolution = {
+            'root': [vers2],
+            'create': [vers1],
+            'update': [vers2],
+            'leave': []
+        }
+        self.maya_env.update_first_level_versions(reference_resolution)
+
+        # now check if the reference is updated and the namespace is set
+        # correctly
+        refs = pymel.core.listReferences()
+        self.assertEqual(
+            vers3.absolute_full_path,
+            refs[0].unresolvedPath()
+        )
+        self.assertEqual(
+            refs[0].namespace,
+            vers3.filename.replace('.', '_')
+        )
+
 
 class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
     """tests the maya env with deep reference updates
@@ -2642,8 +2707,22 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             result
         )
 
-    # def test_update_versions_is_using_the_list(self):
-    #     """testing if
-    #     """
+    def test_update_versions_will_raise_a_RuntimeError_if_the_current_scene_is_not_saved_yet(self):
+        """testing if a RuntimeError will be raised when the update_versions
+        method is called if the current scene is not saved yet
+        """
+        # just renew the scene
+        pymel.core.newFile(force=True)
 
+        # and call update_versions
+        reference_resolution = {
+            'root': [],
+            'leave': [],
+            'update': [],
+            'create': []
+        }
+
+        self.assertRaises(
+            RuntimeError, self.maya_env.update_versions, reference_resolution
+        )
 

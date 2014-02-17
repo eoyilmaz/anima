@@ -904,21 +904,27 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         #   do only one search for each references to the same version
         previous_ref_path = None
         previous_full_path = None
+        previous_namespace = None
 
         for reference in references:
             path = reference.path
             if path == previous_ref_path:
                 full_path = previous_full_path
+                namespace = previous_namespace
             else:
                 version = self.get_version_from_full_path(path)
                 latest_published_version = version.latest_published_version
                 if version in reference_resolution['update']:
                     full_path = latest_published_version.absolute_full_path
+                    namespace = \
+                        latest_published_version.filename.replace('.', '_')
                 else:
                     full_path = None
+                    namespace = ''
 
             if full_path:
                 reference.replaceWith(full_path)
+                reference.namespace = namespace
 
     def get_frame_range(self):
         """returns the current playback frame range
@@ -1410,6 +1416,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # store the current version
         current_version = self.get_current_version()
+
+        if not current_version:
+            raise RuntimeError(
+                'Please save the current scene as a Version by using Version '
+                'Creator'
+            )
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them

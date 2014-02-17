@@ -199,8 +199,15 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         reference_resolution = self.generate_reference_resolution()
 
         # send them back to environment
-        self.new_versions = \
-            self.environment.update_versions(reference_resolution)
+        try:
+            self.new_versions = \
+                self.environment.update_versions(reference_resolution)
+        except RuntimeError as e:
+            # display as a Error message and return without doing anything
+            QtGui.QMessageBox.critical(
+                self, "Error", str(e)
+            )
+            return
 
         logged_in_user = self.get_logged_in_user()
         if logged_in_user:
