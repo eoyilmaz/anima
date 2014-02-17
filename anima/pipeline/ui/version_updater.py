@@ -93,10 +93,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 error_message = 'Please save the current scene with Version ' \
                                 'Creator first!!!'
                 QtGui.QMessageBox.critical(
-                    parent=self,
-                    title="Error",
-                    text=error_message,
-                    buttons=QtGui.QMessageBox.Ok
+                    self,
+                    "Error",
+                    error_message,
+                    QtGui.QMessageBox.Ok
                 )
                 self.close()
                 raise RuntimeError(error_message)
@@ -229,8 +229,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 self.environment.update_versions(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical("Error", str(e))
+            QtGui.QMessageBox.critical(self, "Error", str(e))
             return
 
         logged_in_user = self.get_logged_in_user()
