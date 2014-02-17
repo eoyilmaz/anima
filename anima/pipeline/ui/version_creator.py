@@ -530,28 +530,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logger.debug("finished setting up interface signals")
 
-    def get_logged_in_user(self):
-        """returns the logged in user
-        """
-        local_session = LocalSession()
-        logged_in_user = local_session.logged_in_user
-        if not logged_in_user:
-            dialog = login_dialog.MainDialog(parent=self)
-            self.current_dialog = dialog
-            dialog.exec_()
-            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
-            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted: #Accepted (1) or Rejected (0)
-                local_session = LocalSession()
-                logged_in_user = local_session.logged_in_user
-                self.current_dialog = None
-            else:
-                # close the ui
-                #logged_in_user = self.get_logged_in_user()
-                logger.debug("no logged in user")
-                self.close()
-
-        return logged_in_user
-
     def fill_logged_in_user(self):
         """fills the logged in user label
         """

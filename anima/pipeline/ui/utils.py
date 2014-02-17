@@ -8,6 +8,7 @@
 import sys
 import os
 import logging
+from stalker import LocalSession
 
 from anima.pipeline.utils import StalkerThumbnailCache
 
@@ -30,6 +31,27 @@ class AnimaDialogBase(object):
             (screen.width() - size.width()) * 0.5,
             (screen.height() - size.height()) * 0.5
         )
+
+    def get_logged_in_user(self):
+        """returns the logged in user
+        """
+        local_session = LocalSession()
+        logged_in_user = local_session.logged_in_user
+        if not logged_in_user:
+            from anima.pipeline.ui import login_dialog
+            dialog = login_dialog.MainDialog(parent=self)
+            dialog.exec_()
+            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
+            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted:
+                local_session = LocalSession()
+                logged_in_user = local_session.logged_in_user
+            else:
+                # close the ui
+                #logged_in_user = self.get_logged_in_user()
+                logger.debug("no logged in user")
+                self.close()
+
+        return logged_in_user
 
 
 class MultiLineInputDialog(QtGui.QDialog):

@@ -5,24 +5,24 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import pymel.core as pm
+import pymel.core
 
 
 def create_shot_playblasts():
     """creates the selected shot playblasts
     """
-    shots = pm.ls(sl=1, type=pm.nt.Shot)
-    active_panel = pm.playblast(activeEditor=1)
+    shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
+    active_panel = pymel.core.playblast(activeEditor=1)
 
     path_template = os.path.join(
-        pm.workspace.name,
+        pymel.core.workspace.name,
         'Outputs/Playblast/AllShots/'
     ).replace('\\', '/')
 
     filename_template = '%(scene)s_%(shot)s.mov'
 
     # template vars
-    scene_name = os.path.basename(pm.env.sceneName()).split('.')[0]
+    scene_name = os.path.basename(pymel.core.env.sceneName()).split('.')[0]
 
     for shot in shots:
         shot_name = shot.name()
@@ -42,7 +42,7 @@ def create_shot_playblasts():
             rendered_filename
         ).replace('\\', '/')
 
-        pm.playblast(
+        pymel.core.playblast(
             fmt="qt",
             startTime=start_frame,
             endTime=end_frame,

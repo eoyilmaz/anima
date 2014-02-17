@@ -66,6 +66,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         self.reference_resolution = reference_resolution
 
+        self.new_versions = []
+
         self.setup_signals()
 
         # self._version_tuple_list = []
@@ -194,12 +196,19 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
     def update_versions(self):
         """updates the versions if it is checked in the UI
         """
-        print "reference_resolution before: %s" % self.reference_resolution
         reference_resolution = self.generate_reference_resolution()
-        print "reference_resolution after: %s" % reference_resolution
 
         # send them back to environment
-        self.environment.update_versions(reference_resolution)
+        self.new_versions = \
+            self.environment.update_versions(reference_resolution)
+
+        logged_in_user = self.get_logged_in_user()
+        if logged_in_user:
+            from stalker import db
+            for v in self.new_versions:
+                v.created_by = logged_in_user
+                db.DBSession.add(v)
+            db.DBSession.commit()
 
         # close the interface
         self.close()
@@ -248,3 +257,17 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                     remove_version(v)
 
         return generated_reference_resolution
+
+    def show(self):
+        """overridden show method
+        """
+        logger.debug('MainDialog.show is started')
+        logged_in_user = self.get_logged_in_user()
+        if not logged_in_user:
+            self.close()
+            return_val = None
+        else:
+            return_val = super(MainDialog, self).show()
+
+        logger.debug('MainDialog.show is finished')
+        return return_val

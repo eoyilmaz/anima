@@ -81,6 +81,14 @@ class VersionUpdaterTester(unittest2.TestCase):
             email='user1@users.com',
             password='12345'
         )
+        db.DBSession.add(self.user1)
+        db.DBSession.commit()
+
+        # login as self.user1
+        from stalker import LocalSession
+        local_session = LocalSession()
+        local_session.store_user(self.user1)
+        local_session.save()
 
         self.repo1 = Repository(
             name='Test Project Repository',
@@ -820,11 +828,30 @@ class VersionUpdaterTester(unittest2.TestCase):
             reference_resolution
         )
 
+    def test_update_versions_method_will_store_the_newly_created_Version_instances(self):
+        """testing if the update_versions method will store the newly created
+        versions in new_versions attribute
+        """
+        self.assertEqual(self.dialog.new_versions, [])
+        self.dialog.update_versions()
+        self.assertEqual(len(self.dialog.new_versions), 2)
+        for v in self.dialog.new_versions:
+            self.assertIsInstance(v, Version)
+
+    def test_update_verions_method_will_update_new_versions_created_by_attribute(self):
+        """testing if the update_versions method will update the created_by
+        attributes of the newly created versions
+        """
+        self.assertEqual(self.dialog.new_versions, [])
+        self.dialog.update_versions()
+        self.assertEqual(len(self.dialog.new_versions), 2)
+        for v in self.dialog.new_versions:
+            self.assertEqual(v.created_by, self.user1)
+
     def test_update_pushButton_will_call_environment_update_versions_method(self):
         """testing if update_pushButton will call
         Test_Environment.update_versions method
         """
-
         self.assertRaises(
             KeyError,
             self.test_environment.test_data.__getitem__, 'update_versions'
@@ -880,4 +907,3 @@ class VersionUpdaterTester(unittest2.TestCase):
 
         self.assertEqual(version_item1.checkState(), QtCore.Qt.Checked)
         self.assertEqual(version_item2.checkState(), QtCore.Qt.Checked)
-
