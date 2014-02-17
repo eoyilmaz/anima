@@ -367,8 +367,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           referenced.
         """
         # use the file name without extension as the namespace
-        namespace = os.path.basename(version.filename)
-        namespace = namespace.replace('.', '_')
+        namespace = os.path.basename(version.nice_name)
 
         if use_namespace:
             ref = pymel.core.createReference(
