@@ -93,7 +93,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 error_message = 'Please save the current scene with Version ' \
                                 'Creator first!!!'
                 QtGui.QMessageBox.critical(
-                    parent=self, title="Error", text=error_message
+                    parent=self,
+                    title="Error",
+                    text=error_message,
+                    buttons=QtGui.QMessageBox.Ok
                 )
                 self.close()
                 raise RuntimeError(error_message)
