@@ -623,10 +623,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
-                    message_box = QtGui.QMessageBox(parent=self)
-                    message_box.critical(
-                        "Error",
-                        "Path doesn't exists:\n" + path
+                    QtGui.QMessageBox.critical(
+                        parent=self,
+                        title="Error",
+                        text="Path doesn't exists:\n%s" % path
                     )
             elif choice == 'Change Description...':
                 if version:
@@ -1238,9 +1238,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical(
-                'Error', 'Please select a <strong>leaf</strong> task!'
+            QtGui.QMessageBox.critical(
+                parent=self,
+                title='Error',
+                text='Please select a <strong>leaf</strong> task!'
             )
             return
 
@@ -1250,11 +1251,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                message_box = QtGui.QMessageBox(parent=self)
-                message_box.information(
-                    "Export",
-                    new_version.filename + "\n\n has been exported correctly!",
-                    QtGui.QMessageBox.Ok
+                QtGui.QMessageBox.information(
+                    parent=self,
+                    title="Export",
+                    text="%s\n\n has been exported correctly!" %
+                         new_version.filename
                 )
 
     def save_as_pushButton_clicked(self):
@@ -1267,8 +1268,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             new_version = self.get_new_version()
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical("Error", str(e))
+            QtGui.QMessageBox.critical(parent=self, title="Error", text=str(e))
             return None
 
         if not new_version:
@@ -1276,9 +1276,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical(
-                'Error', 'Please select a <strong>leaf</strong> task!'
+            QtGui.QMessageBox.critical(
+                parent=self,
+                title='Error',
+                text='Please select a <strong>leaf</strong> task!'
             )
             return
 
@@ -1300,8 +1301,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         try:
             environment.save_as(new_version)
         except RuntimeError as e:
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical('Error', str(e))
+            QtGui.QMessageBox.critical(
+                parent=self,
+                title='Error',
+                text=str(e)
+            )
             return
 
         if is_external_env:
@@ -1316,12 +1320,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.warning(
-                "Path Generated",
-                "A new Version is created at:\n\n" + v_path + "\n\n" +
-                "And the path is copied to your clipboard!!!",
-                QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(
+                parent=self,
+                title="Path Generated",
+                text="A new Version is created at:\n\n%s\n\n"
+                "And the path is copied to your clipboard!!!" % v_path,
+                buttons=QtGui.QMessageBox.Ok
             )
 
         # save the new version to the database
@@ -1353,7 +1357,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # call the environments open method
         if self.environment is not None:
-            reference_resolution = {'leave': [], 'create': [], 'update': []}
             # environment can throw RuntimeError for unsaved changes
             try:
                 reference_resolution = self.environment.open(old_version)
@@ -1361,13 +1364,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 # pop a dialog and ask if the user really wants to open the
                 # file
 
-                message_box = QtGui.QMessageBox(parent=self)
-                answer = message_box.question(
-                    'RuntimeError',
-                    "There are <b>unsaved changes</b> in the current "
+                answer = QtGui.QMessageBox.question(
+                    parent=self,
+                    title='RuntimeError',
+                    text="There are <b>unsaved changes</b> in the current "
                     "scene<br><br>Do you really want to open the file?",
-                    QtGui.QMessageBox.Yes,
-                    QtGui.QMessageBox.No
+                    button0=QtGui.QMessageBox.Yes,
+                    button1=QtGui.QMessageBox.No
                 )
 
                 if answer == QtGui.QMessageBox.Yes:
@@ -1401,13 +1404,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
-            message_box = QtGui.QMessageBox(parent=self)
-            message_box.critical(
-                "Critical Error",
-                "Referencing <b>un-published versions</b> are only "
+            QtGui.QMessageBox.critical(
+                parent=self,
+                title="Critical Error",
+                text="Referencing <b>un-published versions</b> are only "
                 "allowed for Power Users!\n"
                 "Please reference a published version of the same Asset/Shot",
-                QtGui.QMessageBox.Ok
+                buttons=QtGui.QMessageBox.Ok
             )
             return
 
@@ -1422,12 +1425,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                message_box = QtGui.QMessageBox(parent=self)
-                message_box.information(
-                    "Reference",
-                    previous_version.filename + \
-                    "\n\n has been referenced correctly!",
-                    QtGui.QMessageBox.Ok
+                QtGui.QMessageBox.information(
+                    parent=self,
+                    title="Reference",
+                    text="%s\n\n has been referenced correctly!" %
+                         previous_version.filename,
+                    buttons=QtGui.QMessageBox.Ok
                 )
 
     def import_pushButton_clicked(self):
@@ -1448,12 +1451,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                message_box = QtGui.QMessageBox(parent=self)
-                message_box.information(
-                    "Import",
-                    previous_version.filename + \
-                    "\n\n has been imported correctly!",
-                    QtGui.QMessageBox.Ok
+                QtGui.QMessageBox.information(
+                    parent=self,
+                    title="Import",
+                    text="%s\n\n has been imported correctly!" %
+                         previous_version.filename,
+                    buttons=QtGui.QMessageBox.Ok
                 )
 
     def clear_thumbnail(self):
