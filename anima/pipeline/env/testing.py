@@ -12,9 +12,7 @@ class TestEnvironment(EnvironmentBase):
     """A test environment which just raises errors to check if the correct
     method has been called
     """
-
     name = "TestEnv"
-
     test_data = {}
 
     def __init__(self, name='TestEnv'):
