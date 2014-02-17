@@ -68,6 +68,4 @@ def version_updater():
     logger.setLevel(logging.WARNING)
 
     # generate a reference_resolution
-    reference_resolution = maya_env.check_referenced_versions()
-    version_updater.UI(environment=maya_env,
-                       reference_resolution=reference_resolution)
+    version_updater.UI(environment=maya_env)

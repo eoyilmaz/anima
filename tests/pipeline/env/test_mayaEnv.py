@@ -1100,8 +1100,8 @@ class MayaEnvTestCase(unittest2.TestCase):
             os.path.exists(new_path)
         )
 
-    def test_update_first_level_versions_also_updates_namespaces(self):
-        """testing if update_first_level_versions method also updates the
+    def test_update_first_level_versions_does_not_update_namespaces(self):
+        """testing if update_first_level_versions method does not updates
         namespaces
         """
         vers1 = Version(task=self.asset1, created_by=self.user1)
@@ -1162,7 +1162,7 @@ class MayaEnvTestCase(unittest2.TestCase):
         )
         self.assertEqual(
             refs[0].namespace,
-            vers3.filename.replace('.', '_')
+            vers2.filename.replace('.', '_')
         )
 
 
