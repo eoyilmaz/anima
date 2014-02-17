@@ -623,15 +623,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
-                    QtGui.QMessageBox.critical(
-                        self,
+                    message_box = QtGui.QMessageBox(parent=self)
+                    message_box.critical(
                         "Error",
                         "Path doesn't exists:\n" + path
                     )
             elif choice == 'Change Description...':
                 if version:
                     # change the description
-                    self.current_dialog = QtGui.QInputDialog(self)
+                    self.current_dialog = QtGui.QInputDialog(parent=self)
 
                     new_description, ok = self.current_dialog.getText(
                         self,
@@ -1238,8 +1238,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            QtGui.QMessageBox.critical(
-                self, 'Error', 'Please select a <strong>leaf</strong> task!'
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical(
+                'Error', 'Please select a <strong>leaf</strong> task!'
             )
             return
 
@@ -1249,8 +1250,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
-                    self,
+                message_box = QtGui.QMessageBox(parent=self)
+                message_box.information(
                     "Export",
                     new_version.filename + "\n\n has been exported correctly!",
                     QtGui.QMessageBox.Ok
@@ -1266,7 +1267,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             new_version = self.get_new_version()
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
-            QtGui.QMessageBox.critical(self, "Error", str(e))
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical("Error", str(e))
             return None
 
         if not new_version:
@@ -1274,8 +1276,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            QtGui.QMessageBox.critical(
-                self, 'Error', 'Please select a <strong>leaf</strong> task!'
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical(
+                'Error', 'Please select a <strong>leaf</strong> task!'
             )
             return
 
@@ -1297,7 +1300,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         try:
             environment.save_as(new_version)
         except RuntimeError as e:
-            QtGui.QMessageBox.critical(self, 'Error', str(e))
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical('Error', str(e))
             return
 
         if is_external_env:
@@ -1312,8 +1316,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
-            QtGui.QMessageBox.warning(
-                self,
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.warning(
                 "Path Generated",
                 "A new Version is created at:\n\n" + v_path + "\n\n" +
                 "And the path is copied to your clipboard!!!",
@@ -1357,8 +1361,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 # pop a dialog and ask if the user really wants to open the
                 # file
 
-                answer = QtGui.QMessageBox.question(
-                    self,
+                message_box = QtGui.QMessageBox(parent=self)
+                answer = message_box.question(
                     'RuntimeError',
                     "There are <b>unsaved changes</b> in the current "
                     "scene<br><br>Do you really want to open the file?",
@@ -1397,8 +1401,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
-            QtGui.QMessageBox.critical(
-                self,
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical(
                 "Critical Error",
                 "Referencing <b>un-published versions</b> are only "
                 "allowed for Power Users!\n"
@@ -1418,8 +1422,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
-                    self,
+                message_box = QtGui.QMessageBox(parent=self)
+                message_box.information(
                     "Reference",
                     previous_version.filename + \
                     "\n\n has been referenced correctly!",
@@ -1444,8 +1448,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
-                    self,
+                message_box = QtGui.QMessageBox(parent=self)
+                message_box.information(
                     "Import",
                     previous_version.filename + \
                     "\n\n has been imported correctly!",

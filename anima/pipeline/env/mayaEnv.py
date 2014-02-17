@@ -1417,12 +1417,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # store the current version
         current_version = self.get_current_version()
 
-        if not current_version:
-            raise RuntimeError(
-                'Please save the current scene as a Version by using Version '
-                'Creator'
-            )
-
         # loop through 'create' versions and update their references
         # and create a new version for each of them
         for version in reference_resolution['create']:

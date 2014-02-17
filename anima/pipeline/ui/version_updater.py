@@ -61,22 +61,45 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         # center to the window
         self.center_window()
 
-        if reference_resolution is None:
-            reference_resolution = empty_reference_resolution()
-
-        self.reference_resolution = reference_resolution
-
         self.new_versions = []
-
-        self.setup_signals()
 
         # self._version_tuple_list = []
         self._num_of_versions = 0
 
         # setup the environment
-        self.environment = environment
+        self.environment = self._validate_environment(environment)
+
+        if reference_resolution is None:
+            # generate from environment
+            if self.environment:
+                reference_resolution = \
+                    self.environment.check_referenced_versions()
+            else:
+                # create an empty one
+                reference_resolution = empty_reference_resolution()
+        self.reference_resolution = reference_resolution
+
+        self.setup_signals()
 
         self._fill_UI()
+
+    def _validate_environment(self, environment):
+        """validates the given environment value
+        """
+        if environment:
+            current_version = environment.get_current_version()
+            if not current_version:
+                # there is no version so warn the user
+                error_message = 'Please save the current scene with Version ' \
+                                'Creator first!!!'
+                message_box = QtGui.QMessageBox()
+                message_box.critical(
+                    "Error", error_message
+                )
+                self.close()
+                raise RuntimeError(error_message)
+
+        return environment
 
     def setup_signals(self):
         """sets up the signals
@@ -204,9 +227,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 self.environment.update_versions(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
-            QtGui.QMessageBox.critical(
-                self, "Error", str(e)
-            )
+            message_box = QtGui.QMessageBox(parent=self)
+            message_box.critical("Error", str(e))
             return
 
         logged_in_user = self.get_logged_in_user()

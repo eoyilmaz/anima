@@ -525,6 +525,7 @@ class VersionUpdaterTester(unittest2.TestCase):
         self.remove_these_files_buffer = []
 
         self.test_environment = TestEnvironment(name='Test Environment')
+        self.test_environment._version = self.version15
 
         if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
@@ -907,3 +908,41 @@ class VersionUpdaterTester(unittest2.TestCase):
 
         self.assertEqual(version_item1.checkState(), QtCore.Qt.Checked)
         self.assertEqual(version_item2.checkState(), QtCore.Qt.Checked)
+
+    def test_init_will_fill_reference_resolution_if_it_is_empty_and_there_is_an_environment(self):
+        """testing if the reference_resolution attribute will be filled by the
+        environment if the reference_resolution argument is None or skipped and
+        there is an environment
+        """
+        self.version1.inputs.append(self.version2)
+        self.version1.inputs.append(self.version3)
+        db.DBSession.commit()
+
+        self.test_environment._version = self.version1
+
+        new_dialog = version_updater.MainDialog(
+            environment=self.test_environment
+        )
+        self.assertEqual(
+            new_dialog.reference_resolution,
+            self.test_environment.check_referenced_versions()
+        )
+
+    def test_init_will_raise_a_RuntimeError_if_the_current_version_is_None(self):
+        """testing if a RuntimeError will be raised if the current_version of
+        the environment is None
+        """
+        self.test_environment._version = None
+
+        def patched(*args, **kwargs):
+            pass
+
+        # patch QMessageBox.critical method
+        original = QtGui.QMessageBox.critical
+        QtGui.QMessageBox.critical = patched
+
+        self.assertRaises(RuntimeError, version_updater.MainDialog,
+                          environment=self.test_environment)
+
+        # restore QMessageBox.critical
+        QtGui.QMessageBox.critical = original

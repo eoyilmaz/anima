@@ -73,7 +73,7 @@ class TestEnvironment(EnvironmentBase):
         dfs_version_references = []
         version = self.get_current_version()
         resolution_dictionary = empty_reference_resolution(
-            root=[self.get_referenced_versions()]
+            root=self.get_referenced_versions()
         )
 
         # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
