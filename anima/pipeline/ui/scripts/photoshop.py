@@ -7,7 +7,7 @@ from anima.pipeline.ui.scripts import do_db_setup
 
 
 def version_creator(lib='PySide'):
-    """Initializes the version_creator UI.
+    """Helper function for version_creator UI for Photoshop
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
     the ``lib`` argument to "PyQt4".
@@ -25,16 +25,16 @@ def version_creator(lib='PySide'):
         SET_PYQT4()
 
     from anima.pipeline.env.photoshopEnv import PhotoshopEnv
-    pEnv = PhotoshopEnv()
+    photoshop_env = PhotoshopEnv()
 
     from anima.pipeline.ui import version_creator
-    # paste only warning messages
+    # display only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(
+        logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_creator.UI(pEnv)
-
+    version_creator.UI(environment=photoshop_env)

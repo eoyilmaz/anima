@@ -24,7 +24,7 @@ elif IS_PYQT4():
     from anima.pipeline.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
 
-def UI(environment=None, app_in=None, executor=None):
+def UI(app_in=None, executor=None, **kwargs):
     """
     :param environment: The
       :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
@@ -37,7 +37,7 @@ def UI(environment=None, app_in=None, executor=None):
     :param executor: Instead of calling app.exec_ the UI will call this given
       function. It also passes the created app instance to this executor.
     """
-    return UICaller(app_in, executor, MainDialog, environment=environment)
+    return UICaller(app_in, executor, MainDialog, **kwargs)
 
 
 class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):

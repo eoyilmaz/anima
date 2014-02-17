@@ -7,7 +7,7 @@ from anima.pipeline.ui.scripts import do_db_setup
 
 
 def version_creator():
-    """helper function to display version_creator in houdini
+    """Helper function for version_creator UI for Houdini
     """
     # connect to db
     do_db_setup()
@@ -22,4 +22,4 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(hEnv)
+    version_creator.UI(environment=hEnv)

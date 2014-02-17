@@ -7,7 +7,7 @@ from anima.pipeline.ui.scripts import do_db_setup
 
 
 def version_creator(lib='PyQt4'):
-    """Initializes the version_creator UI.
+    """Helper function for version_creator UI for Fusion
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
     the ``lib`` argument to "PyQt4".
@@ -25,7 +25,8 @@ def version_creator(lib='PyQt4'):
         SET_PYQT4()
 
     from anima.pipeline.env import fusionEnv
-    fEnv = fusionEnv.Fusion()
+    fusion_env = fusionEnv.Fusion()
+    fusion_env.name = 'Fusion'
 
     from anima.pipeline.ui import version_creator
     # paste only warning messages
@@ -36,4 +37,4 @@ def version_creator(lib='PyQt4'):
     logging.getLogger("anima.pipeline.env.fusionEnv").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_creator.UI(fEnv)
+    version_creator.UI(environment=fusion_env)

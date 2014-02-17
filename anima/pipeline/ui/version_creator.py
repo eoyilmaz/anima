@@ -255,7 +255,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
         logger.debug('VersionsTableWidget.update_content() is finished')
 
 
-def UI(environment=None, mode=0, app_in=None, executor=None):
+def UI(app_in=None, executor=None, **kwargs):
     """
     :param environment: The
       :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
@@ -272,8 +272,7 @@ def UI(environment=None, mode=0, app_in=None, executor=None):
       function. It also passes the created app instance to this executor.
 
     """
-    return UICaller(app_in, executor, MainDialog, environment=environment,
-                    mode=mode)
+    return UICaller(app_in, executor, MainDialog, **kwargs)
 
 
 class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
