@@ -1,0 +1,12 @@
+build/*
+dist/*
+anima.egg-info/*
+docs/build/*
+docs/source/generated/*
+*.pyc
+*~
+.~*
+.DS_Store
+.coverage
+*.swp
+*.md5
