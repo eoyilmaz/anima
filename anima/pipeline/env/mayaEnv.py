@@ -238,7 +238,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.parent = current_version
 
         # update the reference list
-        self.update_version_inputs()
+        # it was too slow, don't do it now
+        #self.update_version_inputs()
 
         # append it to the recent file list
         self.append_to_recent_files(
@@ -1004,7 +1005,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # by applying all the edits to the referenced node (the old way of
         # replacing references)
         sub_references = pymel.core.listReferences(
-            source_reference, resursive=True
+            source_reference, recursive=True
         )
 #        logger.debug("subReferences count: %s" % len(subReferences))
 
