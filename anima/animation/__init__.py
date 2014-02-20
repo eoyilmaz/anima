@@ -12,7 +12,7 @@ def create_shot_playblasts(handle=10, showOrnaments=True):
     """creates the selected shot playblasts
     """
     shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
-    active_panel = pymel.core.playblast(activeEditor=1)
+    #active_panel = pymel.core.playblast(activeEditor=1)
 
     path_template = os.path.join(
         pymel.core.workspace.name,
