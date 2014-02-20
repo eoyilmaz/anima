@@ -8,7 +8,7 @@ import os
 import pymel.core
 
 
-def create_shot_playblasts():
+def create_shot_playblasts(handle=10, showOrnaments=True):
     """creates the selected shot playblasts
     """
     shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
@@ -26,8 +26,8 @@ def create_shot_playblasts():
 
     for shot in shots:
         shot_name = shot.name()
-        start_frame = shot.startFrame.get()
-        end_frame = shot.endFrame.get()
+        start_frame = shot.startFrame.get() - handle
+        end_frame = shot.endFrame.get() + handle
         width = shot.wResolution.get()
         height = shot.hResolution.get()
 
@@ -50,7 +50,7 @@ def create_shot_playblasts():
             forceOverwrite=1,
             filename=movie_full_path,
             clearCache=True,
-            showOrnaments=False,
+            showOrnaments=showOrnaments,
             percent=100,
             wh=[width, height],
             offScreen=True,
