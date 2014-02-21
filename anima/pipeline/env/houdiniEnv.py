@@ -11,6 +11,7 @@ import hou
 from stalker.db import DBSession
 
 from .. import utils
+from anima.pipeline.env import empty_reference_resolution
 from base import EnvironmentBase
 
 import logging
@@ -99,7 +100,7 @@ class Houdini(EnvironmentBase):
         # set the environment variables
         self.set_environment_variables(version)
 
-        return {}
+        return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
         """the import action for houdini environment
