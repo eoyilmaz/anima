@@ -1,0 +1,13 @@
+TITLE:   unknown 
+FCM: NON-DROP FRAME 
+000001  shot2                            V     C        00:00:00:00 00:00:01:09 01:00:00:00 01:00:21:21 
+*FROM CLIP NAME:  file:///home/eoyilmaz/maya/projects/default/data/shot2.mov 
+*SOURCE FILE: 05 
+
+000002  shot                             V     C        05:09:53:16 05:09:55:02 01:00:21:21 01:00:23:07 
+*FROM CLIP NAME:  MVI_5623.AAF 
+*SOURCE FILE: 05 
+
+000003  shot1                            V     C        05:09:53:16 05:09:55:02 01:00:21:21 01:00:23:07 
+*FROM CLIP NAME:  MVI_5623.AAF 
+*SOURCE FILE: 05 
