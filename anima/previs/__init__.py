@@ -24,10 +24,10 @@ class PrevisBase(object):
         """
         raise NotImplementedError
 
-    def from_edl(self, event):
-        """Fills attributes with the given EDL event
+    def from_edl(self, edl_list):
+        """Fills attributes with the given edl.List instance
 
-        :param event: an edl.Event instance
+        :param edl_list: an edl.List instance
         """
         raise NotImplementedError
 
@@ -177,6 +177,62 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
             'pre_indent': ' ' * pre_indent
         }
 
+    def from_edl(self, edl_list):
+        """Fills attributes with the given edl.List instance
+
+        :param edl_list: an edl.List instance
+        """
+        assert isinstance(edl_list, edl.List)
+        self.name = edl_list.title
+
+        # create a Media instance
+        self.media = Media()
+
+        v = Video()
+        self.media.video.append(v)
+
+        video_track = Track()
+        v.tracks.append(video_track)
+        # no audio tracks fow now
+
+        # read Events in to Clips
+        sequence_start = 1e20
+        sequence_end = -1
+        for e in edl_list.events:
+            assert isinstance(e, edl.Event)
+            clip = Clip()
+
+            clip.name = e.clip_name
+            clip.id = clip.name
+            clip.type = 'Video' if e.track == 'V' else 'Audio'
+
+            clip.in_ = e.src_start_tc.frames - 1
+            clip.out = e.src_end_tc.frames - 1
+            clip.duration = clip.out - clip.in_
+
+            clip.start = e.rec_start_tc.frames
+            clip.end = e.rec_end_tc.frames
+
+            if clip.start < sequence_start:
+                sequence_start = clip.start
+            if clip.end > sequence_end:
+                sequence_end = clip.end
+
+            f = File()
+            f.name = clip.name
+            f.duration = clip.duration
+            f.pathurl = 'file://%s' % e.source_file
+
+            clip.file = f
+
+            if clip.type == 'Video':
+                video_track.clips.append(clip)
+
+        self.duration = sequence_end - sequence_start
+        # TODO: fix this latest, timecode always 00:00:00:00 for now
+        self.timecode = '00:00:00:00'
+        # TODO: can not read sequence.timebase from edl
+
     def to_edl(self):
         """Returns an edl.List instance equivalent of this Sequence instance
         """
@@ -199,14 +255,16 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
                     src_start_tc = PyTimeCode(self.timebase,
                                               frames=clip.in_ + 1)
+                    # 1 frame after last frame shown
                     src_end_tc = PyTimeCode(self.timebase,
-                                            frames=clip.out)
+                                            frames=clip.out + 1)
 
                     e.src_start_tc = str(src_start_tc)
                     e.src_end_tc = str(src_end_tc)
 
                     rec_start_tc = PyTimeCode(self.timebase, frames=clip.start)
-                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end - 1)
+                    # 1 frame after last frame shown
+                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end)
 
                     e.rec_start_tc = str(rec_start_tc)
                     e.rec_end_tc = str(rec_end_tc)

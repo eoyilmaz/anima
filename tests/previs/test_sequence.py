@@ -367,7 +367,7 @@ class MediaTestCase(unittest2.TestCase):
         self.assertIsInstance(result, List)
 
     def test_to_edl_method_is_working_properly(self):
-        """testing if the to_edl method will output a proper List object
+        """testing if the to_edl method will output a proper edl.List object
         """
         # create Sequence instance from XML
         from anima.previs import Sequencer
@@ -406,9 +406,9 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('V', e1.track)
         self.assertEqual('C', e1.tr_code)
         self.assertEqual('00:00:00:00', e1.src_start_tc)
-        self.assertEqual('00:00:01:09', e1.src_end_tc)
+        self.assertEqual('00:00:01:10', e1.src_end_tc)
         self.assertEqual('00:00:00:00', e1.rec_start_tc)
-        self.assertEqual('00:00:01:09', e1.rec_end_tc)
+        self.assertEqual('00:00:01:10', e1.rec_end_tc)
         self.assertEqual('* FROM CLIP NAME: shot2', e1.comments[0])
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot2.mov',
                          e1.source_file)
@@ -424,9 +424,9 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('V', e2.track)
         self.assertEqual('C', e2.tr_code)
         self.assertEqual('00:00:00:00', e2.src_start_tc)
-        self.assertEqual('00:00:01:05', e2.src_end_tc)
+        self.assertEqual('00:00:01:06', e2.src_end_tc)
         self.assertEqual('00:00:01:10', e2.rec_start_tc)
-        self.assertEqual('00:00:02:15', e2.rec_end_tc)
+        self.assertEqual('00:00:02:16', e2.rec_end_tc)
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot.mov',
                          e2.source_file)
         self.assertEqual('* FROM CLIP NAME: shot', e2.comments[0])
@@ -442,9 +442,9 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('V', e3.track)
         self.assertEqual('C', e3.tr_code)
         self.assertEqual('00:00:00:00', e3.src_start_tc)
-        self.assertEqual('00:00:01:20', e3.src_end_tc)
+        self.assertEqual('00:00:01:21', e3.src_end_tc)
         self.assertEqual('00:00:02:16', e3.rec_start_tc)
-        self.assertEqual('00:00:04:12', e3.rec_end_tc)
+        self.assertEqual('00:00:04:13', e3.rec_end_tc)
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot1.mov',
                          e3.source_file)
         self.assertEqual('* FROM CLIP NAME: shot1', e3.comments[0])
@@ -452,5 +452,113 @@ class MediaTestCase(unittest2.TestCase):
             '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
             'shot1.mov',
             e3.comments[1]
+        )
+
+    # def test_from_edl_method_will_return_a_sequence_instance(self):
+    #     """testing if the from_edl method will return an anima.previs.Sequence
+    #     instance
+    #     """
+    #     self.fail('test is not implemented yet')
+
+    def test_from_edl_method_is_working_properly(self):
+        """testing if the from_edl method will return an anima.previs.Sequence
+        instance with proper hierarchy
+        """
+        # first supply an edl
+        from edl import Parser
+        p = Parser('24')
+        edl_path = os.path.abspath('./test_data/test_v003.edl')
+
+        with open(edl_path) as f:
+            edl_list = p.parse(f)
+
+        s = Sequence(timebase='24')
+        s.from_edl(edl_list)
+
+        self.assertEqual('previs_edit_v001', s.name)
+
+        self.assertEqual(109.0, s.duration)
+        self.assertEqual('24', s.timebase)
+        self.assertEqual('00:00:00:00', s.timecode)
+
+        m = s.media
+        self.assertIsInstance(m, Media)
+
+        v = m.video[0]
+        self.assertIsInstance(v, Video)
+
+        t = v.tracks[0]
+        self.assertEqual(False, t.locked)
+        self.assertEqual(True, t.enabled)
+
+        clips = t.clips
+        self.assertEqual(3, len(clips))
+
+        clip1 = clips[0]
+        clip2 = clips[1]
+        clip3 = clips[2]
+
+        self.assertIsInstance(clip1, Clip)
+        self.assertIsInstance(clip2, Clip)
+        self.assertIsInstance(clip3, Clip)
+
+        # clip1
+        self.assertEqual(clip1.duration, 34.0)
+        self.assertEqual(clip1.enabled, True)
+        self.assertEqual(clip1.end, 35.0)
+        self.assertEqual(clip1.id, 'shot2')
+        self.assertEqual(clip1.in_, 0.0)
+        self.assertEqual(clip1.name, 'shot2')
+        self.assertEqual(clip1.out, 34.0)
+        self.assertEqual(clip1.start, 1.0)
+        self.assertEqual(clip1.type, 'Video')
+
+        f = clip1.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(34.0, f.duration)
+        self.assertEqual('shot2', f.name)
+        self.assertEqual(
+            'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov',
+            f.pathurl
+        )
+
+        # clip2
+        self.assertEqual(clip2.duration, 30.0)
+        self.assertEqual(clip2.enabled, True)
+        self.assertEqual(clip2.end, 65.0)
+        self.assertEqual(clip2.id, 'shot')
+        self.assertEqual(clip2.in_, 0.0)
+        self.assertEqual(clip2.name, 'shot')
+        self.assertEqual(clip2.out, 30.0)
+        self.assertEqual(clip2.start, 35.0)
+        self.assertEqual(clip2.type, 'Video')
+
+        f = clip2.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(30.0, f.duration)
+        self.assertEqual('shot', f.name)
+        self.assertEqual(
+            'file:///home/eoyilmaz/maya/projects/default/data/shot.mov',
+            f.pathurl
+        )
+
+        # clip3
+        self.assertEqual(clip3.duration, 45.0)
+        self.assertEqual(clip3.enabled, True)
+        self.assertEqual(clip3.end, 110.0)
+        self.assertEqual(clip3.id, 'shot1')
+        self.assertEqual(clip3.in_, 0.0)
+        self.assertEqual(clip3.name, 'shot1')
+        self.assertEqual(clip3.out, 45.0)
+        self.assertEqual(clip3.start, 65.0)
+        self.assertEqual(clip3.type, 'Video')
+
+        f = clip3.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(45.0, f.duration)
+        self.assertEqual('shot1', f.name)
+        self.assertEqual(
+            'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov',
+            f.pathurl
         )
 
