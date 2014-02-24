@@ -25,6 +25,84 @@ class PrevisBase(object):
         raise NotImplementedError
 
 
+class NameMixin(object):
+    """A mixin for name attribute
+    """
+
+    def __init__(self, name=''):
+        self._name = self._validate_name(name)
+
+    @classmethod
+    def _validate_name(cls, name):
+        """validates the given name value
+        """
+        if not isinstance(name, str):
+            raise TypeError(
+                '%(class)s.name should be a string, not %(name_class)s' % {
+                    'class': cls.__name__,
+                    'name_class': name.__class__.__name__
+                }
+            )
+        return name
+
+    @property
+    def name(self):
+        """returns the _name attribute
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """setter for the name property
+        """
+        self._name = self._validate_name(name)
+
+
+class DurationMixin(object):
+    """A mixin for duration attribute
+    """
+
+    def __init__(self, duration=0.0):
+        self._duration = self._validate_duration(duration)
+
+    @classmethod
+    def _validate_duration(cls, duration):
+        """validates the given duration value
+        """
+        if duration is None:
+            duration = 0.0
+
+        if not isinstance(duration, (int, float)):
+            raise TypeError(
+                '%(class)s.duration should be an non-negative float, not '
+                '%(duration_class)s' % {
+                    'class': cls.__name__,
+                    'duration_class': duration.__class__.__name__
+                }
+            )
+
+        duration = float(duration)
+
+        if duration < 0:
+            raise ValueError(
+                '%(class)s.duration should be an non-negative float' % {
+                    'class': cls.__name__
+                }
+            )
+
+        return duration
+
+    @property
+    def duration(self):
+        """returns the _duration attribute value
+        """
+        return self._duration
+
+    @duration.setter
+    def duration(self, duration):
+        self._duration = self._validate_duration(duration)
+
+
 class Sequence(PrevisBase):
     """XML compatibility class for Sequencer
     """
@@ -236,20 +314,51 @@ class Track(PrevisBase):
         }
 
 
-class Clip(PrevisBase):
+class Clip(PrevisBase, NameMixin, DurationMixin):
     """XML compatibility class for Sequencer
     """
 
-    def __init__(self):
-        self.id = None
-        self.name = ''
-        self.start = 0
-        self.end = 0
-        self.duration = 0
-        self.enabled = True
-        self.in_ = 0
-        self.out = 0
+    def __init__(self, id=None, name='', start=0.0, end=0.0, duration=0.0,
+                 enabled=True, in_=0, out=0):
+        NameMixin.__init__(self, name=name)
+        DurationMixin.__init__(self, duration=duration)
+        self._id = self._validate_id(id)
+        self.start = start
+        self.end = end
+        self.enabled = enabled
+        self.in_ = in_
+        self.out = out
         self.file = None
+
+    @classmethod
+    def _validate_id(cls, id_):
+        """validates the given id value
+        """
+        if id_ is None:
+            id_ = ''
+
+        if not isinstance(id_, str):
+            raise TypeError(
+                '%(class)s.id should be a string, not %(id_class)s' %
+                {
+                    'class': cls.__name__,
+                    'id_class': id_.__class__.__name__
+                }
+            )
+
+        return id_
+
+    @property
+    def id(self):
+        """returns the _id attribute value
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id_):
+        """setter for the _id attribute
+        """
+        self._id = self._validate_id(id_)
 
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
@@ -301,76 +410,14 @@ class Clip(PrevisBase):
         }
 
 
-class File(PrevisBase):
+class File(PrevisBase, NameMixin, DurationMixin):
     """XML compatibility class for Sequencer
     """
 
     def __init__(self, duration=0, name='', pathurl=''):
-        self._duration = self._validate_duration(duration)
-        self._name = self._validate_name(name)
+        NameMixin.__init__(self, name=name)
+        DurationMixin.__init__(self, duration=duration)
         self._pathurl = self._validate_pathurl(pathurl)
-
-    @classmethod
-    def _validate_duration(cls, duration):
-        """validates the given duration value
-        """
-        if duration is None:
-            duration = 0.0
-
-        if not isinstance(duration, (int, float)):
-            raise TypeError(
-                '%(class)s.duration should be an non-negative float, not '
-                '%(duration_class)s' % {
-                    'class': cls.__name__,
-                    'duration_class': duration.__class__.__name__
-                }
-            )
-
-        duration = float(duration)
-
-        if duration < 0:
-            raise ValueError(
-                '%(class)s.duration should be an non-negative float' % {
-                    'class': cls.__name__
-                }
-            )
-
-        return duration
-
-    @property
-    def duration(self):
-        """returns the _duration attribute value
-        """
-        return self._duration
-
-    @duration.setter
-    def duration(self, duration):
-        self._duration = self._validate_duration(duration)
-
-    @classmethod
-    def _validate_name(cls, name):
-        """validates the given name value
-        """
-        if not isinstance(name, str):
-            raise TypeError(
-                '%(class)s.name should be a string, not %(name_class)s' % {
-                    'class': cls.__name__,
-                    'name_class': name.__class__.__name__
-                }
-            )
-        return name
-
-    @property
-    def name(self):
-        """returns the _name attribute
-        """
-        return self._name
-
-    @name.setter
-    def name(self, name):
-        """setter for the name property
-        """
-        self._name = self._validate_name(name)
 
     @classmethod
     def _validate_pathurl(cls, pathurl):

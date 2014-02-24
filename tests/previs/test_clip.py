@@ -11,63 +11,53 @@ class ClipTestCase(unittest2.TestCase):
     """tests the anima.previs.Clip class
     """
 
-    def test_id_argument_skipped(self):
-        """testing if the default value will be used when the id argument
-        is skipped
-        """
-        self.fail('test is not implemented yet')
-
-    def test_id_argument_is_not_an_string(self):
-        """testing if a TypeError will be raised when the id argument is
-        not an string
-        """
-        self.fail('test is not implemented yet')
-
-    def test_id_attribute_is_not_an_string(self):
-        """testing if a TypeError will be raised when the id attribute is
-        not set to a string value
-        """
-        self.fail('test is not implemented yet')
-
-    def test_id_argument_is_working_properly(self):
-        """testing if the id argument value is correctly passed to the
-        id attribute
-        """
-        self.fail('test is not implemented yet')
-
-    def test_id_attribute_is_working_properly(self):
-        """testing if the id attribute is working properly
-        """
-        self.fail('test is not implemented yet')
-
-    def test_name_argument_is_skipped(self):
-        """testing if the default value will be used when the name argument is
+    def test_id_argument_is_skipped(self):
+        """testing if the default value will be used when the id argument is
         skipped
         """
-        self.fail('test is not implemented yet')
+        c = Clip()
+        self.assertEqual('', c.id)
 
-    def test_name_argument_is_not_a_string(self):
-        """testing if a TypeError will be raised when the name argument is not
+    def test_id_argument_is_not_a_string(self):
+        """testing if a TypeError will be raised when the id argument is not
         a string instance
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            Clip(id=123)
 
-    def test_name_attribute_is_not_a_string(self):
-        """testing if a TypeError will be raised when the name attribute is set
+        self.assertEqual(
+            cm.exception.message,
+            'Clip.id should be a string, not int'
+        )
+
+    def test_id_attribute_is_not_a_string(self):
+        """testing if a TypeError will be raised when the id attribute is set
         to a value other than a string
         """
-        self.fail('test is not implemented yet')
+        c = Clip(id='shot1')
+        with self.assertRaises(TypeError) as cm:
+            c.id = 123
 
-    def test_name_argument_is_working_properly(self):
-        """testing if the name argument value is correctly passed to the name
+        self.assertEqual(
+            cm.exception.message,
+            'Clip.id should be a string, not int'
+        )
+
+    def test_id_argument_is_working_properly(self):
+        """testing if the id argument value is correctly passed to the id
         attribute
         """
-        self.fail('test is not implemented yet')
+        c = Clip(id='shot2')
+        self.assertEqual('shot2', c.id)
 
-    def test_name_attribute_is_working_properly(self):
-        """testing if the name attribute value can be correctly changed
+    def test_id_attribute_is_working_properly(self):
+        """testing if the id attribute value can be correctly changed
         """
-        self.fail('test is not implemented yet')
+        c = Clip(id='shot1')
+        test_value = 'shot2'
+        self.assertNotEqual(test_value, c.id)
+        c.id = test_value
+        self.assertEqual(test_value, c.id)
 
     def test_to_xml_method_is_working_properly(self):
         """testing if the to xml method is working properly
