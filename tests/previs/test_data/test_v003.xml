@@ -21,12 +21,12 @@
           <locked>FALSE</locked>
           <enabled>TRUE</enabled>
           <clipitem id="shot2">
-            <start>1.0</start>
             <end>35.0</end>
             <name>shot2</name>
             <enabled>True</enabled>
-            <duration>34.0</duration>
+            <start>1.0</start>
             <in>0.0</in>
+            <duration>34.0</duration>
             <out>34.0</out>
             <file>
               <duration>34.0</duration>

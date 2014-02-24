@@ -167,3 +167,47 @@ class SequencerTestCase(unittest2.TestCase):
             'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
         )
 
+    def test_to_xml_seq_argument_skipped(self):
+        """testing if a TypeError will be raised when the seq argument is
+        skipped
+        """
+        s = Sequencer()
+        with self.assertRaises(TypeError) as cm:
+            s.to_xml()
+
+        self.assertEqual(
+            cm.exception.message,
+            'to_xml() takes exactly 2 arguments (1 given)'
+        )
+
+    def test_to_xml_seq_argument_is_not_a_sequence_instance(self):
+        """Testing if a TypeError will be raised when the seq argument in
+        to_xml method is not a Sequence instance
+        """
+        s = Sequencer()
+        with self.assertRaises(TypeError) as cm:
+            s.to_xml(12)
+
+        self.assertEqual(
+            cm.exception.message,
+            '"seq" argument in Sequencer.to_xml should be an instance of'
+            'anima.previs.Sequence, not int'
+        )
+
+    def test_to_xml_returns_a_proper_xml_content_from_given_sequence_instance(self):
+        """testing if a proper string will be returned from Sequencer.to_xml
+        when a Sequence is given with seq argument
+        """
+        path = os.path.abspath('./test_data/test_v003.xml')
+
+        s = Sequencer()
+        sequence = s.parse_xml(path)
+
+        self.assertIsInstance(sequence, Sequence)
+
+        result = s.to_xml(sequence)
+        with open(path) as f:
+            expected = f.read()
+
+        self.maxDiff = None
+        self.assertEqual(expected, result)

@@ -21,6 +21,36 @@ class Sequence(object):
         self.timebase = '24'
         self.media = None
 
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Sequence object
+        """
+        template = """<xmeml version="1.0">
+%(indentation)s<sequence>
+%(indentation)s%(indentation)s<duration>%(duration)s</duration>
+%(indentation)s%(indentation)s<name>%(name)s</name>
+%(indentation)s%(indentation)s<rate>
+%(indentation)s%(indentation)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
+%(indentation)s%(indentation)s%(indentation)s<timebase>%(timebase)s</timebase>
+%(indentation)s%(indentation)s</rate>
+%(indentation)s%(indentation)s<timecode>
+%(indentation)s%(indentation)s%(indentation)s<string>%(timecode)s</string>
+%(indentation)s%(indentation)s</timecode>
+%(media)s
+%(indentation)s</sequence>
+</xmeml>
+"""
+
+        return template % {
+            'duration': self.duration,
+            'name': self.name,
+            'ntsc': str(self.ntsc).upper(),
+            'timebase': self.timebase,
+            'timecode': self.timecode,
+            'media': self.media.to_xml(indentation=indentation,
+                                       pre_indent=indentation * 2 + pre_indent),
+            'indentation': ' ' * indentation
+        }
+
 
 class Media(object):
     """XML compatibility class for Sequencer
@@ -29,6 +59,27 @@ class Media(object):
     def __init__(self):
         self.video = []
         self.audio = []
+
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Media object
+        """
+        template = """%(pre_indent)s<media>
+%(videos)s
+%(pre_indent)s</media>"""
+
+        video_data = []
+        for video in self.video:
+            video_data.append(
+                video.to_xml(indentation=indentation,
+                             pre_indent=indentation + pre_indent)
+            )
+        video_data_as_str = '\n'.join(video_data)
+
+        return template % {
+            'videos': video_data_as_str,
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
 
 
 class Video(object):
@@ -40,6 +91,35 @@ class Video(object):
         self.height = 0
         self.tracks = []
 
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Video object
+        """
+        template = """%(pre_indent)s<video>
+%(pre_indent)s%(indentation)s<format>
+%(pre_indent)s%(indentation)s%(indentation)s<samplecharacteristics>
+%(pre_indent)s%(indentation)s%(indentation)s%(indentation)s<width>%(width)s</width>
+%(pre_indent)s%(indentation)s%(indentation)s%(indentation)s<height>%(height)s</height>
+%(pre_indent)s%(indentation)s%(indentation)s</samplecharacteristics>
+%(pre_indent)s%(indentation)s</format>
+%(tracks)s
+%(pre_indent)s</video>"""
+
+        track_data = []
+        for track in self.tracks:
+            track_data.append(
+                track.to_xml(indentation=indentation,
+                             pre_indent=indentation + pre_indent)
+            )
+        track_data_as_str = '\n'.join(track_data)
+
+        return template % {
+            'width': self.width,
+            'height': self.height,
+            'tracks': track_data_as_str,
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
+
 
 class Track(object):
     """XML compatibility class for Sequencer
@@ -49,6 +129,31 @@ class Track(object):
         self.locked = False
         self.enabled = True
         self.clips = []
+
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Track object
+        """
+        template = """%(pre_indent)s<track>
+%(pre_indent)s%(indentation)s<locked>%(locked)s</locked>
+%(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
+%(clips)s
+%(pre_indent)s</track>"""
+
+        clip_data = []
+        for clip in self.clips:
+            clip_data.append(
+                clip.to_xml(indentation=indentation,
+                            pre_indent=indentation + pre_indent)
+            )
+        clip_data_as_str = '\n'.join(clip_data)
+
+        return template % {
+            'locked': str(self.locked).upper(),
+            'enabled': str(self.enabled).upper(),
+            'clips': clip_data_as_str,
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
 
 
 class Clip(object):
@@ -66,15 +171,60 @@ class Clip(object):
         self.out = 0
         self.file = None
 
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Clip object
+        """
+        template = """%(pre_indent)s<clipitem id="%(id)s">
+%(pre_indent)s%(indentation)s<end>%(end)s</end>
+%(pre_indent)s%(indentation)s<name>%(name)s</name>
+%(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
+%(pre_indent)s%(indentation)s<start>%(start)s</start>
+%(pre_indent)s%(indentation)s<in>%(in)s</in>
+%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
+%(pre_indent)s%(indentation)s<out>%(out)s</out>
+%(file)s
+%(pre_indent)s</clipitem>"""
+
+        return template % {
+            'id': self.id,
+            'start': self.start,
+            'end': self.end,
+            'name': self.name,
+            'enabled': self.enabled,
+            'duration': self.duration,
+            'in': self.in_,
+            'out': self.out,
+            'file': self.file.to_xml(indentation=indentation,
+                                     pre_indent=pre_indent + indentation),
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
+
 
 class File(object):
     """XML compatibility class for Sequencer
     """
 
-    def __init__(self):
-        self.duration = 0
-        self.name = ''
-        self.pathurl = ''
+    def __init__(self, duration=0, name='', pathurl=''):
+        self.duration = duration
+        self.name = name
+        self.pathurl = pathurl
+
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this File object
+        """
+        template = """%(pre_indent)s<file>
+%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
+%(pre_indent)s%(indentation)s<name>%(name)s</name>
+%(pre_indent)s%(indentation)s<pathurl>%(pathurl)s</pathurl>
+%(pre_indent)s</file>"""
+        return template % {
+            'duration': self.duration,
+            'name': self.name,
+            'pathurl': self.pathurl,
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
 
 
 class Sequencer(object):
@@ -141,7 +291,8 @@ class Sequencer(object):
                 quality=70
             )
 
-    def parse_xml(self, path):
+    @classmethod
+    def parse_xml(cls, path):
         """Parses XML file and returns a Sequence instance which reflects the
         whole timeline hierarchy.
 
@@ -151,7 +302,7 @@ class Sequencer(object):
         if not isinstance(path, str):
             raise TypeError(
                 'path argument in %s.parse_xml should be a string, not %s' %
-                (self.__class__.__name__, path.__class__.__name__)
+                (cls.__name__, path.__class__.__name__)
             )
 
         from xml.etree import ElementTree
@@ -224,12 +375,20 @@ class Sequencer(object):
 
         return seq
 
-    def to_xml(self, seq):
+    @classmethod
+    def to_xml(cls, seq, indentation=2, pre_indent=0):
         """Converts the given Sequence instance to an xml file
 
         :param seq: A :class:`.Sequence` instance
         :return: str
         """
-        pass
+        if not isinstance(seq, Sequence):
+            raise TypeError(
+                '"seq" argument in %s.to_xml should be an instance of'
+                'anima.previs.Sequence, not %s' % (
+                    cls.__name__, seq.__class__.__name__
+                )
+            )
 
+        return seq.to_xml(indentation=indentation, pre_indent=pre_indent)
 
