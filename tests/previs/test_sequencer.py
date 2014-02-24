@@ -61,7 +61,7 @@ class SequencerTestCase(unittest2.TestCase):
         """testing if parse_xml method will return a Sequence instance
         """
         s = Sequencer()
-        sequence = s.parse_xml('../test_data/test_v003.xml')
+        sequence = s.parse_xml('./test_data/test_v003.xml')
         self.assertIsInstance(sequence, Sequence)
 
     def test_parse_xml_returns_a_Seqeunce_with_correct_hierarchy(self):
@@ -177,7 +177,7 @@ class SequencerTestCase(unittest2.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'to_xml() takes exactly 2 arguments (1 given)'
+            'to_xml() takes at least 2 arguments (1 given)'
         )
 
     def test_to_xml_seq_argument_is_not_a_sequence_instance(self):

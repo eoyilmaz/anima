@@ -15,88 +15,177 @@ class FileTestCase(unittest2.TestCase):
         """testing if the default value will be used when the duration argument
         is skipped
         """
-        self.fail('test is not implemented yet')
+        f = File()
+        self.assertEqual(f.duration, 0)
 
     def test_duration_argument_is_not_an_integer(self):
         """testing if a TypeError will be raised when the duration argument is
         not an integer
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            File(duration='not an integer')
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.duration should be an non-negative float, not str'
+        )
 
     def test_duration_attribute_is_not_an_integer(self):
         """testing if a TypeError will be raised when the duration attribute is
         not set to a integer value
         """
-        self.fail('test is not implemented yet')
+        f = File(duration=10)
+        with self.assertRaises(TypeError) as cm:
+            f.duration = 'not an integer'
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.duration should be an non-negative float, not str'
+        )
+
+    def test_duration_argument_is_negative(self):
+        """testing if a ValueError will be raised when the duration argument is
+        negative
+        """
+        with self.assertRaises(ValueError) as cm:
+            File(duration=-10)
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.duration should be an non-negative float'
+        )
+
+    def test_duration_attribute_is_negative(self):
+        """testing if a ValueError will be raised when the duration attribute
+        is set to a negative value
+        """
+        f = File(duration=10)
+
+        with self.assertRaises(ValueError) as cm:
+            f.duration = -10
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.duration should be an non-negative float'
+        )
 
     def test_duration_argument_is_working_properly(self):
         """testing if the duration argument value is correctly passed to the
         duration attribute
         """
-        self.fail('test is not implemented yet')
+        f = File(duration=10)
+        self.assertEqual(10, f.duration)
 
     def test_duration_attribute_is_working_properly(self):
         """testing if the duration attribute is working properly
         """
-        self.fail('test is not implemented yet')
+        f = File(duration=10)
+        f.duration = 15
+        self.assertEqual(15, f.duration)
 
     def test_name_argument_is_skipped(self):
         """testing if the default value will be used when the name argument is
         skipped
         """
-        self.fail('test is not implemented yet')
+        f = File()
+        self.assertEqual('', f.name)
 
     def test_name_argument_is_not_a_string(self):
         """testing if a TypeError will be raised when the name argument is not
         a string instance
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            File(name=123)
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.name should be a string, not int'
+        )
 
     def test_name_attribute_is_not_a_string(self):
         """testing if a TypeError will be raised when the name attribute is set
         to a value other than a string
         """
-        self.fail('test is not implemented yet')
+        f = File(name='shot1')
+        with self.assertRaises(TypeError) as cm:
+            f.name = 123
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.name should be a string, not int'
+        )
 
     def test_name_argument_is_working_properly(self):
         """testing if the name argument value is correctly passed to the name
         attribute
         """
-        self.fail('test is not implemented yet')
+        f = File(name='shot2')
+        self.assertEqual('shot2', f.name)
 
     def test_name_attribute_is_working_properly(self):
         """testing if the name attribute value can be correctly changed
         """
-        self.fail('test is not implemented yet')
+        f = File(name='shot1')
+        test_value = 'shot2'
+        self.assertNotEqual(test_value, f.name)
+        f.name = test_value
+        self.assertEqual(test_value, f.name)
 
     def test_pathurl_argument_is_skipped(self):
         """testing if the default value will be used when the pathurl argument is
         skipped
         """
-        self.fail('test is not implemented yet')
+        f = File()
+        self.assertEqual('', f.pathurl)
 
     def test_pathurl_argument_is_not_a_string(self):
         """testing if a TypeError will be raised when the pathurl argument is not
         a string instance
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            File(pathurl=123)
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.pathurl should be a string, not int'
+        )
 
     def test_pathurl_attribute_is_not_a_string(self):
         """testing if a TypeError will be raised when the pathurl attribute is set
         to a value other than a string
         """
-        self.fail('test is not implemented yet')
+        f = File(pathurl='shot1')
+        with self.assertRaises(TypeError) as cm:
+            f.pathurl = 123
+
+        self.assertEqual(
+            cm.exception.message,
+            'File.pathurl should be a string, not int'
+        )
 
     def test_pathurl_argument_is_working_properly(self):
         """testing if the pathurl argument value is correctly passed to the pathurl
         attribute
         """
-        self.fail('test is not implemented yet')
+        f = File(pathurl='shot2')
+        self.assertEqual('shot2', f.pathurl)
 
     def test_pathurl_attribute_is_working_properly(self):
         """testing if the pathurl attribute value can be correctly changed
         """
-        self.fail('test is not implemented yet')
+        f = File(pathurl='shot1')
+        test_value = 'shot2'
+        self.assertNotEqual(test_value, f.pathurl)
+        f.pathurl = test_value
+        self.assertEqual(test_value, f.pathurl)
+
+
+
+
+
+
+
+
 
     def test_to_xml_method_is_working_properly(self):
         """testing if the to xml method is working properly

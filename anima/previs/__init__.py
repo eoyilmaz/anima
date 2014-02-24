@@ -58,7 +58,6 @@ class Sequence(PrevisBase):
 
         self.media = media
 
-
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Sequence object
         """
@@ -307,9 +306,97 @@ class File(PrevisBase):
     """
 
     def __init__(self, duration=0, name='', pathurl=''):
-        self.duration = duration
-        self.name = name
-        self.pathurl = pathurl
+        self._duration = self._validate_duration(duration)
+        self._name = self._validate_name(name)
+        self._pathurl = self._validate_pathurl(pathurl)
+
+    @classmethod
+    def _validate_duration(cls, duration):
+        """validates the given duration value
+        """
+        if duration is None:
+            duration = 0.0
+
+        if not isinstance(duration, (int, float)):
+            raise TypeError(
+                '%(class)s.duration should be an non-negative float, not '
+                '%(duration_class)s' % {
+                    'class': cls.__name__,
+                    'duration_class': duration.__class__.__name__
+                }
+            )
+
+        duration = float(duration)
+
+        if duration < 0:
+            raise ValueError(
+                '%(class)s.duration should be an non-negative float' % {
+                    'class': cls.__name__
+                }
+            )
+
+        return duration
+
+    @property
+    def duration(self):
+        """returns the _duration attribute value
+        """
+        return self._duration
+
+    @duration.setter
+    def duration(self, duration):
+        self._duration = self._validate_duration(duration)
+
+    @classmethod
+    def _validate_name(cls, name):
+        """validates the given name value
+        """
+        if not isinstance(name, str):
+            raise TypeError(
+                '%(class)s.name should be a string, not %(name_class)s' % {
+                    'class': cls.__name__,
+                    'name_class': name.__class__.__name__
+                }
+            )
+        return name
+
+    @property
+    def name(self):
+        """returns the _name attribute
+        """
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        """setter for the name property
+        """
+        self._name = self._validate_name(name)
+
+    @classmethod
+    def _validate_pathurl(cls, pathurl):
+        """validates the given pathurl value
+        """
+        if not isinstance(pathurl, str):
+            raise TypeError(
+                '%(class)s.pathurl should be a string, not '
+                '%(pathurl_class)s' % {
+                    'class': cls.__name__,
+                    'pathurl_class': pathurl.__class__.__name__
+                }
+            )
+        return pathurl
+
+    @property
+    def pathurl(self):
+        """returns the _pathurl attribute
+        """
+        return self._pathurl
+
+    @pathurl.setter
+    def pathurl(self, pathurl):
+        """setter for the pathurl property
+        """
+        self._pathurl = self._validate_pathurl(pathurl)
 
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
@@ -444,7 +531,7 @@ class Sequencer(object):
                 )
             )
 
-        template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>"""
+        template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
 
         return template % {
             'sequence': seq.to_xml(indentation=indentation,
