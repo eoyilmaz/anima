@@ -3,6 +3,8 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import os
+from edl import List, Event
 import unittest2
 from anima.previs import Sequence, Media, Video, Track, Clip, File
 
@@ -356,3 +358,99 @@ class MediaTestCase(unittest2.TestCase):
             'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov',
             f.pathurl
         )
+
+    def test_to_edl_method_will_return_a_List_instance(self):
+        """testing if to_edl method will return an edl.List instance
+        """
+        s = Sequence()
+        result = s.to_edl()
+        self.assertIsInstance(result, List)
+
+    def test_to_edl_method_is_working_properly(self):
+        """testing if the to_edl method will output a proper List object
+        """
+        # create Sequence instance from XML
+        from anima.previs import Sequencer
+        sequencer = Sequencer()
+        xml_path = os.path.abspath('./test_data/test_v003.xml')
+        sequence = sequencer.from_xml(xml_path)
+
+        self.assertIsInstance(sequence, Sequence)
+
+        edl_list = sequence.to_edl()
+        self.assertIsInstance(edl_list, List)
+
+        self.assertEqual(
+            sequence.name,
+            edl_list.title
+        )
+
+        # events should be clips
+        self.assertEqual(3, len(edl_list.events))
+
+        e1 = edl_list.events[0]
+        e2 = edl_list.events[1]
+        e3 = edl_list.events[2]
+
+        self.assertIsInstance(e1, Event)
+        self.assertIsInstance(e2, Event)
+        self.assertIsInstance(e3, Event)
+
+        # check clips
+        clips = sequence.media.video[0].tracks[0].clips
+        self.assertIsInstance(clips[0], Clip)
+
+        self.assertEqual('000001', e1.num)
+        self.assertEqual('shot2', e1.clip_name)
+        self.assertEqual('shot2', e1.reel)
+        self.assertEqual('V', e1.track)
+        self.assertEqual('C', e1.tr_code)
+        self.assertEqual('00:00:00:00', e1.src_start_tc)
+        self.assertEqual('00:00:01:09', e1.src_end_tc)
+        self.assertEqual('00:00:00:00', e1.rec_start_tc)
+        self.assertEqual('00:00:01:09', e1.rec_end_tc)
+        self.assertEqual('* FROM CLIP NAME: shot2', e1.comments[0])
+        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot2.mov',
+                         e1.source_file)
+        self.assertEqual(
+            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
+            'shot2.mov',
+            e1.comments[1]
+        )
+
+        self.assertEqual('000002', e2.num)
+        self.assertEqual('shot', e2.clip_name)
+        self.assertEqual('shot', e2.reel)
+        self.assertEqual('V', e2.track)
+        self.assertEqual('C', e2.tr_code)
+        self.assertEqual('00:00:00:00', e2.src_start_tc)
+        self.assertEqual('00:00:01:05', e2.src_end_tc)
+        self.assertEqual('00:00:01:10', e2.rec_start_tc)
+        self.assertEqual('00:00:02:15', e2.rec_end_tc)
+        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot.mov',
+                         e2.source_file)
+        self.assertEqual('* FROM CLIP NAME: shot', e2.comments[0])
+        self.assertEqual(
+            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
+            'shot.mov',
+            e2.comments[1]
+        )
+
+        self.assertEqual('000003', e3.num)
+        self.assertEqual('shot1', e3.clip_name)
+        self.assertEqual('shot1', e3.reel)
+        self.assertEqual('V', e3.track)
+        self.assertEqual('C', e3.tr_code)
+        self.assertEqual('00:00:00:00', e3.src_start_tc)
+        self.assertEqual('00:00:01:20', e3.src_end_tc)
+        self.assertEqual('00:00:02:16', e3.rec_start_tc)
+        self.assertEqual('00:00:04:12', e3.rec_end_tc)
+        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot1.mov',
+                         e3.source_file)
+        self.assertEqual('* FROM CLIP NAME: shot1', e3.comments[0])
+        self.assertEqual(
+            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
+            'shot1.mov',
+            e3.comments[1]
+        )
+

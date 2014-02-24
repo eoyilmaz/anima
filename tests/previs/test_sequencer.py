@@ -18,60 +18,60 @@ class SequencerTestCase(unittest2.TestCase):
         """
         pass
 
-    def test_parse_xml_path_argument_skipped(self):
+    def test_from_xml_path_argument_skipped(self):
         """testing if a TypeError will be raised when the path argument is
         skipped
         """
         s = Sequencer()
         with self.assertRaises(TypeError) as cm:
-            s.parse_xml()
+            s.from_xml()
 
         self.assertEqual(
             cm.exception.message,
-            'parse_xml() takes exactly 2 arguments (1 given)'
+            'from_xml() takes exactly 2 arguments (1 given)'
         )
 
-    def test_parse_xml_path_argument_is_not_a_string(self):
+    def test_from_xml_path_argument_is_not_a_string(self):
         """testing if a TypeError will be raised when the path argument is not
         a string
         """
         s = Sequencer()
         with self.assertRaises(TypeError) as cm:
-            s.parse_xml(30)
+            s.from_xml(30)
 
         self.assertEqual(
             cm.exception.message,
-            'path argument in Sequencer.parse_xml should be a string, not int'
+            'path argument in Sequencer.from_xml should be a string, not int'
         )
 
-    def test_parse_xml_path_argument_is_not_a_valid_path(self):
+    def test_from_xml_path_argument_is_not_a_valid_path(self):
         """testing if a IOError will be raised when the path argument is not
         a valid path
         """
         s = Sequencer()
         with self.assertRaises(IOError) as cm:
-            s.parse_xml('not a valid path')
+            s.from_xml('not a valid path')
 
         self.assertEqual(
             cm.exception.message,
             'Please supply a valid path to an XML file!'
         )
 
-    def test_parse_xml_returns_a_Sequence_instance(self):
-        """testing if parse_xml method will return a Sequence instance
+    def test_from_xml_returns_a_Sequence_instance(self):
+        """testing if from_xml method will return a Sequence instance
         """
         s = Sequencer()
-        sequence = s.parse_xml('./test_data/test_v003.xml')
+        sequence = s.from_xml('./test_data/test_v003.xml')
         self.assertIsInstance(sequence, Sequence)
 
-    def test_parse_xml_returns_a_Seqeunce_with_correct_hierarchy(self):
-        """testing if parse_xml method will return a Sequence instance with
+    def test_from_xml_returns_a_Seqeunce_with_correct_hierarchy(self):
+        """testing if from_xml method will return a Sequence instance with
         correct hierarchy
         """
         path = os.path.abspath('./test_data/test_v003.xml')
 
         s = Sequencer()
-        sequence = s.parse_xml(path)
+        sequence = s.from_xml(path)
         self.assertIsInstance(sequence, Sequence)
 
         self.assertEqual(sequence.duration, 109)
@@ -201,7 +201,7 @@ class SequencerTestCase(unittest2.TestCase):
         path = os.path.abspath('./test_data/test_v003.xml')
 
         s = Sequencer()
-        sequence = s.parse_xml(path)
+        sequence = s.from_xml(path)
 
         self.assertIsInstance(sequence, Sequence)
 

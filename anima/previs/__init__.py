@@ -24,6 +24,18 @@ class PrevisBase(object):
         """
         raise NotImplementedError
 
+    def from_edl(self, event):
+        """Fills attributes with the given EDL event
+
+        :param event: an edl.Event instance
+        """
+        raise NotImplementedError
+
+    def to_edl(self):
+        """returns an EDL version of this PrevisBase object
+        """
+        raise NotImplementedError
+
 
 class NameMixin(object):
     """A mixin for name attribute
@@ -103,17 +115,18 @@ class DurationMixin(object):
         self._duration = self._validate_duration(duration)
 
 
-class Sequence(PrevisBase):
+class Sequence(PrevisBase, NameMixin, DurationMixin):
     """XML compatibility class for Sequencer
     """
 
-    def __init__(self):
-        self.duration = None
-        self.name = None
-        self.rate = False
-        self.timecode = '00:00:00:00'
+    def __init__(self, name='', duration=0.0, timebase='25',
+                 timecode='00:00:00:00'):
+        NameMixin.__init__(self, name=name)
+        DurationMixin.__init__(self, duration=duration)
         self.ntsc = False
-        self.timebase = '24'
+        # replace this with pytimecode.PyTimeCode instance
+        self.timecode = timecode
+        self.timebase = timebase
         self.media = None
 
     def from_xml(self, xml_node):
@@ -163,6 +176,51 @@ class Sequence(PrevisBase):
             'indentation': ' ' * indentation,
             'pre_indent': ' ' * pre_indent
         }
+
+    def to_edl(self):
+        """Returns an edl.List instance equivalent of this Sequence instance
+        """
+        from edl import List, Event
+        from pytimecode import PyTimeCode
+        l = List(self.timebase)
+        l.title = self.name
+
+        # convert clips to events
+        for video in self.media.video:
+            for track in video.tracks:
+                for i, clip in enumerate(track.clips):
+                    e = Event({})
+                    e.num = '%06i' % (i + 1)
+                    e.clip_name = clip.name
+                    e.reel = clip.name
+                    e.track = 'V' if clip.type == 'Video' else 'A'
+                    e.tr_code = 'C'  # TODO: for now use C (Cut) later on
+                                     # expand it to add other transition codes
+
+                    src_start_tc = PyTimeCode(self.timebase,
+                                              frames=clip.in_ + 1)
+                    src_end_tc = PyTimeCode(self.timebase,
+                                            frames=clip.out)
+
+                    e.src_start_tc = str(src_start_tc)
+                    e.src_end_tc = str(src_end_tc)
+
+                    rec_start_tc = PyTimeCode(self.timebase, frames=clip.start)
+                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end - 1)
+
+                    e.rec_start_tc = str(rec_start_tc)
+                    e.rec_end_tc = str(rec_end_tc)
+
+                    source_file = clip.file.pathurl.replace('file://', '')
+                    e.source_file = source_file
+
+                    e.comments.extend([
+                        '* FROM CLIP NAME: %s' % clip.name,
+                        '* SOURCE FILE: %s' % source_file
+                    ])
+
+                    l.append(e)
+        return l
 
 
 class Media(PrevisBase):
@@ -319,7 +377,7 @@ class Clip(PrevisBase, NameMixin, DurationMixin):
     """
 
     def __init__(self, id=None, name='', start=0.0, end=0.0, duration=0.0,
-                 enabled=True, in_=0, out=0):
+                 enabled=True, in_=0, out=0, type_='Video'):
         NameMixin.__init__(self, name=name)
         DurationMixin.__init__(self, duration=duration)
         self._id = self._validate_id(id)
@@ -329,6 +387,7 @@ class Clip(PrevisBase, NameMixin, DurationMixin):
         self.in_ = in_
         self.out = out
         self.file = None
+        self.type = type_
 
     @classmethod
     def _validate_id(cls, id_):
@@ -536,7 +595,7 @@ class Sequencer(object):
             )
 
     @classmethod
-    def parse_xml(cls, path):
+    def from_xml(cls, path):
         """Parses XML file and returns a Sequence instance which reflects the
         whole timeline hierarchy.
 
@@ -545,7 +604,7 @@ class Sequencer(object):
         """
         if not isinstance(path, str):
             raise TypeError(
-                'path argument in %s.parse_xml should be a string, not %s' %
+                'path argument in %s.from_xml should be a string, not %s' %
                 (cls.__name__, path.__class__.__name__)
             )
 
