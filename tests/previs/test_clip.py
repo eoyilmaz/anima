@@ -108,3 +108,49 @@ class ClipTestCase(unittest2.TestCase):
             expected_xml,
             c.to_xml()
         )
+
+    def test_from_xml_method_is_working_properly(self):
+        """testing if the from_xml method will fill object attributes from the
+        given xml node
+        """
+        from xml.etree import ElementTree
+        clip_node = ElementTree.Element('clipitem', attrib={'id': 'shot'})
+        end_node = ElementTree.SubElement(clip_node, 'end')
+        end_node.text = '65.0'
+        name_node = ElementTree.SubElement(clip_node, 'name')
+        name_node.text = 'shot'
+        enabled_node = ElementTree.SubElement(clip_node, 'enabled')
+        enabled_node.text = 'True'
+        start_node = ElementTree.SubElement(clip_node, 'start')
+        start_node.text = '35.0'
+        in_node = ElementTree.SubElement(clip_node, 'in')
+        in_node.text = '0.0'
+        duration_node = ElementTree.SubElement(clip_node, 'duration')
+        duration_node.text = '30.0'
+        out_node = ElementTree.SubElement(clip_node, 'out')
+        out_node.text = '30.0'
+
+        file_node = ElementTree.SubElement(clip_node, 'file')
+        duration_node = ElementTree.SubElement(file_node, 'duration')
+        duration_node.text = '30.0'
+        name_node = ElementTree.SubElement(file_node, 'name')
+        name_node.text = 'shot'
+        pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
+
+        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl_node.text = pathurl
+
+        c = Clip()
+        c.from_xml(clip_node)
+        self.assertEqual(65.0, c.end)
+        self.assertEqual('shot', c.name)
+        self.assertEqual(True, c.enabled)
+        self.assertEqual(35.0, c.start)
+        self.assertEqual(0.0, c.in_)
+        self.assertEqual(30.0, c.duration)
+        self.assertEqual(30.0, c.out)
+
+        f = c.file
+        self.assertEqual(30.0, f.duration)
+        self.assertEqual('shot', f.name)
+        self.assertEqual(pathurl, f.pathurl)

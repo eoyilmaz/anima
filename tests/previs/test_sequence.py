@@ -4,19 +4,36 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import unittest2
-from anima.previs import Track, Clip, File
+from anima.previs import Sequence, Media, Video, Track, Clip, File
 
 
-class TrackTestCase(unittest2.TestCase):
-    """tests the anima.previs.Track class
+class MediaTestCase(unittest2.TestCase):
+    """tests the anima.previs.Media class
     """
 
     def test_to_xml_method_is_working_properly(self):
         """testing if the to xml method is working properly
         """
+        s = Sequence()
+        s.duration = 109.0
+        s.name = 'previs_edit_v001'
+        s.ntsc = False
+        s.timebase = 24
+        s.timecode = '00:00:00:00'
+
+        m = Media()
+        s.media = m
+
+        v = Video()
+        v.width = 1024
+        v.height = 778
+        m.video.append(v)
+
         t = Track()
         t.enabled = True
         t.locked = False
+
+        v.tracks.append(t)
 
         # clip 1
         f = File()
@@ -76,56 +93,77 @@ class TrackTestCase(unittest2.TestCase):
         t.clips.append(c)
 
         expected_xml = \
-            """<track>
-  <locked>FALSE</locked>
-  <enabled>TRUE</enabled>
-  <clipitem id="shot2">
-    <end>35.0</end>
-    <name>shot2</name>
-    <enabled>True</enabled>
-    <start>1.0</start>
-    <in>0.0</in>
-    <duration>34.0</duration>
-    <out>34.0</out>
-    <file>
-      <duration>34.0</duration>
-      <name>shot2</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
-    </file>
-  </clipitem>
-  <clipitem id="shot">
-    <end>65.0</end>
-    <name>shot</name>
-    <enabled>True</enabled>
-    <start>35.0</start>
-    <in>0.0</in>
-    <duration>30.0</duration>
-    <out>30.0</out>
-    <file>
-      <duration>30.0</duration>
-      <name>shot</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
-    </file>
-  </clipitem>
-  <clipitem id="shot1">
-    <end>110.0</end>
-    <name>shot1</name>
-    <enabled>True</enabled>
-    <start>65.0</start>
-    <in>0.0</in>
-    <duration>45.0</duration>
-    <out>45.0</out>
-    <file>
-      <duration>45.0</duration>
-      <name>shot1</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
-    </file>
-  </clipitem>
-</track>"""
+            """<sequence>
+  <duration>109.0</duration>
+  <name>previs_edit_v001</name>
+  <rate>
+    <ntsc>FALSE</ntsc>
+    <timebase>24</timebase>
+  </rate>
+  <timecode>
+    <string>00:00:00:00</string>
+  </timecode>
+  <media>
+    <video>
+      <format>
+        <samplecharacteristics>
+          <width>1024</width>
+          <height>778</height>
+        </samplecharacteristics>
+      </format>
+      <track>
+        <locked>FALSE</locked>
+        <enabled>TRUE</enabled>
+        <clipitem id="shot2">
+          <end>35.0</end>
+          <name>shot2</name>
+          <enabled>True</enabled>
+          <start>1.0</start>
+          <in>0.0</in>
+          <duration>34.0</duration>
+          <out>34.0</out>
+          <file>
+            <duration>34.0</duration>
+            <name>shot2</name>
+            <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+          </file>
+        </clipitem>
+        <clipitem id="shot">
+          <end>65.0</end>
+          <name>shot</name>
+          <enabled>True</enabled>
+          <start>35.0</start>
+          <in>0.0</in>
+          <duration>30.0</duration>
+          <out>30.0</out>
+          <file>
+            <duration>30.0</duration>
+            <name>shot</name>
+            <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
+          </file>
+        </clipitem>
+        <clipitem id="shot1">
+          <end>110.0</end>
+          <name>shot1</name>
+          <enabled>True</enabled>
+          <start>65.0</start>
+          <in>0.0</in>
+          <duration>45.0</duration>
+          <out>45.0</out>
+          <file>
+            <duration>45.0</duration>
+            <name>shot1</name>
+            <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
+          </file>
+        </clipitem>
+      </track>
+    </video>
+  </media>
+</sequence>"""
 
         self.assertEqual(
             expected_xml,
-            t.to_xml()
+            s.to_xml()
         )
 
     def test_from_xml_method_is_working_properly(self):
@@ -133,7 +171,31 @@ class TrackTestCase(unittest2.TestCase):
         given xml node
         """
         from xml.etree import ElementTree
-        track_node = ElementTree.Element('track')
+        sequence_node = ElementTree.Element('sequence')
+        duration_node = ElementTree.SubElement(sequence_node, 'duration')
+        duration_node.text = '109.0'
+        name_node = ElementTree.SubElement(sequence_node, 'name')
+        name_node.text = 'previs_edit_v001'
+        rate_node = ElementTree.SubElement(sequence_node, 'rate')
+        ntsc_node = ElementTree.SubElement(rate_node, 'ntsc')
+        ntsc_node.text = 'FALSE'
+        timebase_node = ElementTree.SubElement(rate_node, 'timebase')
+        timebase_node.text = '24'
+        timecode_node = ElementTree.SubElement(sequence_node, 'timecode')
+        string_node = ElementTree.SubElement(timecode_node, 'string')
+        string_node.text = '00:00:00:00'
+
+        media_node = ElementTree.SubElement(sequence_node, 'media')
+
+        video_node = ElementTree.SubElement(media_node, 'video')
+        format_node = ElementTree.SubElement(video_node, 'format')
+        sc_node = ElementTree.SubElement(format_node, 'samplecharacteristics')
+        width_node = ElementTree.SubElement(sc_node, 'width')
+        width_node.text = 1024
+        height_node = ElementTree.SubElement(sc_node, 'height')
+        height_node.text = 778
+
+        track_node = ElementTree.SubElement(video_node, 'track')
         locked_node = ElementTree.SubElement(track_node, 'locked')
         locked_node.text = 'FALSE'
         enabled_node = ElementTree.SubElement(track_node, 'enabled')
@@ -223,9 +285,21 @@ class TrackTestCase(unittest2.TestCase):
         pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
         pathurl_node.text = pathurl
 
-        t = Track()
-        t.from_xml(track_node)
+        s = Sequence()
+        s.from_xml(sequence_node)
+        self.assertEqual(109.0, s.duration)
+        self.assertEqual('previs_edit_v001', s.name)
+        self.assertEqual(False, s.ntsc)
+        self.assertEqual('24', s.timebase)
+        self.assertEqual('00:00:00:00', s.timecode)
 
+        m = s.media
+
+        v = m.video[0]
+        self.assertEqual(1024, v.width)
+        self.assertEqual(778, v.height)
+
+        t = v.tracks[0]
         self.assertEqual(False, t.locked)
         self.assertEqual(True, t.enabled)
 
@@ -282,4 +356,3 @@ class TrackTestCase(unittest2.TestCase):
             'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov',
             f.pathurl
         )
-

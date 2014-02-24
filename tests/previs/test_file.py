@@ -137,3 +137,29 @@ class FileTestCase(unittest2.TestCase):
             expected_xml,
             f.to_xml(indentation=2, pre_indent=2)
         )
+
+    def test_from_xml_method_is_working_properly(self):
+        """testing if the from_xml method will fill object attributes from the
+        given xml node
+        """
+        from xml.etree import ElementTree
+        file_node = ElementTree.Element('file')
+        duration_node = ElementTree.SubElement(file_node, 'duration')
+        duration_node.text = '30.0'
+        name_node = ElementTree.SubElement(file_node, 'name')
+        name_node.text = 'shot'
+        pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
+
+        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl_node.text = pathurl
+
+        f = File()
+        # test starting condition
+        self.assertEqual(0.0, f.duration)
+        self.assertEqual('', f.name)
+        self.assertEqual('', f.pathurl)
+
+        f.from_xml(file_node)
+        self.assertEqual(30.0, f.duration)
+        self.assertEqual('shot', f.name)
+        self.assertEqual(pathurl, f.pathurl)

@@ -8,7 +8,24 @@ import os
 import edl
 
 
-class Sequence(object):
+class PrevisBase(object):
+    """The base for other Previs classes
+    """
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        raise NotImplementedError
+
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this PrevisBase object
+        """
+        raise NotImplementedError
+
+
+class Sequence(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
@@ -21,24 +38,42 @@ class Sequence(object):
         self.timebase = '24'
         self.media = None
 
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        self.duration = float(xml_node.find('duration').text)
+        self.name = xml_node.find('name').text
+        rate_tag = xml_node.find('rate')
+        if rate_tag is not None:
+            self.ntsc = rate_tag.find('ntsc').text.title() == 'True'
+            self.timebase = rate_tag.find('timebase').text
+
+        self.timecode = xml_node.find('timecode').find('string').text
+
+        xml_media = xml_node.find('media')
+        media = Media()
+        media.from_xml(xml_media)
+
+        self.media = media
+
+
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Sequence object
         """
-        template = """<xmeml version="1.0">
-%(indentation)s<sequence>
-%(indentation)s%(indentation)s<duration>%(duration)s</duration>
-%(indentation)s%(indentation)s<name>%(name)s</name>
-%(indentation)s%(indentation)s<rate>
-%(indentation)s%(indentation)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
-%(indentation)s%(indentation)s%(indentation)s<timebase>%(timebase)s</timebase>
-%(indentation)s%(indentation)s</rate>
-%(indentation)s%(indentation)s<timecode>
-%(indentation)s%(indentation)s%(indentation)s<string>%(timecode)s</string>
-%(indentation)s%(indentation)s</timecode>
+        template = """%(pre_indent)s<sequence>
+%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
+%(pre_indent)s%(indentation)s<name>%(name)s</name>
+%(pre_indent)s%(indentation)s<rate>
+%(pre_indent)s%(indentation)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
+%(pre_indent)s%(indentation)s%(indentation)s<timebase>%(timebase)s</timebase>
+%(pre_indent)s%(indentation)s</rate>
+%(pre_indent)s%(indentation)s<timecode>
+%(pre_indent)s%(indentation)s%(indentation)s<string>%(timecode)s</string>
+%(pre_indent)s%(indentation)s</timecode>
 %(media)s
-%(indentation)s</sequence>
-</xmeml>
-"""
+%(pre_indent)s</sequence>"""
 
         return template % {
             'duration': self.duration,
@@ -47,18 +82,30 @@ class Sequence(object):
             'timebase': self.timebase,
             'timecode': self.timecode,
             'media': self.media.to_xml(indentation=indentation,
-                                       pre_indent=indentation * 2 + pre_indent),
-            'indentation': ' ' * indentation
+                                       pre_indent=indentation + pre_indent),
+            'indentation': ' ' * indentation,
+            'pre_indent': ' ' * pre_indent
         }
 
 
-class Media(object):
+class Media(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
     def __init__(self):
         self.video = []
         self.audio = []
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        xml_video_tags = xml_node.findall('video')
+        for xml_video_tag in xml_video_tags:
+            video = Video()
+            video.from_xml(xml_video_tag)
+            self.video.append(video)
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Media object
@@ -82,7 +129,7 @@ class Media(object):
         }
 
 
-class Video(object):
+class Video(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
@@ -90,6 +137,26 @@ class Video(object):
         self.width = 0
         self.height = 0
         self.tracks = []
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        format = xml_node.find('format')
+        self.width = int(
+            format.find('samplecharacteristics').find('width').text
+        )
+        self.height = int(
+            format.find('samplecharacteristics').find('height').text
+        )
+
+        # create tracks
+        track_tag = xml_node.find('track')
+        track = Track()
+        track.from_xml(track_tag)
+
+        self.tracks.append(track)
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Video object
@@ -121,7 +188,7 @@ class Video(object):
         }
 
 
-class Track(object):
+class Track(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
@@ -129,6 +196,20 @@ class Track(object):
         self.locked = False
         self.enabled = True
         self.clips = []
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        self.locked = xml_node.find('locked').text.title() == 'True'
+        self.enabled = xml_node.find('enabled').text.title() == 'True'
+
+        # find clips
+        for clip_tag in xml_node.findall('clipitem'):
+            clip = Clip()
+            clip.from_xml(clip_tag)
+            self.clips.append(clip)
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Track object
@@ -156,7 +237,7 @@ class Track(object):
         }
 
 
-class Clip(object):
+class Clip(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
@@ -170,6 +251,26 @@ class Clip(object):
         self.in_ = 0
         self.out = 0
         self.file = None
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        self.id = xml_node.attrib['id']
+        self.start = float(xml_node.find('start').text)
+        self.end = float(xml_node.find('end').text)
+        self.name = xml_node.find('name').text
+        self.enabled = xml_node.find('enabled').text == 'True'
+        self.duration = float(xml_node.find('duration').text)
+        self.in_ = float(xml_node.find('in').text)
+        self.out = float(xml_node.find('out').text)
+
+        f = File()
+        file_tag = xml_node.find('file')
+        f.from_xml(file_tag)
+
+        self.file = f
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Clip object
@@ -201,7 +302,7 @@ class Clip(object):
         }
 
 
-class File(object):
+class File(PrevisBase):
     """XML compatibility class for Sequencer
     """
 
@@ -209,6 +310,15 @@ class File(object):
         self.duration = duration
         self.name = name
         self.pathurl = pathurl
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        self.duration = float(xml_node.find('duration').text)
+        self.name = xml_node.find('name').text
+        self.pathurl = xml_node.find('pathurl').text
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this File object
@@ -313,65 +423,9 @@ class Sequencer(object):
 
         root = tree.getroot()
         seq = Sequence()
-
         xml_seq = root.getchildren()[0]
 
-        media = Media()
-        seq.media = media
-
-        seq.duration = float(xml_seq.find('duration').text)
-        seq.name = xml_seq.find('name').text
-        rate_tag = xml_seq.find('rate')
-        if rate_tag is not None:
-            seq.ntsc = rate_tag.find('ntsc').text.title() == 'True'
-            seq.timebase = rate_tag.find('timebase').text
-
-        seq.timecode = xml_seq.find('timecode').find('string').text
-
-        xml_media = xml_seq.find('media')
-
-        xml_video_tags = xml_media.findall('video')
-
-        for xml_video_tag in xml_video_tags:
-            video = Video()
-            media.video.append(video)
-
-            format = xml_video_tag.find('format')
-            video.width = int(
-                format.find('samplecharacteristics').find('width').text
-            )
-            video.height = int(
-                format.find('samplecharacteristics').find('height').text
-            )
-
-            # create tracks
-            track_tag = xml_video_tag.find('track')
-            track = Track()
-            track.locked = track_tag.find('locked').text.title() == 'True'
-            track.enabled = \
-                track_tag.find('enabled').text.title() == 'True'
-            video.tracks.append(track)
-
-            # find clips
-            for clip_tag in track_tag.findall('clipitem'):
-                clip = Clip()
-                clip.id = clip_tag.attrib['id']
-                clip.start = float(clip_tag.find('start').text)
-                clip.end = float(clip_tag.find('end').text)
-                clip.name = clip_tag.find('name').text
-                clip.enabled = clip_tag.find('enabled').text == 'True'
-                clip.duration = float(clip_tag.find('duration').text)
-                clip.in_ = float(clip_tag.find('in').text)
-                clip.out = float(clip_tag.find('out').text)
-
-                f = File()
-                file_tag = clip_tag.find('file')
-                f.duration = float(file_tag.find('duration').text)
-                f.name = file_tag.find('name').text
-                f.pathurl = file_tag.find('pathurl').text
-                clip.file = f
-
-                track.clips.append(clip)
+        seq.from_xml(xml_seq)
 
         return seq
 
@@ -390,5 +444,17 @@ class Sequencer(object):
                 )
             )
 
-        return seq.to_xml(indentation=indentation, pre_indent=pre_indent)
+        template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>"""
 
+        return template % {
+            'sequence': seq.to_xml(indentation=indentation,
+                                   pre_indent=indentation + pre_indent)
+        }
+
+    @classmethod
+    def to_edl(cls, seq):
+        """returns an EDL for the given sequence
+
+        :param seq: A :class:`.Sequence` instance
+        """
+        pass
