@@ -5,7 +5,6 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import edl
 
 
 class PrevisBase(object):
@@ -116,7 +115,24 @@ class DurationMixin(object):
 
 
 class Sequence(PrevisBase, NameMixin, DurationMixin):
-    """XML compatibility class for Sequencer
+    """XML compatibility class for Sequence
+
+    This class is mainly created to reflect the XML structure of Maya
+    Sequencer.
+
+    It is also the bridge to EDL. So using this class it is possible to convert
+    Maya Sequencer XML to a meaningful EDL.
+
+    :param str name: The name of this sequence.
+    :param float duration: The duration of this sequence.
+    :param str timebase: The frame rate setting for this sequence. Default
+      value is '25', can be anything in ['23.98', '24', '25', '29.97', '30',
+      '50', '59.94', '60']. Without setting this converting to EDL will result
+      wrong timecode values in EDL.
+    :param str timecode: The stating timecode of this Sequence. Default value
+      is '00:00:00:00'. This will be used to calculate the clip in and out
+      points. Maya exports in and out points as frames, Sequence converts them
+      to a timecodes by using this parameter as the base.
     """
 
     def __init__(self, name='', duration=0.0, timebase='25',
@@ -182,7 +198,9 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
         :param edl_list: an edl.List instance
         """
+        import edl
         assert isinstance(edl_list, edl.List)
+
         self.name = edl_list.title
 
         # create a Media instance
@@ -346,12 +364,12 @@ class Video(PrevisBase):
 
         :param xml_node: an xml.etree.ElementTree.Element instance
         """
-        format = xml_node.find('format')
+        format_node = xml_node.find('format')
         self.width = int(
-            format.find('samplecharacteristics').find('width').text
+            format_node.find('samplecharacteristics').find('width').text
         )
         self.height = int(
-            format.find('samplecharacteristics').find('height').text
+            format_node.find('samplecharacteristics').find('height').text
         )
 
         # create tracks
@@ -719,4 +737,4 @@ class Sequencer(object):
 
         :param seq: A :class:`.Sequence` instance
         """
-        pass
+        return seq.to_edl()
