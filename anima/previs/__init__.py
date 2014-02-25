@@ -238,10 +238,19 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
         """
         from edl import List, Event
         from pytimecode import PyTimeCode
+
         l = List(self.timebase)
         l.title = self.name
 
         # convert clips to events
+        if not self.media:
+            raise RuntimeError(
+                'Can not run %(class)s.to_edl() without a Media instance, '
+                'please add a Media instance to this %(class)s instance.' % {
+                    'class': self.__class__.__name__
+                }
+            )
+
         for video in self.media.video:
             for track in video.tracks:
                 for i, clip in enumerate(track.clips):
@@ -251,7 +260,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.reel = clip.name
                     e.track = 'V' if clip.type == 'Video' else 'A'
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
-                                     # expand it to add other transition codes
+                    # expand it to add other transition codes
 
                     src_start_tc = PyTimeCode(self.timebase,
                                               frames=clip.in_ + 1)
@@ -262,7 +271,8 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.src_start_tc = str(src_start_tc)
                     e.src_end_tc = str(src_end_tc)
 
-                    rec_start_tc = PyTimeCode(self.timebase, frames=clip.start)
+                    rec_start_tc = PyTimeCode(self.timebase,
+                                              frames=clip.start)
                     # 1 frame after last frame shown
                     rec_end_tc = PyTimeCode(self.timebase, frames=clip.end)
 
@@ -667,6 +677,7 @@ class Sequencer(object):
             )
 
         from xml.etree import ElementTree
+
         try:
             tree = ElementTree.parse(path)
         except IOError:

@@ -359,10 +359,27 @@ class MediaTestCase(unittest2.TestCase):
             f.pathurl
         )
 
+    def test_to_edl_will_raise_RuntimeError_if_no_Media_instance_presents(self):
+        """testing if a RuntimeError will be raised when there is no Media
+        instance present in Sequence
+        """
+        s = Sequence()
+        with self.assertRaises(RuntimeError) as cm:
+            s.to_edl()
+
+        self.assertEqual(
+            'Can not run Sequence.to_edl() without a Media instance, please '
+            'add a Media instance to this Sequence instance.',
+            cm.exception.message
+        )
+
     def test_to_edl_method_will_return_a_List_instance(self):
         """testing if to_edl method will return an edl.List instance
         """
         s = Sequence()
+        m = Media()
+        s.media = m
+
         result = s.to_edl()
         self.assertIsInstance(result, List)
 
