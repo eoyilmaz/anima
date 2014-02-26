@@ -408,20 +408,19 @@ class Fusion(EnvironmentBase):
         return None
 
     def get_main_saver_node(self):
-        """Returns the main saver node in the scene or None.
+        """Returns the main saver nodes in the scene or an empty list.
+        :return: list
         """
-
         # list all the saver nodes in the current file
         all_saver_nodes = self.comp.GetToolList(False, 'Saver').values()
 
+        saver_nodes = []
         for saver_node in all_saver_nodes:
             if saver_node.GetAttrs('TOOLS_Name').startswith(
-                    self._main_output_node_name
-            ):
-                main_saver_node = saver_node
-                return main_saver_node
+               self._main_output_node_name):
+                saver_nodes.append(saver_node)
 
-        return None
+        return saver_nodes
 
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
