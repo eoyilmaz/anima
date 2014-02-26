@@ -11,6 +11,7 @@ import os
 import PeyeonScript
 from .. import utils
 from base import EnvironmentBase
+from anima.pipeline.env import empty_reference_resolution
 
 
 class Fusion(EnvironmentBase):
@@ -310,7 +311,7 @@ class Fusion(EnvironmentBase):
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
-        return {}
+        return empty_reference_resolution()
 
     def import_(self, version):
         """the import action for nuke environment
