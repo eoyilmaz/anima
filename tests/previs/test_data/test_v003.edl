@@ -1,0 +1,13 @@
+TITLE: previs_edit_v001
+
+000001 shot2    V     C    None 00:00:00:00 00:00:01:10 00:00:00:00 00:00:01:10
+* FROM CLIP NAME: shot2
+* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/shot2.mov
+
+000002 shot     V     C    None 00:00:00:00 00:00:01:06 00:00:01:10 00:00:02:16
+* FROM CLIP NAME: shot
+* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/shot.mov
+
+000003 shot1    V     C    None 00:00:00:00 00:00:01:21 00:00:02:16 00:00:04:13
+* FROM CLIP NAME: shot1
+* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/shot1.mov
