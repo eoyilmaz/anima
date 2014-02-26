@@ -426,62 +426,6 @@ class Fusion(EnvironmentBase):
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
-        # from stalker import Version
-        # assert isinstance(version, Version)
-        # 
-        # # list all the save nodes in the current file
-        # main_saver_node = self.get_main_saver_node()
-        # 
-        # if main_saver_node is None:
-        #     # create one with correct output path
-        # 
-        #     # lock the comp to prevent the file dialog
-        #     self.comp.Lock()
-        # 
-        #     main_saver_node = self.comp.Saver
-        # 
-        #     # unlock the comp
-        #     self.comp.Unlock()
-        # 
-        # # set the output path
-        # output_file_name = ""
-        # 
-        # task = version.task
-        # project = task.project
-        # output_file_name = '%s_%s_%s_Output_v%03d.001.exr' % (
-        #     task.entity_type, task.id, version.take_name,
-        #     version.version_number
-        # )
-        # 
-        # # check if it is a stereo comp
-        # # if it is enable separate view rendering
-        # output_file_full_path = os.path.join(
-        #     version.absolute_path,
-        #     'Outputs',
-        #     'v%03d' % version.version_number,
-        #     'exr',
-        #     output_file_name
-        # ).replace('\\', '/')
-        # 
-        # # set the path
-        # main_saver_node.Clip[0] = 'Comp:' + os.path.normpath(
-        #     utils.relpath(
-        #         os.path.dirname(version.absolute_full_path),
-        #         output_file_full_path,
-        #         "/",
-        #         ".."
-        #     )
-        # ).encode()
-        # 
-        # # set the main_saver_node name
-        # main_saver_node.SetAttrs({'TOOLS_Name': self._main_output_node_name})
-        # 
-        # # create the path
-        # try:
-        #     os.makedirs(os.path.dirname(output_file_full_path))
-        # except OSError:
-        #     # path already exists
-        #     pass
         file_formats = ['exr', 'tga']
 
         # list all the save nodes in the current file
@@ -534,6 +478,7 @@ class Fusion(EnvironmentBase):
             output_file_full_path = os.path.join(
                 version.absolute_path,
                 'Outputs',
+                version.take_name,
                 'v%03d' % version.version_number,
                 file_format,
                 output_file_name
