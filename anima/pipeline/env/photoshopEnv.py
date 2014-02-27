@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class PhotoshopEnv(EnvironmentBase):
+class Photoshop(EnvironmentBase):
     """The photoshop environment class
     """
     name = "Photoshop"
@@ -26,6 +26,7 @@ class PhotoshopEnv(EnvironmentBase):
     def __init__(self):
         """photoshop specific init
         """
+        super(Photoshop, self).__init__(name=self.name)
         # connect to the application
         self.photoshop = comtypes.client.CreateObject('Photoshop.Application')
 

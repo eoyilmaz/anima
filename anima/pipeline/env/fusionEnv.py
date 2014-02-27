@@ -224,9 +224,11 @@ class Fusion(EnvironmentBase):
         },
     }
 
-    def __init__(self, version=None, name='', extensions=None):
+    def __init__(self, name='', version=None, extensions=None):
         """fusion specific init
         """
+        super(Fusion, self).__init__(name=name, version=version,
+                                     extensions=extensions)
         # and add you own modifications to __init__
         self.fusion = PeyeonScript.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']

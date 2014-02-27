@@ -70,10 +70,12 @@ class EnvironmentBase(object):
 
     name = "EnvironmentBase"
 
-    def __init__(self, name=""):
+    def __init__(self, name="", extensions=None, version=None):
         self._name = name
-        self._extensions = []
-        self._version = None
+        if extensions is None:
+            extensions = []
+        self._extensions = extensions
+        self._version = version
 
     def __str__(self):
         """the string representation of the environment

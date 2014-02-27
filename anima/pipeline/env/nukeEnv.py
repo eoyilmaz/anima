@@ -20,13 +20,11 @@ class Nuke(EnvironmentBase):
 
     name = "Nuke"
 
-    def __init__(self, version=None, name='', extensions=None):
+    def __init__(self, name='', version=None, extensions=None):
         """nuke specific init
         """
-        EnvironmentBase.__init__(self, name=name)
-        #        # call the supers __init__
-        #        super(Nuke, self).__init__(asset, name, extensions)
-
+        super(Nuke, self).__init__(name=name, version=version,
+                                 extensions=extensions)
         # and add you own modifications to __init__
         # get the root node
         self._root = self.get_root_node()

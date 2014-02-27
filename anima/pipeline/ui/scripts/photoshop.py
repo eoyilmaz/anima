@@ -24,8 +24,8 @@ def version_creator(lib='PySide'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.pipeline.env.photoshopEnv import PhotoshopEnv
-    photoshop_env = PhotoshopEnv()
+    from anima.pipeline.env.photoshopEnv import Photoshop
+    photoshop_env = Photoshop()
 
     from anima.pipeline.ui import version_creator
     # display only warning messages
