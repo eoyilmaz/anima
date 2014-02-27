@@ -5,11 +5,11 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 
-import unittest2
+import unittest
 from anima.previs import Sequencer, Sequence, Media, Video, Track, Clip, File
 
 
-class SequencerTestCase(unittest2.TestCase):
+class SequencerTestCase(unittest.TestCase):
     """tests the anima.animation.Sequencer class
     """
 
@@ -209,5 +209,87 @@ class SequencerTestCase(unittest2.TestCase):
         with open(path) as f:
             expected = f.read()
 
-        self.maxDiff = None
         self.assertEqual(expected, result)
+
+
+class SequencerMayaTestCase(unittest.TestCase):
+    """Tests Sequencer with Maya
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """setup test in class level
+        """
+        # start maya
+        import pymel.core
+        pymel.core.newFile(force=True)
+
+    def setUp(self):
+        """
+        """
+        import pymel.core
+        pymel.core.newFile(force=True)
+
+        # create a couple of shots
+        self.shot1 = pymel.core.shot()
+        self.shot2 = pymel.core.shot()
+        self.shot3 = pymel.core.shot()
+
+    def test__setup(self):
+        """testing test setup
+        """
+        import pymel.core
+        shots = pymel.core.ls(type=pymel.core.nt.Shot)
+        self.assertEqual(3, len(shots))
+        self.assertIsInstance(shots[0], pymel.core.nt.Shot)
+        self.assertIsInstance(shots[1], pymel.core.nt.Shot)
+        self.assertIsInstance(shots[2], pymel.core.nt.Shot)
+
+    def test_set_shot_handles_shots_argument_is_not_a_list(self):
+        """testing if a TypeError will be raised when the shots argument is
+        not a list
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_shots_argument_is_not_a_list_of_Shot_instances(self):
+        """testing if a TypeError will be raised when the shots list is not a
+        list of Shot instances
+        """
+        self.fail('test is not implemented yte')
+
+    def test_set_shot_handles_handle_argument_skipped(self):
+        """testing if the default value (10) will be used when the handle
+        attribute is skipped
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_handle_argument_is_not_an_integer(self):
+        """testing if a TypeError will be raised when the handle argument is
+        not an integer
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_handle_argument_is_working_properly(self):
+        """testing if the handle argument value is correctly used in
+        set_shot_handles() method
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_handle_argument_is_negative(self):
+        """testing if a ValueError will be raised when the handle argument
+        value is a negative integer
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_will_create_handle_attribute(self):
+        """testing if set_shot_handles method will create handle integer
+        attribute
+        """
+        self.fail('test is not implemented yet')
+
+    def test_set_shot_handles_will_be_able_to_set_handle_values_when_there_is_already_a_handle_attribute_defined(self):
+        """testing if set_shot_handle method will still be able to set the
+        handle attribute value even there is a handle attribute defined
+        previously
+        """
+        self.fail('test is not implemented yet')

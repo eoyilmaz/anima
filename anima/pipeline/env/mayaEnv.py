@@ -238,8 +238,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.parent = current_version
 
         # update the reference list
-        # it was too slow, don't do it now
-        #self.update_version_inputs()
+        # IMPORTANT: without this, the update workflow is not able to do
+        # updates correctly, so do not disable this
+        self.update_version_inputs()
 
         # append it to the recent file list
         self.append_to_recent_files(
@@ -1230,7 +1231,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         for key in pymel.core.workspace.fileRules:
             rule_path = pymel.core.workspace.fileRules[key]
             full_path = os.path.join(path, rule_path).replace('\\', '/')
-            logger.debug(full_path)
+            # logger.debug(full_path)
             try:
                 os.makedirs(full_path)
             except OSError:
