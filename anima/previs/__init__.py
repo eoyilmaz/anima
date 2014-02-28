@@ -727,7 +727,60 @@ class Sequencer(object):
         :param int handle: An integer value for handle
         :return:
         """
-        pass
+        # validate arguments
+        import pymel.core
+
+        # shots
+        if not isinstance(shots, list):
+            raise TypeError(
+                '"shots" argument in %(class)s.set_shot_handles() should be a '
+                'list of pymel.core.nt.Shot instances, not %(shots_class)s' %
+                {
+                    'class': cls.__name__,
+                    'shots_class': shots.__class__.__name__
+                }
+            )
+
+        if not all([isinstance(s, pymel.core.nt.Shot) for s in shots]):
+            raise TypeError(
+                'All elements in "shots" argument in '
+                '%(class)s.set_shot_handles() should be a pymel.core.nt.Shot '
+                'instances' %
+                {
+                    'class': cls.__name__,
+                    'shots_class': shots.__class__.__name__
+                }
+            )
+
+        # handle argument
+        if not isinstance(handle, int):
+            raise TypeError(
+                '"handle" argument in %(class)s.set_shot_handles() should be '
+                'a non negative integer, not %(handle_class)s' %
+                {
+                    'class': cls.__name__,
+                    'handle_class': handle.__class__.__name__
+                }
+            )
+
+        if handle < 0:
+            raise ValueError(
+                '"handle" argument in %(class)s.set_shot_handles() should be '
+                'a non negative integer, not %(handle)s' %
+                {
+                    'class': cls.__name__,
+                    'handle': handle
+                }
+            )
+
+        # create "handle" attribute in each shot and set the value
+        for s in shots:
+            try:
+                s.addAttr('handle', at='short', k=True, min=0)
+            except RuntimeError:
+                # attribute is already there
+                pass
+            s.setAttr('handle', handle)
 
     @classmethod
     def create_shot_playblasts(cls, handle=10, show_ornaments=True):
