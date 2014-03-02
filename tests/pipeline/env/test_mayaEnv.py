@@ -1576,10 +1576,10 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         """
         # set the db.session to None
         db.DBSession.remove()
-
+    
         # delete the temp folder
         shutil.rmtree(self.temp_repo_path, ignore_errors=True)
-
+    
         for f in self.remove_these_files_buffer:
             if os.path.isfile(f):
                 os.remove(f)
@@ -2732,7 +2732,7 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
     #     """
     #     # just renew the scene
     #     pymel.core.newFile(force=True)
-    # 
+    #
     #     # and call update_versions
     #     reference_resolution = {
     #         'root': [],
@@ -2740,8 +2740,641 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
     #         'update': [],
     #         'create': []
     #     }
-    # 
+    #
     #     self.assertRaises(
     #         RuntimeError, self.maya_env.update_versions, reference_resolution
     #     )
+
+    def test_fix_reference_namespace_is_working_properly(self):
+        """testing if the fix_reference_namespace method is working properly
+
+        version15 -> has no new version
+          version11 -> has no new version
+            version4 -> has no new version
+              version2 -> has no new version
+
+        All uses wrong namespace
+        """
+        # create deep reference
+        self.version2.is_published = True
+        self.version4.is_published = True
+        self.version11.is_published = True
+        self.version15.is_published = True
+
+        # open version2 and create a locator
+        self.maya_env.open(self.version2)  # model
+        loc = pymel.core.spaceLocator()
+        loc.t.set(0, 0, 0)
+        pymel.core.saveFile()
+
+        # version4 references version2
+        self.maya_env.open(self.version4)  # lookdev
+        self.maya_env.reference(self.version2)
+        # change the namespace to old one
+        refs = pymel.core.listReferences()
+        ref = refs[0]
+        isinstance(ref, pymel.core.system.FileReference)
+        ref.namespace = self.version2.filename.replace('.', '_')
+        pymel.core.saveFile()
+
+        pymel.core.newFile(force=True)
+        # version11 references version4
+        self.maya_env.open(self.version11)  # layout
+        self.maya_env.reference(self.version4)
+        # use old namespace style
+        refs = pymel.core.listReferences()
+        version4_ref_node = refs[0]
+        version4_ref_node.namespace = self.version4.filename.replace('.', '_')
+        # now do the edits here
+        # we need to do some edits
+        # there is only one locator in the current scene
+        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc[0].t.set(1, 0, 0)
+        # we should have created an edit
+        version2_ref_node = pymel.core.listReferences(version4_ref_node)[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        pymel.core.saveFile()
+        pymel.core.newFile(force=True)
+
+        # version15 references version11 two times
+        self.maya_env.open(self.version15)
+        self.maya_env.reference(self.version11)
+        # use old namespace style
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version11.filename.replace('.', '_')
+        pymel.core.saveFile()
+
+        db.DBSession.commit()
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version4.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # now let it be fixed
+        self.maya_env.fix_reference_namespaces()
+
+        # check if the namespaces are fixed
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version4.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        # now check we don't have any failed edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            0
+        )
+
+        # and we have all successful edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            1
+        )
+
+        # and check if the locator is in 1, 0, 0
+        loc = pymel.core.ls(type=pymel.core.nt.Transform)[0]
+        self.assertEqual(loc.tx.get(), 1.0)
+        self.assertEqual(loc.ty.get(), 0.0)
+        self.assertEqual(loc.tz.get(), 0.0)
+        pymel.core.saveFile()
+
+    def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(self):
+        """testing if the fix_reference_namespace method is working properly
+        with duplicate references
+
+        version15 -> has no new version
+          version11 -> has no new version
+            version4 -> has no new version
+              version2 -> has no new version
+          version11 -> has no new version
+            version4 -> has no new version
+              version2 -> has no new version
+
+        All uses wrong namespace
+        """
+        # create deep reference
+        self.version2.is_published = True
+        self.version4.is_published = True
+        self.version11.is_published = True
+        self.version15.is_published = True
+
+        # open version2 and create a locator
+        self.maya_env.open(self.version2)  # model
+        loc = pymel.core.spaceLocator()
+        loc.t.set(0, 0, 0)
+        pymel.core.saveFile()
+
+        # version4 references version2
+        self.maya_env.open(self.version4)  # lookdev
+        self.maya_env.reference(self.version2)
+        # change the namespace to old one
+        refs = pymel.core.listReferences()
+        ref = refs[0]
+        isinstance(ref, pymel.core.system.FileReference)
+        ref.namespace = self.version2.filename.replace('.', '_')
+        pymel.core.saveFile()
+
+        # version11 references version4
+        pymel.core.newFile(force=True)
+        self.maya_env.open(self.version11)  # layout
+        self.maya_env.reference(self.version4)
+        # use old namespace style
+        refs = pymel.core.listReferences()
+        version4_ref_node = refs[0]
+        version4_ref_node.namespace = self.version4.filename.replace('.', '_')
+        # now do the edits here
+        # we need to do some edits
+        # there should be two locators in the current scene
+        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc[0].t.set(1, 0, 0)
+
+        # we should have created an edit
+        version2_ref_node = pymel.core.listReferences(version4_ref_node)[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        pymel.core.saveFile()
+        pymel.core.newFile(force=True)
+
+        # version15 references version11 two times
+        self.maya_env.open(self.version15)
+        self.maya_env.reference(self.version11)
+        self.maya_env.reference(self.version11)
+        # use old namespace style
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version11.filename.replace('.', '_')
+        refs[1].namespace = self.version11.filename.replace('.', '_')
+        pymel.core.saveFile()
+
+        db.DBSession.commit()
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version4.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # the second copy
+        self.assertEqual(
+            all_refs[3].namespace,
+            '%s1' % self.version11.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[4].namespace,
+            self.version4.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[5].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # now let it be fixed
+        self.maya_env.fix_reference_namespaces()
+
+        # check if the namespaces are fixed
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version4.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[3].namespace,
+            'Test_Task_1_Test_Task_5_Take2'
+        )
+
+        self.assertEqual(
+            all_refs[4].namespace,
+            self.version4.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[5].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        # now check we don't have any failed edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            0
+        )
+
+        # now check we don't have any failed edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[3], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[4], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[5], es=1, fld=1)),
+            0
+        )
+
+        # and we have all successful edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            1
+        )
+
+        # and we have all successful edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[3], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[4], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[5], es=1, scs=1)),
+            1
+        )
+
+        # and check if the locator is in 1, 0, 0
+        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        self.assertEqual(locs[0].tx.get(), 1.0)
+        self.assertEqual(locs[0].ty.get(), 0.0)
+        self.assertEqual(locs[0].tz.get(), 0.0)
+
+        # the second locator
+        self.assertEqual(locs[1].tx.get(), 1.0)
+        self.assertEqual(locs[1].ty.get(), 0.0)
+        self.assertEqual(locs[1].tz.get(), 0.0)
+        pymel.core.saveFile()
+
+    def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_refs(self):
+        """testing if the fix_reference_namespace method is working properly
+        with duplicate references
+
+          version11 -> has no new version ->Layout
+            version4 -> has no new version -> LookDev
+              version2 -> has no new version -> Model
+            version4 -> has no new version
+              version2 -> has no new version
+            version4 -> has no new version
+              version2 -> has no new version
+            version4 -> has no new version
+              version2 -> has no new version
+
+        All uses wrong namespace
+        """
+        # create deep reference
+        self.version2.is_published = True
+        self.version4.is_published = True
+        self.version11.is_published = True
+
+        # open version2 and create a locator
+        self.maya_env.open(self.version2)  # model
+        loc = pymel.core.spaceLocator()
+        loc.t.set(0, 0, 0)
+        pymel.core.saveFile()
+
+        # version4 references version2
+        self.maya_env.open(self.version4)  # lookdev
+        self.maya_env.reference(self.version2)
+        # change the namespace to old one
+        refs = pymel.core.listReferences()
+        ref = refs[0]
+        isinstance(ref, pymel.core.system.FileReference)
+        ref.namespace = self.version2.filename.replace('.', '_')
+        pymel.core.saveFile()
+
+        # version11 references version4 four times
+        pymel.core.newFile(force=True)
+        self.maya_env.open(self.version11)  # layout
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        # use old namespace style
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version4.filename.replace('.', '_')
+        refs[1].namespace = self.version4.filename.replace('.', '_')
+        refs[2].namespace = self.version4.filename.replace('.', '_')
+        refs[3].namespace = self.version4.filename.replace('.', '_')
+        # now do the edits here
+        # we need to do some edits
+        # there should be four locators in the current scene
+        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc[0].t.set(1, 0, 0)
+        loc[1].t.set(2, 0, 0)
+        loc[2].t.set(3, 0, 0)
+        loc[3].t.set(4, 0, 0)
+
+        # we should have created an edit
+        version2_ref_node = pymel.core.listReferences(refs[0])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        version2_ref_node = pymel.core.listReferences(refs[1])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        version2_ref_node = pymel.core.listReferences(refs[2])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        version2_ref_node = pymel.core.listReferences(refs[3])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        pymel.core.saveFile()
+        print 'self.version11.absolute_full_path: %s' % \
+              self.version11.absolute_full_path
+        db.DBSession.commit()
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version4.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # the second copy
+        self.assertEqual(
+            all_refs[2].namespace,
+            '%s%s' % (self.version4.filename.replace('.', '_'),
+                      all_refs[2].copyNumberList()[1])
+        )
+
+        self.assertEqual(
+            all_refs[3].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # the third copy
+        self.assertEqual(
+            all_refs[4].namespace,
+            '%s%s' % (self.version4.filename.replace('.', '_'),
+                      all_refs[4].copyNumberList()[2])
+        )
+
+        self.assertEqual(
+            all_refs[5].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # the forth copy
+        self.assertEqual(
+            all_refs[6].namespace,
+            '%s%s' % (self.version4.filename.replace('.', '_'),
+                      all_refs[6].copyNumberList()[3])
+        )
+
+        self.assertEqual(
+            all_refs[7].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # now let it be fixed
+        self.maya_env.fix_reference_namespaces()
+        pymel.core.saveFile()
+
+        # check if the namespaces are fixed
+        all_refs = pymel.core.listReferences(recursive=1)
+
+        # first copy
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version4.latest_published_version.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        # second copy
+        self.assertEqual(
+            all_refs[2].namespace,
+            'Asset_2_Take2'
+        )
+
+        self.assertEqual(
+            all_refs[3].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        # third copy
+        self.assertEqual(
+            all_refs[4].namespace,
+            'Asset_2_Take3'
+        )
+
+        self.assertEqual(
+            all_refs[5].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+        # forth copy
+        self.assertEqual(
+            all_refs[6].namespace,
+            'Asset_2_Take4'
+        )
+
+        self.assertEqual(
+            all_refs[7].namespace,
+            self.version2.latest_published_version.nice_name
+        )
+
+
+        # now check we don't have any failed edits
+        # first copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            0
+        )
+
+        # second copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[3], es=1, fld=1)),
+            0
+        )
+
+        # third copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[4], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[5], es=1, fld=1)),
+            0
+        )
+
+        # forth copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[6], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[7], es=1, fld=1)),
+            0
+        )
+
+
+        # and we have all successful edits
+        # first copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            1
+        )
+
+        # second copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[3], es=1, scs=1)),
+            1
+        )
+
+        # third copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[4], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[5], es=1, scs=1)),
+            1
+        )
+
+        # forth copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[6], es=1, scs=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[7], es=1, scs=1)),
+            1
+        )
+
+        # and check if the locator are where they should be
+        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        self.assertTrue(locs[0].tx.get() > 0.5)
+        self.assertTrue(locs[1].tx.get() > 0.5)
+        self.assertTrue(locs[2].tx.get() > 0.5)
+        self.assertTrue(locs[3].tx.get() > 0.5)
+        pymel.core.saveFile()
 

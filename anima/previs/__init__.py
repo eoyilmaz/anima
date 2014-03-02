@@ -700,22 +700,48 @@ class Sequencer(object):
     """The sequence instance.
 
     It is a manager that manages shot data. It is kind of the reflection of the
-    Maya CameraSequencer.
+    Maya Sequencer instance.
 
     It is able to get Maya editorial XML and convert it to EDL.
     """
 
+    def __init__(self):
+        self._sequencer = None
+
+    def create_sequencer_attributes(self):
+        """Creates the necessary extra attributes for the sequencer in the
+        current scene.
+
+        Add attributes like:
+            sequenceName
+            shotNameTemplate
+            defaultHandle
+        """
+        pass
+
     @classmethod
-    def rename_shots(self, sequence_name, padding=4, increment=10,
-                     template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
-        """Renames all shots according to the given template. Uses shot
-        connection info.
+    def set_shot_names(
+            cls, sequence_name, padding=4, increment=10,
+            template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
+        """Sets all shot names according to the given template.
 
         :param sequence_name: The sequence name
         :param padding: Shot number padding
         :param increment: Shot number increment
         :param template: The final shot name template
         :return:
+        """
+        pass
+
+    @classmethod
+    def create_shot(cls, name='', handle=10):
+        """Creates a new shot
+
+        :param str name: A string value for the newly created shot name, if
+          skipped or given empty, the next empty shot name will be generated.
+        :param int handle: An integer value for the handle attribute. Default
+          is 10.
+        :returns: The created :class:`~pymel.core.nt.Shot` instance
         """
         pass
 
@@ -782,17 +808,56 @@ class Sequencer(object):
                 pass
             s.setAttr('handle', handle)
 
+    def add_frames_to_start(self, shot, frame_count=0):
+        """Adds extra frames to the given shots start, and offsets all the
+        following shots with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def add_frames_to_end(self, shot, frame_count=0):
+        """Adds extra frames to the given shot, and offsets all the following
+        shots with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def remove_frames_from_start(self, shot, frame_count=0):
+        """Removes frames from the given shots beginning, and offsets all the
+        following shots back with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def remove_frames_from_end(self, shot, frame_count=0):
+        """Removes frames from the given shots end, and offsets all the
+        following shots back with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
     @classmethod
-    def create_shot_playblasts(cls, handle=10, show_ornaments=True):
+    def create_shot_playblasts(cls, shots, handle=10, show_ornaments=True):
         """creates the selected shot playblasts
         """
         import pymel.core
 
-        shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
+        #shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
         #active_panel = pymel.core.playblast(activeEditor=1)
 
         # get current version and then the output folder
-
         path_template = os.path.join(
             pymel.core.workspace.name,
             'Outputs/Playblast/AllShots/'

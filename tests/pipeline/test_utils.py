@@ -700,3 +700,4 @@ class WaslkVersionHierarchyTestCase(unittest2.TestCase):
             expected_visited_versions,
             visited_versions
         )
+
