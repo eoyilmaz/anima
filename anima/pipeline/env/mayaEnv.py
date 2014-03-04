@@ -129,7 +129,7 @@ workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
 
-    def __init__(self, name="", extensions=None, version=None):
+    def __init__(self, extensions=None, version=None):
         name = "Maya" + str(pymel.versions.current())[0:4]
         super(Maya, self).__init__(name, extensions, version)
 
@@ -1611,7 +1611,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # prior to changing the namespace
                     # so store the sub reference edits:
                     edits_dictionary = {}
-                    for sub_ref in sub_refs:
+                    for i, sub_ref in enumerate(sub_refs):
                         # now list all the reference edits
                         all_edits = \
                             pymel.core.referenceQuery(sub_ref, es=1)
@@ -1632,7 +1632,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                                 failedEdits=1
                             )
                             sub_ref.load()
-                            edits_dictionary[sub_ref] = all_edits
+                            edits_dictionary[i] = all_edits
 
                     # now update the namespace
                     new_namespace = match.group('nice_name')
@@ -1652,8 +1652,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     sub_refs = reversed(
                         pymel.core.listReferences(ref, recursive=True)
                     )
-                    for sub_ref in sub_refs:
-                        edits = edits_dictionary.get(sub_ref, [])
+                    for i, sub_ref in enumerate(sub_refs):
+                        edits = edits_dictionary.get(i, [])
 
                         for edit in edits:
                             updated_edit = edit.replace(old_namespace,
