@@ -301,7 +301,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.source_file = source_file
 
                     e.comments.extend([
-                        '* FROM CLIP NAME: %s' % clip.name,
+                        '* FROM CLIP NAME: %s' % source_file,
                         '* SOURCE FILE: %s' % source_file
                     ])
 

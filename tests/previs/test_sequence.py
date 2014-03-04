@@ -5,11 +5,11 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 from edl import List, Event
-import unittest2
+import unittest
 from anima.previs import Sequence, Media, Video, Track, Clip, File
 
 
-class MediaTestCase(unittest2.TestCase):
+class MediaTestCase(unittest.TestCase):
     """tests the anima.previs.Media class
     """
 
@@ -426,7 +426,11 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('00:00:01:10', e1.src_end_tc)
         self.assertEqual('00:00:00:00', e1.rec_start_tc)
         self.assertEqual('00:00:01:10', e1.rec_end_tc)
-        self.assertEqual('* FROM CLIP NAME: shot2', e1.comments[0])
+        self.assertEqual(
+            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
+            'shot2.mov',
+            e1.comments[0]
+        )
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot2.mov',
                          e1.source_file)
         self.assertEqual(
@@ -446,7 +450,11 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('00:00:02:16', e2.rec_end_tc)
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot.mov',
                          e2.source_file)
-        self.assertEqual('* FROM CLIP NAME: shot', e2.comments[0])
+        self.assertEqual(
+            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
+            'shot.mov',
+            e2.comments[0]
+        )
         self.assertEqual(
             '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
             'shot.mov',
@@ -464,18 +472,16 @@ class MediaTestCase(unittest2.TestCase):
         self.assertEqual('00:00:04:13', e3.rec_end_tc)
         self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot1.mov',
                          e3.source_file)
-        self.assertEqual('* FROM CLIP NAME: shot1', e3.comments[0])
+        self.assertEqual(
+            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
+            'shot1.mov',
+            e3.comments[0]
+        )
         self.assertEqual(
             '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
             'shot1.mov',
             e3.comments[1]
         )
-
-    # def test_from_edl_method_will_return_a_sequence_instance(self):
-    #     """testing if the from_edl method will return an anima.previs.Sequence
-    #     instance
-    #     """
-    #     self.fail('test is not implemented yet')
 
     def test_from_edl_method_is_working_properly(self):
         """testing if the from_edl method will return an anima.previs.Sequence
