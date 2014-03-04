@@ -129,6 +129,10 @@ workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
 
+    def __init__(self, name="", extensions=None, version=None):
+        name = "Maya" + str(pymel.versions.current())[0:4]
+        super(Maya, self).__init__(name, extensions, version)
+
     def save_as(self, version):
         """The save_as action for maya environment.
 
