@@ -7,6 +7,7 @@ import os
 
 import unittest
 from anima.previs import Sequencer, Sequence, Media, Video, Track, Clip, File
+import pymel.core
 
 
 class SequencerTestCase(unittest.TestCase):
@@ -221,24 +222,23 @@ class SequencerMayaTestCase(unittest.TestCase):
         """setup test in class level
         """
         # start maya
-        import pymel.core
         pymel.core.newFile(force=True)
 
     def setUp(self):
         """
         """
-        import pymel.core
+        # import pymel.core
         pymel.core.newFile(force=True)
 
         # create a couple of shots
-        self.shot1 = pymel.core.shot()
-        self.shot2 = pymel.core.shot()
-        self.shot3 = pymel.core.shot()
+        self.shot1 = pymel.core.createNode('shot')
+        self.shot2 = pymel.core.createNode('shot')
+        self.shot3 = pymel.core.createNode('shot')
 
     def test__setup(self):
         """testing test setup
         """
-        import pymel.core
+        # import pymel.core
         shots = pymel.core.ls(type=pymel.core.nt.Shot)
         self.assertEqual(3, len(shots))
         self.assertIsInstance(shots[0], pymel.core.nt.Shot)
@@ -249,47 +249,127 @@ class SequencerMayaTestCase(unittest.TestCase):
         """testing if a TypeError will be raised when the shots argument is
         not a list
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            Sequencer.set_shot_handles('not a list of shots', handle=50)
+
+        self.assertEqual(
+            cm.exception.message,
+            '"shots" argument in Sequencer.set_shot_handles() should be a '
+            'list of pymel.core.nt.Shot instances, not str'
+        )
 
     def test_set_shot_handles_shots_argument_is_not_a_list_of_Shot_instances(self):
         """testing if a TypeError will be raised when the shots list is not a
         list of Shot instances
         """
-        self.fail('test is not implemented yte')
+        with self.assertRaises(TypeError) as cm:
+            Sequencer.set_shot_handles(
+                ['not', 'a', 'list of shots'],
+                handle=50
+            )
+
+        self.assertEqual(
+            cm.exception.message,
+            'All elements in "shots" argument in Sequencer.set_shot_handles() '
+            'should be a pymel.core.nt.Shot instances'
+        )
 
     def test_set_shot_handles_handle_argument_skipped(self):
         """testing if the default value (10) will be used when the handle
         attribute is skipped
         """
-        self.fail('test is not implemented yet')
+        Sequencer.set_shot_handles([self.shot1, self.shot2, self.shot3])
+        self.assertEqual(
+            self.shot1.handle.get(), 10
+        )
+        self.assertEqual(
+            self.shot2.handle.get(), 10
+        )
+        self.assertEqual(
+            self.shot3.handle.get(), 10
+        )
 
     def test_set_shot_handles_handle_argument_is_not_an_integer(self):
         """testing if a TypeError will be raised when the handle argument is
         not an integer
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(TypeError) as cm:
+            Sequencer.set_shot_handles(
+                [self.shot1, self.shot2, self.shot3],
+                handle='not an integer'
+            )
+
+        self.assertEqual(
+            cm.exception.message,
+            '"handle" argument in Sequencer.set_shot_handles() should be a '
+            'non negative integer, not str'
+        )
 
     def test_set_shot_handles_handle_argument_is_working_properly(self):
         """testing if the handle argument value is correctly used in
         set_shot_handles() method
         """
-        self.fail('test is not implemented yet')
+        test_handle = 120
+        Sequencer.set_shot_handles(
+            [self.shot1, self.shot2, self.shot3],
+            handle=test_handle
+        )
+        self.assertEqual(
+            self.shot1.handle.get(), test_handle
+        )
+        self.assertEqual(
+            self.shot2.handle.get(), test_handle
+        )
+        self.assertEqual(
+            self.shot3.handle.get(), test_handle
+        )
 
     def test_set_shot_handles_handle_argument_is_negative(self):
         """testing if a ValueError will be raised when the handle argument
         value is a negative integer
         """
-        self.fail('test is not implemented yet')
+        with self.assertRaises(ValueError) as cm:
+            Sequencer.set_shot_handles(
+                [self.shot1, self.shot2, self.shot3],
+                handle=-10
+            )
+
+        self.assertEqual(
+            cm.exception.message,
+            '"handle" argument in Sequencer.set_shot_handles() should be a '
+            'non negative integer, not -10'
+        )
 
     def test_set_shot_handles_will_create_handle_attribute(self):
         """testing if set_shot_handles method will create handle integer
         attribute
         """
-        self.fail('test is not implemented yet')
+        Sequencer.set_shot_handles(
+            [self.shot1, self.shot2, self.shot3],
+            handle=100
+        )
+        self.assertTrue(self.shot1.hasAttr('handle'))
+        self.assertTrue(self.shot2.hasAttr('handle'))
+        self.assertTrue(self.shot3.hasAttr('handle'))
+
+        self.assertEqual(self.shot1.handle.get(), 100)
+        self.assertEqual(self.shot2.handle.get(), 100)
+        self.assertEqual(self.shot3.handle.get(), 100)
 
     def test_set_shot_handles_will_be_able_to_set_handle_values_when_there_is_already_a_handle_attribute_defined(self):
         """testing if set_shot_handle method will still be able to set the
         handle attribute value even there is a handle attribute defined
         previously
         """
-        self.fail('test is not implemented yet')
+        self.shot1.addAttr('handle', at='short', k=True, min=0)
+        self.shot2.addAttr('handle', at='short', k=True, min=0)
+        self.shot3.addAttr('handle', at='short', k=True, min=0)
+
+        Sequencer.set_shot_handles(
+            [self.shot1, self.shot2, self.shot3],
+            handle=100
+        )
+
+        self.assertEqual(self.shot1.handle.get(), 100)
+        self.assertEqual(self.shot2.handle.get(), 100)
+        self.assertEqual(self.shot3.handle.get(), 100)
