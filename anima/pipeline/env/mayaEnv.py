@@ -238,8 +238,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.parent = current_version
 
         # update the reference list
-        # it was too slow, don't do it now
-        #self.update_version_inputs()
+        # IMPORTANT: without this, the update workflow is not able to do
+        # updates correctly, so do not disable this
+        self.update_version_inputs()
 
         # append it to the recent file list
         self.append_to_recent_files(
@@ -605,20 +606,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         #for renderLayer in pymel.core.ls(type='renderLayer'):
             ## if the renderer is set to mayaSoftware (which is very rare)
             #if dRG.getAttr('currentRenderer') == 'mayaSoftware':
-
-    @classmethod
-    def get_significant_name(cls, version, include_version_number=True):
-        """returns a significant name starting from the closest parent which is
-        an Asset, Shot or Sequence and includes the Project.code
-
-        :rtype : basestring
-        """
-        sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
-
-        if include_version_number:
-           sig_name = '%s_v%03d' % (sig_name, version.version_number)
-
-        return sig_name
 
     @classmethod
     def set_playblast_file_name(cls, version):
@@ -1244,7 +1231,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         for key in pymel.core.workspace.fileRules:
             rule_path = pymel.core.workspace.fileRules[key]
             full_path = os.path.join(path, rule_path).replace('\\', '/')
-            logger.debug(full_path)
+            # logger.debug(full_path)
             try:
                 os.makedirs(full_path)
             except OSError:

@@ -1162,7 +1162,7 @@ class MayaEnvTestCase(unittest2.TestCase):
         )
         self.assertEqual(
             refs[0].namespace,
-            vers2.filename.replace('.', '_')
+            vers2.nice_name
         )
 
 
@@ -1836,6 +1836,25 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             visited_versions
         )
         reference_resolution = self.maya_env.open(self.version15)
+
+        # check reference resolution
+        self.assertEqual(
+            reference_resolution['root'],
+            [self.version12]
+        )
+        self.assertEqual(
+            reference_resolution['create'],
+            [self.version5, self.version12]
+        )
+        self.assertEqual(
+            reference_resolution['update'],
+            [self.version2]
+        )
+        self.assertEqual(
+            reference_resolution['leave'],
+            []
+        )
+
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
@@ -2707,22 +2726,22 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             result
         )
 
-    def test_update_versions_will_raise_a_RuntimeError_if_the_current_scene_is_not_saved_yet(self):
-        """testing if a RuntimeError will be raised when the update_versions
-        method is called if the current scene is not saved yet
-        """
-        # just renew the scene
-        pymel.core.newFile(force=True)
-
-        # and call update_versions
-        reference_resolution = {
-            'root': [],
-            'leave': [],
-            'update': [],
-            'create': []
-        }
-
-        self.assertRaises(
-            RuntimeError, self.maya_env.update_versions, reference_resolution
-        )
+    # def test_update_versions_will_raise_a_RuntimeError_if_the_current_scene_is_not_saved_yet(self):
+    #     """testing if a RuntimeError will be raised when the update_versions
+    #     method is called if the current scene is not saved yet
+    #     """
+    #     # just renew the scene
+    #     pymel.core.newFile(force=True)
+    # 
+    #     # and call update_versions
+    #     reference_resolution = {
+    #         'root': [],
+    #         'leave': [],
+    #         'update': [],
+    #         'create': []
+    #     }
+    # 
+    #     self.assertRaises(
+    #         RuntimeError, self.maya_env.update_versions, reference_resolution
+    #     )
 

@@ -585,3 +585,240 @@ class MediaTestCase(unittest.TestCase):
             f.pathurl
         )
 
+    def test_to_metafuze_xml_is_working_properly(self):
+        """testing if to_metafuze_xml method is working properly
+        """
+        s = Sequence()
+        s.duration = 109.0
+        s.name = 'previs_edit_v001'
+        s.ntsc = False
+        s.timebase = 24
+        s.timecode = '00:00:00:00'
+
+        m = Media()
+        s.media = m
+
+        v = Video()
+        v.width = 1024
+        v.height = 778
+        m.video.append(v)
+
+        t = Track()
+        t.enabled = True
+        t.locked = False
+
+        v.tracks.append(t)
+
+        # clip 1
+        f = File()
+        f.duration = 34.0
+        f.name = 'shot2'
+        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+
+        c = Clip()
+        c.id = 'shot2'
+        c.start = 1.0
+        c.end = 35.0
+        c.name = 'shot2'
+        c.enabled = True
+        c.duration = 34.0
+        c.in_ = 0.0
+        c.out = 34.0
+        c.file = f
+
+        t.clips.append(c)
+
+        # clip 2
+        f = File()
+        f.duration = 30.0
+        f.name = 'shot'
+        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+
+        c = Clip()
+        c.id = 'shot'
+        c.start = 35.0
+        c.end = 65.0
+        c.name = 'shot'
+        c.enabled = True
+        c.duration = 30.0
+        c.in_ = 0.0
+        c.out = 30.0
+        c.file = f
+
+        t.clips.append(c)
+
+        # clip 3
+        f = File()
+        f.duration = 45.0
+        f.name = 'shot1'
+        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+
+        c = Clip()
+        c.id = 'shot1'
+        c.start = 65.0
+        c.end = 110.0
+        c.name = 'shot1'
+        c.enabled = True
+        c.duration = 45.0
+        c.in_ = 0.0
+        c.out = 45.0
+        c.file = f
+
+        t.clips.append(c)
+
+        expected_xmls = [
+            """<?xml version='1.0' encoding='UTF-8'?>
+<MetaFuze_BatchTranscode>
+   <Configuration>
+      <Local>8</Local>
+      <Remote>8</Remote>
+   </Configuration>
+   <Group>
+      <FileList>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot2.mov</File>
+      </FileList>
+      <Transcode>
+         <Version>1.0</Version>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot2.mxf</File>
+         <ClipName>shot2</ClipName>
+         <ProjectName>previs_edit_v001</ProjectName>
+         <TapeName>shot2</TapeName>
+         <TC_Start>00:00:00:00</TC_Start>
+         <DropFrame>false</DropFrame>
+         <EdgeTC>** TimeCode N/A **</EdgeTC>
+         <FilmType>35.4</FilmType>
+         <KN_Start>AAAAAAAA-0000+00</KN_Start>
+         <Frames>34</Frames>
+         <Width>1024</Width>
+         <Height>778</Height>
+         <PixelRatio>1.0000</PixelRatio>
+         <UseFilmInfo>false</UseFilmInfo>
+         <UseTapeInfo>true</UseTapeInfo>
+         <AudioChannelCount>0</AudioChannelCount>
+         <UseMXFAudio>false</UseMXFAudio>
+         <UseWAVAudio>false</UseWAVAudio>
+         <SrcBitsPerChannel>8</SrcBitsPerChannel>
+         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>
+            <Version>2.0</Version>
+            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <ColorModel>YCC 709</ColorModel>
+            <BitDepth>8</BitDepth>
+            <Format>1080 24p</Format>
+            <Compression>DNxHD 36</Compression>
+            <Conversion>Letterbox (center)</Conversion>
+            <VideoFileType>.mxf</VideoFileType>
+            <IsDefault>false</IsDefault>
+         </OutputPreset>
+         <Eye></Eye>
+         <Scene></Scene>
+         <Comment></Comment>
+      </Transcode>
+   </Group>
+</MetaFuze_BatchTranscode>""",
+            """<?xml version='1.0' encoding='UTF-8'?>
+<MetaFuze_BatchTranscode>
+   <Configuration>
+      <Local>8</Local>
+      <Remote>8</Remote>
+   </Configuration>
+   <Group>
+      <FileList>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot.mov</File>
+      </FileList>
+      <Transcode>
+         <Version>1.0</Version>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot.mxf</File>
+         <ClipName>shot</ClipName>
+         <ProjectName>previs_edit_v001</ProjectName>
+         <TapeName>shot</TapeName>
+         <TC_Start>00:00:00:00</TC_Start>
+         <DropFrame>false</DropFrame>
+         <EdgeTC>** TimeCode N/A **</EdgeTC>
+         <FilmType>35.4</FilmType>
+         <KN_Start>AAAAAAAA-0000+00</KN_Start>
+         <Frames>30</Frames>
+         <Width>1024</Width>
+         <Height>778</Height>
+         <PixelRatio>1.0000</PixelRatio>
+         <UseFilmInfo>false</UseFilmInfo>
+         <UseTapeInfo>true</UseTapeInfo>
+         <AudioChannelCount>0</AudioChannelCount>
+         <UseMXFAudio>false</UseMXFAudio>
+         <UseWAVAudio>false</UseWAVAudio>
+         <SrcBitsPerChannel>8</SrcBitsPerChannel>
+         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>
+            <Version>2.0</Version>
+            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <ColorModel>YCC 709</ColorModel>
+            <BitDepth>8</BitDepth>
+            <Format>1080 24p</Format>
+            <Compression>DNxHD 36</Compression>
+            <Conversion>Letterbox (center)</Conversion>
+            <VideoFileType>.mxf</VideoFileType>
+            <IsDefault>false</IsDefault>
+         </OutputPreset>
+         <Eye></Eye>
+         <Scene></Scene>
+         <Comment></Comment>
+      </Transcode>
+   </Group>
+</MetaFuze_BatchTranscode>""",
+            """<?xml version='1.0' encoding='UTF-8'?>
+<MetaFuze_BatchTranscode>
+   <Configuration>
+      <Local>8</Local>
+      <Remote>8</Remote>
+   </Configuration>
+   <Group>
+      <FileList>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot1.mov</File>
+      </FileList>
+      <Transcode>
+         <Version>1.0</Version>
+         <File>/home/eoyilmaz/maya/projects/default/data/shot1.mxf</File>
+         <ClipName>shot1</ClipName>
+         <ProjectName>previs_edit_v001</ProjectName>
+         <TapeName>shot1</TapeName>
+         <TC_Start>00:00:00:00</TC_Start>
+         <DropFrame>false</DropFrame>
+         <EdgeTC>** TimeCode N/A **</EdgeTC>
+         <FilmType>35.4</FilmType>
+         <KN_Start>AAAAAAAA-0000+00</KN_Start>
+         <Frames>45</Frames>
+         <Width>1024</Width>
+         <Height>778</Height>
+         <PixelRatio>1.0000</PixelRatio>
+         <UseFilmInfo>false</UseFilmInfo>
+         <UseTapeInfo>true</UseTapeInfo>
+         <AudioChannelCount>0</AudioChannelCount>
+         <UseMXFAudio>false</UseMXFAudio>
+         <UseWAVAudio>false</UseWAVAudio>
+         <SrcBitsPerChannel>8</SrcBitsPerChannel>
+         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>
+            <Version>2.0</Version>
+            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <ColorModel>YCC 709</ColorModel>
+            <BitDepth>8</BitDepth>
+            <Format>1080 24p</Format>
+            <Compression>DNxHD 36</Compression>
+            <Conversion>Letterbox (center)</Conversion>
+            <VideoFileType>.mxf</VideoFileType>
+            <IsDefault>false</IsDefault>
+         </OutputPreset>
+         <Eye></Eye>
+         <Scene></Scene>
+         <Comment></Comment>
+      </Transcode>
+   </Group>
+</MetaFuze_BatchTranscode>""",
+        ]
+
+        result = s.to_metafuze_xml()
+
+        self.assertItemsEqual(
+            expected_xmls,
+            result
+        )

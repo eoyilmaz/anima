@@ -12,6 +12,7 @@ import PeyeonScript
 from .. import utils
 from anima.pipeline.env import empty_reference_resolution
 from base import EnvironmentBase
+from anima.pipeline.env import empty_reference_resolution
 
 
 class Fusion(EnvironmentBase):
@@ -224,9 +225,11 @@ class Fusion(EnvironmentBase):
         },
     }
 
-    def __init__(self, version=None, name='', extensions=None):
+    def __init__(self, name='', version=None, extensions=None):
         """fusion specific init
         """
+        super(Fusion, self).__init__(name=name, version=version,
+                                     extensions=extensions)
         # and add you own modifications to __init__
         self.fusion = PeyeonScript.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
@@ -408,80 +411,97 @@ class Fusion(EnvironmentBase):
         return None
 
     def get_main_saver_node(self):
-        """Returns the main saver node in the scene or None.
+        """Returns the main saver nodes in the scene or an empty list.
+        :return: list
         """
-
         # list all the saver nodes in the current file
         all_saver_nodes = self.comp.GetToolList(False, 'Saver').values()
 
+        saver_nodes = []
         for saver_node in all_saver_nodes:
             if saver_node.GetAttrs('TOOLS_Name').startswith(
-                    self._main_output_node_name
-            ):
-                main_saver_node = saver_node
-                return main_saver_node
+               self._main_output_node_name):
+                saver_nodes.append(saver_node)
 
-        return None
+        return saver_nodes
 
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
-        from stalker import Version
-        assert isinstance(version, Version)
+        file_formats = ['exr', 'tga']
 
         # list all the save nodes in the current file
-        main_saver_node = self.get_main_saver_node()
+        saver_nodes = self.get_main_saver_node()
 
-        if main_saver_node is None:
-            # create one with correct output path
+        for file_format in file_formats:
+            # check if we have a saver node for this format
+            format_saver = None
+            format_node_name = '%s_%s' % (self._main_output_node_name,
+                                          file_format)
+            for node in saver_nodes:
+                node_name = node.GetAttrs('TOOLS_Name')
+                if node_name.startswith(format_node_name):
+                    format_saver = node
+                    break
 
-            # lock the comp to prevent the file dialog
-            self.comp.Lock()
+            # create the saver node for this format if missing
+            if not format_saver:
+                # lock the comp to prevent the file dialog
+                self.comp.Lock()
 
-            main_saver_node = self.comp.Saver
+                format_saver = self.comp.Saver
 
-            # unlock the comp
-            self.comp.Unlock()
+                # unlock the comp
+                self.comp.Unlock()
 
-        # set the output path
-        output_file_name = ""
+                format_saver.SetAttrs(
+                    {'TOOLS_Name': format_node_name}
+                )
 
-        task = version.task
-        project = task.project
-        output_file_name = '%s_%s_%s_Output_v%03d.001.exr' % (
-            task.entity_type, task.id, version.take_name,
-            version.version_number
-        )
+            # set the output path
+            file_name_buffer = []
+            template_kwargs = {}
 
-        # check if it is a stereo comp
-        # if it is enable separate view rendering
-        output_file_full_path = os.path.join(
-            version.absolute_path,
-            'Outputs',
-            'v%03d' % version.version_number,
-            'exr',
-            output_file_name
-        ).replace('\\', '/')
+            # if this is a shot related task set it to shots resolution
+            version_sig_name = self.get_significant_name(version)
 
-        # set the path
-        main_saver_node.Clip[0] = 'Comp:' + os.path.normpath(
-            utils.relpath(
-                os.path.dirname(version.absolute_full_path),
-                output_file_full_path,
-                "/",
-                ".."
+            file_name_buffer.append(
+                '%(version_sig_name)s.001.%(format)s'
             )
-        ).encode()
+            template_kwargs.update({
+                'version_sig_name': version_sig_name,
+                'format': file_format
+            })
 
-        # set the main_saver_node name
-        main_saver_node.SetAttrs({'TOOLS_Name': self._main_output_node_name})
+            output_file_name = ''.join(file_name_buffer) % template_kwargs
 
-        # create the path
-        try:
-            os.makedirs(os.path.dirname(output_file_full_path))
-        except OSError:
-            # path already exists
-            pass
+            # check if it is a stereo comp
+            # if it is enable separate view rendering
+            output_file_full_path = os.path.join(
+                version.absolute_path,
+                'Outputs',
+                version.take_name,
+                'v%03d' % version.version_number,
+                file_format,
+                output_file_name
+            ).replace('\\', '/')
+
+            # set the path
+            format_saver.Clip[0] = 'Comp: %s' % os.path.normpath(
+                utils.relpath(
+                    os.path.dirname(version.full_path),
+                    output_file_full_path,
+                    "/",
+                    ".."
+                )
+            ).encode()
+
+            # create the path
+            try:
+                os.makedirs(os.path.dirname(output_file_full_path))
+            except OSError:
+                # path already exists
+                pass
 
     @property
     def project_directory(self):

@@ -308,6 +308,86 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     l.append(e)
         return l
 
+    def to_metafuze_xml(self):
+        """Generates a MetaFuze compatible XML content per clip.
+
+        :returns: list of strings
+        """
+        metafuze_xml_template = """<?xml version='1.0' encoding='UTF-8'?>
+<MetaFuze_BatchTranscode>
+   <Configuration>
+      <Local>8</Local>
+      <Remote>8</Remote>
+   </Configuration>
+   <Group>
+      <FileList>
+         <File>%(file_pathurl)s</File>
+      </FileList>
+      <Transcode>
+         <Version>1.0</Version>
+         <File>%(mxf_pathurl)s</File>
+         <ClipName>%(clip_name)s</ClipName>
+         <ProjectName>%(sequence_name)s</ProjectName>
+         <TapeName>%(clip_id)s</TapeName>
+         <TC_Start>%(sequence_timecode)s</TC_Start>
+         <DropFrame>false</DropFrame>
+         <EdgeTC>** TimeCode N/A **</EdgeTC>
+         <FilmType>35.4</FilmType>
+         <KN_Start>AAAAAAAA-0000+00</KN_Start>
+         <Frames>%(clip_duration)i</Frames>
+         <Width>%(width)i</Width>
+         <Height>%(height)i</Height>
+         <PixelRatio>1.0000</PixelRatio>
+         <UseFilmInfo>false</UseFilmInfo>
+         <UseTapeInfo>true</UseTapeInfo>
+         <AudioChannelCount>0</AudioChannelCount>
+         <UseMXFAudio>false</UseMXFAudio>
+         <UseWAVAudio>false</UseWAVAudio>
+         <SrcBitsPerChannel>8</SrcBitsPerChannel>
+         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>
+            <Version>2.0</Version>
+            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <ColorModel>YCC 709</ColorModel>
+            <BitDepth>8</BitDepth>
+            <Format>1080 24p</Format>
+            <Compression>DNxHD 36</Compression>
+            <Conversion>Letterbox (center)</Conversion>
+            <VideoFileType>.mxf</VideoFileType>
+            <IsDefault>false</IsDefault>
+         </OutputPreset>
+         <Eye></Eye>
+         <Scene></Scene>
+         <Comment></Comment>
+      </Transcode>
+   </Group>
+</MetaFuze_BatchTranscode>"""
+        rendered_xmls = []
+        for video in self.media.video:
+            for track in video.tracks:
+                for clip in track.clips:
+                    raw_file_path = clip.file.pathurl.replace('file://', '')
+                    raw_mxf_path = '%s%s' % (
+                        os.path.splitext(raw_file_path)[0],
+                        '.mxf'
+                    )
+
+                    kwargs = {
+                        'file_pathurl': raw_file_path,
+                        'mxf_pathurl': raw_mxf_path,
+                        'clip_name': clip.id,
+                        'sequence_name': self.name,
+                        'clip_id': clip.id,
+                        'sequence_timecode': self.timecode,
+                        'clip_duration': clip.duration,
+                        'width': video.width,
+                        'height': video.height
+                    }
+
+                    rendered_xmls.append(metafuze_xml_template % kwargs)
+
+        return rendered_xmls
+
 
 class Media(PrevisBase):
     """XML compatibility class for Sequencer
@@ -626,6 +706,30 @@ class Sequencer(object):
     """
 
     @classmethod
+    def rename_shots(self, sequence_name, padding=4, increment=10,
+                     template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
+        """Renames all shots according to the given template. Uses shot
+        connection info.
+
+        :param sequence_name: The sequence name
+        :param padding: Shot number padding
+        :param increment: Shot number increment
+        :param template: The final shot name template
+        :return:
+        """
+        pass
+
+    @classmethod
+    def set_shot_handles(cls, shots, handle=10):
+        """Creates handle attribute to given shot instance
+
+        :param shots: a list of :class:`pymel.core.nt.Shot` instances
+        :param int handle: An integer value for handle
+        :return:
+        """
+        pass
+
+    @classmethod
     def create_shot_playblasts(cls, handle=10, show_ornaments=True):
         """creates the selected shot playblasts
         """
@@ -633,6 +737,8 @@ class Sequencer(object):
 
         shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
         #active_panel = pymel.core.playblast(activeEditor=1)
+
+        # get current version and then the output folder
 
         path_template = os.path.join(
             pymel.core.workspace.name,
@@ -645,7 +751,7 @@ class Sequencer(object):
         scene_name = os.path.basename(pymel.core.env.sceneName()).split('.')[0]
 
         for shot in shots:
-            shot_name = shot.name()
+            shot_name = shot.shotName.get()
             start_frame = shot.startFrame.get() - handle
             end_frame = shot.endFrame.get() + handle
             width = shot.wResolution.get()

@@ -70,10 +70,12 @@ class EnvironmentBase(object):
 
     name = "EnvironmentBase"
 
-    def __init__(self, name=""):
+    def __init__(self, name="", extensions=None, version=None):
         self._name = name
-        self._extensions = []
-        self._version = None
+        if extensions is None:
+            extensions = []
+        self._extensions = extensions
+        self._version = version
 
     def __str__(self):
         """the string representation of the environment
@@ -397,6 +399,20 @@ class EnvironmentBase(object):
         :return:
         """
         pass
+
+    @classmethod
+    def get_significant_name(cls, version, include_version_number=True):
+        """returns a significant name starting from the closest parent which is
+        an Asset, Shot or Sequence and includes the Project.code
+
+        :rtype : basestring
+        """
+        sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
+
+        if include_version_number:
+           sig_name = '%s_v%03d' % (sig_name, version.version_number)
+
+        return sig_name
 
 
 class Filter(object):
