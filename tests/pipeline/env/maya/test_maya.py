@@ -6,23 +6,31 @@
 
 import os
 import shutil
-import unittest2
 import tempfile
 
+import unittest2
 import pymel.core
-
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      Task, Sequence, Version, User, Type, Structure,
                      FilenameTemplate, ImageFormat)
 
 from anima.pipeline import utils
-from anima.pipeline.env import mayaEnv
+from anima.pipeline.env import maya
 from anima.pipeline.utils import walk_version_hierarchy
 
 
-class MayaEnvTestCase(unittest2.TestCase):
-    """tests the maya env
+class MayaTestBase(unittest2.TestCase):
+
+    """The base class for Maya Tests
     """
+
+    @classmethod
+    def setUpClass(cls):
+        """setup in class level
+        """
+        import logging
+        logger = logging.getLogger('anima.pipeline.env.mayaEnv')
+        logger.setLevel(logging.DEBUG)
 
     def setUp(self):
         """setup the tests
@@ -58,7 +66,7 @@ class MayaEnvTestCase(unittest2.TestCase):
             name='Task Template',
             target_entity_type='Task',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -69,7 +77,29 @@ class MayaEnvTestCase(unittest2.TestCase):
             name='Asset Template',
             target_entity_type='Asset',
             path='{{project.code}}/'
-                 '{%- for parent_task in version.task.parents -%}'
+                 '{%- for parent_task in parent_tasks -%}'
+                 '{{parent_task.nice_name}}/'
+                 '{%- endfor -%}',
+            filename='{{version.nice_name}}'
+                     '_v{{"%03d"|format(version.version_number)}}',
+        )
+
+        self.shot_template = FilenameTemplate(
+            name='Shot Template',
+            target_entity_type='Shot',
+            path='{{project.code}}/'
+                 '{%- for parent_task in parent_tasks -%}'
+                 '{{parent_task.nice_name}}/'
+                 '{%- endfor -%}',
+            filename='{{version.nice_name}}'
+                     '_v{{"%03d"|format(version.version_number)}}',
+        )
+
+        self.sequence_template = FilenameTemplate(
+            name='Sequence Template',
+            target_entity_type='Sequence',
+            path='{{project.code}}/'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
             filename='{{version.nice_name}}'
@@ -78,7 +108,8 @@ class MayaEnvTestCase(unittest2.TestCase):
 
         self.structure = Structure(
             name='Project Struture',
-            templates=[self.task_template, self.asset_template]
+            templates=[self.task_template, self.asset_template,
+                       self.shot_template, self.sequence_template]
         )
 
         self.project_status_list = StatusList(
@@ -203,11 +234,190 @@ class MayaEnvTestCase(unittest2.TestCase):
             self.sequence_status_list, self.task1, self.task2, self.task3,
             self.task4, self.task5, self.task6, self.asset1, self.asset2,
             self.shot1, self.shot2, self.shot3, self.sequence1, self.sequence2,
-            self.task_template
+            self.task_template, self.asset_template, self.shot_template,
+            self.sequence_template
         ])
+        db.DBSession.commit()
 
         # create the environment instance
-        self.maya_env = mayaEnv.Maya()
+        self.maya_env = maya.Maya()
+
+        # now create versions
+        def create_version(task, take_name):
+            """Creates a new version
+            :param task: the task
+            :param take_name: the take_name name
+            :return: the version
+            """
+            # just renew the scene
+            pymel.core.newFile(force=True)
+
+            v = Version(task=task, take_name=take_name)
+            db.DBSession.add(v)
+            self.maya_env.save_as(v)
+            return v
+
+        # asset2
+        self.version1 = create_version(self.asset2, 'Main')
+        self.version2 = create_version(self.asset2, 'Main')
+        self.version3 = create_version(self.asset2, 'Main')
+
+        self.version4 = create_version(self.asset2, 'Take1')
+        self.version5 = create_version(self.asset2, 'Take1')
+        self.version6 = create_version(self.asset2, 'Take1')
+
+        # task5
+        self.version7 = create_version(self.task5, 'Main')
+        self.version8 = create_version(self.task5, 'Main')
+        self.version9 = create_version(self.task5, 'Main')
+
+        self.version10 = create_version(self.task5, 'Take1')
+        self.version11 = create_version(self.task5, 'Take1')
+        self.version12 = create_version(self.task5, 'Take1')
+
+        # task6
+        self.version13 = create_version(self.task6, 'Main')
+        self.version14 = create_version(self.task6, 'Main')
+        self.version15 = create_version(self.task6, 'Main')
+
+        self.version16 = create_version(self.task6, 'Take1')
+        self.version17 = create_version(self.task6, 'Take1')
+        self.version18 = create_version(self.task6, 'Take1')
+
+        # shot3
+        self.version19 = create_version(self.shot3, 'Main')
+        self.version20 = create_version(self.shot3, 'Main')
+        self.version21 = create_version(self.shot3, 'Main')
+
+        self.version22 = create_version(self.shot3, 'Take1')
+        self.version23 = create_version(self.shot3, 'Take1')
+        self.version24 = create_version(self.shot3, 'Take1')
+
+        # task3
+        self.version25 = create_version(self.task3, 'Main')
+        self.version26 = create_version(self.task3, 'Main')
+        self.version27 = create_version(self.task3, 'Main')
+
+        self.version28 = create_version(self.task3, 'Take1')
+        self.version29 = create_version(self.task3, 'Take1')
+        self.version30 = create_version(self.task3, 'Take1')
+
+        # asset1
+        self.version31 = create_version(self.asset1, 'Main')
+        self.version32 = create_version(self.asset1, 'Main')
+        self.version33 = create_version(self.asset1, 'Main')
+
+        self.version34 = create_version(self.asset1, 'Take1')
+        self.version35 = create_version(self.asset1, 'Take1')
+        self.version36 = create_version(self.asset1, 'Take1')
+
+        # shot2
+        self.version37 = create_version(self.shot2, 'Main')
+        self.version38 = create_version(self.shot2, 'Main')
+        self.version39 = create_version(self.shot2, 'Main')
+
+        self.version40 = create_version(self.shot2, 'Take1')
+        self.version41 = create_version(self.shot2, 'Take1')
+        self.version42 = create_version(self.shot2, 'Take1')
+
+        # shot1
+        self.version43 = create_version(self.shot1, 'Main')
+        self.version44 = create_version(self.shot1, 'Main')
+        self.version45 = create_version(self.shot1, 'Main')
+
+        self.version46 = create_version(self.shot1, 'Take1')
+        self.version47 = create_version(self.shot1, 'Take1')
+        self.version48 = create_version(self.shot1, 'Take1')
+
+        # +- task1
+        # |  |
+        # |  +- task4
+        # |  |  |
+        # |  |  +- asset2
+        # |  |     +- Main
+        # |  |     |  +- version1
+        # |  |     |  +- version2 (P)
+        # |  |     |  +- version3 (P)
+        # |  |     +- Take1
+        # |  |        +- version4 (P)
+        # |  |        +- version5
+        # |  |        +- version6 (P)
+        # |  |
+        # |  +- task5
+        # |  |  +- Main
+        # |  |  |  +- version7
+        # |  |  |  +- version8
+        # |  |  |  +- version9
+        # |  |  +- Take1
+        # |  |     +- version10
+        # |  |     +- version11
+        # |  |     +- version12 (P)
+        # |  |
+        # |  +- task6
+        # |     +- Main
+        # |     |  +- version13
+        # |     |  +- version14
+        # |     |  +- version15
+        # |     +- Take1
+        # |        +- version16 (P)
+        # |        +- version17
+        # |        +- version18 (P)
+        # |
+        # +- task2
+        # |  |
+        # |  +- sequence2
+        # |     |
+        # |     +- shot3
+        # |        +- Main
+        # |        |  +- version19
+        # |        |  +- version20
+        # |        |  +- version21
+        # |        +- Take1
+        # |           +- version22
+        # |           +- version23
+        # |           +- version24
+        # |
+        # +- task3
+        # |  +- Main
+        # |  |  +- version25
+        # |  |  +- version26
+        # |  |  +- version27
+        # |  +- Take1
+        # |     +- version28
+        # |     +- version29
+        # |     +- version30
+        # |
+        # +- asset1
+        # |  +- Main
+        # |  |  +- version31
+        # |  |  +- version32
+        # |  |  +- version33
+        # |  +- Take1
+        # |     +- version34
+        # |     +- version35
+        # |     +- version36
+        # |
+        # +- sequence1
+        # |  |
+        # |  +- shot2
+        # |     +- Main
+        # |     |  +- version37
+        # |     |  +- version38
+        # |     |  +- version39
+        # |     +- Take1
+        # |        +- version40
+        # |        +- version41
+        # |        +- version42
+        # |
+        # +- shot1
+        #    +- Main
+        #    |  +- version43
+        #    |  +- version44
+        #    |  +- version45
+        #    +- Take1
+        #       +- version46
+        #       +- version47
+        #       +- version48
 
         # just renew the scene
         pymel.core.newFile(force=True)
@@ -234,6 +444,11 @@ class MayaEnvTestCase(unittest2.TestCase):
     def tearDownClass(cls):
         # quit maya
         pymel.core.runtime.Quit()
+
+
+class MayaTestCase(MayaTestBase):
+    """tests the maya.Maya
+    """
 
     def test_save_as_creates_a_maya_file_at_version_absolute_full_path(self):
         """testing if the save_as creates a maya file at the Version.full_path
@@ -1007,7 +1222,14 @@ class MayaEnvTestCase(unittest2.TestCase):
         """testing if save_as creates the workspace.mel file in the Asset or
         Shot root
         """
-        version1 = Version(task=self.task6)
+        task6 = Task(
+            name='Test Task 6 - New',
+            parent=self.task1
+        )
+        db.DBSession.add(task6)
+        db.DBSession.commit()
+
+        version1 = Version(task=task6)
         version1.extension = '.ma'
         version1.update_paths()
 
@@ -1023,7 +1245,14 @@ class MayaEnvTestCase(unittest2.TestCase):
     def test_save_as_creates_the_workspace_fileRule_folders(self):
         """testing if save_as creates the fileRule folders
         """
-        version1 = Version(task=self.task6)
+        task6 = Task(
+            name='Test Task 6 - New',
+            parent=self.task1
+        )
+        db.DBSession.add(task6)
+        db.DBSession.commit()
+
+        version1 = Version(task=task6)
         version1.extension = '.ma'
         version1.update_paths()
 
@@ -1166,430 +1395,9 @@ class MayaEnvTestCase(unittest2.TestCase):
         )
 
 
-class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
-    """tests the maya env with deep reference updates
+class MayaDeepReferenceUpdateTestCase(MayaTestBase):
+    """tests the maya.Maya with deep reference updates
     """
-
-    @classmethod
-    def setUpClass(cls):
-        """setup in class level
-        """
-        import logging
-        logger = logging.getLogger('anima.pipeline.env.mayaEnv')
-        logger.setLevel(logging.DEBUG)
-
-    def setUp(self):
-        """setup the tests
-        """
-        # -----------------------------------------------------------------
-        # start of the setUp
-        # create the environment variable and point it to a temp directory
-        database_url = "sqlite:///:memory:"
-        db.setup({'sqlalchemy.url': database_url})
-        db.init()
-
-        self.temp_repo_path = tempfile.mkdtemp()
-
-        self.user1 = User(
-            name='User 1',
-            login='user1',
-            email='user1@users.com',
-            password='12345'
-        )
-
-        self.repo1 = Repository(
-            name='Test Project Repository',
-            linux_path=self.temp_repo_path,
-            windows_path=self.temp_repo_path,
-            osx_path=self.temp_repo_path
-        )
-
-        self.status_new = Status.query.filter_by(code='NEW').first()
-        self.status_wip = Status.query.filter_by(code='WIP').first()
-        self.status_comp = Status.query.filter_by(code='CMPL').first()
-
-        self.task_template = FilenameTemplate(
-            name='Task Template',
-            target_entity_type='Task',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
-        )
-
-        self.asset_template = FilenameTemplate(
-            name='Asset Template',
-            target_entity_type='Asset',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
-        )
-
-        self.shot_template = FilenameTemplate(
-            name='Shot Template',
-            target_entity_type='Shot',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
-        )
-
-        self.sequence_template = FilenameTemplate(
-            name='Sequence Template',
-            target_entity_type='Sequence',
-            path='{{project.code}}/'
-                 '{%- for parent_task in parent_tasks -%}'
-                 '{{parent_task.nice_name}}/'
-                 '{%- endfor -%}',
-            filename='{{version.nice_name}}'
-                     '_v{{"%03d"|format(version.version_number)}}',
-        )
-
-        self.structure = Structure(
-            name='Project Struture',
-            templates=[self.task_template, self.asset_template,
-                       self.shot_template, self.sequence_template]
-        )
-
-        self.project_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[self.status_new, self.status_wip, self.status_comp]
-        )
-
-        self.image_format = ImageFormat(
-            name='HD 1080',
-            width=1920,
-            height=1080,
-            pixel_aspect=1.0
-        )
-
-        # create a test project
-        self.project = Project(
-            name='Test Project',
-            code='TP',
-            repository=self.repo1,
-            status_list=self.project_status_list,
-            structure=self.structure,
-            image_format=self.image_format
-        )
-
-        self.task_status_list =\
-            StatusList.query.filter_by(target_entity_type='Task').first()
-        self.asset_status_list =\
-            StatusList.query.filter_by(target_entity_type='Asset').first()
-        self.shot_status_list =\
-            StatusList.query.filter_by(target_entity_type='Shot').first()
-        self.sequence_status_list =\
-            StatusList.query.filter_by(target_entity_type='Sequence').first()
-
-        self.character_type = Type(
-            name='Character',
-            code='CHAR',
-            target_entity_type='Asset'
-        )
-
-        # create a test series of root task
-        self.task1 = Task(
-            name='Test Task 1',
-            project=self.project
-        )
-        self.task2 = Task(
-            name='Test Task 2',
-            project=self.project
-        )
-        self.task3 = Task(
-            name='Test Task 3',
-            project=self.project
-        )
-
-        # then a couple of child tasks
-        self.task4 = Task(
-            name='Test Task 4',
-            parent=self.task1
-        )
-        self.task5 = Task(
-            name='Test Task 5',
-            parent=self.task1
-        )
-        self.task6 = Task(
-            name='Test Task 6',
-            parent=self.task1
-        )
-
-        # create a root asset
-        self.asset1 = Asset(
-            name='Asset 1',
-            code='asset1',
-            type=self.character_type,
-            project=self.project
-        )
-
-        # create a child asset
-        self.asset2 = Asset(
-            name='Asset 2',
-            code='asset2',
-            type=self.character_type,
-            parent=self.task4
-        )
-
-        # create a root Sequence
-        self.sequence1 = Sequence(
-            name='Sequence1',
-            code='SEQ1',
-            project=self.project
-        )
-
-        # create a child Sequence
-        self.sequence2 = Sequence(
-            name='Sequence2',
-            code='SEQ2',
-            parent=self.task2
-        )
-
-        # create a root Shot
-        self.shot1 = Shot(
-            code='SH001',
-            project=self.project
-        )
-
-        # create a child Shot (child of a Sequence)
-        self.shot2 = Shot(
-            code='SH002',
-            parent=self.sequence1
-        )
-
-        # create a child Shot (child of a child Sequence)
-        self.shot3 = Shot(
-            code='SH003',
-            parent=self.sequence2
-        )
-
-        # commit everything
-        db.DBSession.add_all([
-            self.repo1, self.status_new, self.status_wip, self.status_comp,
-            self.project_status_list, self.project, self.task_status_list,
-            self.asset_status_list, self.shot_status_list,
-            self.sequence_status_list, self.task1, self.task2, self.task3,
-            self.task4, self.task5, self.task6, self.asset1, self.asset2,
-            self.shot1, self.shot2, self.shot3, self.sequence1, self.sequence2,
-            self.task_template, self.asset_template, self.shot_template,
-            self.sequence_template
-        ])
-        db.DBSession.commit()
-
-        # create the environment instance
-        self.maya_env = mayaEnv.Maya()
-
-        # now create versions
-        def create_version(task, take_name):
-            """Creates a new version
-            :param task: the task
-            :param take_name: the take_name name
-            :return: the version
-            """
-            # just renew the scene
-            pymel.core.newFile(force=True)
-
-            v = Version(task=task, take_name=take_name)
-            db.DBSession.add(v)
-            self.maya_env.save_as(v)
-            return v
-
-        # asset2
-        self.version1 = create_version(self.asset2, 'Main')
-        self.version2 = create_version(self.asset2, 'Main')
-        self.version3 = create_version(self.asset2, 'Main')
-
-        self.version4 = create_version(self.asset2, 'Take1')
-        self.version5 = create_version(self.asset2, 'Take1')
-        self.version6 = create_version(self.asset2, 'Take1')
-
-        # task5
-        self.version7 = create_version(self.task5, 'Main')
-        self.version8 = create_version(self.task5, 'Main')
-        self.version9 = create_version(self.task5, 'Main')
-
-        self.version10 = create_version(self.task5, 'Take1')
-        self.version11 = create_version(self.task5, 'Take1')
-        self.version12 = create_version(self.task5, 'Take1')
-
-        # task6
-        self.version13 = create_version(self.task6, 'Main')
-        self.version14 = create_version(self.task6, 'Main')
-        self.version15 = create_version(self.task6, 'Main')
-
-        self.version16 = create_version(self.task6, 'Take1')
-        self.version17 = create_version(self.task6, 'Take1')
-        self.version18 = create_version(self.task6, 'Take1')
-
-        # shot3
-        self.version19 = create_version(self.shot3, 'Main')
-        self.version20 = create_version(self.shot3, 'Main')
-        self.version21 = create_version(self.shot3, 'Main')
-
-        self.version22 = create_version(self.shot3, 'Take1')
-        self.version23 = create_version(self.shot3, 'Take1')
-        self.version24 = create_version(self.shot3, 'Take1')
-
-        # task3
-        self.version25 = create_version(self.task3, 'Main')
-        self.version26 = create_version(self.task3, 'Main')
-        self.version27 = create_version(self.task3, 'Main')
-
-        self.version28 = create_version(self.task3, 'Take1')
-        self.version29 = create_version(self.task3, 'Take1')
-        self.version30 = create_version(self.task3, 'Take1')
-
-        # asset1
-        self.version31 = create_version(self.asset1, 'Main')
-        self.version32 = create_version(self.asset1, 'Main')
-        self.version33 = create_version(self.asset1, 'Main')
-
-        self.version34 = create_version(self.asset1, 'Take1')
-        self.version35 = create_version(self.asset1, 'Take1')
-        self.version36 = create_version(self.asset1, 'Take1')
-
-        # shot2
-        self.version37 = create_version(self.shot2, 'Main')
-        self.version38 = create_version(self.shot2, 'Main')
-        self.version39 = create_version(self.shot2, 'Main')
-
-        self.version40 = create_version(self.shot2, 'Take1')
-        self.version41 = create_version(self.shot2, 'Take1')
-        self.version42 = create_version(self.shot2, 'Take1')
-
-        # shot1
-        self.version43 = create_version(self.shot1, 'Main')
-        self.version44 = create_version(self.shot1, 'Main')
-        self.version45 = create_version(self.shot1, 'Main')
-
-        self.version46 = create_version(self.shot1, 'Take1')
-        self.version47 = create_version(self.shot1, 'Take1')
-        self.version48 = create_version(self.shot1, 'Take1')
-
-        # +- task1
-        # |  |
-        # |  +- task4
-        # |  |  |
-        # |  |  +- asset2
-        # |  |     +- Main
-        # |  |     |  +- version1
-        # |  |     |  +- version2 (P)
-        # |  |     |  +- version3 (P)
-        # |  |     +- Take1
-        # |  |        +- version4 (P)
-        # |  |        +- version5
-        # |  |        +- version6 (P)
-        # |  |
-        # |  +- task5
-        # |  |  +- Main
-        # |  |  |  +- version7
-        # |  |  |  +- version8
-        # |  |  |  +- version9
-        # |  |  +- Take1
-        # |  |     +- version10
-        # |  |     +- version11
-        # |  |     +- version12 (P)
-        # |  |
-        # |  +- task6
-        # |     +- Main
-        # |     |  +- version13
-        # |     |  +- version14
-        # |     |  +- version15
-        # |     +- Take1
-        # |        +- version16 (P)
-        # |        +- version17
-        # |        +- version18 (P)
-        # |
-        # +- task2
-        # |  |
-        # |  +- sequence2
-        # |     |
-        # |     +- shot3
-        # |        +- Main
-        # |        |  +- version19
-        # |        |  +- version20
-        # |        |  +- version21
-        # |        +- Take1
-        # |           +- version22
-        # |           +- version23
-        # |           +- version24
-        # |
-        # +- task3
-        # |  +- Main
-        # |  |  +- version25
-        # |  |  +- version26
-        # |  |  +- version27
-        # |  +- Take1
-        # |     +- version28
-        # |     +- version29
-        # |     +- version30
-        # |
-        # +- asset1
-        # |  +- Main
-        # |  |  +- version31
-        # |  |  +- version32
-        # |  |  +- version33
-        # |  +- Take1
-        # |     +- version34
-        # |     +- version35
-        # |     +- version36
-        # |
-        # +- sequence1
-        # |  |
-        # |  +- shot2
-        # |     +- Main
-        # |     |  +- version37
-        # |     |  +- version38
-        # |     |  +- version39
-        # |     +- Take1
-        # |        +- version40
-        # |        +- version41
-        # |        +- version42
-        # |
-        # +- shot1
-        #    +- Main
-        #    |  +- version43
-        #    |  +- version44
-        #    |  +- version45
-        #    +- Take1
-        #       +- version46
-        #       +- version47
-        #       +- version48
-
-        # just renew the scene
-        pymel.core.newFile(force=True)
-
-        # create a buffer for extra created files, which are to be removed
-        self.remove_these_files_buffer = []
-
-    def tearDown(self):
-        """cleanup the test
-        """
-        # set the db.session to None
-        db.DBSession.remove()
-
-        # delete the temp folder
-        shutil.rmtree(self.temp_repo_path, ignore_errors=True)
-
-        for f in self.remove_these_files_buffer:
-            if os.path.isfile(f):
-                os.remove(f)
-            elif os.path.isdir(f):
-                shutil.rmtree(f, True)
-
-    @classmethod
-    def tearDownClass(cls):
-        # quit maya
-        pymel.core.runtime.Quit()
 
     def test_update_versions_is_working_properly_case_1(self):
         """testing if update_versions is working properly in following
@@ -2726,24 +2534,8 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
             result
         )
 
-    # def test_update_versions_will_raise_a_RuntimeError_if_the_current_scene_is_not_saved_yet(self):
-    #     """testing if a RuntimeError will be raised when the update_versions
-    #     method is called if the current scene is not saved yet
-    #     """
-    #     # just renew the scene
-    #     pymel.core.newFile(force=True)
-    #
-    #     # and call update_versions
-    #     reference_resolution = {
-    #         'root': [],
-    #         'leave': [],
-    #         'update': [],
-    #         'create': []
-    #     }
-    #
-    #     self.assertRaises(
-    #         RuntimeError, self.maya_env.update_versions, reference_resolution
-    #     )
+
+class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
     def test_fix_reference_namespace_is_working_properly(self):
         """testing if the fix_reference_namespace method is working properly
@@ -4379,3 +4171,4 @@ class MayaEnvDeepReferenceUpdateTestCase(unittest2.TestCase):
         group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
         pymel.core.saveFile()
+

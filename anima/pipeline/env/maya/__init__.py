@@ -3,22 +3,25 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+
 import os
 import shutil
 import logging
-
 import pymel.core
 import pymel.versions
 
 from stalker import db, Version
 
-from .. import utils
+from anima.pipeline import utils
 from anima.pipeline.env import empty_reference_resolution
-from base import EnvironmentBase
+from anima.pipeline.env.base import EnvironmentBase
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+
+publishers = {}
 
 
 class Maya(EnvironmentBase):
