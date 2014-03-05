@@ -1613,16 +1613,18 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     edits_dictionary = {}
                     for i, sub_ref in enumerate(sub_refs):
                         # now list all the reference edits
-                        all_edits = \
-                            pymel.core.referenceQuery(sub_ref, es=1)
-                        successful_edits = \
-                            pymel.core.referenceQuery(sub_ref, es=1, scs=1)
-                        failed_edits = \
-                            pymel.core.referenceQuery(sub_ref, es=1, fld=1)
-                        logger.debug('all_edits        : %s' % all_edits)
-                        logger.debug('successful_edits : %s' %
-                                     successful_edits)
-                        logger.debug('failed_edits     : %s' % failed_edits)
+                        try:
+                            all_edits = \
+                                pymel.core.referenceQuery(sub_ref, es=1)
+                        except UnicodeEncodeError:
+                            # there is an improper character in the node name
+                            # of some nodes
+                            # just skip this reference
+                            logger.debug('edits has improper character, '
+                                         'skipping!!!')
+                            all_edits = []
+
+                        logger.debug('all_edits : %s' % all_edits)
 
                         # remove all the edits update them and apply them
                         # fix and apply them again
