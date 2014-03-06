@@ -1501,7 +1501,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # This will be used to determine if we need to create a new
         # version for this version
         updated_namespaces = False
-        referenceQuery = pymel.core.referenceQuery
+        # referenceQuery = pymel.core.referenceQuery
+        referenceQuery = maya.cmds.referenceQuery
 
         regex = r'(?P<nice_name>[\w_0-9]+)' \
                 r'(?P<version>_v[0-9]+_ma[0-9]*)'
@@ -1528,13 +1529,13 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         for i, ref in enumerate(reversed(refs)):
             # re apply any live edits
             try:
-                all_edits = referenceQuery(ref, es=1)
-                # all_edits = maya.cmds.referenceQuery(
-                #     ref.refNode.name(),
-                #     es=True, le=True
-                # )
-                # if all_edits is None:
-                #     all_edits = []
+                # all_edits = referenceQuery(ref, es=1)
+                all_edits = referenceQuery(
+                    ref.refNode.name(),
+                    es=True
+                )
+                if all_edits is None:
+                    all_edits = []
             except UnicodeError:
                 logger.debug('edits has improper character, skipping!!!')
                 all_edits = []
