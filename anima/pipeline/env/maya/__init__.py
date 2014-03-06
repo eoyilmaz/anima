@@ -29,7 +29,7 @@ class Maya(EnvironmentBase):
     """the maya environment class
     """
 
-    name = "Maya"
+    name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     time_to_fps = {
         u'sec': 1,
@@ -132,10 +132,6 @@ workspace -fr "templates" ".mayaFiles/assets/";
 workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
-
-    def __init__(self, extensions=None, version=None):
-        name = "Maya" + str(pymel.versions.current())[0:4]
-        super(Maya, self).__init__(name, extensions, version)
 
     def save_as(self, version):
         """The save_as action for maya environment.
