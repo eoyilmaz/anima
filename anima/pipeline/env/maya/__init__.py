@@ -5,10 +5,11 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
+import re
 import shutil
 import logging
-import pymel.core
-import pymel.versions
+import maya
+import pymel
 
 from stalker import db, Version
 
@@ -1491,6 +1492,137 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 rejoin.append(part)
         return '|'.join(rejoin)
 
+    def update_reference_edits(self, version):
+        """Updates the reference edits for the given file
+
+        :param version: The stalker.models.version.Version instance.
+        :return: True or False depending on if a new namespace is created.
+        """
+        # This will be used to determine if we need to create a new
+        # version for this version
+        updated_namespaces = False
+        referenceQuery = pymel.core.referenceQuery
+
+        regex = r'(?P<nice_name>[\w_0-9]+)' \
+                r'(?P<version>_v[0-9]+_ma[0-9]*)'
+
+        # re open original scene
+        reference_resolution = self.open(version, force=True)
+
+        # check reference namespaces
+        for ref in pymel.core.listReferences():
+            namespace = ref.namespace
+            match = re.match(regex, namespace)
+            if match:
+                updated_namespaces = True
+
+        # if not updated_namespaces \
+        #    and reference_resolution['update'] is [] \
+        #    and reference_resolution['create'] is []:
+        #     return updated_namespaces
+
+        # check references
+        refs = pymel.core.listReferences(recursive=True)
+
+        edits_dictionary = {}
+        for i, ref in enumerate(reversed(refs)):
+            # re apply any live edits
+            try:
+                all_edits = referenceQuery(ref, es=1)
+                # all_edits = maya.cmds.referenceQuery(
+                #     ref.refNode.name(),
+                #     es=True, le=True
+                # )
+                # if all_edits is None:
+                #     all_edits = []
+            except UnicodeError:
+                logger.debug('edits has improper character, skipping!!!')
+                all_edits = []
+
+            logger.debug('all_edits: %s' % all_edits)
+
+            edits_dictionary[i] = all_edits
+            if all_edits:
+                ref.removeReferenceEdits(force=1)
+                ref.load()
+
+        # do updates
+        self.update_first_level_versions(reference_resolution)
+
+        # replace first level reference namespaces
+        refs_and_namespaces = {}
+        for ref in pymel.core.listReferences():
+            # replace any possible old namespace with current one
+            ref_version = self.get_version_from_full_path(ref.path)
+            old_namespace = ref.namespace
+            try:
+                new_namespace = ref_version.nice_name
+
+                # changing to the same namespace will change the namespace
+                # to "namespace" to "namespace1"
+                # prevent this by checking if the desired namespace is really
+                # not the old_namespace
+                if old_namespace != new_namespace:
+                    ref.namespace = ref_version.nice_name
+                    new_namespace = ref.namespace
+                    updated_namespaces = True
+
+            except RuntimeError:
+                # Apparently There is no namespace, so do not change the
+                # namespace
+                old_namespace = ''
+                new_namespace = ''
+                pass
+            refs_and_namespaces[ref] = [old_namespace, new_namespace]
+
+        # do not update any reference if we didn't change the namespace
+        # if not updated_namespaces:
+        #     return updated_namespaces
+
+        refs = pymel.core.listReferences(recursive=True)
+        for i, ref in enumerate(reversed(refs)):
+            all_edits = edits_dictionary[i]
+            logger.debug('re-all_edits: %s' % all_edits)
+
+            current_ref = ref
+            parent_ref = current_ref.parent()
+            while parent_ref:
+                current_ref = parent_ref
+                parent_ref = current_ref.parent()
+            parent_ref = current_ref
+
+            old_namespace = refs_and_namespaces[parent_ref][0]
+            new_namespace = refs_and_namespaces[parent_ref][1]
+            logger.debug('old_namespace : %s' % old_namespace)
+            logger.debug('new_namespace : %s' % new_namespace)
+
+            # external edits, edits that are done in another scene
+            external_edits = referenceQuery(ref, es=1, scs=1)
+
+            for edit in all_edits:
+                updated_edit = edit
+                if old_namespace != new_namespace:
+                    updated_edit = updated_edit.replace(
+                        old_namespace,
+                        new_namespace
+                    )
+                updated_edit = self.get_clean_edit(updated_edit)
+
+                # do not apply edits if they are coming from other scenes
+                if updated_edit in external_edits:
+                    continue
+
+                logger.debug('updated_edit: %s' % updated_edit)
+                # so this is an edit done in current scene
+                try:
+                    pymel.core.mel.eval(updated_edit)
+                except RuntimeError as e:
+                    logger.debug('There is a RuntimeError in : %s' % 
+                                 updated_edit)
+                    pass
+
+        return updated_namespaces
+
     def fix_reference_namespaces(self):
         """Fixes the reference namespaces in current scene.
 
@@ -1512,7 +1644,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :return: A list of newly created Versions
         """
-        import re
         regex = r'(?P<nice_name>[\w_0-9]+)' \
                 r'(?P<version>_v[0-9]+_ma[0-9]*)'
 
@@ -1573,103 +1704,109 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 vers = vers.latest_published_version
                 logger.debug('vers.latest_published_version: %s' % vers)
 
-                reference_resolution = self.open(vers, force=True)
+                # reference_resolution = self.open(vers, force=True)
+                # 
+                # # get all first level references
+                # refs = pymel.core.listReferences(recursive=True)
+                # if not refs:
+                #     # no refs, nothing to do
+                #     continue
+                # 
+                # # update only first level references
+                # self.update_first_level_versions(reference_resolution)
+                # 
+                # # this will be used to determine if we need to create a new
+                # # version for this version
+                # updated_namespaces = False
+                # 
+                # for ref in refs:
+                #     # check if the namespace is matching
+                #     old_namespace = ref.namespace
+                #     logger.debug('old_namespace: %s' % old_namespace)
+                #     match = re.match(regex, old_namespace)
+                # 
+                #     if not match:
+                #         logger.debug('name space is good, continuing!')
+                #         continue
+                # 
+                #     # so by updating the namespace we will loose any
+                #     # edits on the sub references
+                # 
+                #     # check if there are sub references
+                #     sub_refs = reversed(
+                #         pymel.core.listReferences(ref, recursive=True)
+                #     )
+                #     if not sub_refs:
+                #         logger.debug('no sub_refs continuing')
+                #         continue
+                # 
+                #     # now list the failed reference edits
+                #     # now fix and apply the edits
+                #     # prior to changing the namespace
+                #     # so store the sub reference edits:
+                #     edits_dictionary = {}
+                #     for i, sub_ref in enumerate(sub_refs):
+                #         # now list all the reference edits
+                #         try:
+                #             all_edits = \
+                #                 pymel.core.referenceQuery(sub_ref, es=1)
+                #             # all_edits = maya.cmds.referenceQuery(
+                #             #     sub_ref.refNode.name(),
+                #             #     es=True, le=True
+                #             # )
+                #         except UnicodeError:
+                #             # there is an improper character in the node name
+                #             # of some nodes
+                #             # just skip this reference
+                #             logger.debug('edits has improper character, '
+                #                          'skipping!!!')
+                #             all_edits = []
+                # 
+                #         logger.debug('all_edits : %s' % all_edits)
+                # 
+                #         # remove all the edits update them and apply them
+                #         # fix and apply them again
+                #         if all_edits:
+                #             sub_ref.removeReferenceEdits(
+                #                 force=1,
+                #                 failedEdits=1
+                #             )
+                #             sub_ref.load()
+                #             edits_dictionary[i] = all_edits
+                # 
+                #     # now update the namespace
+                #     new_namespace = match.group('nice_name')
+                #     # update the namespace
+                #     ref.namespace = new_namespace
+                #     # ask it again cause maya can change it to
+                #     # something else by adding a number to the end
+                #     new_namespace = ref.namespace
+                #     logger.debug('new_namespace: %s' % new_namespace)
+                # 
+                #     # go over sub refs again, but now apply the new
+                #     # edits
+                #     if old_namespace != new_namespace:
+                #         updated_namespaces = True
+                # 
+                #     # re read sub refs
+                #     sub_refs = reversed(
+                #         pymel.core.listReferences(ref, recursive=True)
+                #     )
+                #     for i, sub_ref in enumerate(sub_refs):
+                #         edits = edits_dictionary.get(i, [])
+                # 
+                #         for edit in edits:
+                #             updated_edit = edit.replace(old_namespace,
+                #                                         new_namespace)
+                #             updated_edit = self.get_clean_edit(updated_edit)
+                # 
+                #             try:
+                #                 pymel.core.mel.eval(updated_edit)
+                #             except RuntimeError:
+                #                 # just pass it
+                #                 pass
 
-                # get all first level references
-                refs = pymel.core.listReferences()
-                if not refs:
-                    # no refs, nothing to do
-                    continue
-
-                # update only first level references
-                self.update_first_level_versions(reference_resolution)
-
-                # this will be used to determine if we need to create a new
-                # version for this version
-                updated_namespaces = False
-
-                for ref in refs:
-                    # check if the namespace is matching
-                    old_namespace = ref.namespace
-                    logger.debug('old_namespace: %s' % old_namespace)
-                    match = re.match(regex, old_namespace)
-
-                    if not match:
-                        logger.debug('name space is good, continuing!')
-                        continue
-
-                    # so by updating the namespace we will loose any
-                    # edits on the sub references
-
-                    # check if there are sub references
-                    sub_refs = reversed(
-                        pymel.core.listReferences(ref, recursive=True)
-                    )
-                    if not sub_refs:
-                        logger.debug('no sub_refs continuing')
-                        continue
-
-                    # now list the failed reference edits
-                    # now fix and apply the edits
-                    # prior to changing the namespace
-                    # so store the sub reference edits:
-                    edits_dictionary = {}
-                    for i, sub_ref in enumerate(sub_refs):
-                        # now list all the reference edits
-                        try:
-                            all_edits = \
-                                pymel.core.referenceQuery(sub_ref, es=1)
-                        except UnicodeError:
-                            # there is an improper character in the node name
-                            # of some nodes
-                            # just skip this reference
-                            logger.debug('edits has improper character, '
-                                         'skipping!!!')
-                            all_edits = []
-
-                        logger.debug('all_edits : %s' % all_edits)
-
-                        # remove all the edits update them and apply them
-                        # fix and apply them again
-                        if all_edits:
-                            sub_ref.removeReferenceEdits(
-                                force=1,
-                                failedEdits=1
-                            )
-                            sub_ref.load()
-                            edits_dictionary[i] = all_edits
-
-                    # now update the namespace
-                    new_namespace = match.group('nice_name')
-                    # update the namespace
-                    ref.namespace = new_namespace
-                    # ask it again cause maya can change it to
-                    # something else by adding a number to the end
-                    new_namespace = ref.namespace
-                    logger.debug('new_namespace: %s' % new_namespace)
-
-                    # go over sub refs again, but now apply the new
-                    # edits
-                    if old_namespace != new_namespace:
-                        updated_namespaces = True
-
-                    # re read sub refs
-                    sub_refs = reversed(
-                        pymel.core.listReferences(ref, recursive=True)
-                    )
-                    for i, sub_ref in enumerate(sub_refs):
-                        edits = edits_dictionary.get(i, [])
-
-                        for edit in edits:
-                            updated_edit = edit.replace(old_namespace,
-                                                        new_namespace)
-                            updated_edit = self.get_clean_edit(updated_edit)
-
-                            try:
-                                pymel.core.mel.eval(updated_edit)
-                            except RuntimeError:
-                                # just pass it
-                                pass
+                updated_namespaces = self.update_reference_edits(vers)
 
                 logger.debug('updated_namespaces : %s' % updated_namespaces)
                 if updated_namespaces:
@@ -1688,67 +1825,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     self.save_as(new_version)
                     # pymel.core.saveFile()
 
-            # re open original scene
-            reference_resolution = self.open(started_from_version, force=True)
-
-            # check references
-            refs = pymel.core.listReferences(recursive=True)
-            edits_dictionary = {}
-            for i, ref in enumerate(reversed(refs)):
-                # re apply any failed edits
-                try:
-                    all_edits = pymel.core.referenceQuery(ref, es=1)
-                except UnicodeError:
-                    logger.debug('edits has improper character, '
-                                 'skipping!!!')
-                    all_edits = []
-                logger.debug('all_edits: %s' % all_edits)
-                edits_dictionary[i] = all_edits
-                if all_edits:
-                    ref.removeReferenceEdits(
-                        force=1
-                    )
-                    ref.load()
-
-            # do updates
-            self.update_first_level_versions(reference_resolution)
-
-            # replace first level reference namespaces
-            refs_and_namespaces = {}
-            for ref in pymel.core.listReferences():
-                # replace any possible old namespace with current one
-                ref_version = self.get_version_from_full_path(ref.path)
-                old_namespace = ref.namespace
-                ref.namespace = ref_version.nice_name
-                new_namespace = ref.namespace
-                refs_and_namespaces[ref] = [old_namespace, new_namespace]
-
-            refs = pymel.core.listReferences(recursive=True)
-            for i, ref in enumerate(reversed(refs)):
-                all_edits = edits_dictionary[i]
-                logger.debug('re-all_edits: %s' % all_edits)
-
-                current_ref = ref
-                parent_ref = current_ref.parent()
-                while parent_ref:
-                    current_ref = parent_ref
-                    parent_ref = current_ref.parent()
-                parent_ref = current_ref
-
-                old_namespace = refs_and_namespaces[parent_ref][0]
-                new_namespace = refs_and_namespaces[parent_ref][1]
-
-                for edit in all_edits:
-                    updated_edit = edit.replace(
-                        old_namespace,
-                        new_namespace
-                    )
-                    updated_edit = self.get_clean_edit(updated_edit)
-                    logger.debug('updated_edit: %s' % updated_edit)
-                    # so this is an edit done in current scene
-                    try:
-                        pymel.core.mel.eval(updated_edit)
-                    except RuntimeError:
-                        pass
+            self.update_reference_edits(started_from_version)
 
         return created_versions
