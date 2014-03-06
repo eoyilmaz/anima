@@ -5,6 +5,8 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
+import subprocess
+import tempfile
 
 
 class PrevisBase(object):
@@ -854,9 +856,6 @@ class Sequencer(object):
         """
         import pymel.core
 
-        #shots = pymel.core.ls(sl=1, type=pymel.core.nt.Shot)
-        #active_panel = pymel.core.playblast(activeEditor=1)
-
         # get current version and then the output folder
         path_template = os.path.join(
             pymel.core.workspace.name,
@@ -870,8 +869,12 @@ class Sequencer(object):
 
         for shot in shots:
             shot_name = shot.shotName.get()
-            start_frame = shot.startFrame.get() - handle
-            end_frame = shot.endFrame.get() + handle
+            if shot.hasAttr('handle'):
+                per_shot_handle = shot.handle.get()
+            else:
+                per_shot_handle = handle
+            start_frame = shot.startFrame.get() - per_shot_handle
+            end_frame = shot.endFrame.get() + per_shot_handle
             width = shot.wResolution.get()
             height = shot.hResolution.get()
 
@@ -962,3 +965,42 @@ class Sequencer(object):
         :param seq: A :class:`.Sequence` instance
         """
         return seq.to_edl()
+
+    @classmethod
+    def metafuze(cls, xml):
+        """Calls "Avid Metafuze" with the given xml content to convert media
+        files to MXF format.
+
+        :param str xml: The xml content
+        :return:
+        """
+        # write the given content to tmp
+        temp_file_path = tempfile.mktemp()
+        with open(temp_file_path, 'w') as f:
+            f.write(xml)
+
+        process = subprocess.Popen(
+            ['metafuze',
+             temp_file_path],
+            stderr=subprocess.PIPE
+        )
+        # wait it to complete
+        process.wait()
+
+        stderr = process.stderr.readlines()
+
+        if process.returncode:
+            # there is an error
+            raise RuntimeError(stderr)
+
+        # remove the temp file
+        os.remove(temp_file_path)
+
+    @classmethod
+    def convert_to_mxf(cls, path):
+        """converts the given video at given path to Avid MXF DNxHD 36.
+
+        :param path: The path of the media file
+        :return: returns the generated mxf file location
+        """
+        pass

@@ -1457,40 +1457,21 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return new_versions
 
-    @classmethod
-    def get_clean_edit(cls, edit):
-        """Returns a cleaned up edit string with new namespace scheme which
-        doesn't uses version number and file extension
+    def get_cumulative_namespace(self, ref_node):
+        """Returns the cumulative namespace for the given reference node which
+        includes the parent reference namespaces.
 
-        :param str edit: A string holding the edit, generally returned by the
-          pymel.core.referenceQuery() function.
-        :return str: The cleaned up edit
+        :param ref_node: A pymel.core.system.FileReference instance
+        :return:
         """
-        import re
+        cumulative_namespace = [ref_node.namespace]
+        parent_node = ref_node.parent()
+        while parent_node:
+            current_node = parent_node
+            cumulative_namespace.append(current_node.namespace)
+            parent_node = current_node.parent()
 
-        regex2 = r'(?P<namespace>[\w\_0-9:]+)' \
-                 r'(?P<version>_v[0-9]+_ma)' \
-                 r'(?P<copy_number>[0-9]*)'
-
-        rejoin = []
-        for part in edit.split('|'):
-            if ':' in part:
-                sub_rejoin = []
-                for sub_part in part.split(':'):
-                    match = re.match(regex2, sub_part)
-                    if match:
-                        new_namespace = \
-                            "%s%s" % (
-                                match.group('namespace'),
-                                match.group('copy_number')
-                            )
-                        sub_rejoin.append(new_namespace)
-                    else:
-                        sub_rejoin.append(sub_part)
-                rejoin.append(':'.join(sub_rejoin))
-            else:
-                rejoin.append(part)
-        return '|'.join(rejoin)
+        return ':'.join(reversed(cumulative_namespace))
 
     def update_reference_edits(self, version):
         """Updates the reference edits for the given file
@@ -1502,6 +1483,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # version for this version
         updated_namespaces = False
         # referenceQuery = pymel.core.referenceQuery
+        # use maya.cmds it is safer to use when there are Unicode edits
         referenceQuery = maya.cmds.referenceQuery
 
         regex = r'(?P<nice_name>[\w_0-9]+)' \
@@ -1516,11 +1498,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             match = re.match(regex, namespace)
             if match:
                 updated_namespaces = True
-
-        # if not updated_namespaces \
-        #    and reference_resolution['update'] is [] \
-        #    and reference_resolution['create'] is []:
-        #     return updated_namespaces
 
         # check references
         refs = pymel.core.listReferences(recursive=True)
@@ -1542,7 +1519,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             logger.debug('all_edits: %s' % all_edits)
 
-            edits_dictionary[i] = all_edits
+            edits_dictionary[i] = {
+                'namespace': self.get_cumulative_namespace(ref),
+                'edits': all_edits
+            }
             if all_edits:
                 ref.removeReferenceEdits(force=1)
                 ref.load()
@@ -1551,7 +1531,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.update_first_level_versions(reference_resolution)
 
         # replace first level reference namespaces
-        refs_and_namespaces = {}
         for ref in pymel.core.listReferences():
             # replace any possible old namespace with current one
             ref_version = self.get_version_from_full_path(ref.path)
@@ -1565,35 +1544,21 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # not the old_namespace
                 if old_namespace != new_namespace:
                     ref.namespace = ref_version.nice_name
-                    new_namespace = ref.namespace
                     updated_namespaces = True
 
             except RuntimeError:
                 # Apparently There is no namespace, so do not change the
                 # namespace
-                old_namespace = ''
-                new_namespace = ''
                 pass
-            refs_and_namespaces[ref] = [old_namespace, new_namespace]
-
-        # do not update any reference if we didn't change the namespace
-        # if not updated_namespaces:
-        #     return updated_namespaces
 
         refs = pymel.core.listReferences(recursive=True)
         for i, ref in enumerate(reversed(refs)):
-            all_edits = edits_dictionary[i]
+            all_edits = edits_dictionary[i]['edits']
             logger.debug('re-all_edits: %s' % all_edits)
 
-            current_ref = ref
-            parent_ref = current_ref.parent()
-            while parent_ref:
-                current_ref = parent_ref
-                parent_ref = current_ref.parent()
-            parent_ref = current_ref
+            old_namespace = edits_dictionary[i]['namespace']
+            new_namespace = self.get_cumulative_namespace(ref)
 
-            old_namespace = refs_and_namespaces[parent_ref][0]
-            new_namespace = refs_and_namespaces[parent_ref][1]
             logger.debug('old_namespace : %s' % old_namespace)
             logger.debug('new_namespace : %s' % new_namespace)
 
@@ -1601,13 +1566,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             external_edits = referenceQuery(ref, es=1, scs=1)
 
             for edit in all_edits:
-                updated_edit = edit.replace('|:', '|')  # this is a weird bug
-                if old_namespace != new_namespace:
-                    updated_edit = updated_edit.replace(
-                        old_namespace,
-                        new_namespace
-                    )
-                updated_edit = self.get_clean_edit(updated_edit)
+                updated_edit = edit.replace(
+                    old_namespace,
+                    new_namespace
+                ).replace('|:', '|')  # the last one is a weird bug
 
                 # do not apply edits if they are coming from other scenes
                 if updated_edit in external_edits:
@@ -1617,8 +1579,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # so this is an edit done in current scene
                 try:
                     pymel.core.mel.eval(updated_edit)
-                except RuntimeError as e:
-                    logger.debug('There is a RuntimeError in : %s' % 
+                except RuntimeError:
+                    logger.debug('There is a RuntimeError in : %s' %
                                  updated_edit)
                     pass
 

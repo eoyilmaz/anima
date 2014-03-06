@@ -4342,3 +4342,332 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertEqual(10.0, group.tx.get())
         pymel.core.saveFile()
 
+    def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref(self):
+        """testing if the fix_reference_namespace method is working properly
+        with references that has the same namespace with its children
+
+        version15 -> Bigger Layout -> Move the parent
+          version11 -> Layout -> Parent it under a group
+            version4 -> LookDev -> Assign new Material / using the same
+                        namespace with its child
+              version2 -> Model
+
+        All uses wrong namespaces
+        """
+        # create deep reference
+        self.version2.is_published = True
+        self.version4.is_published = True
+        self.version11.is_published = True
+        self.version15.is_published = True
+        db.DBSession.commit()
+
+        # open version2 and create a locator
+        self.maya_env.open(self.version2)  # model
+        cube = pymel.core.polyCube(name='test_cube')
+        cube[0].t.set(0, 0, 0)
+        pymel.core.saveFile()
+
+        # version4 references version2
+        self.maya_env.open(self.version4)  # look dev
+        self.maya_env.reference(self.version2)
+        # change the namespace to old one
+        refs = pymel.core.listReferences()
+        ref = refs[0]
+        isinstance(ref, pymel.core.system.FileReference)
+        ref.namespace = self.version2.filename.replace('.', '_')
+        # assign a new material
+        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
+        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
+        pymel.core.sets(blinnSG, e=True, fe=[cube])
+        pymel.core.saveFile()
+
+        # version11 references version4
+        pymel.core.newFile(force=True)
+        self.maya_env.open(self.version11)  # layout
+        self.maya_env.reference(self.version4)
+        # use version2 namespace in version4
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version2.filename.replace('.', '_')
+        # now do the edits here
+        # we need to do some edits
+        # there should be only one locator in the current scene
+        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        # parent it to something else
+        group = pymel.core.group(cube, name='test_group')
+        # pymel.core.parent(cube, group)
+        cube.t.set(1, 0, 0)
+        pymel.core.saveFile()
+
+        # we should have created an edit
+        version2_ref_node = pymel.core.listReferences(refs[0])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        # version15 references version11
+        pymel.core.newFile(force=True)
+        self.maya_env.open(self.version15)  # bigger layout
+        self.maya_env.reference(self.version11)
+        # use old style namespace here
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version11.filename.replace('.', '_')
+        # now do some other edits here
+        group = pymel.core.ls(
+            '*:test_group',
+            type=pymel.core.nt.Transform
+        )[0]
+        # move the one with no parent to somewhere in the scene
+        group.t.set(10, 0, 0)
+        pymel.core.saveFile()
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.filename.replace('.', '_')
+        )
+
+        # version4 is using version2 namespace
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.filename.replace('.', '_')
+        )
+
+        # version4 is using version2 filename
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.maya_env.fix_reference_namespaces()
+        pymel.core.saveFile()
+
+        # check if the namespaces are fixed
+        all_refs = pymel.core.listReferences(recursive=1)
+
+        # first copy
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version11.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version4.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[2].namespace,
+            self.version2.nice_name
+        )
+
+        # now check we don't have any failed edits
+        # first copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            0
+        )
+
+        # and we have all successful edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            2
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            1
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            4
+        )
+
+        # and check if the locator are where they should be
+        group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
+        self.assertEqual(10.0, group.tx.get())
+        pymel.core.saveFile()
+
+    def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref_in_a_shallower_setup(self):
+        """testing if the fix_reference_namespace method is working properly
+        with references that has the same namespace with its children in a
+        shallower setup
+
+        version11 -> Layout -> Parent it under a group
+          version4 -> LookDev -> Assign new Material / using the same
+                      namespace with its child
+            version2 -> Model
+
+        All uses wrong namespaces
+        """
+        # create deep reference
+        self.version2.is_published = True
+        self.version4.is_published = True
+        self.version11.is_published = True
+        db.DBSession.commit()
+
+        # open version2 and create a locator
+        self.maya_env.open(self.version2)  # model
+        cube = pymel.core.polyCube(name='test_cube')
+        cube[0].t.set(0, 0, 0)
+        pymel.core.saveFile()
+
+        # version4 references version2
+        self.maya_env.open(self.version4)  # look dev
+        self.maya_env.reference(self.version2)
+        # change the namespace to old one
+        refs = pymel.core.listReferences()
+        ref = refs[0]
+        isinstance(ref, pymel.core.system.FileReference)
+        ref.namespace = self.version2.filename.replace('.', '_')
+        # assign a new material
+        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
+        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
+        pymel.core.sets(blinnSG, e=True, fe=[cube])
+        pymel.core.saveFile()
+
+        # version11 references version4
+        pymel.core.newFile(force=True)
+        self.maya_env.open(self.version11)  # layout
+        self.maya_env.reference(self.version4)
+        # use version2 namespace in version4
+        refs = pymel.core.listReferences()
+        refs[0].namespace = self.version2.filename.replace('.', '_')
+        # now do the edits here
+        # we need to do some edits
+        # there should be only one locator in the current scene
+        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        # parent it to something else
+        group = pymel.core.group(cube, name='test_group')
+        cube.t.set(1, 0, 0)
+        pymel.core.saveFile()
+
+        # we should have created an edit
+        version2_ref_node = pymel.core.listReferences(refs[0])[0]
+        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        self.assertTrue(len(edits) > 0)
+
+        # check namespaces
+        all_refs = pymel.core.listReferences(recursive=1)
+
+        # version4 is using version2 namespace
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        # check namespaces
+        # version4 is using version2 filename
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.filename.replace('.', '_')
+        )
+
+        self.maya_env.fix_reference_namespaces()
+        pymel.core.saveFile()
+
+        # check if the namespaces are fixed
+        all_refs = pymel.core.listReferences(recursive=1)
+
+        # first copy
+        self.assertEqual(
+            all_refs[0].namespace,
+            self.version4.nice_name
+        )
+
+        self.assertEqual(
+            all_refs[1].namespace,
+            self.version2.nice_name
+        )
+
+        # now check we don't have any failed edits
+        # first copy
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            0
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            0
+        )
+
+        # and we have all successful edits
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            1
+        )
+
+        self.assertEqual(
+            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            4
+        )
+
+        # and check if the locator are where they should be
+        pymel.core.saveFile()
+
+    def test_get_cumulative_namespace_is_working_properly(self):
+        """testing if the Maya.get_cumulative_namespace() is working properly
+        """
+        self.maya_env.open(self.version4)
+        self.maya_env.reference(self.version2)
+        pymel.core.saveFile()
+
+        self.maya_env.open(self.version11, force=1)
+        self.maya_env.reference(self.version4)
+        pymel.core.saveFile()
+
+        self.maya_env.open(self.version15, force=1)
+        self.maya_env.reference(self.version11)
+        pymel.core.saveFile()
+
+        # now get the version2 cumulative namespace
+        refs = pymel.core.listReferences(recursive=1)
+        result = self.maya_env.get_cumulative_namespace(refs[-1])
+        self.assertEqual(
+            'Test_Task_1_Test_Task_5_Take1:Asset_2_Take1:Asset_2_Main',
+            result
+        )
+
+    def test_get_cumulative_namespace_is_working_properly_for_refs_with_no_namespace(self):
+        """testing if the get_cumulative_namespace() method is working properly
+        for references with no namespace
+        """
+        self.fail('test is not implemented yet')
