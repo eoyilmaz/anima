@@ -391,7 +391,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             ref = pymel.core.createReference(
                 version.absolute_full_path,
                 gl=True,
-                defaultNamespace=True,
+                defaultNamespace=True,  # this is not "no namespace", but safe
                 options='v=0'
             )
 
@@ -1457,22 +1457,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return new_versions
 
-    def get_cumulative_namespace(self, ref_node):
-        """Returns the cumulative namespace for the given reference node which
-        includes the parent reference namespaces.
-
-        :param ref_node: A pymel.core.system.FileReference instance
-        :return:
-        """
-        cumulative_namespace = [ref_node.namespace]
-        parent_node = ref_node.parent()
-        while parent_node:
-            current_node = parent_node
-            cumulative_namespace.append(current_node.namespace)
-            parent_node = current_node.parent()
-
-        return ':'.join(reversed(cumulative_namespace))
-
     def update_reference_edits(self, version):
         """Updates the reference edits for the given file
 
@@ -1520,7 +1504,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             logger.debug('all_edits: %s' % all_edits)
 
             edits_dictionary[i] = {
-                'namespace': self.get_cumulative_namespace(ref),
+                'namespace': ref.fullNamespace,
                 'edits': all_edits
             }
             if all_edits:
@@ -1557,7 +1541,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             logger.debug('re-all_edits: %s' % all_edits)
 
             old_namespace = edits_dictionary[i]['namespace']
-            new_namespace = self.get_cumulative_namespace(ref)
+            new_namespace = ref.fullNamespace
 
             logger.debug('old_namespace : %s' % old_namespace)
             logger.debug('new_namespace : %s' % new_namespace)

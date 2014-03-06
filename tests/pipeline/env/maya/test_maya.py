@@ -4642,32 +4642,3 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # and check if the locator are where they should be
         pymel.core.saveFile()
-
-    def test_get_cumulative_namespace_is_working_properly(self):
-        """testing if the Maya.get_cumulative_namespace() is working properly
-        """
-        self.maya_env.open(self.version4)
-        self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
-
-        self.maya_env.open(self.version11, force=1)
-        self.maya_env.reference(self.version4)
-        pymel.core.saveFile()
-
-        self.maya_env.open(self.version15, force=1)
-        self.maya_env.reference(self.version11)
-        pymel.core.saveFile()
-
-        # now get the version2 cumulative namespace
-        refs = pymel.core.listReferences(recursive=1)
-        result = self.maya_env.get_cumulative_namespace(refs[-1])
-        self.assertEqual(
-            'Test_Task_1_Test_Task_5_Take1:Asset_2_Take1:Asset_2_Main',
-            result
-        )
-
-    def test_get_cumulative_namespace_is_working_properly_for_refs_with_no_namespace(self):
-        """testing if the get_cumulative_namespace() method is working properly
-        for references with no namespace
-        """
-        self.fail('test is not implemented yet')
