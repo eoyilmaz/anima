@@ -1601,7 +1601,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             external_edits = referenceQuery(ref, es=1, scs=1)
 
             for edit in all_edits:
-                updated_edit = edit
+                updated_edit = edit.replace('|:', '|')  # this is a weird bug
                 if old_namespace != new_namespace:
                     updated_edit = updated_edit.replace(
                         old_namespace,
