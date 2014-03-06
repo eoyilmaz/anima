@@ -24,8 +24,8 @@ def version_creator(lib='PyQt4'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.pipeline.env import fusionEnv
-    fusion_env = fusionEnv.Fusion()
+    from anima.pipeline.env import fusion
+    fusion_env = fusion.Fusion()
     fusion_env.name = 'Fusion'
 
     from anima.pipeline.ui import version_creator
@@ -34,7 +34,7 @@ def version_creator(lib='PyQt4'):
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.fusionEnv").setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.env.fusion").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
     version_creator.UI(environment=fusion_env)

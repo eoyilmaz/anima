@@ -22,11 +22,11 @@ def version_creator():
         pass
 
     from anima.pipeline.ui import version_creator, models
-    from anima.pipeline.env import mayaEnv
+    from anima.pipeline.env import maya
     reload(version_creator)
     reload(models)
-    mEnv = mayaEnv.Maya()
-    mEnv.name = "Maya%s" % str(pymel.versions.current())[0:4]
+    m = maya.Maya()
+    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     import logging
     logger = logging.getLogger('anima.pipeline.ui.version_creator')
@@ -34,7 +34,7 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(environment=mEnv)
+    version_creator.UI(environment=m)
 
 
 def version_updater():
@@ -53,11 +53,11 @@ def version_updater():
         pass
 
     from anima.pipeline.ui import version_updater, models
-    from anima.pipeline.env import mayaEnv
+    from anima.pipeline.env import maya
     reload(version_updater)
     reload(models)
-    maya_env = mayaEnv.Maya()
-    maya_env.name = "Maya" + str(pymel.versions.current())[0:4]
+    m = maya.Maya()
+    m.name = "Maya" + str(pymel.versions.current())[0:4]
 
     import logging
     logger = logging.getLogger('anima.pipeline.env.base')
@@ -68,4 +68,4 @@ def version_updater():
     logger.setLevel(logging.WARNING)
 
     # generate a reference_resolution
-    version_updater.UI(environment=maya_env)
+    version_updater.UI(environment=m)

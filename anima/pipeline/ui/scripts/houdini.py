@@ -13,8 +13,8 @@ def version_creator():
     do_db_setup()
 
     from anima.pipeline.ui import version_creator
-    from anima.pipeline.env import houdiniEnv
-    hEnv = houdiniEnv.Houdini()
+    from anima.pipeline.env import houdini
+    h = houdini.Houdini()
 
     import logging
     logger = logging.getLogger('anima.pipeline.ui.version_creator')
@@ -22,4 +22,4 @@ def version_creator():
     logger = logging.getLogger('anima.pipeline.ui.models')
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(environment=hEnv)
+    version_creator.UI(environment=h)

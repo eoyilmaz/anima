@@ -9,7 +9,7 @@ import os
 from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
 
 import unittest2
-from anima.pipeline.env.externalEnv import ExternalEnv, ExternalEnvFactory
+from anima.pipeline.env.external import ExternalEnv, ExternalEnvFactory
 
 
 class ExternalEnvTestCase(unittest2.TestCase):

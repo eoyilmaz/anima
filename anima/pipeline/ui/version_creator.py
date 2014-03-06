@@ -16,7 +16,7 @@ from stalker import (db, defaults, Version, Project, Task, LocalSession, Group)
 import anima
 from anima.pipeline import utils, power_users_group_names
 from anima.pipeline.env.base import EnvironmentBase
-from anima.pipeline.env.externalEnv import ExternalEnvFactory
+from anima.pipeline.env.external import ExternalEnvFactory
 from anima.pipeline.ui import utils as ui_utils
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 from anima.pipeline.ui import (IS_PYSIDE, IS_PYQT4, version_updater)

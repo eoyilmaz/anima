@@ -17,16 +17,16 @@ def version_creator():
     ui.SET_PYSIDE()
 
     from anima.pipeline.ui import version_creator
-    from anima.pipeline.env import nukeEnv
-    nuke_env = nukeEnv.Nuke()
-    nuke_env.name = "Nuke"
+    from anima.pipeline.env import nuke
+    n = nuke.Nuke()
+    n.name = "Nuke"
 
     # display only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.nukeEnv").setLevel(logging.WARNING)
+    logging.getLogger("anima.pipeline.env.nuke").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_creator.UI(environment=nuke_env)
+    version_creator.UI(environment=n)

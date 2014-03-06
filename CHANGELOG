@@ -7,7 +7,7 @@ Changes
 
 * **Pipeline:**
 
-  * **New:** mayaEnv.Maya.update_versions() updates all the references no
+  * **New:** maya.Maya.update_versions() updates all the references no
     matter how deeply they have been referenced to the current scene. It will
     create new Versions if necessary and return them as a list of Version
     instances.
@@ -16,10 +16,10 @@ Changes
     ``open()``, thus updated all the inherited classes (Maya, Nuke, Photoshop,
     Fusion, Houdini).
 
-  * **Update:** ``update_references_list`` in mayaEnv.Maya class is renamed to
+  * **Update:** ``update_references_list`` in maya.Maya class is renamed to
     ``update_version_inputs`` to make it clear what it does.
 
-  * **Update:** mayaEnv.Maya.reference() now updates the inputs of the related
+  * **Update:** maya.Maya.reference() now updates the inputs of the related
     Version instance of the newly created reference. This last update greatly
     reduces cycle issues in Version.inputs attribute, which can happen if the
     reference is created with Maya class but then removed by hand and then the
@@ -78,7 +78,7 @@ Changes
 
     * **New:** Moved ``stalker.models.env.EnvironmentBase`` to
       ``anima.pipeline.env.base.EnvironmentBase``.
-    * **New:** Added ``stalker.models.env.photoshopEnv.Photoshop`` class for
+    * **New:** Added ``stalker.models.env.photoshop.Photoshop`` class for
       Photoshop.
 
   * **UI:**
@@ -107,7 +107,7 @@ Changes
 
  * **Env:**
 
-   * **ExternalEnv:**
+   * **External:**
 
      * **New:** Added ExternalEnv and ExternalEnvFactory classes to handle
        external environments (which doesn't support python by default). For
@@ -136,11 +136,11 @@ Changes
 
   * **Env:**
 
-    * **MayaEnv:**
+    * **Maya:**
 
-      * **New:** MayaEnv now uses the significant name for playblast file name
+      * **New:** Maya now uses the significant name for playblast file name
         and render output filename.
-      * **Update:** MayaEnv now will leave the reference load state in the same
+      * **Update:** Maya now will leave the reference load state in the same
         state as it was saved.
 
 0.1.0.a6
@@ -166,9 +166,9 @@ Changes
 
   * **Env:**
 
-    * **MayaEnv:**
+    * **Maya:**
 
-      * **Fix:** Fixed MayaEnv.export(), it is now committing the data to the
+      * **Fix:** Fixed Maya.export(), it is now committing the data to the
         database.
 
 0.1.0.a5
@@ -206,7 +206,7 @@ Changes
 
   * **Env:**
 
-    * **MayaEnv:**
+    * **Maya:**
 
       * **New:** External files are now moved to the
         version.absolute_path/external_files folder
@@ -214,13 +214,13 @@ Changes
         again when saving a new version.
       * **New:** Added support for Arnold Renderer.
 
-    * **NukeEnv:**
+    * **Nuke:**
 
       * **Fix:** Fixed a typo
       * **New:** Now also in Nuke, the current version is set as the parent of
         the newly created version.
 
-    * **HoudiniEnv:**
+    * **Houdini:**
 
       * **New:** Now also in Nuke, the current version is set as the parent of
         the newly created version.

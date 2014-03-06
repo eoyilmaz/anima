@@ -24,8 +24,8 @@ def version_creator(lib='PySide'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.pipeline.env.photoshopEnv import Photoshop
-    photoshop_env = Photoshop()
+    from anima.pipeline.env.photoshop import Photoshop
+    p = Photoshop()
 
     from anima.pipeline.ui import version_creator
     # display only warning messages
@@ -33,8 +33,8 @@ def version_creator(lib='PySide'):
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.photoshopEnv").setLevel(
+    logging.getLogger("anima.pipeline.env.photoshop").setLevel(
         logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_creator.UI(environment=photoshop_env)
+    version_creator.UI(environment=p)
