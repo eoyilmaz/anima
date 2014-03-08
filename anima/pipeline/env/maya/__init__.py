@@ -1478,11 +1478,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         reference_resolution = self.open(version, force=True)
 
         # check reference namespaces
-        for ref in pymel.core.listReferences():
+        for ref in pymel.core.listReferences(recursive=True):
             namespace = ref.namespace
             match = re.match(regex, namespace)
             if match:
                 updated_namespaces = True
+
+        if not updated_namespaces:
+            # do updates
+            if self.update_first_level_versions(reference_resolution):
+                updated_namespaces = True
+            return updated_namespaces
 
         # check references
         refs = pymel.core.listReferences(recursive=True)
