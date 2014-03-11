@@ -7,7 +7,7 @@
 
 import os
 import jinja2
-import nukeEnv
+import nuke
 
 from stalker.db import DBSession
 from .. import utils
@@ -34,7 +34,7 @@ class Nuke(EnvironmentBase):
     def get_root_node(self):
         """returns the root node of the current nuke session
         """
-        return nukeEnv.toNode("root")
+        return nuke.toNode("root")
 
     def save_as(self, version):
         """"the save action for nuke environment
@@ -104,7 +104,7 @@ class Nuke(EnvironmentBase):
             #     imf.pixel_aspect
             # )
 
-        nukeEnv.scriptSaveAs(version.absolute_full_path)
+        nuke.scriptSaveAs(version.absolute_full_path)
 
         if current_version:
             # update the parent info
@@ -121,13 +121,13 @@ class Nuke(EnvironmentBase):
         # set the extension to '.nk'
         version.update_paths()
         version.extension = '.nk'
-        nukeEnv.nodeCopy(version.absolute_full_path)
+        nuke.nodeCopy(version.absolute_full_path)
         return True
 
     def open(self, version, force=False):
         """the open action for nuke environment
         """
-        nukeEnv.scriptOpen(version.absolute_full_path)
+        nuke.scriptOpen(version.absolute_full_path)
 
         # set the project_directory
         # self.project_directory = os.path.dirname(version.absolute_path)
@@ -147,7 +147,7 @@ class Nuke(EnvironmentBase):
     def import_(self, version, use_namespace=True):
         """the import action for nuke environment
         """
-        nukeEnv.nodePaste(version.absolute_full_path)
+        nuke.nodePaste(version.absolute_full_path)
         return True
 
     def get_current_version(self):
@@ -173,7 +173,7 @@ class Nuke(EnvironmentBase):
         i = 1
         while True:
             try:
-                full_path = nukeEnv.recentFile(i)
+                full_path = nuke.recentFile(i)
             except RuntimeError:
                 # no recent file anymore just return None
                 return None
@@ -251,7 +251,7 @@ class Nuke(EnvironmentBase):
         """
         # list all the write nodes in the current file
         all_main_write_nodes = []
-        for write_node in nukeEnv.allNodes("Write"):
+        for write_node in nuke.allNodes("Write"):
             if write_node.name().startswith(self._main_output_node_name):
                 all_main_write_nodes.append(write_node)
 
@@ -266,7 +266,7 @@ class Nuke(EnvironmentBase):
         # check if there is a write node or not
         if not len(main_write_nodes):
             # create one with correct output path
-            main_write_node = nukeEnv.nodes.Write()
+            main_write_node = nuke.nodes.Write()
             main_write_node.setName(self._main_output_node_name)
             main_write_nodes.append(main_write_node)
 
@@ -335,7 +335,7 @@ class Nuke(EnvironmentBase):
             return utils.relpath(self.project_directory, path, "/", "..")
 
         # get all read nodes
-        allNodes = nukeEnv.allNodes()
+        allNodes = nuke.allNodes()
 
         readNodes = [node for node in allNodes if node.Class() == "Read"]
         writeNodes = [node for node in allNodes if node.Class() == "Write"]

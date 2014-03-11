@@ -17,8 +17,8 @@ def version_creator():
     ui.SET_PYSIDE()
 
     from anima.pipeline.ui import version_creator
-    from anima.pipeline.env import nuke
-    n = nuke.Nuke()
+    from anima.pipeline.env import nukeEnv
+    n = nukeEnv.Nuke()
     n.name = "Nuke"
 
     # display only warning messages
