@@ -3,10 +3,14 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from contextlib import contextmanager
 
 import os
 import subprocess
 import tempfile
+import pymel
+import anima.extension.maya
+from anima.extension import extends
 
 
 class PrevisBase(object):
@@ -114,6 +118,522 @@ class DurationMixin(object):
     @duration.setter
     def duration(self, duration):
         self._duration = self._validate_duration(duration)
+
+
+class SequenceManagerExtension(object):
+    """Extension to the pymel.core.nodetypes.SequenceManager class
+    """
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def create_sequence(self, name=None):
+        """Creates a new sequence
+
+        :return: pymel.core.nodetypes.Sequence
+        """
+        sequencer = pymel.core.createNode('sequencer')
+        if name:
+            sequencer.set_sequence_name(name)
+
+        sequencer.message >> self.sequences.next_available
+        return sequencer
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def from_xml(self, path):
+        """Parses XML file and returns a Sequence instance which reflects the
+        whole timeline hierarchy.
+
+        :param path: The path of the XML file
+        :return: :class:`.Sequence`
+        """
+        if not isinstance(path, str):
+            raise TypeError(
+                'path argument in %s.from_xml should be a string, not %s' %
+                (self.__class__.__name__, path.__class__.__name__)
+            )
+
+        from xml.etree import ElementTree
+
+        try:
+            tree = ElementTree.parse(path)
+        except IOError:
+            raise IOError('Please supply a valid path to an XML file!')
+
+        root = tree.getroot()
+        seq = Sequence()
+        xml_seq = root.getchildren()[0]
+
+        seq.from_xml(xml_seq)
+
+        return seq
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def to_xml(self, path=None, seq=None, indentation=2, pre_indent=0):
+        """This is a mutated method, meaning it is both using Maya FCP XML
+        generation by using Maya libraries, and can output XML content if a
+        sequence instance is given.
+
+        So it generates Maya FCP XML file using maya.app.edl.importExport.EDL
+        if the path argument is not None.
+
+        Converts the given Sequence instance to an xml file.
+
+        :param path: The path of the XML file
+
+        :param seq: A :class:`.Sequence` instance
+        :return: str
+        """
+        if path is not None:
+            import maya.app.edl.importExport as EDL
+            EDL.doExport(path, 0)
+        elif seq is not None:
+            if not isinstance(seq, Sequence):
+                raise TypeError(
+                    '"seq" argument in %s.to_xml should be an instance of'
+                    'anima.previs.Sequence, not %s' % (
+                        self.__class__.__name__, seq.__class__.__name__
+                    )
+                )
+
+            template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
+
+            return template % {
+                'sequence': seq.to_xml(indentation=indentation,
+                                       pre_indent=indentation + pre_indent)
+            }
+        else:
+            raise TypeError('Please supply at least one of "path" or "seq" '
+                            'arguments')
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def to_edl(self):
+        """Generates an EDL file out of the edit
+        """
+        temp_xml = tempfile.mktemp(suffix='.xml')
+        print temp_xml
+        self.to_xml(temp_xml)
+        seq = self.from_xml(temp_xml)
+        l = seq.to_edl()
+        return l
+
+
+class SequencerExtension(object):
+    """The sequence instance.
+
+    It is a manager that manages shot data. It is kind of the reflection of the
+    Maya Sequencer instance.
+
+    It is able to get Maya editorial XML and convert it to EDL.
+    """
+    # just for IDEs
+    shots = None
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def set_sequence_name(self, name):
+        """Sets the sequence name for this Sequencer
+
+        :param name: A str holding the desired name of the sequence.
+        :return: None
+        """
+        if not self.hasAttr('sequence_name'):
+            self.addAttr('sequence_name', dt='string')
+        self.sequence_name.set(name)
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    @property
+    def all_shots(self):
+        """return all the shots connected to this sequencer
+        """
+        return self.shots.get()
+
+    # @extends(pymel.core.nodetypes.Sequencer)
+    # @all_shots.setter
+    # def all_shots(self, shots):
+    #     """setter for the all_shots property
+    #     """
+    #     # remove the current shots first
+    #     # then append the new ones
+    #     for s in self.all_shots:
+    #         t = s // self.shots
+    #
+    #     for s in shots:
+    #         t = s.message >> self.shots.next_available
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def add_shot(self, shot):
+        """Adds the given shot to the current sequencer
+
+        :param shot: a pymel.core.nodetypes.Shot instance
+        :return: None
+        """
+        # add the given shot to the list
+        if not shot.hasAttr('handle'):
+            shot.set_handle(handle=10)
+
+        # connect to the sequencer
+        # remove it from other sequences
+        for attr in shot.message.outputs(p=1):
+            if isinstance(attr.node(), pymel.core.nodetypes.Sequencer):
+                shot.message // attr
+
+        shot.message >> self.shots.next_available
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def set_shot_handles(self, handle=10):
+        """Set shot handles
+
+        :param int handle: An integer value for handle
+        :return:
+        """
+        # validate arguments
+        # shots
+        for shot in self.all_shots:
+            shot.set_handle(handle)
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def mute_shots(self):
+        """mutes all shots connected to this sequencer
+        """
+        for shot in self.all_shots:
+            shot.mute()
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def unmute_shots(self):
+        """unmutes all shots connected to this sequencer
+        """
+        for shot in self.all_shots:
+            shot.unmute()
+
+    def create_sequencer_attributes(self):
+        """Creates the necessary extra attributes for the sequencer in the
+        current scene.
+
+        Add attributes like:
+            sequenceName
+            shotNameTemplate
+            defaultHandle
+        """
+        raise NotImplementedError()
+
+    def set_shot_names(self, sequence_name, padding=4, increment=10,
+                       template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
+        """Sets all shot names according to the given template.
+
+        :param sequence_name: The sequence name
+        :param padding: Shot number padding
+        :param increment: Shot number increment
+        :param template: The final shot name template
+        :return:
+        """
+        raise NotImplementedError()
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def create_shot(self, name='', handle=10):
+        """Creates a new shot.
+
+        :param str name: A string value for the newly created shot name, if
+          skipped or given empty, the next empty shot name will be generated.
+        :param int handle: An integer value for the handle attribute. Default
+          is 10.
+        :returns: The created :class:`~pymel.core.nt.Shot` instance
+        """
+        shot = pymel.core.createNode('shot', name=name)
+        shot.shotName.set(name)
+        shot.set_handle(handle=handle)
+        shot.set_output('')
+
+        # connect to the sequencer
+        shot.message >> self.shots.next_available
+        return shot
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def create_shot_playblasts(self, output_path, show_ornaments=True):
+        """creates the selected shot playblasts
+        """
+        movie_files = []
+        for shot in self.shots.get():
+            movie_files.append(
+                shot.playblast(output_path, show_ornaments=show_ornaments)
+            )
+        return movie_files
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def to_edl(self, seq):
+        """returns an EDL for the given sequence
+
+        :param seq: A :class:`.Sequence` instance
+        """
+        return seq.to_edl()
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def metafuze(self, xml):
+        """Calls "Avid Metafuze" with the given xml content to convert media
+        files to MXF format.
+
+        :param str xml: The xml content
+        :return:
+        """
+        # write the given content to tmp
+        temp_file_path = tempfile.mktemp()
+        with open(temp_file_path, 'w') as f:
+            f.write(xml)
+
+        process = subprocess.Popen(
+            ['metafuze',
+             temp_file_path],
+            stderr=subprocess.PIPE
+        )
+        # wait it to complete
+        process.wait()
+
+        stderr = process.stderr.readlines()
+
+        if process.returncode:
+            # there is an error
+            raise RuntimeError(stderr)
+
+        # remove the temp file
+        os.remove(temp_file_path)
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def convert_to_mxf(self, path):
+        """converts the given video at given path to Avid MXF DNxHD 36.
+
+        :param path: The path of the media file
+        :return: returns the generated mxf file location
+        """
+        raise NotImplementedError()
+
+
+class ShotExtension(object):
+    """extensions to pymel.core.nodetypes.Shot class
+    """
+
+    @extends(pymel.core.nodetypes.Shot)
+    def set_output(self, output):
+        """Sets the output of this shot. The output is generally a movie file
+        automatically created by calling shot.playblast() method.
+
+        :param str output: A string value showing the path of this shots
+          output.
+        :return:
+        """
+        if not self.hasAttr('output'):
+            self.addAttr('output', dt='string')
+        self.output.set(output)
+
+    @extends(pymel.core.nodetypes.Shot)
+    def mute(self):
+        """Mutes the current shot
+
+        :param mode: True to mute False to unmute
+        :return:
+        """
+        pymel.core.shot(self, e=1, mute=True)
+
+    @extends(pymel.core.nodetypes.Shot)
+    def unmute(self):
+        """Unmutes the current shot.
+
+        :return:
+        """
+        pymel.core.shot(self, e=1, mute=False)
+
+    @extends(pymel.core.nodetypes.Shot)
+    @property
+    def sequence(self):
+        """returns the current sequencer
+        """
+        nodes = pymel.core.ls(
+            self.message.outputs(),
+            type=pymel.core.nodetypes.Sequencer
+        )
+        if len(nodes):
+            return nodes[0]
+        else:
+            return None
+
+    @extends(pymel.core.nodetypes.Shot)
+    @property
+    @contextmanager
+    def include_handles(self):
+        """includes the handle values to the shot range, primarily done for
+        taking playblasts with handles
+        """
+        handle = self.handle.get()
+        self.startFrame.set(
+            self.startFrame.get() - handle
+        )
+        self.endFrame.set(
+            self.endFrame.get() + handle
+        )
+        self.sequenceStartFrame.set(
+            self.sequenceStartFrame.get() - handle
+        )
+        try:
+            yield None
+        finally:
+            self.startFrame.set(
+                self.startFrame.get() + handle
+            )
+            self.endFrame.set(
+                self.endFrame.get() - handle
+            )
+            self.sequenceStartFrame.set(
+                self.sequenceStartFrame.get() + handle
+            )
+
+    @extends(pymel.core.nodetypes.Shot)
+    def playblast(self, output_path, show_ornaments=True):
+        """creates the selected shot playblasts
+        """
+        # TODO: create test for this (how??? no OpenGL)
+        # get current version and then the output folder
+        path_template = os.path.join(output_path).replace('\\', '/')
+
+        filename_template = '%(sequence)s_%(shot)s.mov'
+
+        # template vars
+        sequence = self.sequence
+
+        sequence_name = sequence.sequence_name.get()
+        shot_name = self.shotName.get()
+        handle = self.handle.get()
+        start_frame = self.sequenceStartFrame.get() - handle
+        end_frame = self.sequenceEndFrame.get() + handle
+        width = self.wResolution.get()
+        height = self.hResolution.get()
+
+        # store track
+        track = self.track.get()
+
+        rendered_path = path_template % {}
+        rendered_filename = filename_template % {
+            'shot': shot_name,
+            'sequence': sequence_name
+        }
+
+        movie_full_path = os.path.join(
+            rendered_path,
+            rendered_filename
+        ).replace('\\', '/')
+
+        # set the output of this shot
+        self.set_output(movie_full_path)
+
+        # mute all other shots
+        sequence.mute_shots()
+        self.unmute()
+
+        # include handles
+        with self.include_handles:
+            pymel.core.system.dgdirty(a=True)
+
+            result = pymel.core.playblast(
+                fmt="qt",
+                startTime=start_frame,
+                endTime=end_frame,
+                sequenceTime=1,
+                forceOverwrite=1,
+                filename=movie_full_path,
+                clearCache=True,
+                showOrnaments=show_ornaments,
+                percent=100,
+                wh=[width, height],
+                offScreen=True,
+                viewer=0,
+                useTraxSounds=True,
+                compression="PNG",
+                quality=70
+            )
+            sequence.unmute_shots()
+
+        # restore track
+        self.track.set(track)
+
+        return result
+
+    @extends(pymel.core.nodetypes.Shot)
+    def convert_to_mxf(self):
+        """converts the given video at given path to Avid MXF DNxHD 36.
+
+        :return: returns the generated mxf file location
+        """
+        pass
+
+    @extends(pymel.core.nodetypes.Shot)
+    def set_handle(self, handle=10):
+        """Creates handle attribute to given shot instance
+
+        :param int handle: An integer value for handle
+        :return:
+        """
+        if not isinstance(handle, int):
+            raise TypeError(
+                '"handle" argument in %(class)s.set_handle() should be '
+                'a non negative integer, not %(handle_class)s' %
+                {
+                    'class': self.__class__.__name__,
+                    'handle_class': handle.__class__.__name__
+                }
+            )
+
+        if handle < 0:
+            raise ValueError(
+                '"handle" argument in %(class)s.set_handle() should be '
+                'a non negative integer, not %(handle)s' %
+                {
+                    'class': self.__class__.__name__,
+                    'handle': handle
+                }
+            )
+
+        # create "handle" attribute in each shot and set the value
+        try:
+            self.addAttr('handle', at='short', k=True, min=0)
+        except RuntimeError:
+            # attribute is already there
+            pass
+        self.setAttr('handle', handle)
+
+    def add_frames_to_start(self, shot, frame_count=0):
+        """Adds extra frames to the given shots start, and offsets all the
+        following shots with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def add_frames_to_end(self, shot, frame_count=0):
+        """Adds extra frames to the given shot, and offsets all the following
+        shots with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def remove_frames_from_start(self, shot, frame_count=0):
+        """Removes frames from the given shots beginning, and offsets all the
+        following shots back with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
+
+    def remove_frames_from_end(self, shot, frame_count=0):
+        """Removes frames from the given shots end, and offsets all the
+        following shots back with the given frame_count.
+
+        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param int frame_count: The frame count to be added
+        :return:
+        """
+        pass
 
 
 class Sequence(PrevisBase, NameMixin, DurationMixin):
@@ -677,9 +1197,17 @@ class File(PrevisBase, NameMixin, DurationMixin):
 
         :param xml_node: an xml.etree.ElementTree.Element instance
         """
-        self.duration = float(xml_node.find('duration').text)
-        self.name = xml_node.find('name').text
-        self.pathurl = xml_node.find('pathurl').text
+        duration_node = xml_node.find('duration')
+        if duration_node is not None:
+            self.duration = float(duration_node.text)
+
+        name_node = xml_node.find('name')
+        if name_node is not None:
+            self.name = name_node.text
+
+        pathurl_node = xml_node.find('pathurl')
+        if pathurl_node is not None:
+            self.pathurl = pathurl_node.text
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this File object
@@ -698,309 +1226,3 @@ class File(PrevisBase, NameMixin, DurationMixin):
         }
 
 
-class Sequencer(object):
-    """The sequence instance.
-
-    It is a manager that manages shot data. It is kind of the reflection of the
-    Maya Sequencer instance.
-
-    It is able to get Maya editorial XML and convert it to EDL.
-    """
-
-    def __init__(self):
-        self._sequencer = None
-
-    def create_sequencer_attributes(self):
-        """Creates the necessary extra attributes for the sequencer in the
-        current scene.
-
-        Add attributes like:
-            sequenceName
-            shotNameTemplate
-            defaultHandle
-        """
-        pass
-
-    @classmethod
-    def set_shot_names(
-            cls, sequence_name, padding=4, increment=10,
-            template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
-        """Sets all shot names according to the given template.
-
-        :param sequence_name: The sequence name
-        :param padding: Shot number padding
-        :param increment: Shot number increment
-        :param template: The final shot name template
-        :return:
-        """
-        pass
-
-    @classmethod
-    def create_shot(cls, name='', handle=10):
-        """Creates a new shot
-
-        :param str name: A string value for the newly created shot name, if
-          skipped or given empty, the next empty shot name will be generated.
-        :param int handle: An integer value for the handle attribute. Default
-          is 10.
-        :returns: The created :class:`~pymel.core.nt.Shot` instance
-        """
-        pass
-
-    @classmethod
-    def set_shot_handles(cls, shots, handle=10):
-        """Creates handle attribute to given shot instance
-
-        :param shots: a list of :class:`pymel.core.nt.Shot` instances
-        :param int handle: An integer value for handle
-        :return:
-        """
-        # validate arguments
-        import pymel.core
-
-        # shots
-        if not isinstance(shots, list):
-            raise TypeError(
-                '"shots" argument in %(class)s.set_shot_handles() should be a '
-                'list of pymel.core.nt.Shot instances, not %(shots_class)s' %
-                {
-                    'class': cls.__name__,
-                    'shots_class': shots.__class__.__name__
-                }
-            )
-
-        if not all([isinstance(s, pymel.core.nt.Shot) for s in shots]):
-            raise TypeError(
-                'All elements in "shots" argument in '
-                '%(class)s.set_shot_handles() should be a pymel.core.nt.Shot '
-                'instances' %
-                {
-                    'class': cls.__name__,
-                    'shots_class': shots.__class__.__name__
-                }
-            )
-
-        # handle argument
-        if not isinstance(handle, int):
-            raise TypeError(
-                '"handle" argument in %(class)s.set_shot_handles() should be '
-                'a non negative integer, not %(handle_class)s' %
-                {
-                    'class': cls.__name__,
-                    'handle_class': handle.__class__.__name__
-                }
-            )
-
-        if handle < 0:
-            raise ValueError(
-                '"handle" argument in %(class)s.set_shot_handles() should be '
-                'a non negative integer, not %(handle)s' %
-                {
-                    'class': cls.__name__,
-                    'handle': handle
-                }
-            )
-
-        # create "handle" attribute in each shot and set the value
-        for s in shots:
-            try:
-                s.addAttr('handle', at='short', k=True, min=0)
-            except RuntimeError:
-                # attribute is already there
-                pass
-            s.setAttr('handle', handle)
-
-    def add_frames_to_start(self, shot, frame_count=0):
-        """Adds extra frames to the given shots start, and offsets all the
-        following shots with the given frame_count.
-
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
-        :param int frame_count: The frame count to be added
-        :return:
-        """
-        pass
-
-    def add_frames_to_end(self, shot, frame_count=0):
-        """Adds extra frames to the given shot, and offsets all the following
-        shots with the given frame_count.
-
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
-        :param int frame_count: The frame count to be added
-        :return:
-        """
-        pass
-
-    def remove_frames_from_start(self, shot, frame_count=0):
-        """Removes frames from the given shots beginning, and offsets all the
-        following shots back with the given frame_count.
-
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
-        :param int frame_count: The frame count to be added
-        :return:
-        """
-        pass
-
-    def remove_frames_from_end(self, shot, frame_count=0):
-        """Removes frames from the given shots end, and offsets all the
-        following shots back with the given frame_count.
-
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
-        :param int frame_count: The frame count to be added
-        :return:
-        """
-        pass
-
-    @classmethod
-    def create_shot_playblasts(cls, shots, handle=10, show_ornaments=True):
-        """creates the selected shot playblasts
-        """
-        import pymel.core
-
-        # get current version and then the output folder
-        path_template = os.path.join(
-            pymel.core.workspace.name,
-            'Outputs/Playblast/AllShots/'
-        ).replace('\\', '/')
-
-        filename_template = '%(scene)s_%(shot)s.mov'
-
-        # template vars
-        scene_name = os.path.basename(pymel.core.env.sceneName()).split('.')[0]
-
-        for shot in shots:
-            shot_name = shot.shotName.get()
-            if shot.hasAttr('handle'):
-                per_shot_handle = shot.handle.get()
-            else:
-                per_shot_handle = handle
-            start_frame = shot.startFrame.get() - per_shot_handle
-            end_frame = shot.endFrame.get() + per_shot_handle
-            width = shot.wResolution.get()
-            height = shot.hResolution.get()
-
-            rendered_path = path_template % {}
-            rendered_filename = filename_template % {
-                'shot': shot_name,
-                'scene': scene_name
-            }
-
-            movie_full_path = os.path.join(
-                rendered_path,
-                rendered_filename
-            ).replace('\\', '/')
-
-            pymel.core.playblast(
-                fmt="qt",
-                startTime=start_frame,
-                endTime=end_frame,
-                sequenceTime=1,
-                forceOverwrite=1,
-                filename=movie_full_path,
-                clearCache=True,
-                showOrnaments=show_ornaments,
-                percent=100,
-                wh=[width, height],
-                offScreen=True,
-                viewer=0,
-                useTraxSounds=True,
-                compression="PNG",
-                quality=70
-            )
-
-    @classmethod
-    def from_xml(cls, path):
-        """Parses XML file and returns a Sequence instance which reflects the
-        whole timeline hierarchy.
-
-        :param path: The path of the XML file
-        :return: :class:`.Sequence`
-        """
-        if not isinstance(path, str):
-            raise TypeError(
-                'path argument in %s.from_xml should be a string, not %s' %
-                (cls.__name__, path.__class__.__name__)
-            )
-
-        from xml.etree import ElementTree
-
-        try:
-            tree = ElementTree.parse(path)
-        except IOError:
-            raise IOError('Please supply a valid path to an XML file!')
-
-        root = tree.getroot()
-        seq = Sequence()
-        xml_seq = root.getchildren()[0]
-
-        seq.from_xml(xml_seq)
-
-        return seq
-
-    @classmethod
-    def to_xml(cls, seq, indentation=2, pre_indent=0):
-        """Converts the given Sequence instance to an xml file
-
-        :param seq: A :class:`.Sequence` instance
-        :return: str
-        """
-        if not isinstance(seq, Sequence):
-            raise TypeError(
-                '"seq" argument in %s.to_xml should be an instance of'
-                'anima.previs.Sequence, not %s' % (
-                    cls.__name__, seq.__class__.__name__
-                )
-            )
-
-        template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
-
-        return template % {
-            'sequence': seq.to_xml(indentation=indentation,
-                                   pre_indent=indentation + pre_indent)
-        }
-
-    @classmethod
-    def to_edl(cls, seq):
-        """returns an EDL for the given sequence
-
-        :param seq: A :class:`.Sequence` instance
-        """
-        return seq.to_edl()
-
-    @classmethod
-    def metafuze(cls, xml):
-        """Calls "Avid Metafuze" with the given xml content to convert media
-        files to MXF format.
-
-        :param str xml: The xml content
-        :return:
-        """
-        # write the given content to tmp
-        temp_file_path = tempfile.mktemp()
-        with open(temp_file_path, 'w') as f:
-            f.write(xml)
-
-        process = subprocess.Popen(
-            ['metafuze',
-             temp_file_path],
-            stderr=subprocess.PIPE
-        )
-        # wait it to complete
-        process.wait()
-
-        stderr = process.stderr.readlines()
-
-        if process.returncode:
-            # there is an error
-            raise RuntimeError(stderr)
-
-        # remove the temp file
-        os.remove(temp_file_path)
-
-    @classmethod
-    def convert_to_mxf(cls, path):
-        """converts the given video at given path to Avid MXF DNxHD 36.
-
-        :param path: The path of the media file
-        :return: returns the generated mxf file location
-        """
-        pass

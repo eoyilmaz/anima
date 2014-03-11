@@ -4,9 +4,13 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
-from edl import List, Event
 import unittest
-from anima.previs import Sequence, Media, Video, Track, Clip, File
+import pymel
+
+from edl import List, Event
+
+from anima.previs import (SequencerExtension, Sequence, Media, Video, Track,
+                          Clip, File)
 
 
 class MediaTestCase(unittest.TestCase):
@@ -387,10 +391,9 @@ class MediaTestCase(unittest.TestCase):
         """testing if the to_edl method will output a proper edl.List object
         """
         # create Sequence instance from XML
-        from anima.previs import Sequencer
-        sequencer = Sequencer()
+        sm = pymel.core.PyNode('sequenceManager1')
         xml_path = os.path.abspath('./test_data/test_v003.xml')
-        sequence = sequencer.from_xml(xml_path)
+        sequence = sm.from_xml(xml_path)
 
         self.assertIsInstance(sequence, Sequence)
 

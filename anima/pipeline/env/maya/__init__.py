@@ -1486,9 +1486,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         if not updated_namespaces:
             # do updates
-            if self.update_first_level_versions(reference_resolution):
-                updated_namespaces = True
-            return updated_namespaces
+            return self.update_first_level_versions(reference_resolution)
 
         # check references
         refs = pymel.core.listReferences(recursive=True)
