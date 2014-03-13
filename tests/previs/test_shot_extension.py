@@ -120,6 +120,25 @@ class ShotExtensionTestCase(unittest.TestCase):
         self.assertTrue(shot1.hasAttr('output'))
         self.assertEqual(shot1.output.get(), test_value)
 
+    def test_get_output_is_working_properly(self):
+        """testing if get_output method is working properly
+        """
+        shot1 = pymel.core.createNode('shot')
+        self.assertFalse(shot1.hasAttr('output'))
+        test_value = '/tmp/output.mov'
+        shot1.set_output(test_value)
+        self.assertTrue(shot1.hasAttr('output'))
+        self.assertEqual(shot1.get_output(), test_value)
+
+    def test_get_output_will_create_the_attribute(self):
+        """testing if get_output method will create the attribute if missing
+        """
+        shot1 = pymel.core.createNode('shot')
+        self.assertFalse(shot1.hasAttr('output'))
+        result = shot1.get_output()
+        self.assertTrue(shot1.hasAttr('output'))
+        self.assertEqual(result, '')
+
     def test_include_handles_is_working_properly(self):
         """testing if include_handles() method is working properly
         """
@@ -139,3 +158,33 @@ class ShotExtensionTestCase(unittest.TestCase):
         self.assertEqual(shot1.endFrame.get(), 20)
         self.assertEqual(shot1.sequenceStartFrame.get(), 25)
         self.assertEqual(shot1.sequenceEndFrame.get(), 35)
+
+    def test_duration_property_is_working_properly(self):
+        """testing if the duration property is working properly
+        """
+        shot1 = pymel.core.createNode('shot')
+        shot1.set_handle(10)
+        shot1.startFrame.set(10)
+        shot1.endFrame.set(20)
+        shot1.sequenceStartFrame.set(25)
+
+        self.assertEqual(shot1.duration, 11)
+
+    def test_full_shot_name_property_is_working_properly(self):
+        """testing if the full_shot_name property is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
+        sm.set_version('v001')
+
+        seq1 = sm.create_sequence('SEQ001_HSNI_003')
+        shot1 = seq1.create_shot('0010')
+        shot2 = seq1.create_shot('0020')
+
+        self.assertEqual(shot1.full_shot_name, 'SEQ001_HSNI_003_0010_v001')
+        self.assertEqual(shot2.full_shot_name, 'SEQ001_HSNI_003_0020_v001')
+
+        # change template and test again
+        sm.set_shot_name_template('<Shot>_<Version>')
+        self.assertEqual(shot1.full_shot_name, '0010_v001')
+        self.assertEqual(shot2.full_shot_name, '0020_v001')

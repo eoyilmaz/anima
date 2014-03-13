@@ -33,7 +33,7 @@ class MediaTestCase(unittest.TestCase):
         v = Video()
         v.width = 1024
         v.height = 778
-        m.video.append(v)
+        m.video = v
 
         t = Track()
         t.enabled = True
@@ -301,7 +301,7 @@ class MediaTestCase(unittest.TestCase):
 
         m = s.media
 
-        v = m.video[0]
+        v = m.video
         self.assertEqual(1024, v.width)
         self.assertEqual(778, v.height)
 
@@ -417,7 +417,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(e3, Event)
 
         # check clips
-        clips = sequence.media.video[0].tracks[0].clips
+        clips = sequence.media.video.tracks[0].clips
         self.assertIsInstance(clips[0], Clip)
 
         self.assertEqual('000001', e1.num)
@@ -510,7 +510,7 @@ class MediaTestCase(unittest.TestCase):
         m = s.media
         self.assertIsInstance(m, Media)
 
-        v = m.video[0]
+        v = m.video
         self.assertIsInstance(v, Video)
 
         t = v.tracks[0]
@@ -604,7 +604,7 @@ class MediaTestCase(unittest.TestCase):
         v = Video()
         v.width = 1024
         v.height = 778
-        m.video.append(v)
+        m.video = v
 
         t = Track()
         t.enabled = True

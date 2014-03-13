@@ -9,6 +9,7 @@ import os
 import subprocess
 import tempfile
 import pymel
+
 import anima.extension.maya
 from anima.extension import extends
 
@@ -125,6 +126,45 @@ class SequenceManagerExtension(object):
     """
 
     @extends(pymel.core.nodetypes.SequenceManager)
+    def get_shot_name_template(self):
+        """returns teh shot_name_template_ attribute value, creates the
+        attribute if missing
+        """
+        if not self.hasAttr('shot_name_template'):
+            default_template = '<Sequence>_<Shot>_<Version>'
+            self.set_shot_name_template(default_template)
+
+        return self.shot_name_template.get()
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def set_shot_name_template(self, template):
+        """sets the shot_name_template attribute value
+        """
+        if not self.hasAttr('shot_name_template'):
+            self.addAttr('shot_name_template', dt='string')
+
+        self.shot_name_template.set(template)
+
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def get_version(self):
+        """returns the version attribute value, creates the attribute if
+        missing
+        """
+        if not self.hasAttr('version'):
+            self.set_version('')
+        return self.version.get()
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def set_version(self, template):
+        """sets the version attribute value
+        """
+        if not self.hasAttr('version'):
+            self.addAttr('version', dt='string')
+
+        self.version.set(template)
+
+    @extends(pymel.core.nodetypes.SequenceManager)
     def create_sequence(self, name=None):
         """Creates a new sequence
 
@@ -167,51 +207,109 @@ class SequenceManagerExtension(object):
         return seq
 
     @extends(pymel.core.nodetypes.SequenceManager)
-    def to_xml(self, path=None, seq=None, indentation=2, pre_indent=0):
-        """This is a mutated method, meaning it is both using Maya FCP XML
-        generation by using Maya libraries, and can output XML content if a
-        sequence instance is given.
-
-        So it generates Maya FCP XML file using maya.app.edl.importExport.EDL
-        if the path argument is not None.
-
-        Converts the given Sequence instance to an xml file.
+    def to_xml(self, path=None, indentation=2, pre_indent=0):
+        """Generates an FCP compatible XML file at given path.
 
         :param path: The path of the XML file
 
-        :param seq: A :class:`.Sequence` instance
-        :return: str
+        :return:
         """
-        if path is not None:
-            import maya.app.edl.importExport as EDL
-            EDL.doExport(path, 0)
-        elif seq is not None:
-            if not isinstance(seq, Sequence):
-                raise TypeError(
-                    '"seq" argument in %s.to_xml should be an instance of'
-                    'anima.previs.Sequence, not %s' % (
-                        self.__class__.__name__, seq.__class__.__name__
-                    )
-                )
+        # if path is not None:
+        #     import maya.app.edl.importExport as EDL
+        #     EDL.doExport(path, 0)
+        # elif seq is not None:
+        #     if not isinstance(seq, Sequence):
+        #         raise TypeError(
+        #             '"seq" argument in %s.to_xml should be an instance of'
+        #             'anima.previs.Sequence, not %s' % (
+        #                 self.__class__.__name__, seq.__class__.__name__
+        #             )
+        #         )
+        # 
+        #     template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
+        # 
+        #     return template % {
+        #         'sequence': seq.to_xml(indentation=indentation,
+        #                                pre_indent=indentation + pre_indent)
+        #     }
+        # else:
+        #     raise TypeError('Please supply at least one of "path" or "seq" '
+        #                     'arguments')
+        pass
 
-            template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def generate_sequence_structure(self):
+        """Generates a Sequence structure suitable for XML<->EDL conversion
 
-            return template % {
-                'sequence': seq.to_xml(indentation=indentation,
-                                       pre_indent=indentation + pre_indent)
-            }
-        else:
-            raise TypeError('Please supply at least one of "path" or "seq" '
-                            'arguments')
+        :return: Sequence
+        """
+        import pytimecode
+        from anima.pipeline.env import maya
+        mayaEnv = maya.Maya()
+        fps = mayaEnv.get_fps()
+
+        # export only the first sequence, ignore others
+        sequencers = self.sequences.get()
+        if len(sequencers) == 0:
+            return None
+
+        sequencer = sequencers[0]
+        time = pymel.core.PyNode('time1')
+
+        seq = Sequence()
+        seq.name = str(sequencer.sequence_name.get())
+        seq.ntsc = False  # always false
+
+        seq.timebase = str(fps)
+        seq.timecode = str(pytimecode.PyTimeCode(
+            framerate=seq.timebase,
+            frames=time.timecodeProductionStart.get() + 1
+        ))
+        seq.duration = sequencer.duration
+
+        media = Media()
+        video = Video()
+        media.video = video
+
+        for shot in sequencer.shots.get():
+            clip = Clip()
+            clip.id = str(shot.full_shot_name)
+            clip.name = str(shot.shotName.get())
+            clip.duration = shot.duration
+            clip.enabled = True
+            clip.start = shot.sequenceStartFrame.get()
+            clip.end = shot.sequenceEndFrame.get()
+            clip.in_ = shot.startFrame.get()
+            clip.out = shot.endFrame.get()
+            clip.type = 'Video'  # always video for now
+
+            file = File()
+            file.name = os.path.basename(str(shot.output.get()))
+
+            with shot.include_handles:
+                file.duration = shot.duration
+
+            file.pathurl = str(shot.output.get())
+
+            clip.file = file
+
+            track_number = shot.track.get()
+            try:
+                track = video.tracks[track_number]
+            except IndexError:
+                track = Track()
+                video.tracks.append(track)
+
+            track.clips.append(clip)
+
+        seq.media = media
+        return seq
 
     @extends(pymel.core.nodetypes.SequenceManager)
     def to_edl(self):
         """Generates an EDL file out of the edit
         """
-        temp_xml = tempfile.mktemp(suffix='.xml')
-        print temp_xml
-        self.to_xml(temp_xml)
-        seq = self.from_xml(temp_xml)
+        seq = None
         l = seq.to_edl()
         return l
 
@@ -224,8 +322,14 @@ class SequencerExtension(object):
 
     It is able to get Maya editorial XML and convert it to EDL.
     """
-    # just for IDEs
-    shots = None
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    @property
+    def manager(self):
+        """returns the SequenceManager instance that this sequence is connected
+        to
+        """
+        return self.message.get()
 
     @extends(pymel.core.nodetypes.Sequencer)
     def set_sequence_name(self, name):
@@ -336,7 +440,7 @@ class SequencerExtension(object):
           is 10.
         :returns: The created :class:`~pymel.core.nt.Shot` instance
         """
-        shot = pymel.core.createNode('shot', name=name)
+        shot = pymel.core.createNode('shot')
         shot.shotName.set(name)
         shot.set_handle(handle=handle)
         shot.set_output('')
@@ -403,10 +507,26 @@ class SequencerExtension(object):
         """
         raise NotImplementedError()
 
+    @extends(pymel.core.nodetypes.Sequencer)
+    @property
+    def duration(self):
+        """returns the duration of this sequence
+        """
+        return self.maxFrame.get() - self.minFrame.get() + 1
+
 
 class ShotExtension(object):
     """extensions to pymel.core.nodetypes.Shot class
     """
+
+    @extends(pymel.core.nodetypes.Shot)
+    def get_output(self):
+        """Gets the output attribute value of this shot, creates the attribute
+        if it is missing
+        """
+        if not self.hasAttr('output'):
+            self.set_output('')
+        return self.output.get()
 
     @extends(pymel.core.nodetypes.Shot)
     def set_output(self, output):
@@ -443,14 +563,7 @@ class ShotExtension(object):
     def sequence(self):
         """returns the current sequencer
         """
-        nodes = pymel.core.ls(
-            self.message.outputs(),
-            type=pymel.core.nodetypes.Sequencer
-        )
-        if len(nodes):
-            return nodes[0]
-        else:
-            return None
+        return self.message.get()
 
     @extends(pymel.core.nodetypes.Shot)
     @property
@@ -595,6 +708,13 @@ class ShotExtension(object):
             pass
         self.setAttr('handle', handle)
 
+    @extends(pymel.core.nodetypes.Shot)
+    @property
+    def duration(self):
+        """returns the shot duration
+        """
+        return self.sequenceEndFrame.get() - self.sequenceStartFrame.get() + 1
+
     def add_frames_to_start(self, shot, frame_count=0):
         """Adds extra frames to the given shots start, and offsets all the
         following shots with the given frame_count.
@@ -634,6 +754,33 @@ class ShotExtension(object):
         :return:
         """
         pass
+
+    @extends(pymel.core.nodetypes.Shot)
+    @property
+    def full_shot_name(self):
+        """returns the full shot name
+        """
+        seq = self.sequence
+        sm = seq.manager
+        camera = self.currentCamera.get()
+        version = sm.get_version()
+        template = sm.get_shot_name_template()
+
+        # replace template variables
+        template = template\
+            .replace('<Sequence>', '%(sequence)s')\
+            .replace('<Shot>', '%(shot)s')\
+            .replace('<Version>', '%(version)s')\
+            .replace('<Camera>', '%(camera)s')
+
+        rendered_template = template % {
+            'shot': self.shotName.get(),
+            'sequence': seq.sequence_name.get(),
+            'version': version,
+            'camera': camera.name.get() if camera else None
+        }
+
+        return rendered_template
 
 
 class Sequence(PrevisBase, NameMixin, DurationMixin):
@@ -729,7 +876,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
         self.media = Media()
 
         v = Video()
-        self.media.video.append(v)
+        self.media.video = v
 
         video_track = Track()
         v.tracks.append(video_track)
@@ -791,7 +938,8 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                 }
             )
 
-        for video in self.media.video:
+        video = self.media.video
+        if video is not None:
             for track in video.tracks:
                 for i, clip in enumerate(track.clips):
                     e = Event({})
@@ -885,7 +1033,8 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
    </Group>
 </MetaFuze_BatchTranscode>"""
         rendered_xmls = []
-        for video in self.media.video:
+        video = self.media.video
+        if video is not None:
             for track in video.tracks:
                 for clip in track.clips:
                     raw_file_path = clip.file.pathurl.replace('file://', '')
@@ -916,37 +1065,33 @@ class Media(PrevisBase):
     """
 
     def __init__(self):
-        self.video = []
-        self.audio = []
+        self.video = None
+        self.audio = None
 
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
 
         :param xml_node: an xml.etree.ElementTree.Element instance
         """
-        xml_video_tags = xml_node.findall('video')
-        for xml_video_tag in xml_video_tags:
-            video = Video()
-            video.from_xml(xml_video_tag)
-            self.video.append(video)
+        xml_video_tag = xml_node.find('video')
+        video = Video()
+        video.from_xml(xml_video_tag)
+        self.video = video
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Media object
         """
         template = """%(pre_indent)s<media>
-%(videos)s
+%(video)s
 %(pre_indent)s</media>"""
 
-        video_data = []
-        for video in self.video:
-            video_data.append(
-                video.to_xml(indentation=indentation,
-                             pre_indent=indentation + pre_indent)
-            )
-        video_data_as_str = '\n'.join(video_data)
+        video_data = self.video.to_xml(
+            indentation=indentation,
+            pre_indent=indentation + pre_indent
+        )
 
         return template % {
-            'videos': video_data_as_str,
+            'video': video_data,
             'pre_indent': ' ' * pre_indent,
             'indentation': ' ' * indentation
         }

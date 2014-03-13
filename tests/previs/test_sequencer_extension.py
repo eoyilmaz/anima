@@ -50,7 +50,7 @@ class SequencerExtensionTestCase(unittest.TestCase):
         self.assertIsInstance(shot, pymel.core.nt.Shot)
 
         self.assertEqual(
-            'Test_Shot',
+            'shot1',
             shot.name()
         )
 
@@ -178,7 +178,7 @@ class SequencerExtensionTestCase(unittest.TestCase):
     def test_mute_shots_is_working_properly(self):
         """testing if mute shot is working properly
         """
-        sm = pymel.core.ls('sequenceManager1')[0]
+        sm = pymel.core.PyNode('sequenceManager1')
         seq1 = sm.create_sequence('sequence1')
         shot1 = seq1.create_shot('shot1')
         shot2 = seq1.create_shot('shot2')
@@ -197,7 +197,7 @@ class SequencerExtensionTestCase(unittest.TestCase):
     def test_unmute_shots_is_working_properly(self):
         """testing if mute shot is working properly
         """
-        sm = pymel.core.ls('sequenceManager1')[0]
+        sm = pymel.core.PyNode('sequenceManager1')
         seq1 = sm.create_sequence('sequence1')
         shot1 = seq1.create_shot('shot1')
         shot2 = seq1.create_shot('shot2')
@@ -216,3 +216,36 @@ class SequencerExtensionTestCase(unittest.TestCase):
         self.assertFalse(pymel.core.shot(shot1, q=1, mute=1))
         self.assertFalse(pymel.core.shot(shot2, q=1, mute=1))
         self.assertFalse(pymel.core.shot(shot3, q=1, mute=1))
+
+    def test_duration_property_is_working_properly(self):
+        """testing if the duration property is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        seq1 = sm.create_sequence('sequence1')
+
+        shot1 = seq1.create_shot('shot1')
+        shot1.startFrame.set(10)
+        shot1.endFrame.set(20)
+        shot1.sequenceStartFrame.set(10)
+        shot1.sequenceEndFrame.set(20)
+
+        shot2 = seq1.create_shot('shot2')
+        shot2.startFrame.set(11)
+        shot2.endFrame.set(21)
+        shot2.sequenceStartFrame.set(31)
+        shot2.sequenceEndFrame.set(41)
+
+        shot3 = seq1.create_shot('shot3')
+        shot3.startFrame.set(51)
+        shot3.endFrame.set(61)
+        shot3.sequenceStartFrame.set(71)
+        shot3.sequenceEndFrame.set(81)
+
+        self.assertEqual(seq1.duration, 72)
+
+    def test_manager_property_is_working_properly(self):
+        """testing if manager property is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        seq1 = sm.create_sequence('SEQ001_HSNI_003')
+        self.assertEqual(sm, seq1.manager)
