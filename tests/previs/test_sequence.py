@@ -393,7 +393,7 @@ class MediaTestCase(unittest.TestCase):
         # create Sequence instance from XML
         sm = pymel.core.PyNode('sequenceManager1')
         sm.set_version('v001')
-        xml_path = os.path.abspath('./test_data/test_v003.xml')
+        xml_path = os.path.abspath('./test_data/test_v001.xml')
         sm.from_xml(xml_path)
 
         sequence = sm.generate_sequence_structure()
@@ -445,9 +445,9 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('V', e2.track)
         self.assertEqual('C', e2.tr_code)
         self.assertEqual('00:00:00:00', e2.src_start_tc)
-        self.assertEqual('00:00:01:06', e2.src_end_tc)
+        self.assertEqual('00:00:01:07', e2.src_end_tc)
         self.assertEqual('00:00:01:11', e2.rec_start_tc)
-        self.assertEqual('00:00:02:17', e2.rec_end_tc)
+        self.assertEqual('00:00:02:18', e2.rec_end_tc)
         self.assertEqual('/tmp/SEQ001_HSNI_003_0020_v001.mov',
                          e2.source_file)
         self.assertEqual(
@@ -465,9 +465,9 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('V', e3.track)
         self.assertEqual('C', e3.tr_code)
         self.assertEqual('00:00:00:00', e3.src_start_tc)
-        self.assertEqual('00:00:01:21', e3.src_end_tc)
-        self.assertEqual('00:00:02:17', e3.rec_start_tc)
-        self.assertEqual('00:00:04:14', e3.rec_end_tc)
+        self.assertEqual('00:00:01:22', e3.src_end_tc)
+        self.assertEqual('00:00:02:18', e3.rec_start_tc)
+        self.assertEqual('00:00:04:16', e3.rec_end_tc)
         self.assertEqual('/tmp/SEQ001_HSNI_003_0030_v001.mov',
                          e3.source_file)
         self.assertEqual(
@@ -486,7 +486,7 @@ class MediaTestCase(unittest.TestCase):
         # first supply an edl
         from edl import Parser
         p = Parser('24')
-        edl_path = os.path.abspath('./test_data/test_v003.edl')
+        edl_path = os.path.abspath('./test_data/test_v001.edl')
 
         with open(edl_path) as f:
             edl_list = p.parse(f)
@@ -496,7 +496,7 @@ class MediaTestCase(unittest.TestCase):
 
         self.assertEqual('SEQ001_HSNI_003', s.name)
 
-        self.assertEqual(109.0, s.duration)
+        self.assertEqual(111.0, s.duration)
         self.assertEqual('24', s.timebase)
         self.assertEqual('00:00:00:00', s.timecode)
 
@@ -522,19 +522,19 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(clip3, Clip)
 
         # clip1
-        self.assertEqual(34.0, clip1.duration)
+        self.assertEqual(44.0, clip1.duration)
         self.assertEqual(True, clip1.enabled)
         self.assertEqual(35.0, clip1.end)
         self.assertEqual('0010', clip1.id)
-        self.assertEqual(0.0, clip1.in_)
+        self.assertEqual(10.0, clip1.in_)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
-        self.assertEqual(34.0, clip1.out)
+        self.assertEqual(44.0, clip1.out)
         self.assertEqual(1.0, clip1.start)
         self.assertEqual('Video', clip1.type)
 
         f = clip1.file
         self.assertIsInstance(f, File)
-        self.assertEqual(34.0, f.duration)
+        self.assertEqual(44.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', f.name)
         self.assertEqual(
             'file:///tmp/SEQ001_HSNI_003_0010_v001.mov',
@@ -542,19 +542,19 @@ class MediaTestCase(unittest.TestCase):
         )
 
         # clip2
-        self.assertEqual(30.0, clip2.duration)
+        self.assertEqual(41.0, clip2.duration)
         self.assertEqual(True, clip2.enabled)
-        self.assertEqual(65.0, clip2.end)
+        self.assertEqual(66.0, clip2.end)
         self.assertEqual('0020', clip2.id)
-        self.assertEqual(0.0, clip2.in_)
+        self.assertEqual(10.0, clip2.in_)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
-        self.assertEqual(30.0, clip2.out)
+        self.assertEqual(41.0, clip2.out)
         self.assertEqual(35.0, clip2.start)
         self.assertEqual('Video', clip2.type)
 
         f = clip2.file
         self.assertIsInstance(f, File)
-        self.assertEqual(30.0, f.duration)
+        self.assertEqual(41.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', f.name)
         self.assertEqual(
             'file:///tmp/SEQ001_HSNI_003_0020_v001.mov',
@@ -562,19 +562,19 @@ class MediaTestCase(unittest.TestCase):
         )
 
         # clip3
-        self.assertEqual(45.0, clip3.duration)
+        self.assertEqual(56.0, clip3.duration)
         self.assertEqual(True, clip3.enabled)
-        self.assertEqual(110.0, clip3.end)
+        self.assertEqual(112.0, clip3.end)
         self.assertEqual('0030', clip3.id)
-        self.assertEqual(0.0, clip3.in_)
+        self.assertEqual(10.0, clip3.in_)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
-        self.assertEqual(45.0, clip3.out)
-        self.assertEqual(65.0, clip3.start)
+        self.assertEqual(56.0, clip3.out)
+        self.assertEqual(66.0, clip3.start)
         self.assertEqual('Video', clip3.type)
 
         f = clip3.file
         self.assertIsInstance(f, File)
-        self.assertEqual(45.0, f.duration)
+        self.assertEqual(56.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', f.name)
         self.assertEqual(
             'file:///tmp/SEQ001_HSNI_003_0030_v001.mov',

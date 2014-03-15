@@ -67,7 +67,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         """testing if from_xml method will generate Sequences and shots
         correctly
         """
-        path = os.path.abspath('./test_data/test_v003.xml')
+        path = os.path.abspath('./test_data/test_v001.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
         sm.from_xml(path)
@@ -78,7 +78,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         sequencer = sequences[0]
         self.assertIsInstance(sequencer, pymel.core.nt.Sequencer)
 
-        self.assertEqual(sequencer.duration, 109)
+        self.assertEqual(sequencer.duration, 111)
         self.assertEqual(sequencer.sequence_name.get(), 'SEQ001_HSNI_003')
 
         # check scene fps
@@ -102,8 +102,8 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(1.0, shot1.sequenceStartFrame.get())
         self.assertEqual(34.0, shot1.sequenceEndFrame.get())
         self.assertEqual(34.0, shot1.duration)
-        self.assertEqual(0.0, shot1.startFrame.get())
-        self.assertEqual(33.0, shot1.endFrame.get())
+        self.assertEqual(10.0, shot1.startFrame.get())
+        self.assertEqual(43.0, shot1.endFrame.get())
         self.assertEqual(
             '/tmp/SEQ001_HSNI_003_0010_v001.mov',
             shot1.output.get()
@@ -115,10 +115,10 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(778, shot2.hResolution.get())
         self.assertEqual(1, shot2.track.get())
         self.assertEqual(35.0, shot2.sequenceStartFrame.get())
-        self.assertEqual(64.0, shot2.sequenceEndFrame.get())
-        self.assertEqual(30.0, shot2.duration)
-        self.assertEqual(0.0, shot2.startFrame.get())
-        self.assertEqual(29.0, shot2.endFrame.get())
+        self.assertEqual(65.0, shot2.sequenceEndFrame.get())
+        self.assertEqual(31.0, shot2.duration)
+        self.assertEqual(10.0, shot2.startFrame.get())
+        self.assertEqual(40.0, shot2.endFrame.get())
         self.assertEqual(
             '/tmp/SEQ001_HSNI_003_0020_v001.mov',
             shot2.output.get()
@@ -129,32 +129,179 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(1024, shot3.wResolution.get())
         self.assertEqual(778, shot3.hResolution.get())
         self.assertEqual(1, shot3.track.get())
-        self.assertEqual(65.0, shot3.sequenceStartFrame.get())
-        self.assertEqual(109.0, shot3.sequenceEndFrame.get())
-        self.assertEqual(45.0, shot3.duration)
-        self.assertEqual(0.0, shot3.startFrame.get())
-        self.assertEqual(44.0, shot3.endFrame.get())
+        self.assertEqual(66.0, shot3.sequenceStartFrame.get())
+        self.assertEqual(111.0, shot3.sequenceEndFrame.get())
+        self.assertEqual(46.0, shot3.duration)
+        self.assertEqual(10.0, shot3.startFrame.get())
+        self.assertEqual(55.0, shot3.endFrame.get())
         self.assertEqual(
             '/tmp/SEQ001_HSNI_003_0030_v001.mov',
             shot3.output.get()
         )
 
-    def test_to_xml_will_generate_sequences_and_shots_from_xml_file(self):
-        """testing if a proper sequence structure will be generated from the
-        given XML file.
+    def test_from_xml_updates_sequencer_hierarchy_with_shots_expanded_and_contracted(self):
+        """testing if from_xml method will update Sequences and shots
+        correctly with the xml file
+        """
+        path = os.path.abspath('./test_data/test_v002.xml')
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_version('v001')
+        seq = sm.create_sequence('SEQ001_HSNI_003')
+
+        shot1 = seq.create_shot('0010')
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(33)
+        shot1.sequenceStartFrame.set(1)
+        shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
+        shot1.handle.set(10)
+        shot1.track.set(1)
+
+        shot2 = seq.create_shot('0020')
+        shot2.startFrame.set(34)
+        shot2.endFrame.set(64)
+        shot2.sequenceStartFrame.set(35)
+        shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
+        shot2.handle.set(10)
+        shot2.track.set(1)
+
+        shot3 = seq.create_shot('0030')
+        shot3.startFrame.set(65)
+        shot3.endFrame.set(110)
+        shot3.sequenceStartFrame.set(66)
+        shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
+        shot3.handle.set(10)
+        shot3.track.set(1)
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        # now update it with test_v002.xml
+        sm.from_xml(path)
+
+        # check shot data
+        self.assertEqual('0010', shot1.shotName.get())
+        self.assertEqual(1, shot1.track.get())
+        self.assertEqual(1.0, shot1.sequenceStartFrame.get())
+        self.assertEqual(55.0, shot1.sequenceEndFrame.get())
+        self.assertEqual(-10.0, shot1.startFrame.get())
+        self.assertEqual(44.0, shot1.endFrame.get())
+
+        # Clip2
+        self.assertEqual('0020', shot2.shotName.get())
+        self.assertEqual(1, shot2.track.get())
+        self.assertEqual(56.0, shot2.sequenceStartFrame.get())
+        self.assertEqual(77.0, shot2.sequenceEndFrame.get())
+        self.assertEqual(44.0, shot2.startFrame.get())
+        self.assertEqual(65.0, shot2.endFrame.get())
+
+        # Clip3
+        self.assertEqual('0030', shot3.shotName.get())
+        self.assertEqual(1, shot3.track.get())
+        self.assertEqual(78.0, shot3.sequenceStartFrame.get())
+        self.assertEqual(144.0, shot3.sequenceEndFrame.get())
+        self.assertEqual(65.0, shot3.startFrame.get())
+        self.assertEqual(121.0, shot3.endFrame.get())
+
+    def test_from_xml_updates_sequencer_hierarchy_with_shots_removed(self):
+        """testing if from_xml method will update Sequences and shots
+        correctly with the xml file
         """
         path = os.path.abspath('./test_data/test_v003.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
-        sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
         sm.set_version('v001')
+        seq = sm.create_sequence('SEQ001_HSNI_003')
+
+        shot1 = seq.create_shot('0010')
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(33)
+        shot1.sequenceStartFrame.set(1)
+        shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
+        shot1.handle.set(10)
+        shot1.track.set(1)
+
+        shot2 = seq.create_shot('0020')
+        shot2.startFrame.set(34)
+        shot2.endFrame.set(64)
+        shot2.sequenceStartFrame.set(35)
+        shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
+        shot2.handle.set(10)
+        shot2.track.set(1)
+
+        shot3 = seq.create_shot('0030')
+        shot3.startFrame.set(65)
+        shot3.endFrame.set(110)
+        shot3.sequenceStartFrame.set(66)
+        shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
+        shot3.handle.set(10)
+        shot3.track.set(1)
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        # now update it with test_v002.xml
         sm.from_xml(path)
 
-        seq1 = sm.sequences.get()[0]
-        shots = seq1.shots.get()
-        shot1 = shots[0]
-        shot2 = shots[1]
-        shot3 = shots[2]
+        # we should have 2 shots only
+        self.assertEqual(2, len(seq.shots.get()))
+
+        # check shot data
+        self.assertEqual('0010', shot1.shotName.get())
+        self.assertEqual(1, shot1.track.get())
+        self.assertEqual(1.0, shot1.sequenceStartFrame.get())
+        self.assertEqual(55.0, shot1.sequenceEndFrame.get())
+        self.assertEqual(-10.0, shot1.startFrame.get())
+        self.assertEqual(44.0, shot1.endFrame.get())
+
+        # Clip2
+        # removed
+
+        # Clip3
+        self.assertEqual('0030', shot3.shotName.get())
+        self.assertEqual(1, shot3.track.get())
+        self.assertEqual(56.0, shot3.sequenceStartFrame.get())
+        self.assertEqual(122.0, shot3.sequenceEndFrame.get())
+        self.assertEqual(65.0, shot3.startFrame.get())
+        self.assertEqual(121.0, shot3.endFrame.get())
+
+    def test_to_xml_will_generate_proper_xml_string(self):
+        """testing if a proper xml compatible string will be generated with
+        to_xml() method
+        """
+        path = os.path.abspath('./test_data/test_v001.xml')
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
+        sm.set_version('v001')
+
+        seq1 = sm.create_sequence('SEQ001_HSNI_003')
+
+        shot1 = seq1.create_shot('0010')
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(33)
+        shot1.sequenceStartFrame.set(1)
+        shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
+        shot1.handle.set(10)
+        shot1.track.set(1)
+
+        shot2 = seq1.create_shot('0020')
+        shot2.startFrame.set(34)
+        shot2.endFrame.set(64)
+        shot2.sequenceStartFrame.set(35)
+        shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
+        shot2.handle.set(10)
+        shot2.track.set(1)
+
+        shot3 = seq1.create_shot('0030')
+        shot3.startFrame.set(65)
+        shot3.endFrame.set(110)
+        shot3.sequenceStartFrame.set(66)
+        shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
+        shot3.handle.set(10)
+        shot3.track.set(1)
 
         self.assertEqual(shot1.track.get(), 1)
         self.assertEqual(shot2.track.get(), 1)
@@ -204,12 +351,44 @@ class SequenceManagerTestCase(unittest.TestCase):
     def test_to_edl_will_generate_a_proper_edl_content(self):
         """testing if to_edl will generate a proper edl content
         """
-        xml_path = os.path.abspath('./test_data/test_v003.xml')
-        edl_path = os.path.abspath('./test_data/test_v003.edl')
+        edl_path = os.path.abspath('./test_data/test_v001.edl')
 
         sm = pymel.core.PyNode('sequenceManager1')
         sm.set_version('v001')
-        sm.from_xml(xml_path)
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
+        sm.set_version('v001')
+
+        seq1 = sm.create_sequence('SEQ001_HSNI_003')
+
+        shot1 = seq1.create_shot('0010')
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(33)
+        shot1.sequenceStartFrame.set(1)
+        shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
+        shot1.handle.set(10)
+        shot1.track.set(1)
+
+        shot2 = seq1.create_shot('0020')
+        shot2.startFrame.set(34)
+        shot2.endFrame.set(64)
+        shot2.sequenceStartFrame.set(35)
+        shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
+        shot2.handle.set(10)
+        shot2.track.set(1)
+
+        shot3 = seq1.create_shot('0030')
+        shot3.startFrame.set(65)
+        shot3.endFrame.set(110)
+        shot3.sequenceStartFrame.set(66)
+        shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
+        shot3.handle.set(10)
+        shot3.track.set(1)
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
 
         l = sm.to_edl()
         result = l.to_string()
@@ -245,7 +424,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         """testing if a proper sequence structure will be generated by using
         the generate_sequence_structure() method with correct number of tracks
         """
-        path = os.path.abspath('./test_data/test_v003.xml')
+        path = os.path.abspath('./test_data/test_v001.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
         sm.from_xml(path)
@@ -436,3 +615,4 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual('file:///tmp/SEQ001_HSNI_003_0030_v001.mov',
                          file3.pathurl)
         self.assertEqual(66, file3.duration)  # including handles
+

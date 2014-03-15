@@ -185,8 +185,6 @@ class SequenceManagerExtension(object):
         :param path: The path of the XML file
         :return: :class:`.Sequence`
         """
-        # TODO: This should create new sequences and shots or update the
-        #       current sequenceManager data
         if not isinstance(path, str):
             raise TypeError(
                 'path argument in %s.from_xml should be a string, not %s' %
@@ -212,22 +210,72 @@ class SequenceManagerExtension(object):
 
         shot_name_template = self.get_shot_name_template()
 
-        # create sequencer
-        seq1 = self.create_sequence(seq.name)
+        # get current sequencer
+        seqs = self.sequences.get()
+        if seqs:
+            # we probably need to update shots
+            seq1 = seqs[0]
 
-        # create shots
-        media = seq.media
-        for i, track in enumerate(media.video.tracks):
-            for clip in track.clips:
-                shot = seq1.create_shot(clip.id)
-                shot.startFrame.set(clip.in_)
-                shot.endFrame.set(clip.out - 1)
-                shot.sequenceStartFrame.set(clip.start)
-                shot.handle.set(0)
-                if clip.file:
-                    f = clip.file
-                    shot.output.set(f.pathurl.replace('file://', ''))
-                shot.track.set(i + 1)
+            # update shots
+            shots = seq1.shots.get()
+
+            # collect clips
+            all_clips = [clip
+                         for track in seq.media.video.tracks
+                         for clip in track.clips]
+
+            deleted_shots = []
+
+            for shot in shots:
+                # find the corresponding shots in seq
+                is_deleted = True
+                for clip in all_clips:
+                    if clip.id == shot.shotName.get():
+                        # update with the given clip info
+                        anchor = shot.startFrame.get()
+                        handle = shot.handle.get()
+                        track = shot.track.get()
+
+                        start_frame = clip.in_ - handle + anchor
+                        end_frame = clip.out - clip.in_ + start_frame
+
+                        sequence_start = clip.start
+                        sequence_end = clip.end
+
+                        shot.startFrame.set(start_frame)
+                        shot.endFrame.set(end_frame)
+
+                        shot.sequenceStartFrame.set(sequence_start)
+                        shot.sequenceEndFrame.set(sequence_end)
+
+                        # set original track
+                        shot.track.set(track)
+                        is_deleted = False
+                        break
+
+                if is_deleted:
+                    deleted_shots.append(shot)
+
+            # delete shots
+            pymel.core.delete(deleted_shots)
+
+        else:
+            # create sequencer
+            seq1 = self.create_sequence(seq.name)
+
+            # create shots
+            media = seq.media
+            for i, track in enumerate(media.video.tracks):
+                for clip in track.clips:
+                    shot = seq1.create_shot(clip.id)
+                    shot.startFrame.set(clip.in_)
+                    shot.endFrame.set(clip.out - 1)
+                    shot.sequenceStartFrame.set(clip.start)
+                    shot.handle.set(0)
+                    if clip.file:
+                        f = clip.file
+                        shot.output.set(f.pathurl.replace('file://', ''))
+                    shot.track.set(i + 1)
 
     @extends(pymel.core.nodetypes.SequenceManager)
     def to_xml(self, path=None, indentation=2, pre_indent=0):
@@ -922,7 +970,9 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
             clip.in_ = e.src_start_tc.frame_number
             clip.out = e.src_end_tc.frame_number
-            clip.duration = clip.out - clip.in_
+            clip.duration = clip.out  # including the handle at start,
+                                      # but we can not have any idea about the
+                                      # handle at end
 
             clip.start = e.rec_start_tc.frame_number
             clip.end = e.rec_end_tc.frame_number
