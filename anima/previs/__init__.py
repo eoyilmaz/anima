@@ -185,6 +185,8 @@ class SequenceManagerExtension(object):
         :param path: The path of the XML file
         :return: :class:`.Sequence`
         """
+        # TODO: This should create new sequences and shots or update the
+        #       current sequenceManager data
         if not isinstance(path, str):
             raise TypeError(
                 'path argument in %s.from_xml should be a string, not %s' %
@@ -204,7 +206,28 @@ class SequenceManagerExtension(object):
 
         seq.from_xml(xml_seq)
 
-        return seq
+        # now create or update structure
+        # create first
+        # generate the shot name template first
+
+        shot_name_template = self.get_shot_name_template()
+
+        # create sequencer
+        seq1 = self.create_sequence(seq.name)
+
+        # create shots
+        media = seq.media
+        for i, track in enumerate(media.video.tracks):
+            for clip in track.clips:
+                shot = seq1.create_shot(clip.id)
+                shot.startFrame.set(clip.in_)
+                shot.endFrame.set(clip.out - 1)
+                shot.sequenceStartFrame.set(clip.start)
+                shot.handle.set(0)
+                if clip.file:
+                    f = clip.file
+                    shot.output.set(f.pathurl.replace('file://', ''))
+                shot.track.set(i + 1)
 
     @extends(pymel.core.nodetypes.SequenceManager)
     def to_xml(self, path=None, indentation=2, pre_indent=0):
@@ -214,28 +237,16 @@ class SequenceManagerExtension(object):
 
         :return:
         """
-        # if path is not None:
-        #     import maya.app.edl.importExport as EDL
-        #     EDL.doExport(path, 0)
-        # elif seq is not None:
-        #     if not isinstance(seq, Sequence):
-        #         raise TypeError(
-        #             '"seq" argument in %s.to_xml should be an instance of'
-        #             'anima.previs.Sequence, not %s' % (
-        #                 self.__class__.__name__, seq.__class__.__name__
-        #             )
-        #         )
-        # 
-        #     template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
-        # 
-        #     return template % {
-        #         'sequence': seq.to_xml(indentation=indentation,
-        #                                pre_indent=indentation + pre_indent)
-        #     }
-        # else:
-        #     raise TypeError('Please supply at least one of "path" or "seq" '
-        #                     'arguments')
-        pass
+        seq = self.generate_sequence_structure()
+        template = """<xmeml version="1.0">\n%(sequence)s\n</xmeml>\n"""
+
+        rendered_template = ''
+        if seq:
+            rendered_template = template % {
+                'sequence': seq.to_xml(indentation=indentation,
+                                       pre_indent=indentation + pre_indent)
+            }
+        return rendered_template
 
     @extends(pymel.core.nodetypes.SequenceManager)
     def generate_sequence_structure(self):
@@ -257,7 +268,7 @@ class SequenceManagerExtension(object):
         time = pymel.core.PyNode('time1')
 
         seq = Sequence()
-        seq.name = str(sequencer.sequence_name.get())
+        seq.name = str(sequencer.get_sequence_name())
         seq.ntsc = False  # always false
 
         seq.timebase = str(fps)
@@ -273,27 +284,29 @@ class SequenceManagerExtension(object):
 
         for shot in sequencer.shots.get():
             clip = Clip()
-            clip.id = str(shot.full_shot_name)
-            clip.name = str(shot.shotName.get())
-            clip.duration = shot.duration
+            clip.id = str(shot.shotName.get())
+            clip.name = str(shot.full_shot_name)
+            clip.duration = shot.duration + 2 * shot.handle.get()
             clip.enabled = True
             clip.start = shot.sequenceStartFrame.get()
-            clip.end = shot.sequenceEndFrame.get()
-            clip.in_ = shot.startFrame.get()
-            clip.out = shot.endFrame.get()
+            clip.end = shot.sequenceEndFrame.get() + 1
+            # clips always start from 0 and includes the shot handle
+            clip.in_ = shot.handle.get()  # handle at start
+            clip.out = shot.handle.get() + shot.duration  # handle at end
             clip.type = 'Video'  # always video for now
 
             file = File()
-            file.name = os.path.basename(str(shot.output.get()))
+            file.name = os.path.splitext(
+                os.path.basename(str(shot.output.get()))
+            )[0]
 
-            with shot.include_handles:
-                file.duration = shot.duration
+            file.duration = shot.duration + 2 * shot.handle.get()
 
-            file.pathurl = str(shot.output.get())
+            file.pathurl = str('file://%s' % shot.output.get())
 
             clip.file = file
 
-            track_number = shot.track.get()
+            track_number = shot.track.get() - 1  # tracks should start from 0
             try:
                 track = video.tracks[track_number]
             except IndexError:
@@ -301,6 +314,9 @@ class SequenceManagerExtension(object):
                 video.tracks.append(track)
 
             track.clips.append(clip)
+            # set video resolution
+            video.width = shot.wResolution.get()
+            video.height = shot.hResolution.get()
 
         seq.media = media
         return seq
@@ -309,7 +325,7 @@ class SequenceManagerExtension(object):
     def to_edl(self):
         """Generates an EDL file out of the edit
         """
-        seq = None
+        seq = self.generate_sequence_structure()
         l = seq.to_edl()
         return l
 
@@ -330,6 +346,15 @@ class SequencerExtension(object):
         to
         """
         return self.message.get()
+
+    @extends(pymel.core.nodetypes.Sequencer)
+    def get_sequence_name(self):
+        """Gets the sequence_name attribute value, creates the attribute if it
+        is missing
+        """
+        if not self.hasAttr('sequence_name'):
+            self.set_sequence_name('')
+        return self.sequence_name.get()
 
     @extends(pymel.core.nodetypes.Sequencer)
     def set_sequence_name(self, name):
@@ -573,6 +598,7 @@ class ShotExtension(object):
         taking playblasts with handles
         """
         handle = self.handle.get()
+        track = self.track.get()
         self.startFrame.set(
             self.startFrame.get() - handle
         )
@@ -594,6 +620,7 @@ class ShotExtension(object):
             self.sequenceStartFrame.set(
                 self.sequenceStartFrame.get() + handle
             )
+            self.track.set(track)
 
     @extends(pymel.core.nodetypes.Shot)
     def playblast(self, output_path, show_ornaments=True):
@@ -890,15 +917,15 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
             clip = Clip()
 
             clip.name = e.clip_name
-            clip.id = clip.name
+            clip.id = e.reel
             clip.type = 'Video' if e.track == 'V' else 'Audio'
 
-            clip.in_ = e.src_start_tc.frames - 1
-            clip.out = e.src_end_tc.frames - 1
+            clip.in_ = e.src_start_tc.frame_number
+            clip.out = e.src_end_tc.frame_number
             clip.duration = clip.out - clip.in_
 
-            clip.start = e.rec_start_tc.frames
-            clip.end = e.rec_end_tc.frames
+            clip.start = e.rec_start_tc.frame_number
+            clip.end = e.rec_end_tc.frame_number
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
@@ -940,12 +967,14 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
         video = self.media.video
         if video is not None:
+            i = 0
             for track in video.tracks:
-                for i, clip in enumerate(track.clips):
+                for clip in track.clips:
+                    i += 1
                     e = Event({})
-                    e.num = '%06i' % (i + 1)
+                    e.num = '%06i' % i
                     e.clip_name = clip.name
-                    e.reel = clip.name
+                    e.reel = clip.id
                     e.track = 'V' if clip.type == 'Video' else 'A'
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
                     # expand it to add other transition codes
@@ -960,9 +989,9 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.src_end_tc = str(src_end_tc)
 
                     rec_start_tc = PyTimeCode(self.timebase,
-                                              frames=clip.start)
+                                              frames=clip.start + 1)
                     # 1 frame after last frame shown
-                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end)
+                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end + 1)
 
                     e.rec_start_tc = str(rec_start_tc)
                     e.rec_end_tc = str(rec_end_tc)
@@ -971,7 +1000,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.source_file = source_file
 
                     e.comments.extend([
-                        '* FROM CLIP NAME: %s' % source_file,
+                        '* FROM CLIP NAME: %s' % clip.name,
                         '* SOURCE FILE: %s' % source_file
                     ])
 
@@ -1276,13 +1305,13 @@ class Clip(PrevisBase, NameMixin, DurationMixin):
         """returns an xml version of this Clip object
         """
         template = """%(pre_indent)s<clipitem id="%(id)s">
-%(pre_indent)s%(indentation)s<end>%(end)s</end>
+%(pre_indent)s%(indentation)s<end>%(end)1.1f</end>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
 %(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
-%(pre_indent)s%(indentation)s<start>%(start)s</start>
-%(pre_indent)s%(indentation)s<in>%(in)s</in>
-%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
-%(pre_indent)s%(indentation)s<out>%(out)s</out>
+%(pre_indent)s%(indentation)s<start>%(start)1.1f</start>
+%(pre_indent)s%(indentation)s<in>%(in)1.1f</in>
+%(pre_indent)s%(indentation)s<duration>%(duration)1.1f</duration>
+%(pre_indent)s%(indentation)s<out>%(out)1.1f</out>
 %(file)s
 %(pre_indent)s</clipitem>"""
 

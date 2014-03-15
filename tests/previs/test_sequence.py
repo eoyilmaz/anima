@@ -392,12 +392,13 @@ class MediaTestCase(unittest.TestCase):
         """
         # create Sequence instance from XML
         sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_version('v001')
         xml_path = os.path.abspath('./test_data/test_v003.xml')
-        sequence = sm.from_xml(xml_path)
+        sm.from_xml(xml_path)
 
-        self.assertIsInstance(sequence, Sequence)
+        sequence = sm.generate_sequence_structure()
 
-        edl_list = sequence.to_edl()
+        edl_list = sm.to_edl()
         self.assertIsInstance(edl_list, List)
 
         self.assertEqual(
@@ -421,68 +422,60 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(clips[0], Clip)
 
         self.assertEqual('000001', e1.num)
-        self.assertEqual('shot2', e1.clip_name)
-        self.assertEqual('shot2', e1.reel)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.clip_name)
+        self.assertEqual('0010', e1.reel)
         self.assertEqual('V', e1.track)
         self.assertEqual('C', e1.tr_code)
         self.assertEqual('00:00:00:00', e1.src_start_tc)
         self.assertEqual('00:00:01:10', e1.src_end_tc)
-        self.assertEqual('00:00:00:00', e1.rec_start_tc)
-        self.assertEqual('00:00:01:10', e1.rec_end_tc)
+        self.assertEqual('00:00:00:01', e1.rec_start_tc)
+        self.assertEqual('00:00:01:11', e1.rec_end_tc)
         self.assertEqual(
-            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
-            'shot2.mov',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0010_v001',
             e1.comments[0]
         )
-        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot2.mov',
-                         e1.source_file)
+        self.assertEqual('/tmp/SEQ001_HSNI_003_0010_v001.mov', e1.source_file)
         self.assertEqual(
-            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
-            'shot2.mov',
-            e1.comments[1]
+            '* SOURCE FILE: /tmp/SEQ001_HSNI_003_0010_v001.mov', e1.comments[1]
         )
 
         self.assertEqual('000002', e2.num)
-        self.assertEqual('shot', e2.clip_name)
-        self.assertEqual('shot', e2.reel)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', e2.clip_name)
+        self.assertEqual('0020', e2.reel)
         self.assertEqual('V', e2.track)
         self.assertEqual('C', e2.tr_code)
         self.assertEqual('00:00:00:00', e2.src_start_tc)
         self.assertEqual('00:00:01:06', e2.src_end_tc)
-        self.assertEqual('00:00:01:10', e2.rec_start_tc)
-        self.assertEqual('00:00:02:16', e2.rec_end_tc)
-        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot.mov',
+        self.assertEqual('00:00:01:11', e2.rec_start_tc)
+        self.assertEqual('00:00:02:17', e2.rec_end_tc)
+        self.assertEqual('/tmp/SEQ001_HSNI_003_0020_v001.mov',
                          e2.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
-            'shot.mov',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0020_v001',
             e2.comments[0]
         )
         self.assertEqual(
-            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
-            'shot.mov',
+            '* SOURCE FILE: /tmp/SEQ001_HSNI_003_0020_v001.mov',
             e2.comments[1]
         )
 
         self.assertEqual('000003', e3.num)
-        self.assertEqual('shot1', e3.clip_name)
-        self.assertEqual('shot1', e3.reel)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', e3.clip_name)
+        self.assertEqual('0030', e3.reel)
         self.assertEqual('V', e3.track)
         self.assertEqual('C', e3.tr_code)
         self.assertEqual('00:00:00:00', e3.src_start_tc)
         self.assertEqual('00:00:01:21', e3.src_end_tc)
-        self.assertEqual('00:00:02:16', e3.rec_start_tc)
-        self.assertEqual('00:00:04:13', e3.rec_end_tc)
-        self.assertEqual('/home/eoyilmaz/maya/projects/default/data/shot1.mov',
+        self.assertEqual('00:00:02:17', e3.rec_start_tc)
+        self.assertEqual('00:00:04:14', e3.rec_end_tc)
+        self.assertEqual('/tmp/SEQ001_HSNI_003_0030_v001.mov',
                          e3.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: /home/eoyilmaz/maya/projects/default/data/'
-            'shot1.mov',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0030_v001',
             e3.comments[0]
         )
         self.assertEqual(
-            '* SOURCE FILE: /home/eoyilmaz/maya/projects/default/data/'
-            'shot1.mov',
+            '* SOURCE FILE: /tmp/SEQ001_HSNI_003_0030_v001.mov',
             e3.comments[1]
         )
 
@@ -501,7 +494,7 @@ class MediaTestCase(unittest.TestCase):
         s = Sequence(timebase='24')
         s.from_edl(edl_list)
 
-        self.assertEqual('previs_edit_v001', s.name)
+        self.assertEqual('SEQ001_HSNI_003', s.name)
 
         self.assertEqual(109.0, s.duration)
         self.assertEqual('24', s.timebase)
@@ -529,62 +522,62 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(clip3, Clip)
 
         # clip1
-        self.assertEqual(clip1.duration, 34.0)
-        self.assertEqual(clip1.enabled, True)
-        self.assertEqual(clip1.end, 35.0)
-        self.assertEqual(clip1.id, 'shot2')
-        self.assertEqual(clip1.in_, 0.0)
-        self.assertEqual(clip1.name, 'shot2')
-        self.assertEqual(clip1.out, 34.0)
-        self.assertEqual(clip1.start, 1.0)
-        self.assertEqual(clip1.type, 'Video')
+        self.assertEqual(34.0, clip1.duration)
+        self.assertEqual(True, clip1.enabled)
+        self.assertEqual(35.0, clip1.end)
+        self.assertEqual('0010', clip1.id)
+        self.assertEqual(0.0, clip1.in_)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
+        self.assertEqual(34.0, clip1.out)
+        self.assertEqual(1.0, clip1.start)
+        self.assertEqual('Video', clip1.type)
 
         f = clip1.file
         self.assertIsInstance(f, File)
         self.assertEqual(34.0, f.duration)
-        self.assertEqual('shot2', f.name)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov',
+            'file:///tmp/SEQ001_HSNI_003_0010_v001.mov',
             f.pathurl
         )
 
         # clip2
-        self.assertEqual(clip2.duration, 30.0)
-        self.assertEqual(clip2.enabled, True)
-        self.assertEqual(clip2.end, 65.0)
-        self.assertEqual(clip2.id, 'shot')
-        self.assertEqual(clip2.in_, 0.0)
-        self.assertEqual(clip2.name, 'shot')
-        self.assertEqual(clip2.out, 30.0)
-        self.assertEqual(clip2.start, 35.0)
-        self.assertEqual(clip2.type, 'Video')
+        self.assertEqual(30.0, clip2.duration)
+        self.assertEqual(True, clip2.enabled)
+        self.assertEqual(65.0, clip2.end)
+        self.assertEqual('0020', clip2.id)
+        self.assertEqual(0.0, clip2.in_)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
+        self.assertEqual(30.0, clip2.out)
+        self.assertEqual(35.0, clip2.start)
+        self.assertEqual('Video', clip2.type)
 
         f = clip2.file
         self.assertIsInstance(f, File)
         self.assertEqual(30.0, f.duration)
-        self.assertEqual('shot', f.name)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot.mov',
+            'file:///tmp/SEQ001_HSNI_003_0020_v001.mov',
             f.pathurl
         )
 
         # clip3
-        self.assertEqual(clip3.duration, 45.0)
-        self.assertEqual(clip3.enabled, True)
-        self.assertEqual(clip3.end, 110.0)
-        self.assertEqual(clip3.id, 'shot1')
-        self.assertEqual(clip3.in_, 0.0)
-        self.assertEqual(clip3.name, 'shot1')
-        self.assertEqual(clip3.out, 45.0)
-        self.assertEqual(clip3.start, 65.0)
-        self.assertEqual(clip3.type, 'Video')
+        self.assertEqual(45.0, clip3.duration)
+        self.assertEqual(True, clip3.enabled)
+        self.assertEqual(110.0, clip3.end)
+        self.assertEqual('0030', clip3.id)
+        self.assertEqual(0.0, clip3.in_)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
+        self.assertEqual(45.0, clip3.out)
+        self.assertEqual(65.0, clip3.start)
+        self.assertEqual('Video', clip3.type)
 
         f = clip3.file
         self.assertIsInstance(f, File)
         self.assertEqual(45.0, f.duration)
-        self.assertEqual('shot1', f.name)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov',
+            'file:///tmp/SEQ001_HSNI_003_0030_v001.mov',
             f.pathurl
         )
 

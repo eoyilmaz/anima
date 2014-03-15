@@ -175,6 +175,32 @@ class SequencerExtensionTestCase(unittest.TestCase):
             'Test Sequence'
         )
 
+    def test_get_sequence_name_is_working_properly(self):
+        """testing if the get_sequence_name is working properly
+        """
+        s1 = pymel.core.createNode('sequencer')
+        self.assertFalse(s1.hasAttr('sequence_name'))
+
+        s1.set_sequence_name('Test Sequence')
+        self.assertTrue(s1.hasAttr('sequence_name'))
+
+        self.assertEqual(
+            s1.get_sequence_name(),
+            'Test Sequence'
+        )
+
+    def test_get_sequence_name_will_create_sequence_name_attribute_if_missing(self):
+        """testing if the get_sequence_name will create the attribute if it is
+        missing
+        """
+        s1 = pymel.core.createNode('sequencer')
+        self.assertFalse(s1.hasAttr('sequence_name'))
+
+        result = s1.get_sequence_name()
+        self.assertTrue(s1.hasAttr('sequence_name'))
+
+        self.assertEqual(s1.get_sequence_name(), result)
+
     def test_mute_shots_is_working_properly(self):
         """testing if mute shot is working properly
         """

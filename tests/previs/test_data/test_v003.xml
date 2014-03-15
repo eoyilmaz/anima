@@ -1,7 +1,7 @@
 <xmeml version="1.0">
   <sequence>
     <duration>109.0</duration>
-    <name>previs_edit_v001</name>
+    <name>SEQ001_HSNI_003</name>
     <rate>
       <ntsc>FALSE</ntsc>
       <timebase>24</timebase>
@@ -20,9 +20,9 @@
         <track>
           <locked>FALSE</locked>
           <enabled>TRUE</enabled>
-          <clipitem id="shot2">
+          <clipitem id="0010">
             <end>35.0</end>
-            <name>shot2</name>
+            <name>SEQ001_HSNI_003_0010_v001</name>
             <enabled>True</enabled>
             <start>1.0</start>
             <in>0.0</in>
@@ -30,13 +30,13 @@
             <out>34.0</out>
             <file>
               <duration>34.0</duration>
-              <name>shot2</name>
-              <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+              <name>SEQ001_HSNI_003_0010_v001</name>
+              <pathurl>file:///tmp/SEQ001_HSNI_003_0010_v001.mov</pathurl>
             </file>
           </clipitem>
-          <clipitem id="shot">
+          <clipitem id="0020">
             <end>65.0</end>
-            <name>shot</name>
+            <name>SEQ001_HSNI_003_0020_v001</name>
             <enabled>True</enabled>
             <start>35.0</start>
             <in>0.0</in>
@@ -44,13 +44,13 @@
             <out>30.0</out>
             <file>
               <duration>30.0</duration>
-              <name>shot</name>
-              <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
+              <name>SEQ001_HSNI_003_0020_v001</name>
+              <pathurl>file:///tmp/SEQ001_HSNI_003_0020_v001.mov</pathurl>
             </file>
           </clipitem>
-          <clipitem id="shot1">
+          <clipitem id="0030">
             <end>110.0</end>
-            <name>shot1</name>
+            <name>SEQ001_HSNI_003_0030_v001</name>
             <enabled>True</enabled>
             <start>65.0</start>
             <in>0.0</in>
@@ -58,8 +58,8 @@
             <out>45.0</out>
             <file>
               <duration>45.0</duration>
-              <name>shot1</name>
-              <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
+              <name>SEQ001_HSNI_003_0030_v001</name>
+              <pathurl>file:///tmp/SEQ001_HSNI_003_0030_v001.mov</pathurl>
             </file>
           </clipitem>
         </track>

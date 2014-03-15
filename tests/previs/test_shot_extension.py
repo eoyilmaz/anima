@@ -159,6 +159,50 @@ class ShotExtensionTestCase(unittest.TestCase):
         self.assertEqual(shot1.sequenceStartFrame.get(), 25)
         self.assertEqual(shot1.sequenceEndFrame.get(), 35)
 
+    def test_include_handles_will_not_change_track_of_the_shot(self):
+        """testing if include_handles() method will not change the shots track
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        seq = sm.create_sequence('seq1')
+
+        shot1 = seq.create_shot('shot1')
+        shot1.set_handle(10)
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(24)
+        shot1.sequenceStartFrame.set(0)
+        shot1.track.set(1)
+
+        shot2 = seq.create_shot('shot2')
+        shot2.set_handle(10)
+        shot2.startFrame.set(0)
+        shot2.endFrame.set(24)
+        shot2.sequenceStartFrame.set(25)
+        shot2.track.set(1)
+
+        shot3 = seq.create_shot('shot3')
+        shot3.set_handle(10)
+        shot3.startFrame.set(0)
+        shot3.endFrame.set(24)
+        shot3.sequenceStartFrame.set(50)
+        shot3.track.set(1)
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        with shot1.include_handles:
+            pass
+
+        with shot2.include_handles:
+            pass
+
+        with shot3.include_handles:
+            pass
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
     def test_duration_property_is_working_properly(self):
         """testing if the duration property is working properly
         """

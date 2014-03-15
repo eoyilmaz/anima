@@ -63,158 +63,108 @@ class SequenceManagerTestCase(unittest.TestCase):
             'Please supply a valid path to an XML file!'
         )
 
-    def test_from_xml_returns_a_Sequence_instance(self):
-        """testing if from_xml method will return a Sequence instance
-        """
-        sm = pymel.core.PyNode('sequenceManager1')
-        sequence = sm.from_xml('./test_data/test_v003.xml')
-        self.assertIsInstance(sequence, Sequence)
-
-    def test_from_xml_returns_a_Seqeunce_with_correct_hierarchy(self):
-        """testing if from_xml method will return a Sequence instance with
-        correct hierarchy
+    def test_from_xml_generates_correct_sequencer_hierarchy(self):
+        """testing if from_xml method will generate Sequences and shots
+        correctly
         """
         path = os.path.abspath('./test_data/test_v003.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
-        sequence = sm.from_xml(path)
-        self.assertIsInstance(sequence, Sequence)
+        sm.from_xml(path)
 
-        self.assertEqual(sequence.duration, 109)
-        self.assertEqual(sequence.name, 'previs_edit_v001')
-        self.assertEqual(sequence.timebase, '24')
-        self.assertEqual(sequence.ntsc, False)
-        self.assertEqual(sequence.timecode, '00:00:00:00')
+        sequences = sm.sequences.get()
+        self.assertEqual(len(sequences), 1)
 
-        media = sequence.media
-        self.assertIsInstance(media, Media)
-        self.assertEqual(1, len(media.video))
-        self.assertEqual(0, len(media.audio))
+        sequencer = sequences[0]
+        self.assertIsInstance(sequencer, pymel.core.nt.Sequencer)
 
-        video = media.video[0]
+        self.assertEqual(sequencer.duration, 109)
+        self.assertEqual(sequencer.sequence_name.get(), 'SEQ001_HSNI_003')
 
-        self.assertIsInstance(video, Video)
+        # check scene fps
+        self.assertEqual(pymel.core.currentUnit(q=1, t=1), 'film')
 
-        self.assertEqual(video.width, 1024)
-        self.assertEqual(video.height, 778)
+        # check timecode
+        time = pymel.core.PyNode('time1')
+        self.assertEqual(time.timecodeProductionStart.get(), 0.0)
 
-        self.assertEqual(1, len(video.tracks))
+        shots = sequencer.shots.get()
+        self.assertEqual(len(shots), 3)
 
-        track = video.tracks[0]
+        shot1 = shots[0]
+        shot2 = shots[1]
+        shot3 = shots[2]
 
-        self.assertIsInstance(track, Track)
-
-        self.assertEqual(3, len(track.clips))
-        self.assertEqual(False, track.locked)
-        self.assertEqual(True, track.enabled)
-
-        clip1 = track.clips[0]
-        clip2 = track.clips[1]
-        clip3 = track.clips[2]
-
-        self.assertIsInstance(clip1, Clip)
-        self.assertIsInstance(clip2, Clip)
-        self.assertIsInstance(clip3, Clip)
-
-        # Clip1
-        self.assertEqual(clip1.id, 'shot2')
-        self.assertEqual(clip1.name, 'shot2')
-        self.assertEqual(clip1.enabled, True)
-        self.assertEqual(clip1.start, 1.0)
-        self.assertEqual(clip1.end, 35.0)
-        self.assertEqual(clip1.duration, 34.0)
-        self.assertEqual(clip1.in_, 0.0)
-        self.assertEqual(clip1.out, 34.0)
-
-        file1 = clip1.file
-        self.assertIsInstance(file1, File)
-        self.assertEqual(file1.duration, 34.0)
-        self.assertEqual(file1.name, 'shot2')
+        self.assertEqual('0010', shot1.shotName.get())
+        self.assertEqual(1024, shot1.wResolution.get())
+        self.assertEqual(778, shot1.hResolution.get())
+        self.assertEqual(1, shot1.track.get())
+        self.assertEqual(1.0, shot1.sequenceStartFrame.get())
+        self.assertEqual(34.0, shot1.sequenceEndFrame.get())
+        self.assertEqual(34.0, shot1.duration)
+        self.assertEqual(0.0, shot1.startFrame.get())
+        self.assertEqual(33.0, shot1.endFrame.get())
         self.assertEqual(
-            file1.pathurl,
-            'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+            '/tmp/SEQ001_HSNI_003_0010_v001.mov',
+            shot1.output.get()
         )
 
         # Clip2
-        self.assertEqual(clip2.id, 'shot')
-        self.assertEqual(clip2.name, 'shot')
-        self.assertEqual(clip2.enabled, True)
-        self.assertEqual(clip2.start, 35.0)
-        self.assertEqual(clip2.end, 65.0)
-        self.assertEqual(clip2.duration, 30.0)
-        self.assertEqual(clip2.in_, 0.0)
-        self.assertEqual(clip2.out, 30.0)
-
-        file2 = clip2.file
-        self.assertIsInstance(file2, File)
-        self.assertEqual(file2.duration, 30.0)
-        self.assertEqual(file2.name, 'shot')
+        self.assertEqual('0020', shot2.shotName.get())
+        self.assertEqual(1024, shot2.wResolution.get())
+        self.assertEqual(778, shot2.hResolution.get())
+        self.assertEqual(1, shot2.track.get())
+        self.assertEqual(35.0, shot2.sequenceStartFrame.get())
+        self.assertEqual(64.0, shot2.sequenceEndFrame.get())
+        self.assertEqual(30.0, shot2.duration)
+        self.assertEqual(0.0, shot2.startFrame.get())
+        self.assertEqual(29.0, shot2.endFrame.get())
         self.assertEqual(
-            file2.pathurl,
-            'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+            '/tmp/SEQ001_HSNI_003_0020_v001.mov',
+            shot2.output.get()
         )
 
         # Clip3
-        self.assertEqual(clip3.id, 'shot1')
-        self.assertEqual(clip3.name, 'shot1')
-        self.assertEqual(clip3.enabled, True)
-        self.assertEqual(clip3.start, 65.0)
-        self.assertEqual(clip3.end, 110.0)
-        self.assertEqual(clip3.duration, 45.0)
-        self.assertEqual(clip3.in_, 0.0)
-        self.assertEqual(clip3.out, 45.0)
-
-        file3 = clip3.file
-        self.assertIsInstance(file3, File)
-        self.assertEqual(file3.duration, 45.0)
-        self.assertEqual(file3.name, 'shot1')
+        self.assertEqual('0030', shot3.shotName.get())
+        self.assertEqual(1024, shot3.wResolution.get())
+        self.assertEqual(778, shot3.hResolution.get())
+        self.assertEqual(1, shot3.track.get())
+        self.assertEqual(65.0, shot3.sequenceStartFrame.get())
+        self.assertEqual(109.0, shot3.sequenceEndFrame.get())
+        self.assertEqual(45.0, shot3.duration)
+        self.assertEqual(0.0, shot3.startFrame.get())
+        self.assertEqual(44.0, shot3.endFrame.get())
         self.assertEqual(
-            file3.pathurl,
-            'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+            '/tmp/SEQ001_HSNI_003_0030_v001.mov',
+            shot3.output.get()
         )
 
-    def test_to_xml_seq_argument_skipped(self):
-        """testing if a TypeError will be raised when the seq argument is
-        skipped
-        """
-        sm = pymel.core.PyNode('sequenceManager1')
-        with self.assertRaises(TypeError) as cm:
-            sm.to_xml()
-
-        self.assertEqual(
-            cm.exception.message,
-            'Please supply at least one of "path" or "seq" arguments'
-        )
-
-    def test_to_xml_seq_argument_is_not_a_sequence_instance(self):
-        """Testing if a TypeError will be raised when the seq argument in
-        to_xml method is not a Sequence instance
-        """
-        sm = pymel.core.PyNode('sequenceManager1')
-        with self.assertRaises(TypeError) as cm:
-            sm.to_xml(seq=12)
-
-        self.assertEqual(
-            cm.exception.message,
-            '"seq" argument in SequenceManager.to_xml should be an instance of'
-            'anima.previs.Sequence, not int'
-        )
-
-    def test_to_xml_returns_a_proper_xml_content_from_given_sequence_instance(self):
-        """testing if a proper string will be returned from SequencerExtension.to_xml
-        when a Sequence is given with seq argument
+    def test_to_xml_will_generate_sequences_and_shots_from_xml_file(self):
+        """testing if a proper sequence structure will be generated from the
+        given XML file.
         """
         path = os.path.abspath('./test_data/test_v003.xml')
 
         sm = pymel.core.PyNode('sequenceManager1')
-        sequence = sm.from_xml(path)
+        sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
+        sm.set_version('v001')
+        sm.from_xml(path)
 
-        self.assertIsInstance(sequence, Sequence)
+        seq1 = sm.sequences.get()[0]
+        shots = seq1.shots.get()
+        shot1 = shots[0]
+        shot2 = shots[1]
+        shot3 = shots[2]
 
-        result = sm.to_xml(seq=sequence)
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        result = sm.to_xml()
         with open(path) as f:
             expected = f.read()
 
+        self.maxDiff = None
         self.assertEqual(expected, result)
 
     def test_create_sequence_is_working_properly(self):
@@ -223,6 +173,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         seq = self.sm.create_sequence()
         self.assertEqual(seq.type(), 'sequencer')
 
+        self.maxDiff = None
         self.assertEqual(self.sm, seq.message.connections()[0])
 
     def test_create_sequence_is_properly_setting_the_sequence_name(self):
@@ -239,7 +190,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         """
         import edl
         # create a sequence
-        seq1 = self.sm.create_sequence()
+        seq1 = self.sm.create_sequence('sequence1')
         seq1.create_shot('shot1')
         seq1.create_shot('shot2')
         seq1.create_shot('shot3')
@@ -248,6 +199,27 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertIsInstance(
             l,
             edl.List
+        )
+
+    def test_to_edl_will_generate_a_proper_edl_content(self):
+        """testing if to_edl will generate a proper edl content
+        """
+        xml_path = os.path.abspath('./test_data/test_v003.xml')
+        edl_path = os.path.abspath('./test_data/test_v003.edl')
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_version('v001')
+        sm.from_xml(xml_path)
+
+        l = sm.to_edl()
+        result = l.to_string()
+
+        with open(edl_path) as f:
+            expected_edl_content = f.read()
+
+        self.assertEqual(
+            expected_edl_content,
+            result
         )
 
     def test_generate_sequence_structure_returns_a_sequence_instance(self):
@@ -268,6 +240,34 @@ class SequenceManagerTestCase(unittest.TestCase):
             result,
             Sequence
         )
+
+    def test_generate_sequence_structure_will_generate_sequences_and_shots_with_correct_number_of_tracks(self):
+        """testing if a proper sequence structure will be generated by using
+        the generate_sequence_structure() method with correct number of tracks
+        """
+        path = os.path.abspath('./test_data/test_v003.xml')
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.from_xml(path)
+
+        seq1 = sm.sequences.get()[0]
+        shots = seq1.shots.get()
+        shot1 = shots[0]
+        shot2 = shots[1]
+        shot3 = shots[2]
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        seq = sm.generate_sequence_structure()
+
+        tracks = seq.media.video.tracks
+        self.assertEqual(len(tracks), 1)
+        track1 = tracks[0]
+
+        clips = track1.clips
+        self.assertEqual(len(clips), 3)
 
     def test_set_shot_name_template_is_working_properly(self):
         """testing if set_shot_name_template() is working properly
@@ -340,7 +340,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         shot1.startFrame.set(0)
         shot1.endFrame.set(24)
         shot1.sequenceStartFrame.set(0)
-        shot1.track.set(0)
+        shot1.track.set(1)
         shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
         shot1.handle.set(10)
 
@@ -348,7 +348,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         shot2.startFrame.set(10)
         shot2.endFrame.set(35)
         shot2.sequenceStartFrame.set(25)
-        shot2.track.set(0)
+        shot2.track.set(1)
         shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
         shot2.handle.set(15)
 
@@ -356,7 +356,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         shot3.startFrame.set(25)
         shot3.endFrame.set(50)
         shot3.sequenceStartFrame.set(45)
-        shot3.track.set(1)
+        shot3.track.set(2)
         shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
         shot3.handle.set(20)
 
@@ -374,7 +374,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertIsInstance(video, Video)
         self.assertIsNone(media.audio)
 
-        self.assertEqual(len(video.tracks), 2)
+        self.assertEqual(2, len(video.tracks))
 
         track1 = video.tracks[0]
         self.assertIsInstance(track1, Track)
@@ -388,48 +388,51 @@ class SequenceManagerTestCase(unittest.TestCase):
 
         clip1 = track1.clips[0]
         self.assertIsInstance(clip1, Clip)
-        self.assertEqual(clip1.type, 'Video')
-        self.assertEqual(clip1.id, 'SEQ001_HSNI_003_0010_v001')
-        self.assertEqual(clip1.name, '0010')
-        self.assertEqual(clip1.in_, 0)   # startFrame
-        self.assertEqual(clip1.out, 24)  # endFrame
-        self.assertEqual(clip1.start, 0)  # sequenceStartFrame
-        self.assertEqual(clip1.end, 24)  # sequenceEndFrame
+        self.assertEqual('Video', clip1.type)
+        self.assertEqual('0010', clip1.id)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
+        self.assertEqual(10, clip1.in_)   # handle
+        self.assertEqual(35, clip1.out)  # handle + duration
+        self.assertEqual(0, clip1.start)  # sequenceStartFrame
+        self.assertEqual(25, clip1.end)  # sequenceEndFrame + 1
 
         clip2 = track1.clips[1]
         self.assertIsInstance(clip2, Clip)
-        self.assertEqual(clip2.type, 'Video')
-        self.assertEqual(clip2.id, 'SEQ001_HSNI_003_0020_v001')
-        self.assertEqual(clip2.name, '0020')
-        self.assertEqual(clip2.in_, 10)   # startFrame
-        self.assertEqual(clip2.out, 35)  # endFrame
-        self.assertEqual(clip2.start, 25)  # sequenceStartFrame
-        self.assertEqual(clip2.end, 50)  # sequenceEndFrame
+        self.assertEqual('Video', clip2.type)
+        self.assertEqual('0020', clip2.id)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
+        self.assertEqual(15, clip2.in_)   # handle
+        self.assertEqual(41, clip2.out)  # handle + duration
+        self.assertEqual(25, clip2.start)  # sequenceStartFrame
+        self.assertEqual(51, clip2.end)  # sequenceEndFrame + 1
 
         clip3 = track2.clips[0]
         self.assertIsInstance(clip3, Clip)
-        self.assertEqual(clip3.type, 'Video')
-        self.assertEqual(clip3.id, 'SEQ001_HSNI_003_0030_v001')
-        self.assertEqual(clip3.name, '0030')
-        self.assertEqual(clip3.in_, 25)   # startFrame
-        self.assertEqual(clip3.out, 50)  # endFrame
-        self.assertEqual(clip3.start, 45)  # sequenceStartFrame
-        self.assertEqual(clip3.end, 70)  # sequenceEndFrame
+        self.assertEqual('Video', clip3.type)
+        self.assertEqual('0030', clip3.id)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
+        self.assertEqual(20, clip3.in_)   # startFrame
+        self.assertEqual(46, clip3.out)  # endFrame + 1
+        self.assertEqual(45, clip3.start)  # sequenceStartFrame
+        self.assertEqual(71, clip3.end)  # sequenceEndFrame + 1
 
         file1 = clip1.file
         self.assertIsInstance(file1, File)
-        self.assertEqual(file1.name, 'SEQ001_HSNI_003_0010_v001.mov')
-        self.assertEqual(file1.pathurl, '/tmp/SEQ001_HSNI_003_0010_v001.mov')
-        self.assertEqual(file1.duration, 45)  # including handles
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', file1.name)
+        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0010_v001.mov',
+                         file1.pathurl)
+        self.assertEqual(45, file1.duration)  # including handles
 
         file2 = clip2.file
         self.assertIsInstance(file2, File)
-        self.assertEqual(file2.name, 'SEQ001_HSNI_003_0020_v001.mov')
-        self.assertEqual(file2.pathurl, '/tmp/SEQ001_HSNI_003_0020_v001.mov')
-        self.assertEqual(file2.duration, 56)  # including handles
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', file2.name)
+        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0020_v001.mov',
+                         file2.pathurl)
+        self.assertEqual(56, file2.duration)  # including handles
 
         file3 = clip3.file
         self.assertIsInstance(file3, File)
-        self.assertEqual(file3.name, 'SEQ001_HSNI_003_0030_v001.mov')
-        self.assertEqual(file3.pathurl, '/tmp/SEQ001_HSNI_003_0030_v001.mov')
-        self.assertEqual(file3.duration, 66)  # including handles
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', file3.name)
+        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0030_v001.mov',
+                         file3.pathurl)
+        self.assertEqual(66, file3.duration)  # including handles
