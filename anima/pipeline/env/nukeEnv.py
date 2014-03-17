@@ -11,6 +11,7 @@ import nuke
 
 from stalker.db import DBSession
 from .. import utils
+from anima.pipeline.env import empty_reference_resolution
 from base import EnvironmentBase
 
 
@@ -135,14 +136,14 @@ class Nuke(EnvironmentBase):
         # TODO: file paths in different OS'es should be replaced with the current one
         # Check if the file paths are starting with a string matching one of the
         # OS'es project_directory path and replace them with a relative one
-        # matching the current OS 
+        # matching the current OS
 
         # replace paths
         # self.replace_external_paths()
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
-        return {}
+        return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
         """the import action for nuke environment
@@ -285,6 +286,8 @@ class Nuke(EnvironmentBase):
                 main_write_node.knob('file_type').setValue(output_format_enum)
             elif output_format_enum == 'ffmpeg':
                 output_format_enum = 'mov'
+            elif output_format_enum == 'targa':
+                output_format_enum = 'tga'
 
             output_file_name += '%s_v%03d' % (
                 version.nice_name, version.version_number
