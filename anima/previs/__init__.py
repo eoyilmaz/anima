@@ -13,6 +13,8 @@ import pymel
 import anima.extension.maya
 from anima.extension import extends
 
+default_handle_count = 15
+
 
 class PrevisBase(object):
     """The base for other Previs classes
@@ -444,7 +446,7 @@ class SequencerExtension(object):
         """
         # add the given shot to the list
         if not shot.hasAttr('handle'):
-            shot.set_handle(handle=10)
+            shot.set_handle(handle=default_handle_count)
 
         # connect to the sequencer
         # remove it from other sequences
@@ -455,7 +457,7 @@ class SequencerExtension(object):
         shot.message >> self.shots.next_available
 
     @extends(pymel.core.nodetypes.Sequencer)
-    def set_shot_handles(self, handle=10):
+    def set_shot_handles(self, handle=default_handle_count):
         """Set shot handles
 
         :param int handle: An integer value for handle
@@ -504,7 +506,7 @@ class SequencerExtension(object):
         raise NotImplementedError()
 
     @extends(pymel.core.nodetypes.Sequencer)
-    def create_shot(self, name='', handle=10):
+    def create_shot(self, name='', handle=default_handle_count):
         """Creates a new shot.
 
         :param str name: A string value for the newly created shot name, if
@@ -542,34 +544,39 @@ class SequencerExtension(object):
         return seq.to_edl()
 
     @extends(pymel.core.nodetypes.Sequencer)
-    def metafuze(self, xml):
+    def metafuze(self):
         """Calls "Avid Metafuze" with the given xml content to convert media
         files to MXF format.
 
-        :param str xml: The xml content
-        :return:
+        :return: list of file path
         """
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        seq = sm.generate_sequence_structure()
+        xmls = seq.to_metafuze_xml()
+
         # write the given content to tmp
-        temp_file_path = tempfile.mktemp()
-        with open(temp_file_path, 'w') as f:
-            f.write(xml)
+        for i, xml in enumerate(xmls):
+            temp_file_path = tempfile.mktemp(suffix='.xml')
+            yield i
+            with open(temp_file_path, 'w') as f:
+                f.write(xml)
 
-        process = subprocess.Popen(
-            ['metafuze',
-             temp_file_path],
-            stderr=subprocess.PIPE
-        )
-        # wait it to complete
-        process.wait()
+            subprocess.call(
+                ['metafuze',
+                 '-debug',
+                 temp_file_path],
+                #stderr=subprocess.PIPE,
+                shell=True
+            )
 
-        stderr = process.stderr.readlines()
+            # remove the temp file
+            #os.remove(temp_file_path)
+            print 'xml path: %s' % temp_file_path
 
-        if process.returncode:
-            # there is an error
-            raise RuntimeError(stderr)
-
-        # remove the temp file
-        os.remove(temp_file_path)
+        #if return_code:
+        #    # there is an error
+        #    raise RuntimeError("Something went wrong in MXF conversion")
 
     @extends(pymel.core.nodetypes.Sequencer)
     def convert_to_mxf(self, path):
@@ -678,13 +685,9 @@ class ShotExtension(object):
         # get current version and then the output folder
         path_template = os.path.join(output_path).replace('\\', '/')
 
-        filename_template = '%(sequence)s_%(shot)s.mov'
-
         # template vars
         sequence = self.sequence
 
-        sequence_name = sequence.sequence_name.get()
-        shot_name = self.shotName.get()
         handle = self.handle.get()
         start_frame = self.sequenceStartFrame.get() - handle
         end_frame = self.sequenceEndFrame.get() + handle
@@ -695,10 +698,7 @@ class ShotExtension(object):
         track = self.track.get()
 
         rendered_path = path_template % {}
-        rendered_filename = filename_template % {
-            'shot': shot_name,
-            'sequence': sequence_name
-        }
+        rendered_filename = '%s.mov' % self.full_shot_name
 
         movie_full_path = os.path.join(
             rendered_path,
@@ -741,15 +741,15 @@ class ShotExtension(object):
         return result
 
     @extends(pymel.core.nodetypes.Shot)
-    def convert_to_mxf(self):
-        """converts the given video at given path to Avid MXF DNxHD 36.
+    def convert_to_mxf(self, metafuse_xml):
+        """converts a video with the given Metafuze XML to Avid MXF format.
 
         :return: returns the generated mxf file location
         """
         pass
 
     @extends(pymel.core.nodetypes.Shot)
-    def set_handle(self, handle=10):
+    def set_handle(self, handle=default_handle_count):
         """Creates handle attribute to given shot instance
 
         :param int handle: An integer value for handle
@@ -852,7 +852,7 @@ class ShotExtension(object):
             'shot': self.shotName.get(),
             'sequence': seq.sequence_name.get(),
             'version': version,
-            'camera': camera.name.get() if camera else None
+            'camera': camera.name() if camera else None
         }
 
         return rendered_template
@@ -1024,7 +1024,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e = Event({})
                     e.num = '%06i' % i
                     e.clip_name = clip.name
-                    e.reel = clip.id
+                    e.reel = clip.name
                     e.track = 'V' if clip.type == 'Video' else 'A'
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
                     # expand it to add other transition codes
@@ -1063,7 +1063,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
         :returns: list of strings
         """
         metafuze_xml_template = """<?xml version='1.0' encoding='UTF-8'?>
-<MetaFuze_BatchTranscode>
+<MetaFuze_BatchTranscode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="MetaFuzeBatchTranscode.xsd">
    <Configuration>
       <Local>8</Local>
       <Remote>8</Remote>
@@ -1093,10 +1093,10 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
          <UseMXFAudio>false</UseMXFAudio>
          <UseWAVAudio>false</UseWAVAudio>
          <SrcBitsPerChannel>8</SrcBitsPerChannel>
-         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>DNxHD 36</OutputPreset>
          <OutputPreset>
             <Version>2.0</Version>
-            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <Name>DNxHD 36</Name>
             <ColorModel>YCC 709</ColorModel>
             <BitDepth>8</BitDepth>
             <Format>1080 24p</Format>
@@ -1123,13 +1123,13 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     )
 
                     kwargs = {
-                        'file_pathurl': raw_file_path,
-                        'mxf_pathurl': raw_mxf_path,
+                        'file_pathurl': os.path.normpath(raw_file_path),
+                        'mxf_pathurl': os.path.normpath(raw_mxf_path),
                         'sequence_name': self.name,
                         'sequence_timecode': self.timecode,
                         'clip_id': clip.id,
                         'clip_name': clip.name,
-                        'clip_duration': clip.duration,
+                        'clip_duration': clip.duration - 1,  # metafuze likes frame number
                         'width': video.width,
                         'height': video.height
                     }
