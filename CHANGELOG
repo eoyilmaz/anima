@@ -2,6 +2,38 @@
 Changes
 =======
 
+0.1.5
+=====
+
+* **Extension:**
+
+  * **New:** This is a new module, which will hold all the extensions to the
+    environment classes. Its main tool is the ``anima.extension.extends``
+    decorator, which makes it very easy to patch extend any classes defined
+    outside of ``anima`` library.
+
+* **Pipeline:**
+
+  * **Env:**
+
+    * **Update:** Renamed all ``XEnv`` classes in environment to ``X`` (MayaEnv
+      to Maya ie).
+
+    * **Maya:**
+
+      * **New:** Added Maya.fix_reference_namespaces() tool method, which
+        deeply updates reference namespaces from old format (which uses version
+        number) to new format (which uses the version.nice_name). This method
+        also does a deep update while doing the namespace fix. It can handle
+        very complex situations. For now it seems stable.
+
+* **Previs:**
+
+  * **New:** Added three new classes called ``SequenceManagerExtension``,
+    ``SequencerExtension`` and ``ShotExtension``. These classes are mainly for
+    extending functionality of original PyMel classes by using the
+    ``anima.extension.extends`` decorator.
+
 0.1.4
 =====
 

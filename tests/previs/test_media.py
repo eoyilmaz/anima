@@ -19,7 +19,7 @@ class MediaTestCase(unittest2.TestCase):
         v = Video()
         v.width = 1024
         v.height = 778
-        m.video.append(v)
+        m.video = v
 
         t = Track()
         t.enabled = True
@@ -255,7 +255,7 @@ class MediaTestCase(unittest2.TestCase):
         m = Media()
         m.from_xml(media_node)
 
-        v = m.video[0]
+        v = m.video
         self.assertEqual(1024, v.width)
         self.assertEqual(778, v.height)
 

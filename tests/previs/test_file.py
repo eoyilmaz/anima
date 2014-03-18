@@ -59,14 +59,6 @@ class FileTestCase(unittest2.TestCase):
         f.pathurl = test_value
         self.assertEqual(test_value, f.pathurl)
 
-
-
-
-
-
-
-
-
     def test_to_xml_method_is_working_properly(self):
         """testing if the to xml method is working properly
         """

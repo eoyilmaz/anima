@@ -33,7 +33,7 @@ setup(
     version=anima.__version__,
     authors=["Erkan Ozgur Yilmaz"],
     author_emails=["eoyilmaz@gmail.com"],
-    description=("VFX and animation tools used in Anima Istanbul"),
+    description="VFX and Animation pipeline developed in Anima Istanbul",
     long_description=read("README"),
     keywords=["animation", "character", "studio", "vfx", "pipeline"],
     packages=find_packages(exclude=["tests*"]),
