@@ -586,7 +586,7 @@ class MediaTestCase(unittest.TestCase):
         """
         s = Sequence()
         s.duration = 109.0
-        s.name = 'previs_edit_v001'
+        s.name = 'SEQ001_HSNI_003'
         s.ntsc = False
         s.timebase = 24
         s.timecode = '00:00:00:00'
@@ -608,14 +608,14 @@ class MediaTestCase(unittest.TestCase):
         # clip 1
         f = File()
         f.duration = 34.0
-        f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.name = 'SEQ001_HSNI_003_0010_v001'
+        f.pathurl = 'file:///tmp/SEQ001_HSNI_003_0010_v001.mov'
 
         c = Clip()
-        c.id = 'shot2'
+        c.id = '0010'
         c.start = 1.0
         c.end = 35.0
-        c.name = 'shot2'
+        c.name = 'SEQ001_HSNI_003_0010_v001'
         c.enabled = True
         c.duration = 34.0
         c.in_ = 0.0
@@ -627,14 +627,14 @@ class MediaTestCase(unittest.TestCase):
         # clip 2
         f = File()
         f.duration = 30.0
-        f.name = 'shot'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        f.name = 'SEQ001_HSNI_003_0020_v001'
+        f.pathurl = 'file:///tmp/SEQ001_HSNI_003_0020_v001.mov'
 
         c = Clip()
-        c.id = 'shot'
+        c.id = '0020'
         c.start = 35.0
         c.end = 65.0
-        c.name = 'shot'
+        c.name = 'SEQ001_HSNI_003_0020_v001'
         c.enabled = True
         c.duration = 30.0
         c.in_ = 0.0
@@ -646,14 +646,14 @@ class MediaTestCase(unittest.TestCase):
         # clip 3
         f = File()
         f.duration = 45.0
-        f.name = 'shot1'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.name = 'SEQ001_HSNI_003_0030_v001'
+        f.pathurl = 'file:///tmp/SEQ001_HSNI_003_0030_v001.mov'
 
         c = Clip()
-        c.id = 'shot1'
+        c.id = '0030'
         c.start = 65.0
         c.end = 110.0
-        c.name = 'shot1'
+        c.name = 'SEQ001_HSNI_003_0030_v001'
         c.enabled = True
         c.duration = 45.0
         c.in_ = 0.0
@@ -671,14 +671,14 @@ class MediaTestCase(unittest.TestCase):
    </Configuration>
    <Group>
       <FileList>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot2.mov</File>
+         <File>/tmp/SEQ001_HSNI_003_0010_v001.mov</File>
       </FileList>
       <Transcode>
          <Version>1.0</Version>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot2.mxf</File>
-         <ClipName>shot2</ClipName>
-         <ProjectName>previs_edit_v001</ProjectName>
-         <TapeName>shot2</TapeName>
+         <File>/tmp/SEQ001_HSNI_003_0010_v001.mxf</File>
+         <ClipName>SEQ001_HSNI_003_0010_v001</ClipName>
+         <ProjectName>SEQ001_HSNI_003</ProjectName>
+         <TapeName>SEQ001_HSNI_003_0010_v001</TapeName>
          <TC_Start>00:00:00:00</TC_Start>
          <DropFrame>false</DropFrame>
          <EdgeTC>** TimeCode N/A **</EdgeTC>
@@ -720,14 +720,14 @@ class MediaTestCase(unittest.TestCase):
    </Configuration>
    <Group>
       <FileList>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot.mov</File>
+         <File>/tmp/SEQ001_HSNI_003_0020_v001.mov</File>
       </FileList>
       <Transcode>
          <Version>1.0</Version>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot.mxf</File>
-         <ClipName>shot</ClipName>
-         <ProjectName>previs_edit_v001</ProjectName>
-         <TapeName>shot</TapeName>
+         <File>/tmp/SEQ001_HSNI_003_0020_v001.mxf</File>
+         <ClipName>SEQ001_HSNI_003_0020_v001</ClipName>
+         <ProjectName>SEQ001_HSNI_003</ProjectName>
+         <TapeName>SEQ001_HSNI_003_0020_v001</TapeName>
          <TC_Start>00:00:00:00</TC_Start>
          <DropFrame>false</DropFrame>
          <EdgeTC>** TimeCode N/A **</EdgeTC>
@@ -769,14 +769,14 @@ class MediaTestCase(unittest.TestCase):
    </Configuration>
    <Group>
       <FileList>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot1.mov</File>
+         <File>/tmp/SEQ001_HSNI_003_0030_v001.mov</File>
       </FileList>
       <Transcode>
          <Version>1.0</Version>
-         <File>/home/eoyilmaz/maya/projects/default/data/shot1.mxf</File>
-         <ClipName>shot1</ClipName>
-         <ProjectName>previs_edit_v001</ProjectName>
-         <TapeName>shot1</TapeName>
+         <File>/tmp/SEQ001_HSNI_003_0030_v001.mxf</File>
+         <ClipName>SEQ001_HSNI_003_0030_v001</ClipName>
+         <ProjectName>SEQ001_HSNI_003</ProjectName>
+         <TapeName>SEQ001_HSNI_003_0030_v001</TapeName>
          <TC_Start>00:00:00:00</TC_Start>
          <DropFrame>false</DropFrame>
          <EdgeTC>** TimeCode N/A **</EdgeTC>
@@ -814,7 +814,16 @@ class MediaTestCase(unittest.TestCase):
 
         result = s.to_metafuze_xml()
 
-        self.assertItemsEqual(
-            expected_xmls,
-            result
+        self.maxDiff = None
+        self.assertEqual(
+            expected_xmls[0],
+            result[0]
+        )
+        self.assertEqual(
+            expected_xmls[1],
+            result[1]
+        )
+        self.assertEqual(
+            expected_xmls[2],
+            result[2]
         )

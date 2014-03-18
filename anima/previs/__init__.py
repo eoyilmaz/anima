@@ -1077,7 +1077,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
          <File>%(mxf_pathurl)s</File>
          <ClipName>%(clip_name)s</ClipName>
          <ProjectName>%(sequence_name)s</ProjectName>
-         <TapeName>%(clip_id)s</TapeName>
+         <TapeName>%(clip_name)s</TapeName>
          <TC_Start>%(sequence_timecode)s</TC_Start>
          <DropFrame>false</DropFrame>
          <EdgeTC>** TimeCode N/A **</EdgeTC>
@@ -1125,10 +1125,10 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     kwargs = {
                         'file_pathurl': raw_file_path,
                         'mxf_pathurl': raw_mxf_path,
-                        'clip_name': clip.id,
                         'sequence_name': self.name,
-                        'clip_id': clip.id,
                         'sequence_timecode': self.timecode,
+                        'clip_id': clip.id,
+                        'clip_name': clip.name,
                         'clip_duration': clip.duration,
                         'width': video.width,
                         'height': video.height
