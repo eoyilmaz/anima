@@ -168,6 +168,8 @@ def update_gview_with_image_file(image_full_path, gView):
     clear_thumbnail(gView)
 
     if image_full_path != "":
+        image_full_path = os.path.normpath(image_full_path)
+        image_format = os.path.splitext(image_full_path)[-1].replace('.', '').upper()
         logger.debug("creating pixmap from: %s" % image_full_path)
 
         # size = conf.thumbnail_size
@@ -180,7 +182,7 @@ def update_gview_with_image_file(image_full_path, gView):
         logger.debug('height: %s' % height)
 
         if os.path.exists(image_full_path):
-            pixmap = QtGui.QPixmap(image_full_path, format='JPG').scaled(
+            pixmap = QtGui.QPixmap(image_full_path, format=image_format).scaled(
                 width, height,
                 QtCore.Qt.KeepAspectRatio,
                 QtCore.Qt.SmoothTransformation

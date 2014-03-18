@@ -485,13 +485,9 @@ class Fusion(EnvironmentBase):
             ).replace('\\', '/')
 
             # set the path
-            format_saver.Clip[0] = 'Comp: %s' % os.path.normpath(
-                utils.relpath(
-                    os.path.dirname(version.full_path),
-                    output_file_full_path,
-                    "/",
-                    ".."
-                )
+            #format_saver.Clip[0] = 'Comp: %s' % os.path.normpath(
+            format_saver.Clip[0] = '%s' % os.path.normpath(
+                    output_file_full_path
             ).encode()
 
             # create the path
