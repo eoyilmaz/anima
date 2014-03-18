@@ -422,8 +422,8 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(clips[0], Clip)
 
         self.assertEqual('000001', e1.num)
-        self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.clip_name)
-        self.assertEqual('0010', e1.reel)
+        self.assertEqual('0010', e1.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.reel)
         self.assertEqual('V', e1.track)
         self.assertEqual('C', e1.tr_code)
         self.assertEqual('00:00:00:00', e1.src_start_tc)
@@ -431,7 +431,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('00:00:00:01', e1.rec_start_tc)
         self.assertEqual('00:00:01:11', e1.rec_end_tc)
         self.assertEqual(
-            '* FROM CLIP NAME: SEQ001_HSNI_003_0010_v001',
+            '* FROM CLIP NAME: 0010',
             e1.comments[0]
         )
         self.assertEqual('/tmp/SEQ001_HSNI_003_0010_v001.mov', e1.source_file)
@@ -440,8 +440,8 @@ class MediaTestCase(unittest.TestCase):
         )
 
         self.assertEqual('000002', e2.num)
-        self.assertEqual('SEQ001_HSNI_003_0020_v001', e2.clip_name)
-        self.assertEqual('0020', e2.reel)
+        self.assertEqual('0020', e2.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', e2.reel)
         self.assertEqual('V', e2.track)
         self.assertEqual('C', e2.tr_code)
         self.assertEqual('00:00:00:00', e2.src_start_tc)
@@ -451,7 +451,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('/tmp/SEQ001_HSNI_003_0020_v001.mov',
                          e2.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: SEQ001_HSNI_003_0020_v001',
+            '* FROM CLIP NAME: 0020',
             e2.comments[0]
         )
         self.assertEqual(
@@ -460,8 +460,8 @@ class MediaTestCase(unittest.TestCase):
         )
 
         self.assertEqual('000003', e3.num)
-        self.assertEqual('SEQ001_HSNI_003_0030_v001', e3.clip_name)
-        self.assertEqual('0030', e3.reel)
+        self.assertEqual('0030', e3.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', e3.reel)
         self.assertEqual('V', e3.track)
         self.assertEqual('C', e3.tr_code)
         self.assertEqual('00:00:00:00', e3.src_start_tc)
@@ -471,7 +471,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('/tmp/SEQ001_HSNI_003_0030_v001.mov',
                          e3.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: SEQ001_HSNI_003_0030_v001',
+            '* FROM CLIP NAME: 0030',
             e3.comments[0]
         )
         self.assertEqual(
@@ -664,7 +664,7 @@ class MediaTestCase(unittest.TestCase):
 
         expected_xmls = [
             """<?xml version='1.0' encoding='UTF-8'?>
-<MetaFuze_BatchTranscode>
+<MetaFuze_BatchTranscode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="MetaFuzeBatchTranscode.xsd">
    <Configuration>
       <Local>8</Local>
       <Remote>8</Remote>
@@ -684,7 +684,7 @@ class MediaTestCase(unittest.TestCase):
          <EdgeTC>** TimeCode N/A **</EdgeTC>
          <FilmType>35.4</FilmType>
          <KN_Start>AAAAAAAA-0000+00</KN_Start>
-         <Frames>34</Frames>
+         <Frames>33</Frames>
          <Width>1024</Width>
          <Height>778</Height>
          <PixelRatio>1.0000</PixelRatio>
@@ -694,10 +694,10 @@ class MediaTestCase(unittest.TestCase):
          <UseMXFAudio>false</UseMXFAudio>
          <UseWAVAudio>false</UseWAVAudio>
          <SrcBitsPerChannel>8</SrcBitsPerChannel>
-         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>DNxHD 36</OutputPreset>
          <OutputPreset>
             <Version>2.0</Version>
-            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <Name>DNxHD 36</Name>
             <ColorModel>YCC 709</ColorModel>
             <BitDepth>8</BitDepth>
             <Format>1080 24p</Format>
@@ -713,7 +713,7 @@ class MediaTestCase(unittest.TestCase):
    </Group>
 </MetaFuze_BatchTranscode>""",
             """<?xml version='1.0' encoding='UTF-8'?>
-<MetaFuze_BatchTranscode>
+<MetaFuze_BatchTranscode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="MetaFuzeBatchTranscode.xsd">
    <Configuration>
       <Local>8</Local>
       <Remote>8</Remote>
@@ -733,7 +733,7 @@ class MediaTestCase(unittest.TestCase):
          <EdgeTC>** TimeCode N/A **</EdgeTC>
          <FilmType>35.4</FilmType>
          <KN_Start>AAAAAAAA-0000+00</KN_Start>
-         <Frames>30</Frames>
+         <Frames>29</Frames>
          <Width>1024</Width>
          <Height>778</Height>
          <PixelRatio>1.0000</PixelRatio>
@@ -743,10 +743,10 @@ class MediaTestCase(unittest.TestCase):
          <UseMXFAudio>false</UseMXFAudio>
          <UseWAVAudio>false</UseWAVAudio>
          <SrcBitsPerChannel>8</SrcBitsPerChannel>
-         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>DNxHD 36</OutputPreset>
          <OutputPreset>
             <Version>2.0</Version>
-            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <Name>DNxHD 36</Name>
             <ColorModel>YCC 709</ColorModel>
             <BitDepth>8</BitDepth>
             <Format>1080 24p</Format>
@@ -762,7 +762,7 @@ class MediaTestCase(unittest.TestCase):
    </Group>
 </MetaFuze_BatchTranscode>""",
             """<?xml version='1.0' encoding='UTF-8'?>
-<MetaFuze_BatchTranscode>
+<MetaFuze_BatchTranscode xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="MetaFuzeBatchTranscode.xsd">
    <Configuration>
       <Local>8</Local>
       <Remote>8</Remote>
@@ -782,7 +782,7 @@ class MediaTestCase(unittest.TestCase):
          <EdgeTC>** TimeCode N/A **</EdgeTC>
          <FilmType>35.4</FilmType>
          <KN_Start>AAAAAAAA-0000+00</KN_Start>
-         <Frames>45</Frames>
+         <Frames>44</Frames>
          <Width>1024</Width>
          <Height>778</Height>
          <PixelRatio>1.0000</PixelRatio>
@@ -792,10 +792,10 @@ class MediaTestCase(unittest.TestCase):
          <UseMXFAudio>false</UseMXFAudio>
          <UseWAVAudio>false</UseWAVAudio>
          <SrcBitsPerChannel>8</SrcBitsPerChannel>
-         <OutputPreset>DNxHD 36 - 1080 24p (8 bits)</OutputPreset>
+         <OutputPreset>DNxHD 36</OutputPreset>
          <OutputPreset>
             <Version>2.0</Version>
-            <Name>DNxHD 36 - 1080 24p (8 bits)</Name>
+            <Name>DNxHD 36</Name>
             <ColorModel>YCC 709</ColorModel>
             <BitDepth>8</BitDepth>
             <Format>1080 24p</Format>

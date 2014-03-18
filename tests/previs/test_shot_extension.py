@@ -16,12 +16,12 @@ class ShotExtensionTestCase(unittest.TestCase):
         self.shot = pymel.core.createNode('shot')
 
     def test_set_handle_handle_argument_skipped(self):
-        """testing if the default value (10) will be used when the handle
+        """testing if the default value (15) will be used when the handle
         attribute is skipped
         """
         self.shot.set_handle()
         self.assertEqual(
-            self.shot.handle.get(), 10
+            self.shot.handle.get(), 15
         )
 
     def test_set_handle_handle_argument_is_not_an_integer(self):

@@ -964,8 +964,8 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
             assert isinstance(e, edl.Event)
             clip = Clip()
 
-            clip.name = e.clip_name
-            clip.id = e.reel
+            clip.name = e.reel
+            clip.id = e.clip_name
             clip.type = 'Video' if e.track == 'V' else 'Audio'
 
             clip.in_ = e.src_start_tc.frame_number
@@ -1023,7 +1023,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     i += 1
                     e = Event({})
                     e.num = '%06i' % i
-                    e.clip_name = clip.name
+                    e.clip_name = clip.id
                     e.reel = clip.name
                     e.track = 'V' if clip.type == 'Video' else 'A'
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
@@ -1050,7 +1050,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.source_file = source_file
 
                     e.comments.extend([
-                        '* FROM CLIP NAME: %s' % clip.name,
+                        '* FROM CLIP NAME: %s' % clip.id,
                         '* SOURCE FILE: %s' % source_file
                     ])
 
