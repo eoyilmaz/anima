@@ -11,3 +11,10 @@ __version__ = "0.1.5"
 import logging
 logging.basicConfig()
 logging_level = logging.DEBUG
+
+stalker_server_address = 'http://192.168.0.64:6543'
+local_cache_folder = '~/.cache/anima/'
+recent_file_name = 'recent_files'
+
+normal_users_group_names = ['Normal Users']
+power_users_group_names = ['Power Users', 'admins']

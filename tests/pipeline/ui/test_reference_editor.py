@@ -8,7 +8,8 @@ import logging
 import unittest
 import sys
 
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4
+from anima.ui import IS_PYSIDE, IS_PYQT4, reference_editor
+
 
 logger = logging.getLogger('anima.pipeline.ui.reference_editor')
 
@@ -16,20 +17,12 @@ logger = logging.getLogger('anima.pipeline.ui.reference_editor')
 if IS_PYSIDE():
     logger.debug('environment is set to pyside, importing pyside')
     from PySide import QtCore, QtGui
-    from PySide.QtTest import QTest
-    from PySide.QtCore import Qt
 elif IS_PYQT4():
     logger.debug('environment is set to pyqt4, importing pyqt4')
     import sip
     sip.setapi('QString', 2)
     sip.setapi('QVariant', 2)
     from PyQt4 import QtCore, QtGui
-    from PyQt4.QtTest import QTest
-    from PyQt4.QtCore import Qt
-
-
-from anima.pipeline.ui import reference_editor
-
 
 
 class ReferenceEditorTestCase(unittest.TestCase):

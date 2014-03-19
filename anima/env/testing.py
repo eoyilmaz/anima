@@ -3,8 +3,9 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.pipeline.env import empty_reference_resolution
-from anima.pipeline.env.base import EnvironmentBase
+from anima import utils
+from anima.env import empty_reference_resolution
+from anima.env.base import EnvironmentBase
 from anima.testing import count_calls
 
 
@@ -77,7 +78,6 @@ class TestEnvironment(EnvironmentBase):
         )
 
         # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        from anima.pipeline import utils
 
         for v in utils.walk_version_hierarchy(version):
             dfs_version_references.append(v)

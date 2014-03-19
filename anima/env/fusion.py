@@ -6,11 +6,10 @@
 
 
 import os
+
 import PeyeonScript
-from .. import utils
-from anima.pipeline.env import empty_reference_resolution
 from base import EnvironmentBase
-from anima.pipeline.env import empty_reference_resolution
+from anima.env import empty_reference_resolution
 
 
 class Fusion(EnvironmentBase):

@@ -14,7 +14,8 @@ import subprocess
 import glob
 import logging
 
-from anima.pipeline import utils
+from anima import utils
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)

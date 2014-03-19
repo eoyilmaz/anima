@@ -4,13 +4,15 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import unittest2
 import logging
 
+import unittest2
 from stalker import (db, Repository, Project, Structure, FilenameTemplate,
                      Status, StatusList, Task, Version)
 from stalker.db import DBSession
-from anima.pipeline.env.base import EnvironmentBase
+
+from anima.env.base import EnvironmentBase
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

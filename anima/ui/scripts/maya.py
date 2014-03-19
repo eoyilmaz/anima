@@ -3,7 +3,10 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.pipeline.ui.scripts import do_db_setup
+from anima import ui
+from anima.env import maya
+from anima.ui import version_creator, models, version_updater
+from anima.ui.scripts import do_db_setup
 
 
 def version_creator():
@@ -16,13 +19,10 @@ def version_creator():
     import pymel
     try:
         if pymel.versions.current() >= pymel.versions.v2014:
-            from anima.pipeline import ui
             ui.SET_PYSIDE()
     except AttributeError:
         pass
 
-    from anima.pipeline.ui import version_creator, models
-    from anima.pipeline.env import maya
     reload(version_creator)
     reload(models)
     m = maya.Maya()
@@ -52,8 +52,8 @@ def version_updater():
     except AttributeError:
         pass
 
-    from anima.pipeline.ui import version_updater, models
-    from anima.pipeline.env import maya
+    from anima.ui import models
+    from anima.env import maya
     reload(version_updater)
     reload(models)
     m = maya.Maya()

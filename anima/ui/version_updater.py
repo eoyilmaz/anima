@@ -3,25 +3,22 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.pipeline.env import empty_reference_resolution
+import logging
 
+from anima.env import empty_reference_resolution
 from anima.pipeline.ui.models import VersionTreeModel
-
 from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
 from anima.pipeline.ui.lib import QtGui, QtCore
 from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4
+from anima.utils import walk_version_hierarchy
 
-import logging
-from anima.pipeline.utils import walk_version_hierarchy
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-if IS_PYSIDE():
-    from anima.pipeline.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
+if IS_PYSIDE(): \
 elif IS_PYQT4():
-    from anima.pipeline.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):

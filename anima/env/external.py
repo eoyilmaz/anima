@@ -6,7 +6,9 @@
 
 import logging
 import os
-from base import EnvironmentBase
+
+from anima.env.base import EnvironmentBase
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

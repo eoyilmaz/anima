@@ -14,9 +14,9 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      Task, Sequence, Version, User, Type, Structure,
                      FilenameTemplate, ImageFormat)
 
-from anima.pipeline import utils
-from anima.pipeline.env import maya
-from anima.pipeline.utils import walk_version_hierarchy
+from anima import utils
+from anima.env import maya
+from anima.utils import walk_version_hierarchy
 
 
 class MayaTestBase(unittest2.TestCase):

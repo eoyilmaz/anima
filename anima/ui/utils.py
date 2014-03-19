@@ -8,14 +8,17 @@
 import sys
 import os
 import logging
+
 from stalker import LocalSession
 
-from anima.pipeline.utils import StalkerThumbnailCache
+from anima.utils import StalkerThumbnailCache
+from anima.ui import login_dialog
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-from anima.pipeline.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui
 
 
 class AnimaDialogBase(object):
@@ -38,7 +41,6 @@ class AnimaDialogBase(object):
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
         if not logged_in_user:
-            from anima.pipeline.ui import login_dialog
             dialog = login_dialog.MainDialog(parent=self)
             dialog.exec_()
             logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)

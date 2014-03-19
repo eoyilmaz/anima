@@ -7,18 +7,18 @@ import sys
 import shutil
 import tempfile
 import os
-
-import unittest2
 import logging
 
-from anima.pipeline.utils import walk_version_hierarchy
-from anima.pipeline.env.testing import TestEnvironment
+import unittest2
+
+from anima.utils import walk_version_hierarchy
+from anima.env.testing import TestEnvironment
 
 
 logger = logging.getLogger('anima.pipeline.ui.version_updater')
 logger.setLevel(logging.DEBUG)
 
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
+from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_updater
 
 SET_PYSIDE()
 
@@ -39,8 +39,6 @@ elif IS_PYQT4():
 from stalker import (db, User, Project, Repository, Structure, Status,
                      StatusList, Task, Version, FilenameTemplate,
                      ImageFormat, Type, Asset, Sequence, Shot)
-
-from anima.pipeline.ui import version_updater
 
 
 # exceptions for test purposes

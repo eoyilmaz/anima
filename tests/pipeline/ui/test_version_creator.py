@@ -7,14 +7,16 @@ import sys
 import shutil
 import tempfile
 import os
-import unittest2
 import logging
+
+import unittest2
+
 
 logger = logging.getLogger('anima.pipeline.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
 from stalker.models.auth import LocalSession
-from anima.pipeline.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
+from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_creator
 
 SET_PYSIDE()
 
@@ -35,8 +37,6 @@ elif IS_PYQT4():
 from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
                      StatusList, Task, Version, FilenameTemplate, Group)
 from stalker.db.session import DBSession
-
-from anima.pipeline.ui import version_creator
 
 # logger = logging.getLogger("anima.pipeline.ui.version_creator")
 # logger.setLevel(logging.DEBUG)

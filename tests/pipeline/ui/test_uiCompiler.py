@@ -6,9 +6,12 @@
 
 import os
 import tempfile
+
 import unittest2
 
-from anima.pipeline.ui import uiCompiler
+from anima import utils
+
+from anima.ui import uiCompiler
 
 
 class UIFileTestCase(unittest2.TestCase):
@@ -96,7 +99,6 @@ class UIFileTestCase(unittest2.TestCase):
     def test_md5_attribute_is_calculated_correctly(self):
         """testing if the md5 of the uic file is correctly calculated
         """
-        from anima.pipeline import utils
         expected_value = utils.md5_checksum(self.test_uicFile_path)
         self.assertEqual(expected_value, self.test_uicFile.md5)
 

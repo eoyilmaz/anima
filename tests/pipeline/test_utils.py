@@ -5,15 +5,14 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import shutil
 import os
+import tempfile
 
 from stalker import (db, Project, Repository, Structure,
                      FilenameTemplate, User, Status, StatusList, ImageFormat,
                      Type, Task, Asset, Sequence, Shot, Version)
-import tempfile
-
 import unittest2
-from anima.pipeline import utils
-from anima.pipeline.utils import walk_version_hierarchy
+
+from anima.utils import walk_version_hierarchy
 
 
 class WaslkVersionHierarchyTestCase(unittest2.TestCase):

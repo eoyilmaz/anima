@@ -5,8 +5,8 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import unittest
+
 import pymel
-import anima.extension.maya
 
 
 class AttributeExtensionsTester(unittest.TestCase):

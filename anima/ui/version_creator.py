@@ -7,21 +7,22 @@
 import logging
 import datetime
 import tempfile
-
 import os
+
 from sqlalchemy import distinct
 from stalker.db import DBSession
-from stalker import (db, defaults, Version, Project, Task, LocalSession, Group)
+from stalker import (defaults, Version, Project, Task, LocalSession, Group)
 
 import anima
-from anima.pipeline import utils, power_users_group_names
+from anima import utils
+from anima.pipeline import power_users_group_names
 from anima.pipeline.env.base import EnvironmentBase
-from anima.pipeline.env.external import ExternalEnvFactory
-from anima.pipeline.ui import utils as ui_utils
-from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
-from anima.pipeline.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
-from anima.pipeline.ui.lib import QtGui, QtCore
-from anima.pipeline.ui.models import TaskTreeModel, TakesListWidget
+from anima.env.external import ExternalEnvFactory
+from anima.ui import utils as ui_utils
+from anima.ui.utils import UICaller, AnimaDialogBase
+from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
+from anima.ui.lib import QtGui, QtCore
+from anima.ui.models import TaskTreeModel, TakesListWidget
 
 
 logger = logging.getLogger(__name__)
@@ -31,10 +32,8 @@ fh = logging.FileHandler(
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
-if IS_PYSIDE():
-    from anima.pipeline.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
+if IS_PYSIDE(): \
 elif IS_PYQT4():
-    from anima.pipeline.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 
 class VersionsTableWidget(QtGui.QTableWidget):

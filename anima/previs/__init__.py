@@ -4,14 +4,16 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from contextlib import contextmanager
-
 import os
 import subprocess
 import tempfile
+
 import pymel
 
-import anima.extension.maya
+from anima.env import maya
+
 from anima.extension import extends
+
 
 default_handle_count = 15
 
@@ -305,7 +307,7 @@ class SequenceManagerExtension(object):
         :return: Sequence
         """
         import pytimecode
-        from anima.pipeline.env import maya
+
         mayaEnv = maya.Maya()
         fps = mayaEnv.get_fps()
 

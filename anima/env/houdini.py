@@ -6,15 +6,15 @@
 
 import os
 import re
-import hou
+import logging
 
 from stalker.db import DBSession
 
+import hou
 from .. import utils
-from anima.pipeline.env import empty_reference_resolution
+from anima.env import empty_reference_resolution
 from base import EnvironmentBase
 
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)

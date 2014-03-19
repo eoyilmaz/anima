@@ -6,12 +6,13 @@
 
 
 import os
-import jinja2
-import nuke
 
+import jinja2
 from stalker.db import DBSession
+
+import nuke
 from .. import utils
-from anima.pipeline.env import empty_reference_resolution
+from anima.env import empty_reference_resolution
 from base import EnvironmentBase
 
 

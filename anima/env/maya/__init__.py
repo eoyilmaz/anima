@@ -8,14 +8,16 @@ import os
 import re
 import shutil
 import logging
-import maya
-import pymel
 
+import extension
+import pymel
 from stalker import db, Version
 
-from anima.pipeline import utils
-from anima.pipeline.env import empty_reference_resolution
-from anima.pipeline.env.base import EnvironmentBase
+from anima import utils
+from anima.env import empty_reference_resolution
+from anima.env.base import EnvironmentBase
+from anima.env.maya.extension import MayaExtension
+
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -1469,7 +1471,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         updated_namespaces = False
         # referenceQuery = pymel.core.referenceQuery
         # use maya.cmds it is safer to use when there are Unicode edits
-        referenceQuery = maya.cmds.referenceQuery
+        referenceQuery = extension.cmds.referenceQuery
 
         regex = r'(?P<nice_name>[\w_0-9]+)' \
                 r'(?P<version>_v[0-9]+_ma[0-9]*)'

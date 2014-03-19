@@ -8,7 +8,8 @@ import tempfile
 import os
 
 import unittest2
-from anima.pipeline.recent import RecentFileManager
+
+from anima.recent import RecentFileManager
 from anima import pipeline
 
 

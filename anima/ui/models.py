@@ -5,11 +5,11 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import logging
-
 import re
 
 from stalker import Task, Project, defaults
-from anima.pipeline.ui.lib import QtGui, QtCore
+
+from anima.ui.lib import QtGui, QtCore
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

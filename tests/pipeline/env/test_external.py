@@ -6,10 +6,11 @@
 import shutil
 import tempfile
 import os
-from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
 
+from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
 import unittest2
-from anima.pipeline.env.external import ExternalEnv, ExternalEnvFactory
+
+from anima.env.external import ExternalEnv, ExternalEnvFactory
 
 
 class ExternalEnvTestCase(unittest2.TestCase):
@@ -392,7 +393,7 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
         """testing if ExternalEnvFactory.get_env_names() method will
         return all the environment names as a list of strings
         """
-        from anima.pipeline.env.externalEnv import external_environments
+        from anima.env.externalEnv import external_environments
         expected_result = external_environments.keys()
         ext_env_factory = ExternalEnvFactory()
         result = ext_env_factory.get_env_names()
