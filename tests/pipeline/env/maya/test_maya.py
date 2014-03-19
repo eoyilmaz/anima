@@ -29,7 +29,7 @@ class MayaTestBase(unittest2.TestCase):
         """setup in class level
         """
         import logging
-        logger = logging.getLogger('anima.pipeline.env.maya')
+        logger = logging.getLogger('anima.env.maya')
         logger.setLevel(logging.DEBUG)
 
     def setUp(self):

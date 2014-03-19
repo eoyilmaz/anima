@@ -423,7 +423,7 @@ class ExternalEnvFactoryTestCase(unittest2.TestCase):
 
     def test_get_env_method_name_is_not_in_list(self):
         """testing if a ValueError will be raised when the name argument value
-        is not in the anima.pipeline.env.external_environments list
+        is not in the anima.env.external_environments list
         """
         ext_env_factory = ExternalEnvFactory()
         self.assertRaises(ValueError, ext_env_factory.get_env, 'Modo')

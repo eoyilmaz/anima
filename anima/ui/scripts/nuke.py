@@ -24,9 +24,9 @@ def version_creator():
     # display only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.nuke").setLevel(logging.WARNING)
+    logging.getLogger("anima.ui").setLevel(logging.WARNING)
+    logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
+    logging.getLogger("anima.env.nuke").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
     version_creator.UI(environment=n)

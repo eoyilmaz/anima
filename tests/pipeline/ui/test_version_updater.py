@@ -15,7 +15,7 @@ from anima.utils import walk_version_hierarchy
 from anima.env.testing import TestEnvironment
 
 
-logger = logging.getLogger('anima.pipeline.ui.version_updater')
+logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.DEBUG)
 
 from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_updater

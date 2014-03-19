@@ -11,7 +11,7 @@ import sys
 from anima.ui import IS_PYSIDE, IS_PYQT4, reference_editor
 
 
-logger = logging.getLogger('anima.pipeline.ui.reference_editor')
+logger = logging.getLogger('anima.ui.reference_editor')
 
 
 if IS_PYSIDE():

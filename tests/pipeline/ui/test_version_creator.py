@@ -12,7 +12,7 @@ import logging
 import unittest2
 
 
-logger = logging.getLogger('anima.pipeline.ui.version_creator')
+logger = logging.getLogger('anima.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
 from stalker.models.auth import LocalSession
@@ -38,7 +38,7 @@ from stalker import (db, defaults, User, Project, Repository, Structure, Status,
                      StatusList, Task, Version, FilenameTemplate, Group)
 from stalker.db.session import DBSession
 
-# logger = logging.getLogger("anima.pipeline.ui.version_creator")
+# logger = logging.getLogger("anima.ui.version_creator")
 # logger.setLevel(logging.DEBUG)
 
 

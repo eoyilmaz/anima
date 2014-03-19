@@ -31,9 +31,9 @@ def version_creator(lib='PySide'):
     # display only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.photoshop").setLevel(
+    logging.getLogger("anima.ui").setLevel(logging.WARNING)
+    logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
+    logging.getLogger("anima.env.photoshop").setLevel(
         logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 

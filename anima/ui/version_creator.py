@@ -278,8 +278,8 @@ def UI(app_in=None, executor=None, **kwargs):
 class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     """The main version creation dialog for the pipeline.
 
-    This is the main interface that the users of the anima.pipeline will use
-    to create a new :class:`~stalker.models.version.Version`\ s.
+    This is the main interface that the users of the ``anima`` will use to
+    create a new :class:`~stalker.models.version.Version`\ s.
 
     It is possible to run the version_creator UI in read-only mode where the UI
     is created only for choosing previous versions. There will only be one
@@ -326,7 +326,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.environment_name_format = '%n (%e)'
 
         window_title = 'Version Creator | ' + \
-                       'Anima Pipeline v' + anima.__version__
+                       'Anima v' + anima.__version__
 
         if environment:
             window_title += " | " + environment.name

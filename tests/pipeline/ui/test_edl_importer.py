@@ -22,7 +22,7 @@ elif IS_PYQT4():
 
 from anima.ui import edl_importer
 
-logger = logging.getLogger('anima.pipeline.ui.version_updater')
+logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.DEBUG)
 
 
@@ -54,4 +54,6 @@ class EDLImporterTestCase(unittest.TestCase):
             # self.app = QtGui.qApp
             self.app = QtGui.QApplication.instance()
 
-        self.dialog = edl_importer.MainDialog()
+        self.dialog = edl_importer.MainWindow()
+
+    

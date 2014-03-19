@@ -18,9 +18,9 @@ logger.setLevel(logging.DEBUG)
 
 
 if IS_PYSIDE():
-    from anima.pipeline.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
+    from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
 elif IS_PYQT4():
-    from anima.pipeline.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
+    from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):

@@ -9,8 +9,8 @@ import os
 
 import unittest2
 
+import anima
 from anima.recent import RecentFileManager
-from anima import pipeline
 
 
 class RecentFileManagerTestCase(unittest2.TestCase):
@@ -20,7 +20,7 @@ class RecentFileManagerTestCase(unittest2.TestCase):
     def setUp(self):
         """setup the tests
         """
-        pipeline.local_cache_folder = tempfile.gettempdir()
+        anima.local_cache_folder = tempfile.gettempdir()
 
     def tearDown(self):
         """clean up test

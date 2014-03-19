@@ -355,7 +355,7 @@ class ExternalEnvFactory(object):
         if env_name not in env_names:
             raise ValueError(
                 '%s is not in '
-                'anima.pipeline.env.externalEnv.environment_names list, '
+                'anima.env.externalEnv.environment_names list, '
                 'please supply a value from %s' % (name, env_names))
 
         env = external_environments[env_name]

@@ -29,9 +29,9 @@ def version_creator():
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     import logging
-    logger = logging.getLogger('anima.pipeline.ui.version_creator')
+    logger = logging.getLogger('anima.ui.version_creator')
     logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.pipeline.ui.models')
+    logger = logging.getLogger('anima.ui.models')
     logger.setLevel(logging.WARNING)
 
     version_creator.UI(environment=m)
@@ -47,7 +47,7 @@ def version_updater():
     import pymel
     try:
         if pymel.versions.current() >= pymel.versions.v2014:
-            from anima.pipeline import ui
+            from anima import ui
             ui.SET_PYSIDE()
     except AttributeError:
         pass
@@ -60,11 +60,11 @@ def version_updater():
     m.name = "Maya" + str(pymel.versions.current())[0:4]
 
     import logging
-    logger = logging.getLogger('anima.pipeline.env.base')
+    logger = logging.getLogger('anima.env.base')
     logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.pipeline.ui.version_updater')
+    logger = logging.getLogger('anima.ui.version_updater')
     logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.pipeline.ui.models')
+    logger = logging.getLogger('anima.ui.models')
     logger.setLevel(logging.WARNING)
 
     # generate a reference_resolution

@@ -32,9 +32,9 @@ def version_creator(lib='PyQt4'):
     # paste only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.pipeline.env.fusion").setLevel(logging.WARNING)
+    logging.getLogger("anima.ui").setLevel(logging.WARNING)
+    logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
+    logging.getLogger("anima.env.fusion").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
     version_creator.UI(environment=fusion_env)

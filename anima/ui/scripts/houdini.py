@@ -17,9 +17,9 @@ def version_creator():
     h = houdini.Houdini()
 
     import logging
-    logger = logging.getLogger('anima.pipeline.ui.version_creator')
+    logger = logging.getLogger('anima.ui.version_creator')
     logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.pipeline.ui.models')
+    logger = logging.getLogger('anima.ui.models')
     logger.setLevel(logging.WARNING)
 
     version_creator.UI(environment=h)

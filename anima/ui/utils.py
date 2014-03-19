@@ -12,7 +12,6 @@ import logging
 from stalker import LocalSession
 
 from anima.utils import StalkerThumbnailCache
-from anima.ui import login_dialog
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +40,7 @@ class AnimaDialogBase(object):
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
         if not logged_in_user:
+            from anima.ui import login_dialog
             dialog = login_dialog.MainDialog(parent=self)
             dialog.exec_()
             logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
