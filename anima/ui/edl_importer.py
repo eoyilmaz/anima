@@ -157,7 +157,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
             )
 
         # and call EDL_Manager.exe with the edl_path
-        subprocess.call(['EDL_Manager', edl_path], shell=True)
+        subprocess.call(['EDL_Mgr', edl_path], shell=True)
 
     def store_media_file_path(self, path):
         """stores the given path as the avid media file path in anima cache
