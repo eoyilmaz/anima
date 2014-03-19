@@ -15,8 +15,8 @@ from stalker import (defaults, Version, Project, Task, LocalSession, Group)
 
 import anima
 from anima import utils
-from anima.pipeline import power_users_group_names
-from anima.pipeline.env.base import EnvironmentBase
+from anima import power_users_group_names
+from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
 from anima.ui import utils as ui_utils
 from anima.ui.utils import UICaller, AnimaDialogBase
@@ -32,8 +32,10 @@ fh = logging.FileHandler(
 logger.setLevel(logging.DEBUG)
 logger.addHandler(fh)
 
-if IS_PYSIDE(): \
+if IS_PYSIDE():
+    from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
 elif IS_PYQT4():
+    from anima.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 
 class VersionsTableWidget(QtGui.QTableWidget):

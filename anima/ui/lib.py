@@ -15,8 +15,10 @@ logger.setLevel(logging.DEBUG)
 
 if IS_PYSIDE():
     logger.debug('importing PySide')
+    from PySide import QtGui, QtCore
 elif IS_PYQT4():
     logger.debug('importing PyQt4')
     import sip
     sip.setapi('QString', 2)
     sip.setapi('QVariant', 2)
+    from PyQt4 import QtGui, QtCore

@@ -23,7 +23,7 @@ from cStringIO import StringIO
 
 class Buffer(object):
     """Buffer class for efficient string concatenation.
-    
+
     This class uses cStringIO for the general store and a string buffer as an
     intermediate storage, then concatenates every 1000 element in to the
     cStringIO file handler.

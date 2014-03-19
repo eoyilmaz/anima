@@ -325,7 +325,7 @@ class ExternalEnvFactory(object):
         """Creates an environment with the given name
 
         :param str name: The name of the environment, should be a value from
-          anima.pipeline.env.externalEnv.environment_names list
+          anima.env.externalEnv.environment_names list
 
         :return ExternalEnv: ExternalEnv instance
         """

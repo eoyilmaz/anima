@@ -414,16 +414,16 @@ class StalkerThumbnailCache(object):
     def get(cls, thumbnail_full_path):
         """returns the file either from cache or from stalker server
         """
-        from anima import pipeline
+        import anima
 
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
         logger.debug('filename : %s' % filename)
 
-        cache_path = os.path.expanduser(pipeline.local_cache_folder)
+        cache_path = os.path.expanduser(anima.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
-        url = pipeline.stalker_server_address + '/' + thumbnail_full_path
+        url = anima.stalker_server_address + '/' + thumbnail_full_path
 
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)

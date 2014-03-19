@@ -5,24 +5,21 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import logging
-
 from sqlalchemy import or_
 
 import anima
-from anima.pipeline.ui import IS_PYQT4, IS_PYSIDE
-from anima.pipeline.ui.lib import QtCore, QtGui
-from anima.pipeline.ui.utils import UICaller, AnimaDialogBase
-
-
-
-
+from anima.ui import IS_PYQT4, IS_PYSIDE
+from anima.ui.lib import QtCore, QtGui
+from anima.ui.utils import UICaller, AnimaDialogBase
 
 # create a logger
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-if IS_PYSIDE(): \
+if IS_PYSIDE():
+    from anima.ui.ui_compiled import login_dialog_UI_pyside as login_dialog_UI
 elif IS_PYQT4():
+    from anima.ui.ui_compiled import login_dialog_UI_pyqt4 as login_dialog_UI
 
 
 def UI(app_in=None, executor=None):

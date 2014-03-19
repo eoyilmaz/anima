@@ -37,14 +37,14 @@ class RecentFileManager(object):
     def cache_file_full_path(cls):
         """:return str: the cache file full path
         """
-        from anima import pipeline
+        import anima
 
         return os.path.normpath(
             os.path.expandvars(
                 os.path.expanduser(
                     os.path.join(
-                        pipeline.local_cache_folder,
-                        pipeline.recent_file_name
+                        anima.local_cache_folder,
+                        anima.recent_file_name
                     )
                 )
             )
