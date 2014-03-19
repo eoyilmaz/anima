@@ -3,8 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.env import fusion
-from anima.ui import version_creator
 from anima.ui.scripts import do_db_setup
 
 
@@ -26,9 +24,12 @@ def version_creator(lib='PyQt4'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
+    from anima.env import fusion
+    reload(fusion)
     fusion_env = fusion.Fusion()
     fusion_env.name = 'Fusion'
 
+    from anima.ui import version_creator
     # paste only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)

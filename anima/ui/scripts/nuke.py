@@ -3,9 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima import ui
-from anima.env import nukeEnv
-from anima.ui import version_creator
 from anima.ui.scripts import do_db_setup
 
 
@@ -16,8 +13,11 @@ def version_creator():
     do_db_setup()
 
     # use PySide
+    from anima import ui
     ui.SET_PYSIDE()
 
+    from anima.ui import version_creator
+    from anima.env import nukeEnv
     n = nukeEnv.Nuke()
     n.name = "Nuke"
 

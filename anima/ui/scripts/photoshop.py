@@ -3,7 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.ui import version_creator
 from anima.ui.scripts import do_db_setup
 
 
@@ -26,8 +25,11 @@ def version_creator(lib='PySide'):
         SET_PYQT4()
 
     from anima.env.photoshop import Photoshop
+    reload(Photoshop)
     p = Photoshop()
 
+    from anima.ui import version_creator
+    reload(version_creator)
     # display only warning messages
     import logging
     logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)

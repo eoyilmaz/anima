@@ -858,7 +858,7 @@ class VersionUpdaterTester(unittest2.TestCase):
         # self.show_dialog(self.dialog)
 
         QTest.mouseClick(self.dialog.update_pushButton, Qt.LeftButton)
-        print self.test_environment.test_data
+        #print self.test_environment.test_data
 
         self.assertEqual(
             1,

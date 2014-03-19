@@ -3,8 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.env import houdini
-from anima.ui import version_creator
 from anima.ui.scripts import do_db_setup
 
 
@@ -13,6 +11,11 @@ def version_creator():
     """
     # connect to db
     do_db_setup()
+
+    from anima.ui import version_creator
+    from anima.env import houdini
+    reload(houdini)
+    reload(version_creator)
 
     h = houdini.Houdini()
 
