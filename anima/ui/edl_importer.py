@@ -58,8 +58,10 @@ class LineEdit(QtGui.QLineEdit):
         mime_data = e.mimeData()
         path = ''
         if mime_data.hasFormat('text/plain'):
+            # on linux
             path = mime_data().text().replace('file://', '').strip()
         elif mime_data.hasUrls():
+            # on windows
             url = mime_data.urls()[0]
             path = url.toString().replace('file:///', '').strip()
         self.setText(path)
