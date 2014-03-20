@@ -39,6 +39,26 @@ def UI(app_in=None, executor=None, **kwargs):
     return UICaller(app_in, executor, MainDialog, **kwargs)
 
 
+class LineEdit(QtGui.QLineEdit):
+    """Custom Plain text edit that handles drag and drop
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(LineEdit, self).__init__(*args, **kwargs)
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasFormat('text/plain'):
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        self.setText(
+            e.mimeData().text().replace('file://', '').strip()
+        )
+
+
 class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
                  AnimaDialogBase):
     """The Main Window for EDL Importer.
@@ -64,6 +84,13 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
                     )
                 )
             )
+        )
+
+        self.edl_path_lineEdit = LineEdit()
+        self.formLayout.setWidget(
+            1,
+            QtGui.QFormLayout.FieldRole,
+            self.edl_path_lineEdit
         )
 
         self.setup_signals()

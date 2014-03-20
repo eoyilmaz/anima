@@ -198,10 +198,10 @@ class EDLImporterTestCase(unittest.TestCase):
             os.path.exists(os.path.join(media_files_path, mxf_file_names[2]))
         )
 
-        self.show_dialog(self.dialog)
+        # self.show_dialog(self.dialog)
 
         # now hit it
-        #QTest.mouseClick(self.dialog.send_pushButton, Qt.LeftButton)
+        QTest.mouseClick(self.dialog.send_pushButton, Qt.LeftButton)
 
         # now check if the files are there
         self.assertTrue(
