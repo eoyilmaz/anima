@@ -210,7 +210,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         progress_dialog.setLabelText('Calling EDL Manager...')
         step += 1
         progress_dialog.setValue(step)
-        subprocess.call(['EDL_Mgr', edl_path], shell=True)
+        subprocess.call(['EDL_Mgr', os.path.normcase(edl_path)], shell=False)
 
     def store_media_file_path(self, path):
         """stores the given path as the avid media file path in anima cache
