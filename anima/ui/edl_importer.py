@@ -6,6 +6,7 @@
 import shutil
 import subprocess
 import os
+import time
 import anima
 from anima.ui import IS_PYSIDE, IS_PYQT4
 from anima.ui.utils import UICaller, AnimaDialogBase
@@ -142,21 +143,37 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         with open(edl_path) as f:
             l = parser.parse(f)
 
+        total_item_count = len(l) + 1
+
+        progress_dialog = QtGui.QProgressDialog(self)
+        progress_dialog.setRange(0, total_item_count)
+        progress_dialog.setLabelText('Copying MXF files...')
+        progress_dialog.show()
+
+        step = 0
+        progress_dialog.setValue(step)
+
         for event in l:
             # assert isinstance(event, edl.Event)
-            mov_path = event.source_file
-            mxf_path = os.path.splitext(mov_path)[0] + '.mxf'
+            mov_full_path = event.source_file
+            mxf_full_path = os.path.splitext(mov_full_path)[0] + '.mxf'
             target_mxf_path = os.path.join(
                 media_path,
-                os.path.basename(mxf_path)
+                os.path.basename(mxf_full_path)
             )
 
             shutil.copy(
-                mxf_path,
+                mxf_full_path,
                 target_mxf_path
             )
 
+            step += 1
+            progress_dialog.setValue(step)
+
         # and call EDL_Manager.exe with the edl_path
+        progress_dialog.setLabelText('Calling EDL Manager...')
+        step += 1
+        progress_dialog.setValue(step)
         subprocess.call(['EDL_Mgr', edl_path], shell=True)
 
     def store_media_file_path(self, path):

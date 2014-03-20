@@ -198,8 +198,10 @@ class EDLImporterTestCase(unittest.TestCase):
             os.path.exists(os.path.join(media_files_path, mxf_file_names[2]))
         )
 
+        self.show_dialog(self.dialog)
+
         # now hit it
-        QTest.mouseClick(self.dialog.send_pushButton, Qt.LeftButton)
+        #QTest.mouseClick(self.dialog.send_pushButton, Qt.LeftButton)
 
         # now check if the files are there
         self.assertTrue(
@@ -211,6 +213,65 @@ class EDLImporterTestCase(unittest.TestCase):
         self.assertTrue(
             os.path.exists(os.path.join(media_files_path, mxf_file_names[2]))
         )
+
+    # def test_send_pushButton_will_show_progress_dialog(self):
+    #     """testing if send_pushButton will show progress dialog
+    #     """
+    #     # create a proper edl file with proper files in a temp location
+    #     # there should be MXF files
+    #     tempdir = tempfile.gettempdir()
+    # 
+    #     media_files_path = os.path.join(tempdir, 'avid_media_file_path')
+    #     try:
+    #         os.mkdir(media_files_path)
+    #     except OSError:
+    #         pass
+    #     self.remove_files.append(media_files_path)
+    # 
+    #     mxf_file_names = [
+    #         'SEQ001_HSNI_003_0010_v001.mxf',
+    #         'SEQ001_HSNI_003_0020_v001.mxf',
+    #         'SEQ001_HSNI_003_0030_v001.mxf'
+    #     ]
+    # 
+    #     edl_path = os.path.abspath('../previs/test_data/test_v001.edl')
+    # 
+    #     for mxf_file_name in mxf_file_names:
+    #         media_file_full_path = os.path.join(tempdir, mxf_file_name)
+    #         with open(media_file_full_path, 'w') as f:
+    #             f.write('')
+    #         self.remove_files.append(media_file_full_path)
+    # 
+    #     # set the avid media files folder path
+    #     self.dialog.media_files_path_lineEdit.setText(media_files_path)
+    # 
+    #     # set the edl path
+    #     self.dialog.edl_path_lineEdit.setText(edl_path)
+    # 
+    #     # now check before the files are not there
+    #     self.assertFalse(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[0]))
+    #     )
+    #     self.assertFalse(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[1]))
+    #     )
+    #     self.assertFalse(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[2]))
+    #     )
+    # 
+    #     # now hit it
+    #     QTest.mouseClick(self.dialog.send_pushButton, Qt.LeftButton)
+    # 
+    #     # now check if the files are there
+    #     self.assertTrue(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[0]))
+    #     )
+    #     self.assertTrue(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[1]))
+    #     )
+    #     self.assertTrue(
+    #         os.path.exists(os.path.join(media_files_path, mxf_file_names[2]))
+    #     )
 
     def test_send_pushButton_will_open_the_edl_with_avid_edl_manager(self):
         """testing if the send_pushButton will open the edl with AVID EDL
