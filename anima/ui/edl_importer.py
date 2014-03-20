@@ -48,15 +48,21 @@ class LineEdit(QtGui.QLineEdit):
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, e):
-        if e.mimeData().hasFormat('text/plain'):
+        mime_data = e.mimeData()
+        if mime_data.hasFormat('text/plain') or mime_data.hasUrls():
             e.accept()
         else:
             e.ignore()
 
     def dropEvent(self, e):
-        self.setText(
-            e.mimeData().text().replace('file://', '').strip()
-        )
+        mime_data = e.mimeData()
+        path = ''
+        if mime_data.hasFormat('text/plain'):
+            path = mime_data().text().replace('file://', '').strip()
+        elif mime_data.hasUrls():
+            url = mime_data.urls()[0]
+            path = url.toString().replace('file:///', '').strip()
+        self.setText(path)
 
 
 class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
@@ -87,6 +93,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         )
 
         self.edl_path_lineEdit = LineEdit()
+
         self.formLayout.setWidget(
             1,
             QtGui.QFormLayout.FieldRole,
@@ -108,7 +115,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         QtCore.QObject.connect(
             self.edl_path_lineEdit,
             QtCore.SIGNAL('textChanged(QString)'),
-            self.open
+            self.open_edl
         )
 
         QtCore.QObject.connect(
@@ -117,7 +124,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
             self.send
         )
 
-    def open(self, path):
+    def open_edl(self, path):
         """Opens the edl in the given path
 
         :param path: A string showing the EDL path
