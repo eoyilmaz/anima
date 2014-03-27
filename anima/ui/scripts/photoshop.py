@@ -24,9 +24,9 @@ def version_creator(lib='PySide'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.env.photoshop import Photoshop
-    reload(Photoshop)
-    p = Photoshop()
+    from anima.env import photoshop
+    reload(photoshop)
+    p = photoshop.Photoshop()
 
     from anima.ui import version_creator
     reload(version_creator)

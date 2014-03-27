@@ -8,6 +8,7 @@ import os
 import logging
 
 import comtypes.client
+from anima.env import empty_reference_resolution
 from anima.recent import RecentFileManager
 from anima.env.base import EnvironmentBase
 
@@ -136,7 +137,7 @@ class Photoshop(EnvironmentBase):
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
 
-        return {}
+        return empty_reference_resolution()
 
     def get_current_version(self):
         """Finds the Version instance from the current ActiveDocument.
