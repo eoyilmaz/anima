@@ -16,6 +16,7 @@ from anima import utils
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.maya.extension import MayaExtension
+from anima import previs
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -219,6 +220,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # set the render file name and version
         self.set_render_filename(version)
 
+        # set sequence manager related data
+        self.set_sequence_manager_data(version)
+
         # set the playblast file name
         self.set_playblast_file_name(version)
 
@@ -337,6 +341,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # set the playblast folder
         self.set_playblast_file_name(version)
+
+        # set sequence manager related data
+        self.set_sequence_manager_data(version)
 
         self.append_to_recent_files(version.absolute_full_path)
 
@@ -505,6 +512,20 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version = self.get_version_from_workspace()
 
         return version
+
+    def set_sequence_manager_data(self, version):
+        """sets the sequenceManager1 node attributes including the version
+        number.
+
+        :param version: :class:`~stalker.models.version.Version`
+        """
+        sm = pymel.core.ls('sequenceManager1')[0]
+        if sm is not None:
+            sm.get_shot_name_template()
+            sm.set_version('v%03d' % version.version_number)
+
+            for seq in sm.sequences.get():
+                seq.get_sequence_name()
 
     def set_render_filename(self, version):
         """sets the render file name

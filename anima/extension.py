@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+
 def extends(cls):
     """A decorator for extending classes with other class methods or functions.
 

@@ -6,6 +6,7 @@
 """Module for generic Maya PyMel extensions through anima.extension module
 """
 
+from pymel.core.uitypes import CheckBox
 from pymel.core.general import Attribute
 from anima.extension import extends
 
@@ -38,3 +39,14 @@ class MayaExtension(object):
 
         return self[available_index]
 
+    @extends(CheckBox)
+    def value(self, value=None):
+        """returns or set the check box value
+        """
+        from pymel.core import checkBox
+        if value is not None:
+            # set the value
+            checkBox(self, e=1, v=value)
+        else:
+            # get the value
+            return checkBox(self, q=1, v=1)
