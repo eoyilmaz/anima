@@ -6,7 +6,7 @@
 """Module for generic Maya PyMel extensions through anima.extension module
 """
 
-from pymel.core.uitypes import CheckBox
+from pymel.core.uitypes import CheckBox, TextField
 from pymel.core.general import Attribute
 from anima.extension import extends
 
@@ -50,3 +50,15 @@ class MayaExtension(object):
         else:
             # get the value
             return checkBox(self, q=1, v=1)
+
+    @extends(TextField)
+    def text(self, value=None):
+        """returns or sets the text field value
+        """
+        from pymel.core import textField
+        if value is not None:
+            # set the value
+            textField(self, e=1, tx=value)
+        else:
+            # get the value
+            return textField(self, q=1, tx=1)
