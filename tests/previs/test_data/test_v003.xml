@@ -20,7 +20,7 @@
         <track>
           <locked>FALSE</locked>
           <enabled>TRUE</enabled>
-          <clipitem id="0010">
+          <clipitem id="SEQ001_HSNI_003_0010_v001">
             <end>55.0</end>
             <name>SEQ001_HSNI_003_0010_v001</name>
             <enabled>True</enabled>
@@ -34,7 +34,7 @@
               <pathurl>file:///tmp/SEQ001_HSNI_003_0010_v001.mov</pathurl>
             </file>
           </clipitem>
-          <clipitem id="0030">
+          <clipitem id="SEQ001_HSNI_003_0030_v001">
             <end>121.0</end>
             <name>SEQ001_HSNI_003_0030_v001</name>
             <enabled>True</enabled>

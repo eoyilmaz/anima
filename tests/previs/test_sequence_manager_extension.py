@@ -269,6 +269,93 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertEqual(65.0, shot3.startFrame.get())
         self.assertEqual(121.0, shot3.endFrame.get())
 
+    def test_from_edl_updates_sequencer_hierarchy_with_shots_used_more_than_one_times(self):
+        """testing if from_edl method will update Sequences and shots correctly
+        with shot are used more than once
+        """
+        path = os.path.abspath('./test_data/test_v004.edl')
+
+        sm = pymel.core.PyNode('sequenceManager1')
+        sm.set_version('v001')
+        seq = sm.create_sequence('SEQ001_HSNI_003')
+
+        shot1 = seq.create_shot('0010')
+        shot1.startFrame.set(0)
+        shot1.endFrame.set(33)
+        shot1.sequenceStartFrame.set(1)
+        shot1.output.set('/tmp/SEQ001_HSNI_003_0010_v001.mov')
+        shot1.handle.set(10)
+        shot1.track.set(1)
+
+        shot2 = seq.create_shot('0020')
+        shot2.startFrame.set(34)
+        shot2.endFrame.set(64)
+        shot2.sequenceStartFrame.set(35)
+        shot2.output.set('/tmp/SEQ001_HSNI_003_0020_v001.mov')
+        shot2.handle.set(10)
+        shot2.track.set(1)
+
+        shot3 = seq.create_shot('0030')
+        shot3.startFrame.set(65)
+        shot3.endFrame.set(110)
+        shot3.sequenceStartFrame.set(66)
+        shot3.output.set('/tmp/SEQ001_HSNI_003_0030_v001.mov')
+        shot3.handle.set(10)
+        shot3.track.set(1)
+
+        # set a camera for shot4
+        shot3.set_camera('persp')
+
+        self.assertEqual(shot1.track.get(), 1)
+        self.assertEqual(shot2.track.get(), 1)
+        self.assertEqual(shot3.track.get(), 1)
+
+        # now update it with test_v002.xml
+        sm.from_edl(path)
+
+        # check if there are 4 shots
+        self.assertEqual(4, len(seq.shots.get()))
+
+        # check shot data
+        self.assertEqual('0010', shot1.shotName.get())
+        self.assertEqual(1, shot1.track.get())
+        self.assertEqual(1.0, shot1.sequenceStartFrame.get())
+        self.assertEqual(54.0, shot1.sequenceEndFrame.get())
+        self.assertEqual(-10.0, shot1.startFrame.get())
+        self.assertEqual(43.0, shot1.endFrame.get())
+
+        # Clip2
+        self.assertEqual('0020', shot2.shotName.get())
+        self.assertEqual(1, shot2.track.get())
+        self.assertEqual(55.0, shot2.sequenceStartFrame.get())
+        self.assertEqual(76.0, shot2.sequenceEndFrame.get())
+        self.assertEqual(44.0, shot2.startFrame.get())
+        self.assertEqual(65.0, shot2.endFrame.get())
+
+        # Clip3
+        self.assertEqual('0030', shot3.shotName.get())
+        self.assertEqual(1, shot3.track.get())
+        self.assertEqual(77.0, shot3.sequenceStartFrame.get())
+        self.assertEqual(133.0, shot3.sequenceEndFrame.get())
+        self.assertEqual(65.0, shot3.startFrame.get())
+        self.assertEqual(121.0, shot3.endFrame.get())
+
+        # Clip4
+        # there should be an extra shot
+        shot4 = seq.shots.get()[-1]
+        self.assertEqual('0030', shot4.shotName.get())
+        self.assertEqual(1, shot4.track.get())
+        self.assertEqual(133.0, shot4.sequenceStartFrame.get())
+        self.assertEqual(189.0, shot4.sequenceEndFrame.get())
+        self.assertEqual(65.0, shot4.startFrame.get())
+        self.assertEqual(121.0, shot4.endFrame.get())
+
+        # check if their cameras also the same
+        self.assertEqual(
+            shot3.get_camera(),
+            shot4.get_camera()
+        )
+
     def test_from_xml_updates_sequencer_hierarchy_with_shots_removed(self):
         """testing if from_xml method will update Sequences and shots
         correctly with the xml file
@@ -633,7 +720,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         clip1 = track1.clips[0]
         self.assertIsInstance(clip1, Clip)
         self.assertEqual('Video', clip1.type)
-        self.assertEqual('0010', clip1.id)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.id)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
         self.assertEqual(10, clip1.in_)   # handle
         self.assertEqual(35, clip1.out)  # handle + duration
@@ -643,7 +730,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         clip2 = track1.clips[1]
         self.assertIsInstance(clip2, Clip)
         self.assertEqual('Video', clip2.type)
-        self.assertEqual('0020', clip2.id)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.id)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
         self.assertEqual(15, clip2.in_)   # handle
         self.assertEqual(41, clip2.out)  # handle + duration
@@ -653,7 +740,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         clip3 = track2.clips[0]
         self.assertIsInstance(clip3, Clip)
         self.assertEqual('Video', clip3.type)
-        self.assertEqual('0030', clip3.id)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.id)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
         self.assertEqual(20, clip3.in_)   # startFrame
         self.assertEqual(46, clip3.out)  # endFrame + 1

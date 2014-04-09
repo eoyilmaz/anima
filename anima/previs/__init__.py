@@ -213,34 +213,63 @@ class SequenceManagerExtension(object):
             deleted_shots = []
             used_shots = []
 
+            # for each shot sets the anchor point in a temp variable
             for shot in shots:
-                # find the corresponding shots in seq
-                is_deleted = True
-                for clip in all_clips:
+                shot.anchor = shot.startFrame.get()
+
+            # find the corresponding shots in seq
+            for clip in all_clips:
+                #is_deleted = True
+                for shot in shots:
                     if clip.id.lower() == shot.full_shot_name.lower():
+
                         # update with the given clip info
-                        anchor = shot.startFrame.get()
+                        # anchor = shot.startFrame.get()
                         handle = shot.handle.get()
                         track = shot.track.get()
 
-                        start_frame = clip.in_ - handle + anchor
+                        if shot in used_shots:
+                            # this shot has been used once so duplicate it
+                            # before doing anything
+                            dup_shot = seq1.create_shot(shot.shotName.get())
+                            dup_shot.startFrame.set(shot.startFrame.get())
+                            dup_shot.endFrame.set(shot.endFrame.get())
+                            dup_shot.handle.set(shot.handle.get())
+                            dup_shot.sequenceStartFrame.set(
+                                shot.sequenceStartFrame.get()
+                            )
+                            # do not copy sequenceEndFrame
+                            # copy camera
+                            dup_shot.set_camera(shot.get_camera())
+                            dup_shot.anchor = shot.anchor
+                            shot = dup_shot
+
+                        start_frame = clip.in_ - handle + shot.anchor
                         end_frame = clip.out - clip.in_ + start_frame - 1
 
+                        # print '-------------------------------'
+                        # print 'clip.in     : %s' % clip.in_
+                        # print 'clip.out    : %s' % clip.out
+                        # print 'clip.start  : %s' % clip.start
+                        # print 'clip.end    : %s' % clip.end
+                        # print 'start_frame : %s' % start_frame
+                        # print 'end_frame   : %s' % end_frame
+
                         sequence_start = clip.start
-                        #sequence_end = clip.end
 
                         shot.startFrame.set(start_frame)
                         shot.endFrame.set(end_frame)
 
                         shot.sequenceStartFrame.set(sequence_start)
-                        #shot.sequenceEndFrame.set(sequence_end)
 
                         # set original track
                         shot.track.set(track)
-                        is_deleted = False
+
+                        used_shots.append(shot)
                         break
 
-                if is_deleted:
+            for shot in seq1.shots.get():
+                if shot not in used_shots:
                     deleted_shots.append(shot)
 
             # delete shots
@@ -254,7 +283,11 @@ class SequenceManagerExtension(object):
             media = seq.media
             for i, track in enumerate(media.video.tracks):
                 for clip in track.clips:
-                    shot = seq1.create_shot(clip.id)
+                    # clip.id is something like SEQ001_HSNI_010_0010_v046
+                    # filter the shot name
+                    shot_name = clip.id.split('_')[-2]
+                    shot = seq1.create_shot(shot_name)
+
                     shot.startFrame.set(clip.in_)
                     shot.endFrame.set(clip.out - 1)
                     shot.sequenceStartFrame.set(clip.start)
@@ -376,7 +409,7 @@ class SequenceManagerExtension(object):
 
         for shot in sequencer.shots.get():
             clip = Clip()
-            clip.id = str(shot.shotName.get())
+            clip.id = str(shot.full_shot_name)
             clip.name = str(shot.full_shot_name)
             clip.duration = shot.duration + 2 * shot.handle.get()
             clip.enabled = True
@@ -640,6 +673,23 @@ class SequencerExtension(object):
 class ShotExtension(object):
     """extensions to pymel.core.nodetypes.Shot class
     """
+
+    @extends(pymel.core.nodetypes.Shot)
+    def get_camera(self):
+        """returns the shot camera
+
+        :return:
+        """
+        return pymel.core.PyNode(pymel.core.shot(self, q=1, currentCamera=1))
+
+    @extends(pymel.core.nodetypes.Shot)
+    def set_camera(self, camera):
+        """sets the shot camera
+
+        :param camera: pymel.core.Camera instance or a string
+        :return:
+        """
+        pymel.core.shot(self, e=1, currentCamera=camera)
 
     @extends(pymel.core.nodetypes.Shot)
     def get_output(self):
@@ -1025,9 +1075,10 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                 # a possible negative number
                 from pytimecode import PyTimeCode
                 # get the last timecode like 23:59:59:xx
-                tc_0_frames = PyTimeCode(edl_list.fps, frames=0)
-                tc_24_hours = PyTimeCode(edl_list.fps, str(tc_0_frames))
-
+                tc_24_hours = PyTimeCode(
+                    edl_list.fps,
+                    '23:59:59:%s' % edl_list.fps
+                )
                 clip.start -= tc_24_hours.frame_number + 1
 
             if clip.start < sequence_start:
@@ -1103,7 +1154,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.source_file = source_file
 
                     e.comments.extend([
-                        '* FROM CLIP NAME: %s' % clip.id,
+                        '* FROM CLIP NAME: %s' % clip.name,
                         '* SOURCE FILE: %s' % source_file
                     ])
 

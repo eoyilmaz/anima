@@ -13,8 +13,8 @@ from anima.previs import (SequencerExtension, Sequence, Media, Video, Track,
                           Clip, File)
 
 
-class MediaTestCase(unittest.TestCase):
-    """tests the anima.previs.Media class
+class SequenceTestCase(unittest.TestCase):
+    """tests the anima.previs.Sequence class
     """
 
     def test_to_xml_method_is_working_properly(self):
@@ -422,7 +422,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertIsInstance(clips[0], Clip)
 
         self.assertEqual('000001', e1.num)
-        self.assertEqual('0010', e1.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.clip_name)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.reel)
         self.assertEqual('V', e1.track)
         self.assertEqual('C', e1.tr_code)
@@ -431,7 +431,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('00:00:00:01', e1.rec_start_tc)
         self.assertEqual('00:00:01:11', e1.rec_end_tc)
         self.assertEqual(
-            '* FROM CLIP NAME: 0010',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0010_v001',
             e1.comments[0]
         )
         self.assertEqual('/tmp/SEQ001_HSNI_003_0010_v001.mov', e1.source_file)
@@ -440,7 +440,7 @@ class MediaTestCase(unittest.TestCase):
         )
 
         self.assertEqual('000002', e2.num)
-        self.assertEqual('0020', e2.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', e2.clip_name)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', e2.reel)
         self.assertEqual('V', e2.track)
         self.assertEqual('C', e2.tr_code)
@@ -451,7 +451,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('/tmp/SEQ001_HSNI_003_0020_v001.mov',
                          e2.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: 0020',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0020_v001',
             e2.comments[0]
         )
         self.assertEqual(
@@ -460,7 +460,7 @@ class MediaTestCase(unittest.TestCase):
         )
 
         self.assertEqual('000003', e3.num)
-        self.assertEqual('0030', e3.clip_name)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', e3.clip_name)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', e3.reel)
         self.assertEqual('V', e3.track)
         self.assertEqual('C', e3.tr_code)
@@ -471,7 +471,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual('/tmp/SEQ001_HSNI_003_0030_v001.mov',
                          e3.source_file)
         self.assertEqual(
-            '* FROM CLIP NAME: 0030',
+            '* FROM CLIP NAME: SEQ001_HSNI_003_0030_v001',
             e3.comments[0]
         )
         self.assertEqual(
@@ -525,7 +525,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(44.0, clip1.duration)
         self.assertEqual(True, clip1.enabled)
         self.assertEqual(35.0, clip1.end)
-        self.assertEqual('0010', clip1.id)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.id)
         self.assertEqual(10.0, clip1.in_)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
         self.assertEqual(44.0, clip1.out)
@@ -545,7 +545,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(41.0, clip2.duration)
         self.assertEqual(True, clip2.enabled)
         self.assertEqual(66.0, clip2.end)
-        self.assertEqual('0020', clip2.id)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.id)
         self.assertEqual(10.0, clip2.in_)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
         self.assertEqual(41.0, clip2.out)
@@ -565,7 +565,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(56.0, clip3.duration)
         self.assertEqual(True, clip3.enabled)
         self.assertEqual(112.0, clip3.end)
-        self.assertEqual('0030', clip3.id)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.id)
         self.assertEqual(10.0, clip3.in_)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
         self.assertEqual(56.0, clip3.out)
@@ -600,7 +600,7 @@ class MediaTestCase(unittest.TestCase):
 
         self.assertEqual('SEQ001_HSNI_003', s.name)
 
-        self.assertEqual(246.0, s.duration)
+        self.assertEqual(248.0, s.duration)
         self.assertEqual('24', s.timebase)
         self.assertEqual('00:00:00:00', s.timecode)
 
@@ -629,11 +629,11 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(191.0, clip1.duration)
         self.assertEqual(True, clip1.enabled)
         self.assertEqual(153.0, clip1.end)
-        self.assertEqual('0010', clip1.id)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.id)
         self.assertEqual(15.0, clip1.in_)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
         self.assertEqual(191.0, clip1.out)
-        self.assertEqual(-22, clip1.start)
+        self.assertEqual(-24, clip1.start)
         self.assertEqual('Video', clip1.type)
 
         f = clip1.file
@@ -649,7 +649,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(100, clip2.duration)
         self.assertEqual(True, clip2.enabled)
         self.assertEqual(208, clip2.end)
-        self.assertEqual('0020', clip2.id)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.id)
         self.assertEqual(45.0, clip2.in_)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
         self.assertEqual(100.0, clip2.out)
@@ -669,7 +669,7 @@ class MediaTestCase(unittest.TestCase):
         self.assertEqual(1.0, clip3.duration)
         self.assertEqual(True, clip3.enabled)
         self.assertEqual(224.0, clip3.end)
-        self.assertEqual('0030', clip3.id)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.id)
         self.assertEqual(0.0, clip3.in_)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
         self.assertEqual(1.0, clip3.out)
