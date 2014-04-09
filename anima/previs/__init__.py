@@ -216,7 +216,7 @@ class SequenceManagerExtension(object):
                 # find the corresponding shots in seq
                 is_deleted = True
                 for clip in all_clips:
-                    if clip.id == shot.shotName.get():
+                    if clip.id.lower() == shot.full_shot_name.lower():
                         # update with the given clip info
                         anchor = shot.startFrame.get()
                         handle = shot.handle.get()
@@ -1011,6 +1011,8 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
             clip.in_ = e.src_start_tc.frame_number
             clip.out = e.src_end_tc.frame_number
+            # check in and out frames
+
             clip.duration = clip.out  # including the handle at start,
                                       # but we can not have any idea about the
                                       # handle at end

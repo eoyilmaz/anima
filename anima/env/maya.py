@@ -577,6 +577,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :param version: :class:`~stalker.models.version.Version`
         """
+        from anima import previs  # to extend sequenceManager
         sm = pymel.core.ls('sequenceManager1')[0]
         if sm is not None:
             sm.get_shot_name_template()
