@@ -19,21 +19,9 @@ def empty_reference_resolution(root=None, leave=None, update=None, create=None):
 
     :return: dict
     """
-    if root is None:
-        root = []
-
-    if leave is None:
-        leave = []
-
-    if update is None:
-        update = []
-
-    if create is None:
-        create = []
-
     return {
-        'root': root,
-        'leave': leave,
-        'update': update,
-        'create': create
+        'root': [] if root is None else root,
+        'leave': [] if leave is None else leave,
+        'update': [] if update is None else update,
+        'create': [] if create is None else create
     }

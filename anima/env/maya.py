@@ -1,29 +1,79 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2014, Anima Istanbul
-#
-# This module is part of anima-tools and is released under the BSD 2
-# License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
 import re
 import shutil
 import logging
-import pymel
 
-from stalker import db, Version
+import pymel.core
+
+from pymel.core.uitypes import CheckBox, TextField
+from pymel.core.general import Attribute
+
+from anima.extension import extends
 
 from anima import utils
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
-from anima.env.maya.extension import MayaExtension
-from anima import previs
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-
 publishers = {}
+
+
+class MayaExtension(object):
+    """Extension to PyMel classes
+    """
+
+    @extends(Attribute)
+    @property
+    def next_available(self):
+        """returns the next available attr in a multi attr
+
+        :return: The available index as an attribute
+        """
+        try:
+            indices = self.getArrayIndices()
+        except TypeError:
+            return self
+
+        available_index = 0
+
+        try:
+            for i in xrange(max(indices) + 2):
+                if not self[i].connections():
+                    available_index = i
+                    break
+        except ValueError:
+            available_index = 0
+
+        return self[available_index]
+
+    @extends(CheckBox)
+    def value(self, value=None):
+        """returns or set the check box value
+        """
+        from pymel.core import checkBox
+        if value is not None:
+            # set the value
+            checkBox(self, e=1, v=value)
+        else:
+            # get the value
+            return checkBox(self, q=1, v=1)
+
+    @extends(TextField)
+    def text(self, value=None):
+        """returns or sets the text field value
+        """
+        from pymel.core import textField
+        if value is not None:
+            # set the value
+            textField(self, e=1, tx=value)
+        else:
+            # get the value
+            return textField(self, q=1, tx=1)
 
 
 class Maya(EnvironmentBase):
@@ -134,15 +184,20 @@ workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
 
+    def __init__(self, extensions=None, version=None):
+        #super(Maya, self).__init__(self.name, extensions, version)
+        EnvironmentBase.__init__(self, self.name, extensions, version)
+
+        self.use_progress_window = False
+        if not pymel.core.general.about(batch=1):
+            self.use_progress_window = True
+        self.progress_step = 0
+
     def save_as(self, version):
         """The save_as action for maya environment.
 
         It saves the given Version instance to the Version.absolute_full_path.
         """
-        from stalker import Version
-
-        assert isinstance(version, Version)
-
         # get the current version, and store it as the parent of the new
         # version
         current_version = self.get_current_version()
@@ -256,6 +311,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.absolute_full_path
         )
 
+        from stalker import db
         db.DBSession.add(version)
         db.DBSession.commit()
 
@@ -289,6 +345,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pymel.core.exportSelected(version.absolute_full_path, type='mayaAscii')
 
         # save the version to database
+        from stalker import db
         db.DBSession.add(version)
         db.DBSession.commit()
 
@@ -410,6 +467,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
+            from stalker import db
             db.DBSession.commit()
 
         # also update version.inputs for the referenced input
@@ -899,6 +957,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
+            from stalker import db
             db.DBSession.commit()
 
     def update_first_level_versions(self, reference_resolution):
@@ -1420,6 +1479,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :return list: A list of :class:`~stalker.models.version.Version`
           instances if created any.
         """
+        from stalker import Version
         logger.debug(
             'updating to new versions with: %s' % reference_resolution
         )
@@ -1429,6 +1489,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # store the current version
         current_version = self.get_current_version()
+
+        self.progress_step = 0
+        if self.use_progress_window:
+            pymel.core.progressWindow(
+                title='Deep Reference Update',
+                progress=0,
+                status='',
+                isInterruptable=False
+            )
+            self.progress_step = 100.0 / len(reference_resolution['create'])
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them
@@ -1454,6 +1524,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # renew scene
             pymel.core.newFile(f=True)
+
+            if self.use_progress_window:
+                pymel.core.progressWindow(e=1, step=self.progress_step)
+        pymel.core.progressWindow(endProgress=1)
 
         # check if we are still in the same scene
         current_version_after_create = self.get_current_version()
@@ -1660,7 +1734,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         to_update_paths.append(path)
                     parent_ref = current_ref.parent()
 
-        print "to_update_paths: %s" % to_update_paths
+        # print "to_update_paths: %s" % to_update_paths
 
         if to_update_paths:
             # so, we need to update things
@@ -1675,6 +1749,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # 7- fix edits with new namespace
             # 8- apply them
 
+            if self.use_progress_window:
+                pymel.core.progressWindow(
+                    title='Deep Reference Update',
+                    progress=0,
+                    status='',
+                    isInterruptable=False
+                )
+                self.progress_step = 100.0 / len(to_update_paths)
+
+            from stalker import Version
             for path in to_update_paths:
                 vers = self.get_version_from_full_path(path)
 
@@ -1705,6 +1789,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     logger.debug('new_version : %s' % new_version)
                     self.save_as(new_version)
                     # pymel.core.saveFile()
+
+                if self.use_progress_window:
+                    pymel.core.progressWindow(e=1, step=self.progress_step)
+            pymel.core.progressWindow(endProgress=1)
 
             self.update_reference_edits(started_from_version)
 

@@ -15,7 +15,7 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      FilenameTemplate, ImageFormat)
 
 from anima import utils
-from anima.env import maya
+from anima.env.maya import Maya
 from anima.utils import walk_version_hierarchy
 
 
@@ -240,7 +240,7 @@ class MayaTestBase(unittest2.TestCase):
         db.DBSession.commit()
 
         # create the environment instance
-        self.maya_env = maya.Maya()
+        self.maya_env = Maya()
 
         # now create versions
         def create_version(task, take_name):

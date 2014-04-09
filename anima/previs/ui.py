@@ -12,7 +12,8 @@ import edl
 import anima
 import anima.previs  # this is an extension module don't delete it
 from anima.env import maya
-from anima.env.maya import extension
+from anima.env.maya import extension, Maya
+
 reload(edl)
 reload(anima.previs)
 reload(maya)
@@ -26,7 +27,7 @@ class PrevisUI(object):
     """
 
     def __init__(self):
-        self.mEnv = maya.Maya()
+        self.mEnv = Maya()
 
         self.width = 265
         self.height = 300

@@ -9,7 +9,8 @@ import subprocess
 import tempfile
 from contextlib import contextmanager
 
-import pymel
+import pymel.core
+from anima.env.maya import Maya, MayaExtension
 from anima.extension import extends
 
 
@@ -180,38 +181,21 @@ class SequenceManagerExtension(object):
         return sequencer
 
     @extends(pymel.core.nodetypes.SequenceManager)
-    def from_xml(self, path):
-        """Parses XML file and returns a Sequence instance which reflects the
-        whole timeline hierarchy.
+    def from_seq(self, seq):
+        """Generates maya shots and sequencers with the given
+        :class:`anima.previs.Sequence` instance.
 
-        :param path: The path of the XML file
-        :return: :class:`.Sequence`
+        This method is designed to mainly be used with :method:`.from_xml`
+        and :method:`.from_edl` methods. It generates new shots or updates them
+        by looking at the given :class:`anima.previs.Sequence` instance.
+
+        :param seq: An :class:`anima.previs.Sequence` instance
+        :return:
         """
-        if not isinstance(path, str):
-            raise TypeError(
-                'path argument in %s.from_xml should be a string, not %s' %
-                (self.__class__.__name__, path.__class__.__name__)
-            )
-
-        from xml.etree import ElementTree
-
-        try:
-            tree = ElementTree.parse(path)
-        except IOError:
-            raise IOError('Please supply a valid path to an XML file!')
-
-        root = tree.getroot()
-        seq = Sequence()
-        xml_seq = root.getchildren()[0]
-
-        seq.from_xml(xml_seq)
-
         # now create or update structure
         # create first
         # generate the shot name template first
-
         shot_name_template = self.get_shot_name_template()
-
         # get current sequencer
         seqs = self.sequences.get()
         if seqs:
@@ -239,16 +223,16 @@ class SequenceManagerExtension(object):
                         track = shot.track.get()
 
                         start_frame = clip.in_ - handle + anchor
-                        end_frame = clip.out - clip.in_ + start_frame
+                        end_frame = clip.out - clip.in_ + start_frame - 1
 
                         sequence_start = clip.start
-                        sequence_end = clip.end
+                        #sequence_end = clip.end
 
                         shot.startFrame.set(start_frame)
                         shot.endFrame.set(end_frame)
 
                         shot.sequenceStartFrame.set(sequence_start)
-                        shot.sequenceEndFrame.set(sequence_end)
+                        #shot.sequenceEndFrame.set(sequence_end)
 
                         # set original track
                         shot.track.set(track)
@@ -280,6 +264,62 @@ class SequenceManagerExtension(object):
                     shot.track.set(i + 1)
 
     @extends(pymel.core.nodetypes.SequenceManager)
+    def from_xml(self, path):
+        """Parses XML file and returns a Sequence instance which reflects the
+        whole timeline hierarchy.
+
+        :param path: The path of the XML file
+        :return: :class:`.Sequence`
+        """
+        if not isinstance(path, str):
+            raise TypeError(
+                'path argument in %s.from_xml should be a string, not %s' %
+                (self.__class__.__name__, path.__class__.__name__)
+            )
+
+        from xml.etree import ElementTree
+
+        try:
+            tree = ElementTree.parse(path)
+        except IOError:
+            raise IOError('Please supply a valid path to an XML file!')
+
+        root = tree.getroot()
+        seq = Sequence()
+        xml_seq = root.getchildren()[0]
+
+        seq.from_xml(xml_seq)
+
+        self.from_seq(seq)
+
+    @extends(pymel.core.nodetypes.SequenceManager)
+    def from_edl(self, path):
+        """Parses EDL file and returns a Sequence instance which reflects the
+        whole timeline hierarchy.
+
+        :param path: The path of the XML file
+        :return: :class:`.Sequence`
+        """
+        if not isinstance(path, str):
+            raise TypeError(
+                'path argument in %s.from_edl should be a string, not %s' %
+                (self.__class__.__name__, path.__class__.__name__)
+            )
+
+        mayaEnv = Maya()
+        fps = mayaEnv.get_fps()
+
+        import edl
+        p = edl.Parser(str(fps))
+        with open(path) as f:
+            l = p.parse(f)
+
+        seq = Sequence()
+        seq.from_edl(l)
+
+        self.from_seq(seq)
+
+    @extends(pymel.core.nodetypes.SequenceManager)
     def to_xml(self, path=None, indentation=2, pre_indent=0):
         """Generates an FCP compatible XML file at given path.
 
@@ -307,7 +347,7 @@ class SequenceManagerExtension(object):
         import pytimecode
         from anima.env import maya
 
-        mayaEnv = maya.Maya()
+        mayaEnv = Maya()
         fps = mayaEnv.get_fps()
 
         # export only the first sequence, ignore others
