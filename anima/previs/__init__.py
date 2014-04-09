@@ -211,6 +211,7 @@ class SequenceManagerExtension(object):
                          for clip in track.clips]
 
             deleted_shots = []
+            used_shots = []
 
             for shot in shots:
                 # find the corresponding shots in seq
@@ -1027,7 +1028,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                 tc_0_frames = PyTimeCode(edl_list.fps, frames=0)
                 tc_24_hours = PyTimeCode(edl_list.fps, str(tc_0_frames))
 
-                clip.start -= tc_24_hours.frame_number
+                clip.start -= tc_24_hours.frame_number + 1
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
