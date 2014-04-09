@@ -581,6 +581,110 @@ class MediaTestCase(unittest.TestCase):
             f.pathurl
         )
 
+    def test_from_edl_method_is_working_properly_with_negative_timecodes(self):
+        """testing if the from_edl method will return an anima.previs.Sequence
+        instance with proper hierarchy event with clips that has negative
+        timecode values (timecodes with in point is bigger than out point and
+        around 23:59:59:XX as a result)
+        """
+        # first supply an edl
+        from edl import Parser
+        p = Parser('24')
+        edl_path = os.path.abspath('./test_data/test_v003.edl')
+
+        with open(edl_path) as f:
+            edl_list = p.parse(f)
+
+        s = Sequence(timebase='24')
+        s.from_edl(edl_list)
+
+        self.assertEqual('SEQ001_HSNI_003', s.name)
+
+        self.assertEqual(246.0, s.duration)
+        self.assertEqual('24', s.timebase)
+        self.assertEqual('00:00:00:00', s.timecode)
+
+        m = s.media
+        self.assertIsInstance(m, Media)
+
+        v = m.video
+        self.assertIsInstance(v, Video)
+
+        t = v.tracks[0]
+        self.assertEqual(False, t.locked)
+        self.assertEqual(True, t.enabled)
+
+        clips = t.clips
+        self.assertEqual(3, len(clips))
+
+        clip1 = clips[0]
+        clip2 = clips[1]
+        clip3 = clips[2]
+
+        self.assertIsInstance(clip1, Clip)
+        self.assertIsInstance(clip2, Clip)
+        self.assertIsInstance(clip3, Clip)
+
+        # clip1
+        self.assertEqual(191.0, clip1.duration)
+        self.assertEqual(True, clip1.enabled)
+        self.assertEqual(153.0, clip1.end)
+        self.assertEqual('0010', clip1.id)
+        self.assertEqual(15.0, clip1.in_)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
+        self.assertEqual(191.0, clip1.out)
+        self.assertEqual(-22, clip1.start)
+        self.assertEqual('Video', clip1.type)
+
+        f = clip1.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(191.0, f.duration)
+        self.assertEqual('SEQ001_HSNI_003_0010_v001', f.name)
+        self.assertEqual(
+            'file:///tmp/SEQ001_HSNI_003_0010_v001.mov',
+            f.pathurl
+        )
+
+        # clip2
+        self.assertEqual(100, clip2.duration)
+        self.assertEqual(True, clip2.enabled)
+        self.assertEqual(208, clip2.end)
+        self.assertEqual('0020', clip2.id)
+        self.assertEqual(45.0, clip2.in_)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', clip2.name)
+        self.assertEqual(100.0, clip2.out)
+        self.assertEqual(153.0, clip2.start)
+        self.assertEqual('Video', clip2.type)
+
+        f = clip2.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(100.0, f.duration)
+        self.assertEqual('SEQ001_HSNI_003_0020_v001', f.name)
+        self.assertEqual(
+            'file:///tmp/SEQ001_HSNI_003_0020_v001.mov',
+            f.pathurl
+        )
+
+        # clip3
+        self.assertEqual(1.0, clip3.duration)
+        self.assertEqual(True, clip3.enabled)
+        self.assertEqual(224.0, clip3.end)
+        self.assertEqual('0030', clip3.id)
+        self.assertEqual(0.0, clip3.in_)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', clip3.name)
+        self.assertEqual(1.0, clip3.out)
+        self.assertEqual(208.0, clip3.start)
+        self.assertEqual('Video', clip3.type)
+
+        f = clip3.file
+        self.assertIsInstance(f, File)
+        self.assertEqual(1.0, f.duration)
+        self.assertEqual('SEQ001_HSNI_003_0030_v001', f.name)
+        self.assertEqual(
+            'file:///tmp/SEQ001_HSNI_003_0030_v001.mov',
+            f.pathurl
+        )
+
     def test_to_metafuze_xml_is_working_properly(self):
         """testing if to_metafuze_xml method is working properly
         """

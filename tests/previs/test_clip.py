@@ -144,3 +144,13 @@ class ClipTestCase(unittest.TestCase):
         self.assertEqual(30.0, f.duration)
         self.assertEqual('shot', f.name)
         self.assertEqual(pathurl, f.pathurl)
+
+    # def test_in_is_bigger_than_out_will_be_converted_to_negative_values(self):
+    #     """testing if setting the in smaller than out will convert the in to
+    #     a negative value
+    #     """
+    #     c = Clip()
+    #     c.in_ = 2073577.0
+    #     c.out = 191.0
+    # 
+    #     self.assertEqual(c.in_, -23)

@@ -1011,7 +1011,6 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
             clip.in_ = e.src_start_tc.frame_number
             clip.out = e.src_end_tc.frame_number
-            # check in and out frames
 
             clip.duration = clip.out  # including the handle at start,
                                       # but we can not have any idea about the
@@ -1019,6 +1018,16 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
 
             clip.start = e.rec_start_tc.frame_number
             clip.end = e.rec_end_tc.frame_number
+
+            # check in and out points relative to each other
+            if clip.start > clip.end:
+                # a possible negative number
+                from pytimecode import PyTimeCode
+                # get the last timecode like 23:59:59:xx
+                tc_0_frames = PyTimeCode(edl_list.fps, frames=0)
+                tc_24_hours = PyTimeCode(edl_list.fps, str(tc_0_frames))
+
+                clip.start -= tc_24_hours.frame_number
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
