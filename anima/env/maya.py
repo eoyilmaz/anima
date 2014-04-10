@@ -6,6 +6,7 @@ import shutil
 import logging
 
 import pymel.core
+import maya.cmds
 
 from pymel.core.uitypes import CheckBox, TextField
 from pymel.core.general import Attribute
