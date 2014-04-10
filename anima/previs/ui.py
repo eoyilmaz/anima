@@ -11,13 +11,7 @@ import pymel
 import edl
 import anima
 import anima.previs  # this is an extension module don't delete it
-from anima.env import maya
-from anima.env.maya import extension, Maya
-
-reload(edl)
-reload(anima.previs)
-reload(maya)
-reload(extension)
+from anima.env.maya import Maya
 
 from pymel import core
 
