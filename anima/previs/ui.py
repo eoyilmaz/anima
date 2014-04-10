@@ -11,7 +11,7 @@ import pymel
 import edl
 import anima
 import anima.previs  # this is an extension module don't delete it
-from anima.env.maya import Maya
+from anima.env.mayaEnv import Maya
 
 from pymel import core
 

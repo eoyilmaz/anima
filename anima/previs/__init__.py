@@ -10,7 +10,7 @@ import tempfile
 from contextlib import contextmanager
 
 import pymel.core
-from anima.env.maya import Maya, MayaExtension
+from anima.env.mayaEnv import Maya, MayaExtension
 from anima.extension import extends
 
 
@@ -379,7 +379,7 @@ class SequenceManagerExtension(object):
         :return: Sequence
         """
         import pytimecode
-        from anima.env import maya
+        from anima.env import mayaEnv
 
         mayaEnv = Maya()
         fps = mayaEnv.get_fps()

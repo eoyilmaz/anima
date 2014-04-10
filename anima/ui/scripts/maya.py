@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.env.maya import Maya
+from anima.env.mayaEnv import Maya
 from anima.ui.scripts import do_db_setup
 
 
@@ -23,10 +23,10 @@ def version_creator():
         pass
 
     from anima.ui import version_creator, models
-    from anima.env import maya
+    from anima.env import mayaEnv
     reload(version_creator)
     reload(models)
-    reload(maya)
+    reload(mayaEnv)
     m = Maya()
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
@@ -55,8 +55,8 @@ def version_updater():
         pass
 
     from anima.ui import version_updater, models
-    from anima.env import maya
-    reload(maya)
+    from anima.env import mayaEnv
+    reload(mayaEnv)
     reload(version_updater)
     reload(models)
     m = Maya()

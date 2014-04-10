@@ -15,7 +15,7 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      FilenameTemplate, ImageFormat)
 
 from anima import utils
-from anima.env.maya import Maya
+from anima.env.mayaEnv import Maya
 from anima.utils import walk_version_hierarchy
 
 
