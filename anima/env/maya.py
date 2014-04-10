@@ -189,6 +189,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         EnvironmentBase.__init__(self, self.name, extensions, version)
 
         self.use_progress_window = False
+        self.in_progress = False
         if not pymel.core.general.about(batch=1):
             self.use_progress_window = True
         self.progress_step = 0
@@ -1492,7 +1493,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         current_version = self.get_current_version()
 
         self.progress_step = 0
-        if self.use_progress_window:
+        if self.use_progress_window and len(reference_resolution['create']):
             pymel.core.progressWindow(
                 title='Deep Reference Update',
                 progress=0,
@@ -1500,6 +1501,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 isInterruptable=False
             )
             self.progress_step = 100.0 / len(reference_resolution['create'])
+            self.in_progress = True
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them
@@ -1526,9 +1528,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # renew scene
             pymel.core.newFile(f=True)
 
-            if self.use_progress_window:
+            if self.use_progress_window and self.in_progress:
                 pymel.core.progressWindow(e=1, step=self.progress_step)
-        pymel.core.progressWindow(endProgress=1)
+        if self.use_progress_window and self.in_progress:
+            pymel.core.progressWindow(endProgress=1)
+            self.in_progress = False
 
         # check if we are still in the same scene
         current_version_after_create = self.get_current_version()
@@ -1750,7 +1754,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # 7- fix edits with new namespace
             # 8- apply them
 
-            if self.use_progress_window:
+            if self.use_progress_window and len(to_update_paths):
                 pymel.core.progressWindow(
                     title='Deep Reference Update',
                     progress=0,
@@ -1758,6 +1762,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     isInterruptable=False
                 )
                 self.progress_step = 100.0 / len(to_update_paths)
+                self.in_progress = True
 
             from stalker import Version
             for path in to_update_paths:
@@ -1791,9 +1796,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     self.save_as(new_version)
                     # pymel.core.saveFile()
 
-                if self.use_progress_window:
+                if self.use_progress_window and self.in_progress:
                     pymel.core.progressWindow(e=1, step=self.progress_step)
-            pymel.core.progressWindow(endProgress=1)
+            if self.use_progress_window and self.in_progress:
+                pymel.core.progressWindow(endProgress=1)
+                self.in_progress = False
 
             self.update_reference_edits(started_from_version)
 

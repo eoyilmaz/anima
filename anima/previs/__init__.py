@@ -1079,7 +1079,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     edl_list.fps,
                     '23:59:59:%s' % edl_list.fps
                 )
-                clip.start -= tc_24_hours.frame_number + 1
+                clip.start -= tc_24_hours.frame_number #+ 1
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
