@@ -287,6 +287,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # delete the unknown nodes
         unknown_nodes = pymel.core.ls(type='unknown')
+        # unlock each possible locked unknown nodes
+        for node in unknown_nodes:
+            node.unlock()
         pymel.core.delete(unknown_nodes)
 
         # set the file paths for external resources
