@@ -1645,7 +1645,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         refs = pymel.core.listReferences(recursive=True)
         for i, ref in enumerate(reversed(refs)):
-            all_edits = edits_dictionary[i]['edits']
+            try:
+                all_edits = edits_dictionary[i]['edits']
+            except KeyError:
+                # there is a problem with this file skip this edit
+                continue
             logger.debug('re-all_edits: %s' % all_edits)
 
             old_namespace = edits_dictionary[i]['namespace']
