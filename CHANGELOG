@@ -2,6 +2,12 @@
 Changes
 =======
 
+0.1.7
+=====
+
+* **New:** Implemented **Shallow Reference Update** which only updates the
+  current scene without generating any new versions.
+
 0.1.6
 =====
 
