@@ -70,7 +70,21 @@ def output_to_h264(write_node=None):
 def convert_to_h264(input_path, output_path):
     """converts the given input to h264
     """
-    logger.debug('calling ffmpeg')
+    ffmpeg(**{
+        'i': input_path,
+        'vcodec': 'libx264',
+        'b:v': '4096k',
+        'o': output_path
+    })
+
+
+def convert_to_animated_gif(input_path, output_path):
+    """converts the given input to animated gif
+
+    :param input_path: A string of path, can have wild card characters
+    :param output_path: The output path
+    :return:
+    """
     ffmpeg(**{
         'i': input_path,
         'vcodec': 'libx264',
@@ -104,9 +118,24 @@ def ffmpeg(**kwargs):
 
     logger.debug('calling real ffmpeg with args: %s' % args)
 
-    proc = subprocess.Popen(args, stderr=subprocess.PIPE)
-    proc.wait()
-    logger.debug(proc.stderr.readlines())
+    process = subprocess.Popen(args, stderr=subprocess.PIPE)
+
+    # loop until process finishes and capture stderr output
+    stderr_buffer = []
+    while True:
+        stderr = process.stderr.readline()
+
+        if stderr == '' and process.poll() is not None:
+            break
+
+        if stderr != '':
+            stderr_buffer.append(stderr)
+
+    if process.returncode:
+        # there is an error
+        raise RuntimeError(stderr_buffer)
+
+    logger.debug(stderr_buffer)
     logger.debug('process completed!')
 
 

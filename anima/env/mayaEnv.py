@@ -78,7 +78,24 @@ class MayaExtension(object):
 
 
 class Maya(EnvironmentBase):
-    """the maya environment class
+    """The maya environment class
+
+    .. versionadded:: 0.1.7
+       Shallow Reference Updates
+
+       With version 0.1.7 all the scene references are updated *shallowly*,
+       that is no new versions are going to be created as opposed to
+       **Deep Reference Updates**. With **Shallow Reference Update**, all the
+       references in current scene is updated in place. So if a new version of
+       a Version is present, Maya will update it to that version in the current
+       scene without creating new intermediate versions. This makes things much
+       simple and easy to manage.
+
+    .. deprecated::
+       Deep Reference Updates
+
+       Deep reference updates are deprecated. Use shallow reference updates.
+
     """
 
     name = "Maya%s" % str(pymel.versions.current())[0:4]
@@ -1335,122 +1352,77 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
 
-    def deep_version_inputs_update(self):
-        """updates the inputs of the references of the current scene
-        """
-        # first update the current scene
-        self.update_version_inputs()
-
-        # the go to the references
-        references_list = pymel.core.listReferences()
-
-        prev_ref_path = None
-        while len(references_list):
-            current_ref = references_list.pop(0)
-            self.update_version_inputs(current_ref)
-            # optimize it by only appending one instance of the same referenced
-            # file
-            # sort the references according to their paths so, all the
-            # references of the same file will be got together
-            all_refs = sorted(
-                pymel.core.listReferences(current_ref),
-                key=lambda x: x.path
-            )
-            for ref in all_refs:
-                if ref.path != prev_ref_path:
-                    prev_ref_path = ref.path
-                    references_list.append(ref)
-            prev_ref_path = None
-
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
         dictionary which has three keys called 'leave', 'update' and 'create'.
+
         Each of these keys correspond to a value of a list of
         :class:`~stalker.model.version.Version`\ s. Where the list in 'leave'
         key shows the Versions referenced (or deeply referenced) to the
-        current scene which doesn't need to be changed. The list in 'update'
-        key holds Versions those need to be updated to a newer version which
-        are already exist. The list in 'create' key holds Version instance
-        which needs to have its references to be updated to the never versions
-        thus need a new version for them self. All the Versions in the list
-        are sorted from the deepest to shallowest reference, so processing the
-        list from 0th element to nth will always guarantee up to date info for
-        the currently processed Version instance.
+        current scene which doesn't need to be changed.
 
-        Uses the top level references to get a Stalker Version instance and
-        then tracks all the changes from these Version instances.
+        The list in 'update' key holds Versions those need to be updated to a
+        newer version which are already exist.
+
+        With the new shallow reference update the 'create' key will always be
+        empty, so no new versions will be created.
+
+        All the Versions in the list are sorted from the deepest to shallowest
+        reference, so processing the list from 0th element to nth will always
+        guarantee up to date info for the currently processed Version instance.
+
+        Because of the latest changes in the reference update process (namely;
+        shallow updates) output of this method is gathered from the references
+        and not from the Version instances. Making it prone to changes which
+        are not reflected in the database yet.
 
         :return: dictionary
         """
-        # recreate version.inputs list from current scene
-        self.deep_version_inputs_update()
+        # check only first level of references, due to new shallow reference
+        # updates deeper references may not reflect the reality
+        self.update_version_inputs()
 
         reference_resolution = \
             empty_reference_resolution(root=self.get_referenced_versions())
 
-        # reverse walk in DFS
-        dfs_version_references = []
+        # gather versions from reference paths
+        references_list = \
+            sorted(pymel.core.listReferences(), key=lambda x: x.path)
 
-        version = self.get_current_version()
-        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        for v in utils.walk_version_hierarchy(version):
-            dfs_version_references.append(v)
+        prev_ref_path = ''
+        current_version = None
 
-        # pop the first element which is the current scene
-        dfs_version_references.pop(0)
+        print 'len(references_list): %s' % len(references_list)
 
-        # iterate back in the list
-        for v in reversed(dfs_version_references):
-            # check inputs first
-            to_be_updated_list = []
-            for ref_v in v.inputs:
-                if not ref_v.is_latest_published_version():
-                    to_be_updated_list.append(ref_v)
+        while len(references_list):
+            current_ref = references_list.pop(0)
+            current_ref_path = current_ref.path
 
-            if to_be_updated_list:
-                action = 'create'
-                # check if there is a new published version of this version
-                # that is using all the updated versions of the references
-                latest_published_version = v.latest_published_version
-                if latest_published_version and \
-                   not v.is_latest_published_version():
-                    # so there is a new published version
-                    # check if its children needs any update
-                    # and the updated child versions are already
-                    # referenced to the this published version
-                    if all([ref_v.latest_published_version
-                            in latest_published_version.inputs
-                            for ref_v in to_be_updated_list]):
-                        # so all new versions are referenced to this published
-                        # version, just update to this latest published version
-                        action = 'update'
+            if current_ref_path != prev_ref_path:
+                current_version = \
+                    self.get_version_from_full_path(current_ref_path)
+
+                action = None
+                print 'current_version: %s' % current_version
+                if current_version is not None:
+                    if current_version.is_latest_published_version():
+                        print 'current_version.is_latest_published_version: True'
+                        action = 'leave'
                     else:
-                        # not all references are in the inputs
-                        # so we need to create a new version as usual
-                        # and update the references to the latest versions
-                        action = 'create'
-            else:
-                # nothing needs to be updated,
-                # so check if this version has a new version,
-                # also there could be no reference under this referenced
-                # version
-                if v.is_latest_published_version():
-                    # do nothing
-                    action = 'leave'
-                else:
-                    # update to latest published version
-                    action = 'update'
+                        print 'current_version.is_latest_published_version: False'
+                        action = 'update'
 
-                # before setting the action check all the inputs in
-                # resolution_dictionary, if any of them are update, or create
-                # then set this one to 'create'
-                if any(rev_v in reference_resolution['update'] or
-                       rev_v in reference_resolution['create']
-                       for rev_v in v.inputs):
-                    action = 'create'
+                    if action is not None:
+                        if current_version not in reference_resolution[action]:
+                            reference_resolution[action].append(current_version)
 
-            # so append this v to the related action list
-            reference_resolution[action].append(v)
+            # extend the list with sub references
+            references_list.extend(
+                sorted(
+                    pymel.core.listReferences(current_ref),
+                    key=lambda x: x.path
+                )
+            )
 
         return reference_resolution
 
@@ -1485,82 +1457,52 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :return list: A list of :class:`~stalker.models.version.Version`
           instances if created any.
         """
-        from stalker import Version
         logger.debug(
             'updating to new versions with: %s' % reference_resolution
         )
 
-        # first get the resolution list
-        new_versions = []
+        # just create a breadth first references list
+        # and update on the way to go deeper
+        references_list = pymel.core.listReferences()
 
-        # store the current version
-        current_version = self.get_current_version()
+        # order to the path
+        references_list = sorted(references_list, key=lambda x: x.path)
 
-        self.progress_step = 0
-        if self.use_progress_window and len(reference_resolution['create']):
-            pymel.core.progressWindow(
-                title='Deep Reference Update',
-                progress=0,
-                status='',
-                isInterruptable=False
+        prev_path = ''
+        prev_vers = None
+
+        while len(references_list):
+            current_ref = references_list.pop(0)
+
+            current_ref_path = current_ref.path
+
+            if current_ref_path != prev_path:
+                # get current version
+                current_version = \
+                    self.get_version_from_full_path(current_ref_path)
+                prev_vers = current_version
+            else:
+                current_version = prev_vers
+
+            # update to a new version if present
+            if not current_version.is_latest_published_version():
+                latest_published_version = \
+                    current_version.latest_published_version
+
+                # replace the current reference with this one
+                current_ref.replaceWith(
+                    latest_published_version.absolute_full_path
+                )
+
+            # get any reference under it and append to the list
+            references_list.extend(
+                sorted(
+                    pymel.core.listReferences(current_ref),
+                    key=lambda x: x.path
+                )
             )
-            self.progress_step = 100.0 / len(reference_resolution['create'])
-            self.in_progress = True
 
-        # loop through 'create' versions and update their references
-        # and create a new version for each of them
-        for version in reference_resolution['create']:
-            local_reference_resolution = \
-                self.open(version, force=True)
-
-            # replace each 'update' reference in the
-            # local_reference_resolution list
-            self.update_first_level_versions(local_reference_resolution)
-
-            # save as a new version
-            new_version = Version(
-                task=version.task,
-                take_name=version.take_name,
-                parent=version,
-                description='Automatically created with '
-                            'Deep Reference Update'
-            )
-            new_version.is_published = True
-            self.save_as(new_version)
-            new_versions.append(new_version)
-
-            # renew scene
-            pymel.core.newFile(f=True)
-
-            if self.use_progress_window and self.in_progress:
-                pymel.core.progressWindow(e=1, step=self.progress_step)
-        if self.use_progress_window and self.in_progress:
-            pymel.core.progressWindow(endProgress=1)
-            self.in_progress = False
-
-        # check if we are still in the same scene
-        current_version_after_create = self.get_current_version()
-
-        # now open up the current scene again and update all the references
-        # in 'update' list
-        logger.debug('current_version: %s' % current_version)
-        logger.debug('current_version_after_create: %s' % current_version)
-        if current_version:
-            logger.debug('we got a current_version')
-            if current_version != current_version_after_create:
-                # so we are in a different scene just reopen the previous scene
-                local_reference_resolution = self.open(current_version)
-            # we got a new local_reference_resolution but we should have given
-            # a previous one, so use it,
-            #
-            # append all the 'create' items to 'update' items,
-            # so we can update them with update_first_level_versions()
-            reference_resolution['update'].extend(
-                reference_resolution['create']
-            )
-            self.update_first_level_versions(reference_resolution)
-
-        return new_versions
+        return []  # no new version will be created
 
     def update_reference_edits(self, version):
         """Updates the reference edits for the given file
