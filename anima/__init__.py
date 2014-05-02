@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"
 
 
 import logging
