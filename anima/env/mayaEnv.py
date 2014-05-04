@@ -10,6 +10,7 @@ import maya.cmds
 
 from pymel.core.uitypes import CheckBox, TextField
 from pymel.core.general import Attribute
+from pymel.core.system import FileReference
 
 from anima.extension import extends
 
@@ -75,6 +76,87 @@ class MayaExtension(object):
         else:
             # get the value
             return textField(self, q=1, tx=1)
+
+
+class ReferenceExtension(object):
+    """Extensions to Maya Reference node.
+
+    Manages the Referenced ASS files in the current scene.
+
+    This class helps converting references to ASS files and vice versa.
+    """
+
+    @extends(FileReference)
+    def to_ass(self):
+        """Loads the ass version.
+
+        Finds the related Stalker version of this reference, and replaces the
+        path of this reference with the latest ASS take of the same task and
+        take.
+        """
+        # create a temp maya env
+        mEnv = Maya()
+        ver = mEnv.get_version_from_full_path(self.path)
+
+        if ver is None:
+            return
+
+        from stalker import Version
+        assert isinstance(ver, Version)
+        # try to get the version with {{take}}_ASS
+        task = ver.task
+        ass_take = '%s_ASS' % ver.take_name
+        # do a quick query
+        ass_version = Version.query\
+            .filter(Version.task == task)\
+            .filter(Version.take_name == ass_take).first()
+
+        if ass_version is None:
+            return
+
+        assert isinstance(ass_version, Version)
+
+        latest_ass_version = ass_version.latest_published_version
+        if latest_ass_version is None:
+            return
+
+        self.replaceWith(latest_ass_version.absolute_full_path)
+
+    @extends(FileReference)
+    def to_original(self):
+        """Loads the original version
+        """
+        # create a temp maya env
+        mEnv = Maya()
+        ver = mEnv.get_version_from_full_path(self.path)
+
+        if ver is None:
+            return
+
+        from stalker import Version
+        assert isinstance(ver, Version)
+        # try to get the version with {{take}}_ASS
+        task = ver.task
+        if '_ASS' not in ver.take_name:
+            return
+
+        original_take = ver.take_name.replace('_ASS', '')
+
+        # do a quick query
+        original_version = Version.query\
+            .filter(Version.task == task)\
+            .filter(Version.take_name == original_take).first()
+
+        if original_version is None:
+            return
+
+        assert isinstance(original_version, Version)
+
+        latest_original_version = original_version.latest_published_version
+        if latest_original_version is None:
+            return
+
+        self.replaceWith(latest_original_version.absolute_full_path)
 
 
 class Maya(EnvironmentBase):
