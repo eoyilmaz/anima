@@ -1485,14 +1485,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 current_version = prev_vers
 
             # update to a new version if present
-            if not current_version.is_latest_published_version():
-                latest_published_version = \
-                    current_version.latest_published_version
+            if current_version in reference_resolution['update']:
+                if not current_version.is_latest_published_version():
+                    latest_published_version = \
+                        current_version.latest_published_version
 
-                # replace the current reference with this one
-                current_ref.replaceWith(
-                    latest_published_version.absolute_full_path
-                )
+                    # replace the current reference with this one
+                    current_ref.replaceWith(
+                        latest_published_version.absolute_full_path
+                    )
 
             # get any reference under it and append to the list
             references_list.extend(

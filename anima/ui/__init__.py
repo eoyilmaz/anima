@@ -13,7 +13,7 @@ PYQT4 = 'PyQt4'
 
 # set the default
 qt_lib_key = "QT_LIB"
-qt_lib = PYQT4
+qt_lib = PYSIDE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

@@ -7,7 +7,7 @@
 import logging
 import re
 
-from stalker import Task, Project, defaults
+from stalker import defaults, Task, Project
 
 from anima.ui.lib import QtGui, QtCore
 
@@ -64,6 +64,92 @@ class VersionItem(QtGui.QStandardItem):
             'VersionItem.canFetchMore() is finished for item: %s' % self.text())
         return return_value
 
+    @classmethod
+    def generate_version_row(cls, parent, pseudo_model, version):
+        """Generates a new version row
+
+        :return:
+        """
+        # column 0
+        version_item = VersionItem(0, 0)
+        version_item.parent = parent
+        version_item.pseudo_model = pseudo_model
+
+        version_item.version = version
+        version_item.setEditable(False)
+        reference_resolution = pseudo_model.reference_resolution
+
+        if version in reference_resolution['update'] \
+           or version in reference_resolution['create']:
+            font_color = QtGui.QColor(192, 0, 0)
+            checkable = True
+            check_state = QtCore.Qt.Checked
+        else:
+            font_color = QtGui.QColor(0, 192, 0)
+            checkable = False
+            check_state = QtCore.Qt.Unchecked
+
+        version_item.setCheckable(checkable)
+        version_item.setCheckState(check_state)
+
+        set_item_color(version_item, font_color)
+
+        # thumbnail
+        thumbnail_item = QtGui.QStandardItem()
+        thumbnail_item.setEditable(False)
+        # thumbnail_item.setText('no thumbnail')
+        set_item_color(thumbnail_item, font_color)
+
+        # Nice Name
+        nice_name_item = QtGui.QStandardItem()
+        nice_name_item.toolTip()
+        nice_name_item.setText(
+            '%s_v%s' % (
+                version.nice_name,
+                ('%s' % version.version_number).zfill(3)
+            )
+        )
+        nice_name_item.setEditable(False)
+        set_item_color(nice_name_item, font_color)
+
+        # Take
+        take_item = QtGui.QStandardItem()
+        take_item.setEditable(False)
+        take_item.setText(version.take_name)
+        set_item_color(take_item, font_color)
+
+        # Current
+        current_version_item = QtGui.QStandardItem()
+        current_version_item.setText('%s' % version.version_number)
+        current_version_item.setEditable(False)
+        set_item_color(current_version_item, font_color)
+
+        # Latest
+        latest_published_version = version.latest_published_version
+
+        latest_published_version_item = QtGui.QStandardItem()
+        latest_published_version_item.setEditable(False)
+
+        latest_published_version_text = 'No Published Version'
+        if latest_published_version:
+            latest_published_version_text = '%s' % \
+                latest_published_version.version_number
+        latest_published_version_item.setText(
+            latest_published_version_text
+        )
+        set_item_color(latest_published_version_item, font_color)
+
+        # Description
+        description_item = QtGui.QStandardItem()
+        if latest_published_version:
+            description_item.setText(latest_published_version.description)
+        description_item.setEditable(False)
+        set_item_color(description_item, font_color)
+
+        return [version_item, thumbnail_item, nice_name_item, take_item,
+                current_version_item, latest_published_version_item,
+                description_item]
+
     def fetchMore(self):
         logger.debug(
             'VersionItem.fetchMore() is started for item: %s' % self.text())
@@ -72,88 +158,9 @@ class VersionItem(QtGui.QStandardItem):
             # model = self.model() # This will cause a SEGFAULT
             versions = sorted(self.version.inputs, key=lambda x: x.full_path)
 
-            # TODO: Please, please, please "Do not Repeat Yourself", use the existing code
             for version in versions:
-                version_item = VersionItem()
-                version_item.parent = self
-                version_item.version = version
-                version_item.setEditable(False)
-                version_item.pseudo_model = self.pseudo_model
-
-                # set the font
-                # name_item = QtGui.QStandardItem(task.name)
-                # entity_type_item = QtGui.QStandardItem(task.entity_type)
-                # task_item.setItem(0, 0, name_item)
-                # task_item.setItem(0, 1, entity_type_item)
-                #version_item.setCheckable(True)
-                if version in self.pseudo_model.reference_resolution['update']:
-                    font_color = QtGui.QColor(192, 0, 0)
-                    action = 'update'
-                elif version in self.pseudo_model.reference_resolution['create']:
-                    font_color = QtGui.QColor(192, 0, 0)
-                    action = 'create'
-                else:
-                    font_color = QtGui.QColor(0, 192, 0)
-                    action = ''
-
-                # my_font = version_item.font()
-                #my_font.setBold(True)
-                # assert isinstance(my_font, QtGui.QFont)
-                # my_font.setStyle('color: %s' % font_color)
-                set_item_color(version_item, font_color)
-
-                # CheckBox
-
-                # thumbnail
-                thumbnail_item = QtGui.QStandardItem()
-                thumbnail_item.setEditable(False)
-                # thumbnail_item.setText('no thumbnail')
-                set_item_color(thumbnail_item, font_color)
-
-                # Task
-                nice_name_item = QtGui.QStandardItem()
-                nice_name_item.setEditable(False)
-                nice_name_item.setText(
-                    '%s_%s_v%s' % (
-                        version.task.project.code, version.nice_name,
-                        ('%s' % version.version_number).zfill(3)
-                    )
-                )
-                set_item_color(nice_name_item, font_color)
-
-                # Take
-                take_item = QtGui.QStandardItem()
-                take_item.setEditable(False)
-                take_item.setText(version.take_name)
-                set_item_color(take_item, font_color)
-
-                # Current
-                current_version_item = QtGui.QStandardItem()
-                current_version_item.setText('%s' % version.version_number)
-                current_version_item.setEditable(False)
-                set_item_color(current_version_item, font_color)
-
-                # Latest
-                latest_published_version_item = \
-                    QtGui.QStandardItem()
-                latest_published_version_item.setEditable(False)
-                latest_published_version_item.setText(
-                    '%s' % version.latest_published_version.version_number
-                )
-                set_item_color(latest_published_version_item, font_color)
-
-                # Action
-                action_item = QtGui.QStandardItem()
-                action_item.setEditable(False)
-                action_item.setText(action)
-                set_item_color(action_item, font_color)
-
                 self.appendRow(
-                    [
-                        version_item, thumbnail_item, nice_name_item, take_item,
-                        current_version_item, latest_published_version_item,
-                        action_item
-                    ]
+                    self.generate_version_row(self, self.pseudo_model, version)
                 )
 
             self.fetched_all = True
@@ -176,12 +183,13 @@ class VersionTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the version hierarchy
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, flat_view=False, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
         logger.debug('VersionTreeModel.__init__() is started')
         self.root = None
         self.root_versions = []
         self.reference_resolution = None
+        self.flat_view = flat_view
         logger.debug('VersionTreeModel.__init__() is finished')
 
     def populateTree(self, versions):
@@ -191,103 +199,13 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         self.setColumnCount(6)
         self.setHorizontalHeaderLabels(
             ['Do Update?', 'Thumbnail', 'Task', 'Take', 'Current', 'Latest',
-             'Action']
+             'Notes']
         )
 
-        logger.debug('root_versions: %s' % versions)
-
         self.root_versions = versions
-        for version in self.root_versions:
-            # column 0
-            version_item = VersionItem()
-            version_item.parent = None
-            version_item.version = version
-            version_item.pseudo_model = self
-            version_item.setEditable(False)
-            version_item.setCheckable(True)
-            version_item.setCheckState(QtCore.Qt.CheckState.Checked)
-
-            if version in self.reference_resolution['update']:
-                font_color = QtGui.QColor(192, 0, 0)
-                action = 'update'
-            elif version in self.reference_resolution['create']:
-                font_color = QtGui.QColor(192, 0, 0)
-                action = 'create'
-            else:
-                font_color = QtGui.QColor(0, 192, 0)
-                action = ''
-
-            # set the font
-            # project_item.setText(0, entity.name)
-            # project_item.setText(1, entity.entity_type)
-            # name_item = QtGui.QStandardItem()
-            # name_item.setText(project.name)
-            # entity_type_item = QtGui.QStandardItem()
-            # entity_type_item.setText(project.entity_type)
-            # project_item.appendColumn([name_item, entity_type_item])
-
-            # Set Font
-            my_font = version_item.font()
-            # my_font.setBold(True)
-            version_item.setFont(my_font)
-            set_item_color(version_item, font_color)
-
-            # thumbnail
-            thumbnail_item = QtGui.QStandardItem()
-            # thumbnail_item.setText('no thumbnail')
-            thumbnail_item.setEditable(False)
-            set_item_color(thumbnail_item, font_color)
-
-            # Nice Name
-            nice_name_item = QtGui.QStandardItem()
-            nice_name_item.toolTip()
-            nice_name_item.setText(
-                '%s_%s_v%s' % (
-                    version.task.project.code, version.nice_name,
-                    ('%s' % version.version_number).zfill(3)
-                )
-            )
-            nice_name_item.setEditable(False)
-            set_item_color(nice_name_item, font_color)
-
-            # Take
-            take_item = QtGui.QStandardItem()
-            take_item.setText(version.take_name)
-            take_item.setEditable(False)
-            set_item_color(take_item, font_color)
-
-            # Current
-            current_version_item = QtGui.QStandardItem()
-            current_version_item.setText('%s' % version.version_number)
-            current_version_item.setEditable(False)
-            set_item_color(current_version_item, font_color)
-
-            # Latest
-            latest_published_version_item = \
-                QtGui.QStandardItem()
-            latest_published_version_item.setEditable(False)
-
-            latest_published_version_text = 'No Published Version'
-            if version.latest_published_version:
-                latest_published_version_text = '%s' % \
-                    version.latest_published_version.version_number
-            latest_published_version_item.setText(
-                latest_published_version_text
-            )
-            set_item_color(latest_published_version_item, font_color)
-
-            # Action
-            action_item = QtGui.QStandardItem()
-            action_item.setText(action)
-            action_item.setEditable(False)
-            set_item_color(action_item, font_color)
-
+        for version in versions:
             self.appendRow(
-                [
-                    version_item, thumbnail_item, nice_name_item, take_item,
-                    current_version_item, latest_published_version_item,
-                    action_item
-                ]
+                VersionItem.generate_version_row(None, self, version)
             )
 
         logger.debug('VersionTreeModel.populateTree() is finished')
@@ -308,28 +226,35 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         """fetches more elements
         """
         logger.debug(
-            'VersionTreeModel.canFetchMore() is started for index: %s' % index)
+            'VersionTreeModel.canFetchMore() is started for index: %s' % index
+        )
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
         logger.debug(
-            'VersionTreeModel.canFetchMore() is finished for index: %s' % index)
+            'VersionTreeModel.canFetchMore() is finished for index: %s' % index
+        )
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
         logger.debug(
-            'VersionTreeModel.hasChildren() is started for index: %s' % index)
+            'VersionTreeModel.hasChildren() is started for index: %s' % index
+        )
         if not index.isValid():
             return_value = len(self.root_versions) > 0
         else:
-            item = self.itemFromIndex(index)
-            return_value = False
-            if item:
-                return_value = item.hasChildren()
+            if self.flat_view:
+                return False
+            else:
+                item = self.itemFromIndex(index)
+                return_value = False
+                if item:
+                    return_value = item.hasChildren()
         logger.debug(
-            'VersionTreeModel.hasChildren() is finished for index: %s' % index)
+            'VersionTreeModel.hasChildren() is finished for index: %s' % index
+        )
         return return_value
 
 
