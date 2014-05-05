@@ -4958,12 +4958,8 @@ class ReferenceToAssTestCase(MayaTestBase):
         """testing if FileReference.to_ass() is working properly
         """
         # reference version1 to the scene
-        self.maya_env.reference(self.version1)
+        ref = self.maya_env.reference(self.version1)
 
-        # check reference
-        refs = pymel.core.listReferences()
-
-        ref = refs[0]
         self.assertEqual(ref.path, self.version1.absolute_full_path)
         # now invoke to_ass on the FileReference node
         ref.to_ass()
@@ -4975,15 +4971,41 @@ class ReferenceToAssTestCase(MayaTestBase):
         """testing if FileReference.to_original() is working properly
         """
         # reference version1 to the scene
-        self.maya_env.reference(self.ass_version1)
+        ref = self.maya_env.reference(self.ass_version1)
 
-        # check reference
-        refs = pymel.core.listReferences()
-
-        ref = refs[0]
         self.assertEqual(ref.path, self.ass_version1.absolute_full_path)
         # now invoke to_ass on the FileReference node
         ref.to_original()
 
         # and expect its path to be replaced with self.ass_version3
         self.assertEqual(ref.path, self.version3.absolute_full_path)
+
+    def test_has_ass_is_working_properly(self):
+        """testing if FileReference.has_ass() is working properly
+        """
+        # reference version1 to the scene
+        ref1 = self.maya_env.reference(self.version1)
+        ref2 = self.maya_env.reference(self.version40)  # which has no ASS
+        self.assertEqual(ref1.path, self.version1.absolute_full_path)
+
+        # now check has_ass
+        self.assertTrue(ref1.has_ass())
+        self.assertFalse(ref2.has_ass())
+
+    def test_is_ass_is_working_properly(self):
+        """testing if FileReference.is_ass() is working properly
+        """
+        # reference version1 to the scene
+        ref1 = self.maya_env.reference(self.version1)
+        ref2 = self.maya_env.reference(self.version40)  # which has no ASS
+        self.assertEqual(ref1.path, self.version1.absolute_full_path)
+
+        self.assertFalse(ref1.is_ass())
+        self.assertFalse(ref2.is_ass())
+
+        ref1.to_ass()
+        ref2.to_ass()
+
+        self.assertTrue(ref1.is_ass())
+        self.assertFalse(ref2.is_ass())
+

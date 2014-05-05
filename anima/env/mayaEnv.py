@@ -87,6 +87,57 @@ class ReferenceExtension(object):
     """
 
     @extends(FileReference)
+    def has_ass(self):
+        """Checks if the reference has a related ASS take
+
+        :return: bool
+        """
+        # create a temp maya env
+        mEnv = Maya()
+        ver = mEnv.get_version_from_full_path(self.path)
+
+        if ver is None:
+            return
+
+        from stalker import Version
+        # try to get the version with {{take}}_ASS
+        task = ver.task
+        ass_take = '%s_ASS' % ver.take_name
+
+        # do a quick query
+        ass_version = Version.query\
+            .filter(Version.task == task)\
+            .filter(Version.take_name == ass_take).first()
+
+        if ass_version is None:
+            return False
+
+        latest_ass_version = ass_version.latest_published_version
+        if latest_ass_version is None:
+            return False
+
+        return True
+
+    @extends(FileReference)
+    def is_ass(self):
+        """Checks if the reference is an ASS version
+
+        :return: bool
+        """
+        # create a temp maya env
+        mEnv = Maya()
+        ver = mEnv.get_version_from_full_path(self.path)
+
+        if ver is None:
+            return
+
+        # try to get the version with {{take}}_ASS
+        if '_ASS' in ver.take_name:
+            return True
+        else:
+            return False
+
+    @extends(FileReference)
     def to_ass(self):
         """Loads the ass version.
 
@@ -102,10 +153,10 @@ class ReferenceExtension(object):
             return
 
         from stalker import Version
-        assert isinstance(ver, Version)
         # try to get the version with {{take}}_ASS
         task = ver.task
         ass_take = '%s_ASS' % ver.take_name
+
         # do a quick query
         ass_version = Version.query\
             .filter(Version.task == task)\
@@ -113,8 +164,6 @@ class ReferenceExtension(object):
 
         if ass_version is None:
             return
-
-        assert isinstance(ass_version, Version)
 
         latest_ass_version = ass_version.latest_published_version
         if latest_ass_version is None:
@@ -134,7 +183,6 @@ class ReferenceExtension(object):
             return
 
         from stalker import Version
-        assert isinstance(ver, Version)
         # try to get the version with {{take}}_ASS
         task = ver.task
         if '_ASS' not in ver.take_name:
@@ -149,8 +197,6 @@ class ReferenceExtension(object):
 
         if original_version is None:
             return
-
-        assert isinstance(original_version, Version)
 
         latest_original_version = original_version.latest_published_version
         if latest_original_version is None:
@@ -540,6 +586,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :param version: The desired
           :class:`~stalker.models.version.Version` instance to be
           referenced.
+        :return: :class:`~pymel.core.system.FileReference`
         """
         # use the file name without extension as the namespace
         namespace = os.path.basename(version.nice_name)
@@ -577,7 +624,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # also update version.inputs for the referenced input
         self.update_version_inputs(ref)
 
-        return True
+        return ref
 
     def get_version_from_workspace(self):
         """Tries to find a version from the current workspace path
