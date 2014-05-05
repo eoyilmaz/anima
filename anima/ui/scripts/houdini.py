@@ -3,7 +3,12 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.ui import SET_PYQT4
+SET_PYQT4()
+
 from anima.ui.scripts import do_db_setup
+
+
 import logging
 
 
@@ -15,9 +20,6 @@ def version_creator():
 
     from stalker import log
     log.logging_level = logging.WARNING
-
-    from anima.ui import SET_PYQT4
-    SET_PYQT4()
 
     from anima.ui import version_creator
     from anima.env import houdini

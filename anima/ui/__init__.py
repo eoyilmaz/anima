@@ -21,16 +21,20 @@ logger.setLevel(logging.DEBUG)
 if os.environ.has_key(qt_lib_key):
     qt_lib = os.environ[qt_lib_key]
 
+
 def IS_PYSIDE():
     return qt_lib == PYSIDE
 
+
 def IS_PYQT4():
     return qt_lib == PYQT4
+
 
 def SET_PYSIDE():
     logger.debug('setting environment to PySide')
     global qt_lib
     qt_lib = PYSIDE
+
 
 def SET_PYQT4():
     logger.debug('setting environment to PyQt4')

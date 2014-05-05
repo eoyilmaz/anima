@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-# if IS_PYSIDE():
-from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
-# elif IS_PYQT4():
-#     from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
+if IS_PYSIDE():
+    from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
+elif IS_PYQT4():
+    from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):
