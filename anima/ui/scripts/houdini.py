@@ -16,6 +16,9 @@ def version_creator():
     from stalker import log
     log.logging_level = logging.WARNING
 
+    from anima.ui import SET_PYQT4
+    SET_PYQT4()
+
     from anima.ui import version_creator
     from anima.env import houdini
     reload(houdini)
