@@ -17,10 +17,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
+# if IS_PYSIDE():
+from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
+# elif IS_PYQT4():
+#     from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -91,8 +91,8 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 # there is no version so warn the user
                 error_message = 'Please save the current scene with Version ' \
                                 'Creator first!!!'
-                QtGui.QMessageBox.critical(
-                    self,
+                message_box = QtGui.QMessageBox(self)
+                message_box.critical(
                     "Error",
                     error_message,
                     QtGui.QMessageBox.Ok
@@ -164,9 +164,11 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('start filling versions_treeView')
         logger.debug('creating a new model')
 
-        version_tree_model = VersionTreeModel()
+        version_tree_model = VersionTreeModel(flat_view=True)
         version_tree_model.reference_resolution = self.reference_resolution
-        version_tree_model.populateTree(self.reference_resolution['root'])
+
+        # populate with all update items
+        version_tree_model.populateTree(self.reference_resolution['update'])
 
         self.versions_treeView.setModel(version_tree_model)
 
@@ -188,16 +190,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         """
         # set the row count
         self.fill_versions_treeView()
-
-        # if len(unpublished_versions):
-        #     QtGui.QMessageBox.warning(
-        #         self,
-        #         "Warning",
-        #         "The following references have no published versions:\n\n" +
-        #         "\n".join([vers.filename for vers in unpublished_versions]) +
-        #         "\n\nPlease publish them and re-open the current file.",
-        #         QtGui.QMessageBox.Ok
-        #     )
 
     def _select_all_versions(self):
         """selects all the versions in the tableWidget
@@ -224,66 +216,32 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         # send them back to environment
         try:
-            self.new_versions = \
-                self.environment.update_versions(reference_resolution)
+            self.environment.update_versions(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
-            QtGui.QMessageBox.critical(self, "Error", str(e))
+            message_box = QtGui.QMessageBox(self)
+            message_box.critical("Error", str(e))
             return
-
-        logged_in_user = self.get_logged_in_user()
-        if logged_in_user:
-            from stalker import db
-            for v in self.new_versions:
-                v.created_by = logged_in_user
-                db.DBSession.add(v)
-            db.DBSession.commit()
 
         # close the interface
         self.close()
 
     def generate_reference_resolution(self):
-        """Generates a reference_resolution dictionary from the UI
-
-        Modifies a copy of the original reference_resolution dictionary
+        """Generates a new reference_resolution dictionary from the UI
 
         :return: dictionary
         """
-        import copy
-        generated_reference_resolution = copy.copy(self.reference_resolution)
+        generated_reference_resolution = empty_reference_resolution()
 
-        # get the checkState of the first level ModelItems
-        # remove anything under it from the reference_resolution list
+        # append anything that is checked
 
         version_tree_model = self.versions_treeView.model()
-
-        def remove_version(ver):
-            try:
-                generated_reference_resolution['leave'].remove(ver)
-            except ValueError:
-                pass
-
-            try:
-                generated_reference_resolution['update'].remove(ver)
-            except ValueError:
-                pass
-
-            try:
-                generated_reference_resolution['create'].remove(ver)
-            except ValueError:
-                pass
-
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
             version_item = version_tree_model.itemFromIndex(index)
-            if version_item.checkState() == QtCore.Qt.CheckState.Unchecked:
+            if version_item.checkState() == QtCore.Qt.Checked:
                 version = version_item.version
-                # remove it from the generated_reference_resolution
-                remove_version(version)
-
-                # and all decedents
-                for v in walk_version_hierarchy(version):
-                    remove_version(v)
+                generated_reference_resolution['update'].append(version)
 
         return generated_reference_resolution
 

@@ -24,6 +24,23 @@ class MayaTestBase(unittest2.TestCase):
     """The base class for Maya Tests
     """
 
+    def create_version(self, task, take_name):
+        """A helper method for creating a new version
+
+        :param task: the task
+        :param take_name: the take_name name
+        :return: the version
+        """
+        # just renew the scene
+        pymel.core.newFile(force=True)
+
+        v = Version(task=task, take_name=take_name)
+        db.DBSession.add(v)
+        self.maya_env.save_as(v)
+
+        return v
+
+
     @classmethod
     def setUpClass(cls):
         """setup in class level
@@ -242,92 +259,77 @@ class MayaTestBase(unittest2.TestCase):
         # create the environment instance
         self.maya_env = Maya()
 
-        # now create versions
-        def create_version(task, take_name):
-            """Creates a new version
-            :param task: the task
-            :param take_name: the take_name name
-            :return: the version
-            """
-            # just renew the scene
-            pymel.core.newFile(force=True)
-
-            v = Version(task=task, take_name=take_name)
-            db.DBSession.add(v)
-            self.maya_env.save_as(v)
-            return v
-
         # asset2
-        self.version1 = create_version(self.asset2, 'Main')
-        self.version2 = create_version(self.asset2, 'Main')
-        self.version3 = create_version(self.asset2, 'Main')
+        self.version1 = self.create_version(self.asset2, 'Main')
+        self.version2 = self.create_version(self.asset2, 'Main')
+        self.version3 = self.create_version(self.asset2, 'Main')
 
-        self.version4 = create_version(self.asset2, 'Take1')
-        self.version5 = create_version(self.asset2, 'Take1')
-        self.version6 = create_version(self.asset2, 'Take1')
+        self.version4 = self.create_version(self.asset2, 'Take1')
+        self.version5 = self.create_version(self.asset2, 'Take1')
+        self.version6 = self.create_version(self.asset2, 'Take1')
 
         # task5
-        self.version7 = create_version(self.task5, 'Main')
-        self.version8 = create_version(self.task5, 'Main')
-        self.version9 = create_version(self.task5, 'Main')
+        self.version7 = self.create_version(self.task5, 'Main')
+        self.version8 = self.create_version(self.task5, 'Main')
+        self.version9 = self.create_version(self.task5, 'Main')
 
-        self.version10 = create_version(self.task5, 'Take1')
-        self.version11 = create_version(self.task5, 'Take1')
-        self.version12 = create_version(self.task5, 'Take1')
+        self.version10 = self.create_version(self.task5, 'Take1')
+        self.version11 = self.create_version(self.task5, 'Take1')
+        self.version12 = self.create_version(self.task5, 'Take1')
 
         # task6
-        self.version13 = create_version(self.task6, 'Main')
-        self.version14 = create_version(self.task6, 'Main')
-        self.version15 = create_version(self.task6, 'Main')
+        self.version13 = self.create_version(self.task6, 'Main')
+        self.version14 = self.create_version(self.task6, 'Main')
+        self.version15 = self.create_version(self.task6, 'Main')
 
-        self.version16 = create_version(self.task6, 'Take1')
-        self.version17 = create_version(self.task6, 'Take1')
-        self.version18 = create_version(self.task6, 'Take1')
+        self.version16 = self.create_version(self.task6, 'Take1')
+        self.version17 = self.create_version(self.task6, 'Take1')
+        self.version18 = self.create_version(self.task6, 'Take1')
 
         # shot3
-        self.version19 = create_version(self.shot3, 'Main')
-        self.version20 = create_version(self.shot3, 'Main')
-        self.version21 = create_version(self.shot3, 'Main')
+        self.version19 = self.create_version(self.shot3, 'Main')
+        self.version20 = self.create_version(self.shot3, 'Main')
+        self.version21 = self.create_version(self.shot3, 'Main')
 
-        self.version22 = create_version(self.shot3, 'Take1')
-        self.version23 = create_version(self.shot3, 'Take1')
-        self.version24 = create_version(self.shot3, 'Take1')
+        self.version22 = self.create_version(self.shot3, 'Take1')
+        self.version23 = self.create_version(self.shot3, 'Take1')
+        self.version24 = self.create_version(self.shot3, 'Take1')
 
         # task3
-        self.version25 = create_version(self.task3, 'Main')
-        self.version26 = create_version(self.task3, 'Main')
-        self.version27 = create_version(self.task3, 'Main')
+        self.version25 = self.create_version(self.task3, 'Main')
+        self.version26 = self.create_version(self.task3, 'Main')
+        self.version27 = self.create_version(self.task3, 'Main')
 
-        self.version28 = create_version(self.task3, 'Take1')
-        self.version29 = create_version(self.task3, 'Take1')
-        self.version30 = create_version(self.task3, 'Take1')
+        self.version28 = self.create_version(self.task3, 'Take1')
+        self.version29 = self.create_version(self.task3, 'Take1')
+        self.version30 = self.create_version(self.task3, 'Take1')
 
         # asset1
-        self.version31 = create_version(self.asset1, 'Main')
-        self.version32 = create_version(self.asset1, 'Main')
-        self.version33 = create_version(self.asset1, 'Main')
+        self.version31 = self.create_version(self.asset1, 'Main')
+        self.version32 = self.create_version(self.asset1, 'Main')
+        self.version33 = self.create_version(self.asset1, 'Main')
 
-        self.version34 = create_version(self.asset1, 'Take1')
-        self.version35 = create_version(self.asset1, 'Take1')
-        self.version36 = create_version(self.asset1, 'Take1')
+        self.version34 = self.create_version(self.asset1, 'Take1')
+        self.version35 = self.create_version(self.asset1, 'Take1')
+        self.version36 = self.create_version(self.asset1, 'Take1')
 
         # shot2
-        self.version37 = create_version(self.shot2, 'Main')
-        self.version38 = create_version(self.shot2, 'Main')
-        self.version39 = create_version(self.shot2, 'Main')
+        self.version37 = self.create_version(self.shot2, 'Main')
+        self.version38 = self.create_version(self.shot2, 'Main')
+        self.version39 = self.create_version(self.shot2, 'Main')
 
-        self.version40 = create_version(self.shot2, 'Take1')
-        self.version41 = create_version(self.shot2, 'Take1')
-        self.version42 = create_version(self.shot2, 'Take1')
+        self.version40 = self.create_version(self.shot2, 'Take1')
+        self.version41 = self.create_version(self.shot2, 'Take1')
+        self.version42 = self.create_version(self.shot2, 'Take1')
 
         # shot1
-        self.version43 = create_version(self.shot1, 'Main')
-        self.version44 = create_version(self.shot1, 'Main')
-        self.version45 = create_version(self.shot1, 'Main')
+        self.version43 = self.create_version(self.shot1, 'Main')
+        self.version44 = self.create_version(self.shot1, 'Main')
+        self.version45 = self.create_version(self.shot1, 'Main')
 
-        self.version46 = create_version(self.shot1, 'Take1')
-        self.version47 = create_version(self.shot1, 'Take1')
-        self.version48 = create_version(self.shot1, 'Take1')
+        self.version46 = self.create_version(self.shot1, 'Take1')
+        self.version47 = self.create_version(self.shot1, 'Take1')
+        self.version48 = self.create_version(self.shot1, 'Take1')
 
         # +- task1
         # |  |
@@ -4909,3 +4911,79 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
         pymel.core.saveFile()
+
+
+class ReferenceToAssTestCase(MayaTestBase):
+    """tests the reference file to ass integration
+    """
+
+    def setUp(self):
+        """additional setup
+        """
+        # call the supers setUp first
+        super(ReferenceToAssTestCase, self).setUp()
+
+        # now do your addition
+        # create ass take for asset2
+        self.ass_version1 = self.create_version(self.asset2, 'Main_ASS')
+        self.ass_version2 = self.create_version(self.asset2, 'Main_ASS')
+        self.ass_version3 = self.create_version(self.asset2, 'Main_ASS')
+
+        self.ass_version4 = self.create_version(self.asset2, 'Take1_ASS')
+        self.ass_version5 = self.create_version(self.asset2, 'Take1_ASS')
+        self.ass_version6 = self.create_version(self.asset2, 'Take1_ASS')
+
+        self.ass_version3.is_published = True
+        self.version1.is_published = True
+        self.version3.is_published = True
+
+        self.ass_version6.is_published = True
+        db.DBSession.commit()
+
+        pymel.core.newFile(force=True)
+
+    def test_FileReference_class_has_to_ass_method(self):
+        """testing if FileReference has a to_ass() method
+        """
+        from pymel.core.system import FileReference
+        self.assertTrue(hasattr(FileReference, 'to_ass'))
+
+    def test_FileReference_class_has_to_original_method(self):
+        """testing if FileReference has a to_original() method
+        """
+        from pymel.core.system import FileReference
+        self.assertTrue(hasattr(FileReference, 'to_original'))
+
+    def test_to_ass_is_working_properly(self):
+        """testing if FileReference.to_ass() is working properly
+        """
+        # reference version1 to the scene
+        self.maya_env.reference(self.version1)
+
+        # check reference
+        refs = pymel.core.listReferences()
+
+        ref = refs[0]
+        self.assertEqual(ref.path, self.version1.absolute_full_path)
+        # now invoke to_ass on the FileReference node
+        ref.to_ass()
+
+        # and expect its path to be replaced with self.ass_version3
+        self.assertEqual(ref.path, self.ass_version3.absolute_full_path)
+
+    def test_to_original_is_working_properly(self):
+        """testing if FileReference.to_original() is working properly
+        """
+        # reference version1 to the scene
+        self.maya_env.reference(self.ass_version1)
+
+        # check reference
+        refs = pymel.core.listReferences()
+
+        ref = refs[0]
+        self.assertEqual(ref.path, self.ass_version1.absolute_full_path)
+        # now invoke to_ass on the FileReference node
+        ref.to_original()
+
+        # and expect its path to be replaced with self.ass_version3
+        self.assertEqual(ref.path, self.version3.absolute_full_path)

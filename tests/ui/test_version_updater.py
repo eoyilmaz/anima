@@ -299,6 +299,7 @@ class VersionUpdaterTester(unittest2.TestCase):
         self.version1 = create_version(self.asset2, 'Main')
         self.version2 = create_version(self.asset2, 'Main')
         self.version3 = create_version(self.asset2, 'Main')
+        self.version3.description = 'Test Description'
 
         self.version4 = create_version(self.asset2, 'Take1')
         self.version5 = create_version(self.asset2, 'Take1')
@@ -577,27 +578,18 @@ class VersionUpdaterTester(unittest2.TestCase):
             visited_versions
         )
 
-    def test_versions_treeView_displays_the_root_versions_correctly(self):
-        """testing if versions_treeView is displaying the root versions
-        correctly
+    def test_versions_treeView_displays_all_versions_correctly(self):
+        """testing if versions_treeView is displaying all the versions as a
+        flat list
         """
-        # self.show_dialog(self.dialog)
+        #self.show_dialog(self.dialog)
 
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
         row_count = version_tree_model.rowCount()
-        self.assertEqual(2, row_count)
+        self.assertEqual(1, row_count)
 
-        # check if we have all items
-        index = version_tree_model.index(0, 0)
-        version12_item = version_tree_model.itemFromIndex(index)
-        self.assertEqual(version12_item.version, self.version12)
-
-        index = version_tree_model.index(1, 0)
-        version45_item = version_tree_model.itemFromIndex(index)
-        self.assertEqual(version45_item.version, self.version45)
-
-    def test_versions_treeView_displays_the_version_hierarchy_correctly(self):
+    def test_versions_treeView_displays_the_root_versions_correctly(self):
         """testing if versions_treeView is displaying the root versions
         correctly
         """
@@ -606,25 +598,10 @@ class VersionUpdaterTester(unittest2.TestCase):
 
         # check if we have all items
         index = version_tree_model.index(0, 0)
-        version12_item = version_tree_model.itemFromIndex(index)
-
-        index = version_tree_model.index(1, 0)
-        version45_item = version_tree_model.itemFromIndex(index)
-
-        # check deeper
-        self.dialog.versions_treeView.expand(version12_item.index())
-        version5_item = version12_item.child(0, 0)
-        self.assertEqual(version5_item.version, self.version5)
-
-        self.dialog.versions_treeView.expand(version5_item.index())
-        version2_item = version5_item.child(0, 0)
+        version2_item = version_tree_model.itemFromIndex(index)
         self.assertEqual(version2_item.version, self.version2)
 
-        self.dialog.versions_treeView.expand(version45_item.index())
-        version48_item = version45_item.child(0, 0)
-        self.assertEqual(version48_item.version, self.version48)
-
-    def test_versions_treeView_displays_the_version_hierarchy_colors_correctly(self):
+    def test_versions_treeView_displays_the_version_colors_correctly(self):
         """testing if versions_treeView is displaying the versions in correct
         colors
         """
@@ -633,71 +610,25 @@ class VersionUpdaterTester(unittest2.TestCase):
 
         # check if we have all items
         index = version_tree_model.index(0, 0)
-        version12_item = version_tree_model.itemFromIndex(index)
-
-        index = version_tree_model.index(1, 0)
-        version45_item = version_tree_model.itemFromIndex(index)
-
-        # check deeper
-        self.dialog.versions_treeView.expand(version12_item.index())
-        version5_item = version12_item.child(0, 0)
-
-        self.dialog.versions_treeView.expand(version5_item.index())
-        version2_item = version5_item.child(0, 0)
-
-        self.dialog.versions_treeView.expand(version45_item.index())
-        version48_item = version45_item.child(0, 0)
-
-        # version12
-        fg = version12_item.foreground()
-        color = fg.color()
-        self.assertEqual(color, QtGui.QColor(192, 0, 0))
-
-        # version5
-        fg = version5_item.foreground()
-        color = fg.color()
-        self.assertEqual(color, QtGui.QColor(192, 0, 0))
+        version2_item = version_tree_model.itemFromIndex(index)
 
         # version2
         fg = version2_item.foreground()
         color = fg.color()
         self.assertEqual(color, QtGui.QColor(192, 0, 0))
 
-        # version45
-        fg = version45_item.foreground()
-        color = fg.color()
-        self.assertEqual(color, QtGui.QColor(0, 192, 0))
-
-        # version48
-        fg = version48_item.foreground()
-        color = fg.color()
-        self.assertEqual(color, QtGui.QColor(0, 192, 0))
-
-    def test_versions_treeView_displays_the_version_hierarchy_labels_correctly(self):
-        """testing if versions_treeView is displaying the versions hierarchy
-        with correct labels
+    def test_versions_treeView_displays_the_version_labels_correctly(self):
+        """testing if versions_treeView is displaying the versions with correct
+        labels
         """
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
 
         # check if we have all items
         index = version_tree_model.index(0, 0)
-        version12_item = version_tree_model.itemFromIndex(index)
+        version2_item = version_tree_model.itemFromIndex(index)
 
-        index = version_tree_model.index(1, 0)
-        version45_item = version_tree_model.itemFromIndex(index)
-
-        # check deeper
-        self.dialog.versions_treeView.expand(version12_item.index())
-        version5_item = version12_item.child(0, 0)
-
-        self.dialog.versions_treeView.expand(version5_item.index())
-        version2_item = version5_item.child(0, 0)
-
-        self.dialog.versions_treeView.expand(version45_item.index())
-        version48_item = version45_item.child(0, 0)
-
-        # version12 columns
+        # version2 columns
         nice_name_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(0, 2))
         take_column_item = \
@@ -706,72 +637,15 @@ class VersionUpdaterTester(unittest2.TestCase):
             version_tree_model.itemFromIndex(version_tree_model.index(0, 4))
         latest_version_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(0, 5))
-        action_column_item = \
+        description_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(0, 6))
 
         self.assertEqual(nice_name_item.text(),
-                         'TP_Test_Task_1_Test_Task_5_Take1_v003')
-        self.assertEqual(take_column_item.text(), 'Take1')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), 'create')
-
-        # version5 columns
-        nice_name_item = version12_item.child(0, 2)
-        take_column_item = version12_item.child(0, 3)
-        current_version_column_item = version12_item.child(0, 4)
-        latest_version_column_item = version12_item.child(0, 5)
-        action_column_item = version12_item.child(0, 6)
-
-        self.assertEqual(nice_name_item.text(), 'TP_Asset_2_Take1_v002')
-        self.assertEqual(take_column_item.text(), 'Take1')
-        self.assertEqual(current_version_column_item.text(), '2')
-        self.assertEqual(latest_version_column_item.text(), '2')
-        self.assertEqual(action_column_item.text(), 'create')
-
-        # version2 columns
-        nice_name_item = version5_item.child(0, 2)
-        take_column_item = version5_item.child(0, 3)
-        current_version_column_item = version5_item.child(0, 4)
-        latest_version_column_item = version5_item.child(0, 5)
-        action_column_item = version5_item.child(0, 6)
-
-        self.assertEqual(nice_name_item.text(), 'TP_Asset_2_Main_v002')
+                         'Asset_2_Main_v002')
         self.assertEqual(take_column_item.text(), 'Main')
         self.assertEqual(current_version_column_item.text(), '2')
         self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), 'update')
-
-        # version45 columns
-        nice_name_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 2))
-        take_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 3))
-        current_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 4))
-        latest_version_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 5))
-        action_column_item = \
-            version_tree_model.itemFromIndex(version_tree_model.index(1, 6))
-
-        self.assertEqual(nice_name_item.text(), 'TP_SH001_Main_v003')
-        self.assertEqual(take_column_item.text(), 'Main')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), '')
-
-        # version48
-        nice_name_item = version45_item.child(0, 2)
-        take_column_item = version45_item.child(0, 3)
-        current_version_column_item = version45_item.child(0, 4)
-        latest_version_column_item = version45_item.child(0, 5)
-        action_column_item = version45_item.child(0, 6)
-
-        self.assertEqual(nice_name_item.text(), 'TP_SH001_Take1_v003')
-        self.assertEqual(take_column_item.text(), 'Take1')
-        self.assertEqual(current_version_column_item.text(), '3')
-        self.assertEqual(latest_version_column_item.text(), '3')
-        self.assertEqual(action_column_item.text(), '')
+        self.assertEqual(description_column_item.text(), 'Test Description')
 
     def test_all_the_root_version_items_check_state_is_True_by_default(self):
         """testing if all the check boxes for all the root items are already
@@ -780,20 +654,28 @@ class VersionUpdaterTester(unittest2.TestCase):
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
 
-        # check if we have all items
+        # check if we have only one item
         index = version_tree_model.index(0, 0)
         version12_item = version_tree_model.itemFromIndex(index)
-
-        index = version_tree_model.index(1, 0)
-        version45_item = version_tree_model.itemFromIndex(index)
 
         self.assertEqual(
             QtCore.Qt.CheckState.Checked,
             version12_item.checkState()
         )
+
+    def test_only_update_items_have_check_boxes(self):
+        """testing if there are checkboxes on the update items only
+        """
+        # check root rows
+        version_tree_model = self.dialog.versions_treeView.model()
+
+        # check if we have all items
+        index = version_tree_model.index(0, 0)
+        version2_item = version_tree_model.itemFromIndex(index)
+
         self.assertEqual(
             QtCore.Qt.CheckState.Checked,
-            version45_item.checkState()
+            version2_item.checkState()
         )
 
     def test_generate_reference_resolution_generate_a_new_reference_resolution_correctly(self):
@@ -803,49 +685,34 @@ class VersionUpdaterTester(unittest2.TestCase):
         """
         reference_resolution = self.dialog.generate_reference_resolution()
         self.assertEqual(
-            self.reference_resolution,
-            reference_resolution
+            {
+                'root': [],
+                'leave': [],
+                'update': [self.version2],
+                'create': []
+            },
+            reference_resolution,
         )
 
-        # now disable first version12_item
+        # now disable version2_item
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
 
         # check if we have all items
         index = version_tree_model.index(0, 0)
-        version12_item = version_tree_model.itemFromIndex(index)
+        version2_item = version_tree_model.itemFromIndex(index)
 
-        version12_item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        version2_item.setCheckState(QtCore.Qt.Unchecked)
         reference_resolution = self.dialog.generate_reference_resolution()
         self.assertEqual(
             {
-                'root': [self.version12, self.version45],
-                'leave': [self.version48, self.version45],
+                'root': [],
+                'leave': [],
                 'update': [],
                 'create': []
             },
             reference_resolution
         )
-
-    def test_update_versions_method_will_store_the_newly_created_Version_instances(self):
-        """testing if the update_versions method will store the newly created
-        versions in new_versions attribute
-        """
-        self.assertEqual(self.dialog.new_versions, [])
-        self.dialog.update_versions()
-        self.assertEqual(len(self.dialog.new_versions), 2)
-        for v in self.dialog.new_versions:
-            self.assertIsInstance(v, Version)
-
-    def test_update_verions_method_will_update_new_versions_created_by_attribute(self):
-        """testing if the update_versions method will update the created_by
-        attributes of the newly created versions
-        """
-        self.assertEqual(self.dialog.new_versions, [])
-        self.dialog.update_versions()
-        self.assertEqual(len(self.dialog.new_versions), 2)
-        for v in self.dialog.new_versions:
-            self.assertEqual(v.created_by, self.user1)
 
     def test_update_pushButton_will_call_environment_update_versions_method(self):
         """testing if update_pushButton will call
@@ -856,6 +723,8 @@ class VersionUpdaterTester(unittest2.TestCase):
             self.test_environment.test_data.__getitem__, 'update_versions'
         )
         # self.show_dialog(self.dialog)
+
+        self.assertIsInstance(self.dialog.update_pushButton, QtGui.QWidget)
 
         QTest.mouseClick(self.dialog.update_pushButton, Qt.LeftButton)
         #print self.test_environment.test_data
@@ -875,16 +744,11 @@ class VersionUpdaterTester(unittest2.TestCase):
         # check if we have all items
         index = version_tree_model.index(0, 0)
         version_item1 = version_tree_model.itemFromIndex(index)
-        version_item1.setCheckState(QtCore.Qt.CheckState.Checked)
-
-        index = version_tree_model.index(1, 0)
-        version_item2 = version_tree_model.itemFromIndex(index)
-        version_item2.setCheckState(QtCore.Qt.CheckState.Checked)
+        version_item1.setCheckState(QtCore.Qt.Checked)
 
         QTest.mouseClick(self.dialog.selectNone_pushButton, Qt.LeftButton)
 
         self.assertEqual(version_item1.checkState(), QtCore.Qt.Unchecked)
-        self.assertEqual(version_item2.checkState(), QtCore.Qt.Unchecked)
 
     def test_select_all_pushButton_will_select_all_check_boxes_when_clicked(self):
         """testing if select all pushButton will select all the check boxes
@@ -896,16 +760,11 @@ class VersionUpdaterTester(unittest2.TestCase):
         # check if we have all items
         index = version_tree_model.index(0, 0)
         version_item1 = version_tree_model.itemFromIndex(index)
-        version_item1.setCheckState(QtCore.Qt.CheckState.Unchecked)
-
-        index = version_tree_model.index(1, 0)
-        version_item2 = version_tree_model.itemFromIndex(index)
-        version_item2.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        version_item1.setCheckState(QtCore.Qt.Unchecked)
 
         QTest.mouseClick(self.dialog.selectAll_pushButton, Qt.LeftButton)
 
         self.assertEqual(version_item1.checkState(), QtCore.Qt.Checked)
-        self.assertEqual(version_item2.checkState(), QtCore.Qt.Checked)
 
     def test_init_will_fill_reference_resolution_if_it_is_empty_and_there_is_an_environment(self):
         """testing if the reference_resolution attribute will be filled by the
