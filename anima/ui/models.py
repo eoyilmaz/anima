@@ -25,6 +25,86 @@ def set_item_color(item, color):
     item.setForeground(foreground)
 
 
+class ButtonItemDelegate(QtGui.QStyledItemDelegate):
+    """A custom item delegate for button like function in rows
+    """
+
+    def __init__(self, button_column_index=0, text="Open...", *args, **kwargs):
+        super(ButtonItemDelegate, self).__init__(*args, **kwargs)
+        self.mouse_event_index_row = None
+        self.mouse_event_index_column = None
+        self.button_column_index = button_column_index
+        self.text = text
+        # self.model = None
+
+    def paint(self, painter, option, index):
+        """overridden paint method
+        """
+        if index.column() == self.button_column_index:
+            # draw this column as button
+            button = QtGui.QStyleOptionButton()
+            button.enable = True
+            button.ButtonFeature = QtGui.QStyleOptionButton.None
+            button.rect = option.rect
+            button.text = self.text
+
+            if self.mouse_event_index_row == index.row() \
+               and self.mouse_event_index_column == self.button_column_index:
+                button.state = \
+                    QtGui.QStyle.State_Sunken | QtGui.QStyle.State_Enabled
+            else:
+                button.state = \
+                    QtGui.QStyle.State_Raised | QtGui.QStyle.State_Enabled
+
+            QtGui.QApplication.style().drawControl(
+                QtGui.QStyle.CE_PushButton, button, painter
+            )
+        else:
+            # use standard
+            QtGui.QStyledItemDelegate.paint(self, painter, option, index)
+
+    def editorEvent(self, event, model, option, index):
+        """
+
+        :param event:
+        :param model:
+        :param option:
+        :param index:
+        :return:
+        """
+        self.mouse_event_index_row = None
+        self.mouse_event_index_column = None
+        if index.column() == 6:  # draw the 6th column as button
+            if event.type() in [QtCore.QEvent.MouseButtonPress,
+                                QtCore.QEvent.MouseButtonRelease]:
+
+                button_rect = QtCore.QRect(option.rect)
+                if button_rect.contains(event.pos()):
+                    # if event.type() == QtCore.QEvent.MouseButtonPress:
+                    # elif event.type() == QtCore.QEvent.MouseButtonRelease:
+                    if event.type() == QtCore.QEvent.MouseButtonPress:
+                        self.mouse_event_index_row = index.row()
+                        self.mouse_event_index_column = index.column()
+                        self.button_clicked(index)
+
+        # use standard
+        return super(ButtonItemDelegate, self).editorEvent(
+            event, model, option, index
+        )
+
+    @QtCore.Slot(QtCore.QModelIndex)
+    def button_clicked(self, index):
+        """
+
+        :param index: QtCore.QModelIndex
+        :return:
+        """
+        index = self.model.index(index.row(), 0)
+        item = self.model.itemFromIndex(index)
+        version = item.version
+        print 'version is: %s' % version
+
+
 class VersionItem(QtGui.QStandardItem):
     """Implements the Version as a QStandardItem
     """
@@ -79,18 +159,15 @@ class VersionItem(QtGui.QStandardItem):
         version_item.setEditable(False)
         reference_resolution = pseudo_model.reference_resolution
 
+        checkable = False
         if version in reference_resolution['update'] \
            or version in reference_resolution['create']:
             font_color = QtGui.QColor(192, 0, 0)
-            checkable = True
-            check_state = QtCore.Qt.Checked
+            if version in reference_resolution['root']:
+                version_item.setCheckable(True)
+                version_item.setCheckState(QtCore.Qt.Checked)
         else:
             font_color = QtGui.QColor(0, 192, 0)
-            checkable = False
-            check_state = QtCore.Qt.Unchecked
-
-        version_item.setCheckable(checkable)
-        version_item.setCheckState(check_state)
 
         set_item_color(version_item, font_color)
 
@@ -146,9 +223,16 @@ class VersionItem(QtGui.QStandardItem):
         description_item.setEditable(False)
         set_item_color(description_item, font_color)
 
+        # Path
+        path_item = QtGui.QStandardItem()
+        if latest_published_version:
+            path_item.setText(version.absolute_full_path)
+        path_item.setEditable(True)
+        set_item_color(path_item, font_color)
+
         return [version_item, thumbnail_item, nice_name_item, take_item,
                 current_version_item, latest_published_version_item,
-                description_item]
+                description_item, path_item]
 
     def fetchMore(self):
         logger.debug(

@@ -330,6 +330,12 @@ workspace -fr "textures" ".mayaFiles/images/";
 workspace -fr "translatorData" ".mayaFiles/data/";
 """
 
+    executable = {
+        'windows': 'maya',
+        'linux': 'maya',
+        'osx': 'maya'
+    }
+
     def __init__(self, extensions=None, version=None):
         #super(Maya, self).__init__(self.name, extensions, version)
         EnvironmentBase.__init__(self, self.name, extensions, version)
@@ -1600,8 +1606,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         prev_path = ''
         prev_vers = None
 
-        while len(references_list):
-            current_ref = references_list.pop(0)
+        # while len(references_list):
+        for ref in references_list:
+            #current_ref = references_list.pop(0)
+            current_ref = ref
 
             current_ref_path = current_ref.path
 
@@ -1625,12 +1633,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     )
 
             # get any reference under it and append to the list
-            references_list.extend(
-                sorted(
-                    pymel.core.listReferences(current_ref),
-                    key=lambda x: x.path
-                )
-            )
+            # references_list.extend(
+            #     sorted(
+            #         pymel.core.listReferences(current_ref),
+            #         key=lambda x: x.path
+            #     )
+            # )
 
         return []  # no new version will be created
 

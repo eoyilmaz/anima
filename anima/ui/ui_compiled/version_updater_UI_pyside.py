@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_updater.ui'
 #
-# Created: Fri Feb 14 11:39:58 2014
+# Created: Tue May  6 17:38:32 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -13,7 +13,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(823, 753)
+        Dialog.resize(1304, 753)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtGui.QLabel(Dialog)

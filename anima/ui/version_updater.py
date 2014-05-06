@@ -164,13 +164,16 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('start filling versions_treeView')
         logger.debug('creating a new model')
 
-        version_tree_model = VersionTreeModel(flat_view=True)
+        version_tree_model = VersionTreeModel()
         version_tree_model.reference_resolution = self.reference_resolution
 
         # populate with all update items
-        version_tree_model.populateTree(self.reference_resolution['update'])
+        version_tree_model.populateTree(self.reference_resolution['root'])
 
+        # button_item_delegate = ButtonItemDelegate(button_column_index=6)
+        # self.versions_treeView.setItemDelegate(button_item_delegate)
         self.versions_treeView.setModel(version_tree_model)
+        # button_item_delegate.model = self.versions_treeView.model()
 
         logger.debug('setting up signals for versions_treeView_changed')
         # versions_treeView
@@ -208,6 +211,22 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             index = version_tree_model.index(i, 0)
             version_item = version_tree_model.itemFromIndex(index)
             version_item.setCheckState(QtCore.Qt.Unchecked)
+
+    def open_version(self):
+        """opens the given version in new environment
+        """
+        import subprocess
+        import platform
+
+        platform_name = platform.system().lower()
+
+        version = None
+
+        process = subprocess.Popen(
+            [self.environment.executable[platform_name],
+             version.absolute_path],
+            stderr=subprocess.PIPE
+        )
 
     def update_versions(self):
         """updates the versions if it is checked in the UI
