@@ -92,7 +92,7 @@ class ButtonItemDelegate(QtGui.QStyledItemDelegate):
             event, model, option, index
         )
 
-    @QtCore.Slot(QtCore.QModelIndex)
+    #@QtCore.Slot(QtCore.QModelIndex)
     def button_clicked(self, index):
         """
 
