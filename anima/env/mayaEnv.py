@@ -1487,6 +1487,33 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
 
+    def deep_version_inputs_update(self):
+        """updates the inputs of the references of the current scene
+        """
+        # first update with data from first level references
+        self.update_version_inputs()
+
+        # the go to the references
+        references_list = pymel.core.listReferences()
+
+        prev_ref_path = None
+        while len(references_list):
+            current_ref = references_list.pop(0)
+            self.update_version_inputs(current_ref)
+            # optimize it by only appending one instance of the same referenced
+            # file
+            # sort the references according to their paths so, all the
+            # references of the same file will be got together
+            all_refs = sorted(
+                pymel.core.listReferences(current_ref),
+                key=lambda x: x.path
+            )
+            for ref in all_refs:
+                if ref.path != prev_ref_path:
+                    prev_ref_path = ref.path
+                    references_list.append(ref)
+            prev_ref_path = None
+
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
         dictionary which has three keys called 'leave', 'update' and 'create'.
@@ -1499,65 +1526,88 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         The list in 'update' key holds Versions those need to be updated to a
         newer version which are already exist.
 
-        With the new shallow reference update the 'create' key will always be
-        empty, so no new versions will be created.
+        The list in 'create' key holds Version instance which needs to have its
+        references to be updated to the never versions thus need a new version
+        for them self.
 
         All the Versions in the list are sorted from the deepest to shallowest
         reference, so processing the list from 0th element to nth will always
         guarantee up to date info for the currently processed Version instance.
 
-        Because of the latest changes in the reference update process (namely;
-        shallow updates) output of this method is gathered from the references
-        and not from the Version instances. Making it prone to changes which
-        are not reflected in the database yet.
+        Uses the top level references to get a Stalker Version instance and
+        then tracks all the changes from these Version instances.
 
         :return: dictionary
         """
-        # check only first level of references, due to new shallow reference
-        # updates deeper references may not reflect the reality
-        self.update_version_inputs()
+        # deeply get which maya file is referencing which other files
+        self.deep_version_inputs_update()
 
         reference_resolution = \
             empty_reference_resolution(root=self.get_referenced_versions())
 
-        # gather versions from reference paths
-        references_list = \
-            sorted(pymel.core.listReferences(), key=lambda x: x.path)
+        # reverse walk in DFS
+        dfs_version_references = []
 
-        prev_ref_path = ''
-        current_version = None
+        version = self.get_current_version()
+        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
+        for v in utils.walk_version_hierarchy(version):
+            dfs_version_references.append(v)
 
-        print 'len(references_list): %s' % len(references_list)
+        # pop the first element which is the current scene
+        dfs_version_references.pop(0)
 
-        while len(references_list):
-            current_ref = references_list.pop(0)
-            current_ref_path = current_ref.path
+        # iterate back in the list
+        for v in reversed(dfs_version_references):
+            # check inputs first
+            to_be_updated_list = []
+            for ref_v in v.inputs:
+                if not ref_v.is_latest_published_version():
+                    to_be_updated_list.append(ref_v)
 
-            if current_ref_path != prev_ref_path:
-                current_version = \
-                    self.get_version_from_full_path(current_ref_path)
-
-                action = None
-                print 'current_version: %s' % current_version
-                if current_version is not None:
-                    if current_version.is_latest_published_version():
-                        print 'current_version.is_latest_published_version: True'
-                        action = 'leave'
-                    else:
-                        print 'current_version.is_latest_published_version: False'
+            if to_be_updated_list:
+                action = 'create'
+                # check if there is a new published version of this version
+                # that is using all the updated versions of the references
+                latest_published_version = v.latest_published_version
+                if latest_published_version and \
+                   not v.is_latest_published_version():
+                    # so there is a new published version
+                    # check if its children needs any update
+                    # and the updated child versions are already
+                    # referenced to the this published version
+                    if all([ref_v.latest_published_version
+                            in latest_published_version.inputs
+                            for ref_v in to_be_updated_list]):
+                        # so all new versions are referenced to this published
+                        # version, just update to this latest published version
                         action = 'update'
+                    else:
+                        # not all references are in the inputs
+                        # so we need to create a new version as usual
+                        # and update the references to the latest versions
+                        action = 'create'
+            else:
+                # nothing needs to be updated,
+                # so check if this version has a new version,
+                # also there could be no reference under this referenced
+                # version
+                if v.is_latest_published_version():
+                    # do nothing
+                    action = 'leave'
+                else:
+                    # update to latest published version
+                    action = 'update'
 
-                    if action is not None:
-                        if current_version not in reference_resolution[action]:
-                            reference_resolution[action].append(current_version)
+                # before setting the action check all the inputs in
+                # resolution_dictionary, if any of them are update, or create
+                # then set this one to 'create'
+                if any(rev_v in reference_resolution['update'] or
+                       rev_v in reference_resolution['create']
+                       for rev_v in v.inputs):
+                    action = 'create'
 
-            # extend the list with sub references
-            references_list.extend(
-                sorted(
-                    pymel.core.listReferences(current_ref),
-                    key=lambda x: x.path
-                )
-            )
+            # so append this v to the related action list
+            reference_resolution[action].append(v)
 
         return reference_resolution
 
@@ -1574,8 +1624,19 @@ workspace -fr "translatorData" ".mayaFiles/data/";
               'create': [versionC1, versionC2, ..., versionCN],
           }
 
-        All the references in the 'create' key will be opened and then the all
-        references will be updated to the latest version and then a new
+        Previously this method was opening all the maya files by itself and do
+        all the reference updates. But then we had crappy Maya scene files
+        where the reference edits where ruined somehow. We tried to fix it by
+        switching to a new update scheme (Shallow Reference Updates) but then
+        we found that it is not working as expected. Finally, we have decided
+        to update only 1st level references and inform the user about the
+        deeper level references that needs to be updated and created UIs to let
+        the artist quickly open the maya scene which needs to be updated. This
+        way we hope that we still are going to have updated references and will
+        prevent any bad maya scene file.
+
+        All the references in the 'create' key need to be opened and then the
+        all references need to be updated to the latest version and then a new
         :class:`~stalker.models.version.Version` instance will be created for
         each of them, and the newly created versions will be returned.
 
@@ -1596,8 +1657,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             'updating to new versions with: %s' % reference_resolution
         )
 
-        # just create a breadth first references list
-        # and update on the way to go deeper
+        # just create a list from  first level references
+        # and only update those references
         references_list = pymel.core.listReferences()
 
         # order to the path
@@ -1640,7 +1701,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             #     )
             # )
 
-        return []  # no new version will be created
+        return []  # no new version will be created with the current version
 
     def update_reference_edits(self, version):
         """Updates the reference edits for the given file
