@@ -81,7 +81,7 @@ class VersionItem(QtGui.QStandardItem):
 
         if version in reference_resolution['update']:
             action = 'update'
-            font_color = QtGui.QColor(192, 0, 0)
+            font_color = QtGui.QColor(192, 128, 0)
             if version in reference_resolution['root']:
                 version_item.setCheckable(True)
                 version_item.setCheckState(QtCore.Qt.Checked)
