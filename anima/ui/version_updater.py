@@ -62,9 +62,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         self.new_versions = []
 
-        # self._version_tuple_list = []
-        self._num_of_versions = 0
-
         # setup the environment
         self.environment = self._validate_environment(environment)
 
@@ -287,6 +284,9 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         platform_name = platform.system().lower()
 
+        # store the latest published version
+        prev_lpv = version.latest_published_version
+
         process = subprocess.Popen(
             [self.environment.executable[platform_name],
              version.absolute_full_path],
@@ -295,6 +295,23 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         # wait until the process finishes
         process.wait()
+
+        # check the latest published version again
+        next_lpv = version.latest_published_version
+
+        if prev_lpv != next_lpv:
+            # a new version has been created so tell the environment to update
+            # the references to this version
+            temp_ref_res = empty_reference_resolution()
+            temp_ref_res['update'] = version
+
+            self.environment.update_versions(temp_ref_res)
+
+            self.reference_resolution = \
+                self.environment.check_referenced_versions()
+
+            # and then refresh the UI
+            self._fill_UI()
 
     def update_versions(self):
         """updates the versions if it is checked in the UI

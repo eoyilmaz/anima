@@ -158,6 +158,7 @@ class VersionItem(QtGui.QStandardItem):
         action_item = QtGui.QStandardItem()
         action_item.setEditable(False)
         action_item.setText(action)
+        action_item.version = version
         set_item_color(action_item, font_color)
 
         # Description
