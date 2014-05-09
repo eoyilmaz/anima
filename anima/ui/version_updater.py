@@ -285,7 +285,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
 
         process = subprocess.Popen(
             [self.environment.executable[platform_name],
-             version.absolute_path],
+             version.absolute_full_path],
             stderr=subprocess.PIPE
         )
 
