@@ -1397,8 +1397,8 @@ class MayaTestCase(MayaTestBase):
         )
 
 
-class MayaShallowReferenceUpdateTestCase(MayaTestBase):
-    """tests the maya.Maya with shallow reference updates
+class MayaReferenceUpdateTestCase(MayaTestBase):
+    """tests the maya.Maya reference updates
     """
 
     def test_update_versions_is_working_properly_case_1(self):
@@ -1415,7 +1415,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
 
         version12 (no new version based on version12)
           version5 (no new version based on version5)
-            version3
+            version2 (do not update version2)
         """
         # create a deep relation
         self.version2.is_published = True
@@ -1474,10 +1474,10 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
             self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
-        # and it should have referenced version3
+        # and it should still have referencing version2
         refs = pymel.core.listReferences(refs[0])
         self.assertEqual(
-            self.version3,
+            self.version2,
             self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
@@ -1496,8 +1496,8 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
             version2 -> has new published version (version3)
 
         Expected Final Result
-        version12 (it should be the same version)
-          version6
+        version12
+          version6 -> 1st level reference is updated correctly
             version3
         """
         # create a deep relation
@@ -1592,13 +1592,13 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
               version2 -> has new published version (version3)
 
         Expected Final Result
-        version15 -> Doesn't saved yet!
-          version12 -> no new version based on version12
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
-          version12 -> no new version based on version12 - The second reference
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
+        version15
+          version12
+            version5
+              version2 -> it is not a 1st level reference, nothing is updated
+          version12
+            version5
+              version2 -> nothing is updated
         """
         # create a deep relation
         self.version2.is_published = True
@@ -1654,7 +1654,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
         )
         self.assertItemsEqual(
             reference_resolution['create'],
-            []
+            [self.version5, self.version12]
         )
         self.assertItemsEqual(
             reference_resolution['update'],
@@ -1662,7 +1662,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
         )
         self.assertItemsEqual(
             reference_resolution['leave'],
-            [self.version5, self.version12]
+            []
         )
 
         updated_versions = \
@@ -1698,7 +1698,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
         # and it should have referenced version5A
         refs_level3 = pymel.core.listReferences(refs_level2[0])
         self.assertEqual(
-            self.version3,
+            self.version2,
             self.maya_env.get_version_from_full_path(refs_level3[0].path)
         )
 
@@ -1712,7 +1712,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
         # and it should have referenced version5A
         refs_level3 = pymel.core.listReferences(refs_level2[0])
         self.assertEqual(
-            self.version3,
+            self.version2,
             self.maya_env.get_version_from_full_path(refs_level3[0].path)
         )
 
@@ -1735,17 +1735,17 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
               version2 -> has new published version (version3)
 
         Expected Final Result
-        version15 -> no new version based on version15
-          version12 -> no new version based on version12
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
-          version12 -> no new version based on version12 - The second reference
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
-            version5 -> no new version based on version5
-              version3 -> has new published version (version3)
+        version15
+          version12
+            version5
+              version2 -> nothing is updated
+            version5
+              version2 -> nothing is updated
+          version12
+            version5
+              version2 -> nothing is updated
+            version5
+              version2 -> nothing is updated
         """
         # create a deep relation
         self.version2.is_published = True
@@ -1857,21 +1857,20 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
         )
 
         # Version2
-        published_version = self.version2.latest_published_version
         self.assertEqual(
-            published_version,
+            self.version2,
             self.maya_env.get_version_from_full_path(version2_ref1.path)
         )
         self.assertEqual(
-            published_version,
+            self.version2,
             self.maya_env.get_version_from_full_path(version2_ref2.path)
         )
         self.assertEqual(
-            published_version,
+            self.version2,
             self.maya_env.get_version_from_full_path(version2_ref3.path)
         )
         self.assertEqual(
-            published_version,
+            self.version2,
             self.maya_env.get_version_from_full_path(version2_ref4.path)
         )
 
@@ -2510,7 +2509,6 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
                 self.version21
             ],
             'leave': [
-                self.version21,
                 self.version27,
                 self.version38
             ],
@@ -2521,6 +2519,7 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
                 self.version11
             ],
             'create': [
+                self.version21
             ]
         }
 
@@ -2615,9 +2614,9 @@ class MayaShallowReferenceUpdateTestCase(MayaTestBase):
 
         expected_reference_resolution = {
             'root': [self.version11],
-            'leave': [self.version11, self.version4],
+            'leave': [],
             'update': [self.version2],
-            'create': []
+            'create': [self.version4, self.version11]
         }
 
         result = \

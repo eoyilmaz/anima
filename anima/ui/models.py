@@ -74,7 +74,7 @@ class ButtonItemDelegate(QtGui.QStyledItemDelegate):
         """
         self.mouse_event_index_row = None
         self.mouse_event_index_column = None
-        if index.column() == 6:  # draw the 6th column as button
+        if index.column() == self.button_column_index:
             if event.type() in [QtCore.QEvent.MouseButtonPress,
                                 QtCore.QEvent.MouseButtonRelease]:
 
@@ -92,13 +92,17 @@ class ButtonItemDelegate(QtGui.QStyledItemDelegate):
             event, model, option, index
         )
 
-    @QtCore.Slot(QtCore.QModelIndex)
+    #@QtCore.Slot(QtCore.QModelIndex)
     def button_clicked(self, index):
         """
 
         :param index: QtCore.QModelIndex
         :return:
         """
+        print 'row_count: %s' % self.model.rowCount()
+
+        print 'index.child(): %s' % index.child(0, 0)
+
         index = self.model.index(index.row(), 0)
         item = self.model.itemFromIndex(index)
         version = item.version
@@ -159,7 +163,6 @@ class VersionItem(QtGui.QStandardItem):
         version_item.setEditable(False)
         reference_resolution = pseudo_model.reference_resolution
 
-        checkable = False
         if version in reference_resolution['update'] \
            or version in reference_resolution['create']:
             font_color = QtGui.QColor(192, 0, 0)
@@ -283,7 +286,7 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         self.setColumnCount(6)
         self.setHorizontalHeaderLabels(
             ['Do Update?', 'Thumbnail', 'Task', 'Take', 'Current', 'Latest',
-             'Notes']
+             'Open', 'Notes']
         )
 
         self.root_versions = versions

@@ -847,6 +847,8 @@ class VersionUpdaterTester(unittest2.TestCase):
     def test_there_is_an_open_button_on_deeper_update_items(self):
         """testing if there are Open buttons on deeper update items
         """
+        self.show_dialog(self.dialog)
+
         # self.show_dialog(self.dialog)
         # check root rows
         version_tree_model = self.dialog.versions_treeView.model()
@@ -864,8 +866,6 @@ class VersionUpdaterTester(unittest2.TestCase):
         self.dialog.versions_treeView.expand(version5_item.index())
         version2_item = version5_item.child(0, 0)
         self.assertFalse(version2_item.isCheckable())
-
-        # self.show_dialog(self.dialog)
 
         index = version_tree_model.index(1, 0)
         version45_item = version_tree_model.itemFromIndex(index)

@@ -6,7 +6,7 @@
 import logging
 
 from anima.env import empty_reference_resolution
-from anima.ui.models import VersionTreeModel
+from anima.ui.models import VersionTreeModel, ButtonItemDelegate
 from anima.ui.utils import UICaller, AnimaDialogBase
 from anima.ui.lib import QtGui, QtCore
 from anima.ui import IS_PYSIDE, IS_PYQT4
@@ -170,10 +170,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         # populate with all update items
         version_tree_model.populateTree(self.reference_resolution['root'])
 
-        # button_item_delegate = ButtonItemDelegate(button_column_index=6)
-        # self.versions_treeView.setItemDelegate(button_item_delegate)
+        button_item_delegate = ButtonItemDelegate(button_column_index=6)
+        self.versions_treeView.setItemDelegate(button_item_delegate)
         self.versions_treeView.setModel(version_tree_model)
-        # button_item_delegate.model = self.versions_treeView.model()
+        button_item_delegate.model = self.versions_treeView.model()
 
         logger.debug('setting up signals for versions_treeView_changed')
         # versions_treeView
