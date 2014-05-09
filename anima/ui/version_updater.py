@@ -10,7 +10,6 @@ from anima.ui.models import VersionTreeModel
 from anima.ui.utils import UICaller, AnimaDialogBase
 from anima.ui.lib import QtGui, QtCore
 from anima.ui import IS_PYSIDE, IS_PYQT4
-from anima.utils import walk_version_hierarchy
 
 
 logger = logging.getLogger(__name__)
@@ -232,8 +231,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         item = model.itemFromIndex(index)
         logger.debug('itemAt(position) : %s' % item)
 
-        print 'item.text(): %s' % item.text()
-
         if not item:
             return
 
@@ -264,13 +261,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         if selected_item:
             choice = selected_item.text()
             path = selected_item.path
-            # print 'choice : %s' % choice
-            # print 'path   : %s' % path
-            # task = selected_item.task
-            # self.find_and_select_entity_item_in_treeView(
-            #     task,
-            #     self.tasks_treeView
-            # )
             if choice == 'Open...':
                 self.open_version(version)
 
@@ -302,11 +292,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         if prev_lpv != next_lpv:
             # a new version has been created so tell the environment to update
             # the references to this version
-            temp_ref_res = empty_reference_resolution()
-            temp_ref_res['update'] = version
-
-            self.environment.update_versions(temp_ref_res)
-
             self.reference_resolution = \
                 self.environment.check_referenced_versions()
 
