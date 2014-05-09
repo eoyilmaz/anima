@@ -205,6 +205,70 @@ class ReferenceExtension(object):
         self.replaceWith(latest_original_version.absolute_full_path)
 
 
+class ProgressWindowManager(object):
+    """A wrapper for maya's progress window
+
+    It needs to be able to extend the maximum as more then one process can
+    increase the progress. So there should be a way to register which method
+    is increasing the current progress and then let it automatically extend it
+    or not
+
+    can we do a decorator, yes we can, we can let the function to yield and
+    that increase the progress.
+
+    so how can we extend the maximum progress with every new function.
+
+    one function can start the progress window and the other
+
+    actually we should have different progress bars for each process.
+
+    the function object can have a maximum function, but at decoration time we
+    will not be able to now it.
+    """
+
+    in_progress = False
+    current_progress = 0
+
+    def __init__(self):
+        self.use_progress_window = False
+        if not pymel.core.general.about(batch=1):
+            self.use_progress_window = True
+        self.progress_step = 0
+
+    @classmethod
+    def function_locals(cls, f):
+        """generates a dictionary from the given function
+        """
+        code = f.func_code
+        return dict(zip(code.co_varnames, code.co_consts[1:]))
+
+    @classmethod
+    def track_progress(cls, f):
+        """A decorator for wrapping the progress window around a function that
+        will increase the progress every time the wrapped function yileds
+        """
+
+        def wrapped_f(*args, **kwargs):
+            # when the function is first wrapped
+            # store the f.max_progress
+            f_locals = cls.function_locals(f)
+
+            # increase the maximum iteration from function locals
+            max_iteration = f_locals.get('pg_max_iteration', 0)
+            title = f_locals.get('pg_title', '')
+
+
+            if max_iteration:
+                # increase the max progress amount
+
+
+            for i in f(*args, **kwargs):
+                # increase progress
+                print i
+
+        return wrapped_f
+
+
 class Maya(EnvironmentBase):
     """The maya environment class
 
@@ -339,12 +403,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def __init__(self, extensions=None, version=None):
         #super(Maya, self).__init__(self.name, extensions, version)
         EnvironmentBase.__init__(self, self.name, extensions, version)
-
-        self.use_progress_window = False
-        self.in_progress = False
-        if not pymel.core.general.about(batch=1):
-            self.use_progress_window = True
-        self.progress_step = 0
 
     def save_as(self, version):
         """The save_as action for maya environment.
@@ -1947,6 +2005,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
                 if self.use_progress_window and self.in_progress:
                     pymel.core.progressWindow(e=1, step=self.progress_step)
+
             if self.use_progress_window and self.in_progress:
                 pymel.core.progressWindow(endProgress=1)
                 self.in_progress = False
