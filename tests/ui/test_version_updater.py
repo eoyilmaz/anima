@@ -708,14 +708,17 @@ class VersionUpdaterTester(unittest2.TestCase):
             version_tree_model.itemFromIndex(version_tree_model.index(0, 4))
         latest_version_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(0, 5))
-        description_column_item = \
+        action_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(0, 6))
+        description_column_item = \
+            version_tree_model.itemFromIndex(version_tree_model.index(0, 7))
 
         self.assertEqual(nice_name_item.text(),
                          'Test_Task_1_Test_Task_5_Take1_v003')
         self.assertEqual(take_column_item.text(), 'Take1')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
+        self.assertEqual(action_column_item.text(), 'create')
         self.assertEqual(description_column_item.text(), '')
 
         # version5 columns
@@ -723,12 +726,14 @@ class VersionUpdaterTester(unittest2.TestCase):
         take_column_item = version12_item.child(0, 3)
         current_version_column_item = version12_item.child(0, 4)
         latest_version_column_item = version12_item.child(0, 5)
-        description_column_item = version12_item.child(0, 6)
+        action_column_item = version12_item.child(0, 6)
+        description_column_item = version12_item.child(0, 7)
 
         self.assertEqual(nice_name_item.text(), 'Asset_2_Take1_v002')
         self.assertEqual(take_column_item.text(), 'Take1')
         self.assertEqual(current_version_column_item.text(), '2')
         self.assertEqual(latest_version_column_item.text(), '2')
+        self.assertEqual(action_column_item.text(), 'create')
         self.assertEqual(description_column_item.text(), '')
 
         # version2 columns
@@ -736,12 +741,14 @@ class VersionUpdaterTester(unittest2.TestCase):
         take_column_item = version5_item.child(0, 3)
         current_version_column_item = version5_item.child(0, 4)
         latest_version_column_item = version5_item.child(0, 5)
-        description_column_item = version5_item.child(0, 6)
+        action_column_item = version5_item.child(0, 6)
+        description_column_item = version5_item.child(0, 7)
 
         self.assertEqual(nice_name_item.text(), 'Asset_2_Main_v002')
         self.assertEqual(take_column_item.text(), 'Main')
         self.assertEqual(current_version_column_item.text(), '2')
         self.assertEqual(latest_version_column_item.text(), '3')
+        self.assertEqual(action_column_item.text(), 'update')
         self.assertEqual(description_column_item.text(), 'Test Description')
 
         # version45 columns
@@ -753,13 +760,16 @@ class VersionUpdaterTester(unittest2.TestCase):
             version_tree_model.itemFromIndex(version_tree_model.index(1, 4))
         latest_version_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(1, 5))
-        description_column_item = \
+        action_column_item = \
             version_tree_model.itemFromIndex(version_tree_model.index(1, 6))
+        description_column_item = \
+            version_tree_model.itemFromIndex(version_tree_model.index(1, 7))
 
         self.assertEqual(nice_name_item.text(), 'SH001_Main_v003')
         self.assertEqual(take_column_item.text(), 'Main')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
+        self.assertEqual(action_column_item.text(), '')
         self.assertEqual(description_column_item.text(), '')
 
         # version48
@@ -767,12 +777,14 @@ class VersionUpdaterTester(unittest2.TestCase):
         take_column_item = version45_item.child(0, 3)
         current_version_column_item = version45_item.child(0, 4)
         latest_version_column_item = version45_item.child(0, 5)
-        description_column_item = version45_item.child(0, 6)
+        action_column_item = version45_item.child(0, 6)
+        description_column_item = version45_item.child(0, 7)
 
         self.assertEqual(nice_name_item.text(), 'SH001_Take1_v003')
         self.assertEqual(take_column_item.text(), 'Take1')
         self.assertEqual(current_version_column_item.text(), '3')
         self.assertEqual(latest_version_column_item.text(), '3')
+        self.assertEqual(action_column_item.text(), '')
         self.assertEqual(description_column_item.text(), '')
 
     def test_not_all_of_the_root_version_items_check_state_is_True_by_default(self):
@@ -847,7 +859,7 @@ class VersionUpdaterTester(unittest2.TestCase):
     def test_there_is_an_open_button_on_deeper_update_items(self):
         """testing if there are Open buttons on deeper update items
         """
-        self.show_dialog(self.dialog)
+        # self.show_dialog(self.dialog)
 
         # self.show_dialog(self.dialog)
         # check root rows

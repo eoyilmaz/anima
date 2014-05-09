@@ -25,90 +25,6 @@ def set_item_color(item, color):
     item.setForeground(foreground)
 
 
-class ButtonItemDelegate(QtGui.QStyledItemDelegate):
-    """A custom item delegate for button like function in rows
-    """
-
-    def __init__(self, button_column_index=0, text="Open...", *args, **kwargs):
-        super(ButtonItemDelegate, self).__init__(*args, **kwargs)
-        self.mouse_event_index_row = None
-        self.mouse_event_index_column = None
-        self.button_column_index = button_column_index
-        self.text = text
-        # self.model = None
-
-    def paint(self, painter, option, index):
-        """overridden paint method
-        """
-        if index.column() == self.button_column_index:
-            # draw this column as button
-            button = QtGui.QStyleOptionButton()
-            button.enable = True
-            button.ButtonFeature = QtGui.QStyleOptionButton.None
-            button.rect = option.rect
-            button.text = self.text
-
-            if self.mouse_event_index_row == index.row() \
-               and self.mouse_event_index_column == self.button_column_index:
-                button.state = \
-                    QtGui.QStyle.State_Sunken | QtGui.QStyle.State_Enabled
-            else:
-                button.state = \
-                    QtGui.QStyle.State_Raised | QtGui.QStyle.State_Enabled
-
-            QtGui.QApplication.style().drawControl(
-                QtGui.QStyle.CE_PushButton, button, painter
-            )
-        else:
-            # use standard
-            QtGui.QStyledItemDelegate.paint(self, painter, option, index)
-
-    def editorEvent(self, event, model, option, index):
-        """
-
-        :param event:
-        :param model:
-        :param option:
-        :param index:
-        :return:
-        """
-        self.mouse_event_index_row = None
-        self.mouse_event_index_column = None
-        if index.column() == self.button_column_index:
-            if event.type() in [QtCore.QEvent.MouseButtonPress,
-                                QtCore.QEvent.MouseButtonRelease]:
-
-                button_rect = QtCore.QRect(option.rect)
-                if button_rect.contains(event.pos()):
-                    # if event.type() == QtCore.QEvent.MouseButtonPress:
-                    # elif event.type() == QtCore.QEvent.MouseButtonRelease:
-                    if event.type() == QtCore.QEvent.MouseButtonPress:
-                        self.mouse_event_index_row = index.row()
-                        self.mouse_event_index_column = index.column()
-                        self.button_clicked(index)
-
-        # use standard
-        return super(ButtonItemDelegate, self).editorEvent(
-            event, model, option, index
-        )
-
-    #@QtCore.Slot(QtCore.QModelIndex)
-    def button_clicked(self, index):
-        """
-
-        :param index: QtCore.QModelIndex
-        :return:
-        """
-        print 'row_count: %s' % self.model.rowCount()
-
-        print 'index.child(): %s' % index.child(0, 0)
-
-        index = self.model.index(index.row(), 0)
-        item = self.model.itemFromIndex(index)
-        version = item.version
-        print 'version is: %s' % version
-
-
 class VersionItem(QtGui.QStandardItem):
     """Implements the Version as a QStandardItem
     """
@@ -163,14 +79,23 @@ class VersionItem(QtGui.QStandardItem):
         version_item.setEditable(False)
         reference_resolution = pseudo_model.reference_resolution
 
-        if version in reference_resolution['update'] \
-           or version in reference_resolution['create']:
+        if version in reference_resolution['update']:
+            action = 'update'
+            font_color = QtGui.QColor(192, 0, 0)
+            if version in reference_resolution['root']:
+                version_item.setCheckable(True)
+                version_item.setCheckState(QtCore.Qt.Checked)
+        elif version in reference_resolution['create']:
+            action = 'create'
             font_color = QtGui.QColor(192, 0, 0)
             if version in reference_resolution['root']:
                 version_item.setCheckable(True)
                 version_item.setCheckState(QtCore.Qt.Checked)
         else:
             font_color = QtGui.QColor(0, 192, 0)
+            action = ''
+
+        version_item.action = action
 
         set_item_color(version_item, font_color)
 
@@ -178,6 +103,8 @@ class VersionItem(QtGui.QStandardItem):
         thumbnail_item = QtGui.QStandardItem()
         thumbnail_item.setEditable(False)
         # thumbnail_item.setText('no thumbnail')
+        thumbnail_item.version = version
+        thumbnail_item.action = action
         set_item_color(thumbnail_item, font_color)
 
         # Nice Name
@@ -190,24 +117,32 @@ class VersionItem(QtGui.QStandardItem):
             )
         )
         nice_name_item.setEditable(False)
+        nice_name_item.version = version
+        nice_name_item.action = action
         set_item_color(nice_name_item, font_color)
 
         # Take
         take_item = QtGui.QStandardItem()
         take_item.setEditable(False)
         take_item.setText(version.take_name)
+        take_item.version = version
+        take_item.action = action
         set_item_color(take_item, font_color)
 
         # Current
         current_version_item = QtGui.QStandardItem()
         current_version_item.setText('%s' % version.version_number)
         current_version_item.setEditable(False)
+        current_version_item.version = version
+        current_version_item.action = action
         set_item_color(current_version_item, font_color)
 
         # Latest
         latest_published_version = version.latest_published_version
 
         latest_published_version_item = QtGui.QStandardItem()
+        latest_published_version_item.version = version
+        latest_published_version_item.action = action
         latest_published_version_item.setEditable(False)
 
         latest_published_version_text = 'No Published Version'
@@ -219,23 +154,31 @@ class VersionItem(QtGui.QStandardItem):
         )
         set_item_color(latest_published_version_item, font_color)
 
+        # Action
+        action_item = QtGui.QStandardItem()
+        action_item.setEditable(False)
+        action_item.setText(action)
+        set_item_color(action_item, font_color)
+
         # Description
         description_item = QtGui.QStandardItem()
         if latest_published_version:
             description_item.setText(latest_published_version.description)
         description_item.setEditable(False)
+        description_item.version = version
+        description_item.action = action
         set_item_color(description_item, font_color)
 
-        # Path
-        path_item = QtGui.QStandardItem()
-        if latest_published_version:
-            path_item.setText(version.absolute_full_path)
-        path_item.setEditable(True)
-        set_item_color(path_item, font_color)
+        # # Path
+        # path_item = QtGui.QStandardItem()
+        # if latest_published_version:
+        #     path_item.setText(version.absolute_full_path)
+        # path_item.setEditable(True)
+        # set_item_color(path_item, font_color)
 
         return [version_item, thumbnail_item, nice_name_item, take_item,
                 current_version_item, latest_published_version_item,
-                description_item, path_item]
+                action_item, description_item]
 
     def fetchMore(self):
         logger.debug(
@@ -286,7 +229,7 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         self.setColumnCount(6)
         self.setHorizontalHeaderLabels(
             ['Do Update?', 'Thumbnail', 'Task', 'Take', 'Current', 'Latest',
-             'Open', 'Notes']
+             'Notes']
         )
 
         self.root_versions = versions
@@ -343,6 +286,23 @@ class VersionTreeModel(QtGui.QStandardItemModel):
             'VersionTreeModel.hasChildren() is finished for index: %s' % index
         )
         return return_value
+
+
+class VersionTreeView(QtGui.QTreeView):
+    """A custom tree view to display Version info
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(VersionTreeView, self).__init__(*args, **kwargs)
+
+        # TODO: Implement this as a class with all its context menus etc.
+
+
+class TaskTreeView(QtGui.QTreeView):
+    """A custom tree view to display Taks info
+    """
+    # TODO: Implement this as a class with all its context menus etc.
+    pass
 
 
 class TaskItem(QtGui.QStandardItem):

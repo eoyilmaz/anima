@@ -6,7 +6,7 @@
 import logging
 
 from anima.env import empty_reference_resolution
-from anima.ui.models import VersionTreeModel, ButtonItemDelegate
+from anima.ui.models import VersionTreeModel
 from anima.ui.utils import UICaller, AnimaDialogBase
 from anima.ui.lib import QtGui, QtCore
 from anima.ui import IS_PYSIDE, IS_PYQT4
@@ -147,6 +147,17 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             self.versions_treeView_auto_fit_column
         )
 
+        # custom context menu for the version_treeView
+        self.versions_treeView.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
+
+        QtCore.QObject.connect(
+            self.versions_treeView,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self._show_versions_treeView_context_menu
+        )
+
     def versions_treeView_auto_fit_column(self):
         """fits columns to content
         """
@@ -170,10 +181,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         # populate with all update items
         version_tree_model.populateTree(self.reference_resolution['root'])
 
-        button_item_delegate = ButtonItemDelegate(button_column_index=6)
-        self.versions_treeView.setItemDelegate(button_item_delegate)
         self.versions_treeView.setModel(version_tree_model)
-        button_item_delegate.model = self.versions_treeView.model()
 
         logger.debug('setting up signals for versions_treeView_changed')
         # versions_treeView
@@ -212,21 +220,77 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             version_item = version_tree_model.itemFromIndex(index)
             version_item.setCheckState(QtCore.Qt.Unchecked)
 
-    def open_version(self):
-        """opens the given version in new environment
+    def _show_versions_treeView_context_menu(self, position):
+        """the custom context menu for the versions_treeView
+        """
+        # convert the position to global screen position
+        global_position = \
+            self.versions_treeView.mapToGlobal(position)
+
+        index = self.versions_treeView.indexAt(position)
+        model = self.versions_treeView.model()
+
+        # get the column 0 item which holds the Version instance
+        # index = self.versions_treeView.model().index(index.row(), 0)
+        item = model.itemFromIndex(index)
+        logger.debug('itemAt(position) : %s' % item)
+
+        print 'item.text(): %s' % item.text()
+
+        if not item:
+            return
+
+        if not hasattr(item, 'version'):
+            return
+
+        version = item.version
+
+        from stalker import Version
+        if not isinstance(version, Version):
+            return
+
+        # create the menu
+        menu = QtGui.QMenu()
+
+        # Add Depends To menu
+        absolute_full_path = version.absolute_full_path
+        if absolute_full_path:
+            action = menu.addAction('Open...')
+            action.path = absolute_full_path
+
+        selected_item = menu.exec_(global_position)
+
+        if selected_item:
+            choice = selected_item.text()
+            path = selected_item.path
+            # print 'choice : %s' % choice
+            # print 'path   : %s' % path
+            # task = selected_item.task
+            # self.find_and_select_entity_item_in_treeView(
+            #     task,
+            #     self.tasks_treeView
+            # )
+            if choice == 'Open...':
+                self.open_version(version)
+
+    def open_version(self, version):
+        """opens the given version in a new environment
+
+        :param version: :class:`~stalker.model.version.Version` instance.
         """
         import subprocess
         import platform
 
         platform_name = platform.system().lower()
 
-        version = None
-
         process = subprocess.Popen(
             [self.environment.executable[platform_name],
              version.absolute_path],
             stderr=subprocess.PIPE
         )
+
+        # wait until the process finishes
+        process.wait()
 
     def update_versions(self):
         """updates the versions if it is checked in the UI
