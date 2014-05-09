@@ -302,11 +302,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         if prev_lpv != next_lpv:
             # a new version has been created so tell the environment to update
             # the references to this version
-            temp_ref_res = empty_reference_resolution()
-            temp_ref_res['update'] = version
-
-            self.environment.update_versions(temp_ref_res)
-
             self.reference_resolution = \
                 self.environment.check_referenced_versions()
 
