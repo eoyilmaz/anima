@@ -208,65 +208,60 @@ class ReferenceExtension(object):
 class ProgressWindowManager(object):
     """A wrapper for maya's progress window
 
-    It needs to be able to extend the maximum as more then one process can
-    increase the progress. So there should be a way to register which method
-    is increasing the current progress and then let it automatically extend it
-    or not
+    This is a wrapper for the maya progress window. It is able to track more
+    then one process. The current usage is as follows::
 
-    can we do a decorator, yes we can, we can let the function to yield and
-    that increase the progress.
+      pm = ProgressWindowManager()
 
-    so how can we extend the maximum progress with every new function.
+      # register a new caller which will have 100 iterations
+      pm.register(__name__, 'My Message', 100)
 
-    one function can start the progress window and the other
+      for i in range(100):
+          pm.progress(__name__)
 
-    actually we should have different progress bars for each process.
+      pm.end_progress(__name__)
 
-    the function object can have a maximum function, but at decoration time we
-    will not be able to now it.
+    So calling ``register`` will register a new caller for the progress window.
+    The ProgressWindowManager will store the caller name and the desired title
+    for the window, and whenever a progress is
+
     """
 
-    in_progress = False
-    current_progress = 0
+    __instance_dict__ = {}
+
+    def __new__(cls):
+        """overridden __new__ to be used to generate borg instances of this
+        class
+        """
+        if 'instance' in ProgressWindowManager.__instance_dict__:
+            print 'existst'
+            return ProgressWindowManager.__instance_dict__['instance']
+        else:
+            print 'creating a new one'
+            return super(ProgressWindowManager, cls).__new__(cls)
 
     def __init__(self):
+        self.__instance_dict__['instance'] = self
+
+        self.in_progress = False
+        self.current_progress = 0
+        self.callers = {}
+
         self.use_progress_window = False
         if not pymel.core.general.about(batch=1):
             self.use_progress_window = True
         self.progress_step = 0
 
-    @classmethod
-    def function_locals(cls, f):
-        """generates a dictionary from the given function
+    def register(self, name, max_iteration):
+        """registers a new caller
         """
-        code = f.func_code
-        return dict(zip(code.co_varnames, code.co_consts[1:]))
+        pass
 
-    @classmethod
-    def track_progress(cls, f):
-        """A decorator for wrapping the progress window around a function that
-        will increase the progress every time the wrapped function yileds
+    def increment_progress(self, name):
+        """Increments the progress by 1
         """
-
-        def wrapped_f(*args, **kwargs):
-            # when the function is first wrapped
-            # store the f.max_progress
-            f_locals = cls.function_locals(f)
-
-            # increase the maximum iteration from function locals
-            max_iteration = f_locals.get('pg_max_iteration', 0)
-            title = f_locals.get('pg_title', '')
-
-
-            if max_iteration:
-                # increase the max progress amount
-
-
-            for i in f(*args, **kwargs):
-                # increase progress
-                print i
-
-        return wrapped_f
+        if self.use_progress_window:
+            pymel.core.progressWindow(e=1, step=1)
 
 
 class Maya(EnvironmentBase):
