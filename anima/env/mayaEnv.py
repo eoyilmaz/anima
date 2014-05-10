@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2012-2014, Anima Istanbul
+#
+# This module is part of anima-tools and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
 import re
@@ -15,6 +19,7 @@ from pymel.core.system import FileReference
 from anima.extension import extends
 
 from anima import utils
+from anima.base import Singleton
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 
@@ -209,8 +214,7 @@ class ProgressCaller(object):
     """A simple object to hold caller data for ProgressWindowManager
     """
 
-    def __init__(self, name='', max_iterations=0):
-        self.name = name
+    def __init__(self, max_iterations=0):
         self.max_iterations = max_iterations
         self.current_step = 0
         self.manager = None
@@ -244,21 +248,11 @@ class ProgressWindowManager(object):
 
     """
 
-    __instance__ = None
-
-    def __new__(cls):
-        """overridden __new__ to be used to generate borg instances of this
-        class
-        """
-        if ProgressWindowManager.__instance__:
-            return ProgressWindowManager.__instance__
-        else:
-            print type(cls)
-            cls.__instance__ = super(ProgressWindowManager, cls).__new__(cls)
-            return cls.__instance__
+    __metaclass__ = Singleton
 
     def __init__(self):
         self.in_progress = False
+        self.dialog = None
         self.callers = []
 
         self.title = ''
@@ -272,34 +266,32 @@ class ProgressWindowManager(object):
     def create_dialog(self):
         """creates the progressWindow
         """
-        print 'create_dialog start'
-        pymel.core.progressWindow(
-            title=self.title,
-            progress=0,
-            status='',
-            maxValue=self.max_iterations,
-            isInterruptable=False
-        )
+        if self.dialog is None:
+            print 'no dialog, creating one'
+            from anima.ui.lib import QtGui
+            self.dialog = QtGui.QProgressDialog()
+            self.dialog.setRange(0, self.max_iterations)
+            self.dialog.setLabelText(self.title)
+            self.dialog.show()
 
         # also set the Manager to in progress
         self.in_progress = True
-        print 'create_dialog end'
 
     def _kill_window(self):
         """kills the progressWindow
         """
-        print '_kill_window start'
-        pymel.core.progressWindow(endProgress=True)
-        self.in_progress = False
-        print '_kill_window end'
+        if self.dialog is not None:
+            self.dialog.close()
 
-    def register(self, name, max_iteration):
+        # re initialize self
+        self.__init__()
+
+    def register(self, max_iteration):
         """registers a new caller
 
         :return: ProgressCaller instance
         """
-        print 'register start'
-        caller = ProgressCaller(name, max_iteration)
+        caller = ProgressCaller(max_iteration)
         caller.manager = self
         self.max_iterations += max_iteration
 
@@ -307,12 +299,11 @@ class ProgressWindowManager(object):
             self.create_dialog()
         else:
             # update the maximum
-            pymel.core.progressWindow(e=1, maxValue=self.max_iterations,
-                                      progress=self.current_step)
+            self.dialog.setRange(0, self.max_iterations)
+            self.dialog.setValue(self.current_step)
 
         # also store this
         self.callers.append(caller)
-        print 'register end'
         return caller
 
     def step(self, caller, step=1):
@@ -322,15 +313,13 @@ class ProgressWindowManager(object):
           by the :meth:`.register` method.
         :param step: The step size to increment, the default value is 1.
         """
-        print 'step start'
         caller.current_step += step
         self.current_step += step
-        pymel.core.progressWindow(e=1, progress=self.current_step)
+        self.dialog.setValue(self.current_step)
 
         if caller.current_step == caller.max_iterations:
             # kill the caller
             self.end_progress(caller)
-        print 'step end'
 
     def end_progress(self, caller):
         """Ends the progress for the given caller
@@ -338,7 +327,6 @@ class ProgressWindowManager(object):
         :param caller: A :class:`.ProgressCaller` instance
         :return: None
         """
-        print 'end_progress start'
         # remove the caller from the callers list
         self.callers.remove(caller)
 
@@ -346,7 +334,6 @@ class ProgressWindowManager(object):
         if not len(self.callers):
             # remove the progress window
             self._kill_window()
-        print 'end_progress end'
 
 
 class Maya(EnvironmentBase):
