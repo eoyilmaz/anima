@@ -205,6 +205,23 @@ class ReferenceExtension(object):
         self.replaceWith(latest_original_version.absolute_full_path)
 
 
+class ProgressCaller(object):
+    """A simple object to hold caller data for ProgressWindowManager
+    """
+
+    def __init__(self, name='', max_iterations=0):
+        self.name = name
+        self.max_iterations = max_iterations
+        self.current_step = 0
+        self.manager = None
+
+    def step(self):
+        """A shortcut for the ProgressWindowManager.step() method
+        :return:
+        """
+        self.manager.step(self)
+
+
 class ProgressWindowManager(object):
     """A wrapper for maya's progress window
 
@@ -227,41 +244,109 @@ class ProgressWindowManager(object):
 
     """
 
-    __instance_dict__ = {}
+    __instance__ = None
 
     def __new__(cls):
         """overridden __new__ to be used to generate borg instances of this
         class
         """
-        if 'instance' in ProgressWindowManager.__instance_dict__:
-            print 'existst'
-            return ProgressWindowManager.__instance_dict__['instance']
+        if ProgressWindowManager.__instance__:
+            return ProgressWindowManager.__instance__
         else:
-            print 'creating a new one'
-            return super(ProgressWindowManager, cls).__new__(cls)
+            print type(cls)
+            cls.__instance__ = super(ProgressWindowManager, cls).__new__(cls)
+            return cls.__instance__
 
     def __init__(self):
-        self.__instance_dict__['instance'] = self
-
         self.in_progress = False
-        self.current_progress = 0
-        self.callers = {}
+        self.callers = []
+
+        self.title = ''
+        self.max_iterations = 0
+        self.current_step = 0
 
         self.use_progress_window = False
         if not pymel.core.general.about(batch=1):
             self.use_progress_window = True
-        self.progress_step = 0
+
+    def create_dialog(self):
+        """creates the progressWindow
+        """
+        print 'create_dialog start'
+        pymel.core.progressWindow(
+            title=self.title,
+            progress=0,
+            status='',
+            maxValue=self.max_iterations,
+            isInterruptable=False
+        )
+
+        # also set the Manager to in progress
+        self.in_progress = True
+        print 'create_dialog end'
+
+    def _kill_window(self):
+        """kills the progressWindow
+        """
+        print '_kill_window start'
+        pymel.core.progressWindow(endProgress=True)
+        self.in_progress = False
+        print '_kill_window end'
 
     def register(self, name, max_iteration):
         """registers a new caller
-        """
-        pass
 
-    def increment_progress(self, name):
-        """Increments the progress by 1
+        :return: ProgressCaller instance
         """
-        if self.use_progress_window:
-            pymel.core.progressWindow(e=1, step=1)
+        print 'register start'
+        caller = ProgressCaller(name, max_iteration)
+        caller.manager = self
+        self.max_iterations += max_iteration
+
+        if not self.in_progress:
+            self.create_dialog()
+        else:
+            # update the maximum
+            pymel.core.progressWindow(e=1, maxValue=self.max_iterations,
+                                      progress=self.current_step)
+
+        # also store this
+        self.callers.append(caller)
+        print 'register end'
+        return caller
+
+    def step(self, caller, step=1):
+        """Increments the progress by the given mount
+
+        :param caller: A :class:`.ProgressCaller` instance, generally returned
+          by the :meth:`.register` method.
+        :param step: The step size to increment, the default value is 1.
+        """
+        print 'step start'
+        caller.current_step += step
+        self.current_step += step
+        pymel.core.progressWindow(e=1, progress=self.current_step)
+
+        if caller.current_step == caller.max_iterations:
+            # kill the caller
+            self.end_progress(caller)
+        print 'step end'
+
+    def end_progress(self, caller):
+        """Ends the progress for the given caller
+
+        :param caller: A :class:`.ProgressCaller` instance
+        :return: None
+        """
+        print 'end_progress start'
+        # remove the caller from the callers list
+        self.callers.remove(caller)
+
+        # check if there are still other callers
+        if not len(self.callers):
+            # remove the progress window
+            self._kill_window()
+        print 'end_progress end'
 
 
 class Maya(EnvironmentBase):

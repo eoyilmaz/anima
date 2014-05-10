@@ -9,13 +9,15 @@ import shutil
 import tempfile
 
 import unittest2
-import pymel.core
+import pymel
+
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      Task, Sequence, Version, User, Type, Structure,
                      FilenameTemplate, ImageFormat)
 
 from anima import utils
 from anima.env.mayaEnv import Maya
+from anima.env.mayaEnv import ProgressWindowManager, ProgressCaller
 from anima.utils import walk_version_hierarchy
 
 
@@ -5007,4 +5009,161 @@ class ReferenceToAssTestCase(MayaTestBase):
 
         self.assertTrue(ref1.is_ass())
         self.assertFalse(ref2.is_ass())
+
+
+class PatchedProgressWindow(object):
+    """A dummy class for patching pymel.core.progressWindow
+    """
+
+    def __init__(self):
+        self.call_info = {}
+
+    def __call__(self, *args, **kwargs):
+        """mock version of the pymel.core.progressWindow command
+
+        :return:
+        """
+        self.call_info.update(kwargs)
+
+
+class ProgressWindowManagerTestCase(unittest2.TestCase):
+    """tests the maya.ProgressWindowManager class
+    """
+
+    progress_window = None
+
+    @classmethod
+    def setUpClass(cls):
+        """set up tests in class level
+        """
+        # patch pymel.core.
+        cls.progress_window = pymel.core.progressWindow
+        cls.mock_progress_window = PatchedProgressWindow()
+        pymel.core.progressWindow = cls.mock_progress_window
+
+    @classmethod
+    def tearDownClass(cls):
+        """clean up tests in class level
+        """
+        # restore the progressWindow
+        pymel.core.progressWindow = cls.progress_window
+
+    def test_singletonness(self):
+        """testing if the ProgressWindowManager is a Singleton class.
+        """
+        pm1 = ProgressWindowManager()
+        pm2 = ProgressWindowManager()
+        self.assertEqual(id(pm1), id(pm2))
+
+    def test_register_will_return_a_ProgerssCaller_instance(self):
+        """testing if the ProgressWindowManager.register() method will return a
+        ProgressCaller instance
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('test', 10)
+        self.assertIsInstance(caller, ProgressCaller)
+
+        self.assertEqual(caller.name, 'test')
+        self.assertEqual(caller.max_iterations, 10)
+        self.assertEqual(caller.current_step, 0)
+
+    def test_register_will_store_the_given_caller_name_in_callers_dictionary(self):
+        """testing if ProgressWindow.register() method will store the given
+        name as a key in the ProgressWindow.callers dictionary
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('update_references', 100)
+        self.assertIn(caller, pm.callers)
+
+    def test_register_will_set_the_manager_to_in_progress(self):
+        """testing if ProgressWindow.register() method will set the system to
+        "in_progress" mode True
+        """
+        pm = ProgressWindowManager()
+        self.assertFalse(pm.in_progress)
+        pm.register('update_references', 100)
+        self.assertTrue(pm.in_progress)
+
+    def test_register_will_create_the_window_if_it_is_not_created_yet(self):
+        """testing if the register method will create the progressWindow if it
+        is not created yet
+        """
+        pm = ProgressWindowManager()
+        self.assertFalse(pm.in_progress)
+        caller = pm.register('test', 5)
+        self.assertTrue(pm.in_progress)
+
+    def test_step_method_will_increment_the_call_count_of_the_given_caller(self):
+        """testing if the step method will increment the step of the caller
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('test', 100)
+        self.assertEqual(caller.current_step, 0)
+
+        pm.step(caller)
+        self.assertEqual(caller.current_step, 1)
+
+        pm.step(caller)
+        self.assertEqual(caller.current_step, 2)
+
+    def test_step_automatically_removes_the_given_caller_if_it_reached_to_its_maximum(self):
+        """testing if the step method will automatically remove the caller from
+        the list if the caller reached to its maximum
+        """
+        pm = ProgressWindowManager()
+        self.assertFalse(pm.in_progress)
+        caller = pm.register('test', 5)
+        self.assertTrue(pm.in_progress)
+        self.assertEqual(caller.current_step, 0)
+        self.assertTrue(pm.in_progress)
+        self.assertIn(caller, pm.callers)
+
+        for i in range(5):
+            caller.step()
+
+        self.assertNotIn(caller, pm.callers)
+        self.assertFalse(pm.in_progress)
+
+    def test_step_will_step_the_progressWindow(self):
+        """testing if the step method will call pymel.core.progressWindow
+        properly
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('test', 5)
+        pm.step(caller, 2)
+
+        self.assertIn('step', self.mock_progress_window.call_info)
+
+        # check the value
+        self.assertEqual(self.mock_progress_window.call_info['step'], 2)
+
+    def test_end_progress_method_removes_the_given_caller_from_list(self):
+        """testing if the end_progress method will remove the given caller from
+        the callers list
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('test', 5)
+        caller.step()
+        self.assertIn(caller, pm.callers)
+        pm.end_progress(caller)
+        self.assertNotIn(caller, pm.callers)
+
+    def test_end_progress_method_will_remove_the_progress_windows_if_there_are_no_callers_left(self):
+        """testing if the end_progress method will remove the progress window
+        it there are no callers left
+        """
+        pm = ProgressWindowManager()
+        caller = pm.register('test', 5)
+        caller.step()
+        self.assertIn(caller, pm.callers)
+        pm.end_progress(caller)
+        self.assertNotIn(caller, pm.callers)
+
+        # also check if the endProgress is called in the mock object
+        self.assertTrue(
+            'endProgress' in self.mock_progress_window.call_info
+        )
+
+        # and the value is True
+        self.assertTrue(self.mock_progress_window.call_info['endProgress'])
 
