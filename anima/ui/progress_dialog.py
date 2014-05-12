@@ -16,11 +16,11 @@ class ProgressCaller(object):
         self.current_step = 0
         self.manager = None
 
-    def step(self):
+    def step(self, step_size=1, message=''):
         """A shortcut for the ProgressDialogManager.step() method
         :return:
         """
-        self.manager.step(self)
+        self.manager.step(self, step=step_size, message=message)
 
 
 class ProgressDialogManager(object):
@@ -97,7 +97,7 @@ class ProgressDialogManager(object):
         self.callers.append(caller)
         return caller
 
-    def step(self, caller, step=1):
+    def step(self, caller, step=1, message=''):
         """Increments the progress by the given mount
 
         :param caller: A :class:`.ProgressCaller` instance, generally returned
@@ -107,7 +107,7 @@ class ProgressDialogManager(object):
         caller.current_step += step
         self.current_step += step
         self.dialog.setValue(self.current_step)
-        self.dialog.setLabelText(caller.title)
+        self.dialog.setLabelText('%s : %s' % (caller.title, message))
 
         if caller.current_step == caller.max_iterations:
             # kill the caller

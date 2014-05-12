@@ -129,11 +129,11 @@ class ProgressDialogManagerTestCase(unittest2.TestCase):
         caller2 = pm.register(5, test_title2)
         pm.step(caller1)
         self.assertEqual(pm.dialog.call_info['setLabelText'],
-                         [(test_title1,), {}])
+                         [('%s : ' % test_title1,), {}])
 
         pm.step(caller2)
         self.assertEqual(pm.dialog.call_info['setLabelText'],
-                         [(test_title2,), {}])
+                         [('%s : ' % test_title2,), {}])
 
     def test_end_progress_method_removes_the_given_caller_from_list(self):
         """testing if the end_progress method will remove the given caller from

@@ -1088,7 +1088,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # lets use a progress window
         pm = ProgressDialogManager()
-        caller = pm.register(len(references))
+        caller = pm.register(len(references), 'Maya.get_referenced_versions()')
 
         # sort them according to path
         # to make same paths together
@@ -1565,7 +1565,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         dfs_version_references.pop(0)
 
         pm = ProgressDialogManager()
-        caller = pm.register(len(dfs_version_references))
+        caller = pm.register(len(dfs_version_references),
+                             'Maya.check_referenced_versions()')
 
         # iterate back in the list
         for v in reversed(dfs_version_references):
@@ -1620,7 +1621,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # so append this v to the related action list
             reference_resolution[action].append(v)
 
-            caller.step()
+            # from stalker import Version
+            # assert isinstance(v, Version)
+            caller.step(message=v.nice_name)
 
         return reference_resolution
 
@@ -1682,7 +1685,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # use a progress window for that
         pm = ProgressDialogManager()
-        caller = pm.register(len(references_list))
+        caller = pm.register(len(references_list), 'Maya.update_versions()')
 
         # while len(references_list):
         for ref in references_list:
@@ -1717,7 +1720,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             #         key=lambda x: x.path
             #     )
             # )
-            caller.step()
+            caller.step(message=ref.namespace)
 
         return []  # no new version will be created with the current version
 
@@ -1925,7 +1928,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if self.use_progress_window and len(to_update_paths):
                 title = 'Deep Reference Update'
                 pm = ProgressDialogManager()
-                caller = pm.register(len(to_update_paths))
+                caller = pm.register(len(to_update_paths),
+                                     'Maya.fix_reference_namespaces()')
 
             from stalker import Version
             for path in to_update_paths:
@@ -1960,7 +1964,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # pymel.core.saveFile()
 
                 if caller is not None:
-                    caller.step()
+                    caller.step(message=path)
 
             self.update_reference_edits(started_from_version)
 
