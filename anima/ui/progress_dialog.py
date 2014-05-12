@@ -10,8 +10,9 @@ class ProgressCaller(object):
     """A simple object to hold caller data for ProgressDialogManager
     """
 
-    def __init__(self, max_iterations=0):
+    def __init__(self, max_iterations=0, title=''):
         self.max_iterations = max_iterations
+        self.title = title
         self.current_step = 0
         self.manager = None
 
@@ -76,12 +77,12 @@ class ProgressDialogManager(object):
         # re initialize self
         self.__init__()
 
-    def register(self, max_iteration):
+    def register(self, max_iteration, title=''):
         """registers a new caller
 
         :return: ProgressCaller instance
         """
-        caller = ProgressCaller(max_iteration)
+        caller = ProgressCaller(max_iterations=max_iteration, title=title)
         caller.manager = self
         self.max_iterations += max_iteration
 
@@ -106,6 +107,7 @@ class ProgressDialogManager(object):
         caller.current_step += step
         self.current_step += step
         self.dialog.setValue(self.current_step)
+        self.dialog.setLabelText(caller.title)
 
         if caller.current_step == caller.max_iterations:
             # kill the caller

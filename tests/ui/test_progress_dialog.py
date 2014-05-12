@@ -5,30 +5,9 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import unittest2
+from anima.testing import CallInfo
 from anima.ui.lib import QtGui
 from anima.ui.progress_dialog import ProgressDialogManager, ProgressCaller
-
-
-class PatchedProgressDialog(object):
-    """A dummy class for patching QtGui.QProgressDialog
-    """
-
-    def __init__(self):
-        self.call_info = {}
-        self.patched_func_names = [
-            'setRange', 'setValue', 'setLabelText', 'show', 'close'
-        ]
-
-        self.register_functions()
-
-    def __call_recorder__(self, *args, **kwargs):
-        """records the call to a function with arguments and keyword arguments
-        """
-        self.call_info['setRange'] = [args, kwargs]
-
-    def register_functions(self):
-        for f in self.patched_func_names:
-            setattr(self, f, self.__call_recorder__)
 
 
 class ProgressDialogManagerTestCase(unittest2.TestCase):
@@ -43,7 +22,7 @@ class ProgressDialogManagerTestCase(unittest2.TestCase):
         """
         # patch QtGui.QProgressDialog
         cls.original_progress_dialog = QtGui.QProgressDialog
-        QtGui.QProgressDialog = PatchedProgressDialog
+        QtGui.QProgressDialog = CallInfo
 
     @classmethod
     def tearDownClass(cls):
@@ -130,13 +109,31 @@ class ProgressDialogManagerTestCase(unittest2.TestCase):
         properly
         """
         pm = ProgressDialogManager()
-        caller = pm.register(5)
+        caller = pm.register(5, 'test title')
         pm.step(caller, 2)
 
         self.assertIn('setRange', pm.dialog.call_info)
 
-        # check the value
-        self.assertEqual(pm.dialog.call_info['setRange'], [(2,), {}])
+        # check the values
+        self.assertEqual(pm.dialog.call_info['setRange'], [(0, 5), {}])
+        self.assertEqual(pm.dialog.call_info['setValue'], [(2,), {}])
+
+    def test_step_will_set_the_dialog_title(self):
+        """testing if the step method will set the dialog title to the stepped
+        caller
+        """
+        pm = ProgressDialogManager()
+        test_title1 = 'test title 1'
+        test_title2 = 'test title 2'
+        caller1 = pm.register(5, test_title1)
+        caller2 = pm.register(5, test_title2)
+        pm.step(caller1)
+        self.assertEqual(pm.dialog.call_info['setLabelText'],
+                         [(test_title1,), {}])
+
+        pm.step(caller2)
+        self.assertEqual(pm.dialog.call_info['setLabelText'],
+                         [(test_title2,), {}])
 
     def test_end_progress_method_removes_the_given_caller_from_list(self):
         """testing if the end_progress method will remove the given caller from
