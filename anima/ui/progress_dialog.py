@@ -18,9 +18,13 @@ class ProgressCaller(object):
 
     def step(self, step_size=1, message=''):
         """A shortcut for the ProgressDialogManager.step() method
-        :return:
         """
         self.manager.step(self, step=step_size, message=message)
+
+    def end_progress(self):
+        """A shortcut fro the ProgressDialogManager.end_progress() method
+        """
+        self.manager.end_progress(self)
 
 
 class ProgressDialogManager(object):

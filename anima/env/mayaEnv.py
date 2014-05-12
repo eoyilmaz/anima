@@ -1505,6 +1505,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # the go to the references
         references_list = pymel.core.listReferences()
 
+        pm = ProgressDialogManager()
+        caller = pm.register(len(references_list),
+                             'Maya.deep_version_inputs_update()')
+
         prev_ref_path = None
         while len(references_list):
             current_ref = references_list.pop(0)
@@ -1521,7 +1525,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if ref.path != prev_ref_path:
                     prev_ref_path = ref.path
                     references_list.append(ref)
+            caller.step(prev_ref_path)
             prev_ref_path = None
+
+        # it probably will terminate before expected, so call end_progress for
+        # this caller
+        caller.end_progress()
 
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
