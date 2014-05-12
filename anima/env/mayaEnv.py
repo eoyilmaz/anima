@@ -19,9 +19,9 @@ from pymel.core.system import FileReference
 from anima.extension import extends
 
 from anima import utils
-from anima.base import Singleton
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
+from anima.ui.progress_dialog import ProgressDialogManager
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -210,132 +210,6 @@ class ReferenceExtension(object):
         self.replaceWith(latest_original_version.absolute_full_path)
 
 
-class ProgressCaller(object):
-    """A simple object to hold caller data for ProgressWindowManager
-    """
-
-    def __init__(self, max_iterations=0):
-        self.max_iterations = max_iterations
-        self.current_step = 0
-        self.manager = None
-
-    def step(self):
-        """A shortcut for the ProgressWindowManager.step() method
-        :return:
-        """
-        self.manager.step(self)
-
-
-class ProgressWindowManager(object):
-    """A wrapper for maya's progress window
-
-    This is a wrapper for the maya progress window. It is able to track more
-    then one process. The current usage is as follows::
-
-      pm = ProgressWindowManager()
-
-      # register a new caller which will have 100 iterations
-      pm.register(__name__, 'My Message', 100)
-
-      for i in range(100):
-          pm.progress(__name__)
-
-      pm.end_progress(__name__)
-
-    So calling ``register`` will register a new caller for the progress window.
-    The ProgressWindowManager will store the caller name and the desired title
-    for the window, and whenever a progress is
-
-    """
-
-    __metaclass__ = Singleton
-
-    def __init__(self):
-        self.in_progress = False
-        self.dialog = None
-        self.callers = []
-
-        self.title = ''
-        self.max_iterations = 0
-        self.current_step = 0
-
-        self.use_progress_window = False
-        if not pymel.core.general.about(batch=1):
-            self.use_progress_window = True
-
-    def create_dialog(self):
-        """creates the progressWindow
-        """
-        if self.dialog is None:
-            print 'no dialog, creating one'
-            from anima.ui.lib import QtGui
-            self.dialog = QtGui.QProgressDialog()
-            self.dialog.setRange(0, self.max_iterations)
-            self.dialog.setLabelText(self.title)
-            self.dialog.show()
-
-        # also set the Manager to in progress
-        self.in_progress = True
-
-    def _kill_window(self):
-        """kills the progressWindow
-        """
-        if self.dialog is not None:
-            self.dialog.close()
-
-        # re initialize self
-        self.__init__()
-
-    def register(self, max_iteration):
-        """registers a new caller
-
-        :return: ProgressCaller instance
-        """
-        caller = ProgressCaller(max_iteration)
-        caller.manager = self
-        self.max_iterations += max_iteration
-
-        if not self.in_progress:
-            self.create_dialog()
-        else:
-            # update the maximum
-            self.dialog.setRange(0, self.max_iterations)
-            self.dialog.setValue(self.current_step)
-
-        # also store this
-        self.callers.append(caller)
-        return caller
-
-    def step(self, caller, step=1):
-        """Increments the progress by the given mount
-
-        :param caller: A :class:`.ProgressCaller` instance, generally returned
-          by the :meth:`.register` method.
-        :param step: The step size to increment, the default value is 1.
-        """
-        caller.current_step += step
-        self.current_step += step
-        self.dialog.setValue(self.current_step)
-
-        if caller.current_step == caller.max_iterations:
-            # kill the caller
-            self.end_progress(caller)
-
-    def end_progress(self, caller):
-        """Ends the progress for the given caller
-
-        :param caller: A :class:`.ProgressCaller` instance
-        :return: None
-        """
-        # remove the caller from the callers list
-        self.callers.remove(caller)
-
-        # check if there are still other callers
-        if not len(self.callers):
-            # remove the progress window
-            self._kill_window()
-
-
 class Maya(EnvironmentBase):
     """The maya environment class
 
@@ -470,6 +344,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def __init__(self, extensions=None, version=None):
         #super(Maya, self).__init__(self.name, extensions, version)
         EnvironmentBase.__init__(self, self.name, extensions, version)
+
+        self.use_progress_window = False
+        if not pymel.core.general.about(batch=1):
+            self.use_progress_window = True
 
     def save_as(self, version):
         """The save_as action for maya environment.
@@ -1208,6 +1086,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # get all the references
         references = pymel.core.listReferences(parent_ref)
 
+        # lets use a progress window
+        pm = ProgressDialogManager()
+        caller = pm.register(len(references))
+
         # sort them according to path
         # to make same paths together
         refs = sorted(references, key=lambda x: x.path)
@@ -1222,6 +1104,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if version:
                     versions.append(version)
                     prev_path = path
+            caller.step()
+
         return versions
 
     def update_version_inputs(self, parent_ref=None):
@@ -1674,12 +1558,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         dfs_version_references = []
 
         version = self.get_current_version()
-        # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
-        for v in utils.walk_version_hierarchy(version):
+        for v in version.walk_inputs():
             dfs_version_references.append(v)
 
         # pop the first element which is the current scene
         dfs_version_references.pop(0)
+
+        pm = ProgressDialogManager()
+        caller = pm.register(len(dfs_version_references))
 
         # iterate back in the list
         for v in reversed(dfs_version_references):
@@ -1733,6 +1619,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # so append this v to the related action list
             reference_resolution[action].append(v)
+
+            caller.step()
 
         return reference_resolution
 
@@ -1792,6 +1680,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         prev_path = ''
         prev_vers = None
 
+        # use a progress window for that
+        pm = ProgressDialogManager()
+        caller = pm.register(len(references_list))
+
         # while len(references_list):
         for ref in references_list:
             #current_ref = references_list.pop(0)
@@ -1825,6 +1717,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             #         key=lambda x: x.path
             #     )
             # )
+            caller.step()
 
         return []  # no new version will be created with the current version
 
@@ -2028,15 +1921,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # 7- fix edits with new namespace
             # 8- apply them
 
+            caller = None
             if self.use_progress_window and len(to_update_paths):
-                pymel.core.progressWindow(
-                    title='Deep Reference Update',
-                    progress=0,
-                    status='',
-                    isInterruptable=False
-                )
-                self.progress_step = 100.0 / len(to_update_paths)
-                self.in_progress = True
+                title = 'Deep Reference Update'
+                pm = ProgressDialogManager()
+                caller = pm.register(len(to_update_paths))
 
             from stalker import Version
             for path in to_update_paths:
@@ -2070,12 +1959,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     self.save_as(new_version)
                     # pymel.core.saveFile()
 
-                if self.use_progress_window and self.in_progress:
-                    pymel.core.progressWindow(e=1, step=self.progress_step)
-
-            if self.use_progress_window and self.in_progress:
-                pymel.core.progressWindow(endProgress=1)
-                self.in_progress = False
+                if caller is not None:
+                    caller.step()
 
             self.update_reference_edits(started_from_version)
 
