@@ -126,4 +126,5 @@ class ProgressDialogManager(object):
         :return: None
         """
         # remove the caller from the callers list
-        self.callers.remove(caller)
+        if caller in self.callers:
+            self.callers.remove(caller)
