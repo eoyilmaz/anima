@@ -1557,11 +1557,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :return: dictionary
         """
+        pm = ProgressDialogManager()
+        caller = pm.register(3, 'Maya.check_referenced_versions()')
+
         # deeply get which maya file is referencing which other files
         self.deep_version_inputs_update()
+        caller.step()
 
         reference_resolution = \
             empty_reference_resolution(root=self.get_referenced_versions())
+        caller.step()
 
         # reverse walk in DFS
         dfs_version_references = []
@@ -1569,11 +1574,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         version = self.get_current_version()
         for v in version.walk_inputs():
             dfs_version_references.append(v)
+        caller.step()
 
         # pop the first element which is the current scene
         dfs_version_references.pop(0)
 
-        pm = ProgressDialogManager()
+        caller.end_progress()
+
+        # register a new caller
         caller = pm.register(len(dfs_version_references),
                              'Maya.check_referenced_versions()')
 
