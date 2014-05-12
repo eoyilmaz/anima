@@ -1525,7 +1525,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if ref.path != prev_ref_path:
                     prev_ref_path = ref.path
                     references_list.append(ref)
-            caller.step(prev_ref_path)
+            caller.step(message=prev_ref_path)
             prev_ref_path = None
 
         # it probably will terminate before expected, so call end_progress for
