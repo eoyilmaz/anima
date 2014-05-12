@@ -10,8 +10,8 @@ class ProgressCaller(object):
     """A simple object to hold caller data for ProgressDialogManager
     """
 
-    def __init__(self, max_iterations=0, title=''):
-        self.max_iterations = max_iterations
+    def __init__(self, max_steps=0, title=''):
+        self.max_steps = max_steps
         self.title = title
         self.current_step = 0
         self.manager = None
@@ -36,7 +36,7 @@ class ProgressDialogManager(object):
 
       pm = ProgressDialogManager()
 
-      # register a new caller which will have 100 iterations
+      # register a new caller which will have 100 steps
       caller = pm.register(100)
 
       for i in range(100):
@@ -55,21 +55,21 @@ class ProgressDialogManager(object):
         self.callers = []
 
         self.title = ''
-        self.max_iterations = 0
+        self.max_steps = 0
         self.current_step = 0
 
     def create_dialog(self):
         """creates the progressWindow
         """
         if self.dialog is None:
-            print 'no dialog, creating one'
             from anima.ui.lib import QtGui
             self.dialog = QtGui.QProgressDialog()
-            self.dialog.setMinimumDuration(2000)
-            self.dialog.setRange(0, self.max_iterations)
+            # self.dialog.setMinimumDuration(2000)
+            self.dialog.setRange(0, self.max_steps)
             self.dialog.setLabelText(self.title)
-            self.dialog.setAutoClose(True)
-            self.dialog.setAutoReset(True)
+            # self.dialog.setAutoClose(True)
+            # self.dialog.setAutoReset(True)
+            self.dialog.show()
 
         # also set the Manager to in progress
         self.in_progress = True
@@ -88,15 +88,15 @@ class ProgressDialogManager(object):
 
         :return: ProgressCaller instance
         """
-        caller = ProgressCaller(max_iterations=max_iteration, title=title)
+        caller = ProgressCaller(max_steps=max_iteration, title=title)
         caller.manager = self
-        self.max_iterations += max_iteration
+        self.max_steps += max_iteration
 
         if not self.in_progress:
             self.create_dialog()
         else:
             # update the maximum
-            self.dialog.setRange(0, self.max_iterations)
+            self.dialog.setRange(0, self.max_steps)
             self.dialog.setValue(self.current_step)
 
         # also store this
@@ -115,7 +115,7 @@ class ProgressDialogManager(object):
         self.dialog.setValue(self.current_step)
         self.dialog.setLabelText('%s : %s' % (caller.title, message))
 
-        if caller.current_step == caller.max_iterations:
+        if caller.current_step >= caller.max_steps:
             # kill the caller
             self.end_progress(caller)
 
@@ -128,3 +128,11 @@ class ProgressDialogManager(object):
         # remove the caller from the callers list
         if caller in self.callers:
             self.callers.remove(caller)
+            # also reduce the max_steps counter
+            # incase of an easly kill
+            steps_left = caller.max_steps - caller.current_step
+            if steps_left > 0:
+                self.max_steps -= steps_left
+
+        if len(self.callers) == 0:
+            self.close()

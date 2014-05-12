@@ -53,7 +53,7 @@ class ProgressDialogManagerTestCase(unittest2.TestCase):
         caller = pm.register(10)
         self.assertIsInstance(caller, ProgressCaller)
 
-        self.assertEqual(caller.max_iterations, 10)
+        self.assertEqual(caller.max_steps, 10)
         self.assertEqual(caller.current_step, 0)
 
     def test_register_will_store_the_given_caller(self):

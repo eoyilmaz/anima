@@ -1086,13 +1086,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # get all the references
         references = pymel.core.listReferences(parent_ref)
 
-        # lets use a progress window
-        pm = ProgressDialogManager()
-        caller = pm.register(len(references), 'Maya.get_referenced_versions()')
-
         # sort them according to path
         # to make same paths together
         refs = sorted(references, key=lambda x: x.path)
+
+        # lets use a progress window
+        caller = None
+        if len(references):
+            pm = ProgressDialogManager()
+            caller = pm.register(len(references), 'Maya.get_referenced_versions()')
 
         prev_path = ''
         versions = []
@@ -1104,7 +1106,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if version:
                     versions.append(version)
                     prev_path = path
-            caller.step()
+            if caller is not None:
+                caller.step()
 
         return versions
 
@@ -1505,9 +1508,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # the go to the references
         references_list = pymel.core.listReferences()
 
-        pm = ProgressDialogManager()
-        caller = pm.register(len(references_list),
-                             'Maya.deep_version_inputs_update()')
+        # pm = ProgressDialogManager()
+        # caller = pm.register(len(references_list),
+        #                      'Maya.deep_version_inputs_update()')
 
         prev_ref_path = None
         while len(references_list):
@@ -1525,12 +1528,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if ref.path != prev_ref_path:
                     prev_ref_path = ref.path
                     references_list.append(ref)
-            caller.step(message=prev_ref_path)
+            # caller.step(message=prev_ref_path)
             prev_ref_path = None
 
         # it probably will terminate before expected, so call end_progress for
         # this caller
-        caller.end_progress()
+        # caller.end_progress()
 
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
@@ -1558,7 +1561,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :return: dictionary
         """
         pm = ProgressDialogManager()
-        caller = pm.register(3, 'Maya.check_referenced_versions()')
+        caller = pm.register(3, 'Maya.check_referenced_versions() prepare data')
 
         # deeply get which maya file is referencing which other files
         self.deep_version_inputs_update()
@@ -1641,6 +1644,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # from stalker import Version
             # assert isinstance(v, Version)
             caller.step(message=v.nice_name)
+
+        caller.end_progress()
 
         return reference_resolution
 
@@ -1943,7 +1948,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             caller = None
             if self.use_progress_window and len(to_update_paths):
-                title = 'Deep Reference Update'
                 pm = ProgressDialogManager()
                 caller = pm.register(len(to_update_paths),
                                      'Maya.fix_reference_namespaces()')
