@@ -61,9 +61,11 @@ class ProgressDialogManager(object):
             print 'no dialog, creating one'
             from anima.ui.lib import QtGui
             self.dialog = QtGui.QProgressDialog()
+            self.dialog.setMinimumDuration(2000)
             self.dialog.setRange(0, self.max_iterations)
             self.dialog.setLabelText(self.title)
-            self.dialog.show()
+            self.dialog.setAutoClose(True)
+            self.dialog.setAutoReset(True)
 
         # also set the Manager to in progress
         self.in_progress = True
@@ -121,8 +123,3 @@ class ProgressDialogManager(object):
         """
         # remove the caller from the callers list
         self.callers.remove(caller)
-
-        # check if there are still other callers
-        if not len(self.callers):
-            # remove the progress window
-            self.close()
