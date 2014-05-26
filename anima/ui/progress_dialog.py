@@ -129,7 +129,7 @@ class ProgressDialogManager(object):
         if caller in self.callers:
             self.callers.remove(caller)
             # also reduce the max_steps counter
-            # incase of an easly kill
+            # in case of an early kill
             steps_left = caller.max_steps - caller.current_step
             if steps_left > 0:
                 self.max_steps -= steps_left

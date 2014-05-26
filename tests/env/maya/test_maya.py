@@ -17,7 +17,6 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
 
 from anima import utils
 from anima.env.mayaEnv import Maya
-from anima.env.mayaEnv import ProgressWindowManager, ProgressCaller
 from anima.utils import walk_version_hierarchy
 
 
