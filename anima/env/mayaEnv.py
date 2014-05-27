@@ -22,12 +22,11 @@ from anima import utils
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.ui.progress_dialog import ProgressDialogManager
+from anima import publish
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
-
-publishers = {}
 
 
 class MayaExtension(object):
@@ -354,6 +353,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         It saves the given Version instance to the Version.absolute_full_path.
         """
+        if version.is_published:
+            # before doing anything run all publishers
+            type_name = ''
+            if version.task.type:
+                type_name = version.task.type.name
+
+            publish.run_publishers(type_name)
+
         # get the current version, and store it as the parent of the new
         # version
         current_version = self.get_current_version()

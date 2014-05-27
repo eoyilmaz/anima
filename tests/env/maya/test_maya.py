@@ -17,11 +17,11 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
 
 from anima import utils
 from anima.env.mayaEnv import Maya
+from anima import publish
 from anima.utils import walk_version_hierarchy
 
 
 class MayaTestBase(unittest2.TestCase):
-
     """The base class for Maya Tests
     """
 
@@ -189,11 +189,13 @@ class MayaTestBase(unittest2.TestCase):
         )
         self.task5 = Task(
             name='Test Task 5',
-            parent=self.task1
+            parent=self.task1,
+            type=Type('Model', code='Model', target_entity_type='Task')
         )
         self.task6 = Task(
             name='Test Task 6',
-            parent=self.task1
+            parent=self.task1,
+            type=Type('LookDev', code='Model', target_entity_type='Task')
         )
 
         # create a root asset
@@ -5008,3 +5010,92 @@ class ReferenceToAssTestCase(MayaTestBase):
 
         self.assertTrue(ref1.is_ass())
         self.assertFalse(ref2.is_ass())
+
+
+class PublisherTestCase(MayaTestBase):
+    """tests maya environment with publishers
+    """
+    backup_publishers = None
+
+    @classmethod
+    def setUpClass(cls):
+        """setup once
+        """
+        super(PublisherTestCase, cls).setUpClass()
+
+        cls.backup_publishers = publish.publishers
+        publish.publishers = {}
+
+    @classmethod
+    def tearDownClass(cls):
+        """clean up once
+        """
+        super(PublisherTestCase, cls).tearDownClass()
+
+        # also restore publishers
+        publish.publishers = cls.backup_publishers
+
+    def setUp(self):
+        """clean up tests
+        """
+        super(PublisherTestCase, self).setUp()
+        publish.publishers = {}
+
+    def tearDown(self):
+        """clean up tests
+        """
+        super(PublisherTestCase, self).tearDown()
+        publish.publishers = {}
+
+    def test_save_as_calls_publishers_for_published_versions(self):
+        """testing if Maya.save_as() runs the registered publishers for
+        published versions before really saving the file.
+        """
+        # register two new publishers
+        publishers_called = []
+
+        @publish.publisher('LookDev')
+        def publisher1():
+            publishers_called.append('publisher1')
+
+        @publish.publisher('Model')
+        def publisher2():
+            publishers_called.append('publisher2')
+
+        # now save a new version to a task which is a LookDev task
+        pymel.core.newFile(force=True)
+
+        v = Version(task=self.task6)
+        v.is_published = True
+        db.DBSession.add(v)
+
+        # check called publishers
+        self.assertEqual(publishers_called, [])
+        self.maya_env.save_as(v)
+        self.assertEqual(publishers_called, ['publisher1'])
+
+    def test_save_as_does_not_call_publishers_for_published_versions(self):
+        """testing if Maya.save_as() runs the registered publishers for
+        published versions before really saving the file.
+        """
+        # register two new publishers
+        publishers_called = []
+
+        @publish.publisher('LookDev')
+        def publisher1():
+            publishers_called.append('publisher1')
+
+        @publish.publisher('Model')
+        def publisher2():
+            publishers_called.append('publisher2')
+
+        # now save a new version to a task which is a LookDev task
+        pymel.core.newFile(force=True)
+
+        v = Version(task=self.task6)
+        db.DBSession.add(v)
+
+        # check called publishers
+        self.assertEqual(publishers_called, [])
+        self.maya_env.save_as(v)
+        self.assertEqual(publishers_called, [])
