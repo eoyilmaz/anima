@@ -27,6 +27,7 @@ def register_publisher(callable_, type_name=''):
     if not callable(callable_):
         raise TypeError('%s is not callable' % callable_.__class__.__name__)
 
+    type_name = type_name.lower()
     if type_name not in publishers:
         publishers[type_name] = []
 
@@ -62,5 +63,5 @@ def run_publishers(type_name=''):
         for f in publishers.get('', []):  # run generic publishers first
             f()
 
-    for f in publishers.get(type_name, []):
+    for f in publishers.get(type_name.lower(), []):
         f()

@@ -19,6 +19,7 @@ from pymel.core.system import FileReference
 from anima.extension import extends
 
 from anima import utils
+from anima.exc import PublishError
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.ui.progress_dialog import ProgressDialogManager
@@ -27,6 +28,9 @@ from anima import publish
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+
+MAX_NODE_DISPLAY = 80
 
 
 class MayaExtension(object):
@@ -1997,3 +2001,193 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             self.update_reference_edits(started_from_version)
 
         return created_versions
+
+#************#
+# PUBLISHERS #
+#************#
+
+#*********#
+# GENERIC #
+#*********#
+@publish.publisher()
+def check_old_object_smoothing():
+    """checking if there are objects with
+    """
+    meshes_with_smooth_mesh_preview = []
+    for node in pymel.core.ls(type='mesh'):
+        if node.displaySmoothMesh.get() != 0:
+            meshes_with_smooth_mesh_preview.append(node)
+
+    if len(meshes_with_smooth_mesh_preview) > 0:
+        raise PublishError(
+            'Please do not use <b>Smooth Mesh</b> on following nodes:<br><br>'
+            '%s' %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    meshes_with_smooth_mesh_preview[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+#*******#
+# MODEL #
+#*******#
+@publish.publisher('model')
+def check_history():
+    """there should be no history on the objects
+    """
+    nodes_with_history = []
+
+    # get all shapes
+    for node in pymel.core.ls(type='mesh'):
+        if len(node.listHistory()) > 1:
+            nodes_with_history.append(node)
+
+    if len(nodes_with_history):
+        # there is history
+        raise PublishError(
+            'There is history on:\n\n'
+            '%s'
+            '\n\n'
+            'there should be no '
+            'history in Model versions' %
+            '\n'.join(
+                map(lambda x: x.name(),
+                    nodes_with_history[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publish.publisher('model')
+def check_if_default_shader():
+    """check if only default shader is assigned
+    """
+    if len(pymel.core.ls(mat=1)) > 2:
+        raise PublishError(
+            'Use only lambert1 as the shader!'
+        )
+
+
+@publish.publisher('model')
+def check_if_root_nodes_have_no_transformation():
+    """checks if transform nodes directly under world have 0 transformations
+    """
+    root_transform_nodes = []
+    for node in pymel.core.ls(dag=1, transforms=1):
+        shape = node.getShape()
+        if shape:
+            if node.getParent() is None and shape.type() not in ['camera']:
+                root_transform_nodes.append(node)
+
+    non_freezed_root_nodes = []
+    for node in root_transform_nodes:
+        t = node.t.get()
+        r = node.r.get()
+        s = node.s.get()
+        if t.x != 0 or t.y != 0 or t.z != 0 \
+           or r.x != 0 or r.y != 0 or r.z != 0 \
+           or s.x != 1 or s.y != 1 or s.z != 1:
+            non_freezed_root_nodes.append(node)
+
+    if len(non_freezed_root_nodes):
+        raise PublishError(
+            'Please freeze the following node transformations:\n\n%s' %
+            '\n'.join(
+                map(lambda x: x.name(),
+                    non_freezed_root_nodes[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publish.publisher('model')
+def check_if_leaf_mesh_nodes_have_no_transformation():
+    """checks if all the Mesh transforms have 0 transformation, but it is
+    allowed to move the mesh nodes in space with a parent group node.
+    """
+    mesh_nodes_with_transform_children = []
+    for node in pymel.core.ls(dag=1, type='mesh'):
+        parent = node.getParent()
+        tra_under_shape = pymel.core.ls(
+            parent.listRelatives(),
+            type='transform'
+        )
+        if len(tra_under_shape):
+            mesh_nodes_with_transform_children.append(parent)
+
+    if len(mesh_nodes_with_transform_children):
+        raise PublishError(
+            'The following meshes have other objects parented to them:'
+            '\n\n%s'
+            '\n\nPlease remove any object under them!' %
+            '\n'.join(
+                map(lambda x: x.name(),
+                    mesh_nodes_with_transform_children[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publish.publisher('model')
+def check_model_quality():
+    """checks the quality of the model
+    """
+    pymel.core.select(None)
+    pymel.core.mel.eval(
+        'polyCleanupArgList 3 { "1","2","0","0","1","0","1","0","0","1e-005",'
+        '"0","1e-005","1","1e-005","0","2","1" };'
+    )
+    if len(pymel.core.ls(sl=1)) > 0:
+        raise RuntimeError(
+            """There are issues in your model please run:<br><br>
+            <b>PolygonMesh -> Mesh -> Cleanup...</b><br><br>
+            <ul>Check:
+            <li>Faces with more than 4 sides</li>
+            <li>Faces with holes</li>
+            <li>Lamina Faces</li>
+            <li>Non-manifold Geometry</li>
+            <li>Faces with zero map area</li>
+            </ul>"""
+        )
+
+
+@publish.publisher('model')
+def check_anim_layers():
+    """check if there are animation layers on the scene
+    """
+    if len(pymel.core.ls(type='animLayer')) > 0:
+        raise PublishError(
+            'There should be no <b>Animation Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_display_layer():
+    """check if there are display layers
+    """
+    if len(pymel.core.ls(type='displayLayer')) > 1:
+        raise PublishError(
+            'There should be no <b>Display Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_extra_cameras():
+    """checking if there are extra cameras
+    """
+    if len(pymel.core.ls(type='camera')) > 4:
+        raise PublishError('There should be no extra cameras in your scene!')
+
+
+@publish.publisher('model')
+def check_empty_groups():
+    """check if there are empty groups
+    """
+    empty_groups = []
+    for node in pymel.core.ls(type='transform'):
+        if len(node.listRelatives(children=1)) == 0:
+            empty_groups.append(node)
+
+    if len(empty_groups):
+        raise PublishError(
+            'There are <b>empty groups</b> in your scene, '
+            'please remove them!!!'
+        )
