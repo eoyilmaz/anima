@@ -2132,8 +2132,8 @@ def check_model_quality():
     """
     pymel.core.select(None)
     pymel.core.mel.eval(
-        'polyCleanupArgList 3 { "1","2","0","0","1","0","1","0","0","1e-005",'
-        '"0","1e-005","1","0","0","2","1" };'
+        'polyCleanupArgList 3 { "1","2","0","0","1","0","0","0","0","1e-005",'
+        '"0","0","1","0","0","2","1" };'
     )
     if len(pymel.core.ls(sl=1)) > 0:
         raise RuntimeError(
