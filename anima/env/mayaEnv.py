@@ -25,6 +25,9 @@ from anima.env.base import EnvironmentBase
 from anima.ui.progress_dialog import ProgressDialogManager
 from anima import publish
 
+# empty publishers first
+publish.publishers = {}
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -2142,6 +2145,7 @@ def check_model_quality():
         'polyCleanupArgList 3 { "1","2","0","0","1","0","0","0","0","1e-005",'
         '"0","0","0","0","0","2","1" };'
     )
+
     if len(pymel.core.ls(sl=1)) > 0:
         raise RuntimeError(
             """There are issues in your model please run:<br><br>
@@ -2153,6 +2157,54 @@ def check_model_quality():
             <li>Non-manifold Geometry</li>
             <li>Faces with zero map area</li>
             </ul>"""
+        )
+
+
+@publish.publisher('model')
+def check_uvs():
+    """checks uvs with no uv area
+    """
+    def area(p):
+        return 0.5 * abs(sum(x0 * y1 - x1 * y0
+                             for ((x0, y0), (x1, y1)) in segments(p)))
+
+    def segments(p):
+        return zip(p, p[1:] + [p[0]])
+
+    all_meshes = pymel.core.ls(type='mesh')
+    mesh_count = len(all_meshes)
+
+    caller = None
+    if not pymel.core.general.about(batch=1) and mesh_count:
+        pm = ProgressDialogManager()
+        caller = pm.register(mesh_count, 'check_uvs()')
+
+    meshes_with_zero_uv_area = []
+    for node in pymel.core.ls(type='mesh'):
+        for i in range(node.numFaces()):
+            uvs = []
+            try:
+                for j in range(node.numPolygonVertices(i)):
+                    uvs.append(node.getPolygonUV(i, j))
+                if area(uvs) == 0.0:
+                    meshes_with_zero_uv_area.append(node)
+                    break
+            except RuntimeError:
+                meshes_with_zero_uv_area.append(node)
+                break
+
+        if caller is not None:
+            caller.step()
+
+    if len(meshes_with_zero_uv_area):
+        pymel.core.select(meshes_with_zero_uv_area)
+        raise RuntimeError(
+            """There are models with no uvs or faces with zero uv area:<br><br>
+            %s""" %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    meshes_with_zero_uv_area[:MAX_NODE_DISPLAY])
+            )
         )
 
 

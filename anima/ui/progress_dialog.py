@@ -62,8 +62,8 @@ class ProgressDialogManager(object):
         """creates the progressWindow
         """
         if self.dialog is None:
-            from anima.ui.lib import QtGui
-            self.dialog = QtGui.QProgressDialog()
+            from anima.ui.lib import QtCore, QtGui
+            self.dialog = QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
             # self.dialog.setMinimumDuration(2000)
             self.dialog.setRange(0, self.max_steps)
             self.dialog.setLabelText(self.title)
