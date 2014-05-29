@@ -2036,11 +2036,18 @@ def check_old_object_smoothing():
 def check_history():
     """there should be no history on the objects
     """
+    excluded_types = ['mesh', 'shadingEngine', 'groupId']
     nodes_with_history = []
 
     # get all shapes
-    for node in pymel.core.ls(type='mesh'):
-        if len(node.listHistory()) > 1:
+    all_shapes = pymel.core.ls(type='mesh')
+    for node in all_shapes:
+        history_nodes = []
+        for h_node in node.listHistory(pdo=1, lv=1):
+            if h_node.type() not in excluded_types:
+                history_nodes.append(h_node)
+
+        if len(history_nodes) > 1:
             nodes_with_history.append(node)
 
     if len(nodes_with_history):
@@ -2133,7 +2140,7 @@ def check_model_quality():
     pymel.core.select(None)
     pymel.core.mel.eval(
         'polyCleanupArgList 3 { "1","2","0","0","1","0","0","0","0","1e-005",'
-        '"0","0","1","0","0","2","1" };'
+        '"0","0","0","0","0","2","1" };'
     )
     if len(pymel.core.ls(sl=1)) > 0:
         raise RuntimeError(
