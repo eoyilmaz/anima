@@ -2181,17 +2181,20 @@ def check_uvs():
 
     meshes_with_zero_uv_area = []
     for node in pymel.core.ls(type='mesh'):
-        for i in range(node.numFaces()):
-            uvs = []
-            try:
+        all_uvs = node.getUVs()
+        try:
+            for i in range(node.numFaces()):
+                uvs = []
                 for j in range(node.numPolygonVertices(i)):
-                    uvs.append(node.getPolygonUV(i, j))
+                    #uvs.append(node.getPolygonUV(i, j))
+                    uv_id = node.getPolygonUVid(i, j)
+                    uvs.append((all_uvs[0][uv_id], all_uvs[1][uv_id]))
                 if area(uvs) == 0.0:
                     meshes_with_zero_uv_area.append(node)
                     break
-            except RuntimeError:
-                meshes_with_zero_uv_area.append(node)
-                break
+        except RuntimeError:
+            meshes_with_zero_uv_area.append(node)
+            break
 
         if caller is not None:
             caller.step()
