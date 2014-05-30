@@ -24,15 +24,24 @@ def register_publisher(callable_, type_name=''):
       publisher and will always run first.
     :return:
     """
+
     if not callable(callable_):
         raise TypeError('%s is not callable' % callable_.__class__.__name__)
 
-    type_name = type_name.lower()
-    if type_name not in publishers:
-        publishers[type_name] = []
+    def register_one(t_name):
+        t_name = t_name.lower()
+        if t_name not in publishers:
+            publishers[t_name] = []
 
-    if callable_ not in publishers[type_name]:
-        publishers[type_name].append(callable_)
+        if callable_ not in publishers[t_name]:
+            publishers[t_name].append(callable_)
+
+    if isinstance(type_name, list):
+        for item in type_name:
+            register_one(item)
+    else:
+        # it should have only one item
+        register_one(type_name)
 
 
 def publisher(type_name=''):
