@@ -2155,7 +2155,6 @@ def check_model_quality():
             <li>Faces with holes</li>
             <li>Lamina Faces</li>
             <li>Non-manifold Geometry</li>
-            <li>Faces with zero map area</li>
             </ul>"""
         )
 
