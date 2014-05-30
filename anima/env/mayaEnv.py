@@ -2009,10 +2009,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 # PUBLISHERS #
 #************#
 
+
 #*********#
 # GENERIC #
 #*********#
-@publish.publisher()
+@publish.publisher
 def check_old_object_smoothing():
     """checking if there are objects with
     """
@@ -2248,4 +2249,188 @@ def check_empty_groups():
         raise PublishError(
             'There are <b>empty groups</b> in your scene, '
             'please remove them!!!'
+        )
+
+
+#******************#
+# LOOK DEVELOPMENT #
+#******************#
+look_dev_types = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
+
+
+@publish.publisher(look_dev_types)
+def check_all_tx_textures():
+    """checks if tx textures are created for all of the texture nodes in the
+    current scene
+    """
+    texture_file_paths = []
+    workspace_path = pymel.core.workspace.path
+
+    def add_path(path):
+        if path != '':
+            if not os.path.isabs(path):
+                path = \
+                    os.path.normpath(os.path.join(workspace_path, path))
+            texture_file_paths.append(path)
+
+    for node in pymel.core.ls(type='file'):
+        add_path(node.fileTextureName.get())
+
+    for node in pymel.core.ls(type='aiImage'):
+        add_path(node.filename.get())
+
+    textures_with_no_tx = []
+    for path in texture_file_paths:
+        tx_path = '%s.tx' % os.path.splitext(path)[0]
+        if not os.path.exists(tx_path):
+            textures_with_no_tx.append(path)
+
+    if len(textures_with_no_tx):
+        raise PublishError('There are textures with no <b>TX</b> file!!!')
+
+
+@publish.publisher(look_dev_types)
+def check_lights():
+    """checks if there are lights in the scene
+    """
+    all_lights = pymel.core.ls(type='light')
+    if len(all_lights):
+        raise PublishError(
+            'There are <b>Lights</b> in the current scene:<br><br>%s<br><br>'
+            'Please delete them!!!' %
+            '<br>'.join(map(lambda x: x.name(), all_lights))
+        )
+
+
+@publish.publisher(look_dev_types)
+def check_unused_nodes():
+    """selects unused shading nodes
+    """
+    num_of_items_deleted = pymel.core.mel.eval('MLdeleteUnused')
+    if num_of_items_deleted:
+        # do not raise any error just warn the user
+        pymel.core.warning('Deleted unused nodes during Publish operation!!')
+
+
+@publish.publisher(look_dev_types)
+def check_only_arnold_materials_are_used():
+    """check if only arnold materials are used
+    """
+    # TODO: this should be depending on to the project some projects still can
+    #       use mental ray
+    arnold_materials = [
+        u'aiAmbientOcclusion',
+        u'aiHair',
+        u'aiRaySwitch',
+        u'aiShadowCatcher',
+        u'aiSkin',
+        u'aiSkinSss',
+        u'aiStandard',
+        u'aiUtility',
+        u'aiWireframe'
+    ]
+
+    non_arnold_materials = []
+
+    for material in pymel.core.ls(mat=1):
+        if material.name() not in ['lambert1', 'particleCloud1']:
+            if material.type() not in arnold_materials:
+                non_arnold_materials.append(material)
+
+    if len(non_arnold_materials):
+        raise PublishError(
+            'There are non-Arnold materials in the scene:<br><br>%s<br><br>'
+            'Please remove them!!!' %
+            '<br>'.join(map(lambda x: x.name(), non_arnold_materials))
+        )
+
+
+@publish.publisher(look_dev_types)
+def check_objects_still_using_default_shader():
+    """check if there are objects still using the default shader
+    """
+    objects_with_default_material = pymel.core.sets('initialShadingGroup', q=1)
+    if len(objects_with_default_material):
+        raise PublishError(
+            'There are objects still using <b>initialShadingGroup</b><br><br>'
+            '%s<br><br>Please assign a proper material to them' %
+            '<br>'.join(
+                map(lambda x: x.name(), objects_with_default_material)
+            )[:MAX_NODE_DISPLAY]
+        )
+
+
+@publish.publisher(look_dev_types)
+def check_component_edits_on_references():
+    """check if there are component edits on references
+    """
+    import maya.cmds
+    reference_query = maya.cmds.referenceQuery
+
+    references_with_component_edits = []
+
+    for ref in pymel.core.listReferences(recursive=True):
+        all_edits = reference_query(ref.refNode.name(), es=True)
+        joined_edits = '\n'.join(all_edits)
+        if '.pt[' in joined_edits or '.pnts[' in joined_edits:
+            references_with_component_edits.append(ref)
+            continue
+
+    if len(references_with_component_edits):
+        raise PublishError(
+            'There are <b>component edits</b> on the following References:'
+            '<br><br>%s<br><br>Please remove them!!!' %
+            '<br>'.join(
+                map(lambda x: x.refNode.name(),
+                    references_with_component_edits)
+            )[:MAX_NODE_DISPLAY]
+        )
+
+
+@publish.publisher(look_dev_types)
+def check_if_previous_version_references():
+    """check if a previous version of the same task is referenced to the scene
+    """
+    m = Maya()
+    ver = m.get_current_version()
+    same_version_references = []
+    for ref in pymel.core.listReferences():  # check only 1st level references
+        ref_version = m.get_version_from_full_path(ref.path)
+        if ref_version:
+            if ref_version.task == ver.task \
+               and ref_version.take_name == ver.take_name:
+                same_version_references.append(ref)
+
+    if len(same_version_references):
+        print 'The following nodes are references to an older version of ' \
+              'this scene'
+        print '\n'.join(
+            map(lambda x: x.refNode.name(), same_version_references)
+        )
+        raise PublishError(
+            'The current scene contains a <b>reference</b> to a<br>'
+            '<b>previous version</b> of itself.<br><br>'
+            'Please remove it!!!'
+        )
+
+
+@publish.publisher(look_dev_types)
+def check_material_names():
+    """check if the name of materials are not starting with the material type
+    name
+    """
+    material_with_simple_names = []
+    for mat in pymel.core.ls(mat=1):
+        mat_name = mat.name()
+        if mat_name not in ['lambert1', 'particleCloud1'] \
+           and mat.name().startswith(mat.type()):
+            material_with_simple_names.append(mat_name)
+
+    if len(material_with_simple_names):
+        print 'Use a more **descriptive** name for the following materials:'
+        print '\n'.join(material_with_simple_names)
+        raise PublishError(
+            'Please use a more <b>descriptive</b> name<br>'
+            'for the following materials:<br><br>%s' %
+            '<br>'.join(material_with_simple_names)
         )
