@@ -2366,7 +2366,7 @@ def check_objects_still_using_default_shader():
         )
 
 
-@publish.publisher(look_dev_types)
+@publish.publisher(look_dev_types + ['layout'])
 def check_component_edits_on_references():
     """check if there are component edits on references
     """
