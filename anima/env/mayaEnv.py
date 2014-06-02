@@ -2163,6 +2163,9 @@ def check_model_quality():
 @publish.publisher('model')
 def check_uvs():
     """checks uvs with no uv area
+
+    The area of a 2d polygon calculation is based on the answer of Darius Bacon
+    in http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
     """
     def area(p):
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
