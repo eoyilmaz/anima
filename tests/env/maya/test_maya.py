@@ -41,7 +41,6 @@ class MayaTestBase(unittest2.TestCase):
 
         return v
 
-
     @classmethod
     def setUpClass(cls):
         """setup in class level
@@ -437,7 +436,7 @@ class MayaTestBase(unittest2.TestCase):
         db.DBSession.remove()
 
         # delete the temp folder
-        # shutil.rmtree(self.temp_repo_path, ignore_errors=True)
+        shutil.rmtree(self.temp_repo_path, ignore_errors=True)
 
         for f in self.remove_these_files_buffer:
             if os.path.isfile(f):
