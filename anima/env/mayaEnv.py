@@ -854,11 +854,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 pass
         elif current_renderer == 'arnold':
             dRG.imageFormat.set(51)  # exr
-            dAD = pymel.core.PyNode('defaultArnoldDriver')
-            dAD.exrCompression.set(2)  # zips
-            dAD.halfPrecision.set(1)  # half
-            dAD.tiled.set(0)  # not tiled
-            dAD.autocrop.set(1)  # will enhance file load times in Nuke
+            try:
+                dAD = pymel.core.PyNode('defaultArnoldDriver')
+                dAD.exrCompression.set(2)  # zips
+                dAD.halfPrecision.set(1)  # half
+                dAD.tiled.set(0)  # not tiled
+                dAD.autocrop.set(1)  # will enhance file load times in Nuke
+            except pymel.core.general.MayaNodeError:
+                # arnold is not rendered any single frame yet
+                pass
 
         ## check all the render layers and try to get if any of them are using
         ## mayaSoftware as the renderer, and set the render output to iff if any
