@@ -2037,7 +2037,7 @@ def check_old_object_smoothing():
         )
 
 
-@publish.publisher(look_dev_types)
+@publish.publisher()
 def check_if_previous_version_references():
     """check if a previous version of the same task is referenced to the scene
     """
