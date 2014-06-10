@@ -2037,12 +2037,16 @@ def check_old_object_smoothing():
         )
 
 
-@publish.publisher
+@publish.publisher(look_dev_types)
 def check_if_previous_version_references():
     """check if a previous version of the same task is referenced to the scene
     """
     m = Maya()
     ver = m.get_current_version()
+
+    if ver is None:
+        return
+
     same_version_references = []
     for ref in pymel.core.listReferences():  # check only 1st level references
         ref_version = m.get_version_from_full_path(ref.path)
@@ -2425,40 +2429,6 @@ def check_component_edits_on_references():
 
 
 @publish.publisher(look_dev_types)
-<<<<<<< HEAD
-=======
-def check_if_previous_version_references():
-    """check if a previous version of the same task is referenced to the scene
-    """
-    m = Maya()
-    ver = m.get_current_version()
-
-    if ver is None:
-        return
-
-    same_version_references = []
-    for ref in pymel.core.listReferences():  # check only 1st level references
-        ref_version = m.get_version_from_full_path(ref.path)
-        if ref_version:
-            if ref_version.task == ver.task \
-               and ref_version.take_name == ver.take_name:
-                same_version_references.append(ref)
-
-    if len(same_version_references):
-        print 'The following nodes are references to an older version of ' \
-              'this scene'
-        print '\n'.join(
-            map(lambda x: x.refNode.name(), same_version_references)
-        )
-        raise PublishError(
-            'The current scene contains a <b>reference</b> to a<br>'
-            '<b>previous version</b> of itself.<br><br>'
-            'Please remove it!!!'
-        )
-
-
-@publish.publisher(look_dev_types)
->>>>>>> 288551470ef2655174c4eadf1ad4be50b865e13a
 def check_material_names():
     """check if the name of materials are not starting with the material type
     name
