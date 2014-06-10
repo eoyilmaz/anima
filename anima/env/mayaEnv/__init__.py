@@ -2196,6 +2196,50 @@ def check_model_quality():
 
 
 @publish.publisher('model')
+def check_anim_layers():
+    """check if there are animation layers on the scene
+    """
+    if len(pymel.core.ls(type='animLayer')) > 0:
+        raise PublishError(
+            'There should be no <b>Animation Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_display_layer():
+    """check if there are display layers
+    """
+    if len(pymel.core.ls(type='displayLayer')) > 1:
+        raise PublishError(
+            'There should be no <b>Display Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_extra_cameras():
+    """checking if there are extra cameras
+    """
+    if len(pymel.core.ls(type='camera')) > 4:
+        raise PublishError('There should be no extra cameras in your scene!')
+
+
+@publish.publisher('model')
+def check_empty_groups():
+    """check if there are empty groups
+    """
+    empty_groups = []
+    for node in pymel.core.ls(type='transform'):
+        if len(node.listRelatives(children=1)) == 0:
+            empty_groups.append(node)
+
+    if len(empty_groups):
+        raise PublishError(
+            'There are <b>empty groups</b> in your scene, '
+            'please remove them!!!'
+        )
+
+
+@publish.publisher('model')
 def check_uvs():
     """checks uvs with no uv area
 
@@ -2246,50 +2290,6 @@ def check_uvs():
                 map(lambda x: x.name(),
                     meshes_with_zero_uv_area[:MAX_NODE_DISPLAY])
             )
-        )
-
-
-@publish.publisher('model')
-def check_anim_layers():
-    """check if there are animation layers on the scene
-    """
-    if len(pymel.core.ls(type='animLayer')) > 0:
-        raise PublishError(
-            'There should be no <b>Animation Layers</b> in the scene!!!'
-        )
-
-
-@publish.publisher('model')
-def check_display_layer():
-    """check if there are display layers
-    """
-    if len(pymel.core.ls(type='displayLayer')) > 1:
-        raise PublishError(
-            'There should be no <b>Display Layers</b> in the scene!!!'
-        )
-
-
-@publish.publisher('model')
-def check_extra_cameras():
-    """checking if there are extra cameras
-    """
-    if len(pymel.core.ls(type='camera')) > 4:
-        raise PublishError('There should be no extra cameras in your scene!')
-
-
-@publish.publisher('model')
-def check_empty_groups():
-    """check if there are empty groups
-    """
-    empty_groups = []
-    for node in pymel.core.ls(type='transform'):
-        if len(node.listRelatives(children=1)) == 0:
-            empty_groups.append(node)
-
-    if len(empty_groups):
-        raise PublishError(
-            'There are <b>empty groups</b> in your scene, '
-            'please remove them!!!'
         )
 
 
