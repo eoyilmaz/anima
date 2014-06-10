@@ -2403,6 +2403,10 @@ def check_if_previous_version_references():
     """
     m = Maya()
     ver = m.get_current_version()
+
+    if ver is None:
+        return
+
     same_version_references = []
     for ref in pymel.core.listReferences():  # check only 1st level references
         ref_version = m.get_version_from_full_path(ref.path)
