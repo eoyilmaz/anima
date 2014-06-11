@@ -2320,10 +2320,15 @@ def check_all_tx_textures():
     for node in pymel.core.ls(type='aiImage'):
         add_path(node.filename.get())
 
+    import glob
+
     textures_with_no_tx = []
     for path in texture_file_paths:
         tx_path = '%s.tx' % os.path.splitext(path)[0]
-        if not os.path.exists(tx_path):
+        # replace any <udim> value with *
+        tx_path = tx_path.replace('<udim>', '*')
+
+        if not len(glob.glob(tx_path)):
             textures_with_no_tx.append(path)
 
     if len(textures_with_no_tx):
@@ -2334,7 +2339,9 @@ def check_all_tx_textures():
 def check_lights():
     """checks if there are lights in the scene
     """
-    all_lights = pymel.core.ls(type='light')
+    all_lights = pymel.core.ls(
+        type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight']
+    )
     if len(all_lights):
         raise PublishError(
             'There are <b>Lights</b> in the current scene:<br><br>%s<br><br>'
