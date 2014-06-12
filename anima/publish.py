@@ -74,3 +74,10 @@ def run_publishers(type_name=''):
 
     for f in publishers.get(type_name.lower(), []):
         f()
+
+
+def clear_publishers():
+    """utility function to clear publishers
+    """
+    publishers = {}
+

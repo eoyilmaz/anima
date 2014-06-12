@@ -9,8 +9,8 @@ from sqlalchemy import or_
 
 import anima
 from anima.ui import IS_PYQT4, IS_PYSIDE
+from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui
-from anima.ui.utils import UICaller, AnimaDialogBase
 
 # create a logger
 logger = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ def UI(app_in=None, executor=None):
     :param executor: Instead of calling app.exec_ the UI will call this given
       function. It also passes the created app instance to this executor.
     """
-    return UICaller(app_in, executor, MainDialog)
+    return ui_caller(app_in, executor, MainDialog)
 
 
 class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):

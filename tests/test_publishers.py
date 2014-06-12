@@ -23,6 +23,8 @@ class PublishersTestCase(unittest.TestCase):
     def test_registering_a_publisher(self):
         """testing if registering a publisher is working properly
         """
+        self.assertEqual(publishers, {})
+
         def some_callable():
             pass
 

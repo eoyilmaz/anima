@@ -5,11 +5,8 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 """Utilities for UI stuff
 """
-import sys
 import os
 import logging
-
-from stalker import LocalSession
 
 from anima.utils import StalkerThumbnailCache
 
@@ -20,81 +17,7 @@ logger.setLevel(logging.DEBUG)
 from anima.ui.lib import QtCore, QtGui
 
 
-class AnimaDialogBase(object):
-    """A simple class to hold basic common functions for dialogs
-    """
-
-    def center_window(self):
-        """centers the window to the screen
-        """
-        screen = QtGui.QDesktopWidget().screenGeometry()
-        size = self.geometry()
-        self.move(
-            (screen.width() - size.width()) * 0.5,
-            (screen.height() - size.height()) * 0.5
-        )
-
-    def get_logged_in_user(self):
-        """returns the logged in user
-        """
-        local_session = LocalSession()
-        logged_in_user = local_session.logged_in_user
-        if not logged_in_user:
-            from anima.ui import login_dialog
-            dialog = login_dialog.MainDialog(parent=self)
-            dialog.exec_()
-            logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
-            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted:
-                local_session = LocalSession()
-                logged_in_user = local_session.logged_in_user
-            else:
-                # close the ui
-                #logged_in_user = self.get_logged_in_user()
-                logger.debug("no logged in user")
-                self.close()
-
-        return logged_in_user
-
-
-class MultiLineInputDialog(QtGui.QDialog):
-    """A simple dialog with a QPlainTextEdit
-    """
-    pass
-
-
-def UICaller(app_in, executor, DialogClass, **kwargs):
-    global app
-    global mainDialog
-    self_quit = False
-    if QtGui.QApplication.instance() is None:
-        if not app_in:
-            try:
-                app = QtGui.QApplication(sys.argv)
-            except AttributeError: # sys.argv gives argv.error
-                app = QtGui.QApplication([])
-        else:
-            app = app_in
-        self_quit = True
-    else:
-        app = QtGui.QApplication.instance()
-
-    mainDialog = DialogClass(**kwargs)
-    mainDialog.show()
-    if executor is None:
-        app.exec_()
-        if self_quit:
-            app.connect(
-                app,
-                QtCore.SIGNAL("lastWindowClosed()"),
-                app,
-                QtCore.SLOT("quit()")
-            )
-    else:
-        executor.exec_(app, mainDialog)
-    return mainDialog
-
-
-def getIcon(icon_name):
+def get_icon(icon_name):
     """Returns an icon from ui library
     """
     here = os.path.abspath(os.path.dirname(__file__))
@@ -103,36 +26,36 @@ def getIcon(icon_name):
     return QtGui.QIcon(icon_full_path)
 
 
-def clear_thumbnail(gView):
+def clear_thumbnail(gview):
     """Clears the thumbnail for the given QGraphicsView
 
-    :param gView: The QGraphicsView instance
+    :param gview: The QGraphicsView instance
     """
 
-    if not gView:
+    if not gview:
         return
 
     # clear the graphics scene in case there is no thumbnail
-    scene = gView.scene()
+    scene = gview.scene()
     if not scene:
-        scene = QtGui.QGraphicsScene(gView)
-        gView.setScene(scene)
+        scene = QtGui.QGraphicsScene(gview)
+        gview.setScene(scene)
 
     scene.clear()
 
 
-def update_gview_with_task_thumbnail(task, gView):
+def update_gview_with_task_thumbnail(task, gview):
     """Updates the given QGraphicsView with the given Task thumbnail
 
     :param task: A
       :class:`~stalker.models.task.Task` instance
 
-    :param gView: A QtGui.QGraphicsView instance
+    :param gview: A QtGui.QGraphicsView instance
     """
     from stalker import Task
 
     if not isinstance(task, Task) or \
-            not isinstance(gView, QtGui.QGraphicsView):
+            not isinstance(gview, QtGui.QGraphicsView):
         # do nothing
         logger.debug('task is not a stalker.models.task.Task instance')
         return
@@ -156,18 +79,18 @@ def update_gview_with_task_thumbnail(task, gView):
     if full_path:
         update_gview_with_image_file(
             full_path,
-            gView
+            gview
         )
 
 
-def update_gview_with_image_file(image_full_path, gView):
+def update_gview_with_image_file(image_full_path, gview):
     """updates the QGraphicsView with the given image
     """
 
-    if not isinstance(gView, QtGui.QGraphicsView):
+    if not isinstance(gview, QtGui.QGraphicsView):
         return
 
-    clear_thumbnail(gView)
+    clear_thumbnail(gview)
 
     if image_full_path != "":
         image_full_path = os.path.normpath(image_full_path)
@@ -177,7 +100,7 @@ def update_gview_with_image_file(image_full_path, gView):
         # size = conf.thumbnail_size
         # width = size[0]
         # height = size[1]
-        size = gView.size()
+        size = gview.size()
         width = size.width()
         height = size.height()
         logger.debug('width: %s' % width)
@@ -191,7 +114,7 @@ def update_gview_with_image_file(image_full_path, gView):
             )
             # pixmap = QtGui.QPixmap(image_full_path, format='JPG')
 
-            scene = gView.scene()
+            scene = gview.scene()
             scene.addPixmap(pixmap)
 
 

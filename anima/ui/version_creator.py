@@ -19,7 +19,7 @@ from anima import power_users_group_names
 from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
 from anima.ui import utils as ui_utils
-from anima.ui.utils import UICaller, AnimaDialogBase
+from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
 from anima.ui.lib import QtGui, QtCore
 from anima.ui.models import TaskTreeModel, TakesListWidget
@@ -166,7 +166,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
             # created_with
             item = QtGui.QTableWidgetItem()
             if version.created_with:
-                item.setIcon(ui_utils.getIcon(version.created_with.lower()))
+                item.setIcon(ui_utils.get_icon(version.created_with.lower()))
 
             if is_published:
                 set_font(item)
@@ -272,7 +272,7 @@ def UI(app_in=None, executor=None, **kwargs):
       function. It also passes the created app instance to this executor.
 
     """
-    return UICaller(app_in, executor, MainDialog, **kwargs)
+    return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
 class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):

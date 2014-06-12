@@ -6,8 +6,8 @@
 import logging
 
 from anima.env import empty_reference_resolution
+from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models import VersionTreeModel
-from anima.ui.utils import UICaller, AnimaDialogBase
 from anima.ui.lib import QtGui, QtCore
 from anima.ui import IS_PYSIDE, IS_PYQT4
 
@@ -35,7 +35,7 @@ def UI(app_in=None, executor=None, **kwargs):
     :param executor: Instead of calling app.exec_ the UI will call this given
       function. It also passes the created app instance to this executor.
     """
-    return UICaller(app_in, executor, MainDialog, **kwargs)
+    return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
 class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):

@@ -79,7 +79,7 @@ class TestEnvironment(EnvironmentBase):
 
         # TODO: with Stalker v0.2.5 replace this with Version.walk_inputs()
 
-        for v in utils.walk_version_hierarchy(version):
+        for v in version.walk_hierarchy():
             dfs_version_references.append(v)
 
         # pop the first element which is the current scene

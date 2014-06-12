@@ -4,17 +4,174 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+
 import os
 import subprocess
 import tempfile
 from contextlib import contextmanager
 
-import pymel.core
-from anima.env.mayaEnv import Maya, MayaExtension
+import pymel.core as pm
+from pymel.core.uitypes import CheckBox, TextField
+from pymel.core.general import Attribute
+from pymel.core.system import FileReference
+
 from anima.extension import extends
+from anima.repr import Representation
 
 
 default_handle_count = 15
+
+
+class MayaExtension(object):
+    """Extension to PyMel classes
+    """
+
+    @extends(Attribute)
+    @property
+    def next_available(self):
+        """returns the next available attr in a multi attr
+
+        :return: The available index as an attribute
+        """
+        try:
+            indices = self.getArrayIndices()
+        except TypeError:
+            return self
+
+        available_index = 0
+
+        try:
+            for i in xrange(max(indices) + 2):
+                if not self[i].connections():
+                    available_index = i
+                    break
+        except ValueError:
+            available_index = 0
+
+        return self[available_index]
+
+    @extends(CheckBox)
+    def value(self, value=None):
+        """returns or set the check box value
+        """
+        from pymel.core import checkBox
+        if value is not None:
+            # set the value
+            checkBox(self, e=1, v=value)
+        else:
+            # get the value
+            return checkBox(self, q=1, v=1)
+
+    @extends(TextField)
+    def text(self, value=None):
+        """returns or sets the text field value
+        """
+        from pymel.core import textField
+        if value is not None:
+            # set the value
+            textField(self, e=1, tx=value)
+        else:
+            # get the value
+            return textField(self, q=1, tx=1)
+
+
+class ReferenceExtension(object):
+    """Extensions to Maya Reference node.
+
+    Manages the Referenced different representations in the current scene.
+
+    This class helps converting references to other representations and vice
+    versa.
+    """
+
+    def path(self):
+        """dummy method to let the IDEs find FileReference.path and not
+        complain about it.
+        """
+        return ''
+
+    @extends(FileReference)
+    def to_repr(self, repr_name):
+        """Replaces the current reference with the representation with the
+        given repr_name.
+
+        :param str repr_name: The desired repr name
+        :return:
+        """
+        rep_v = self.find_repr(repr_name)
+        if rep_v is not None:
+            self.replaceWith(rep_v.absolute_full_path)
+
+    @extends(FileReference)
+    def find_repr(self, repr_name):
+        """Finds the representation with the given repr_name.
+
+        :param str repr_name: The desired repr name
+        :return: :class:`.Version`
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return
+
+        rep = Representation(version=v)
+        rep_v = rep.find(repr_name)
+
+        return rep_v
+
+    @extends(FileReference)
+    def list_all_repr(self):
+        """Returns a list of strings representing all the representation names
+        of this FileReference
+
+        :return: list of str
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return []
+
+        rep = Representation(version=v)
+        return rep.list_all()
+
+    @extends(FileReference)
+    def to_base(self):
+        """Loads the original version
+        """
+        self.to_repr(Representation.base_repr_name)
+
+    @extends(FileReference)
+    def is_base(self):
+        """returns True or False depending to if this is the base
+        representation for this reference
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return True
+
+        rep = Representation(version=v)
+        return rep.is_base()
+
+    @extends(FileReference)
+    def get_base(self):
+        """returns the base version instance
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return True
+
+        rep = Representation(version=v)
+        return rep.find(rep.base_repr_name)
 
 
 class PrevisBase(object):
@@ -125,10 +282,10 @@ class DurationMixin(object):
 
 
 class SequenceManagerExtension(object):
-    """Extension to the pymel.core.nodetypes.SequenceManager class
+    """Extension to the pm.nodetypes.SequenceManager class
     """
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def get_shot_name_template(self):
         """returns teh shot_name_template_ attribute value, creates the
         attribute if missing
@@ -139,7 +296,7 @@ class SequenceManagerExtension(object):
 
         return self.shot_name_template.get()
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def set_shot_name_template(self, template):
         """sets the shot_name_template attribute value
         """
@@ -148,8 +305,7 @@ class SequenceManagerExtension(object):
 
         self.shot_name_template.set(template)
 
-
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def get_version(self):
         """returns the version attribute value, creates the attribute if
         missing
@@ -158,7 +314,7 @@ class SequenceManagerExtension(object):
             self.set_version('')
         return self.version.get()
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def set_version(self, template):
         """sets the version attribute value
         """
@@ -167,20 +323,20 @@ class SequenceManagerExtension(object):
 
         self.version.set(template)
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def create_sequence(self, name=None):
         """Creates a new sequence
 
-        :return: pymel.core.nodetypes.Sequence
+        :return: pm.nodetypes.Sequence
         """
-        sequencer = pymel.core.createNode('sequencer')
+        sequencer = pm.createNode('sequencer')
         if name:
             sequencer.set_sequence_name(name)
 
         sequencer.message >> self.sequences.next_available
         return sequencer
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def from_seq(self, seq):
         """Generates maya shots and sequencers with the given
         :class:`anima.previs.Sequence` instance.
@@ -273,7 +429,7 @@ class SequenceManagerExtension(object):
                     deleted_shots.append(shot)
 
             # delete shots
-            pymel.core.delete(deleted_shots)
+            pm.delete(deleted_shots)
 
         else:
             # create sequencer
@@ -297,10 +453,10 @@ class SequenceManagerExtension(object):
                         shot.output.set(f.pathurl.replace('file://', ''))
                     shot.track.set(i + 1)
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def from_xml(self, path):
         """Parses XML file and returns a Sequence instance which reflects the
-        whole timeline hierarchy.
+        whole time line hierarchy.
 
         :param path: The path of the XML file
         :return: :class:`.Sequence`
@@ -326,10 +482,10 @@ class SequenceManagerExtension(object):
 
         self.from_seq(seq)
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def from_edl(self, path):
         """Parses EDL file and returns a Sequence instance which reflects the
-        whole timeline hierarchy.
+        whole time line hierarchy.
 
         :param path: The path of the XML file
         :return: :class:`.Sequence`
@@ -340,8 +496,9 @@ class SequenceManagerExtension(object):
                 (self.__class__.__name__, path.__class__.__name__)
             )
 
-        mayaEnv = Maya()
-        fps = mayaEnv.get_fps()
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        fps = m.get_fps()
 
         import edl
         p = edl.Parser(str(fps))
@@ -353,11 +510,9 @@ class SequenceManagerExtension(object):
 
         self.from_seq(seq)
 
-    @extends(pymel.core.nodetypes.SequenceManager)
-    def to_xml(self, path=None, indentation=2, pre_indent=0):
+    @extends(pm.nodetypes.SequenceManager)
+    def to_xml(self, indentation=2, pre_indent=0):
         """Generates an FCP compatible XML file at given path.
-
-        :param path: The path of the XML file
 
         :return:
         """
@@ -372,17 +527,17 @@ class SequenceManagerExtension(object):
             }
         return rendered_template
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def generate_sequence_structure(self):
         """Generates a Sequence structure suitable for XML<->EDL conversion
 
         :return: Sequence
         """
         import pytimecode
-        from anima.env import mayaEnv
+        from anima.env.mayaEnv import Maya
 
-        mayaEnv = Maya()
-        fps = mayaEnv.get_fps()
+        m = Maya()
+        fps = m.get_fps()
 
         # export only the first sequence, ignore others
         sequencers = self.sequences.get()
@@ -390,7 +545,7 @@ class SequenceManagerExtension(object):
             return None
 
         sequencer = sequencers[0]
-        time = pymel.core.PyNode('time1')
+        time = pm.PyNode('time1')
 
         seq = Sequence()
         seq.name = str(sequencer.get_sequence_name())
@@ -420,16 +575,16 @@ class SequenceManagerExtension(object):
             clip.out = shot.handle.get() + shot.duration  # handle at end
             clip.type = 'Video'  # always video for now
 
-            file = File()
-            file.name = os.path.splitext(
+            f = File()
+            f.name = os.path.splitext(
                 os.path.basename(str(shot.output.get()))
             )[0]
 
-            file.duration = shot.duration + 2 * shot.handle.get()
+            f.duration = shot.duration + 2 * shot.handle.get()
 
-            file.pathurl = str('file://%s' % shot.output.get())
+            f.pathurl = str('file://%s' % shot.output.get())
 
-            clip.file = file
+            clip.file = f
 
             track_number = shot.track.get() - 1  # tracks should start from 0
             try:
@@ -446,7 +601,7 @@ class SequenceManagerExtension(object):
         seq.media = media
         return seq
 
-    @extends(pymel.core.nodetypes.SequenceManager)
+    @extends(pm.nodetypes.SequenceManager)
     def to_edl(self):
         """Generates an EDL file out of the edit
         """
@@ -464,7 +619,7 @@ class SequencerExtension(object):
     It is able to get Maya editorial XML and convert it to EDL.
     """
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     @property
     def manager(self):
         """returns the SequenceManager instance that this sequence is connected
@@ -472,7 +627,7 @@ class SequencerExtension(object):
         """
         return self.message.get()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def get_sequence_name(self):
         """Gets the sequence_name attribute value, creates the attribute if it
         is missing
@@ -481,7 +636,7 @@ class SequencerExtension(object):
             self.set_sequence_name('')
         return self.sequence_name.get()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def set_sequence_name(self, name):
         """Sets the sequence name for this Sequencer
 
@@ -492,14 +647,14 @@ class SequencerExtension(object):
             self.addAttr('sequence_name', dt='string')
         self.sequence_name.set(name)
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     @property
     def all_shots(self):
         """return all the shots connected to this sequencer
         """
         return self.shots.get()
 
-    # @extends(pymel.core.nodetypes.Sequencer)
+    # @extends(pm.nodetypes.Sequencer)
     # @all_shots.setter
     # def all_shots(self, shots):
     #     """setter for the all_shots property
@@ -512,11 +667,11 @@ class SequencerExtension(object):
     #     for s in shots:
     #         t = s.message >> self.shots.next_available
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def add_shot(self, shot):
         """Adds the given shot to the current sequencer
 
-        :param shot: a pymel.core.nodetypes.Shot instance
+        :param shot: a pm.nodetypes.Shot instance
         :return: None
         """
         # add the given shot to the list
@@ -526,12 +681,12 @@ class SequencerExtension(object):
         # connect to the sequencer
         # remove it from other sequences
         for attr in shot.message.outputs(p=1):
-            if isinstance(attr.node(), pymel.core.nodetypes.Sequencer):
+            if isinstance(attr.node(), pm.nodetypes.Sequencer):
                 shot.message // attr
 
         shot.message >> self.shots.next_available
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def set_shot_handles(self, handle=default_handle_count):
         """Set shot handles
 
@@ -543,14 +698,14 @@ class SequencerExtension(object):
         for shot in self.all_shots:
             shot.set_handle(handle)
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def mute_shots(self):
         """mutes all shots connected to this sequencer
         """
         for shot in self.all_shots:
             shot.mute()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def unmute_shots(self):
         """unmutes all shots connected to this sequencer
         """
@@ -580,7 +735,7 @@ class SequencerExtension(object):
         """
         raise NotImplementedError()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def create_shot(self, name='', handle=default_handle_count):
         """Creates a new shot.
 
@@ -588,9 +743,9 @@ class SequencerExtension(object):
           skipped or given empty, the next empty shot name will be generated.
         :param int handle: An integer value for the handle attribute. Default
           is 10.
-        :returns: The created :class:`~pymel.core.nt.Shot` instance
+        :returns: The created :class:`~pm.nt.Shot` instance
         """
-        shot = pymel.core.createNode('shot')
+        shot = pm.createNode('shot')
         shot.shotName.set(name)
         shot.set_handle(handle=handle)
         shot.set_output('')
@@ -599,7 +754,7 @@ class SequencerExtension(object):
         shot.message >> self.shots.next_available
         return shot
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def create_shot_playblasts(self, output_path, show_ornaments=True):
         """creates the selected shot playblasts
         """
@@ -610,7 +765,7 @@ class SequencerExtension(object):
             )
         return movie_files
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def to_edl(self, seq):
         """returns an EDL for the given sequence
 
@@ -618,7 +773,7 @@ class SequencerExtension(object):
         """
         return seq.to_edl()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def metafuze(self):
         """Calls "Avid Metafuze" with the given xml content to convert media
         files to MXF format.
@@ -626,7 +781,7 @@ class SequencerExtension(object):
         :return: list of file path
         """
 
-        sm = pymel.core.PyNode('sequenceManager1')
+        sm = pm.PyNode('sequenceManager1')
         seq = sm.generate_sequence_structure()
         xmls = seq.to_metafuze_xml()
 
@@ -653,7 +808,7 @@ class SequencerExtension(object):
         #    # there is an error
         #    raise RuntimeError("Something went wrong in MXF conversion")
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     def convert_to_mxf(self, path):
         """converts the given video at given path to Avid MXF DNxHD 36.
 
@@ -662,7 +817,7 @@ class SequencerExtension(object):
         """
         raise NotImplementedError()
 
-    @extends(pymel.core.nodetypes.Sequencer)
+    @extends(pm.nodetypes.Sequencer)
     @property
     def duration(self):
         """returns the duration of this sequence
@@ -671,27 +826,27 @@ class SequencerExtension(object):
 
 
 class ShotExtension(object):
-    """extensions to pymel.core.nodetypes.Shot class
+    """extensions to pm.nodetypes.Shot class
     """
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def get_camera(self):
         """returns the shot camera
 
         :return:
         """
-        return pymel.core.PyNode(pymel.core.shot(self, q=1, currentCamera=1))
+        return pm.PyNode(pm.shot(self, q=1, currentCamera=1))
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def set_camera(self, camera):
         """sets the shot camera
 
-        :param camera: pymel.core.Camera instance or a string
+        :param camera: pm.Camera instance or a string
         :return:
         """
-        pymel.core.shot(self, e=1, currentCamera=camera)
+        pm.shot(self, e=1, currentCamera=camera)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def get_output(self):
         """Gets the output attribute value of this shot, creates the attribute
         if it is missing
@@ -700,7 +855,7 @@ class ShotExtension(object):
             self.set_output('')
         return self.output.get()
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def set_output(self, output):
         """Sets the output of this shot. The output is generally a movie file
         automatically created by calling shot.playblast() method.
@@ -713,31 +868,30 @@ class ShotExtension(object):
             self.addAttr('output', dt='string')
         self.output.set(output)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def mute(self):
         """Mutes the current shot
 
-        :param mode: True to mute False to unmute
         :return:
         """
-        pymel.core.shot(self, e=1, mute=True)
+        pm.shot(self, e=1, mute=True)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def unmute(self):
         """Unmutes the current shot.
 
         :return:
         """
-        pymel.core.shot(self, e=1, mute=False)
+        pm.shot(self, e=1, mute=False)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     @property
     def sequence(self):
         """returns the current sequencer
         """
         return self.message.get()
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     @property
     @contextmanager
     def include_handles(self):
@@ -769,7 +923,7 @@ class ShotExtension(object):
             )
             self.track.set(track)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def playblast(self, output_path, show_ornaments=True):
         """creates the selected shot playblasts
         """
@@ -806,9 +960,9 @@ class ShotExtension(object):
 
         # include handles
         with self.include_handles:
-            pymel.core.system.dgdirty(a=True)
+            pm.system.dgdirty(a=True)
 
-            result = pymel.core.playblast(
+            result = pm.playblast(
                 fmt="qt",
                 startTime=start_frame,
                 endTime=end_frame,
@@ -832,15 +986,15 @@ class ShotExtension(object):
 
         return result
 
-    @extends(pymel.core.nodetypes.Shot)
-    def convert_to_mxf(self, metafuse_xml):
+    @extends(pm.nodetypes.Shot)
+    def convert_to_mxf(self, metafuze_xml):
         """converts a video with the given Metafuze XML to Avid MXF format.
 
         :return: returns the generated mxf file location
         """
         pass
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     def set_handle(self, handle=default_handle_count):
         """Creates handle attribute to given shot instance
 
@@ -875,7 +1029,7 @@ class ShotExtension(object):
             pass
         self.setAttr('handle', handle)
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     @property
     def duration(self):
         """returns the shot duration
@@ -886,7 +1040,7 @@ class ShotExtension(object):
         """Adds extra frames to the given shots start, and offsets all the
         following shots with the given frame_count.
 
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param shot: A :class:`~pm.nt.Shot` instance.
         :param int frame_count: The frame count to be added
         :return:
         """
@@ -896,7 +1050,7 @@ class ShotExtension(object):
         """Adds extra frames to the given shot, and offsets all the following
         shots with the given frame_count.
 
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param shot: A :class:`~pm.nt.Shot` instance.
         :param int frame_count: The frame count to be added
         :return:
         """
@@ -906,7 +1060,7 @@ class ShotExtension(object):
         """Removes frames from the given shots beginning, and offsets all the
         following shots back with the given frame_count.
 
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param shot: A :class:`~pm.nt.Shot` instance.
         :param int frame_count: The frame count to be added
         :return:
         """
@@ -916,13 +1070,13 @@ class ShotExtension(object):
         """Removes frames from the given shots end, and offsets all the
         following shots back with the given frame_count.
 
-        :param shot: A :class:`~pymel.core.nt.Shot` instance.
+        :param shot: A :class:`~pm.nt.Shot` instance.
         :param int frame_count: The frame count to be added
         :return:
         """
         pass
 
-    @extends(pymel.core.nodetypes.Shot)
+    @extends(pm.nodetypes.Shot)
     @property
     def full_shot_name(self):
         """returns the full shot name
@@ -968,7 +1122,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
     :param str timecode: The stating timecode of this Sequence. Default value
       is '00:00:00:00'. This will be used to calculate the clip in and out
       points. Maya exports in and out points as frames, Sequence converts them
-      to a timecodes by using this parameter as the base.
+      to a timecode by using this parameter as the base.
     """
 
     def __init__(self, name='', duration=0.0, timebase='25',
@@ -1079,7 +1233,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     edl_list.fps,
                     '23:59:59:%s' % edl_list.fps
                 )
-                clip.start -= tc_24_hours.frame_number #+ 1
+                clip.start -= tc_24_hours.frame_number  #+ 1
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
@@ -1552,5 +1706,3 @@ class File(PrevisBase, NameMixin, DurationMixin):
             'pre_indent': ' ' * pre_indent,
             'indentation': ' ' * indentation
         }
-
-

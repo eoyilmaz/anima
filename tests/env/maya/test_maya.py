@@ -18,7 +18,6 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
 from anima import utils
 from anima.env.mayaEnv import Maya
 from anima import publish
-from anima.utils import walk_version_hierarchy
 
 
 class MayaTestBase(unittest.TestCase):
@@ -1448,7 +1447,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version12):
+        for v in self.version12.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version12, self.version5, self.version2]
@@ -1540,7 +1539,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version12):
+        for v in self.version12.walk_hierarchy():
             visited_versions.append(v)
 
         expected_visited_versions = \
@@ -1636,7 +1635,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
@@ -1784,7 +1783,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
@@ -1960,7 +1959,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
@@ -2134,7 +2133,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
@@ -2469,7 +2468,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2,
@@ -2605,7 +2604,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]

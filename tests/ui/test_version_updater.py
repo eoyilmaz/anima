@@ -11,7 +11,6 @@ import logging
 
 import unittest
 
-from anima.utils import walk_version_hierarchy
 from anima.env.testing import TestEnvironment
 
 
@@ -565,7 +564,7 @@ class VersionUpdaterTester(unittest.TestCase):
 
         # check the setup
         visited_versions = []
-        for v in walk_version_hierarchy(self.version15):
+        for v in self.version15.walk_hierarchy():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2,
