@@ -9,7 +9,7 @@ import tempfile
 import os
 import logging
 
-import unittest2
+import unittest
 
 
 logger = logging.getLogger('anima.ui.version_creator')
@@ -83,7 +83,7 @@ from stalker.db.session import DBSession
 #         return None
 
 
-class VersionCreatorTester(unittest2.TestCase):
+class VersionCreatorTester(unittest.TestCase):
     """Tests the Version Creator instance
     """
 

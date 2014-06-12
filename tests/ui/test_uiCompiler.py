@@ -7,14 +7,14 @@
 import os
 import tempfile
 
-import unittest2
+import unittest
 
 from anima import utils
 
 from anima.ui import uiCompiler
 
 
-class UIFileTestCase(unittest2.TestCase):
+class UIFileTestCase(unittest.TestCase):
     """tests the UIFile class
     """
 

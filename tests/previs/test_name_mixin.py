@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import unittest2
+import unittest
 from anima.previs import NameMixin
 
 
-class NameAttrMixinTestCase(unittest2.TestCase):
+class NameAttrMixinTestCase(unittest.TestCase):
     """tests the anima.previs.NameMixin class
     """
 

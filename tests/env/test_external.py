@@ -7,13 +7,14 @@ import shutil
 import tempfile
 import os
 
-from stalker import Version, Task, Project, Structure, StatusList, Repository, Status, FilenameTemplate
-import unittest2
+from stalker import (Version, Task, Project, Structure, StatusList, Repository,
+                     Status, FilenameTemplate)
+import unittest
 
 from anima.env.external import ExternalEnv, ExternalEnvFactory
 
 
-class ExternalEnvTestCase(unittest2.TestCase):
+class ExternalEnvTestCase(unittest.TestCase):
     """tests ExternalEnv class
     """
 
@@ -385,7 +386,7 @@ class ExternalEnvTestCase(unittest2.TestCase):
         self.assertEqual(last_version, self.version)
 
 
-class ExternalEnvFactoryTestCase(unittest2.TestCase):
+class ExternalEnvFactoryTestCase(unittest.TestCase):
     """tests ExternalEnvFactory class
     """
 

@@ -6,7 +6,7 @@
 
 import logging
 
-import unittest2
+import unittest
 from stalker import (db, Repository, Project, Structure, FilenameTemplate,
                      Status, StatusList, Task, Version)
 from stalker.db import DBSession
@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 
-class EnvironmentBaseTestCase(unittest2.TestCase):
+class EnvironmentBaseTestCase(unittest.TestCase):
     """tests the EnvironmentBase class
     """
 

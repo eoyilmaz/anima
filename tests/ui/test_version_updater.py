@@ -9,7 +9,7 @@ import tempfile
 import os
 import logging
 
-import unittest2
+import unittest
 
 from anima.utils import walk_version_hierarchy
 from anima.env.testing import TestEnvironment
@@ -46,7 +46,7 @@ class ExportAs(Exception):
     pass
 
 
-class VersionUpdaterTester(unittest2.TestCase):
+class VersionUpdaterTester(unittest.TestCase):
     """Tests the Version Updater UI instance
     """
 

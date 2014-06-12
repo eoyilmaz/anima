@@ -7,13 +7,13 @@
 import tempfile
 import os
 
-import unittest2
+import unittest
 
 import anima
 from anima.recent import RecentFileManager
 
 
-class RecentFileManagerTestCase(unittest2.TestCase):
+class RecentFileManagerTestCase(unittest.TestCase):
     """tests the RecentFileManager class
     """
 

@@ -10,12 +10,12 @@ import tempfile
 from stalker import (db, Project, Repository, Structure,
                      FilenameTemplate, User, Status, StatusList, ImageFormat,
                      Type, Task, Asset, Sequence, Shot, Version)
-import unittest2
+import unittest
 
 from anima.utils import walk_version_hierarchy
 
 
-class WaslkVersionHierarchyTestCase(unittest2.TestCase):
+class WaslkVersionHierarchyTestCase(unittest.TestCase):
     """tests utils.walk_version_hierarchy() function
     """
 

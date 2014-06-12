@@ -3,11 +3,11 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import unittest2
+import unittest
 from anima.previs import Media, Video, Track, Clip, File
 
 
-class MediaTestCase(unittest2.TestCase):
+class MediaTestCase(unittest.TestCase):
     """tests the anima.previs.Media class
     """
 

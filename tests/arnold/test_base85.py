@@ -5,11 +5,11 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 from anima.render.arnold import base85
-import unittest2
+import unittest
 import struct
 
 
-class Base85TestCase(unittest2.TestCase):
+class Base85TestCase(unittest.TestCase):
     """tests the base85 module
     """
 

@@ -8,7 +8,7 @@ import os
 import shutil
 import tempfile
 
-import unittest2
+import unittest
 import pymel
 
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
@@ -21,7 +21,7 @@ from anima import publish
 from anima.utils import walk_version_hierarchy
 
 
-class MayaTestBase(unittest2.TestCase):
+class MayaTestBase(unittest.TestCase):
     """The base class for Maya Tests
     """
 

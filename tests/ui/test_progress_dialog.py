@@ -4,13 +4,13 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import unittest2
+import unittest
 from anima.testing import CallInfo
 from anima.ui.lib import QtGui
 from anima.ui.progress_dialog import ProgressDialogManager, ProgressCaller
 
 
-class ProgressDialogManagerTestCase(unittest2.TestCase):
+class ProgressDialogManagerTestCase(unittest.TestCase):
     """tests the maya.ProgressDialogManager class
     """
 
