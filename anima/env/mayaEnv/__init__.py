@@ -2003,12 +2003,16 @@ def check_old_object_smoothing():
         )
 
 
-@publish.publisher
+@publish.publisher()
 def check_if_previous_version_references():
     """check if a previous version of the same task is referenced to the scene
     """
     m = Maya()
     ver = m.get_current_version()
+
+    if ver is None:
+        return
+
     same_version_references = []
     for ref in pymel.core.listReferences():  # check only 1st level references
         ref_version = m.get_version_from_full_path(ref.path)
@@ -2158,6 +2162,50 @@ def check_model_quality():
 
 
 @publish.publisher('model')
+def check_anim_layers():
+    """check if there are animation layers on the scene
+    """
+    if len(pymel.core.ls(type='animLayer')) > 0:
+        raise PublishError(
+            'There should be no <b>Animation Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_display_layer():
+    """check if there are display layers
+    """
+    if len(pymel.core.ls(type='displayLayer')) > 1:
+        raise PublishError(
+            'There should be no <b>Display Layers</b> in the scene!!!'
+        )
+
+
+@publish.publisher('model')
+def check_extra_cameras():
+    """checking if there are extra cameras
+    """
+    if len(pymel.core.ls(type='camera')) > 4:
+        raise PublishError('There should be no extra cameras in your scene!')
+
+
+@publish.publisher('model')
+def check_empty_groups():
+    """check if there are empty groups
+    """
+    empty_groups = []
+    for node in pymel.core.ls(type='transform'):
+        if len(node.listRelatives(children=1)) == 0:
+            empty_groups.append(node)
+
+    if len(empty_groups):
+        raise PublishError(
+            'There are <b>empty groups</b> in your scene, '
+            'please remove them!!!'
+        )
+
+
+@publish.publisher('model')
 def check_uvs():
     """checks uvs with no uv area
 
@@ -2213,50 +2261,6 @@ def check_uvs():
         )
 
 
-@publish.publisher('model')
-def check_anim_layers():
-    """check if there are animation layers on the scene
-    """
-    if len(pymel.core.ls(type='animLayer')) > 0:
-        raise PublishError(
-            'There should be no <b>Animation Layers</b> in the scene!!!'
-        )
-
-
-@publish.publisher('model')
-def check_display_layer():
-    """check if there are display layers
-    """
-    if len(pymel.core.ls(type='displayLayer')) > 1:
-        raise PublishError(
-            'There should be no <b>Display Layers</b> in the scene!!!'
-        )
-
-
-@publish.publisher('model')
-def check_extra_cameras():
-    """checking if there are extra cameras
-    """
-    if len(pymel.core.ls(type='camera')) > 4:
-        raise PublishError('There should be no extra cameras in your scene!')
-
-
-@publish.publisher('model')
-def check_empty_groups():
-    """check if there are empty groups
-    """
-    empty_groups = []
-    for node in pymel.core.ls(type='transform'):
-        if len(node.listRelatives(children=1)) == 0:
-            empty_groups.append(node)
-
-    if len(empty_groups):
-        raise PublishError(
-            'There are <b>empty groups</b> in your scene, '
-            'please remove them!!!'
-        )
-
-
 #******************#
 # LOOK DEVELOPMENT #
 #******************#
@@ -2284,10 +2288,15 @@ def check_all_tx_textures():
     for node in pymel.core.ls(type='aiImage'):
         add_path(node.filename.get())
 
+    import glob
+
     textures_with_no_tx = []
     for path in texture_file_paths:
         tx_path = '%s.tx' % os.path.splitext(path)[0]
-        if not os.path.exists(tx_path):
+        # replace any <udim> value with *
+        tx_path = tx_path.replace('<udim>', '*')
+
+        if not len(glob.glob(tx_path)):
             textures_with_no_tx.append(path)
 
     if len(textures_with_no_tx):
@@ -2298,7 +2307,9 @@ def check_all_tx_textures():
 def check_lights():
     """checks if there are lights in the scene
     """
-    all_lights = pymel.core.ls(type='light')
+    all_lights = pymel.core.ls(
+        type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight']
+    )
     if len(all_lights):
         raise PublishError(
             'There are <b>Lights</b> in the current scene:<br><br>%s<br><br>'
