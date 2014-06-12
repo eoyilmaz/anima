@@ -24,6 +24,7 @@ from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.ui.progress_dialog import ProgressDialogManager
 from anima import publish
+from anima.repr import Representation
 
 # empty publishers first
 publish.publishers = {}
@@ -92,128 +93,96 @@ class MayaExtension(object):
 class ReferenceExtension(object):
     """Extensions to Maya Reference node.
 
-    Manages the Referenced ASS files in the current scene.
+    Manages the Referenced different representations in the current scene.
 
-    This class helps converting references to ASS files and vice versa.
+    This class helps converting references to other representations and vice
+    versa.
     """
 
-    @extends(FileReference)
-    def has_ass(self):
-        """Checks if the reference has a related ASS take
-
-        :return: bool
+    def path(self):
+        """dummy method to let the IDEs find FileReference.path and not
+        complain about it.
         """
-        # create a temp maya env
-        mEnv = Maya()
-        ver = mEnv.get_version_from_full_path(self.path)
-
-        if ver is None:
-            return
-
-        from stalker import Version
-        # try to get the version with {{take}}_ASS
-        task = ver.task
-        ass_take = '%s_ASS' % ver.take_name
-
-        # do a quick query
-        ass_version = Version.query\
-            .filter(Version.task == task)\
-            .filter(Version.take_name == ass_take).first()
-
-        if ass_version is None:
-            return False
-
-        latest_ass_version = ass_version.latest_published_version
-        if latest_ass_version is None:
-            return False
-
-        return True
+        return ''
 
     @extends(FileReference)
-    def is_ass(self):
-        """Checks if the reference is an ASS version
+    def to_repr(self, repr_name):
+        """Replaces the current reference with the representation with the
+        given repr_name.
 
-        :return: bool
+        :param str repr_name: The desired repr name
+        :return:
         """
-        # create a temp maya env
-        mEnv = Maya()
-        ver = mEnv.get_version_from_full_path(self.path)
-
-        if ver is None:
-            return
-
-        # try to get the version with {{take}}_ASS
-        if '_ASS' in ver.take_name:
-            return True
-        else:
-            return False
+        rep_v = self.find_repr(repr_name)
+        if rep_v is not None:
+            self.replaceWith(rep_v.absolute_full_path)
 
     @extends(FileReference)
-    def to_ass(self):
-        """Loads the ass version.
+    def find_repr(self, repr_name):
+        """Finds the representation with the given repr_name.
 
-        Finds the related Stalker version of this reference, and replaces the
-        path of this reference with the latest ASS take of the same task and
-        take.
+        :param str repr_name: The desired repr name
+        :return: :class:`.Version`
         """
-        # create a temp maya env
-        mEnv = Maya()
-        ver = mEnv.get_version_from_full_path(self.path)
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
 
-        if ver is None:
+        if v is None:
             return
 
-        from stalker import Version
-        # try to get the version with {{take}}_ASS
-        task = ver.task
-        ass_take = '%s_ASS' % ver.take_name
+        rep = Representation(version=v)
+        rep_v = rep.find(repr_name)
 
-        # do a quick query
-        ass_version = Version.query\
-            .filter(Version.task == task)\
-            .filter(Version.take_name == ass_take).first()
-
-        if ass_version is None:
-            return
-
-        latest_ass_version = ass_version.latest_published_version
-        if latest_ass_version is None:
-            return
-
-        self.replaceWith(latest_ass_version.absolute_full_path)
+        return rep_v
 
     @extends(FileReference)
-    def to_original(self):
+    def list_all_repr(self):
+        """Returns a list of strings representing all the representation names
+        of this FileReference
+
+        :return: list of str
+        """
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return []
+
+        rep = Representation(version=v)
+        return rep.list_all()
+
+    @extends(FileReference)
+    def to_base(self):
         """Loads the original version
         """
-        # create a temp maya env
-        mEnv = Maya()
-        ver = mEnv.get_version_from_full_path(self.path)
+        self.to_repr(Representation.base_repr_name)
 
-        if ver is None:
-            return
+    @extends(FileReference)
+    def is_base(self):
+        """returns True or False depending to if this is the base
+        representation for this reference
+        """
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
 
-        from stalker import Version
-        # try to get the version with {{take}}_ASS
-        task = ver.task
-        if '_ASS' not in ver.take_name:
-            return
+        if v is None:
+            return True
 
-        original_take = ver.take_name.replace('_ASS', '')
+        rep = Representation(version=v)
+        return rep.is_base()
 
-        # do a quick query
-        original_version = Version.query\
-            .filter(Version.task == task)\
-            .filter(Version.take_name == original_take).first()
+    @extends(FileReference)
+    def get_base(self):
+        """returns the base version instance
+        """
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
 
-        if original_version is None:
-            return
+        if v is None:
+            return True
 
-        latest_original_version = original_version.latest_published_version
-        if latest_original_version is None:
-            return
-
-        self.replaceWith(latest_original_version.absolute_full_path)
+        rep = Representation(version=v)
+        return rep.find(rep.base_repr_name)
 
 
 class Maya(EnvironmentBase):
@@ -1112,7 +1081,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         caller = None
         if len(references):
             pm = ProgressDialogManager()
-            caller = pm.register(len(references), 'Maya.get_referenced_versions()')
+            pm.use_ui = self.use_progress_window
+            caller = pm.register(
+                len(references),
+                'Maya.get_referenced_versions()'
+            )
 
         prev_path = ''
         versions = []
@@ -1526,10 +1499,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # the go to the references
         references_list = pymel.core.listReferences()
 
-        # pm = ProgressDialogManager()
-        # caller = pm.register(len(references_list),
-        #                      'Maya.deep_version_inputs_update()')
-
         prev_ref_path = None
         while len(references_list):
             current_ref = references_list.pop(0)
@@ -1546,12 +1515,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if ref.path != prev_ref_path:
                     prev_ref_path = ref.path
                     references_list.append(ref)
-            # caller.step(message=prev_ref_path)
-            prev_ref_path = None
 
-        # it probably will terminate before expected, so call end_progress for
-        # this caller
-        # caller.end_progress()
+            prev_ref_path = None
 
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a
@@ -1579,7 +1544,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :return: dictionary
         """
         pm = ProgressDialogManager()
-        caller = pm.register(3, 'Maya.check_referenced_versions() prepare data')
+        pm.use_ui = self.use_progress_window
+        caller = \
+            pm.register(3, 'Maya.check_referenced_versions() prepare data')
 
         # deeply get which maya file is referencing which other files
         self.deep_version_inputs_update()
@@ -1603,8 +1570,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         caller.end_progress()
 
         # register a new caller
-        caller = pm.register(len(dfs_version_references),
-                             'Maya.check_referenced_versions()')
+        caller = pm.register(
+            len(dfs_version_references),
+            'Maya.check_referenced_versions()'
+        )
 
         # iterate back in the list
         for v in reversed(dfs_version_references):
@@ -1725,6 +1694,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # use a progress window for that
         pm = ProgressDialogManager()
+        pm.use_ui = self.use_progress_window
         caller = pm.register(len(references_list), 'Maya.update_versions()')
 
         # while len(references_list):
@@ -1949,8 +1919,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         to_update_paths.append(path)
                     parent_ref = current_ref.parent()
 
-        # print "to_update_paths: %s" % to_update_paths
-
         if to_update_paths:
             # so, we need to update things
 
@@ -1964,11 +1932,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # 7- fix edits with new namespace
             # 8- apply them
 
-            caller = None
-            if self.use_progress_window and len(to_update_paths):
-                pm = ProgressDialogManager()
-                caller = pm.register(len(to_update_paths),
-                                     'Maya.fix_reference_namespaces()')
+            pm = ProgressDialogManager()
+            pm.use_ui = self.use_progress_window
+            caller = pm.register(len(to_update_paths),
+                                 'Maya.fix_reference_namespaces()')
 
             from stalker import Version
             for path in to_update_paths:
@@ -2002,8 +1969,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     self.save_as(new_version)
                     # pymel.core.saveFile()
 
-                if caller is not None:
-                    caller.step(message=path)
+                caller.step(message=path)
 
             self.update_reference_edits(started_from_version)
 
@@ -2052,10 +2018,10 @@ def check_if_previous_version_references():
                 same_version_references.append(ref)
 
     if len(same_version_references):
-        print 'The following nodes are references to an older version of ' \
-              'this scene'
-        print '\n'.join(
-            map(lambda x: x.refNode.name(), same_version_references)
+        print('The following nodes are references to an older version of this '
+              'scene')
+        print(
+            '\n'.join(map(lambda x: x.refNode.name(), same_version_references))
         )
         raise PublishError(
             'The current scene contains a <b>reference</b> to a<br>'
@@ -2209,8 +2175,10 @@ def check_uvs():
     mesh_count = len(all_meshes)
 
     caller = None
-    if not pymel.core.general.about(batch=1) and mesh_count:
+    in_batch_mode = pymel.core.general.about(batch=1)
+    if not in_batch_mode and mesh_count:
         pm = ProgressDialogManager()
+        pm.use_ui = True
         caller = pm.register(mesh_count, 'check_uvs()')
 
     meshes_with_zero_uv_area = []
@@ -2437,10 +2405,10 @@ def check_material_names():
             material_with_simple_names.append(mat_name)
 
     if len(material_with_simple_names):
-        print 'Use a more **descriptive** name for the following materials:'
-        print '\n'.join(material_with_simple_names)
-        raise PublishError(
+        print('Use a more **descriptive** name for the following materials:')
+        print('\n'.join(material_with_simple_names))
+        raise(PublishError(
             'Please use a more <b>descriptive</b> name<br>'
             'for the following materials:<br><br>%s' %
             '<br>'.join(material_with_simple_names)
-        )
+        ))

@@ -36,7 +36,7 @@ class Representation(object):
     """
 
     base_repr_name = 'Base'
-    repr_separator = '_'
+    repr_separator = '___'
 
     def __init__(self, version=None):
         self._version = None
@@ -93,11 +93,9 @@ class Representation(object):
         """
         # find the base repr name from the current version
         take_name = version.take_name
-        if '_' in take_name:
+        if cls.repr_separator in take_name:
             # it is a repr
-            base_repr_take_name = cls.repr_separator.join(
-                take_name.split(cls.repr_separator)[:-1]
-            )
+            base_repr_take_name = take_name.split(cls.repr_separator)[0]
         else:
             # it is the base repr
             base_repr_take_name = take_name
@@ -124,7 +122,8 @@ class Representation(object):
             if take_name.startswith(base_take_name):
                 if take_name != base_take_name:
                     repr_names.append(
-                        take_name[len(base_take_name) + 1:]
+                        take_name[len(base_take_name) +
+                                  len(self.repr_separator):]
                     )
                 else:
                     repr_names.append(self.base_repr_name)
@@ -147,5 +146,15 @@ class Representation(object):
         return Version.query\
             .filter_by(task=self.version.task)\
             .filter_by(take_name=take_name)\
+            .filter_by(is_published=True)\
             .order_by(Version.version_number.desc())\
             .first()
+
+    def is_base(self):
+        """Returns a bool value depending if the version is the base of its
+        representations series.
+
+        :return: bool
+        """
+        base_take_name = self.get_base_take_name(self.version)
+        return self.version.take_name == base_take_name

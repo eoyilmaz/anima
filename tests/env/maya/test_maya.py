@@ -189,12 +189,12 @@ class MayaTestBase(unittest2.TestCase):
         self.task5 = Task(
             name='Test Task 5',
             parent=self.task1,
-            type=Type('Model', code='Model', target_entity_type='Task')
+            #type=Type('Model', code='Model', target_entity_type='Task')
         )
         self.task6 = Task(
             name='Test Task 6',
             parent=self.task1,
-            type=Type('LookDev', code='Model', target_entity_type='Task')
+            #type=Type('LookDev', code='Model', target_entity_type='Task')
         )
 
         # create a root asset
@@ -260,6 +260,9 @@ class MayaTestBase(unittest2.TestCase):
 
         # create the environment instance
         self.maya_env = Maya()
+        print('self.maya_env.use_progress_window: %s' %
+              self.maya_env.use_progress_window)
+        self.maya_env.use_progress_window = False
 
         # asset2
         self.version1 = self.create_version(self.asset2, 'Main')
@@ -985,8 +988,6 @@ class MayaTestCase(MayaTestBase):
         # unload a couple of them
         refs = pymel.core.listReferences()
         refs[0].unload()
-        print refs[0].path
-        print refs[1].path
         self.assertFalse(refs[0].isLoaded())
         self.assertTrue(refs[1].isLoaded())
 
@@ -4914,101 +4915,167 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         pymel.core.saveFile()
 
 
-class ReferenceToAssTestCase(MayaTestBase):
-    """tests the reference file to ass integration
+class FileReferenceRepresentationsTestCase(MayaTestBase):
+    """tests the FileReference with Representations
     """
 
     def setUp(self):
         """additional setup
         """
         # call the supers setUp first
-        super(ReferenceToAssTestCase, self).setUp()
+        super(FileReferenceRepresentationsTestCase, self).setUp()
 
         # now do your addition
         # create ass take for asset2
-        self.ass_version1 = self.create_version(self.asset2, 'Main_ASS')
-        self.ass_version2 = self.create_version(self.asset2, 'Main_ASS')
-        self.ass_version3 = self.create_version(self.asset2, 'Main_ASS')
+        self.repr_version1 = self.create_version(self.asset2, 'Main___ASS')
+        self.repr_version2 = self.create_version(self.asset2, 'Main___ASS')
+        self.repr_version3 = self.create_version(self.asset2, 'Main___ASS')
 
-        self.ass_version4 = self.create_version(self.asset2, 'Take1_ASS')
-        self.ass_version5 = self.create_version(self.asset2, 'Take1_ASS')
-        self.ass_version6 = self.create_version(self.asset2, 'Take1_ASS')
+        self.repr_version1.is_published = True
+        self.repr_version3.is_published = True
 
-        self.ass_version3.is_published = True
+        self.repr_version4 = self.create_version(self.asset2, 'Main___BBox')
+        self.repr_version5 = self.create_version(self.asset2, 'Main___BBox')
+        self.repr_version6 = self.create_version(self.asset2, 'Main___BBox')
+
+        self.repr_version4.is_published = True
+        self.repr_version6.is_published = True
+
+        self.repr_version7 = self.create_version(self.asset2, 'Main___GPU')
+        self.repr_version8 = self.create_version(self.asset2, 'Main___GPU')
+        self.repr_version9 = self.create_version(self.asset2, 'Main___GPU')
+
+        self.repr_version9.is_published = True
+
+        self.repr_version10 = self.create_version(self.asset2, 'Take1___ASS')
+        self.repr_version11 = self.create_version(self.asset2, 'Take1___ASS')
+        self.repr_version12 = self.create_version(self.asset2, 'Take1___ASS')
+
+        self.repr_version11.is_published = True
+
+        self.repr_version13 = self.create_version(self.asset2, 'Take1___BBox')
+        self.repr_version14 = self.create_version(self.asset2, 'Take1___BBox')
+        self.repr_version15 = self.create_version(self.asset2, 'Take1___BBox')
+
+        self.repr_version14.is_published = True
+
+        self.repr_version16 = self.create_version(self.asset2, 'Take1___GPU')
+        self.repr_version17 = self.create_version(self.asset2, 'Take1___GPU')
+        self.repr_version18 = self.create_version(self.asset2, 'Take1___GPU')
+
+        self.repr_version16.is_published = True
+        self.repr_version17.is_published = True
+        self.repr_version18.is_published = True
+
+        # a reference with only ASS representation
+        self.repr_version19 = self.create_version(self.asset2, 'Take2')
+        self.repr_version20 = self.create_version(self.asset2, 'Take2')
+        self.repr_version21 = self.create_version(self.asset2, 'Take2')
+
+        self.repr_version21.is_published = True
+
+        self.repr_version22 = self.create_version(self.asset2, 'Take2___ASS')
+        self.repr_version23 = self.create_version(self.asset2, 'Take2___ASS')
+        self.repr_version24 = self.create_version(self.asset2, 'Take2___ASS')
+
+        self.repr_version24.is_published = True
+
         self.version1.is_published = True
         self.version3.is_published = True
 
-        self.ass_version6.is_published = True
         db.DBSession.commit()
 
         pymel.core.newFile(force=True)
 
-    def test_FileReference_class_has_to_ass_method(self):
-        """testing if FileReference has a to_ass() method
+    def test_FileReference_class_has_to_repr_method(self):
+        """testing if FileReference has a to_repr() method
         """
         from pymel.core.system import FileReference
-        self.assertTrue(hasattr(FileReference, 'to_ass'))
+        self.assertTrue(hasattr(FileReference, 'to_repr'))
 
-    def test_FileReference_class_has_to_original_method(self):
-        """testing if FileReference has a to_original() method
+    def test_FileReference_class_has_list_all_repr_method(self):
+        """testing if FileReference has a list_all_repr() method
         """
         from pymel.core.system import FileReference
-        self.assertTrue(hasattr(FileReference, 'to_original'))
+        self.assertTrue(hasattr(FileReference, 'list_all_repr'))
 
-    def test_to_ass_is_working_properly(self):
-        """testing if FileReference.to_ass() is working properly
+    def test_FileReference_class_has_list_find_repr_method(self):
+        """testing if FileReference has a find_repr() method
+        """
+        from pymel.core.system import FileReference
+        self.assertTrue(hasattr(FileReference, 'find_repr'))
+
+    def test_to_repr_is_working_properly(self):
+        """testing if FileReference.to_repr() is working properly
         """
         # reference version1 to the scene
         ref = self.maya_env.reference(self.version1)
 
         self.assertEqual(ref.path, self.version1.absolute_full_path)
-        # now invoke to_ass on the FileReference node
-        ref.to_ass()
+        # now invoke to_repr on the FileReference node
+        ref.to_repr('ASS')
 
-        # and expect its path to be replaced with self.ass_version3
-        self.assertEqual(ref.path, self.ass_version3.absolute_full_path)
+        # and expect its path to be replaced with self.repr_version3
+        self.assertEqual(ref.path, self.repr_version3.absolute_full_path)
 
-    def test_to_original_is_working_properly(self):
-        """testing if FileReference.to_original() is working properly
+    def test_to_base_is_working_properly(self):
+        """testing if FileReference.to_base() is working properly
         """
         # reference version1 to the scene
-        ref = self.maya_env.reference(self.ass_version1)
+        ref = self.maya_env.reference(self.repr_version1)
 
-        self.assertEqual(ref.path, self.ass_version1.absolute_full_path)
-        # now invoke to_ass on the FileReference node
-        ref.to_original()
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
+        # now invoke to_base on the FileReference node
+        ref.to_base()
 
-        # and expect its path to be replaced with self.ass_version3
+        # and expect its path to be replaced with self.repr_version3
         self.assertEqual(ref.path, self.version3.absolute_full_path)
 
-    def test_has_ass_is_working_properly(self):
-        """testing if FileReference.has_ass() is working properly
+    def test_list_all_repr_is_working_properly(self):
+        """testing if list_all_repr is working properly
         """
-        # reference version1 to the scene
-        ref1 = self.maya_env.reference(self.version1)
-        ref2 = self.maya_env.reference(self.version40)  # which has no ASS
-        self.assertEqual(ref1.path, self.version1.absolute_full_path)
+        ref = self.maya_env.reference(self.repr_version1)
 
-        # now check has_ass
-        self.assertTrue(ref1.has_ass())
-        self.assertFalse(ref2.has_ass())
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
 
-    def test_is_ass_is_working_properly(self):
-        """testing if FileReference.is_ass() is working properly
+        result = ref.list_all_repr()
+        self.assertEqual(
+            sorted(['Base', 'ASS', 'BBox', 'GPU']),
+            sorted(result)
+        )
+
+    def test_find_repr_is_working_properly(self):
+        """testing if find_repr is working properly
         """
-        # reference version1 to the scene
-        ref1 = self.maya_env.reference(self.version1)
-        ref2 = self.maya_env.reference(self.version40)  # which has no ASS
-        self.assertEqual(ref1.path, self.version1.absolute_full_path)
+        ref = self.maya_env.reference(self.repr_version1)
 
-        self.assertFalse(ref1.is_ass())
-        self.assertFalse(ref2.is_ass())
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
 
-        ref1.to_ass()
-        ref2.to_ass()
+        result = ref.find_repr('GPU')
+        self.assertEqual(
+            result,
+            self.repr_version9
+        )
 
-        self.assertTrue(ref1.is_ass())
-        self.assertFalse(ref2.is_ass())
+    def test_is_base_is_working_properly(self):
+        """testing if is_base is working properly
+        """
+        ref = self.maya_env.reference(self.repr_version1)
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
+        self.assertFalse(ref.is_base())
+
+        ref = self.maya_env.reference(self.version1)
+        self.assertEqual(ref.path, self.version1.absolute_full_path)
+        self.assertTrue(ref.is_base())
+
+    def test_get_base_is_working_properly(self):
+        """testing if get_base is working properly
+        """
+        ref = self.maya_env.reference(self.repr_version1)
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
+        self.assertFalse(ref.is_base())
+        v = ref.get_base()
+        self.assertEqual(v, self.version3)
 
 
 class PublisherTestCase(MayaTestBase):
@@ -5063,6 +5130,12 @@ class PublisherTestCase(MayaTestBase):
 
         # now save a new version to a task which is a LookDev task
         pymel.core.newFile(force=True)
+
+        self.task6.type = Type(
+            name='LookDev',
+            code='LookDev',
+            target_entity_type='Task'
+        )
 
         v = Version(task=self.task6)
         v.is_published = True

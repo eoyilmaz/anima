@@ -135,32 +135,32 @@ class RepresentationTestCase(unittest.TestCase):
 
         # create other reprs
         # BBOX
-        cls.version4 = cls.create_version(cls.task1, 'Main_BBox')
-        cls.version5 = cls.create_version(cls.task1, 'Main_BBox')
+        cls.version4 = cls.create_version(cls.task1, 'Main___BBox')
+        cls.version5 = cls.create_version(cls.task1, 'Main___BBox')
 
         # ASS
-        cls.version6 = cls.create_version(cls.task1, 'Main_ASS')
-        cls.version7 = cls.create_version(cls.task1, 'Main_ASS')
+        cls.version6 = cls.create_version(cls.task1, 'Main___ASS')
+        cls.version7 = cls.create_version(cls.task1, 'Main___ASS')
 
         # GPU
-        cls.version8 = cls.create_version(cls.task1, 'Main_GPU')
-        cls.version9 = cls.create_version(cls.task1, 'Main_GPU')
+        cls.version8 = cls.create_version(cls.task1, 'Main___GPU')
+        cls.version9 = cls.create_version(cls.task1, 'Main___GPU')
 
         # Non default take name
         cls.version10 = cls.create_version(cls.task1, 'alt1')
         cls.version11 = cls.create_version(cls.task1, 'alt1')
 
         # Hires
-        cls.version12 = cls.create_version(cls.task1, 'alt1_Hires')
-        cls.version13 = cls.create_version(cls.task1, 'alt1_Hires')
+        cls.version12 = cls.create_version(cls.task1, 'alt1___Hires')
+        cls.version13 = cls.create_version(cls.task1, 'alt1___Hires')
 
         # Midres
-        cls.version14 = cls.create_version(cls.task1, 'alt1_Midres')
-        cls.version15 = cls.create_version(cls.task1, 'alt1_Midres')
+        cls.version14 = cls.create_version(cls.task1, 'alt1___Midres')
+        cls.version15 = cls.create_version(cls.task1, 'alt1___Midres')
 
         # Lores
-        cls.version16 = cls.create_version(cls.task1, 'alt1_Lores')
-        cls.version17 = cls.create_version(cls.task1, 'alt1_Lores')
+        cls.version16 = cls.create_version(cls.task1, 'alt1___Lores')
+        cls.version17 = cls.create_version(cls.task1, 'alt1___Lores')
 
         # No Repr
         cls.version18 = cls.create_version(cls.task1, 'NoRepr')
@@ -308,3 +308,12 @@ class RepresentationTestCase(unittest.TestCase):
         self.assertNotEqual(rep.version, self.version2)
         rep.version = self.version2
         self.assertEqual(rep.version, self.version2)
+
+    def test_is_base_method_is_working_properly(self):
+        """testing if Representation.is_base() method is working properly
+        """
+        rep = Representation(self.version1)
+        self.assertTrue(rep.is_base())
+
+        rep = Representation(self.version4)
+        self.assertFalse(rep.is_base())

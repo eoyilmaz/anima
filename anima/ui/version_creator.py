@@ -819,23 +819,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("adding the takes from db")
         self.takes_listWidget.take_names = takes
 
-    def project_changed(self):
-        """updates the assets list_widget and sequences_comboBox for the 
-        """
-        logger.debug("project_comboBox has changed in the UI")
-
-        project = self.get_current_project()
-        if project:
-            # update the client info
-            self.client_name_label.setText(
-                project.client.name if project.client else "N/A"
-            )
-
-        # call tabWidget_changed with the current index
-        curr_tab_index = self.tabWidget.currentIndex()
-
-        self.tabWidget_changed(curr_tab_index)
-
     def _set_defaults(self):
         """sets up the defaults for the interface
         """
@@ -938,10 +921,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 self.open_pushButton_clicked
             )
         # *********************************************************************
-
-        # run the project changed item for the first time
-        # self.project_changed()
-
         # set the completer for the search_task_lineEdit
         # completer = TaskNameCompleter(self)
         # completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
