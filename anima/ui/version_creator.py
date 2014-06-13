@@ -545,10 +545,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         self.close()
 
     def is_power_user(self, user):
-        """A predicate that retuns if the user is a poweruser
+        """A predicate that returns if the user is a power user
         """
-        power_users_groups = Group.query \
-            .filter(Group.name.in_(power_users_group_names)) \
+        power_users_groups = Group.query\
+            .filter(Group.name.in_(power_users_group_names))\
             .all()
         if power_users_groups:
             for group in power_users_groups:
@@ -584,7 +584,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             menu_action = menu.addAction('Publish')
 
-        if not logged_in_user in version.task.responsible:
+        if not logged_in_user in version.task.responsible \
+           and not self.is_power_user(logged_in_user):
             menu_action.setDisabled(True)
 
         menu.addSeparator()
