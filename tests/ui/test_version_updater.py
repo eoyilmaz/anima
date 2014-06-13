@@ -458,7 +458,6 @@ class VersionUpdaterTester(unittest.TestCase):
         #       +- version47
         #       +- version48
 
-
         # Start Condition:
         #
         # version15

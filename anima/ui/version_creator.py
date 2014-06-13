@@ -578,12 +578,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logged_in_user = self.get_logged_in_user()
 
-        if version.created_by == logged_in_user:
-            if version.is_published:
-                menu.addAction('Un-Publish')
-            else:
-                menu.addAction('Publish')
-            menu.addSeparator()
+        # if version.created_by == logged_in_user:
+        if version.is_published:
+            menu_action = menu.addAction('Un-Publish')
+        else:
+            menu_action = menu.addAction('Publish')
+
+        if logged_in_user in version.task.responsible:
+            menu_action.setDisabled(True)
+
+        menu.addSeparator()
 
         # add Browse Outputs
         menu.addAction("Browse Path...")
@@ -730,6 +734,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """finds the item related to the stalker entity in the given
         QtTreeView
         """
+        if not entity:
+            return None
+
         indexes = self.get_item_indices_containing_text(entity.name, treeView)
         model = treeView.model()
         logger.debug('items matching name : %s' % indexes)
@@ -754,10 +761,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logger.debug('creating a new model')
         projects = Project.query.order_by(Project.name).all()
+        logger.debug('projects: %s' % projects)
 
         task_tree_model = TaskTreeModel()
         task_tree_model.user = logged_in_user
-        task_tree_model.user_tasks_only = self.my_tasks_only_checkBox.isChecked()
+        task_tree_model.user_tasks_only = \
+            self.my_tasks_only_checkBox.isChecked()
         task_tree_model.populateTree(projects)
 
         self.tasks_treeView.setModel(task_tree_model)
@@ -828,7 +837,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #   tasks_groupBox
         #   new_version_groupBox
         #   previous_versions_groupBox
-        # 
+        #
         # and add it under horizontalLayout_14
 
         splitter = QtGui.QSplitter()
@@ -1007,6 +1016,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # set the task
         task = version.task
+
         if not self.find_and_select_entity_item_in_treeView(
                 task, self.tasks_treeView):
             return
@@ -1037,6 +1047,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         :return: TaskItem instance
         """
+        if not task:
+            return
+
         self.tasks_treeView.is_updating = True
         item = self.find_entity_item_in_tree_view(task, treeView)
         if not item:
@@ -1070,6 +1083,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def find_and_select_entity_item_in_treeView(self, task, treeView):
         """finds and selects the task in the given treeView item
         """
+        if not task:
+            return
+
         item = self.load_task_item_hierarchy(task, treeView)
 
         logger.debug('*******************************')

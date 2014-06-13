@@ -314,7 +314,8 @@ class TaskItem(QtGui.QStandardItem):
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
         logger.debug(
-            'TaskItem.__init__() is started for item: %s' % self.text())
+            'TaskItem.__init__() is started for item: %s' % self.text()
+        )
         self.loaded = False
         self.task = None
         self.parent = None
@@ -323,7 +324,8 @@ class TaskItem(QtGui.QStandardItem):
         self.user = None
         self.user_tasks_only = False
         logger.debug(
-            'TaskItem.__init__() is finished for item: %s' % self.text())
+            'TaskItem.__init__() is finished for item: %s' % self.text()
+        )
 
     def clone(self):
         """returns a copy of this item
@@ -338,7 +340,8 @@ class TaskItem(QtGui.QStandardItem):
 
     def canFetchMore(self):
         logger.debug(
-            'TaskItem.canFetchMore() is started for item: %s' % self.text())
+            'TaskItem.canFetchMore() is started for item: %s' % self.text()
+        )
         return_value = False
         if self.task and not self.fetched_all:
             if isinstance(self.task, Task):
@@ -348,12 +351,14 @@ class TaskItem(QtGui.QStandardItem):
         else:
             return_value = False
         logger.debug(
-            'TaskItem.canFetchMore() is finished for item: %s' % self.text())
+            'TaskItem.canFetchMore() is finished for item: %s' % self.text()
+        )
         return return_value
 
     def fetchMore(self):
         logger.debug(
-            'TaskItem.fetchMore() is started for item: %s' % self.text())
+            'TaskItem.fetchMore() is started for item: %s' % self.text()
+        )
 
         if self.canFetchMore():
             tasks = []
@@ -369,8 +374,8 @@ class TaskItem(QtGui.QStandardItem):
                 for task in tasks:
                     for user_task in self.user.tasks:
                         if task in user_task.parents or \
-                                        task is user_task or \
-                                        task in self.user.projects:
+                           task is user_task or \
+                           task in self.user.projects:
                             user_tasks_and_parents.append(task)
                             break
 
@@ -407,11 +412,14 @@ class TaskItem(QtGui.QStandardItem):
 
             self.fetched_all = True
         logger.debug(
-            'TaskItem.fetchMore() is finished for item: %s' % self.text())
+            'TaskItem.fetchMore() is finished for item: %s' % self.text()
+        )
 
     def hasChildren(self):
         logger.debug(
-            'TaskItem.hasChildren() is started for item: %s' % self.text())
+            'TaskItem.hasChildren() is started for item: %s' % self.text()
+        )
+
         if self.task:
             if isinstance(self.task, Task):
                 return_value = self.task.is_container
@@ -422,7 +430,9 @@ class TaskItem(QtGui.QStandardItem):
         else:
             return_value = False
         logger.debug(
-            'TaskItem.hasChildren() is finished for item: %s' % self.text())
+            'TaskItem.hasChildren() is finished for item: %s' % self.text()
+        )
+
         return return_value
 
 

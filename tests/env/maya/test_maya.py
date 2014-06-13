@@ -16,8 +16,8 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      FilenameTemplate, ImageFormat)
 
 from anima import utils
-from anima.env.mayaEnv import Maya
 from anima import publish
+from anima.env.mayaEnv import Maya
 
 
 class MayaTestBase(unittest.TestCase):
@@ -814,7 +814,10 @@ class MayaTestCase(MayaTestBase):
         # now check if versionBase.references is updated
         self.assertTrue(len(versionBase.inputs) == 2)
 
-        self.assertItemsEqual(versionBase.inputs, [version1, version2])
+        self.assertEqual(
+            sorted(versionBase.inputs, key=lambda x: x.name),
+            sorted([version1, version2], key=lambda x: x.name)
+        )
 
     def test_save_as_of_a_scene_with_two_references_to_the_same_version(self):
         """testing if the case where the current maya scene has two references
@@ -929,7 +932,10 @@ class MayaTestCase(MayaTestBase):
         # now check if versionBase.inputs is updated
         # this part is already tested in save_as
         self.assertEqual(2, len(versionBase.inputs))
-        self.assertItemsEqual(versionBase.inputs, [version1, version2])
+        self.assertEqual(
+            sorted(versionBase.inputs, key=lambda x: x.name),
+            sorted([version1, version2], key=lambda x: x.name)
+        )
 
         # now remove references
         for ref_node in pymel.core.listReferences():
@@ -1447,7 +1453,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version12.walk_hierarchy():
+        for v in self.version12.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version12, self.version5, self.version2]
@@ -1539,7 +1545,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version12.walk_hierarchy():
+        for v in self.version12.walk_inputs():
             visited_versions.append(v)
 
         expected_visited_versions = \
@@ -1635,7 +1641,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
@@ -1650,19 +1656,19 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         reference_resolution = self.maya_env.open(self.version15)
 
         # check reference resolution
-        self.assertItemsEqual(
-            reference_resolution['root'],
-            [self.version12]
+        self.assertEqual(
+            sorted(reference_resolution['root'], key=lambda x: x.name),
+            sorted([self.version12], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            reference_resolution['create'],
-            [self.version5, self.version12]
+        self.assertEqual(
+            sorted(reference_resolution['create'], key=lambda x: x.name),
+            sorted([self.version5, self.version12], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            reference_resolution['update'],
-            [self.version2]
+        self.assertEqual(
+            sorted(reference_resolution['update'], key=lambda x: x.name),
+            sorted([self.version2], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
+        self.assertEqual(
             reference_resolution['leave'],
             []
         )
@@ -1783,7 +1789,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
@@ -1959,7 +1965,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
@@ -2133,7 +2139,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
@@ -2210,9 +2216,10 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.maya_env.reference(self.version3)
 
         # at this point we should have self.version6.inputs filled correctly
-        self.assertItemsEqual(
-            [self.version5, self.version4, self.version3],
-            self.version6.inputs
+        self.assertEqual(
+            sorted([self.version5, self.version4, self.version3],
+                   key=lambda x: x.name),
+            sorted(self.version6.inputs, key=lambda x: x.name)
         )
 
     def test_get_referenced_versions_returns_a_list_of_Version_instances(self):
@@ -2231,9 +2238,10 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # now try to get the referenced versions
         referenced_versions = self.maya_env.get_referenced_versions()
 
-        self.assertItemsEqual(
-            referenced_versions,
-            [self.version3, self.version4, self.version5]
+        self.assertEqual(
+            sorted(referenced_versions, key=lambda x: x.name),
+            sorted([self.version3, self.version4, self.version5],
+                   key=lambda x: x.name)
         )
 
     def test_get_referenced_versions_returns_a_list_of_Version_instances_referenced_under_the_given_reference(self):
@@ -2259,7 +2267,10 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # now try to get the referenced versions
         versions = self.maya_env.get_referenced_versions()
 
-        self.assertItemsEqual(versions, [self.version6])
+        self.assertEqual(
+            sorted(versions, key=lambda x: x.name),
+            sorted([self.version6], key=lambda x: x.name)
+        )
 
         # and get a deeper one
         versions = \
@@ -2267,9 +2278,10 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
                 pymel.core.listReferences()[0]
             )
 
-        self.assertItemsEqual(
-            versions,
-            [self.version3, self.version4, self.version5]
+        self.assertEqual(
+            sorted(versions, key=lambda x: x.name),
+            sorted([self.version3, self.version4, self.version5],
+                   key=lambda x: x.name)
         )
 
     def test_update_version_inputs_method_updates_the_inputs_of_the_open_version(self):
@@ -2318,7 +2330,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # now try to update referenced versions
         self.maya_env.update_version_inputs()
 
-        self.assertItemsEqual(
+        self.assertEqual(
             [self.version6],
             self.version7.inputs
         )
@@ -2327,9 +2339,10 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         refs = pymel.core.listReferences()
         self.maya_env.update_version_inputs(refs[0])
 
-        self.assertItemsEqual(
-            [self.version3, self.version4, self.version5],
-            self.version6.inputs
+        self.assertEqual(
+            sorted([self.version3, self.version4, self.version5],
+                   key=lambda x: x.name),
+            sorted(self.version6.inputs, key=lambda x: x.name)
         )
 
     def test_reference_method_updates_the_inputs_of_the_referenced_version(self):
@@ -2468,7 +2481,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2,
@@ -2541,21 +2554,28 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         print '--------------------------'
         print result
 
-        self.assertItemsEqual(
-            expected_reference_resolution['root'],
-            result['root']
+        self.assertEqual(
+            sorted(expected_reference_resolution['root'],
+                   key=lambda x: x.name),
+            sorted(result['root'], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['leave'],
-            result['leave']
+        self.assertEqual(
+            sorted(expected_reference_resolution['leave'],
+                   key=lambda x: x.name),
+            sorted(result['leave'],
+                   key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['update'],
-            result['update']
+        self.assertEqual(
+            sorted(expected_reference_resolution['update'],
+                   key=lambda x: x.name),
+            sorted(result['update'],
+                   key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['create'],
-            result['create']
+        self.assertEqual(
+            sorted(expected_reference_resolution['create'],
+                   key=lambda x: x.name),
+            sorted(result['create'],
+                   key=lambda x: x.name)
         )
 
     def test_check_referenced_versions_is_working_properly_case_2(self):
@@ -2604,7 +2624,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check the setup
         visited_versions = []
-        for v in self.version15.walk_hierarchy():
+        for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
@@ -2633,21 +2653,25 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         print '--------------------------'
         print result
 
-        self.assertItemsEqual(
-            expected_reference_resolution['root'],
-            result['root']
+        self.assertEqual(
+            sorted(expected_reference_resolution['root'],
+                   key=lambda x: x.name),
+            sorted(result['root'], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['leave'],
-            result['leave']
+        self.assertEqual(
+            sorted(expected_reference_resolution['leave'],
+                   key=lambda x: x.name),
+            sorted(result['leave'], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['update'],
-            result['update']
+        self.assertEqual(
+            sorted(expected_reference_resolution['update'],
+                   key=lambda x: x.name),
+            sorted(result['update'], key=lambda x: x.name)
         )
-        self.assertItemsEqual(
-            expected_reference_resolution['create'],
-            result['create']
+        self.assertEqual(
+            sorted(expected_reference_resolution['create'],
+                   key=lambda x: x.name),
+            sorted(result['create'], key=lambda x: x.name)
         )
 
 
@@ -4035,7 +4059,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now let it be fixed
         list_of_versions = self.maya_env.fix_reference_namespaces()
 
-        self.assertItemsEqual(
+        self.assertEqual(
             list_of_versions,
             [self.version4.latest_published_version]
         )
