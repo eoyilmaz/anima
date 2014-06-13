@@ -69,6 +69,21 @@ def check_if_previous_version_references():
         )
 
 
+@publisher
+def check_namespaces():
+    """checks if there are unnecessary namespaces
+    """
+    # only allow namespaces as much as we have references
+    all_namespaces = pm.listNamespaces()
+    ref_namespaces = [ref.namespace for ref in pm.listReferences()]
+    if len(all_namespaces) > len(ref_namespaces):
+        raise PublishError(
+            'There are more <b>namespaces</b> than the number of '
+            '<b>References</b> you have in your scene.<br><br>'
+            'Please remove them!!!'
+        )
+
+
 #*******#
 # MODEL #
 #*******#
