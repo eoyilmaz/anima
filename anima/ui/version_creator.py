@@ -584,7 +584,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             menu_action = menu.addAction('Publish')
 
-        if logged_in_user in version.task.responsible:
+        if not logged_in_user in version.task.responsible:
             menu_action.setDisabled(True)
 
         menu.addSeparator()
