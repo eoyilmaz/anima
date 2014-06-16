@@ -6,6 +6,7 @@
 
 import os
 import pymel.core as pm
+import maya.cmds as mc
 
 from anima.publish import publisher
 from anima.exc import PublishError
@@ -420,14 +421,15 @@ def check_only_arnold_materials_are_used():
 def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """
-    objects_with_default_material = pm.sets('initialShadingGroup', q=1)
+    objects_with_default_material = mc.sets('initialShadingGroup', q=1)
     if len(objects_with_default_material):
+        mc.select(objects_with_default_material)
         raise PublishError(
             'There are objects still using <b>initialShadingGroup</b><br><br>'
             '%s<br><br>Please assign a proper material to them' %
             '<br>'.join(
-                map(lambda x: x.name(), objects_with_default_material)
-            )[:MAX_NODE_DISPLAY]
+                objects_with_default_material[:MAX_NODE_DISPLAY]
+            )
         )
 
 
