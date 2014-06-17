@@ -442,7 +442,7 @@ def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """
     objects_with_default_material = mc.sets('initialShadingGroup', q=1)
-    if len(objects_with_default_material):
+    if objects_with_default_material and len(objects_with_default_material):
         mc.select(objects_with_default_material)
         raise PublishError(
             'There are objects still using <b>initialShadingGroup</b><br><br>'
