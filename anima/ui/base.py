@@ -62,7 +62,7 @@ def ui_caller(app_in, executor, DialogClass, **kwargs):
         if not app_in:
             try:
                 app = QtGui.QApplication(sys.argv)
-            except AttributeError: # sys.argv gives argv.error
+            except AttributeError:  # sys.argv gives argv.error
                 app = QtGui.QApplication([])
         else:
             app = app_in

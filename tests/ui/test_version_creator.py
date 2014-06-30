@@ -21,22 +21,23 @@ from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_creator
 
 SET_PYSIDE()
 
-# if IS_PYSIDE():
-logger.debug('environment is set to pyside, importing pyside')
-from PySide import QtCore, QtGui
-from PySide.QtTest import QTest
-from PySide.QtCore import Qt
-# elif IS_PYQT4():
-#     logger.debug('environment is set to pyqt4, importing pyqt4')
-#     import sip
-#     sip.setapi('QString', 2)
-#     sip.setapi('QVariant', 2)
-#     from PyQt4 import QtCore, QtGui
-#     from PyQt4.QtTest import QTest
-#     from PyQt4.QtCore import Qt
+if IS_PYSIDE():
+    logger.debug('environment is set to pyside, importing pyside')
+    from PySide import QtCore, QtGui
+    from PySide.QtTest import QTest
+    from PySide.QtCore import Qt
+elif IS_PYQT4():
+    logger.debug('environment is set to pyqt4, importing pyqt4')
+    import sip
+    sip.setapi('QString', 2)
+    sip.setapi('QVariant', 2)
+    from PyQt4 import QtCore, QtGui
+    from PyQt4.QtTest import QTest
+    from PyQt4.QtCore import Qt
 
-from stalker import (db, defaults, User, Project, Repository, Structure, Status,\
-                     StatusList, Task, Version, FilenameTemplate, Group)
+from stalker import (db, defaults, User, Project, Repository, Structure,
+                     Status, StatusList, Task, Version, FilenameTemplate,
+                     Group)
 from stalker.db.session import DBSession
 
 # logger = logging.getLogger("anima.ui.version_creator")
@@ -1180,10 +1181,11 @@ class VersionCreatorTester(unittest.TestCase):
         # show again
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
+        self.fail('test is not implemented completely')
 
     def test_tasks_treeView_do_not_cause_a_segfault(self):
+        """there was a bug causing a segfault
         """
-        """
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
 
@@ -1192,272 +1194,6 @@ class VersionCreatorTester(unittest.TestCase):
 
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
-
-    def test_statuses_comboBox_filled_with_version_statuses(self):
-        """testing if the status_comboBox is filled with statuses suitable for
-        Versions
-        """
-        s1 = Status(
-            name='Waiting To Start',
-            code='WTS'
-        )
-
-        s2 = Status(
-            name='Work In Progress',
-            code='WIP'
-        )
-
-        s3 = Status(
-            name='Completed',
-            code='CMPL'
-        )
-
-        s4 = Status(
-            name='Waiting Review',
-            code='WRev'
-        )
-
-        s5 = Status(
-            name='On Hold',
-            code='OH'
-        )
-
-        s6 = Status(
-            name='Approved',
-            code='APP'
-        )
-
-        # create the StatusList for Versions
-        version_statuses = StatusList(
-            name='Version Statuses',
-            target_entity_type=Version,
-            statuses=[s1, s2, s3, s4]
-        )
-
-        # record them all to the db
-        DBSession.add(version_statuses)
-        DBSession.commit()
-
-        dialog = version_creator.MainDialog()
-        # self.show_dialog(dialog)
-
-        # check if the statuses_comboBox has 4 items
-        self.assertEqual(
-            dialog.statuses_comboBox.count(),
-            4
-        )
-
-        # status names are all in the comboBox
-        status_names = [
-            'Waiting To Start',
-            'Work In Progress',
-            'Completed',
-            'Waiting Review'
-        ]
-
-        for i in range(4):
-            item_text = dialog.statuses_comboBox.itemText(i)
-            self.assertEqual(
-                status_names[i],
-                item_text
-            )
-
-    def test_statuses_comboBox_shows_last_version_status_in_the_list(self):
-        """testing if the status_comboBox shows the status of the last version
-        """
-        repo1 = Repository(
-            name='Test Repository',
-            windows_path='T;/TestRepo/',
-            linux_path='/mnt/T/TestRepo/',
-            osx_path='/Volumes/T/TestRepo/'
-        )
-        DBSession.add(repo1)
-
-        structure1 = Structure(
-            name='Test Project Structure',
-            templates=[],
-            custom_template=''
-        )
-        DBSession.add(structure1)
-
-        s1 = Status(
-            name='Waiting To Start',
-            code='WTS'
-        )
-
-        s2 = Status(
-            name='Work In Progress',
-            code='WIP'
-        )
-
-        s3 = Status(
-            name='Completed',
-            code='CMPL'
-        )
-
-        s4 = Status(
-            name='Waiting Review',
-            code='WRev'
-        )
-
-        s5 = Status(
-            name='On Hold',
-            code='OH'
-        )
-
-        s6 = Status(
-            name='Approved',
-            code='APP'
-        )
-
-        # create the StatusList for Versions
-        version_statuses = StatusList(
-            name='Version Statuses',
-            target_entity_type=Version,
-            statuses=[s1, s2, s3, s4]
-        )
-        # record them all to the db
-        DBSession.add(version_statuses)
-        DBSession.commit()
-
-        project_statuses = StatusList(
-            name='Project Statuses',
-            statuses=[s1, s2, s3],
-            target_entity_type=Project
-        )
-        # record them all to the db
-        DBSession.add(project_statuses)
-
-        # create a couple of projects
-        p1 = Project(
-            name='Project 1',
-            code='P1',
-            repository=repo1,
-            structure=structure1,
-            status_list=project_statuses
-        )
-        DBSession.add(p1)
-
-        # create tasks for admin user
-        task_statuses = StatusList(
-            name='Task Statuses',
-            statuses=[s1, s2, s3],
-            target_entity_type=Task
-        )
-        DBSession.add(task_statuses)
-
-        # project 1
-        t1 = Task(
-            name='Test Task 1',
-            project=p1,
-            resources=[self.admin],
-            status_list=task_statuses
-        )
-        DBSession.add(t1)
-
-        # default (Main)
-        v1 = Version(
-            task=t1,
-            full_path='/some/path',
-            created_by=self.admin,
-            status=s1
-        )
-        DBSession.add(v1)
-        DBSession.commit()
-
-        v2 = Version(
-            task=t1,
-            full_path='/some/path',
-            created_by=self.admin,
-            status=s1
-        )
-        DBSession.add(v2)
-        DBSession.commit()
-
-        v3 = Version(
-            task=t1,
-            full_path='/some/path',
-            created_by=self.admin,
-            status=s1
-        )
-        DBSession.add(v3)
-        DBSession.commit()
-
-        # Take1
-        v4 = Version(
-            task=t1,
-            full_path='/some/path',
-            created_by=self.admin,
-            status=s1
-        )
-        DBSession.add(v4)
-        DBSession.commit()
-
-        v5 = Version(
-            task=t1,
-            full_path='/some/path',
-            created_by=self.admin,
-            status=s2
-        )
-        DBSession.add(v5)
-
-        DBSession.commit()
-
-        # create a couple of versions
-        dialog = version_creator.MainDialog()
-        # self.show_dialog(dialog)
-
-        # set the current item to task1
-        # get the corresponding item
-        items = dialog.tasks_treeView.findItems(
-            p1.name,
-            QtCore.Qt.MatchExactly,
-            0
-        )
-        self.assertGreater(len(items), 0)
-        p1_item = items[0]
-        self.assertIsNotNone(p1_item)
-
-        # get task1
-        t1_item = None
-        for i in range(p1_item.childCount()):
-            item = p1_item.child(i)
-            if item.text(0) == t1.name:
-                t1_item = item
-                break
-        self.assertIsNotNone(t1_item)
-
-        dialog.tasks_treeView.setCurrentItem(t1_item)
-
-        # select the first take
-        dialog.takes_listWidget.setCurrentRow(0)
-
-        # check if the statuses_comboBox has 4 items
-        self.assertEqual(
-            dialog.statuses_comboBox.count(),
-            4
-        )
-
-        # status names are all in the comboBox
-        status_names = [
-            'Waiting To Start',
-            'Work In Progress',
-            'Completed',
-            'Waiting Review'
-        ]
-
-        for i in range(4):
-            item_text = dialog.statuses_comboBox.itemText(i)
-            self.assertEqual(
-                status_names[i],
-                item_text
-            )
-
-        # and the current one is s2
-        self.assertEqual(
-            dialog.statuses_comboBox.currentText(),
-            s2.name
-        )
 
     def test_previous_versions_tableWidget_is_filled_with_proper_info(self):
         """testing if the previous_versions_tableWidget is filled with proper
@@ -1679,9 +1415,9 @@ class VersionCreatorTester(unittest.TestCase):
             QtCore.Qt.MatchExactly,
             0
         )
-        self.assertGreater(len(items), 0)
+        self.assertTrue(len(items) > 0)
         p1_item = items[0]
-        self.assertIsNotNone(p1_item)
+        self.assertTrue(p1_item is not None)
 
         # get task1
         t1_item = None
@@ -1690,7 +1426,7 @@ class VersionCreatorTester(unittest.TestCase):
             if item.text(0) == t1.name:
                 t1_item = item
                 break
-        self.assertIsNotNone(t1_item)
+        self.assertTrue(t1_item is not None)
 
         dialog.tasks_treeView.setCurrentItem(t1_item)
 
