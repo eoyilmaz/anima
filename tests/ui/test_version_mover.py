@@ -13,6 +13,7 @@ from sqlalchemy import distinct
 from anima.ui import SET_PYSIDE, IS_PYSIDE, IS_PYQT4
 
 from anima.ui.version_mover import VersionMover
+from anima.ui.testing import PatchedMessageBox
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -43,6 +44,8 @@ from stalker import db, Task, Version, Project, Repository, Structure, \
 class VersionMoverTestCase(unittest.TestCase):
     """tests the VersionMover class
     """
+
+    original_message_box = None
 
     def show_dialog(self, dialog):
         """show the given dialog
@@ -80,6 +83,20 @@ class VersionMoverTestCase(unittest.TestCase):
             pass
 
         return v
+
+    @classmethod
+    def setUpClass(cls):
+        """set up once
+        """
+        # patch QMessageBox
+        cls.original_message_box = QtGui.QMessageBox
+        QtGui.QMessageBox = PatchedMessageBox
+
+    @classmethod
+    def tearDownClass(cls):
+        """clean up once
+        """
+        QtGui.QMessageBox = cls.original_message_box
 
     def setUp(self):
         """sets up the test
@@ -341,24 +358,107 @@ class VersionMoverTestCase(unittest.TestCase):
 
         self.dialog = VersionMover()
 
+    def tearDown(self):
+        """clean up every time
+        """
+        PatchedMessageBox.tear_down()
+
     def test_copy_button_clicked_with_no_selection_on_from_task_tree_view(self):
         """testing if a QMessageDialog will be displayed when the copy button
         selected and no selection is made in from_task_tree_view
         """
-        #self.show_dialog(self.dialog)
-        self.fail('test is not implemented yet')
+        self.assertEqual(PatchedMessageBox.called_function, '')
+
+        # now try to copy it
+        QTest.mouseClick(self.dialog.copy_push_button, Qt.LeftButton)
+
+        self.assertEqual(PatchedMessageBox.called_function, 'critical')
+        self.assertEqual(PatchedMessageBox.title, 'Error')
+        self.assertEqual(PatchedMessageBox.message,
+                         'Please select a task from <b>From Task</b> list')
 
     def test_copy_button_clicked_with_no_selection_on_to_task_tree_view(self):
         """testing if a QMessageDialog will be displayed when the copy button
         selected and no selection is made in to_task_tree_vie
         """
-        self.fail('test is not implemented yet')
+        # select one task in from_task_tree_view
+
+        # Select Task4 in from_task_tree_view
+        selection_model = self.dialog.from_task_tree_view.selectionModel()
+        model = self.dialog.from_task_tree_view.model()
+
+        project1_item = model.item(0, 0)
+        self.dialog.from_task_tree_view.expand(project1_item.index())
+
+        task1_item = project1_item.child(0, 0)
+        self.dialog.from_task_tree_view.expand(task1_item.index())
+
+        task4_item = task1_item.child(0, 0)
+
+        selection_model.select(
+            task4_item.index(),
+            QtGui.QItemSelectionModel.Select
+        )
+
+        self.assertEqual(PatchedMessageBox.called_function, '')
+
+        # now try to copy it
+        QTest.mouseClick(self.dialog.copy_push_button, Qt.LeftButton)
+
+        self.assertEqual(PatchedMessageBox.called_function, 'critical')
+        self.assertEqual(PatchedMessageBox.title, 'Error')
+        self.assertEqual(PatchedMessageBox.message,
+                         'Please select a task from <b>To Task</b> list')
 
     def test_copy_button_clicked_with_same_task_is_selected_in_both_sides(self):
         """testing if a QMessageDialog will warn the user about he/she selected
         the same task in both tree views
         """
-        self.fail('test is not implemented yet')
+        # select one task in from_task_tree_view
+
+        # Select Task4 in from_task_tree_view
+        selection_model = self.dialog.from_task_tree_view.selectionModel()
+        model = self.dialog.from_task_tree_view.model()
+
+        project1_item = model.item(0, 0)
+        self.dialog.from_task_tree_view.expand(project1_item.index())
+
+        task1_item = project1_item.child(0, 0)
+        self.dialog.from_task_tree_view.expand(task1_item.index())
+
+        task4_item = task1_item.child(0, 0)
+
+        selection_model.select(
+            task4_item.index(),
+            QtGui.QItemSelectionModel.Select
+        )
+
+        # Select Task4 in to_task_tree_view
+        selection_model = self.dialog.to_task_tree_view.selectionModel()
+        model = self.dialog.to_task_tree_view.model()
+
+        project1_item = model.item(0, 0)
+        self.dialog.to_task_tree_view.expand(project1_item.index())
+
+        task1_item = project1_item.child(0, 0)
+        self.dialog.to_task_tree_view.expand(task1_item.index())
+
+        task4_item = task1_item.child(0, 0)
+
+        selection_model.select(
+            task4_item.index(),
+            QtGui.QItemSelectionModel.Select
+        )
+
+        self.assertEqual(PatchedMessageBox.called_function, '')
+
+        # now try to copy it
+        QTest.mouseClick(self.dialog.copy_push_button, Qt.LeftButton)
+
+        self.assertEqual(PatchedMessageBox.called_function, 'critical')
+        self.assertEqual(PatchedMessageBox.title, 'Error')
+        self.assertEqual(PatchedMessageBox.message,
+                         'Please select two different tasks')
 
     def test_copy_button_is_working_properly(self):
         """testing if the copy button is working properly
@@ -408,6 +508,11 @@ class VersionMoverTestCase(unittest.TestCase):
             .count()
         self.assertEqual(take_name_count, 3)
 
+        # for testing purposes set question result to QtGui.QMessageBox.Yes
+        PatchedMessageBox.Yes = self.original_message_box.Yes
+        PatchedMessageBox.No = self.original_message_box.No
+        PatchedMessageBox.question_return_value = self.original_message_box.Yes
+
         # copy it
         QTest.mouseClick(self.dialog.copy_push_button, Qt.LeftButton)
 
@@ -423,11 +528,11 @@ class VersionMoverTestCase(unittest.TestCase):
         for version in self.test_task8.versions:
             self.assertTrue(os.path.exists(version.absolute_full_path))
 
-    def test_destination_task_has_versions_already(self):
-        """testing if the there will be no problem when the destination task
-        already has versions
-        """
-        self.fail('test is not implemented yet')
+    # def test_destination_task_has_versions_already(self):
+    #     """testing if the there will be no problem when the destination task
+    #     already has versions
+    #     """
+    #     self.fail('test is not implemented yet')
 
     # def test_move_button_clicked_with_no_selection_on_from_task_tree_view(self):
     #     """testing if a QMessageDialog will be displayed when the move button

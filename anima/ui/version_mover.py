@@ -175,7 +175,10 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
             current_item = item_model.itemFromIndex(current_index)
 
             if current_item:
-                task = current_item.task
+                try:
+                    task = current_item.task
+                except AttributeError:
+                    pass
 
         return task
 
@@ -185,8 +188,33 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         # get from task
         from_task = self.get_task_from_tree_view(self.from_task_tree_view)
 
+        if not from_task:
+            QtGui.QMessageBox.critical(
+                self,
+                'Error',
+                'Please select a task from <b>From Task</b> list'
+            )
+            return
+
         # get to task
         to_task = self.get_task_from_tree_view(self.to_task_tree_view)
+
+        if not to_task:
+            QtGui.QMessageBox.critical(
+                self,
+                'Error',
+                'Please select a task from <b>To Task</b> list'
+            )
+            return
+
+        # check if tasks are the same
+        if from_task == to_task:
+            QtGui.QMessageBox.critical(
+                self,
+                'Error',
+                'Please select two different tasks'
+            )
+            return
 
         # get take names and related versions
         # get distinct take names
@@ -199,34 +227,58 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         )
 
         # create versions for each take
-        for take_name in from_take_names:
-            latest_version = Version.query\
-                .filter_by(take_name=take_name)\
-                .order_by(Version.version_number.desc())\
-                .first()
+        answer = QtGui.QMessageBox.question(
+            self,
+            'Info',
+            "Will copy %s versions from take names:<br><br>"
+            "%s"
+            "<br><br>"
+            "Is that Ok?" % (
+                len(from_take_names),
+                '<br>'.join(from_take_names)
+            ),
+            QtGui.QMessageBox.Yes,
+            QtGui.QMessageBox.No
+        )
 
-            # create a new version
-            new_version = Version(
-                task=to_task,
-                take_name=take_name
+        if answer == QtGui.QMessageBox.Yes:
+            for take_name in from_take_names:
+                latest_version = Version.query\
+                    .filter_by(take_name=take_name)\
+                    .order_by(Version.version_number.desc())\
+                    .first()
+
+                # create a new version
+                new_version = Version(
+                    task=to_task,
+                    take_name=take_name
+                )
+                new_version.extension = latest_version.extension
+                db.DBSession.add(new_version)
+                db.DBSession.commit()
+
+                # update path
+                new_version.update_paths()
+                db.DBSession.add(new_version)
+                db.DBSession.commit()
+
+                # now copy the last_version file to the new_version path
+                try:
+                    os.makedirs(new_version.absolute_path)
+                except OSError:  # path exists
+                    pass
+
+                # move the file there
+                shutil.copyfile(
+                    latest_version.absolute_full_path,
+                    new_version.absolute_full_path
+                )
+
+            # inform the user
+            QtGui.QMessageBox.information(
+                self,
+                'Success',
+                'Successfully copied %s versions' % len(from_take_names)
             )
-            new_version.extension = latest_version.extension
-            db.DBSession.add(new_version)
-            db.DBSession.commit()
 
-            # update path
-            new_version.update_paths()
-            db.DBSession.add(new_version)
-            db.DBSession.commit()
 
-            # now copy the last_version file to the new_version path
-            try:
-                os.makedirs(new_version.absolute_path)
-            except OSError:  # path exists
-                pass
-
-            # move the file there
-            shutil.copyfile(
-                latest_version.absolute_full_path,
-                new_version.absolute_full_path
-            )
