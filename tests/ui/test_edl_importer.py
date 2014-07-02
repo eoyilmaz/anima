@@ -73,7 +73,7 @@ class EDLImporterTestCase(unittest.TestCase):
     def tearDown(self):
         """clean up test
         """
-        PatchedMessageBox.tearDown()
+        PatchedMessageBox.tear_down()
 
         # restore anima.local_cache_folder
         anima.local_cache_folder = self.original_cache_folder

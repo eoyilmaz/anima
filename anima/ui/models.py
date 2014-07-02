@@ -210,6 +210,11 @@ class VersionItem(QtGui.QStandardItem):
             'VersionItem.hasChildren() is finished for item: %s' % self.text())
         return return_value
 
+    def type(self, *args, **kwargs):
+        """
+        """
+        return QtGui.QStandardItem.UserType + 2
+
 
 class VersionTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the version hierarchy
@@ -301,10 +306,11 @@ class VersionTreeView(QtGui.QTreeView):
 
 
 class TaskTreeView(QtGui.QTreeView):
-    """A custom tree view to display Taks info
+    """A custom tree view to display Tasks info
     """
-    # TODO: Implement this as a class with all its context menus etc.
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super(TaskTreeView, self).__init__(*args, **kwargs)
 
 
 class TaskItem(QtGui.QStandardItem):
@@ -435,6 +441,11 @@ class TaskItem(QtGui.QStandardItem):
 
         return return_value
 
+    def type(self, *args, **kwargs):
+        """
+        """
+        return QtGui.QStandardItem.UserType + 1
+
 
 class TaskTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the task hierarchy
@@ -457,8 +468,11 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             ['Name', 'Type', 'Dependencies']
         )
 
-        #item_prototype = TaskItem()
-        #self.setItemPrototype(item_prototype)
+        # item_prototype = TaskItem()
+        # self.setItemPrototype(item_prototype)
+        # root_item = TaskItem(0, 3)
+        # root_item.setColumnCount(3)
+        # self.appendRow(root_item)
 
         for project in projects:
             project_item = TaskItem(0, 3)
@@ -485,6 +499,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.setFont(my_font)
 
             self.appendRow(project_item)
+            # root_item.appendRow(project_item)
 
         logger.debug('TaskTreeModel.populateTree() is finished')
 
@@ -518,7 +533,13 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug(
             'TaskTreeModel.hasChildren() is started for index: %s' % index)
         if not index.isValid():
-            projects = self.user.projects
+            if self.user_tasks_only:
+                if self.user:
+                    projects = self.user.projects
+                else:
+                    projects = []
+            else:
+                projects = Project.query.all()
             return_value = len(projects) > 0
         else:
             item = self.itemFromIndex(index)
