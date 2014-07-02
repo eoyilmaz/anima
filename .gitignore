@@ -7,6 +7,7 @@ docs/source/generated/*
 *~
 .~*
 .DS_Store
+Thumbs.db
 .coverage
 *.swp
 *.md5
