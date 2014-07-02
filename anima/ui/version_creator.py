@@ -1204,8 +1204,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         task = None
         selection_model = self.tasks_treeView.selectionModel()
         logger.debug('selection_model: %s' % selection_model)
+
         indexes = selection_model.selectedIndexes()
         logger.debug('selected indexes : %s' % indexes)
+
         if indexes:
             current_index = indexes[0]
             logger.debug('current_index : %s' % current_index)
