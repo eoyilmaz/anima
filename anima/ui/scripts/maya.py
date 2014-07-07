@@ -72,3 +72,12 @@ def version_updater():
 
     # generate a reference_resolution
     version_updater.UI(environment=m)
+
+def version_mover():
+    """
+    """
+    # connect to db
+    do_db_setup()
+
+    from anima.ui import version_mover as vm
+    vm.UI()

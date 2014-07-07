@@ -9,8 +9,25 @@ from sqlalchemy import distinct
 from stalker import db, Project, Task, Version
 
 from anima.ui.lib import QtCore, QtGui
-from anima.ui.base import AnimaDialogBase
+from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models import TaskTreeView, TaskTreeModel
+
+
+
+def UI(app_in=None, executor=None, **kwargs):
+    """
+    :param environment: The
+      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
+      work in "environmentless" mode in which it only creates data in database
+      and copies the resultant version file path to clipboard.
+
+    :param app_in: A Qt Application instance, which you can pass to let the UI
+      be attached to the given applications event process.
+
+    :param executor: Instead of calling app.exec_ the UI will call this given
+      function. It also passes the created app instance to this executor.
+    """
+    return ui_caller(app_in, executor, VersionMover, **kwargs)
 
 
 class VersionMover(QtGui.QDialog, AnimaDialogBase):
@@ -68,22 +85,6 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         self.horizontal_layout_2.setContentsMargins(-1, 10, -1, -1)
         self.horizontal_layout_2.setObjectName("horizontal_layout_2")
 
-        # spacer1 = QtGui.QSpacerItem(
-        #     40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum
-        # )
-        # spacer2 = QtGui.QSpacerItem(
-        #     40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum
-        # )
-
-        # self.horizontal_layout_2.addItem(spacer1)
-        # self.horizontal_layout_2.addWidget(self.copy_push_button)
-
-        # self.move_push_button = QtGui.QPushButton(dialog)
-        # self.move_push_button.setObjectName("move_push_button")
-        # self.move_push_button.setText('Move')
-        # self.horizontal_layout_2.addWidget(self.move_push_button)
-
-        # self.horizontal_layout_2.addItem(spacer2)
         self.vertical_layout.addLayout(self.horizontal_layout_2)
 
         QtCore.QMetaObject.connectSlotsByName(dialog)
@@ -188,6 +189,9 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         # get from task
         from_task = self.get_task_from_tree_view(self.from_task_tree_view)
 
+        # get logged in user
+        logged_in_user = self.get_logged_in_user()
+
         if not from_task:
             QtGui.QMessageBox.critical(
                 self,
@@ -244,6 +248,7 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         if answer == QtGui.QMessageBox.Yes:
             for take_name in from_take_names:
                 latest_version = Version.query\
+                    .filter_by(task=from_task)\
                     .filter_by(take_name=take_name)\
                     .order_by(Version.version_number.desc())\
                     .first()
@@ -253,7 +258,12 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
                     task=to_task,
                     take_name=take_name
                 )
+                new_version.created_by = logged_in_user
                 new_version.extension = latest_version.extension
+                new_version.description = \
+                    'Moved from another task (id=%s) with Version Mover' % \
+                    latest_version.task.id
+                new_version.created_with = latest_version.created_with
                 db.DBSession.add(new_version)
                 db.DBSession.commit()
 
