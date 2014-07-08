@@ -7,9 +7,9 @@
 import unittest
 import os
 import pymel.core
-from anima.previs import (SequenceManagerExtension, SequencerExtension,
-                          ShotExtension, Sequence, Media, Video, Track, Clip,
-                          File)
+
+from anima.env.mayaEnv.extension import (Sequence, Media, Video, Track, Clip,
+                                         File)
 
 
 class SequenceManagerTestCase(unittest.TestCase):

@@ -3,12 +3,10 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import os
 
 import unittest
 import pymel.core
-from anima.previs import (SequencerExtension, Sequence, Media, Video, Track,
-                          Clip, File)
+from anima.env.mayaEnv import extension
 
 
 class SequencerExtensionTestCase(unittest.TestCase):

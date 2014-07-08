@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import unittest
-from anima.previs import DurationMixin
+from anima.env.mayaEnv.extension import DurationMixin
 
 
 class DurationAttrMixinTestCase(unittest.TestCase):

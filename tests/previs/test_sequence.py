@@ -9,8 +9,8 @@ import pymel
 
 from edl import List, Event
 
-from anima.previs import (SequencerExtension, Sequence, Media, Video, Track,
-                          Clip, File)
+from anima.env.mayaEnv.extension import (Sequence, Media, Video, Track, Clip,
+                                         File)
 
 
 class SequenceTestCase(unittest.TestCase):
@@ -385,7 +385,7 @@ class SequenceTestCase(unittest.TestCase):
         s.media = m
 
         result = s.to_edl()
-        self.assertIsInstance(result, List)
+        self.assertTrue(isinstance(result, List))
 
     def test_to_edl_method_is_working_properly(self):
         """testing if the to_edl method will output a proper edl.List object
@@ -399,7 +399,7 @@ class SequenceTestCase(unittest.TestCase):
         sequence = sm.generate_sequence_structure()
 
         edl_list = sm.to_edl()
-        self.assertIsInstance(edl_list, List)
+        self.assertTrue(isinstance(edl_list, List))
 
         self.assertEqual(
             sequence.name,
@@ -413,13 +413,13 @@ class SequenceTestCase(unittest.TestCase):
         e2 = edl_list.events[1]
         e3 = edl_list.events[2]
 
-        self.assertIsInstance(e1, Event)
-        self.assertIsInstance(e2, Event)
-        self.assertIsInstance(e3, Event)
+        self.assertTrue(isinstance(e1, Event))
+        self.assertTrue(isinstance(e2, Event))
+        self.assertTrue(isinstance(e3, Event))
 
         # check clips
         clips = sequence.media.video.tracks[0].clips
-        self.assertIsInstance(clips[0], Clip)
+        self.assertTrue(isinstance(clips[0], Clip))
 
         self.assertEqual('000001', e1.num)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', e1.clip_name)
@@ -501,10 +501,10 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('00:00:00:00', s.timecode)
 
         m = s.media
-        self.assertIsInstance(m, Media)
+        self.assertTrue(isinstance(m, Media))
 
         v = m.video
-        self.assertIsInstance(v, Video)
+        self.assertTrue(isinstance(v, Video))
 
         t = v.tracks[0]
         self.assertEqual(False, t.locked)
@@ -517,9 +517,9 @@ class SequenceTestCase(unittest.TestCase):
         clip2 = clips[1]
         clip3 = clips[2]
 
-        self.assertIsInstance(clip1, Clip)
-        self.assertIsInstance(clip2, Clip)
-        self.assertIsInstance(clip3, Clip)
+        self.assertTrue(isinstance(clip1, Clip))
+        self.assertTrue(isinstance(clip2, Clip))
+        self.assertTrue(isinstance(clip3, Clip))
 
         # clip1
         self.assertEqual(44.0, clip1.duration)
@@ -533,7 +533,7 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('Video', clip1.type)
 
         f = clip1.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(44.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', f.name)
         self.assertEqual(
@@ -553,7 +553,7 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('Video', clip2.type)
 
         f = clip2.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(41.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', f.name)
         self.assertEqual(
@@ -573,7 +573,7 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('Video', clip3.type)
 
         f = clip3.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(56.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', f.name)
         self.assertEqual(
@@ -600,15 +600,15 @@ class SequenceTestCase(unittest.TestCase):
 
         self.assertEqual('SEQ001_HSNI_003', s.name)
 
-        self.assertEqual(248.0, s.duration)
+        self.assertEqual(247.0, s.duration)
         self.assertEqual('24', s.timebase)
         self.assertEqual('00:00:00:00', s.timecode)
 
         m = s.media
-        self.assertIsInstance(m, Media)
+        self.assertTrue(isinstance(m, Media))
 
         v = m.video
-        self.assertIsInstance(v, Video)
+        self.assertTrue(isinstance(v, Video))
 
         t = v.tracks[0]
         self.assertEqual(False, t.locked)
@@ -621,9 +621,9 @@ class SequenceTestCase(unittest.TestCase):
         clip2 = clips[1]
         clip3 = clips[2]
 
-        self.assertIsInstance(clip1, Clip)
-        self.assertIsInstance(clip2, Clip)
-        self.assertIsInstance(clip3, Clip)
+        self.assertTrue(isinstance(clip1, Clip))
+        self.assertTrue(isinstance(clip2, Clip))
+        self.assertTrue(isinstance(clip3, Clip))
 
         # clip1
         self.assertEqual(191.0, clip1.duration)
@@ -633,11 +633,11 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual(15.0, clip1.in_)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', clip1.name)
         self.assertEqual(191.0, clip1.out)
-        self.assertEqual(-24, clip1.start)
+        self.assertEqual(-23, clip1.start)
         self.assertEqual('Video', clip1.type)
 
         f = clip1.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(191.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', f.name)
         self.assertEqual(
@@ -657,7 +657,7 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('Video', clip2.type)
 
         f = clip2.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(100.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', f.name)
         self.assertEqual(
@@ -677,7 +677,7 @@ class SequenceTestCase(unittest.TestCase):
         self.assertEqual('Video', clip3.type)
 
         f = clip3.file
-        self.assertIsInstance(f, File)
+        self.assertTrue(isinstance(f, File))
         self.assertEqual(1.0, f.duration)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', f.name)
         self.assertEqual(

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 import pymel.core
-from anima.previs import ShotExtension
+from anima.env.mayaEnv import extension
 
 
 class ShotExtensionTestCase(unittest.TestCase):

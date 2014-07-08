@@ -2,6 +2,12 @@
 Changes
 =======
 
+0.1.8
+=====
+
+* **Update:** Using the forked library of the unmaintained ``PyTimeCode``
+  called ``timecode`` instead of it.
+
 0.1.7
 =====
 

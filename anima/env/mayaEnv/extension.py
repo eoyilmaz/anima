@@ -533,7 +533,7 @@ class SequenceManagerExtension(object):
 
         :return: Sequence
         """
-        import pytimecode
+        import timecode
         from anima.env.mayaEnv import Maya
 
         m = Maya()
@@ -552,7 +552,7 @@ class SequenceManagerExtension(object):
         seq.ntsc = False  # always false
 
         seq.timebase = str(fps)
-        seq.timecode = str(pytimecode.PyTimeCode(
+        seq.timecode = str(timecode.Timecode(
             framerate=seq.timebase,
             frames=time.timecodeProductionStart.get() + 1
         ))
@@ -1227,9 +1227,9 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
             # check in and out points relative to each other
             if clip.start > clip.end:
                 # a possible negative number
-                from pytimecode import PyTimeCode
+                from timecode import Timecode
                 # get the last timecode like 23:59:59:xx
-                tc_24_hours = PyTimeCode(
+                tc_24_hours = Timecode(
                     edl_list.fps,
                     '23:59:59:%s' % edl_list.fps
                 )
@@ -1259,7 +1259,7 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
         """Returns an edl.List instance equivalent of this Sequence instance
         """
         from edl import List, Event
-        from pytimecode import PyTimeCode
+        from timecode import Timecode
 
         l = List(self.timebase)
         l.title = self.name
@@ -1287,19 +1287,19 @@ class Sequence(PrevisBase, NameMixin, DurationMixin):
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
                     # expand it to add other transition codes
 
-                    src_start_tc = PyTimeCode(self.timebase,
+                    src_start_tc = Timecode(self.timebase,
                                               frames=clip.in_ + 1)
                     # 1 frame after last frame shown
-                    src_end_tc = PyTimeCode(self.timebase,
+                    src_end_tc = Timecode(self.timebase,
                                             frames=clip.out + 1)
 
                     e.src_start_tc = str(src_start_tc)
                     e.src_end_tc = str(src_end_tc)
 
-                    rec_start_tc = PyTimeCode(self.timebase,
+                    rec_start_tc = Timecode(self.timebase,
                                               frames=clip.start + 1)
                     # 1 frame after last frame shown
-                    rec_end_tc = PyTimeCode(self.timebase, frames=clip.end + 1)
+                    rec_end_tc = Timecode(self.timebase, frames=clip.end + 1)
 
                     e.rec_start_tc = str(rec_start_tc)
                     e.rec_end_tc = str(rec_end_tc)
