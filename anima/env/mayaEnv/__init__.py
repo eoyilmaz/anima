@@ -12,15 +12,16 @@ import logging
 import pymel.core as pm
 import maya.cmds as mc
 
-from anima.publish import clear_publishers, run_publishers
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
-from anima.env.mayaEnv import publish as publish_scripts  # register publishers
 from anima.ui.progress_dialog import ProgressDialogManager
 
 # empty publishers first
-clear_publishers()
+from anima.env.mayaEnv import publish as publish_scripts  # register publishers
+reload(publish_scripts)
+
+from anima.publish import run_publishers
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)

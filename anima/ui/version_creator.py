@@ -584,10 +584,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         else:
             menu_action = menu.addAction('Publish')
 
-        if not logged_in_user in version.task.responsible \
-           and not self.is_power_user(logged_in_user):
-            menu_action.setDisabled(True)
-
         menu.addSeparator()
 
         # add Browse Outputs
@@ -606,6 +602,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             if version:
                 if choice == "Publish":
+                    # check if the user is able to publish this
+                    if not logged_in_user in version.task.responsible \
+                       and not self.is_power_user(logged_in_user):
+                        QtGui.QMessageBox.critical(
+                            self,
+                            'Error',
+                            'You are not a <b>Responsible</b> of this task<br>'
+                            'nor a <b>Power User</b><br>'
+                            '<br>'
+                            'So, you can not <b>Publish</b> this!!!'
+                        )
+                        return
+
                     # publish the selected version
                     # publish it
                     version.is_published = True
@@ -616,6 +625,49 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     self.update_previous_versions_tableWidget()
                     return
                 elif choice == "Un-Publish":
+                    # allow the user un-publish this version if it is not used
+                    # by any other versions
+                    versions_using_this_versions = \
+                        Version.query\
+                               .filter(Version.inputs.contains(version))\
+                               .all()
+
+                    if len(versions_using_this_versions):
+                        related_tasks = []
+                        for v in versions_using_this_versions:
+                            if v.task not in related_tasks:
+                                related_tasks.append(v.task)
+
+                        QtGui.QMessageBox.critical(
+                            self,
+                            'Error',
+                            'This version is referenced by the following '
+                            'tasks:<br><br>%s<br><br>'
+                            'So, you can not un-publish this version!' %
+                            '<br>'.join(
+                                map(
+                                    lambda x: x.name,
+                                    related_tasks
+                                )
+                            )
+                        )
+                        return
+
+                    # check if this user is one of the responsible or a power
+                    # user
+                    if not logged_in_user in version.task.responsible \
+                       and not logged_in_user in version.task.resources \
+                       and not self.is_power_user(logged_in_user):
+                        QtGui.QMessageBox.critical(
+                            self,
+                            'Error',
+                            'You are not a <b>Resource/Responsible</b> of '
+                            'this task<br> nor a <b>Power User</b><br>'
+                            '<br>'
+                            'So, you can not <b>Un-Publish</b> this!!!'
+                        )
+                        return
+
                     version.is_published = False
                     version.updated_by = logged_in_user
                     DBSession.add(version)

@@ -79,5 +79,5 @@ def run_publishers(type_name=''):
 def clear_publishers():
     """utility function to clear publishers
     """
-    publishers = {}
+    publishers.clear()
 

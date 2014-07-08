@@ -6,10 +6,12 @@
 
 import os
 import pymel.core as pm
+import maya.cmds as mc
 
-from anima.publish import publisher
+from anima.publish import clear_publishers, publisher
 from anima.exc import PublishError
 
+clear_publishers()
 
 MAX_NODE_DISPLAY = 80
 
@@ -18,15 +20,28 @@ MAX_NODE_DISPLAY = 80
 # GENERIC #
 #*********#
 @publisher
+def cleanup_intermediate_objects():
+    """deletes any unused intermediate object in the current scene
+    """
+    pm.delete(
+        [node
+         for node in pm.ls(type='mesh')
+         if len(node.inputs()) == 0 and len(node.outputs()) == 0 and
+            node.intermediateObject.get()]
+    )
+
+
+@publisher
 def check_old_object_smoothing():
     """checking if there are objects with
     """
     meshes_with_smooth_mesh_preview = []
     for node in pm.ls(type='mesh'):
         if node.displaySmoothMesh.get() != 0:
-            meshes_with_smooth_mesh_preview.append(node)
+            meshes_with_smooth_mesh_preview.append(node.getParent())
 
     if len(meshes_with_smooth_mesh_preview) > 0:
+        pm.select(meshes_with_smooth_mesh_preview)
         raise PublishError(
             'Please do not use <b>Smooth Mesh</b> on following nodes:<br><br>'
             '%s' %
@@ -106,6 +121,7 @@ def check_history():
             nodes_with_history.append(node)
 
     if len(nodes_with_history):
+        pm.select(nodes_with_history)
         # there is history
         raise PublishError(
             'There is history on:\n\n'
@@ -155,6 +171,7 @@ def check_if_root_nodes_have_no_transformation():
             non_freezed_root_nodes.append(node)
 
     if len(non_freezed_root_nodes):
+        pm.select(non_freezed_root_nodes)
         raise PublishError(
             'Please freeze the following node transformations:\n\n%s' %
             '\n'.join(
@@ -180,6 +197,7 @@ def check_if_leaf_mesh_nodes_have_no_transformation():
             mesh_nodes_with_transform_children.append(parent)
 
     if len(mesh_nodes_with_transform_children):
+        pm.select(mesh_nodes_with_transform_children)
         raise PublishError(
             'The following meshes have other objects parented to them:'
             '\n\n%s'
@@ -252,6 +270,7 @@ def check_empty_groups():
             empty_groups.append(node)
 
     if len(empty_groups):
+        pm.select(empty_groups)
         raise PublishError(
             'There are <b>empty groups</b> in your scene, '
             'please remove them!!!'
@@ -284,7 +303,7 @@ def check_uvs():
         caller = pdm.register(mesh_count, 'check_uvs()')
 
     meshes_with_zero_uv_area = []
-    for node in pm.ls(type='mesh'):
+    for node in all_meshes:
         all_uvs = node.getUVs()
         try:
             for i in range(node.numFaces()):
@@ -298,7 +317,6 @@ def check_uvs():
                     break
         except RuntimeError:
             meshes_with_zero_uv_area.append(node)
-            break
 
         if caller is not None:
             caller.step()
@@ -354,6 +372,7 @@ def check_all_tx_textures():
             textures_with_no_tx.append(path)
 
     if len(textures_with_no_tx):
+        pm.select(textures_with_no_tx)
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 
@@ -365,6 +384,7 @@ def check_lights():
         type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight']
     )
     if len(all_lights):
+        pm.select(all_lights)
         raise PublishError(
             'There are <b>Lights</b> in the current scene:<br><br>%s<br><br>'
             'Please delete them!!!' %
@@ -409,6 +429,7 @@ def check_only_arnold_materials_are_used():
                 non_arnold_materials.append(material)
 
     if len(non_arnold_materials):
+        pm.select(non_arnold_materials)
         raise PublishError(
             'There are non-Arnold materials in the scene:<br><br>%s<br><br>'
             'Please remove them!!!' %
@@ -420,14 +441,15 @@ def check_only_arnold_materials_are_used():
 def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """
-    objects_with_default_material = pm.sets('initialShadingGroup', q=1)
-    if len(objects_with_default_material):
+    objects_with_default_material = mc.sets('initialShadingGroup', q=1)
+    if objects_with_default_material and len(objects_with_default_material):
+        mc.select(objects_with_default_material)
         raise PublishError(
             'There are objects still using <b>initialShadingGroup</b><br><br>'
             '%s<br><br>Please assign a proper material to them' %
             '<br>'.join(
-                map(lambda x: x.name(), objects_with_default_material)
-            )[:MAX_NODE_DISPLAY]
+                objects_with_default_material[:MAX_NODE_DISPLAY]
+            )
         )
 
 
@@ -453,8 +475,8 @@ def check_component_edits_on_references():
             '<br><br>%s<br><br>Please remove them!!!' %
             '<br>'.join(
                 map(lambda x: x.refNode.name(),
-                    references_with_component_edits)
-            )[:MAX_NODE_DISPLAY]
+                    references_with_component_edits[:MAX_NODE_DISPLAY])
+            )
         )
 
 
@@ -471,6 +493,7 @@ def check_material_names():
             material_with_simple_names.append(mat_name)
 
     if len(material_with_simple_names):
+        pm.select(material_with_simple_names)
         print('Use a more **descriptive** name for the following materials:')
         print('\n'.join(material_with_simple_names))
         raise(PublishError(
