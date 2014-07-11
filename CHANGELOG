@@ -2,6 +2,17 @@
 Changes
 =======
 
+0.1.9
+=====
+
+* **New:** Added a new helper function to ``anima.env.create_repo_vars()``
+  which will create environment variables for all of the ``Repository``
+  instances in the current database.
+
+* **New:** Added a new helper function called
+  ``anima.env.to_os_independent_path()`` to convert a path to a OS independent
+  path, which returns a path which is using environment variables.
+
 0.1.8
 =====
 

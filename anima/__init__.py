@@ -19,3 +19,6 @@ avid_media_file_path_storage = 'avid_media_file_path'
 
 normal_users_group_names = ['Normal Users']
 power_users_group_names = ['Power Users', 'admins']
+
+# environment variable template for repositories
+repo_env_template = 'REPO%(id)s'

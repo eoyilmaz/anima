@@ -77,6 +77,10 @@ class EnvironmentBase(object):
         self._extensions = extensions
         self._version = version
 
+        # create repository environment variables
+        from anima.env import create_repo_vars
+        create_repo_vars()
+
     def __str__(self):
         """the string representation of the environment
         """
@@ -160,6 +164,9 @@ class EnvironmentBase(object):
         :param str path: path in a repository
         :return: stalker.models.repository.Repository
         """
+        # path could be using environment variables so expand them
+        # path = os.path.expandvars(path)
+
         # first find the repository
         from stalker import Repository
 

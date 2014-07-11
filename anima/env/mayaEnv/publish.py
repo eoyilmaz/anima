@@ -349,6 +349,7 @@ def check_all_tx_textures():
 
     def add_path(path):
         if path != '':
+            path = os.path.expandvars(path)
             if not os.path.isabs(path):
                 path = \
                     os.path.normpath(os.path.join(workspace_path, path))
@@ -372,7 +373,6 @@ def check_all_tx_textures():
             textures_with_no_tx.append(path)
 
     if len(textures_with_no_tx):
-        pm.select(textures_with_no_tx)
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 

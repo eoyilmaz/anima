@@ -12,7 +12,7 @@ import logging
 import pymel.core as pm
 import maya.cmds as mc
 
-from anima.env import empty_reference_resolution
+from anima.env import empty_reference_resolution, to_os_independent_path
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
 from anima.ui.progress_dialog import ProgressDialogManager
@@ -436,14 +436,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         if use_namespace:
             ref = pm.createReference(
-                version.absolute_full_path,
+                to_os_independent_path(version.absolute_full_path),
                 gl=True,
                 namespace=namespace,
                 options='v=0'
             )
         else:
             ref = pm.createReference(
-                version.absolute_full_path,
+                to_os_independent_path(version.absolute_full_path),
                 gl=True,
                 defaultNamespace=True,  # this is not "no namespace", but safe
                 options='v=0'
@@ -1212,13 +1212,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             return False
 
     def replace_external_paths(self, mode=0):
-        """Replaces all the external paths. Because absolute mode is the
-        default and only mode, the 'mode' parameter is not used.
+        """Replaces all the external paths.
+
+        Because absolute mode is the default and only mode, the 'mode'
+        parameter is not used.
 
         replaces:
-          references: replaces Windows, Linux or OSX paths with native one
-                      (the one that the current user has).
-          files     : converts to absolute mode
+          * references
+          * texture files including arnold textures
+          * arnold ass paths
+          * image planes
 
         Absolute mode works best for now.
 
@@ -1229,86 +1232,66 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           regular maya file nodes with mib_texture_filter_lookup nodes to have
           the same sharp results.
         """
-        # TODO: Also check for image planes and replace the path
-        # create a repository
         workspace_path = pm.workspace.path
+
+        logger.debug('replace_external_paths is called!!!')
 
         # *********************************************************************
         # References
-        # replace reference paths with absolute path
-        from stalker import Repository
-
+        # replace reference paths with os independent absolute path
         for ref in pm.listReferences():
-            unresolved_path = ref.unresolvedPath().replace("\\", "/")
-            # keep the load state
-            # load_state = ref.isLoded()
-            repo = self.find_repo(unresolved_path)
-            if False:
-                assert isinstance(repo, Repository)
-            # TODO: Please request Repository.is_native(path) from Stalker
-            # Windows paths doesn't seem to be absolute under linux and osx
+            unresolved_path = \
+                os.path.normpath(ref.unresolvedPath()).replace("\\", "/")
 
-            if repo:
-                update_path = False
-                if not os.path.isabs(unresolved_path):
-                    # update anyway
-                    # either the path is really relative, or it is a windows
-                    # path and we are under linux or osx
-                    # or it is a linux or osx path and we are under windows
-                    # so update it
-                    update_path = True
-                else:
-                    # it seems the path is absolute
-                    # but double check if the file path and the os is matching
-                    path = unresolved_path
-                    if not (path == repo.to_native_path(path)):
-                        # again the path was osx and the os is linux or
-                        # the path was linux and the os is osx
-                        # so update it
-                        update_path = True
+            # check if it is already containing some environment variables
+            if '$' in unresolved_path:  # just skip this one
+                logger.debug('skipping current ref, it is already os '
+                             'independent!: %s' % unresolved_path)
+                continue
 
-                if update_path:
-                    if repo.is_in_repo(unresolved_path):
-                        # convert to absolute path
-                        new_ref_path = repo.to_native_path(ref.path)
-
-                        if new_ref_path != unresolved_path:
-                            logger.info("replacing reference: %s" % ref.path)
-                            logger.info("replacing with: %s" % new_ref_path)
-                            ref.replaceWith(new_ref_path)
+            new_ref_path = to_os_independent_path(unresolved_path)
+            if new_ref_path != unresolved_path:
+                logger.info("replacing reference: %s" % ref.path)
+                logger.info("replacing with: %s" % new_ref_path)
+                ref.replaceWith(new_ref_path)
 
         # *********************************************************************
         # Texture Files
         # replace with absolute path
-        for image_file in pm.ls(type="file"):
-            orig_file_texture_path = image_file.getAttr("fileTextureName")
-            orig_file_texture_path = orig_file_texture_path.replace("\\", "/")
 
-            logger.info("replacing file texture: %s" % orig_file_texture_path)
+        # store node types and the attribute that is holding the path
+        types_and_attrs = {
+            'aiImage': 'filename',
+            'aiStandIn': 'dso',
+            'file': 'fileTextureName',
+            'imagePlane': 'imageName'
+        }
+        for node_type in types_and_attrs.keys():
+            attr_name = types_and_attrs[node_type]
+            for node in pm.ls(type=node_type):
+                orig_path = node.getAttr(attr_name).replace("\\", "/")
 
-            file_texture_path = os.path.normpath(
-                os.path.expandvars(
-                    orig_file_texture_path
-                )
-            )
-            file_texture_path = file_texture_path.replace("\\", "/")
+                logger.info("replacing file texture: %s" % orig_path)
 
-            # convert to absolute
-            if not os.path.isabs(file_texture_path):
-                file_texture_path = os.path.join(
-                    workspace_path,
-                    file_texture_path
+                path = os.path.normpath(
+                    os.path.expandvars(
+                        orig_path
+                    )
                 ).replace("\\", "/")
 
-            repo = self.find_repo(file_texture_path)
-
-            if repo:
                 # convert to absolute
-                new_path = repo.to_native_path(file_texture_path)
+                if not os.path.isabs(path):
+                    path = os.path.join(
+                        workspace_path,
+                        path
+                    ).replace("\\", "/")
 
-                if new_path != orig_file_texture_path:
+                # convert to os independent absolute
+                new_path = to_os_independent_path(path)
+
+                if new_path != orig_path:
                     logger.info("with: %s" % new_path)
-                    image_file.setAttr("fileTextureName", new_path)
+                    node.setAttr(attr_name, new_path)
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path

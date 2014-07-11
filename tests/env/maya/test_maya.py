@@ -9,7 +9,7 @@ import shutil
 import tempfile
 
 import unittest
-import pymel
+import pymel.core as pm
 
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      Task, Sequence, Version, User, Type, Structure,
@@ -17,6 +17,7 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
 
 from anima import utils
 from anima import publish
+from anima.env import to_os_independent_path
 from anima.env.mayaEnv import Maya
 
 
@@ -32,7 +33,7 @@ class MayaTestBase(unittest.TestCase):
         :return: the version
         """
         # just renew the scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         v = Version(task=task, take_name=take_name)
         db.DBSession.add(v)
@@ -45,7 +46,7 @@ class MayaTestBase(unittest.TestCase):
         """setup in class level
         """
         import logging
-        logger = logging.getLogger('anima.env.maya')
+        logger = logging.getLogger('anima.env.mayaEnv')
         logger.setLevel(logging.DEBUG)
 
     def setUp(self):
@@ -426,7 +427,7 @@ class MayaTestBase(unittest.TestCase):
         #       +- version48
 
         # just renew the scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # create a buffer for extra created files, which are to be removed
         self.remove_these_files_buffer = []
@@ -449,7 +450,7 @@ class MayaTestBase(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         # quit maya
-        pymel.core.runtime.Quit()
+        pm.runtime.Quit()
 
 
 class MayaTestCase(MayaTestBase):
@@ -501,7 +502,7 @@ class MayaTestCase(MayaTestBase):
         # version.version_number
 
         render_version =\
-            pymel.core.getAttr("defaultRenderGlobals.renderVersion")
+            pm.getAttr("defaultRenderGlobals.renderVersion")
         self.assertEqual(render_version,
                          "v%03d" % version1.version_number)
 
@@ -510,21 +511,21 @@ class MayaTestCase(MayaTestBase):
         """
         # load mayatomr plugin
         try:
-            pymel.core.loadPlugin("Mayatomr")
+            pm.loadPlugin("Mayatomr")
         except RuntimeError:
             # no Mayatomr plugin
             # so pass the test
             return
 
         # set the current renderer to mentalray
-        dRG = pymel.core.PyNode("defaultRenderGlobals")
+        dRG = pm.PyNode("defaultRenderGlobals")
 
         dRG.setAttr('currentRenderer', 'mentalRay')
 
         # dirty little maya tricks
-        pymel.core.mel.miCreateDefaultNodes()
+        pm.mel.miCreateDefaultNodes()
 
-        mrG = pymel.core.PyNode("mentalrayGlobals")
+        mrG = pm.PyNode("mentalrayGlobals")
 
         version1 = Version(
             task=self.task1
@@ -547,14 +548,14 @@ class MayaTestCase(MayaTestBase):
         """
         # load mtoa plugin
         try:
-            pymel.core.loadPlugin("mtoa")
+            pm.loadPlugin("mtoa")
         except RuntimeError:
             # no mtoa plugin
             # pass the test
             return
 
         # set the current renderer to arnold
-        dRG = pymel.core.PyNode("defaultRenderGlobals")
+        dRG = pm.PyNode("defaultRenderGlobals")
         dRG.setAttr('currentRenderer', 'arnold')
 
         # dirty little maya tricks: do a render to create arnold globals
@@ -562,7 +563,7 @@ class MayaTestCase(MayaTestBase):
         arnoldRender(10, 10, False, False,
                      'perspShape', ' -layer defaultRenderLayer')
 
-        dAD = pymel.core.PyNode("defaultArnoldDriver")
+        dAD = pm.PyNode("defaultArnoldDriver")
 
         version1 = Version(
             task=self.task1
@@ -601,8 +602,8 @@ class MayaTestCase(MayaTestBase):
             }
 
         image_path = os.path.join(
-            pymel.core.workspace.path,
-            pymel.core.workspace.fileRules['image']
+            pm.workspace.path,
+            pm.workspace.fileRules['image']
         ).replace("\\", "/")
 
         expected_path = utils.relpath(
@@ -610,7 +611,7 @@ class MayaTestCase(MayaTestBase):
             expected_path,
         )
 
-        dRG = pymel.core.PyNode("defaultRenderGlobals")
+        dRG = pm.PyNode("defaultRenderGlobals")
 
         self.assertEqual(
             expected_path,
@@ -637,8 +638,8 @@ class MayaTestCase(MayaTestBase):
             }
 
         image_path = os.path.join(
-            pymel.core.workspace.path,
-            pymel.core.workspace.fileRules['image']
+            pm.workspace.path,
+            pm.workspace.fileRules['image']
         ).replace("\\", "/")
 
         expected_path = utils.relpath(
@@ -646,7 +647,7 @@ class MayaTestCase(MayaTestBase):
             expected_path,
         )
 
-        dRG = pymel.core.PyNode("defaultRenderGlobals")
+        dRG = pm.PyNode("defaultRenderGlobals")
 
         print expected_path
         print dRG.getAttr("imageFilePrefix")
@@ -663,11 +664,11 @@ class MayaTestCase(MayaTestBase):
     #     self.maya_env.save_as(self.version1)
     # 
     #     # create file node
-    #     file_node = pymel.core.createNode("file")
+    #     file_node = pm.createNode("file")
     # 
     #     # set it to a path in the workspace
     #     texture_path = os.path.join(
-    #         pymel.core.workspace.path, ".maya_files/textures/test.jpg"
+    #         pm.workspace.path, ".maya_files/textures/test.jpg"
     #     )
     #     file_node.fileTextureName.set(texture_path)
     # 
@@ -706,7 +707,7 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version1)
 
         # check the resolutions
-        dRes = pymel.core.PyNode("defaultResolution")
+        dRes = pm.PyNode("defaultResolution")
         self.assertEqual(dRes.width.get(), width)
         self.assertEqual(dRes.height.get(), height)
         self.assertEqual(dRes.pixelAspect.get(), pixel_aspect)
@@ -731,7 +732,7 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version1)
 
         # check the resolutions
-        dRes = pymel.core.PyNode("defaultResolution")
+        dRes = pm.PyNode("defaultResolution")
         self.assertEqual(dRes.width.get(), width)
         self.assertEqual(dRes.height.get(), height)
         self.assertEqual(dRes.pixelAspect.get(), pixel_aspect)
@@ -799,7 +800,7 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version3)  # this is the dummy version
 
         # create a new scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # check if the versionBase.inputs is an empty list
         self.assertTrue(versionBase.inputs == [])
@@ -831,7 +832,7 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(vers1)
 
         # new scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # create another version with different type
         vers2 = Version(task=self.asset1)
@@ -855,7 +856,7 @@ class MayaTestCase(MayaTestBase):
         folder under the "external_files" folder
         """
         # create a texture file with local path
-        new_texture_file = pymel.core.nt.File()
+        new_texture_file = pm.nt.File()
         # generate a local path
         local_file_full_path = os.path.join(
             tempfile.gettempdir(),
@@ -878,8 +879,12 @@ class MayaTestCase(MayaTestBase):
         # and expect the fileTexture has been moved to workspace/external_files
         # folder
         expected_path =\
-            os.path.join(version1.absolute_path, 'external_files', 'Textures',
-                         'temp.png')
+            to_os_independent_path(
+                os.path.join(
+                    version1.absolute_path,
+                    'external_files/Textures/temp.png'
+                )
+            )
 
         self.assertEqual(
             expected_path,
@@ -917,7 +922,7 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version3)  # this is the dummy version
 
         # create a new scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # check if the versionBase.references is an empty list
         self.assertEqual([], versionBase.inputs)
@@ -938,14 +943,14 @@ class MayaTestCase(MayaTestBase):
         )
 
         # now remove references
-        for ref_node in pymel.core.listReferences():
+        for ref_node in pm.listReferences():
             ref_node.remove()
 
         # do a save (not save_as)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # clean scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # open the same version
         self.maya_env.open(versionBase, force=True)
@@ -984,14 +989,14 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version3)  # this is the dummy version
 
         # create a new scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # reference the given versions
         self.maya_env.reference(version1)
         self.maya_env.reference(version2)
 
         # unload a couple of them
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].unload()
         self.assertFalse(refs[0].isLoaded())
         self.assertTrue(refs[1].isLoaded())
@@ -1002,15 +1007,86 @@ class MayaTestCase(MayaTestBase):
         self.assertTrue(refs[1].isLoaded())
 
         # clean scene
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # re-open the file
         self.maya_env.open(version_base, force=True)
 
         # check if the references are loaded
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         self.assertTrue(refs[1].isLoaded())
         self.assertFalse(refs[0].isLoaded())
+
+    def test_open_replaces_first_level_reference_paths_with_os_independent_path(self):
+        """testing if Maya.open() will replace first level reference paths with
+        os independent path
+        """
+        # create a new reference
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # save it as a new version
+        self.maya_env.save_as(version_base)
+
+        # reference the given versions
+        ref1 = self.maya_env.reference(version1)
+        ref2 = self.maya_env.reference(version2)
+
+        # convert the path to abs on purpose
+        ref1.replaceWith(ref1.path)
+        ref2.replaceWith(ref2.path)
+
+        self.assertFalse('$' in ref1.unresolvedPath())
+        self.assertFalse('$' in ref2.unresolvedPath())
+        self.assertEqual(ref1.path, ref1.unresolvedPath())
+        self.assertEqual(ref2.path, ref2.unresolvedPath())
+
+        # save the file
+        pm.saveFile()
+
+        # check if paths are still using absolute paths
+        self.assertEqual(ref1.path, ref1.unresolvedPath())
+        self.assertEqual(ref2.path, ref2.unresolvedPath())
+        self.assertTrue(os.path.isabs(ref1.unresolvedPath()))
+        self.assertTrue(os.path.isabs(ref2.unresolvedPath()))
+
+        # open it with Maya
+        pm.newFile(f=True)
+
+        self.maya_env.open(version_base, force=True)
+        references = pm.listReferences()
+        ref1 = references[0]
+        ref2 = references[1]
+
+        # and expect the path to be os independent again
+        self.assertNotEqual(ref1.path, ref1.unresolvedPath())
+        self.assertNotEqual(ref2.path, ref2.unresolvedPath())
+        self.assertFalse(os.path.isabs(ref1.unresolvedPath()))
+        self.assertFalse(os.path.isabs(ref2.unresolvedPath()))
+        self.assertTrue('$' in ref1.unresolvedPath())
+        self.assertTrue('$' in ref2.unresolvedPath())
 
     def test_save_as_in_another_project_updates_paths_correctly(self):
         """testing if the external paths are updated correctly if the document
@@ -1047,7 +1123,7 @@ class MayaTestCase(MayaTestBase):
         db.DBSession.commit()
 
         # save a maya file with this references
-        pymel.core.newFile(f=True)
+        pm.newFile(f=True)
         self.maya_env.save_as(version_ref1)
         self.maya_env.save_as(version_ref2)
 
@@ -1055,14 +1131,18 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version1)
 
         # create a couple of file textures
-        file_texture1 = pymel.core.createNode("file")
-        file_texture2 = pymel.core.createNode("file")
+        file_texture1 = pm.createNode("file")
+        file_texture2 = pm.createNode("file")
 
-        path1 = os.path.join(
-            version1.absolute_path, ".maya_files/TEXTURES/a.jpg"
+        path1 = to_os_independent_path(
+            os.path.join(
+                version1.absolute_path, ".maya_files/TEXTURES/a.jpg"
+            )
         )
-        path2 = os.path.join(
-            version1.absolute_path, ".maya_files/TEXTURES/b.jpg"
+        path2 = to_os_independent_path(
+            os.path.join(
+                version1.absolute_path, ".maya_files/TEXTURES/b.jpg"
+            )
         )
 
         # set them to some relative paths
@@ -1181,9 +1261,9 @@ class MayaTestCase(MayaTestBase):
             30
         )
 
-    def test_reference_creates_references_with_absolute_paths(self):
+    def test_reference_creates_references_with_absolute_paths_containing_env_var(self):
         """testing if reference method creates references with unresolved paths
-        are absolute paths
+        are absolute paths containing repo env var
         """
         vers1 = Version(task=self.asset1, created_by=self.user1)
         db.DBSession.add(vers1)
@@ -1195,38 +1275,54 @@ class MayaTestCase(MayaTestBase):
 
         self.maya_env.save_as(vers1)
 
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.save_as(vers2)
 
         # reference vers1 to vers2
-        self.maya_env.reference(vers1)
+        ref = self.maya_env.reference(vers1)
 
         # now check if the referenced files unresolved path is equal to
         # ver2.absolute_full_path
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
 
         # there should be only one reference
         self.assertEqual(len(refs), 1)
 
         # the unresolved path should be an absolute path
         self.assertEqual(
-            vers1.absolute_full_path,
-            refs[0].unresolvedPath()
+            to_os_independent_path(vers1.absolute_full_path),
+            ref.unresolvedPath()
         )
 
-        self.assertTrue(refs[0].isLoaded())
+        self.assertTrue(ref.isLoaded())
 
-    # def test_save_as_replaces_imagePlane_filename_with_env_variable(self):
-    #     """testing if save_as replaces the imagePlane filename with repository
-    #     environment variable
-    #     """
-    #     # create a camera
-    #     # create an image plane
-    #     # set it to something
-    #     # save the scene
-    #     # check if the path is replaced with repository environment variable
-    # 
-    #     self.fail("test is not implemented yet")
+    def test_save_as_replaces_image_plane_filename_with_env_variable(self):
+        """testing if save_as replaces the imagePlane filename with repository
+        environment variable
+        """
+        absolute_path = os.path.join(
+            self.asset1.absolute_path,
+            'Plate/plateA.1.jpg'
+        )
+
+        # create an image plane
+        image_plane = pm.createNode('imagePlane')
+
+        # and set the path to something absolute
+        image_plane.setAttr('imageName', absolute_path)
+
+        vers1 = Version(task=self.asset1, created_by=self.user1)
+        db.DBSession.add(vers1)
+        db.DBSession.commit()
+
+        # save the scene
+        self.maya_env.save_as(vers1)
+
+        # check if the path is replaced with repository environment variable
+        self.assertEqual(
+            to_os_independent_path(absolute_path),
+            image_plane.getAttr('imageName')
+        )
 
     def test_save_as_creates_the_workspace_mel_file_in_the_given_path(self):
         """testing if save_as creates the workspace.mel file in the Asset or
@@ -1267,8 +1363,8 @@ class MayaTestCase(MayaTestBase):
         version1.update_paths()
 
         # first prove that the folders doesn't exist
-        for key in pymel.core.workspace.fileRules.keys():
-            file_rule_partial_path = pymel.core.workspace.fileRules[key]
+        for key in pm.workspace.fileRules.keys():
+            file_rule_partial_path = pm.workspace.fileRules[key]
             file_rule_full_path = os.path.join(
                 version1.absolute_path,
                 file_rule_partial_path
@@ -1278,8 +1374,8 @@ class MayaTestCase(MayaTestBase):
         self.maya_env.save_as(version1)
 
         # save_as and now expect the folders to be created
-        for key in pymel.core.workspace.fileRules.keys():
-            file_rule_partial_path = pymel.core.workspace.fileRules[key]
+        for key in pm.workspace.fileRules.keys():
+            file_rule_partial_path = pm.workspace.fileRules[key]
             file_rule_full_path = os.path.join(
                 version1.absolute_path,
                 file_rule_partial_path
@@ -1357,10 +1453,10 @@ class MayaTestCase(MayaTestBase):
         db.DBSession.add(vers3)
         db.DBSession.commit()
 
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.save_as(vers2)
 
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.save_as(vers3)
 
         self.maya_env.save_as(vers1)
@@ -1370,7 +1466,7 @@ class MayaTestCase(MayaTestBase):
 
         # now check if the referenced files unresolved path is equal to
         # ver2.absolute_full_path
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
 
         # there should be only one reference
         self.assertEqual(len(refs), 1)
@@ -1378,7 +1474,7 @@ class MayaTestCase(MayaTestBase):
         # the unresolved path should be an absolute path
         self.assertEqual(
             vers2.absolute_full_path,
-            refs[0].unresolvedPath()
+            refs[0].path
         )
 
         self.assertTrue(refs[0].isLoaded())
@@ -1394,10 +1490,10 @@ class MayaTestCase(MayaTestBase):
 
         # now check if the reference is updated and the namespace is set
         # correctly
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         self.assertEqual(
             vers3.absolute_full_path,
-            refs[0].unresolvedPath()
+            refs[0].path
         )
         self.assertEqual(
             refs[0].namespace,
@@ -1432,16 +1528,16 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version5 references version2
         self.maya_env.open(self.version5)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version5.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version5
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version5)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version3 set published
         self.version3.is_published = True
@@ -1476,14 +1572,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # check references
         # we shouldn't have a new version5 referenced
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         self.assertEqual(
             self.version5,
             self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
         # and it should still have referencing version2
-        refs = pymel.core.listReferences(refs[0])
+        refs = pm.listReferences(refs[0])
         self.assertEqual(
             self.version2,
             self.maya_env.get_version_from_full_path(refs[0].path)
@@ -1515,23 +1611,23 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version5 references version2
         self.maya_env.open(self.version5)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version5.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version6 references version3
         self.maya_env.open(self.version6)
         self.maya_env.reference(self.version3)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version6.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version5
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version5)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version3 set published
         self.version3.is_published = True
@@ -1572,14 +1668,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and expect maya have the updated references
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         self.assertEqual(
             self.version6,
             self.maya_env.get_version_from_full_path(refs[0].path)
         )
 
         # and it should have referenced version3
-        refs = pymel.core.listReferences(refs[0])
+        refs = pm.listReferences(refs[0])
         self.assertEqual(
             self.version3,
             self.maya_env.get_version_from_full_path(refs[0].path)
@@ -1616,23 +1712,23 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version5 references version2
         self.maya_env.open(self.version5)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version5.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version5
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version5)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version12 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version12)
         self.maya_env.reference(self.version12)
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         print "version2  : %s" % self.version2
         print "version5  : %s" % self.version5
@@ -1686,7 +1782,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and expect maya have the updated references
-        refs_level1 = pymel.core.listReferences()
+        refs_level1 = pm.listReferences()
         self.assertEqual(
             self.version12,
             self.maya_env.get_version_from_full_path(refs_level1[0].path)
@@ -1697,28 +1793,28 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and it should have referenced version5A
-        refs_level2 = pymel.core.listReferences(refs_level1[0])
+        refs_level2 = pm.listReferences(refs_level1[0])
         self.assertEqual(
             self.version5,
             self.maya_env.get_version_from_full_path(refs_level2[0].path)
         )
 
         # and it should have referenced version5A
-        refs_level3 = pymel.core.listReferences(refs_level2[0])
+        refs_level3 = pm.listReferences(refs_level2[0])
         self.assertEqual(
             self.version2,
             self.maya_env.get_version_from_full_path(refs_level3[0].path)
         )
 
         # the other version5A
-        refs_level2 = pymel.core.listReferences(refs_level1[1])
+        refs_level2 = pm.listReferences(refs_level1[1])
         self.assertEqual(
             self.version5,
             self.maya_env.get_version_from_full_path(refs_level2[0].path)
         )
 
         # and it should have referenced version5A
-        refs_level3 = pymel.core.listReferences(refs_level2[0])
+        refs_level3 = pm.listReferences(refs_level2[0])
         self.assertEqual(
             self.version2,
             self.maya_env.get_version_from_full_path(refs_level3[0].path)
@@ -1763,24 +1859,24 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version5 references version2
         self.maya_env.open(self.version5)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version5.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version5
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version5)
         self.maya_env.reference(self.version5)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version12 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version12)
         self.maya_env.reference(self.version12)
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         print "version2  : %s" % self.version2
         print "version5  : %s" % self.version5
@@ -1817,22 +1913,22 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and expect maya have the updated references
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         version12_ref1 = refs[0]
         version12_ref2 = refs[1]
 
-        refs = pymel.core.listReferences(version12_ref1)
+        refs = pm.listReferences(version12_ref1)
         version5_ref1 = refs[0]
         version5_ref2 = refs[1]
 
-        refs = pymel.core.listReferences(version12_ref2)
+        refs = pm.listReferences(version12_ref2)
         version5_ref3 = refs[0]
         version5_ref4 = refs[1]
 
-        version2_ref1 = pymel.core.listReferences(version5_ref1)[0]
-        version2_ref2 = pymel.core.listReferences(version5_ref2)[0]
-        version2_ref3 = pymel.core.listReferences(version5_ref3)[0]
-        version2_ref4 = pymel.core.listReferences(version5_ref4)[0]
+        version2_ref1 = pm.listReferences(version5_ref1)[0]
+        version2_ref2 = pm.listReferences(version5_ref2)[0]
+        version2_ref3 = pm.listReferences(version5_ref3)[0]
+        version2_ref4 = pm.listReferences(version5_ref4)[0]
 
         # Version12
         published_version = self.version12
@@ -1920,39 +2016,39 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version4 references version2
         self.maya_env.open(self.version4)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version4.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version6 references version3
         self.maya_env.open(self.version6)
         self.maya_env.reference(self.version3)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version6.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version11 references version5
         self.maya_env.open(self.version11)
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version11.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version6
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version6)
         self.maya_env.reference(self.version6)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version11)
         self.maya_env.reference(self.version11)
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         print "version2  : %s" % self.version2
         print "version3  : %s" % self.version3
@@ -1992,22 +2088,22 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and expect maya have the updated references
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         version12_ref1 = refs[0]
         version12_ref2 = refs[1]
 
-        refs = pymel.core.listReferences(version12_ref1)
+        refs = pm.listReferences(version12_ref1)
         version6_ref1 = refs[0]
         version6_ref2 = refs[1]
 
-        refs = pymel.core.listReferences(version12_ref2)
+        refs = pm.listReferences(version12_ref2)
         version6_ref3 = refs[0]
         version6_ref4 = refs[1]
 
-        version3_ref1 = pymel.core.listReferences(version6_ref1)[0]
-        version3_ref2 = pymel.core.listReferences(version6_ref2)[0]
-        version3_ref3 = pymel.core.listReferences(version6_ref3)[0]
-        version3_ref4 = pymel.core.listReferences(version6_ref4)[0]
+        version3_ref1 = pm.listReferences(version6_ref1)[0]
+        version3_ref2 = pm.listReferences(version6_ref2)[0]
+        version3_ref3 = pm.listReferences(version6_ref3)[0]
+        version3_ref4 = pm.listReferences(version6_ref4)[0]
 
         # Version12
         published_version = self.version12.latest_published_version
@@ -2086,32 +2182,32 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version4 references version2
         self.maya_env.open(self.version4)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version4.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version6 references version3
         self.maya_env.open(self.version6)
         self.maya_env.reference(self.version3)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version6.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version11 references version5
         self.maya_env.open(self.version11)
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version11.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version6
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version6)
         self.maya_env.reference(self.version6)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
@@ -2119,14 +2215,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # now simulate a shallow update on version2 -> version3 while under
         # in version4
-        refs = pymel.core.listReferences(recursive=1)
+        refs = pm.listReferences(recursive=1)
         # we should have all the references
         print refs
         self.assertEqual(self.version2.absolute_full_path, refs[-1].path)
         refs[-1].replaceWith(self.version3.absolute_full_path)
 
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         print "version2  : %s" % self.version2
         print "version3  : %s" % self.version3
@@ -2166,15 +2262,15 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # and expect maya have the updated references
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         version12_ref1 = refs[0]
 
-        refs = pymel.core.listReferences(version12_ref1)
+        refs = pm.listReferences(version12_ref1)
         version6_ref1 = refs[0]
         version6_ref2 = refs[1]
 
-        version3_ref1 = pymel.core.listReferences(version6_ref1)[0]
-        version3_ref2 = pymel.core.listReferences(version6_ref2)[0]
+        version3_ref1 = pm.listReferences(version6_ref1)[0]
+        version3_ref2 = pm.listReferences(version6_ref2)[0]
 
         # Version12
         published_version = self.version12.latest_published_version
@@ -2258,7 +2354,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.maya_env.reference(self.version3)
 
         # save the scene and start
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # open version7 and reference version6 to it
         self.maya_env.open(self.version7)
@@ -2275,7 +2371,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # and get a deeper one
         versions = \
             self.maya_env.get_referenced_versions(
-                pymel.core.listReferences()[0]
+                pm.listReferences()[0]
             )
 
         self.assertEqual(
@@ -2293,14 +2389,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # create references to various versions
         def open_(version):
             new_workspace = version.absolute_path
-            pymel.core.workspace.open(new_workspace)
-            pymel.core.openFile(version.absolute_full_path, f=True,)
+            pm.workspace.open(new_workspace)
+            pm.openFile(version.absolute_full_path, f=True,)
 
         # create references
         def reference(version):
             namespace = os.path.basename(version.filename)
             namespace = namespace.replace('.', '_')
-            ref = pymel.core.createReference(
+            ref = pm.createReference(
                 version.absolute_full_path,
                 gl=True,
                 namespace=namespace,
@@ -2315,7 +2411,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         reference(self.version3)
 
         # save the scene and start
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # the version6.inputs should be an empty list
         self.assertEqual(self.version6.inputs, [])
@@ -2336,7 +2432,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         )
 
         # now get the version6.inputs right
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         self.maya_env.update_version_inputs(refs[0])
 
         self.assertEqual(
@@ -2362,16 +2458,16 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.assertTrue(self.version5 in self.version6.inputs)
 
         # remove the reference and save the file (do not saveAs)
-        pymel.core.listReferences()[0].remove()
+        pm.listReferences()[0].remove()
 
         # save the file over itself
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if version5 still in version6.inputs
         self.assertTrue(self.version5 in self.version6.inputs)
 
         # create a new scene and reference the previous version and check if
-        pymel.core.newFile(f=True)
+        pm.newFile(f=True)
         self.maya_env.reference(self.version6)
 
         # the Version.inputs is updated correctly
@@ -2425,49 +2521,49 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version4 references version2
         self.maya_env.open(self.version4)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version4.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version6 references version3
         self.maya_env.open(self.version6)
         self.maya_env.reference(self.version3)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version6.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version11 references version5
         self.maya_env.open(self.version11)
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version11.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version12 references version6
         self.maya_env.open(self.version12)
         self.maya_env.reference(self.version6)
         self.maya_env.reference(self.version6)  # reference a second time
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version12.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version21 references version16
         self.maya_env.open(self.version21)
         self.maya_env.reference(self.version16)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version16.is_published = True
         self.version18.is_published = True
         self.version21.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version38 references version27
         self.maya_env.open(self.version38)
         self.maya_env.reference(self.version27)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version38.is_published = True
         self.version27.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
@@ -2475,8 +2571,8 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.maya_env.reference(self.version11)
         self.maya_env.reference(self.version21)
         self.maya_env.reference(self.version38)
-        pymel.core.saveFile()
-        #pymel.core.newFile(force=True)
+        pm.saveFile()
+        #pm.newFile(force=True)
         db.DBSession.commit()
 
         # check the setup
@@ -2495,25 +2591,25 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
             visited_versions
         )
 
-        root_refs = pymel.core.listReferences()
+        root_refs = pm.listReferences()
 
         version11_ref_1 = root_refs[0]
-        version4_ref_1 = pymel.core.listReferences(version11_ref_1)[0]
-        version2_ref_1 = pymel.core.listReferences(version4_ref_1)[0]
-        version4_ref_2 = pymel.core.listReferences(version11_ref_1)[1]
-        version2_ref_2 = pymel.core.listReferences(version4_ref_2)[0]
+        version4_ref_1 = pm.listReferences(version11_ref_1)[0]
+        version2_ref_1 = pm.listReferences(version4_ref_1)[0]
+        version4_ref_2 = pm.listReferences(version11_ref_1)[1]
+        version2_ref_2 = pm.listReferences(version4_ref_2)[0]
 
         version11_ref_2 = root_refs[1]
-        version4_ref_3 = pymel.core.listReferences(version11_ref_2)[0]
-        version2_ref_3 = pymel.core.listReferences(version4_ref_3)[0]
-        version4_ref_4 = pymel.core.listReferences(version11_ref_2)[1]
-        version2_ref_4 = pymel.core.listReferences(version4_ref_4)[0]
+        version4_ref_3 = pm.listReferences(version11_ref_2)[0]
+        version2_ref_3 = pm.listReferences(version4_ref_3)[0]
+        version4_ref_4 = pm.listReferences(version11_ref_2)[1]
+        version2_ref_4 = pm.listReferences(version4_ref_4)[0]
 
         version21_ref = root_refs[2]
-        version16_ref = pymel.core.listReferences(version21_ref)[0]
+        version16_ref = pm.listReferences(version21_ref)[0]
 
         version38_ref = root_refs[3]
-        version27_ref = pymel.core.listReferences(version38_ref)[0]
+        version27_ref = pm.listReferences(version38_ref)[0]
 
         self.assertFalse(self.version2.is_latest_published_version())
 
@@ -2604,21 +2700,21 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version4 references version2
         self.maya_env.open(self.version4)
         self.maya_env.reference(self.version2)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version4.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version11 references version4
         self.maya_env.open(self.version11)
         self.maya_env.reference(self.version4)
-        pymel.core.saveFile()
+        pm.saveFile()
         self.version11.is_published = True
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version11)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         db.DBSession.commit()
 
@@ -2697,53 +2793,53 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # lookdev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         # version11 references version4
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         version4_ref_node = refs[0]
         version4_ref_node.namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there is only one locator in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(version4_ref_node)[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(version4_ref_node)[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version11)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version11.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -2763,7 +2859,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.maya_env.fix_reference_namespaces()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.latest_published_version.nice_name
@@ -2781,42 +2877,42 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # now check we don't have any failed edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             1
         )
 
         # and check if the locator is in 1, 0, 0
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)[0]
+        loc = pm.ls(type=pm.nt.Transform)[0]
         self.assertEqual(loc.tx.get(), 1.0)
         self.assertEqual(loc.ty.get(), 0.0)
         self.assertEqual(loc.tz.get(), 0.0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_duplicate_refs(self):
         """testing if the fix_reference_namespace method is working properly
@@ -2840,56 +2936,56 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # lookdev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         version4_ref_node = refs[0]
         version4_ref_node.namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be two locators in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(version4_ref_node)[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(version4_ref_node)[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
-        pymel.core.newFile(force=True)
+        pm.saveFile()
+        pm.newFile(force=True)
 
         # version15 references version11 two times
         self.maya_env.open(self.version15)
         self.maya_env.reference(self.version11)
         self.maya_env.reference(self.version11)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version11.filename.replace('.', '_')
         refs[1].namespace = self.version11.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -2925,7 +3021,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.maya_env.fix_reference_namespaces()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.latest_published_version.nice_name
@@ -2958,70 +3054,70 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # now check we don't have any failed edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # now check we don't have any failed edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[3], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[3], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[4], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[4], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[5], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[5], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             1
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[3], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[3], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[4], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[4], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[5], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[5], es=1, scs=1)),
             1
         )
 
         # and check if the locator is in 1, 0, 0
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(locs[0].tx.get(), 1.0)
         self.assertEqual(locs[0].ty.get(), 0.0)
         self.assertEqual(locs[0].tz.get(), 0.0)
@@ -3030,7 +3126,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertEqual(locs[1].tx.get(), 1.0)
         self.assertEqual(locs[1].ty.get(), 0.0)
         self.assertEqual(locs[1].tz.get(), 0.0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_shallower_duplicate_refs(self):
         """testing if the fix_reference_namespace method is working properly
@@ -3055,29 +3151,29 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4 four times
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         refs[1].namespace = self.version4.filename.replace('.', '_')
         refs[2].namespace = self.version4.filename.replace('.', '_')
@@ -3085,36 +3181,36 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now do the edits here
         # we need to do some edits
         # there should be four locators in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
         loc[1].t.set(2, 0, 0)
         loc[2].t.set(3, 0, 0)
         loc[3].t.set(4, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        version2_ref_node = pymel.core.listReferences(refs[1])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[1])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        version2_ref_node = pymel.core.listReferences(refs[2])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[2])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        version2_ref_node = pymel.core.listReferences(refs[3])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[3])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
+        pm.saveFile()
         print 'self.version11.absolute_full_path: %s' % \
               self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -3163,10 +3259,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # now let it be fixed
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -3215,100 +3311,100 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         # second copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[3], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[3], es=1, fld=1)),
             0
         )
 
         # third copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[4], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[4], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[5], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[5], es=1, fld=1)),
             0
         )
 
         # forth copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[6], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[6], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[7], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[7], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         # second copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[3], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[3], es=1, scs=1)),
             1
         )
 
         # third copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[4], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[4], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[5], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[5], es=1, scs=1)),
             1
         )
 
         # forth copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[6], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[6], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[7], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[7], es=1, scs=1)),
             1
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertTrue(locs[0].tx.get() > 0.5)
         self.assertTrue(locs[1].tx.get() > 0.5)
         self.assertTrue(locs[2].tx.get() > 0.5)
         self.assertTrue(locs[3].tx.get() > 0.5)
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_refs_with_new_versions(self):
         """testing if the fix_reference_namespace method is working properly
@@ -3330,9 +3426,9 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # save as version3
         self.maya_env.save_as(self.version3)
@@ -3341,37 +3437,37 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4 four times
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be four locators in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
+        pm.saveFile()
         print 'self.version11.absolute_full_path: %s' % \
               self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -3384,10 +3480,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # now let it be fixed
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -3415,31 +3511,31 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(1.0, locs[0].tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_refs_updated_in_a_previous_scene(self):
         """testing if the fix_reference_namespace method is working properly
@@ -3462,65 +3558,65 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
+        pm.saveFile()
         print 'self.version11.absolute_full_path: %s' % \
               self.version11.absolute_full_path
         db.DBSession.commit()
 
         # version15 also references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(0, 1, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -3533,10 +3629,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # now fix the namespaces in version15 let it be fixed
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         version15_version4_path = all_refs[0].path
         version15_version2_path = all_refs[1].path
@@ -3555,37 +3651,37 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(1.0, locs[0].ty.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # now open version11 and try to fix it also there
         self.maya_env.open(self.version11)
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -3597,10 +3693,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         version11_version4_path = all_refs[0].path
         version11_version2_path = all_refs[1].path
@@ -3619,31 +3715,31 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(1.0, locs[0].tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the two scenes are using the same assets
         self.assertEqual(
@@ -3682,53 +3778,53 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version15 references version11
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # bigger layout
         self.maya_env.reference(self.version11)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version11.filename.replace('.', '_')
         # now do some other edits here
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(0, 1, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -3745,40 +3841,40 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         # version18 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version18)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(0, 0, 1)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version23 references version18
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version23)  # bigger layout
         self.maya_env.reference(self.version18)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version18.filename.replace('.', '_')
         # now do some other edits here
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(0, 0, 2)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version18.filename.replace('.', '_')
@@ -3796,41 +3892,41 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # check edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             2
         )
 
         # now fix the namespaces in version23 let it be fixed
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         version23_version4_path = all_refs[1].path
         version23_version2_path = all_refs[2].path
@@ -3854,47 +3950,47 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             2
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(2.0, locs[0].tz.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # now open version11 and try to fix it also there
         self.maya_env.open(self.version15)
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -3911,10 +4007,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         version15_version4_path = all_refs[1].path
         version15_version2_path = all_refs[2].path
@@ -3938,41 +4034,41 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             2
         )
 
         # and check if the locator are where they should be
-        locs = pymel.core.ls(type=pymel.core.nt.Transform)
+        locs = pm.ls(type=pm.nt.Transform)
         self.assertEqual(1.0, locs[0].ty.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the two scenes are using the same assets
         self.assertEqual(
@@ -4004,9 +4100,9 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # save as version3
         self.maya_env.save_as(self.version3)
@@ -4015,37 +4111,37 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4 four times
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be four locators in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
+        pm.saveFile()
         print 'self.version11.absolute_full_path: %s' % \
               self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -4084,9 +4180,9 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        loc = pymel.core.spaceLocator()
+        loc = pm.spaceLocator()
         loc.t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # save as version3
         self.maya_env.save_as(self.version3)
@@ -4095,37 +4191,37 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version11 references version4 four times
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be four locators in the current scene
-        loc = pymel.core.ls(type=pymel.core.nt.Transform)
+        loc = pm.ls(type=pm.nt.Transform)
         loc[0].t.set(1, 0, 0)
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
-        pymel.core.saveFile()
+        pm.saveFile()
         print 'self.version11.absolute_full_path: %s' % \
               self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version4.filename.replace('.', '_')
@@ -4164,63 +4260,63 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        cube = pymel.core.polyCube(name='test_cube')
+        cube = pm.polyCube(name='test_cube')
         cube[0].t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
         # assign a new material
-        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
-        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
-        pymel.core.sets(blinnSG, e=True, fe=[cube])
-        pymel.core.saveFile()
+        cube = pm.ls('*:test_cube', type=pm.nt.Transform)[0]
+        blinn, blinnSG = pm.createSurfaceShader('blinn')
+        pm.sets(blinnSG, e=True, fe=[cube])
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        cube = pm.ls('*:*:test_cube', type=pm.nt.Transform)[0]
         # parent it to something else
-        group = pymel.core.group(cube, name='test_group')
+        group = pm.group(cube, name='test_group')
         cube.t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version15 references version11
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # bigger layout
         self.maya_env.reference(self.version11)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version11.filename.replace('.', '_')
         # now do some other edits here
-        group = pymel.core.ls(
+        group = pm.ls(
             '*:test_group',
-            type=pymel.core.nt.Transform
+            type=pm.nt.Transform
         )[0]
         # move the one with no parent to somewhere in the scene
         group.t.set(10, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -4237,7 +4333,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -4254,10 +4350,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -4278,41 +4374,41 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             2
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             4
         )
 
         # and check if the locator are where they should be
-        group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
+        group = pm.ls('*:test_group', type=pm.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_references_with_no_namespaces(self):
         """testing if the fix_reference_namespace method is working properly
@@ -4334,62 +4430,62 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        cube = pymel.core.polyCube(name='test_cube')
+        cube = pm.polyCube(name='test_cube')
         cube[0].t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
         # assign a new material
-        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
-        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
-        pymel.core.sets(blinnSG, e=True, fe=[cube])
-        pymel.core.saveFile()
+        cube = pm.ls('*:test_cube', type=pm.nt.Transform)[0]
+        blinn, blinnSG = pm.createSurfaceShader('blinn')
+        pm.sets(blinnSG, e=True, fe=[cube])
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use old namespace style
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version4.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        cube = pm.ls('*:*:test_cube', type=pm.nt.Transform)[0]
         # parent it to something else
-        group = pymel.core.group(cube, name='test_group')
-        # pymel.core.parent(cube, group)
+        group = pm.group(cube, name='test_group')
+        # pm.parent(cube, group)
         cube.t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version15 references version11
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # bigger layout
         self.maya_env.reference(self.version11, use_namespace=False)
         # use no namespace for version11 (so do not edit to old version)
         # now do some other edits here
-        group = pymel.core.ls(
+        group = pm.ls(
             'test_group',
-            type=pymel.core.nt.Transform
+            type=pm.nt.Transform
         )[0]
         # move the one with no parent to somewhere in the scene
         group.t.set(10, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.split('.')[0]  # maya uses filename
@@ -4406,7 +4502,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.split('.')[0]  # still using filename
@@ -4423,10 +4519,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -4447,40 +4543,40 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             2
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             4
         )
 
         # and check if the locator are where they should be
-        group = pymel.core.ls('test_group', type=pymel.core.nt.Transform)[0]
+        group = pm.ls('test_group', type=pm.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref(self):
         """testing if the fix_reference_namespace method is working properly
@@ -4503,64 +4599,64 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        cube = pymel.core.polyCube(name='test_cube')
+        cube = pm.polyCube(name='test_cube')
         cube[0].t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
         # assign a new material
-        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
-        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
-        pymel.core.sets(blinnSG, e=True, fe=[cube])
-        pymel.core.saveFile()
+        cube = pm.ls('*:test_cube', type=pm.nt.Transform)[0]
+        blinn, blinnSG = pm.createSurfaceShader('blinn')
+        pm.sets(blinnSG, e=True, fe=[cube])
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use version2 namespace in version4
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version2.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        cube = pm.ls('*:*:test_cube', type=pm.nt.Transform)[0]
         # parent it to something else
-        group = pymel.core.group(cube, name='test_group')
-        # pymel.core.parent(cube, group)
+        group = pm.group(cube, name='test_group')
+        # pm.parent(cube, group)
         cube.t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version15 references version11
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # bigger layout
         self.maya_env.reference(self.version11)
         # use old style namespace here
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version11.filename.replace('.', '_')
         # now do some other edits here
-        group = pymel.core.ls(
+        group = pm.ls(
             '*:test_group',
-            type=pymel.core.nt.Transform
+            type=pm.nt.Transform
         )[0]
         # move the one with no parent to somewhere in the scene
         group.t.set(10, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -4578,7 +4674,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.filename.replace('.', '_')
@@ -4596,10 +4692,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -4620,40 +4716,40 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             2
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             4
         )
 
         # and check if the locator are where they should be
-        group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
+        group = pm.ls('*:test_group', type=pm.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_references_with_same_namespaces_with_its_children_ref_in_a_shallower_setup(self):
         """testing if the fix_reference_namespace method is working properly
@@ -4675,47 +4771,47 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        cube = pymel.core.polyCube(name='test_cube')
+        cube = pm.polyCube(name='test_cube')
         cube[0].t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
         # assign a new material
-        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
-        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
-        pymel.core.sets(blinnSG, e=True, fe=[cube])
-        pymel.core.saveFile()
+        cube = pm.ls('*:test_cube', type=pm.nt.Transform)[0]
+        blinn, blinnSG = pm.createSurfaceShader('blinn')
+        pm.sets(blinnSG, e=True, fe=[cube])
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use version2 namespace in version4
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         refs[0].namespace = self.version2.filename.replace('.', '_')
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        cube = pm.ls('*:*:test_cube', type=pm.nt.Transform)[0]
         # parent it to something else
-        group = pymel.core.group(cube, name='test_group')
+        group = pm.group(cube, name='test_group')
         cube.t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # check namespaces
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # version4 is using version2 namespace
         self.assertEqual(
@@ -4741,10 +4837,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -4760,28 +4856,28 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             1
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             4
         )
 
         # and check if the locator are where they should be
-        pymel.core.saveFile()
+        pm.saveFile()
 
     def test_fix_reference_namespace_is_working_properly_with_references_with_correct_namespaces_but_has_wrong_namespace_children(self):
         """testing if the fix_reference_namespace method is working properly
@@ -4803,64 +4899,64 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
-        cube = pymel.core.polyCube(name='test_cube')
+        cube = pm.polyCube(name='test_cube')
         cube[0].t.set(0, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # version4 references version2
         self.maya_env.open(self.version4)  # look dev
         self.maya_env.reference(self.version2)
         # change the namespace to old one
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         ref = refs[0]
-        isinstance(ref, pymel.core.system.FileReference)
+        isinstance(ref, pm.system.FileReference)
         ref.namespace = self.version2.filename.replace('.', '_')
         # assign a new material
-        cube = pymel.core.ls('*:test_cube', type=pymel.core.nt.Transform)[0]
-        blinn, blinnSG = pymel.core.createSurfaceShader('blinn')
-        pymel.core.sets(blinnSG, e=True, fe=[cube])
-        pymel.core.saveFile()
+        cube = pm.ls('*:test_cube', type=pm.nt.Transform)[0]
+        blinn, blinnSG = pm.createSurfaceShader('blinn')
+        pm.sets(blinnSG, e=True, fe=[cube])
+        pm.saveFile()
 
         # version11 references version4
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version11)  # layout
         self.maya_env.reference(self.version4)
         # use version2 namespace in version4
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         # refs[0].namespace = self.version4.nice_name
         # now do the edits here
         # we need to do some edits
         # there should be only one locator in the current scene
-        cube = pymel.core.ls('*:*:test_cube', type=pymel.core.nt.Transform)[0]
+        cube = pm.ls('*:*:test_cube', type=pm.nt.Transform)[0]
         # parent it to something else
-        group = pymel.core.group(cube, name='test_group')
+        group = pm.group(cube, name='test_group')
         cube.t.set(1, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # we should have created an edit
-        version2_ref_node = pymel.core.listReferences(refs[0])[0]
-        edits = pymel.core.referenceQuery(version2_ref_node, es=1)
+        version2_ref_node = pm.listReferences(refs[0])[0]
+        edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
 
         # version15 references version11
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
         self.maya_env.open(self.version15)  # bigger layout
         self.maya_env.reference(self.version11)
         # use old style namespace here
-        refs = pymel.core.listReferences()
+        refs = pm.listReferences()
         # refs[0].namespace = self.version11.nice_name
         # now do some other edits here
-        group = pymel.core.ls(
+        group = pm.ls(
             '*:test_group',
-            type=pymel.core.nt.Transform
+            type=pm.nt.Transform
         )[0]
         # move the one with no parent to somewhere in the scene
         group.t.set(10, 0, 0)
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check namespaces
         # version11 is using correct namespace
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
         self.assertEqual(
             all_refs[0].namespace,
             self.version11.nice_name
@@ -4878,10 +4974,10 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         )
 
         self.maya_env.fix_reference_namespaces()
-        pymel.core.saveFile()
+        pm.saveFile()
 
         # check if the namespaces are fixed
-        all_refs = pymel.core.listReferences(recursive=1)
+        all_refs = pm.listReferences(recursive=1)
 
         # first copy
         self.assertEqual(
@@ -4902,40 +4998,40 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # now check we don't have any failed edits
         # first copy
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, fld=1)),
             0
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, fld=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, fld=1)),
             0
         )
 
         # and we have all successful edits
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[0], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[0], es=1, scs=1)),
             2
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[1], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[1], es=1, scs=1)),
             1
         )
 
         self.assertEqual(
-            len(pymel.core.referenceQuery(all_refs[2], es=1, scs=1)),
+            len(pm.referenceQuery(all_refs[2], es=1, scs=1)),
             4
         )
 
         # and check if the locator are where they should be
-        group = pymel.core.ls('*:test_group', type=pymel.core.nt.Transform)[0]
+        group = pm.ls('*:test_group', type=pm.nt.Transform)[0]
         self.assertEqual(10.0, group.tx.get())
-        pymel.core.saveFile()
+        pm.saveFile()
 
 
 class FileReferenceRepresentationsTestCase(MayaTestBase):
@@ -5008,7 +5104,7 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
 
         db.DBSession.commit()
 
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
     def test_FileReference_class_has_to_repr_method(self):
         """testing if FileReference has a to_repr() method
@@ -5152,7 +5248,7 @@ class PublisherTestCase(MayaTestBase):
             publishers_called.append('publisher2')
 
         # now save a new version to a task which is a LookDev task
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         self.task6.type = Type(
             name='LookDev',
@@ -5185,7 +5281,7 @@ class PublisherTestCase(MayaTestBase):
             publishers_called.append('publisher2')
 
         # now save a new version to a task which is a LookDev task
-        pymel.core.newFile(force=True)
+        pm.newFile(force=True)
 
         v = Version(task=self.task6)
         db.DBSession.add(v)
