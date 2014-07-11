@@ -372,7 +372,6 @@ def check_all_tx_textures():
             textures_with_no_tx.append(path)
 
     if len(textures_with_no_tx):
-        pm.select(textures_with_no_tx)
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 
