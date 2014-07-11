@@ -1269,6 +1269,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         for node_type in types_and_attrs.keys():
             attr_name = types_and_attrs[node_type]
             for node in pm.ls(type=node_type):
+                # do not update if the node is a referenced node
+                if node.referenceFile():
+                    continue
+
                 orig_path = node.getAttr(attr_name).replace("\\", "/")
 
                 logger.info("replacing file texture: %s" % orig_path)
