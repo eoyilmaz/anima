@@ -113,3 +113,54 @@ class RepresentationGenerator(object):
         """generates the GPU representation of the current scene
         """
         pass
+
+
+def cube_from_bbox(bbox):
+    """creates a polyCube from the given bbox
+
+    :param bbox: pymel.core.dt.BoundingBox instance
+    """
+    cube = pm.polyCube(width=bbox.width(), height=bbox.height(), depth=bbox.depth(), ch=False)
+    cube[0].setAttr('t', bbox.center())
+    return cube[0]
+
+
+def create_bbox(nodes, per_selection=False):
+    """creates bounding boxes for the selected objects
+
+    :param bool per_selection: If True will create a BBox for each
+      given object
+    """
+
+    if per_selection:
+        for node in nodes:
+            cube_from_bbox(node.boundingBox())
+    else:
+        bbox = pm.dt.BoundingBox()
+        for node in nodes:
+            bbox.expand(node.boundingBox().min())
+            bbox.expand(node.boundingBox().max())
+        cube_from_bbox(bbox)
+
+
+def replace_with_bbox(nodes):
+    """replaces the given nodes with a bbox object
+    """
+    node_names = []
+    bboxes = []
+    for node in nodes:
+        # create a bbox and parent it to the parent of
+        # the original node
+        bbox = cube_from_bbox(node.boundingBox())
+        bbox.setParent(node.getParent())
+        node_names.append(node.name())
+        bboxes.append(bbox)
+
+    # delete the nodes
+    pm.delete(nodes)
+
+    # rename the bboxes5454
+    for name, bbox in zip(node_names, bboxes):
+        bbox.rename(name)
+
+    return bboxes
