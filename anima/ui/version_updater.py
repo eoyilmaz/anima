@@ -309,7 +309,12 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         except RuntimeError as e:
             # display as a Error message and return without doing anything
             message_box = QtGui.QMessageBox(self)
-            message_box.critical("Error", str(e))
+            message_box.critical(
+                self,
+                "Error",
+                str(e),
+                QtGui.QMessageBox.Ok
+            )
             return
 
         # close the interface
