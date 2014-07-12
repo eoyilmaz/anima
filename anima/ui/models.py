@@ -589,15 +589,10 @@ class TakesListWidget(QtGui.QListWidget):
         """adds a new take to the takes list
         """
         # condition the input
-        # TODO: there are no tests for take_name conditioning
-        # if the given take name is in the list don't add it
-        take_name = take_name[0].upper() + take_name[1:]
-        # replace spaces with underscores
-        take_name = re.sub(r'[\s\-]+', '_', take_name)
-        take_name = re.sub(r'[^a-zA-Z0-9_]+', '', take_name)
-        take_name = re.sub(r'[_]+', '_', take_name)
-        take_name = re.sub(r'[_]+$', '', take_name)
+        from stalker import Version
+        take_name = Version._format_take_name(take_name)
 
+        # if the given take name is in the list don't add it
         if take_name not in self._take_names:
             # add the item via property
             new_take_list = self._take_names

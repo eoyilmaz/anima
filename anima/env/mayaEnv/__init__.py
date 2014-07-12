@@ -393,6 +393,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 for ref in pm.listReferences():
                     logger.debug('switching: %s' % ref.path)
                     ref.to_repr(representation)
+                    # force load reference
+                    ref.load()
             else:
                 pm.openFile(
                     version.absolute_full_path,
