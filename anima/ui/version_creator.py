@@ -1008,6 +1008,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # just get one random environment
             env = env_factory.get_env(env_names[0])
 
+        # get all the representations available for this environment
+        reprs = env.representations
+        # add them to the representations comboBox
+        for r in reprs:
+            self.representations_comboBox.addItem(r)
+
         logger.debug("restoring the ui with the version from environment")
 
         # get the last version from the environment
@@ -1141,8 +1147,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         item = self.load_task_item_hierarchy(task, treeView)
 
-        logger.debug('*******************************')
-        logger.debug('item: %s' % item)
+        if not item:
+            self.tasks_treeView.selectionModel().clearSelection()
+            return None
 
         self.tasks_treeView.selectionModel().select(
             item.index(), QtGui.QItemSelectionModel.ClearAndSelect
@@ -1341,8 +1348,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # get the environment
             env_name = self.environment_comboBox.currentText()
             env_factory = ExternalEnvFactory()
-            environment = env_factory.get_env(env_name,
-                                              self.environment_name_format)
+            environment = env_factory.get_env(
+                env_name,
+                self.environment_name_format
+            )
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
@@ -1408,9 +1417,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # call the environments open method
         if self.environment is not None:
+            repr_name = self.representations_comboBox.currentText()
+
             # environment can throw RuntimeError for unsaved changes
             try:
-                reference_resolution = self.environment.open(old_version)
+                reference_resolution = \
+                    self.environment.open(
+                        old_version,
+                        representation=repr_name
+                    )
             except RuntimeError as e:
                 # pop a dialog and ask if the user really wants to open the
                 # file
@@ -1426,7 +1441,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
                 if answer == QtGui.QMessageBox.Yes:
                     reference_resolution =\
-                        self.environment.open(old_version, True)
+                        self.environment.open(
+                            old_version,
+                            True,
+                            representation=repr_name
+                        )
                 else:
                     # no, just return
                     return

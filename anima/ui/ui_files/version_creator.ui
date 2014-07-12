@@ -505,7 +505,7 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="load_settings_comboBox"/>
+              <widget class="QComboBox" name="representations_comboBox"/>
              </item>
              <item>
               <spacer name="horizontalSpacer_2">

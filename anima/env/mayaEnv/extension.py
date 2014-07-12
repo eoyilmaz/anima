@@ -90,6 +90,12 @@ class ReferenceExtension(object):
         """
         return ''
 
+    def replaceWith(self, path):
+        """dummy method to let the IDEs find FileReference.replaceWith and not
+        complain about it.
+        """
+        return None
+
     @extends(FileReference)
     def to_repr(self, repr_name):
         """Replaces the current reference with the representation with the
@@ -158,6 +164,38 @@ class ReferenceExtension(object):
 
         rep = Representation(version=v)
         return rep.is_base()
+
+    @extends(FileReference)
+    def is_repr(self, repr_name):
+        """returns True or False depending to if this is the requested repr
+
+        :param str repr_name: The representation name
+        :return:
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return False
+
+        rep = Representation(version=v)
+        return rep.is_repr(repr_name=repr_name)
+
+    @extends(FileReference)
+    @property
+    def repr(self):
+        """the representation name of the related version
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return None
+
+        rep = Representation(version=v)
+        return rep.repr
 
     @extends(FileReference)
     def get_base(self):

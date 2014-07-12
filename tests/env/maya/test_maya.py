@@ -1088,6 +1088,99 @@ class MayaTestCase(MayaTestBase):
         self.assertTrue('$' in ref1.unresolvedPath())
         self.assertTrue('$' in ref2.unresolvedPath())
 
+    def test_open_will_open_the_requested_representations_of_the_first_level_references(self):
+        """testing if Maya.open() will open with the requested representations
+        of the first level references
+        """
+        # create three different versions
+        # create both a Base and a BBox representation for each of them
+
+        # Base repr
+        a_base_v1 = self.create_version(self.asset1, 'Main')
+
+        a_base_v2 = self.create_version(self.asset1, 'Main')
+        a_base_v2.is_published = True
+
+        a_base_v3 = self.create_version(self.asset1, 'Main')
+        a_base_v3.is_published = True
+
+        # BBox repr
+        a_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+
+        a_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        a_bbox_v2.is_published = True
+
+        a_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        a_bbox_v3.is_published = True
+
+        # a new series of versions
+        # Base repr
+        b_base_v1 = self.create_version(self.asset1, 'Main')
+
+        b_base_v2 = self.create_version(self.asset1, 'Main')
+        b_base_v2.is_published = True
+
+        b_base_v3 = self.create_version(self.asset1, 'Main')
+        b_base_v3.is_published = True
+
+        # BBox repr
+        b_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+
+        b_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        b_bbox_v2.is_published = True
+
+        b_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        b_bbox_v3.is_published = True
+
+        # and another one
+        # a new series of versions
+        # Base repr
+        c_base_v1 = self.create_version(self.asset1, 'Main')
+
+        c_base_v2 = self.create_version(self.asset1, 'Main')
+        c_base_v2.is_published = True
+
+        c_base_v3 = self.create_version(self.asset1, 'Main')
+        c_base_v3.is_published = True
+
+        # BBox repr
+        c_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+
+        c_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        c_bbox_v2.is_published = True
+
+        c_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        c_bbox_v3.is_published = True
+
+        # save it as a new version
+        base_version = self.create_version(self.task1, 'Main')
+
+        # reference the Base versions of each of them to this new scene
+        self.maya_env.reference(a_base_v3)
+        self.maya_env.reference(b_base_v3)
+        self.maya_env.reference(c_base_v3)
+
+        # expect all of the references to be Base representations
+        all_refs = pm.listReferences()
+        self.assertTrue(all_refs[0].is_repr('Base'))
+        self.assertTrue(all_refs[1].is_repr('Base'))
+        self.assertTrue(all_refs[2].is_repr('Base'))
+
+        # save it again
+        self.maya_env.save_as(base_version)
+
+        # new scene
+        pm.newFile(force=1)
+
+        # open the same version with requesting the BBox representation
+        self.maya_env.open(base_version, representation='BBox')
+
+        # expect all of the references to be BBox representations
+        all_refs = pm.listReferences()
+        self.assertTrue(all_refs[0].is_repr('BBox'))
+        self.assertTrue(all_refs[1].is_repr('BBox'))
+        self.assertTrue(all_refs[2].is_repr('BBox'))
+
     def test_save_as_in_another_project_updates_paths_correctly(self):
         """testing if the external paths are updated correctly if the document
         is created in one maya project but it is saved under another one.
@@ -5242,6 +5335,21 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
         self.assertFalse(ref.is_base())
         v = ref.get_base()
         self.assertEqual(v, self.version3)
+
+    def test_is_repr_method_is_working_properly(self):
+        """testing if is_repr is working properly
+        """
+        ref = self.maya_env.reference(self.repr_version1)
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
+        self.assertFalse(ref.is_repr('Base'))
+        self.assertTrue(ref.is_repr('ASS'))
+
+    def test_repr_property_is_working_properly(self):
+        """testing if ``repr`` property is working properly
+        """
+        ref = self.maya_env.reference(self.repr_version1)
+        self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
+        self.assertEqual(ref.repr, 'ASS')
 
 
 class PublisherTestCase(MayaTestBase):

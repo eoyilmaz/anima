@@ -83,7 +83,7 @@ class Houdini(EnvironmentBase):
 
         return True
 
-    def open(self, version, force=False):
+    def open(self, version, force=False, representation=None):
         """the open action for houdini environment
         """
         if not version:

@@ -13,6 +13,12 @@ Changes
   ``anima.env.to_os_independent_path()`` to convert a path to a OS independent
   path, which returns a path which is using environment variables.
 
+* **New:** Added full support to ``Representations`` for Maya.
+
+* **New:** It is now possible to choose one of the supported representations
+  for the current environment in ``version_creator`` UI and open the given
+  ``version`` with the desired representation.
+
 0.1.8
 =====
 

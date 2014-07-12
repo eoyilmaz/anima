@@ -50,6 +50,7 @@ class Maya(EnvironmentBase):
     """
 
     name = "Maya%s" % str(pm.versions.current())[0:4]
+    representations = ['Base', 'BBox', 'GPU']
 
     time_to_fps = {
         u'sec': 1,
@@ -344,7 +345,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return True
 
-    def open(self, version, force=False):
+    def open(self, version, force=False, representation=None):
         """The open action for Maya environment.
 
         Opens the given Version file, sets the workspace etc.
@@ -361,6 +362,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :meth:`.update_verions`, so only desired version instances are updated
         or a new version is created for them.
 
+        :param representation: Opens the given version with the given
+          representations.
+
         :returns: (Bool, Dictionary)
         """
         # store current workspace path
@@ -376,11 +380,25 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.info("opening file: %s" % version.absolute_full_path)
 
         try:
-            pm.openFile(
-                version.absolute_full_path,
-                f=force,
-                #loadReferenceDepth='none'
-            )
+            # switch representations
+            if representation:
+                logger.info('requested representation: %s' % representation)
+                # so we have a representation request
+                pm.openFile(
+                    version.absolute_full_path,
+                    f=force,
+                    loadReferenceDepth='none'
+                )
+                # list all references and switch their paths
+                for ref in pm.listReferences():
+                    logger.debug('switching: %s' % ref.path)
+                    ref.to_repr(representation)
+            else:
+                pm.openFile(
+                    version.absolute_full_path,
+                    f=force,
+                    #loadReferenceDepth='none'
+                )
         except RuntimeError as e:
             # restore the previous workspace
             pm.workspace.open(previous_workspace_path)
@@ -1274,6 +1292,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     continue
 
                 orig_path = node.getAttr(attr_name).replace("\\", "/")
+                if '$' in orig_path:
+                    # do nothing it is already using an environment variable
+                    continue
 
                 logger.info("replacing file texture: %s" % orig_path)
 
