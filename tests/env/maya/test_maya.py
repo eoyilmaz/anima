@@ -1324,6 +1324,53 @@ class MayaTestCase(MayaTestBase):
             image_plane.getAttr('imageName')
         )
 
+    def test_save_as_will_not_replaces_paths_if_they_are_referenced(self):
+        """testing if save_as will not replace external paths of referenced
+        nodes
+        """
+        absolute_path = os.path.normpath(
+            os.path.join(
+                self.asset1.absolute_path,
+                'Plate/plateA.1.jpg'
+            )
+        )
+
+        # create an image plane
+        image_plane = pm.createNode('imagePlane')
+
+        # and set the path to something absolute
+        image_plane.setAttr('imageName', absolute_path)
+
+        vers1 = Version(task=self.asset1, created_by=self.user1)
+        db.DBSession.add(vers1)
+        db.DBSession.commit()
+
+        # save the scene
+        self.maya_env.save_as(vers1)
+
+        # re-set to absolute path
+        image_plane.setAttr('imageName', absolute_path)
+
+        # save again
+        pm.saveFile()
+
+        vers2 = Version(task=self.asset1, created_by=self.user1)
+        db.DBSession.add(vers2)
+        db.DBSession.commit()
+
+        # save the scene as a different version
+        pm.newFile(f=1)
+        self.maya_env.reference(vers1)
+        self.maya_env.save_as(vers2)
+
+        image_plane = pm.ls(type='imagePlane')[0]
+
+        # check if the path is not replaced
+        self.assertEqual(
+            os.path.normpath(absolute_path),
+            os.path.normpath(image_plane.getAttr('imageName'))
+        )
+
     def test_save_as_creates_the_workspace_mel_file_in_the_given_path(self):
         """testing if save_as creates the workspace.mel file in the Asset or
         Shot root
