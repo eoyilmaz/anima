@@ -86,6 +86,32 @@ class Representation(object):
         """
         return len(self.list_all()) > 1
 
+    def is_repr(self, repr_name=''):
+        """Returns a bool value depending if the version is the requested
+        representation in its representation series.
+
+        :param str repr_name: Representation name
+        :return:
+        """
+        base_take_name = self.get_base_take_name(self.version)
+
+        if repr_name != self.base_repr_name and repr_name != base_take_name:
+            resolved_repr_name = \
+                '%s%s%s' % (base_take_name, self.repr_separator, repr_name)
+        else:
+            resolved_repr_name = base_take_name
+
+        return self.version.take_name == resolved_repr_name
+
+    def is_base(self):
+        """Returns a bool value depending if the version is the base of its
+        representations series.
+
+        :return: bool
+        """
+        base_take_name = self.get_base_take_name(self.version)
+        return self.version.take_name == base_take_name
+
     @classmethod
     def get_base_take_name(cls, version):
         """Returns the base take_name for the related version
@@ -150,11 +176,19 @@ class Representation(object):
             .order_by(Version.version_number.desc())\
             .first()
 
-    def is_base(self):
-        """Returns a bool value depending if the version is the base of its
-        representations series.
-
-        :return: bool
+    @property
+    def repr(self):
+        """returns the current representation name
         """
-        base_take_name = self.get_base_take_name(self.version)
-        return self.version.take_name == base_take_name
+        if not self.version:
+            return None
+
+        take_name = self.version.take_name
+        if self.repr_separator in take_name:
+            # it is a repr
+            repr_name = take_name.split(self.repr_separator)[1]
+        else:
+            # it is the base repr
+            repr_name = self.base_repr_name
+
+        return repr_name

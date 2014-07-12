@@ -137,10 +137,14 @@ class RepresentationTestCase(unittest.TestCase):
         # BBOX
         cls.version4 = cls.create_version(cls.task1, 'Main___BBox')
         cls.version5 = cls.create_version(cls.task1, 'Main___BBox')
+        cls.version5.is_published = True
+        db.DBSession.commit()
 
         # ASS
         cls.version6 = cls.create_version(cls.task1, 'Main___ASS')
         cls.version7 = cls.create_version(cls.task1, 'Main___ASS')
+        cls.version7.is_published = True
+        db.DBSession.commit()
 
         # GPU
         cls.version8 = cls.create_version(cls.task1, 'Main___GPU')
@@ -192,7 +196,7 @@ class RepresentationTestCase(unittest.TestCase):
         expected_result = ['Base', 'BBox', 'ASS', 'GPU']
         rep = Representation(self.version1)
         result = rep.list_all()
-        self.assertItemsEqual(expected_result, result)
+        self.assertEqual(sorted(expected_result), sorted(result))
 
     def test_list_all_lists_all_representations_from_non_base_version(self):
         """testing if Representation.list_all() returns a list of strings
@@ -201,7 +205,7 @@ class RepresentationTestCase(unittest.TestCase):
         expected_result = ['Base', 'Hires', 'Midres', 'Lores']
         rep = Representation(self.version10)
         result = rep.list_all()
-        self.assertItemsEqual(expected_result, result)
+        self.assertEqual(sorted(expected_result), sorted(result))
 
     def test_find_method_finds_the_given_representation(self):
         """testing if Representation.find() finds the latest version with the
@@ -224,7 +228,7 @@ class RepresentationTestCase(unittest.TestCase):
         nonexistent repr name
         """
         rep = Representation(self.version4)
-        self.assertIsNone(rep.find('NonExists'))
+        self.assertTrue(rep.find('NonExists') is None)
 
     def test_has_repr_method_is_working_properly(self):
         """testing if Representation.has_repr() method is working properly
@@ -251,21 +255,21 @@ class RepresentationTestCase(unittest.TestCase):
         """testing if it is possible to skip the version argument
         """
         rep = Representation()
-        self.assertIsNone(rep.version)
+        self.assertTrue(rep.version is None)
 
     def test_version_argument_is_none(self):
         """testing if the version argument can be None
         """
         rep = Representation(None)
-        self.assertIsNone(rep.version)
+        self.assertTrue(rep.version is None)
 
     def test_version_attribute_is_set_to_none(self):
         """testing if setting the version attribute to None is possible
         """
         rep = Representation(self.version1)
-        self.assertIsNotNone(rep.version)
+        self.assertFalse(rep.version is None)
         rep.version = None
-        self.assertIsNone(rep.version)
+        self.assertTrue(rep.version is None)
 
     def test_version_argument_is_not_a_version_instance(self):
         """testing if a TypeError will be raised when the version argument is
@@ -317,3 +321,25 @@ class RepresentationTestCase(unittest.TestCase):
 
         rep = Representation(self.version4)
         self.assertFalse(rep.is_base())
+
+    def test_is_repr_method_is_working_properly(self):
+        """testing if Representation.is_repr() method is working properly
+        """
+        rep = Representation(self.version1)
+        self.assertTrue(rep.is_repr('Base'))
+
+        rep = Representation(self.version4)
+        self.assertFalse(rep.is_repr('Base'))
+
+        rep = Representation(self.version4)
+        self.assertTrue(rep.is_repr('BBox'))
+
+    def test_repr_property_is_working_properly(self):
+        """testing if Representation.repr property is working properly
+        """
+        rep = Representation(self.version1)
+        self.assertEqual(rep.repr, 'Base')
+
+        rep = Representation(self.version4)
+        self.assertTrue(rep.repr, 'BBox')
+

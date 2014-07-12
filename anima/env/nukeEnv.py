@@ -126,7 +126,7 @@ class Nuke(EnvironmentBase):
         nuke.nodeCopy(version.absolute_full_path)
         return True
 
-    def open(self, version, force=False):
+    def open(self, version, force=False, representation=None):
         """the open action for nuke environment
         """
         nuke.scriptOpen(version.absolute_full_path)

@@ -69,6 +69,7 @@ class EnvironmentBase(object):
     """
 
     name = "EnvironmentBase"
+    representations = ['Base']
 
     def __init__(self, name="", extensions=None, version=None):
         self._name = name
@@ -119,7 +120,7 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def open(self, version, force=False):
+    def open(self, version, force=False, representation=None):
         """the open action
         """
         raise NotImplementedError

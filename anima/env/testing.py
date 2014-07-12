@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima import utils
+
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.testing import count_calls
@@ -14,6 +14,8 @@ class TestEnvironment(EnvironmentBase):
     method has been called
     """
     name = "TestEnv"
+    representations = ['Base', 'BBox', 'GPU', 'ASS']
+
     test_data = {}
 
     def __init__(self, name='TestEnv'):
@@ -33,7 +35,7 @@ class TestEnvironment(EnvironmentBase):
         pass
 
     @count_calls
-    def open(self, version, force=False):
+    def open(self, version, force=False, representation=None):
         self._version = version
         return self.check_referenced_versions()
 
