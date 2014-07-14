@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 publishers = {}
+staging = {}
 
 
 def register_publisher(callable_, type_name=''):

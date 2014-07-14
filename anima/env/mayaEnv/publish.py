@@ -8,7 +8,7 @@ import os
 import pymel.core as pm
 import maya.cmds as mc
 
-from anima.publish import clear_publishers, publisher
+from anima.publish import clear_publishers, publisher, staging
 from anima.exc import PublishError
 
 clear_publishers()
@@ -19,6 +19,58 @@ MAX_NODE_DISPLAY = 80
 #*********#
 # GENERIC #
 #*********#
+@publisher
+def check_representations():
+    """checks if the referenced versions are all matching the representation
+    type of the current version
+    """
+    from anima.repr import Representation
+
+    ref_reprs = []
+    wrong_reprs = []
+
+    v = staging.get('version')
+    if v:
+        r = Representation(version=v)
+        current_repr = r.repr
+
+        for ref in pm.listReferences():
+            ref_repr = ref.repr
+            ref_reprs.append([ref, ref_repr])
+            if ref_repr != current_repr:
+                wrong_reprs.append(ref)
+    else:
+        return
+
+    if len(wrong_reprs):
+        ref_repr_labels = []
+        for ref_repr in ref_reprs:
+            ref = ref_repr[0]
+            repr_name = ref_repr[1]
+
+            color = 'red' if current_repr != repr_name else 'green'
+
+            ref_repr_labels.append(
+                '<span style="color: %(color)s">%(repr_name)s</span> -> '
+                '%(ref)s' %
+                {
+                    'color': color,
+                    'repr_name': repr_name,
+                    'ref': ref.refNode.name()
+                }
+            )
+
+        raise PublishError(
+            'You are saving as the <b>%s</b> representation<br>'
+            'for the current scene, but the following references<br>'
+            'are not <b>%s</b> representations of their versions:<br><br>'
+            '%s' % (
+                current_repr, current_repr,
+                '<br>'.join(ref_repr_labels[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
 @publisher
 def cleanup_intermediate_objects():
     """deletes any unused intermediate object in the current scene
