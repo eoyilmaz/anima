@@ -330,6 +330,112 @@ def check_empty_groups():
 
 
 @publisher('model')
+def check_out_of_space_uvs():
+    """checks if there are uvs with u values that are bigger than 10.0
+    """
+    all_meshes = pm.ls(type='mesh')
+    mesh_count = len(all_meshes)
+    nodes_with_out_of_space_uvs = []
+
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    if not pm.general.about(batch=1) and mesh_count:
+        pdm.use_ui = True
+
+    caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
+
+    for node in all_meshes:
+
+        u, v = node.getUVs()
+        u = sorted(u)
+        if u[-1] > 10.0:
+            nodes_with_out_of_space_uvs.append(node)
+
+        caller.step()
+
+    if len(nodes_with_out_of_space_uvs):
+        # get transform nodes
+        tra_nodes = map(
+            lambda x: x.getParent(),
+            nodes_with_out_of_space_uvs
+        )
+        pm.select(tra_nodes)
+        raise RuntimeError(
+            """There are nodes which have a UV value bigger than <b>10</b>:
+            <br><br>%s""" %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    tra_nodes[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publisher('model')
+def check_uv_border_crossing():
+    """checks if any of the uv shells are crossing uv borders
+    """
+    all_meshes = pm.ls(type='mesh')
+    mesh_count = len(all_meshes)
+
+    nodes_with_uvs_crossing_borders = []
+
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    if not pm.general.about(batch=1) and mesh_count:
+        pdm.use_ui = True
+
+    caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
+
+    for node in all_meshes:
+        all_uvs = node.getUVs()
+        uv_shell_ids = node.getUvShellsIds()
+
+        # prepare an empty dict of lists
+        uvs_per_shell = {}
+        for shell_id in range(uv_shell_ids[1]):
+            uvs_per_shell[shell_id] = [[], []]
+
+        for uv_id in range(len(uv_shell_ids[0])):
+            u = all_uvs[0][uv_id]
+            v = all_uvs[1][uv_id]
+            shell_id = uv_shell_ids[0][uv_id]
+
+            uvs_per_shell[shell_id][0].append(u)
+            uvs_per_shell[shell_id][1].append(v)
+
+        # now check all uvs per shell
+        for shell_id in range(uv_shell_ids[1]):
+            us = sorted(uvs_per_shell[shell_id][0])
+            vs = sorted(uvs_per_shell[shell_id][1])
+
+            #check first and last u and v values
+            if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
+                # they are not equal it is crossing spaces
+                nodes_with_uvs_crossing_borders.append(node)
+                break
+
+        caller.step()
+
+    if len(nodes_with_uvs_crossing_borders):
+        # get transform nodes
+        tra_nodes = map(
+            lambda x: x.getParent(),
+            nodes_with_uvs_crossing_borders
+        )
+        pm.select(tra_nodes)
+        raise RuntimeError(
+            """There are nodes with <b>UV-Shells</b> that are crossing
+            <b>UV BORDERS</b>:<br><br>%s""" %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    tra_nodes[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publisher('model')
 def check_uvs():
     """checks uvs with no uv area
 
@@ -346,13 +452,13 @@ def check_uvs():
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
 
-    caller = None
-    in_batch_mode = pm.general.about(batch=1)
-    if not in_batch_mode and mesh_count:
-        from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    if not pm.general.about(batch=1) and mesh_count:
         pdm.use_ui = True
-        caller = pdm.register(mesh_count, 'check_uvs()')
+
+    caller = pdm.register(mesh_count, 'check_uvs()')
 
     meshes_with_zero_uv_area = []
     for node in all_meshes:
@@ -370,13 +476,12 @@ def check_uvs():
         except RuntimeError:
             meshes_with_zero_uv_area.append(node)
 
-        if caller is not None:
-            caller.step()
+        caller.step()
 
     if len(meshes_with_zero_uv_area):
         pm.select(meshes_with_zero_uv_area)
         raise RuntimeError(
-            """There are models with no uvs or faces with zero uv area:<br><br>
+            """There are meshes with no uvs or faces with zero uv area:<br><br>
             %s""" %
             '<br>'.join(
                 map(lambda x: x.name(),

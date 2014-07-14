@@ -1310,12 +1310,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     )
                 ).replace("\\", "/")
 
-                # convert to absolute
-                if not os.path.isabs(path):
-                    path = os.path.join(
-                        workspace_path,
-                        path
-                    ).replace("\\", "/")
+                # be sure that it is not a Windows path
+                if ':' not in path:
+                    # convert to absolute
+                    if not os.path.isabs(path):  # be sure it
+                        path = os.path.join(
+                            workspace_path,
+                            path
+                        ).replace("\\", "/")
 
                 # convert to os independent absolute
                 new_path = to_os_independent_path(path)
