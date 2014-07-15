@@ -1033,7 +1033,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     full_path = None
 
             if full_path:
-                reference.replaceWith(full_path)
+                reference.replaceWith(to_os_independent_path(full_path))
                 updated_references = True
 
         return updated_references
@@ -1105,116 +1105,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # get all the references
         for reference in pm.listReferences():
             reference.load()
-
-    @classmethod
-    def replace_versions(cls, source_reference, target_file):
-        """replaces the source reference with the target file
-
-        the source_reference may should be in maya reference node
-        """
-        # get the reference node
-        base_reference_node = source_reference.refNode
-
-        # get the base namespace before replacing the reference
-        previous_namespace = \
-            cls.get_full_namespace_from_node_name(source_reference.nodes()[0])
-
-        # if the source_reference has referenced files do a dirty edit
-        # by applying all the edits to the referenced node (the old way of
-        # replacing references)
-        sub_references = pm.listReferences(
-            source_reference, recursive=True
-        )
-        # logger.debug("subReferences count: %s" % len(subReferences))
-
-        if len(sub_references) > 0:
-            # for all subReferences get the editString and apply it to the
-            # replaced file with new namespace
-            all_edits = []
-            for subRef in sub_references:
-                all_edits += subRef.getReferenceEdits(orn=base_reference_node)
-
-            # replace the reference
-            source_reference.replaceWith(target_file)
-
-            # try to find the new namespace
-            sub_references = pm.listReferences(
-                source_reference, recursive=True
-            )
-            new_namespace = cls.get_full_namespace_from_node_name(
-                sub_references[0].nodes()[0]
-            )  # possible bug here, fix it later
-
-            # replace the old namespace with the new namespace in all the edits
-            all_edits = [
-                edit.replace(previous_namespace + ":", new_namespace + ":")
-                for edit in all_edits
-            ]
-
-            # apply all the edits
-            for edit in all_edits:
-                try:
-                    pm.mel.eval(edit)
-                except pm.MelError:
-                    pass
-        else:
-            # replace the reference
-            source_reference.replaceWith(target_file)
-
-            # try to find the new namespace
-            sub_references = pm.listReferences(
-                source_reference, recursive=True
-            )
-            new_namespace = cls.get_full_namespace_from_node_name(
-                sub_references[0].nodes()[0]
-            )  # possible bug here, fix it later
-
-            #subReferences = source_reference.subReferences()
-            #for subRefData in subReferences.iteritems():
-            #    refNode = subRefData[1]
-            #    newNS = \
-            #      self.get_full_namespace_from_node_name(refNode.nodes()[0])
-
-            # if the new namespace is different than the previous one
-            # also change the edit targets
-            if previous_namespace != new_namespace:
-                # logger.debug("prevNS: %s" % previous_namespace)
-                # logger.debug("newNS : %s" % newNS)
-
-                # get the new sub references
-                for subRef in pm.listReferences(source_reference):
-                    # for all the nodes in sub references
-                    # change the edit targets with new namespace
-                    for node in subRef.nodes():
-                        # use the long name -- suggested by maya help
-                        node_new_name = node.longName()
-                        node_old_name = node_new_name.replace(
-                            new_namespace + ':', previous_namespace + ':'
-                        )
-
-                        pm.referenceEdit(
-                            base_reference_node,
-                            changeEditTarget=(node_old_name, node_new_name)
-                        )
-                        #pm.referenceEdit(
-                        #    baseRefNode,
-                        #    orn=baseRefNode,
-                        #    changeEditTarget=(node_old_name, node_new_name)
-                        #)
-                        #pm.referenceEdit(
-                        #     subRef,
-                        #     orn=baseRefNode,
-                        #     changeEditTarget=(node_old_name, node_new_name)
-                        #)
-                        #for aRefNode in pm.ls(type='reference'):
-                            #if len(aRefNode.attr('sharedReference').listConnections(s=0,d=1)) == 0: # not a shared reference
-                                #pm.referenceEdit(aRefNode, orn=baseRefNode, changeEditTarget=(nodeOldName, nodeNewName), scs=1, fld=1)
-                                ##pm.referenceEdit(aRefNode, applyFailedEdits=True)
-                    #pm.referenceEdit(subRef, applyFailedEdits=True)
-
-                # apply all the failed edits again
-                pm.referenceEdit(base_reference_node,
-                                         applyFailedEdits=True)
 
     @classmethod
     def get_full_namespace_from_node_name(cls, node):
@@ -1592,7 +1482,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
                     # replace the current reference with this one
                     current_ref.replaceWith(
-                        latest_published_version.absolute_full_path
+                        to_os_independent_path(
+                            latest_published_version.absolute_full_path
+                        )
                     )
 
             # get any reference under it and append to the list
