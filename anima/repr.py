@@ -118,7 +118,12 @@ class Representation(object):
         :return: str
         """
         # find the base repr name from the current version
-        take_name = version.take_name
+        take_name = ''
+        if isinstance(version, Version):
+            take_name = version.take_name
+        elif isinstance(version, str):
+            take_name = version
+
         if cls.repr_separator in take_name:
             # it is a repr
             base_repr_take_name = take_name.split(cls.repr_separator)[0]

@@ -729,7 +729,7 @@ class VersionCreatorTester(unittest.TestCase):
         """testing if repr_as_separate_takes_checkBox is unchecked by default
         """
         self.assertFalse(
-            self.dialog.repr_as_seperate_takes_checkBox.isChecked()
+            self.dialog.repr_as_separate_takes_checkBox.isChecked()
         )
 
     def test_repr_as_separate_takes_check_box_is_working_properly(self):
@@ -765,4 +765,32 @@ class VersionCreatorTester(unittest.TestCase):
             ['Main', 'Main___GPU']
         )
 
-        self.show_dialog(self.dialog)
+        # self.show_dialog(self.dialog)
+
+    def test_takes_with_representations_shows_in_blue(self):
+        """testing if takes with representations will be displayed in blue
+        """
+                # select project 1 -> task1
+        item_model = self.dialog.tasks_treeView.model()
+        selection_model = self.dialog.tasks_treeView.selectionModel()
+
+        index = item_model.index(0, 0)
+        project1_item = item_model.itemFromIndex(index)
+        self.dialog.tasks_treeView.expand(index)
+
+        task1_item = project1_item.child(0, 0)
+        selection_model.select(
+            task1_item.index(),
+            QtGui.QItemSelectionModel.Select
+        )
+
+        # expect only one "Main" take listed in take_listWidget
+        main_item = self.dialog.takes_listWidget.item(0)
+        item_foreground = main_item.foreground()
+        color = item_foreground.color()
+        self.assertEqual(
+            color,
+            QtGui.QColor(0, 0, 255)
+        )
+
+        # self.show_dialog(self.dialog)

@@ -65,7 +65,18 @@ class VersionsTableWidget(QtGui.QTableWidget):
         self.setToolTip(
             QtGui.QApplication.translate(
                 "Dialog",
-                "<html><head/><body><p>Right click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" font-weight:600;\">Copy Path</span></li><li><span style=\" font-weight:600;\">Browse Path</span></li><li><span style=\" font-weight:600;\">Change Description</span></li></ul><p>Double click to:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-weight:600;\">Open</span></li></ul></body></html>",
+                "<html><head/><body><p>Right click to:</p><ul style=\""
+                "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
+                "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
+                "font-weight:600;\">Copy Path</span></li><li><span style=\" "
+                "font-weight:600;\">Browse Path</span></li><li><span style=\" "
+                "font-weight:600;\">Change Description</span></li></ul>"
+                "<p>Double click to:</p><ul style=\"margin-top: 0px; "
+                "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
+                "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
+                "margin-bottom:12px; margin-left:0px; margin-right:0px; "
+                "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
+                "font-weight:600;\">Open</span></li></ul></body></html>",
                 None,
                 QtGui.QApplication.UnicodeUTF8
             )
@@ -882,9 +893,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 .filter(Version.task == task)
                 .all()
             )
+
             if not self.repr_as_separate_takes_checkBox.isChecked():
                 # filter representations
-                takes = [take for take in takes if '___' not in take]
+                from anima.repr import Representation
+                takes = [take for take in takes
+                         if Representation.repr_separator not in take]
             takes.sort()
 
         logger.debug("len(takes) from db: %s" % len(takes))
