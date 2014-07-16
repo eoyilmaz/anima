@@ -642,8 +642,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # just add the <Camera> template variable to the file name
             render_file_rel_path += "_<Camera>"
 
-        # SHOTS/ToonShading/TestTransition/incidence/ToonShading_TestTransition_incidence_MasterPass_v050.####.iff
-
         # defaultRenderGlobals
         dRG = pm.PyNode('defaultRenderGlobals')
         dRG.setAttr('imageFilePrefix', render_file_rel_path)
@@ -1234,8 +1232,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
 
-            with open(full_path, "w") as workspace_file:
-                workspace_file.write(content)
+        with open(full_path, "w") as workspace_file:
+            workspace_file.write(content)
 
     @classmethod
     def create_workspace_folders(cls, path):
