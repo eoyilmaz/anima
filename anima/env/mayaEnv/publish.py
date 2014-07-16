@@ -36,6 +36,10 @@ def check_representations():
 
         for ref in pm.listReferences():
             ref_repr = ref.repr
+            if ref_repr is None:
+                # skip this one this is not related to a Stalker Version
+                continue
+
             ref_reprs.append([ref, ref_repr])
             if ref_repr != current_repr:
                 wrong_reprs.append(ref)

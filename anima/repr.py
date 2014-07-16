@@ -186,7 +186,7 @@ class Representation(object):
         """returns the current representation name
         """
         if not self.version:
-            return self.base_repr_name
+            return None
 
         take_name = self.version.take_name
         if self.repr_separator in take_name:
