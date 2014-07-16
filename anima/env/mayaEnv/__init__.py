@@ -15,6 +15,7 @@ import maya.cmds as mc
 from anima.env import empty_reference_resolution, to_os_independent_path
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
+from anima.repr import Representation
 from anima.ui.progress_dialog import ProgressDialogManager
 
 # empty publishers first
@@ -385,7 +386,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         try:
             # switch representations
-            if representation:
+            if representation != Representation.base_repr_name:
                 logger.info('requested representation: %s' % representation)
                 # so we have a representation request
                 pm.openFile(
