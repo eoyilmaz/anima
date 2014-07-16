@@ -1488,13 +1488,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         )
                     )
 
-            # get any reference under it and append to the list
-            # references_list.extend(
-            #     sorted(
-            #         pm.listReferences(current_ref),
-            #         key=lambda x: x.path
-            #     )
-            # )
             caller.step(message=ref.namespace)
 
         return []  # no new version will be created with the current version
