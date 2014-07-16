@@ -264,7 +264,19 @@ class VersionCreatorTester(unittest.TestCase):
             created_with='Test',
             description='Test Description'
         )
+        cls.test_version3.is_published = True
         db.DBSession.add(cls.test_version3)
+        db.DBSession.commit()
+
+        cls.test_version4 = Version(
+            cls.test_task1,
+            take_name='Main___GPU',
+            created_by=cls.admin,
+            created_with='Test',
+            description='Test Description'
+        )
+        cls.test_version4.is_published = True
+        db.DBSession.add(cls.test_version4)
         db.DBSession.commit()
 
         if not QtGui.QApplication.instance():
@@ -713,3 +725,44 @@ class VersionCreatorTester(unittest.TestCase):
             combo_box_text = dialog.representations_comboBox.itemText(i)
             self.assertEqual(repr_name, combo_box_text)
 
+    def test_repr_as_separate_takes_check_box_is_unchecked_by_default(self):
+        """testing if repr_as_separate_takes_checkBox is unchecked by default
+        """
+        self.assertFalse(
+            self.dialog.repr_as_seperate_takes_checkBox.isChecked()
+        )
+
+    def test_repr_as_separate_takes_check_box_is_working_properly(self):
+        """testing if when the repr_as_separate_takes_checkBox is checked it
+        will update the takes_listWidget to also show representation takes
+        """
+        # select project 1 -> task1
+        item_model = self.dialog.tasks_treeView.model()
+        selection_model = self.dialog.tasks_treeView.selectionModel()
+
+        index = item_model.index(0, 0)
+        project1_item = item_model.itemFromIndex(index)
+        self.dialog.tasks_treeView.expand(index)
+
+        task1_item = project1_item.child(0, 0)
+        selection_model.select(
+            task1_item.index(),
+            QtGui.QItemSelectionModel.Select
+        )
+
+        # expect only one "Main" take listed in take_listWidget
+        self.assertEqual(
+            sorted(self.dialog.takes_listWidget.take_names),
+            ['Main']
+        )
+
+        # check the repr_as_separate_takes_checkBox
+        self.dialog.repr_as_separate_takes_checkBox.setChecked(True)
+
+        # expect two takes of "Main" and "Main___GPU"
+        self.assertEqual(
+            sorted(self.dialog.takes_listWidget.take_names),
+            ['Main', 'Main___GPU']
+        )
+
+        self.show_dialog(self.dialog)

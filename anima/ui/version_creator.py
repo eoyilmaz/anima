@@ -191,7 +191,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
             # ------------------------------------
 
             # ------------------------------------
-            # filesize
+            # file size
 
             # get the file size
             #file_size_format = "%.2f MB"
@@ -430,6 +430,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.SIGNAL("currentTextChanged(QString)"),
             self.takes_listWidget_changed
         )
+
+        # repr_as_separate_takes_checkBox
+        QtCore.QObject.connect(
+            self.repr_as_separate_takes_checkBox,
+            QtCore.SIGNAL("stateChanged(int)"),
+            self.tasks_treeView_changed
+        )
+
 
         # takes_listWidget
         QtCore.QObject.connect(
@@ -874,6 +882,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 .filter(Version.task == task)
                 .all()
             )
+            if not self.repr_as_separate_takes_checkBox.isChecked():
+                # filter representations
+                takes = [take for take in takes if '___' not in take]
             takes.sort()
 
         logger.debug("len(takes) from db: %s" % len(takes))
@@ -1454,14 +1465,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if reference_resolution['create'] \
                or reference_resolution['update']:
                 # invoke the version_updater for this scene
-                version_updater_mainDialog = \
+                version_updater_main_dialog = \
                     version_updater.MainDialog(
                         environment=self.environment,
                         parent=self,
                         reference_resolution=reference_resolution
                     )
 
-                version_updater_mainDialog.exec_()
+                version_updater_main_dialog.exec_()
 
         # close the dialog
         self.close()

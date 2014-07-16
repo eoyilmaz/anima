@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Sat Jul 12 19:13:31 2014
+# Created: Wed Jul 16 12:30:52 2014
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -137,7 +137,7 @@ class Ui_Dialog(object):
         self.description_label = QtGui.QLabel(self.new_version_groupBox)
         self.description_label.setMinimumSize(QtCore.QSize(35, 0))
         self.description_label.setObjectName("description_label")
-        self.gridLayout_3.addWidget(self.description_label, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.description_label, 2, 0, 1, 1)
         self.horizontalLayout_6 = QtGui.QHBoxLayout()
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.takes_listWidget = QtGui.QListWidget(self.new_version_groupBox)
@@ -151,7 +151,10 @@ class Ui_Dialog(object):
         self.description_textEdit.setEnabled(True)
         self.description_textEdit.setTabChangesFocus(True)
         self.description_textEdit.setObjectName("description_textEdit")
-        self.gridLayout_3.addWidget(self.description_textEdit, 1, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.description_textEdit, 2, 1, 1, 1)
+        self.repr_as_separate_takes_checkBox = QtGui.QCheckBox(self.new_version_groupBox)
+        self.repr_as_separate_takes_checkBox.setObjectName("repr_as_separate_takes_checkBox")
+        self.gridLayout_3.addWidget(self.repr_as_separate_takes_checkBox, 1, 1, 1, 1)
         self.verticalLayout_6.addLayout(self.gridLayout_3)
         self.horizontalLayout_7 = QtGui.QHBoxLayout()
         self.horizontalLayout_7.setObjectName("horizontalLayout_7")
@@ -289,6 +292,8 @@ class Ui_Dialog(object):
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Cantarell\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\'; font-size:9pt;\"><br /></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.repr_as_separate_takes_checkBox.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Check this to show <span style=\" font-weight:600;\">Representations</span> as separate takes if available</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.repr_as_separate_takes_checkBox.setText(QtGui.QApplication.translate("Dialog", "Representations as separate takes", None, QtGui.QApplication.UnicodeUTF8))
         self.update_paths_checkBox.setText(QtGui.QApplication.translate("Dialog", "Update Paths", None, QtGui.QApplication.UnicodeUTF8))
         self.publish_checkBox.setText(QtGui.QApplication.translate("Dialog", "Publish", None, QtGui.QApplication.UnicodeUTF8))
         self.export_as_pushButton.setText(QtGui.QApplication.translate("Dialog", "Export Selection As", None, QtGui.QApplication.UnicodeUTF8))
