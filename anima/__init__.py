@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 
 import logging
@@ -22,3 +22,6 @@ power_users_group_names = ['Power Users', 'admins']
 
 # environment variable template for repositories
 repo_env_template = 'REPO%(id)s'
+
+anima_env_var = 'ANIMAPATH'
+env_var_file_name = 'env.json'

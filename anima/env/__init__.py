@@ -4,6 +4,12 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+import os
+import json
+import platform
+
+from anima import anima_env_var, env_var_file_name
+
 
 def empty_reference_resolution(root=None, leave=None, update=None, create=None):
     """Generates an empty reference_resolution dictionary.
@@ -60,3 +66,125 @@ def to_os_independent_path(path):
         }
     else:
         return path
+
+
+def discover_env_vars(env_name=''):
+    """Looks for an ``env.json`` file in the path shown with the $ANIMAPATH
+    environment variable then creates the environment variables.
+
+    If the ``env_name`` argument is given it will initialize the environment
+    variables registered under that environment name.
+
+    The ``env.json`` file format is as follows::
+
+      {
+        "env_name": {
+          "os_name": {
+            "var_name": ['values']
+          }
+        }
+      }
+
+    If "*" is given as the "env_name" (in the env.json file), all the variables
+    will be registered regardless of what the ``env_name`` argument is given.
+
+    A typical setup can be something as follows::
+
+    {
+      "*": {
+        "windows": {
+          "PYTHONPATH": []
+        },
+        "linux": {
+          "PYTHONPATH": []
+        },
+        "osx": {
+          "PYTHONATPATH": []
+        }
+      },
+      "python2.6": {
+        "windows": {
+          "PYTHONPATH": []
+        },
+        "linux": {},
+        "osx": {}
+      },
+      "python2.7": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "python3": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "maya": {
+        "windows": {
+          "MAYA_SCRIPTS_PATH": []
+        },
+        "linux": {},
+        "osx": {}
+      },
+      "houdini": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "nuke": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "fusion": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "photoshop": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+      "blender": {
+        "windows": {},
+        "linux": {},
+        "osx": {}
+      },
+    }
+
+    The environment variables defined in "*" will be defined first and then
+    the others will run. So defining some environment variables in "*" first
+    and the let say under "blender" will not overwrite the variable values
+    those are defined at "*".
+
+    None of the definitions will overwrite system variables. So if you defined
+    PYTHONPATH in your system environment then the variables defined in
+    env.json will be appended to them.
+    """
+
+    env_path = os.environ[anima_env_var]
+
+    env_json_path = os.path.join(env_path, env_var_file_name)
+
+    # parse the file as a json file
+    with open(env_json_path) as f:
+        data = json.load(f)
+
+    # get the current os
+    os_name = platform.system().lower()
+
+    # get the keys
+    # first get *
+    def append_data_from(env_name_i):
+        if env_name_i in data:
+            if os_name in data[env_name_i]:
+                for env_var in data[env_name_i][os_name]:
+                    values = data[env_name_i][os_name][env_var]
+                    if env_var in os.environ:
+                        values.insert(0, os.environ[env_var])
+
+                    os.environ[env_var] = os.pathsep.join(values)
+
+    append_data_from('*')
+    append_data_from(env_name)

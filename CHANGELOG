@@ -2,6 +2,13 @@
 Changes
 =======
 
+0.1.10
+======
+
+* **New:** Added a new helper function called ``anima.env.discover_env_vars()``
+  which will help loading environment variables from a file called ``env.json``
+  which is placed to a path defined with ``$ANIMAPATH``.
+
 0.1.9
 =====
 
