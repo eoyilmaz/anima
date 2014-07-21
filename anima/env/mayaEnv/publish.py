@@ -564,8 +564,8 @@ def check_unused_nodes():
 
 
 @publisher(look_dev_types)
-def check_only_arnold_materials_are_used():
-    """check if only arnold materials are used
+def check_only_supported_materials_are_used():
+    """check if only supported materials are used
     """
     # TODO: this should be depending on to the project some projects still can
     #       use mental ray
@@ -579,7 +579,15 @@ def check_only_arnold_materials_are_used():
         u'aiStandard',
         u'aiUtility',
         u'aiWireframe',
-        u'displacementShader'
+        u'displacementShader',
+        u'lambert',
+        u'blinn',
+        u'layeredShader',
+        u'oceanShader',
+        u'phong',
+        u'phongE',
+        u'rampShader',
+        u'surfaceShader',
     ]
 
     non_arnold_materials = []
