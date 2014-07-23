@@ -13,6 +13,8 @@ logging.basicConfig()
 logging_level = logging.DEBUG
 
 stalker_server_address = 'http://192.168.0.64:6543'
+stalker_dummy_user_login = 'anima'
+stalker_dummy_user_pass = 'anima'
 local_cache_folder = '~/.cache/anima/'
 recent_file_name = 'recent_files'
 avid_media_file_path_storage = 'avid_media_file_path'

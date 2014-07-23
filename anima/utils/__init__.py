@@ -122,7 +122,7 @@ class StalkerThumbnailCache(object):
     """
 
     @classmethod
-    def get(cls, thumbnail_full_path):
+    def get(cls, thumbnail_full_path, login=None, password=None):
         """returns the file either from cache or from stalker server
         """
         import anima
@@ -134,18 +134,31 @@ class StalkerThumbnailCache(object):
         cache_path = os.path.expanduser(anima.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
-        url = anima.stalker_server_address + '/' + thumbnail_full_path
+        url = '%s/%s' % (anima.stalker_server_address, thumbnail_full_path)
+        login_url = '%s/login' % anima.stalker_server_address
 
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)
         logger.debug('url                   : %s' % url)
 
-        if not os.path.exists(cached_file_full_path):
+        if not os.path.exists(cached_file_full_path) and login and password:
             # download the file and put it on to the cache
+            import urllib
             import urllib2
+            import cookielib
 
-            response = urllib2.urlopen(url)
-            data = response.read()
+            cj = cookielib.CookieJar()
+            opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+            login_data = urllib.urlencode({
+                'login': login,
+                'password': password,
+                'submit': True
+            })
+            opener.open(login_url, login_data)
+
+            resp = opener.open(url)
+            data = resp.read()
+
             # put it in to a file
             # TODO: from header decide ascii or binary mode
             if not os.path.exists(cache_path):

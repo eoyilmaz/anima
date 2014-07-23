@@ -44,7 +44,7 @@ def clear_thumbnail(gview):
     scene.clear()
 
 
-def update_gview_with_task_thumbnail(task, gview):
+def update_gview_with_task_thumbnail(task, gview, login, password):
     """Updates the given QGraphicsView with the given Task thumbnail
 
     :param task: A
@@ -64,14 +64,20 @@ def update_gview_with_task_thumbnail(task, gview):
     full_path = None
     if task.thumbnail:
         # use the cache system to get the thumbnail
-        full_path = StalkerThumbnailCache.get(task.thumbnail.full_path)
+        full_path = StalkerThumbnailCache.get(
+            task.thumbnail.full_path,
+            login,
+            password
+        )
     else:
         logger.debug('there is no thumbnail')
         # try to get the thumbnail from parents
         for parent in task.parents:
             if parent.thumbnail:
                 full_path = StalkerThumbnailCache.get(
-                    parent.thumbnail.full_path
+                    parent.thumbnail.full_path,
+                    login,
+                    password
                 )
                 logger.debug('found parent thumbnail at: %s' % full_path)
                 break

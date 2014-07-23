@@ -1565,9 +1565,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the current task
         task = self.get_task()
         if task:
+            from anima import stalker_dummy_user_login, stalker_dummy_user_pass
             ui_utils.update_gview_with_task_thumbnail(
                 task,
-                self.thumbnail_graphicsView
+                self.thumbnail_graphicsView,
+                stalker_dummy_user_login,
+                stalker_dummy_user_pass
             )
 
     def upload_thumbnail_pushButton_clicked(self):
