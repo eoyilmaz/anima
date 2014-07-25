@@ -60,7 +60,7 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         "linux": {
             "ENV1": ["/mnt/Z/some/path1", "/mnt/Z/some/path2"]
         },
-        "darwin": {
+        "osx": {
             "ENV1": ["/Volumes/Z/some/path1", "/Volumes/Z/some/path2"]
         }
     },
@@ -71,7 +71,7 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         "linux": {
             "ENV1": ["/mnt/Z/some/other/path1", "/mnt/Z/some/other/path2"]
         },
-        "darwin": {
+        "osx": {
             "ENV1": ["/Volumes/Z/some/other/path1", "/Volumes/Z/some/other/path2"]
         }
     },
@@ -84,7 +84,7 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
             "ENV1": ["/mnt/Z/this/should/not/be/appended"],
             "ENV2": ["/mnt/Z/also/these/should/not/be/appended"]
         },
-        "darwin": {
+        "osx": {
             "ENV1": ["/Volumes/Z/this/should/not/be/appended"],
             "ENV2": ["/Volumes/Z/also/these/should/not/be/appended"]
         }
@@ -211,7 +211,7 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
             os.environ['ENV1']
         )
 
-    def test_env_variables_is_working_properly_in_darwin(self):
+    def test_env_variables_is_working_properly_in_osx(self):
         """testing if environment variables are properly defined by using the
         os name
         """

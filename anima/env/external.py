@@ -21,7 +21,7 @@ external_environments = {
             'linux': 'mudbox',
             'windows': 'mudbox.exe',
         },
-        'extension': '.mud',
+        'extensions': ['.mud'],
         'structure': [
             'Outputs',
         ]
@@ -29,7 +29,7 @@ external_environments = {
     #'ZBrush Project' : {
     #    'name': 'ZBrush Project',
     #    'icon': 'zbrush.png',
-    #    'extension': '.zpr',
+    #    'extensions': ['.zpr'],
     #    'structure': [
     #        'Outputs',
     #    ]
@@ -40,7 +40,7 @@ external_environments = {
         'executable': {
             'windows': 'zbrush.exe',
         },
-        'extension': '.ztl',
+        'extensions': ['.ztl'],
         'structure': [
             'Outputs',
         ]
@@ -56,20 +56,21 @@ class ExternalEnv(EnvironmentBase):
     environment by setting its file extension etc.
     """
 
-    def __init__(self, name, extension, structure=None, **kwargs):
+    def __init__(self, name, extensions, structure=None, **kwargs):
         """
 
         :param name: The name of this environment
-        :param extension: The extension of this environment
+        :param extensions: The extensions of this environment
         :param structure: The folder structure of this environment
         :return:
         """
+        super(ExternalEnv, self).__init__(name=name, extensions=extensions)
         self._name = None
-        self._extension = None
+        self._extensions = None
         self._structure = None
 
         self.name = self._validate_name(name)
-        self.extension = self._validate_extension(extension)
+        self.extensions = self._validate_extensions(extensions)
         self.structure = self._validate_structure(structure)
 
     def _validate_name(self, name):
@@ -78,10 +79,12 @@ class ExternalEnv(EnvironmentBase):
         :param name: the desired name
         :return: str
         """
-        if not isinstance(name, basestring):
-            raise TypeError('%s.name should be an instance of '
-                            'basestring, not %s' % (
-                self.__class__.__name__, name.__class__.__name__)
+        if not isinstance(name, str):
+            raise TypeError(
+                '%s.name should be an instance of str, not %s' % (
+                    self.__class__.__name__,
+                    name.__class__.__name__
+                )
             )
         return name
 
@@ -103,52 +106,64 @@ class ExternalEnv(EnvironmentBase):
         """
         self._name = self._validate_name(name)
 
-    def _validate_extension(self, extension):
-        """validates the given extension value
+    def _validate_extensions(self, extensions):
+        """validates the given extensions value
 
-        :param extension: the desired extension
+        :param extensions: the desired extensions
         :return: str
         """
-        if not isinstance(extension, basestring):
-            raise TypeError('%s.extension should be an instance of '
-                            'basestring, not %s' % (
-                self.__class__.__name__, extension.__class__.__name__)
+        if not hasattr(extensions, '__getitem__'):
+            raise TypeError(
+                '%s.extensions should be a list like object, not %s' % (
+                    self.__class__.__name__,
+                    extensions.__class__.__name__
+                )
             )
-        return self._format_extension(extension)
+
+        for extension in extensions:
+            if not isinstance(extension, str):
+                raise TypeError(
+                    'All elements in %s.extensions should be a str, not %s' % (
+                        self.__class__.__name__,
+                        extensions.__class__.__name__
+                    )
+                )
+            return self._format_extensions(extensions)
 
     @classmethod
-    def _format_extension(cls, extension):
+    def _format_extensions(cls, extensions):
         """formats the given extension
 
-        :param extension: a string containing the desired extension
+        :param extensions: a list of strings containing the desired extensions
         :return:
         """
-        if not extension.startswith('.'):
-            extension = '.' + extension
-        return extension
+        for i, extension in enumerate(extensions):
+            if not extension.startswith('.'):
+                extensions[i] = '.' + extension
+        return extensions
 
     @property
-    def extension(self):
+    def extensions(self):
         """the extension property getter
 
         :return: str
         """
-        return self._extension
+        return self._extensions
 
-    @extension.setter
-    def extension(self, extension):
+    @extensions.setter
+    def extensions(self, extensions):
         """the extension property setter
 
-        :param str extension: A string value for desired extension should
-          contain a value which starts with "."
+        :param list extensions: A list of string value for desired extension
+          should contain a value which starts with "."
         :return: None
         """
-        self._extension = self._validate_extension(extension)
+        self._extensions = self._validate_extensions(extensions)
 
     def _validate_structure(self, structure):
         """validates the given structure value
 
-        :param str structure: 
+        :param str structure:
         :return: str
         """
         if structure is None:
@@ -197,12 +212,12 @@ class ExternalEnv(EnvironmentBase):
                             'stalker.version.Version instance, not %s' %
                             version.__class__.__name__)
         version.update_paths()
-        version.extension = self.extension
+        version.extension = self.extensions[0]
         version.created_with = self.name
         logger.debug('version.absolute_full_path : %s' %
                      version.absolute_full_path)
         logger.debug('finished conforming version extension to: %s' %
-                     self.extension)
+                     self.extensions[0])
 
     def initialize_structure(self, version):
         """Initializes the environment folder structure
@@ -315,8 +330,8 @@ class ExternalEnvFactory(object):
             env_data = external_environments[env_name]
             env_names.append(
                 name_format
-                    .replace('%n', env_data['name'])
-                    .replace('%e', env_data['extension'])
+                .replace('%n', env_data['name'])
+                .replace('%e', env_data['extensions'][0])
             )
         return env_names
 
@@ -331,9 +346,8 @@ class ExternalEnvFactory(object):
         """
         if not isinstance(name, basestring):
             raise TypeError('"name" argument in %s.get_env() should be an '
-                            'instance of basestring, not %s' % (
-                cls.__name__, name.__class__.__name__
-            ))
+                            'instance of basestring, not %s' %
+                            (cls.__name__, name.__class__.__name__))
 
         # filter the name
         import re

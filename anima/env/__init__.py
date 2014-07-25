@@ -174,6 +174,10 @@ def discover_env_vars(env_name=''):
     # get the current os
     os_name = platform.system().lower()
 
+    # replace darwin with osx
+    if os_name == 'darwin':
+        os_name = 'osx'
+
     # get the keys
     # first get *
     def append_data_from(env_name_i):
