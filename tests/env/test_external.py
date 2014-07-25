@@ -7,8 +7,8 @@ import shutil
 import tempfile
 import os
 
-from stalker import (Version, Task, Project, Structure, StatusList, Repository,
-                     Status, FilenameTemplate)
+from stalker import (db, Version, Task, Project, Structure, StatusList,
+                     Repository, Status, FilenameTemplate)
 import unittest
 
 from anima.env.external import ExternalEnv, ExternalEnvFactory
@@ -21,6 +21,9 @@ class ExternalEnvTestCase(unittest.TestCase):
     def setUp(self):
         """set up the test
         """
+        db.setup()
+        db.init()
+
         self.temp_path = tempfile.mkdtemp()
         self.repo = Repository(
             name='Test Repository',
@@ -28,9 +31,10 @@ class ExternalEnvTestCase(unittest.TestCase):
             windows_path=self.temp_path,
             osx_path=self.temp_path
         )
-        self.status_new = Status(name='New', code='NEW')
-        self.status_wip = Status(name='Work In Progress', code='WIP')
-        self.status_cmpl = Status(name='Complete', code='CMPL')
+        self.status_new = Status.query.filter_by(code='NEW').first()
+        self.status_wip = Status.query.filter_by(code='WIP').first()
+        self.status_cmpl = Status.query.filter_by(code='CMPL').first()
+
         self.project_status_list = StatusList(
             target_entity_type='Project',
             name='Project Statuses',
@@ -55,15 +59,10 @@ class ExternalEnvTestCase(unittest.TestCase):
             repository=self.repo,
             structure=self.project_structure
         )
-        self.task_status_list = StatusList(
-            target_entity_type='Task',
-            name='Task Statuses',
-            statuses=[self.status_new, self.status_wip, self.status_cmpl]
-        )
+
         self.task = Task(
             name='Test Task',
-            project=self.project,
-            status_list=self.task_status_list
+            project=self.project
         )
         self.version = Version(
             task=self.task
@@ -71,10 +70,8 @@ class ExternalEnvTestCase(unittest.TestCase):
 
         self.kwargs = {
             'name': 'Photoshop',
-            'extension': 'psd',
-            'structure': [
-                'Outputs'
-            ]
+            'extensions': ['psd'],
+            'structure': ['Outputs']
         }
 
         self.external_env = ExternalEnv(**self.kwargs)
@@ -135,21 +132,21 @@ class ExternalEnvTestCase(unittest.TestCase):
         """testing if a TypeError will raised when the extension argument is
         skipped
         """
-        self.kwargs.pop('extension')
+        self.kwargs.pop('extensions')
         self.assertRaises(TypeError, ExternalEnv, **self.kwargs)
 
     def test_extension_argument_cannot_be_None(self):
         """testing if a TypeError will be raised when the extension argument is
         None
         """
-        self.kwargs['extension'] = None
+        self.kwargs['extensions'] = None
         self.assertRaises(TypeError, ExternalEnv, **self.kwargs)
 
     def test_extension_attribute_cannot_be_set_to_None(self):
         """testing if a TypeError will be raised when the extension attribute
         is set to None
         """
-        self.assertRaises(TypeError, setattr, self.external_env, 'extension', None)
+        self.assertRaises(TypeError, setattr, self.external_env, 'extensions', None)
 
     def test_extension_argument_should_be_a_string(self):
         """testing if a TypeError will be raised when the extension argument is
@@ -162,38 +159,38 @@ class ExternalEnvTestCase(unittest.TestCase):
         """testing if a TypeError will be raised when the extension attribute
         is set to a value other than a string
         """
-        self.assertRaises(TypeError, setattr, self.external_env, 'extension', 23)
+        self.assertRaises(TypeError, setattr, self.external_env, 'extensions', 23)
 
     def test_extension_argument_with_no_dots_is_working(self):
         """testing if extension argument accepts strings without a dot at the
         beginning
         """
-        self.kwargs['extension'] = 'psd'
+        self.kwargs['extensions'] = ['psd']
         external_env = ExternalEnv(**self.kwargs)
-        self.assertEqual('.psd', external_env.extension)
+        self.assertEqual(['.psd'], external_env.extensions)
 
     def test_extension_attribute_with_no_dots_is_working(self):
         """testing if extension attribute accepts strings without a dot at the
         beginning
         """
-        self.external_env.extension = 'psd'
-        self.assertEqual('.psd', self.external_env.extension)
+        self.external_env.extensions = ['psd']
+        self.assertEqual(['.psd'], self.external_env.extensions)
 
     def test_extension_argument_is_working_properly(self):
         """testing if the extension argument value is correctly passed to the
         extension attribute
         """
-        test_value = '.ztl'
-        self.kwargs['extension'] = test_value
+        test_value = ['.ztl']
+        self.kwargs['extensions'] = test_value
         external_env = ExternalEnv(**self.kwargs)
-        self.assertEqual(test_value, external_env.extension)
+        self.assertEqual(test_value, external_env.extensions)
 
     def test_extension_attribute_is_working_properly(self):
         """testing if the extension attribute value is correctly set
         """
-        test_value = '.ztl'
-        self.external_env.extension = test_value
-        self.assertEqual(test_value, self.external_env.extension)
+        test_value = ['.ztl']
+        self.external_env.extensions = test_value
+        self.assertEqual(test_value, self.external_env.extensions)
 
     def test_structure_argument_can_be_skipped(self):
         """testing if the structure argument can be skipped
@@ -265,14 +262,15 @@ class ExternalEnvTestCase(unittest.TestCase):
         test_value = ['Outputs', 'Inputs', 'cache']
         self.kwargs['structure'] = test_value
         external_env = ExternalEnv(**self.kwargs)
-        self.assertItemsEqual(test_value, external_env.structure)
+        self.assertEqual(sorted(test_value), sorted(external_env.structure))
 
     def test_structure_attribute_is_working_properly(self):
         """testing if the structure attribute value can be correctly updated
         """
         test_value = ['Outputs', 'Inputs', 'cache']
         self.external_env.structure = test_value
-        self.assertItemsEqual(test_value, self.external_env.structure)
+        self.assertEqual(sorted(test_value),
+                         sorted(self.external_env.structure))
 
     def test_conform_version_argument_accepts_Version_instances_only(self):
         """testing if a TypeError will be raised when the version argument in
@@ -286,7 +284,7 @@ class ExternalEnvTestCase(unittest.TestCase):
         environment extension correctly
         """
         self.assertNotEqual(self.version.extension, '.ztl')
-        external_env = ExternalEnv(name='ZBrush', extension='.ztl')
+        external_env = ExternalEnv(name='ZBrush', extensions=['.ztl'])
 
         external_env.conform(self.version)
         self.assertEqual(self.version.extension, '.ztl')
@@ -296,7 +294,7 @@ class ExternalEnvTestCase(unittest.TestCase):
         environment name
         """
         self.assertNotEqual(self.version.extension, '.ztl')
-        external_env = ExternalEnv(name='ZBrush', extension='.ztl')
+        external_env = ExternalEnv(name='ZBrush', extensions=['.ztl'])
 
         external_env.conform(self.version)
         self.assertEqual(self.version.extension, '.ztl')
@@ -335,7 +333,8 @@ class ExternalEnvTestCase(unittest.TestCase):
         initialize the structure
         """
         self.external_env.save_as(self.version)
-        self.assertEquals(self.external_env.extension, self.version.extension)
+        self.assertEquals(self.external_env.extensions[0],
+                          self.version.extension)
         for folder in self.external_env.structure:
             self.assertTrue(
                 os.path.exists(
@@ -380,7 +379,7 @@ class ExternalEnvTestCase(unittest.TestCase):
         db.setup({'sqlalchemy.url': 'sqlite:///:memory:'})
         db.DBSession.add(self.version)
         db.DBSession.commit()
-        self.assertIsNotNone(self.version.id)
+        self.assertTrue(self.version.id is not None)
         self.external_env.append_to_recent_files(self.version)
         last_version = self.external_env.get_last_version()
         self.assertEqual(last_version, self.version)
@@ -390,11 +389,18 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
     """tests ExternalEnvFactory class
     """
 
+    @classmethod
+    def setUpClass(cls):
+        """set up once
+        """
+        db.setup()
+        db.init()
+
     def test_get_env_names_method_will_return_all_environment_names_properly(self):
         """testing if ExternalEnvFactory.get_env_names() method will
         return all the environment names as a list of strings
         """
-        from anima.env.externalEnv import external_environments
+        from anima.env.external import external_environments
         expected_result = external_environments.keys()
         ext_env_factory = ExternalEnvFactory()
         result = ext_env_factory.get_env_names()
@@ -413,7 +419,7 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
         ]
         ext_env_factory = ExternalEnvFactory()
         result = ext_env_factory.get_env_names(name_format=name_format)
-        self.assertItemsEqual(expected_result, result)
+        self.assertEqual(sorted(expected_result), sorted(result))
 
     def test_get_env_method_name_argument_is_not_a_string(self):
         """testing if a TypeError will be raised when the name argument is not
@@ -442,15 +448,15 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
         #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush_tool = ext_env_factory.get_env('ZBrush')
-        self.assertIsInstance(zbrush_tool, ExternalEnv)
+        self.assertTrue(isinstance(zbrush_tool, ExternalEnv))
         self.assertEqual(zbrush_tool.name, 'ZBrush')
-        self.assertEqual(zbrush_tool.extension, '.ztl')
+        self.assertEqual(zbrush_tool.extensions, ['.ztl'])
         self.assertEqual(zbrush_tool.structure, ['Outputs'])
 
         mudbox = ext_env_factory.get_env('MudBox')
-        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertTrue(isinstance(mudbox, ExternalEnv))
         self.assertEqual(mudbox.name, 'MudBox')
-        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.extensions, ['.mud'])
         self.assertEqual(mudbox.structure, ['Outputs'])
 
     def test_get_env_method_will_return_desired_environment_even_with_complex_formats(self):
@@ -467,17 +473,17 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
         #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush = ext_env_factory.get_env('ZBrush (.ztl)',
-                                              name_format='%n (%e)')
-        self.assertIsInstance(zbrush, ExternalEnv)
+                                         name_format='%n (%e)')
+        self.assertTrue(isinstance(zbrush, ExternalEnv))
         self.assertEqual(zbrush.name, 'ZBrush')
-        self.assertEqual(zbrush.extension, '.ztl')
+        self.assertEqual(zbrush.extensions, ['.ztl'])
         self.assertEqual(zbrush.structure, ['Outputs'])
 
         mudbox = ext_env_factory.get_env('MudBox (.mud)',
                                          name_format='%n (%e)')
-        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertTrue(isinstance(mudbox, ExternalEnv))
         self.assertEqual(mudbox.name, 'MudBox')
-        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.extensions, ['.mud'])
         self.assertEqual(mudbox.structure, ['Outputs'])
 
     def test_get_env_method_will_return_desired_environment_even_with_custom_formats(self):
@@ -496,15 +502,15 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
         #self.assertEqual(photoshop.structure, ['Outputs'])
 
         zbrush = ext_env_factory.get_env('(.ztl) ZBrush',
-                                              name_format=name_format)
-        self.assertIsInstance(zbrush, ExternalEnv)
+                                         name_format=name_format)
+        self.assertTrue(isinstance(zbrush, ExternalEnv))
         self.assertEqual(zbrush.name, 'ZBrush')
-        self.assertEqual(zbrush.extension, '.ztl')
+        self.assertEqual(zbrush.extensions, ['.ztl'])
         self.assertEqual(zbrush.structure, ['Outputs'])
 
         mudbox = ext_env_factory.get_env('(.mud) MudBox',
                                          name_format=name_format)
-        self.assertIsInstance(mudbox, ExternalEnv)
+        self.assertTrue(isinstance(mudbox, ExternalEnv))
         self.assertEqual(mudbox.name, 'MudBox')
-        self.assertEqual(mudbox.extension, '.mud')
+        self.assertEqual(mudbox.extensions, ['.mud'])
         self.assertEqual(mudbox.structure, ['Outputs'])

@@ -482,8 +482,7 @@ class VersionCreatorTester(unittest.TestCase):
             dialog.takes_listWidget.currentItem().text()
         )
 
-    def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(
-            self):
+    def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(self):
         """testing if the takes_listWidget lists "Main" by default for a
         project with no tasks
         """
@@ -498,91 +497,22 @@ class VersionCreatorTester(unittest.TestCase):
             dialog.takes_listWidget.currentItem().text()
         )
 
-    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(self):
-        """testing if the takes_listWidget lists all the takes of the current
-        task versions
+    def test_tasks_treeView_tasks_are_sorted(self):
+        """testing if tasks in tasks_treeView are sorted according to their
+        names
         """
-        # create a test user
-        user1 = User(
-            name='Test User',
-            groups=[self.power_users_group],
-            login='tuser',
-            email='tuser@tusers.com',
-            password='secret'
-        )
-        db.DBSession.add(user1)
-        db.DBSession.commit()
+        item_model = self.dialog.tasks_treeView.model()
+        selection_model = self.dialog.tasks_treeView.selectionModel()
 
-        # no tasks for project 3
-        self.admin.projects.append(self.test_project1)
-        self.admin.projects.append(self.test_project1)
-        self.admin.projects.append(self.test_project1)
-        user1.projects.append(self.test_project1)
-        user1.projects.append(self.test_project1)
-        user1.projects.append(self.test_project1)
+        index = item_model.index(0, 0)
+        project1_item = item_model.itemFromIndex(index)
+        self.dialog.tasks_treeView.expand(index)
 
-        # login as user1
-        self.lsession.store_user(user1)
-        self.lsession.save()
+        task1_item = project1_item.child(0, 0)
+        self.assertEqual(task1_item.text(), self.test_task1.name)
 
-        dialog = version_creator.MainDialog()
-        # self.show_dialog(dialog)
-
-        # set the current item to task1
-        # get the corresponding item
-        items = dialog.tasks_treeView.findItems(
-            self.test_project1.name,
-            QtCore.Qt.MatchExactly,
-            0
-        )
-        self.assertTrue(len(items) > 0)
-        p1_item = items[0]
-        self.assertFalse(p1_item is None)
-
-        # get task1
-        t1_item = None
-        for i in range(p1_item.childCount()):
-             item = p1_item.child(i)
-             if item.text(0) == t1.name:
-                 t1_item = item
-                 break
-        self.assertFalse(t1_item is None)
-
-        dialog.tasks_treeView.setCurrentItem(item)
-
-        # now check if the takes_listWidget lists all the takes of the
-        # t1 versions
-        takes = ['Main', 'Take1', 'Take2']
-        self.assertEqual(
-            dialog.takes_listWidget.count(),
-            3
-        )
-
-        self.assertTrue(
-            dialog.takes_listWidget.item(0).text(),
-            'Main'
-        )
-
-        self.assertTrue(
-            dialog.takes_listWidget.item(1).text(),
-            'Take1'
-        )
-
-        self.assertTrue(
-            dialog.takes_listWidget.item(2).text(),
-            'Take2'
-        )
-
-    #def test_tasks_treeView_tasks_are_sorted(self):
-    #    """testing if tasks in tasks_treeView are sorted according to their
-    #    names
-    #    """
-
-    def test_takes_listWidget_lists_all_the_takes_of_the_current_task_versions(self):
-        """testing if the takes_listWidget lists all the takes of the current
-        task versions
-        """
-        self.fail('test is not implemented completely')
+        task2_item = project1_item.child(1, 0)
+        self.assertEqual(task2_item.text(), self.test_task2.name)
 
     def test_tasks_treeView_do_not_cause_a_segfault(self):
         """there was a bug causing a segfault
@@ -770,7 +700,7 @@ class VersionCreatorTester(unittest.TestCase):
     def test_takes_with_representations_shows_in_blue(self):
         """testing if takes with representations will be displayed in blue
         """
-                # select project 1 -> task1
+        # select project 1 -> task1
         item_model = self.dialog.tasks_treeView.model()
         selection_model = self.dialog.tasks_treeView.selectionModel()
 
@@ -792,5 +722,3 @@ class VersionCreatorTester(unittest.TestCase):
             color,
             QtGui.QColor(0, 0, 255)
         )
-
-        # self.show_dialog(self.dialog)
