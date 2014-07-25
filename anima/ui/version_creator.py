@@ -755,7 +755,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         # create the menu
-        menu = QtGui.QMenu()
+        menu = QtGui.QMenu()  # Open in browser
+        menu.addMenu('Open In Web Browser...')
+        menu.addSeparator()
 
         # Add Depends To menu
         depends = task.depends
@@ -783,11 +785,18 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         if selected_item:
             choice = selected_item.text()
-            task = selected_item.task
-            self.find_and_select_entity_item_in_treeView(
-                task,
-                self.tasks_treeView
-            )
+            if choice == 'Open In Web Browser...':
+                import webbrowser
+                webbrowser.open(
+                    '%s/tasks/%s/view' % (anima.stalker_server_address,
+                                          task.id)
+                )
+            else:
+                task = selected_item.task
+                self.find_and_select_entity_item_in_treeView(
+                    task,
+                    self.tasks_treeView
+                )
 
     def get_item_indices_containing_text(self, text, treeView):
         """returns the indexes of the item indices containing the given text
