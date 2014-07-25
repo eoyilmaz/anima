@@ -756,7 +756,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # create the menu
         menu = QtGui.QMenu()  # Open in browser
-        menu.addMenu('Open In Web Browser...')
+        menu.addAction('Open In Web Browser...')
         menu.addSeparator()
 
         # Add Depends To menu
