@@ -5619,14 +5619,17 @@ workspace -fr "shaders" "renderData/shaders";
         archived_version1_path = \
             os.path.join(project_path, 'scenes', self.version1.filename)
 
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
         archived_version4_path = \
-            os.path.join(project_path, 'scenes/refs', self.version4.filename)
+            os.path.join(project_path, archived_version4_unresolved_path)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
 
         # open the archived version1
-        pm.workspace.chdir(project_path)
+        pm.workspace.open(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have one reference
@@ -5636,6 +5639,10 @@ workspace -fr "shaders" "renderData/shaders";
         # and the path is matching to archived version4 path
         ref = all_refs[0]
         self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
 
     def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_to_the_same_file(self):
         """testing if the Archiver.flatten() is working properly for a scene
@@ -5665,14 +5672,17 @@ workspace -fr "shaders" "renderData/shaders";
         archived_version1_path = \
             os.path.join(project_path, 'scenes', self.version1.filename)
 
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
         archived_version4_path = \
-            os.path.join(project_path, 'scenes/refs', self.version4.filename)
+            os.path.join(project_path, archived_version4_unresolved_path)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
 
         # open the archived version1
-        pm.workspace.chdir(project_path)
+        pm.workspace.open(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have three references
@@ -5682,12 +5692,24 @@ workspace -fr "shaders" "renderData/shaders";
         # and the path is matching to archived version4 path
         ref = all_refs[0]
         self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
 
         ref = all_refs[1]
         self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
 
         ref = all_refs[2]
         self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
 
     def test_flatten_is_working_properly_with_multiple_level_of_references(self):
         """testing if the Archiver.flatten() is working properly for a scene
@@ -5727,15 +5749,21 @@ workspace -fr "shaders" "renderData/shaders";
         archived_version4_path = \
             os.path.join(project_path, 'scenes/refs', self.version4.filename)
 
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
         archived_version7_path = \
             os.path.join(project_path, 'scenes/refs', self.version7.filename)
+
+        archived_version7_unresolved_path = \
+            os.path.join('scenes/refs', self.version7.filename)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
         self.assertTrue(os.path.exists(archived_version7_path))
 
         # open the archived version1
-        pm.workspace.chdir(project_path)
+        pm.workspace.open(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have one reference
@@ -5745,10 +5773,18 @@ workspace -fr "shaders" "renderData/shaders";
         # and the path is matching to archived version4 path
         ref = all_refs[0]
         self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
 
         # check the deeper level references
         deeper_ref = pm.listReferences(parentReference=ref)[0]
         self.assertEqual(deeper_ref.path, archived_version7_path)
+        self.assertEqual(
+            deeper_ref.unresolvedPath(),
+            archived_version7_unresolved_path
+        )
 
     def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_with_multiple_level_of_references(self):
         """testing if the Archiver.flatten() is working properly for a scene
@@ -5787,19 +5823,28 @@ workspace -fr "shaders" "renderData/shaders";
         archived_version1_path = \
             os.path.join(project_path, 'scenes', self.version1.filename)
 
+        # version4
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
         archived_version4_path = \
-            os.path.join(project_path, 'scenes/refs', self.version4.filename)
+            os.path.join(project_path, archived_version4_unresolved_path)
+
+        # version7
+        archived_version7_unresolved_path = \
+            os.path.join('scenes/refs', self.version7.filename)
 
         archived_version7_path = \
-            os.path.join(project_path, 'scenes/refs', self.version7.filename)
+            os.path.join(project_path, archived_version7_unresolved_path)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
         self.assertTrue(os.path.exists(archived_version7_path))
 
         # open the archived version1
-        pm.workspace.chdir(project_path)
-        pm.openFile(archived_version1_path)
+        pm.workspace.open(project_path)
+        pm.newFile(force=True)
+        pm.openFile(archived_version1_path, force=True)
 
         # expect it to have three reference to the same file
         all_refs = pm.listReferences()
@@ -5810,25 +5855,61 @@ workspace -fr "shaders" "renderData/shaders";
         ref = all_refs[0]
         self.assertEqual(ref.path, archived_version4_path)
 
+        # check the unresolved path
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+
         # check the deeper level references
         deeper_ref = pm.listReferences(parentReference=ref)[0]
         self.assertEqual(deeper_ref.path, archived_version7_path)
+
+        # check the unresolved path
+        self.assertEqual(
+            deeper_ref.unresolvedPath(),
+            archived_version7_unresolved_path
+        )
 
         # 2nd
         ref = all_refs[1]
         self.assertEqual(ref.path, archived_version4_path)
 
+        # check the unresolved path
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+
         # check the deeper level references
         deeper_ref = pm.listReferences(parentReference=ref)[0]
         self.assertEqual(deeper_ref.path, archived_version7_path)
+
+        # check the unresolved path
+        self.assertEqual(
+            deeper_ref.unresolvedPath(),
+            archived_version7_unresolved_path
+        )
 
         # 3rd
         ref = all_refs[2]
         self.assertEqual(ref.path, archived_version4_path)
 
+        # check the unresolved path
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+
         # check the deeper level references
         deeper_ref = pm.listReferences(parentReference=ref)[0]
         self.assertEqual(deeper_ref.path, archived_version7_path)
+
+        # check the unresolved path
+        self.assertEqual(
+            deeper_ref.unresolvedPath(),
+            archived_version7_unresolved_path
+        )
 
     def test_flatten_is_working_properly_for_textures(self):
         """testing if the Archiver.flatten() is working properly for a scene
@@ -5855,14 +5936,14 @@ workspace -fr "shaders" "renderData/shaders";
         # open self.version1
         self.maya_env.open(self.version1, force=True)
 
-        current_workspace = pm.workspace.getcwd()
+        current_workspace = pm.workspace.path
 
         arch = Archiver()
         project_path = arch.flatten(self.version1.absolute_full_path)
         self.remove_these_files_buffer.append(project_path)
 
         # now check if the current workspace is intact
-        self.assertEqual(current_workspace, pm.workspace.getcwd())
+        self.assertEqual(current_workspace, pm.workspace.path)
 
     def test_archive_will_create_a_zip_file_from_the_given_directory(self):
         """testing if the Archiver.archive() will create a zip file and return

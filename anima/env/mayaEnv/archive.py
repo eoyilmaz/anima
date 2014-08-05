@@ -135,7 +135,7 @@ sourceimages/3dPaintTextures"""
         :param path: The path to the file which wanted to be flattened
         :return:
         """
-        current_workspace_path = pm.workspace.getcwd()
+        current_workspace_path = pm.workspace.path
 
         # create a new Default Project
         tempdir = tempfile.gettempdir()
@@ -149,7 +149,14 @@ sourceimages/3dPaintTextures"""
         original_file_name = os.path.basename(path)
         logger.debug('original_file_name: %s' % original_file_name)
 
+        # update the workspace
+        # do it as early as possible to be able to set unresolved paths
+        # correctly
+        pm.workspace.open(default_project_path)
+
         # open the given maya scene
+        # any references that uses relative paths will not work at this moment
+        # but hopefully we are using absolute paths in Anima
         pm.openFile(path, force=True, loadReferenceDepth='all')
 
         all_refs = pm.listReferences(recursive=True)
@@ -177,21 +184,26 @@ sourceimages/3dPaintTextures"""
                         c_ref.replaceWith(reference_resolution[c_ref.path])
 
                 # save it to the DefaultProject/scenes
-                new_ref_path = os.path.join(
-                    default_project_path,
+                new_ref_unresolved_path = os.path.join(
                     'scenes/refs',
                     os.path.basename(ref_path)
+                )
+                new_ref_path = os.path.join(
+                    default_project_path,
+                    new_ref_unresolved_path
                 )
                 logger.debug('new_ref_path: %s' % new_ref_path)
 
                 pm.saveAs(new_ref_path)
 
                 # add it to the reference_resolution
-                reference_resolution[ref_path] = new_ref_path
+                reference_resolution[ref_path] = new_ref_unresolved_path
 
             # re open the original file
             logger.debug('re-opening the original file at: %s' % path)
             pm.openFile(path, force=True)
+
+            logger.debug('reference_resolution: %s' % reference_resolution)
 
             # replace all first level references
             logger.debug('replacing references!')
@@ -209,9 +221,6 @@ sourceimages/3dPaintTextures"""
                         'no reference resolution for: %s' % original_ref_path
                     )
 
-        # update the workspace
-        pm.workspace.chdir(default_project_path)
-
         # and save it to the scenes folder of the default project
         pm.saveAs(
             os.path.join(default_project_path, 'scenes', original_file_name),
@@ -222,12 +231,7 @@ sourceimages/3dPaintTextures"""
         pm.newFile(force=True)
 
         # restore the current workspace
-        try:
-            pm.workspace.chdir(current_workspace_path)
-        except RuntimeError:
-            # the current_workspace_path is invalid
-            # no problem
-            pass
+        pm.workspace.open(current_workspace_path)
 
         return default_project_path
 
