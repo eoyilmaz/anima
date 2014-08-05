@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-"""Anima Previz Editor
+"""Anima Previs Editor
 """
 
 import os

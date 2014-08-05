@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import logging
 
 import os
 import shutil
@@ -19,6 +20,7 @@ from anima import utils
 from anima import publish
 from anima.env import to_os_independent_path
 from anima.env.mayaEnv import Maya
+from anima.env.mayaEnv.archive import Archiver
 
 
 class MayaTestBase(unittest.TestCase):
@@ -5445,3 +5447,465 @@ class PublisherTestCase(MayaTestBase):
         self.assertEqual(publishers_called, [])
         self.maya_env.save_as(v)
         self.assertEqual(publishers_called, [])
+
+
+class ArchiverTestCase(MayaTestBase):
+    """Tests the anima.env.mayaEnv.archive.Archiver class
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """setup once
+        """
+        cls.logger = logging.getLogger('anima.env.mayaEnv.archive')
+        cls.logger.setLevel(logging.DEBUG)
+
+    @classmethod
+    def tearDownClass(cls):
+        """clean up once
+        """
+        cls.logger = logging.getLogger('anima.env.mayaEnv.archive')
+        cls.logger.setLevel(logging.WARNING)
+
+    def test_create_default_project_will_create_a_folder(self):
+        """testing if the create_default_project will create a
+        default maya project structure and return the path
+        """
+        arch = Archiver()
+        tempdir = tempfile.gettempdir()
+
+        project_path = arch.create_default_project(tempdir)
+        self.remove_these_files_buffer.append(project_path)
+
+        self.assertTrue(os.path.exists(project_path))
+
+    def test_create_default_project_will_create_a_workspace_mel_file(self):
+        """testing if the create_default_project will create a
+        default maya project structure with a proper workspace.mel
+        """
+        arch = Archiver()
+        tempdir = tempfile.gettempdir()
+
+        project_path = arch.create_default_project(tempdir)
+        self.remove_these_files_buffer.append(project_path)
+
+        workspace_mel_path = os.path.join(project_path, 'workspace.mel')
+
+        self.assertTrue(os.path.exists(workspace_mel_path))
+
+    def test_create_default_project_workspace_mel_content_is_correct(self):
+        """testing if the content of the workspace.mel file is correct when the
+        create_default_project method is used.
+        """
+        arch = Archiver()
+        tempdir = tempfile.gettempdir()
+
+        project_path = arch.create_default_project(tempdir)
+        self.remove_these_files_buffer.append(project_path)
+
+        workspace_mel_path = os.path.join(project_path, 'workspace.mel')
+
+        with open(workspace_mel_path) as f:
+            content = f.readlines()
+
+        content = '\n'.join(content)
+
+        expected_result = """// Anima Archiver Default Project Definition
+
+workspace -fr "translatorData" "data";
+workspace -fr "offlineEdit" "scenes/edits";
+workspace -fr "renderData" "renderData";
+workspace -fr "scene" "scenes";
+workspace -fr "3dPaintTextures" "sourceimages/3dPaintTextures";
+workspace -fr "eps" "data";
+workspace -fr "OBJexport" "data";
+workspace -fr "mel" "scripts";
+workspace -fr "furShadowMap" "renderData/fur/furShadowMap";
+workspace -fr "particles" "cache/particles";
+workspace -fr "audio" "sound";
+workspace -fr "scripts" "scripts";
+workspace -fr "sound" "sound";
+workspace -fr "DXF_FBX export" "data";
+workspace -fr "furFiles" "renderData/fur/furFiles";
+workspace -fr "depth" "renderData/depth";
+workspace -fr "autoSave" "autosave";
+workspace -fr "furAttrMap" "renderData/fur/furAttrMap";
+workspace -fr "diskCache" "data";
+workspace -fr "fileCache" "cache/nCache";
+workspace -fr "ASS Export" "data";
+workspace -fr "FBX export" "data";
+workspace -fr "sourceImages" "sourceimages";
+workspace -fr "FBX" "data";
+workspace -fr "DAE_FBX export" "data";
+workspace -fr "movie" "movies";
+workspace -fr "Alembic" "data";
+workspace -fr "DAE_FBX" "data";
+workspace -fr "iprImages" "renderData/iprImages";
+workspace -fr "mayaAscii" "scenes";
+workspace -fr "furImages" "renderData/fur/furImages";
+workspace -fr "furEqualMap" "renderData/fur/furEqualMap";
+workspace -fr "illustrator" "data";
+workspace -fr "DXF_FBX" "data";
+workspace -fr "mayaBinary" "scenes";
+workspace -fr "move" "data";
+workspace -fr "images" "images";
+workspace -fr "fluidCache" "cache/nCache/fluid";
+workspace -fr "clips" "clips";
+workspace -fr "ASS" "data";
+workspace -fr "OBJ" "data";
+workspace -fr "templates" "assets";
+workspace -fr "shaders" "renderData/shaders";
+"""
+
+    def test_create_default_project_workspace_mel_already_exists(self):
+        """testing if no error will be raised when the workspace.mel file is
+        already there
+        """
+        arch = Archiver()
+        tempdir = tempfile.gettempdir()
+
+        # there should be no error to call it multiple times
+        project_path = arch.create_default_project(tempdir)
+        self.remove_these_files_buffer.append(project_path)
+
+        project_path = arch.create_default_project(tempdir)
+        project_path = arch.create_default_project(tempdir)
+
+    def test_flatten_is_working_properly_with_no_references(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with no references.
+        """
+        arch = Archiver()
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # the returned path should be a maya project directory
+        self.assertTrue(os.path.exists(path))
+
+        # there should be a workspace.mel file
+        self.assertTrue(os.path.exists(os.path.join(path, 'workspace.mel')))
+
+        # there should be a maya scene file under path/scenes with the same
+        # name of the source file
+        self.assertTrue(
+            os.path.exists(
+                os.path.join(
+                    path, 'scenes', self.version1.filename
+                )
+            )
+        )
+
+    def test_flatten_is_working_properly_with_only_one_level_of_references(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with only one level of references.
+        """
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 to it
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # now check if we have two files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(path, 'scenes', self.version1.filename)
+
+        archived_version4_path = \
+            os.path.join(path, 'scenes', self.version4.filename)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+
+        # open the archived version1
+        pm.workspace.chdir(path)
+        pm.openFile(archived_version1_path)
+
+        # expect it to have one reference
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 1)
+
+        # and the path is matching to archived version4 path
+        ref = all_refs[0]
+        self.assertEqual(ref.path, archived_version4_path)
+
+    def test_flatten_is_working_properly_with_only_one_level_of_multiple_references_to_the_same_file(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with only one level of multiple references to the same file.
+        """
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 more than once to it
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # now check if we have two files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(path, 'scenes', self.version1.filename)
+
+        archived_version4_path = \
+            os.path.join(path, 'scenes', self.version4.filename)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+
+        # open the archived version1
+        pm.workspace.chdir(path)
+        pm.openFile(archived_version1_path)
+
+        # expect it to have three references
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 3)
+
+        # and the path is matching to archived version4 path
+        ref = all_refs[0]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        ref = all_refs[1]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        ref = all_refs[2]
+        self.assertEqual(ref.path, archived_version4_path)
+
+    def test_flatten_is_working_properly_with_multiple_level_of_references(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with multiple levels of references.
+        """
+        # open self.version4
+        self.maya_env.open(self.version4, force=True)
+
+        # and reference self.version7 to it
+        self.maya_env.reference(self.version7)
+
+        # and save it
+        pm.saveFile()
+
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 to it
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # now check if we have two files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(path, 'scenes', self.version1.filename)
+
+        archived_version4_path = \
+            os.path.join(path, 'scenes', self.version4.filename)
+
+        archived_version7_path = \
+            os.path.join(path, 'scenes', self.version7.filename)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+        self.assertTrue(os.path.exists(archived_version7_path))
+
+        # open the archived version1
+        pm.workspace.chdir(path)
+        pm.openFile(archived_version1_path)
+
+        # expect it to have one reference
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 1)
+
+        # and the path is matching to archived version4 path
+        ref = all_refs[0]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        # check the deeper level references
+        deeper_ref = pm.listReferences(parentReference=ref)[0]
+        self.assertEqual(deeper_ref.path, archived_version7_path)
+
+    def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_with_multiple_level_of_references(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with multiple levels of references.
+        """
+        # open self.version4
+        self.maya_env.open(self.version4, force=True)
+
+        # and reference self.version7 to it
+        self.maya_env.reference(self.version7)
+
+        # and save it
+        pm.saveFile()
+
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 multiple times to it
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # now check if we have two files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(path, 'scenes', self.version1.filename)
+
+        archived_version4_path = \
+            os.path.join(path, 'scenes', self.version4.filename)
+
+        archived_version7_path = \
+            os.path.join(path, 'scenes', self.version7.filename)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+        self.assertTrue(os.path.exists(archived_version7_path))
+
+        # open the archived version1
+        pm.workspace.chdir(path)
+        pm.openFile(archived_version1_path)
+
+        # expect it to have three reference to the same file
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 3)
+
+        # and the path is matching to archived version4 path
+        # 1st
+        ref = all_refs[0]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        # check the deeper level references
+        deeper_ref = pm.listReferences(parentReference=ref)[0]
+        self.assertEqual(deeper_ref.path, archived_version7_path)
+
+        # 2nd
+        ref = all_refs[1]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        # check the deeper level references
+        deeper_ref = pm.listReferences(parentReference=ref)[0]
+        self.assertEqual(deeper_ref.path, archived_version7_path)
+
+        # 3rd
+        ref = all_refs[2]
+        self.assertEqual(ref.path, archived_version4_path)
+
+        # check the deeper level references
+        deeper_ref = pm.listReferences(parentReference=ref)[0]
+        self.assertEqual(deeper_ref.path, archived_version7_path)
+
+    def test_flatten_is_working_properly_for_textures(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with textures
+        """
+        self.fail('test is not implemented yet')
+
+    def test_flatten_is_working_properly_for_image_planes(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with image planes
+        """
+        self.fail('test is not implemented yet')
+
+    def test_flatten_is_working_properly_for_ass_files(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with Arnold Ass files
+        """
+        self.fail('test is not implemented yet')
+
+    def test_flatten_will_restore_the_current_workspace(self):
+        """testing if the Archiver.flatten() will restore the current workspace
+        path after it has finished flattening
+        """
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        current_workspace = pm.workspace.getcwd()
+
+        arch = Archiver()
+        path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(path)
+
+        # now check if the current workspace is intact
+        self.assertEqual(current_workspace, pm.workspace.getcwd())
+
+    def test_archive_will_create_a_zip_file_from_the_given_directory(self):
+        """testing if the Archiver.archive() will create a zip file and return
+        the path of it
+        """
+        arch = Archiver()
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
+
+        parent_path = os.path.dirname(project_path) + '/'
+
+        # create a list of paths
+        original_files = []
+        for current_dir_path, dir_names, file_names in os.walk(project_path):
+            for dir_name in dir_names:
+                original_files.append(
+                    os.path.join(
+                        current_dir_path,
+                        dir_name
+                    )[len(parent_path):] + '/'  # for dirs only
+                )
+            for file_name in file_names:
+                original_files.append(
+                    os.path.join(
+                        current_dir_path,
+                        file_name
+                    )[len(parent_path):]
+                )
+
+        # archive it
+        archive_path = arch.archive(project_path)
+        self.remove_these_files_buffer.append(archive_path)
+
+        self.assertTrue(os.path.exists(archive_path))
+
+        # and it is a valid zip file
+        import zipfile
+        with zipfile.ZipFile(archive_path) as z:
+            all_names = z.namelist()
+
+        self.assertEqual(
+            sorted(original_files),
+            sorted(all_names)
+        )

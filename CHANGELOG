@@ -2,6 +2,12 @@
 Changes
 =======
 
+0.1.11
+======
+
+* **New:** Added **Archiver** class to help flattening a maya scene to a
+  default maya project folder structure without importing the scene references.
+
 0.1.10
 ======
 
