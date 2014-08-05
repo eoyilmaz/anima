@@ -91,6 +91,7 @@ renderData/iprImages
 renderData/shaders
 scenes
 scenes/edits
+scenes/refs
 scripts
 sound
 sourceimages
@@ -178,7 +179,7 @@ sourceimages/3dPaintTextures"""
                 # save it to the DefaultProject/scenes
                 new_ref_path = os.path.join(
                     default_project_path,
-                    'scenes',
+                    'scenes/refs',
                     os.path.basename(ref_path)
                 )
                 logger.debug('new_ref_path: %s' % new_ref_path)

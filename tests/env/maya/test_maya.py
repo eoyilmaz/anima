@@ -262,8 +262,6 @@ class MayaTestBase(unittest.TestCase):
 
         # create the environment instance
         self.maya_env = Maya()
-        print('self.maya_env.use_progress_window: %s' %
-              self.maya_env.use_progress_window)
         self.maya_env.use_progress_window = False
 
         # asset2
@@ -5576,21 +5574,21 @@ workspace -fr "shaders" "renderData/shaders";
         with no references.
         """
         arch = Archiver()
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # the returned path should be a maya project directory
-        self.assertTrue(os.path.exists(path))
+        self.assertTrue(os.path.exists(project_path))
 
         # there should be a workspace.mel file
-        self.assertTrue(os.path.exists(os.path.join(path, 'workspace.mel')))
+        self.assertTrue(os.path.exists(os.path.join(project_path, 'workspace.mel')))
 
         # there should be a maya scene file under path/scenes with the same
         # name of the source file
         self.assertTrue(
             os.path.exists(
                 os.path.join(
-                    path, 'scenes', self.version1.filename
+                    project_path, 'scenes', self.version1.filename
                 )
             )
         )
@@ -5614,21 +5612,21 @@ workspace -fr "shaders" "renderData/shaders";
         # create an archiver
         arch = Archiver()
 
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # now check if we have two files under the path/scenes directory
         archived_version1_path = \
-            os.path.join(path, 'scenes', self.version1.filename)
+            os.path.join(project_path, 'scenes', self.version1.filename)
 
         archived_version4_path = \
-            os.path.join(path, 'scenes', self.version4.filename)
+            os.path.join(project_path, 'scenes/refs', self.version4.filename)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
 
         # open the archived version1
-        pm.workspace.chdir(path)
+        pm.workspace.chdir(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have one reference
@@ -5660,21 +5658,21 @@ workspace -fr "shaders" "renderData/shaders";
         # create an archiver
         arch = Archiver()
 
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # now check if we have two files under the path/scenes directory
         archived_version1_path = \
-            os.path.join(path, 'scenes', self.version1.filename)
+            os.path.join(project_path, 'scenes', self.version1.filename)
 
         archived_version4_path = \
-            os.path.join(path, 'scenes', self.version4.filename)
+            os.path.join(project_path, 'scenes/refs', self.version4.filename)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
 
         # open the archived version1
-        pm.workspace.chdir(path)
+        pm.workspace.chdir(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have three references
@@ -5719,25 +5717,25 @@ workspace -fr "shaders" "renderData/shaders";
         # create an archiver
         arch = Archiver()
 
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # now check if we have two files under the path/scenes directory
         archived_version1_path = \
-            os.path.join(path, 'scenes', self.version1.filename)
+            os.path.join(project_path, 'scenes', self.version1.filename)
 
         archived_version4_path = \
-            os.path.join(path, 'scenes', self.version4.filename)
+            os.path.join(project_path, 'scenes/refs', self.version4.filename)
 
         archived_version7_path = \
-            os.path.join(path, 'scenes', self.version7.filename)
+            os.path.join(project_path, 'scenes/refs', self.version7.filename)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
         self.assertTrue(os.path.exists(archived_version7_path))
 
         # open the archived version1
-        pm.workspace.chdir(path)
+        pm.workspace.chdir(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have one reference
@@ -5782,25 +5780,25 @@ workspace -fr "shaders" "renderData/shaders";
         # create an archiver
         arch = Archiver()
 
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # now check if we have two files under the path/scenes directory
         archived_version1_path = \
-            os.path.join(path, 'scenes', self.version1.filename)
+            os.path.join(project_path, 'scenes', self.version1.filename)
 
         archived_version4_path = \
-            os.path.join(path, 'scenes', self.version4.filename)
+            os.path.join(project_path, 'scenes/refs', self.version4.filename)
 
         archived_version7_path = \
-            os.path.join(path, 'scenes', self.version7.filename)
+            os.path.join(project_path, 'scenes/refs', self.version7.filename)
 
         self.assertTrue(os.path.exists(archived_version1_path))
         self.assertTrue(os.path.exists(archived_version4_path))
         self.assertTrue(os.path.exists(archived_version7_path))
 
         # open the archived version1
-        pm.workspace.chdir(path)
+        pm.workspace.chdir(project_path)
         pm.openFile(archived_version1_path)
 
         # expect it to have three reference to the same file
@@ -5860,8 +5858,8 @@ workspace -fr "shaders" "renderData/shaders";
         current_workspace = pm.workspace.getcwd()
 
         arch = Archiver()
-        path = arch.flatten(self.version1.absolute_full_path)
-        self.remove_these_files_buffer.append(path)
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
 
         # now check if the current workspace is intact
         self.assertEqual(current_workspace, pm.workspace.getcwd())
