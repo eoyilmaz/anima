@@ -273,4 +273,29 @@ sourceimages/3dPaintTextures"""
 
         :return:
         """
-        pass
+        # open the given path
+        # but do not load any references
+        pm.openFile(path, force=True, loadReferenceDepth='none')
+
+        from stalker import Version
+
+        # list all references
+        for ref in pm.listReferences():
+            ref_file_name = os.path.basename(ref.unresolvedPath())
+
+            # try to find a corresponding Stalker Version instance with it
+            version = Version.query\
+                .filter(Version.full_path.endswith(ref_file_name))\
+                .first()
+            if version:
+                # replace it
+                ref.replaceWith(version.absolute_full_path)
+                # leave it to anima.env.mayaEnv to replace the external paths
+
+        # finally replace absolute paths with repo relative paths
+        from anima.env.mayaEnv import Maya
+        m_env = Maya()
+        m_env.replace_external_paths()
+
+        # save the file over itself
+        pm.saveFile(force=True)

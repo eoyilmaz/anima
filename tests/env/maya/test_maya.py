@@ -5988,3 +5988,113 @@ workspace -fr "shaders" "renderData/shaders";
             sorted(original_files),
             sorted(all_names)
         )
+
+    def test_bind_to_original_will_bind_the_references_to_their_original_counter_part_in_the_repository(self):
+        """testing if bind_to_original will be able to switch first level
+        references with their original counter part in the repository
+        """
+        # open self.version4
+        self.maya_env.open(self.version4, force=True)
+
+        # and reference self.version7 to it
+        self.maya_env.reference(self.version7)
+
+        # and save it
+        pm.saveFile()
+
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 multiple times to it
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
+
+        # now check if we have two files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(project_path, 'scenes', self.version1.filename)
+
+        # version4
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
+        archived_version4_path = \
+            os.path.join(project_path, archived_version4_unresolved_path)
+
+        # version7
+        archived_version7_unresolved_path = \
+            os.path.join('scenes/refs', self.version7.filename)
+
+        archived_version7_path = \
+            os.path.join(project_path, archived_version7_unresolved_path)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+        self.assertTrue(os.path.exists(archived_version7_path))
+
+        # open the archived version1
+        pm.workspace.open(project_path)
+        pm.newFile(force=True)
+        pm.openFile(archived_version1_path, force=True)
+
+        # expect it to have three reference to the same file
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 3)
+
+        # check if the first level references are using the flattened files
+        self.assertEqual(
+            all_refs[0].unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+        self.assertEqual(
+            all_refs[1].unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+        self.assertEqual(
+            all_refs[2].unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+
+        # close the file
+        pm.newFile(force=True)
+
+        # now use bind to original to bind them to the originals
+        arch.bind_to_original(archived_version1_path)
+
+        # re-open the file and expect it to be bound to the originals
+        pm.openFile(archived_version1_path, force=True)
+
+        # list references
+        repo = self.version4.task.project.repository
+
+        all_refs = pm.listReferences()
+        version4_os_independent_path = \
+            self.version4.absolute_full_path.replace(
+                repo.path,
+                '$REPO%s/' % repo.id
+            )
+
+        self.assertEqual(
+            all_refs[0].unresolvedPath(),
+            version4_os_independent_path
+        )
+        self.assertEqual(
+            all_refs[1].unresolvedPath(),
+            version4_os_independent_path
+        )
+        self.assertEqual(
+            all_refs[2].unresolvedPath(),
+            version4_os_independent_path
+        )
