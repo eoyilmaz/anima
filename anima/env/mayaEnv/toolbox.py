@@ -103,21 +103,21 @@ def UI():
 
     color = Color()
 
-    if pm.dockControl("oyToolbox_dockControl", q=True, ex=True):
-        pm.deleteUI("oyToolbox_dockControl")
+    if pm.dockControl("toolbox_dockControl", q=True, ex=True):
+        pm.deleteUI("toolbox_dockControl")
 
-    if pm.window("oyToolbox_Window", q=True, ex=True):
-        pm.deleteUI("oyToolbox_Window", wnd=True)
+    if pm.window("toolbox_window", q=True, ex=True):
+        pm.deleteUI("toolbox_window", wnd=True)
 
-    oyToolbox_window = pm.window(
-        'oyToolbox_Window',
+    toolbox_window = pm.window(
+        'toolbox_window',
         wh=(width, height),
         title="Anima ToolBox v%s" % __version__
     )
 
     #the layout that holds the tabs
     main_formLayout = pm.formLayout(
-        'main_formLayout', nd=100, parent=oyToolbox_window
+        'main_formLayout', nd=100, parent=toolbox_window
     )
 
     main_tabLayout = pm.tabLayout(
@@ -143,6 +143,14 @@ def UI():
             rs=row_spacing
         )
         with general_columnLayout:
+            color.change()
+            pm.button(
+                'deleteAllSound_button', l="delete all sound",
+                c=RepeatedCallback(General.delete_all_sound),
+                ann="delete all sound",
+                bgc=color.color
+            )
+
             pm.button(
                 'displayHandlesOfSelectedObjects_button',
                 l="toggle handles of selected objects",
@@ -280,6 +288,7 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
             pm.button(
                 'fix_reference_paths_button',
                 l='Fix Reference Paths',
@@ -289,11 +298,13 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
             pm.button(
-                'deleteAllSound_button', l="delete all sound",
-                c=RepeatedCallback(General.delete_all_sound),
-                ann="delete all sound",
+                'archive_button',
+                l='Archive Current Scene',
+                c=RepeatedCallback(General.archive_current_scene),
+                ann='Creates a ZIP file containing the current scene and its'
+                    'references in a flat Maya default project folder '
+                    'structure',
                 bgc=color.color
             )
 
@@ -1138,15 +1149,15 @@ def UI():
         ]
     )
 
-    # pm.showWindow(oyToolbox_window)
-    # pm.window(oyToolbox_window, edit=True, w=width)
+    # pm.showWindow(toolbox_window)
+    # pm.window(toolbox_window, edit=True, w=width)
 
-    #print oyToolbox_window.name()
+    #print toolbox_window.name()
 
     dock_control = pm.dockControl(
-        "oyToolbox_dockControl",
-        l='oyToolbox v%s' % __version__,
-        content=oyToolbox_window,
+        "toolbox_dockControl",
+        l='toolbox v%s' % __version__,
+        content=toolbox_window,
         area="left",
         allowedArea=["left", "right"],
         width=width
@@ -1525,6 +1536,21 @@ class General(object):
     def archive_current_scene(cls):
         """archives the current scene
         """
+        # before doing anything ask it
+        response = pm.confirmDialog(
+            title='Do Archive?',
+            message='This will create a ZIP file containing\n'
+                    'the current scene and all its references\n'
+                    '\n'
+                    'Is that OK?',
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+        if response == 'No':
+            return
+
         import os
         import shutil
         import anima
@@ -1533,7 +1559,7 @@ class General(object):
         m_env = Maya()
         version = m_env.get_current_version()
         if version:
-            path = version.absolute_full_path()
+            path = version.absolute_full_path
             arch = Archiver()
             task = version.task
             if False:
@@ -1546,9 +1572,9 @@ class General(object):
             # append link file
             stalker_link_file_path = os.path.join(project_path,
                                                   'scenes/stalker_links.txt')
-            version_upload_link = '%s/versions/%s/view' % (
+            version_upload_link = '%s/tasks/%s/versions/list' % (
                 anima.stalker_server_external_address,
-                version.id
+                task.id
             )
             request_review_link = '%s/tasks/%s/view' % (
                 anima.stalker_server_external_address,
@@ -1567,9 +1593,13 @@ class General(object):
             # move the zip right beside the original version file
             shutil.move(zip_path, new_zip_path)
 
+            # re-open the current scene
+            m_env.open(version, force=True)
+
             # open the zip file in browser
             from anima.utils import open_browser_in_location
             open_browser_in_location(new_zip_path)
+
 
 
 class Modeling(object):
