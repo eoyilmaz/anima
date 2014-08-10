@@ -132,7 +132,7 @@ TODO :
 __version__ = "1.2.2"
 
 import pymel.core as pm
-from anima.env.mayaEnv import aux
+from anima.env.mayaEnv import auxiliary
 
 
 class PickedObject(object):
@@ -520,7 +520,7 @@ class PickedObject(object):
         # objects parent so that the keyframes of the object should not be altered
 
         self._stabilizer_parent = pm.nodetypes.DagNode(
-            aux.axial_correction_group(
+            auxiliary.axial_correction_group(
                 self._object,
                 to_parents_origin=True
             )
@@ -548,7 +548,7 @@ class PickedObject(object):
             return
 
         self._constrained_parent = pm.nodetypes.DagNode(
-            aux.axial_correction_group(self._stabilizer_parent))
+            auxiliary.axial_correction_group(self._stabilizer_parent))
         self._constrained_parent = pm.nodetypes.DagNode(
             pm.rename(self._constrained_parent,
                       self._object.name() + "_constrained_parent"))
@@ -876,23 +876,23 @@ class PickedObject(object):
             return
 
         pm.select(
-            aux.get_anim_curves(self._parent_constraint),
-            aux.get_anim_curves(self._stabilizer_parent)
+            auxiliary.get_anim_curves(self._parent_constraint),
+            auxiliary.get_anim_curves(self._stabilizer_parent)
         )
 
     def set_keyframe_colors(self):
         """sets the keyframe colors for the parentConstraint and stabilizerParent
         """
         # get all animCurves
-        animCurves = aux.concatenateLists(
-            aux.get_anim_curves(self._parent_constraint),
-            aux.get_anim_curves(self._stabilizer_parent))
+        animCurves = auxiliary.concatenateLists(
+            auxiliary.get_anim_curves(self._parent_constraint),
+            auxiliary.get_anim_curves(self._stabilizer_parent))
 
         color = [0, 1, 0] # green
 
         # set anim curve colors to green
         for animCurve in animCurves:
-            aux.set_anim_curve_color(animCurve, color)
+            auxiliary.set_anim_curve_color(animCurve, color)
 
     def delete_parent_key(self, frame):
         """deletes parent keyframes at the given keyframe

@@ -10,7 +10,7 @@ __version__ = "0.1.9"
 import pymel.core as pm
 import maya.mel as mel
 
-from anima.env.mayaEnv import aux, camera_tools
+from anima.env.mayaEnv import auxiliary, camera_tools
 
 
 __last_commands__ = []  # list of dictionaries
@@ -453,13 +453,13 @@ def UI():
             pm.button(
                 'oyAutoRivetFollicle_button',
                 l="auto rivet (Follicle)",
-                c=RepeatedCallback(aux.auto_rivet),
+                c=RepeatedCallback(auxiliary.auto_rivet),
                 ann="creates a rivet setup by using hair follicles",
                 bgc=color.color
             )
             pm.button('create_hair_from_curves_button',
                       l="Create Hair From Curves",
-                      c=RepeatedCallback(aux.hair_from_curves),
+                      c=RepeatedCallback(auxiliary.hair_from_curves),
                       ann="creates hair from curves",
                       bgc=color.color)
 
@@ -490,7 +490,7 @@ def UI():
                       bgc=color.color)
             pm.button('align_to_pole_vector_button',
                       l="Align To Pole Vector",
-                      c=RepeatedCallback(aux.align_to_pole_vector),
+                      c=RepeatedCallback(auxiliary.align_to_pole_vector),
                       ann="align to pole vector",
                       bgc=color.color)
 
@@ -501,7 +501,7 @@ def UI():
                       bgc=color.color)
             pm.button('export_blend_connections_button',
                       l="Export blend connections",
-                      c=RepeatedCallback(aux.export_blend_connections),
+                      c=RepeatedCallback(auxiliary.export_blend_connections),
                       ann="export blend connections",
                       bgc=color.color)
 
@@ -1688,7 +1688,7 @@ class Rigging(object):
     def axial_correction_group(cls):
         selection = pm.ls(sl=1)
         for item in selection:
-            aux.axial_correction_group(item)
+            auxiliary.axial_correction_group(item)
 
     @classmethod
     def create_axial_correction_group_for_clusters(cls):
@@ -2100,7 +2100,7 @@ class Render(object):
         pm.select(None)
         source = selection[0]
         target = selection[1]
-        aux.transfer_shaders(source, target)
+        auxiliary.transfer_shaders(source, target)
         pm.select(selection)
 
     @classmethod

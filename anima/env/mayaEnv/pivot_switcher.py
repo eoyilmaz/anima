@@ -33,7 +33,7 @@ TODO List :
 __version__ = "10.5.17"
 
 import pymel.core as pm
-from anima.env.mayaEnv import aux
+from anima.env.mayaEnv import auxiliary
 
 
 class PivotSwitcher(object):
@@ -42,7 +42,7 @@ class PivotSwitcher(object):
 
     def __init__(self, _object):
         # the object
-        self._object = aux.get_valid_dag_node(_object)
+        self._object = auxiliary.get_valid_dag_node(_object)
 
         assert (isinstance(self._object, pm.nodetypes.Transform))
 
@@ -61,7 +61,7 @@ class PivotSwitcher(object):
         # check if the object has pivotData attribute
         if self._object.hasAttr("pivotData"):
             # get the future pivot object
-            self._futurePivot = aux.get_valid_dag_node(
+            self._futurePivot = auxiliary.get_valid_dag_node(
                 pm.listConnections(
                     self._object.attr("pivotData.futurePivot")
                 )[0]
@@ -117,7 +117,7 @@ class PivotSwitcher(object):
         locator_name = self._object.name() + "_futurePivotLocator#"
 
         self._futurePivot = \
-            aux.get_valid_dag_node(pm.spaceLocator(n=locator_name))
+            auxiliary.get_valid_dag_node(pm.spaceLocator(n=locator_name))
 
         pm.parent(self._futurePivot, self._object)
 
@@ -270,7 +270,7 @@ def get_one_switcher():
     """
     for node in pm.ls(sl=True):
         try:
-            node = aux.get_valid_dag_node(node)
+            node = auxiliary.get_valid_dag_node(node)
 
             if node.type() == "transform":
                 my_pivot_switcher = PivotSwitcher(node)
