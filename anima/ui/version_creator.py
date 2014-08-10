@@ -788,8 +788,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if choice == 'Open In Web Browser...':
                 import webbrowser
                 webbrowser.open(
-                    '%s/tasks/%s/view' % (anima.stalker_server_address,
-                                          task.id)
+                    '%s/tasks/%s/view' % (
+                        anima.stalker_server_internal_address,
+                        task.id
+                    )
                 )
             else:
                 task = selected_item.task

@@ -157,7 +157,10 @@ sourceimages/3dPaintTextures"""
         # open the given maya scene
         # any references that uses relative paths will not work at this moment
         # but hopefully we are using absolute paths in Anima
-        pm.openFile(path, force=True, loadReferenceDepth='all')
+        #
+        # check if the scene is already open
+        if pm.sceneName() != path:
+            pm.openFile(path, force=True, loadReferenceDepth='all')
 
         all_refs = pm.listReferences(recursive=True)
         if len(all_refs):
@@ -203,7 +206,9 @@ sourceimages/3dPaintTextures"""
             logger.debug('re-opening the original file at: %s' % path)
             pm.openFile(path, force=True)
 
-            logger.debug('reference_resolution: %s' % reference_resolution)
+            logger.debug(
+                'reference_resolution: {0:s}'.format(reference_resolution)
+            )
 
             # replace all first level references
             logger.debug('replacing references!')

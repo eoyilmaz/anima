@@ -1,0 +1,679 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2012-2014, Anima Istanbul
+#
+# This module is part of anima-tools and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+"""
+Auxiliary Function
+
+v10.7.20
+
+Description :
+-------------
+The Python version of the original Mel script
+
+contains algorithms that I use often
+
+Version History :
+-----------------
+v10.7.20
+- added rivet
+
+v10.6.18
+- axial_correction_group now can correctly zero out joint transformations
+
+v10.5.17
+- modifications for Maya 2011 and PyMel 1.0.2
+
+v10.3.24
+- added functions to remove pasted from node names
+
+v10.2.16
+- fixed concatenateLists function
+
+v10.2.6:
+- concatenateLists is updated with a new and much faster method
+
+v10.1.30:
+- added: maintainMaximumBackup function
+- added: maximum_backup_count option to the backup_file function
+
+v10.1.13
+- updated: the validChars splitted in to two different strings now, to have one
+  set for file names and another set for valid characters in regular texts
+
+v10.1.5
+- added: get_backup_number, get_maximum_backup_number
+
+v10.1.4
+- embedded_numbers function now converts the input to str, to allow classes
+  to be sorted too
+
+v9.12.29
+- added getBackUpFiles
+- added invalid_character_remover
+
+v9.12.24
+- added backUpFile
+
+v9.12.23
+- added get_child_folders, get_child_files to easily and quickly get the files and
+  folders
+
+v9.11.20
+- added unFixWindowsPath to replace \\ with /
+
+v9.11.14
+- moved to new versioning scheme
+- axial_correction_group moved to this script
+
+v1.3.7
+- updated padNumber, it now uses zfill method of the python string object
+- updated fixWindowsPath, it now uses replace method of the python string
+  object
+
+v1.3.6
+- added fixWindowsPath which replaces / with \\
+
+v1.3.5
+- added string_conditioner to remove any unwanted characters
+- added tr_chars dict as a global variable
+
+v1.3.4
+- file_name_conditioner now uses multiple_replace to reduce code replication
+
+v1.3.3
+- added multiple_replace
+
+v1.3.2
+- fixed a bug in file_name_conditioner, where it was not accepting unicodes
+
+v1.3.1
+- fixed a rare bug in padNumber where an error occurs when the number to pad is
+  supplied as a string
+
+v1.3.0
+- added sort_strings_with_embedded_numbers
+
+v1.2.1
+- added __version__
+- createFolder now also creates all the intermediate directories
+
+v1.2.0
+- added :
+  file_name_conditioner
+  unique
+- moved the non-standar library imports to the functions those needs that
+  module
+
+v1.1.0
+- added:
+  getValidNode
+  getAnimCurves
+  setAnimCurveColor
+  concatenateList
+
+v1.0.0
+- initial working version
+
+"""
+
+
+import pymel.core as pm
+import maya.mel as mel
+
+
+__version__ = "v10.1.13"
+
+
+def get_valid_dag_node(node):
+    """returns a valid dag node even the input is string
+    """
+    import pymel.core as pm
+
+    try:
+        dagNode = pm.nodetypes.DagNode(node)
+    except pm.MayaNodeError:
+        print 'Error: no node named : %s' % node
+        return None
+
+    return dagNode
+
+
+def getValidNode(node):
+    """returns a valid PyNode even the input is string
+    """
+    import pymel.core as pm
+
+    try:
+        PyNode = pm.PyNode(node)
+    except pm.MayaNodeError:
+        print 'Error: no node named : %s' % node
+        return None
+
+    return PyNode
+
+
+def getAnimCurves(node):
+    """returns all the animation curves connected to the
+    given node
+    """
+
+    import pymel.core as pm
+
+    # list all connections to the node
+    connectedNodes = pm.listConnections(node)
+
+    animCurve = "animCurve"
+
+    returnList = list()
+
+    for cNode in connectedNodes:
+        if pm.nodeType(cNode)[0:len(animCurve)] == animCurve:
+            returnList.append(cNode)
+
+    return returnList
+
+
+def setAnimCurveColor(animCurve, color):
+    """sets animCurve color to color
+    """
+    animCurve = getValidNode(animCurve)
+
+    animCurve.setAttr("useCurveColor", True)
+    animCurve.setAttr("curveColor", color, type="double3")
+
+
+def axial_correction_group(obj,
+                           to_parents_origin=False,
+                           name_prefix="",
+                           name_postfix="_ACGroup#"):
+    """creates a new parent to zero out the transformations
+
+    if to_parents_origin is set to True, it doesn't zero outs the transformations
+    but creates a new parent at the same place of the original parent
+
+    returns the acGroup
+    """
+    import pymel.core as pm
+
+    obj = get_valid_dag_node(obj)
+
+    if name_postfix == "":
+        name_postfix = "_ACGroup#"
+
+    ac_group = pm.group(
+        em=True,
+        n=(name_prefix + obj.name() + name_postfix)
+    )
+
+    ac_group = pm.parent(ac_group, obj)[0]
+
+    pm.setAttr(ac_group + ".t", [0, 0, 0])
+    pm.setAttr(ac_group + ".r", [0, 0, 0])
+    pm.setAttr(ac_group + ".s", [1, 1, 1])
+
+    parent = pm.listRelatives(obj, p=True)
+    if len(parent) != 0:
+        pm.parent(ac_group, parent[0], a=True)
+    else:
+        pm.parent(ac_group, w=True)
+
+    if to_parents_origin:
+        pm.setAttr(ac_group + ".t", [0, 0, 0])
+        pm.setAttr(ac_group + ".r", [0, 0, 0])
+        pm.setAttr(ac_group + ".s", [1, 1, 1])
+
+    pm.parent(obj, ac_group, a=True)
+
+    # for joints also set the joint orient to zero
+    if isinstance(obj, pm.nodetypes.Joint):
+        # set the joint rotation and joint orient to zero
+        obj.setAttr('r', (0, 0, 0))
+        obj.setAttr('jo', (0, 0, 0))
+
+    return ac_group
+
+
+def goHome(node):
+    """sets all the transformations to zero
+    """
+    if node.attr('t').isSettable():
+        node.setAttr('t', (0, 0, 0))
+    if node.attr('r').isSettable():
+        node.setAttr('r', (0, 0, 0))
+    if node.attr('s').isSettable():
+        node.setAttr('s', (1, 1, 1))
+
+
+def rivet():
+    """the python version of the famous rivet setup from Bazhutkin
+    """
+    selection_list = pm.filterExpand(sm=32)
+
+    if selection_list is not None and len(selection_list) > 0:
+        size = len(selection_list)
+        if size != 2:
+            raise pm.MayaObjectError('No two edges selected')
+
+        edge1 = pm.PyNode(selection_list[0])
+        edge2 = pm.PyNode(selection_list[1])
+
+        edge1Index = edge1.indices()[0]
+        edge2Index = edge2.indices()[0]
+
+        shape = edge1.node()
+
+        cFME1 = pm.createNode('curveFromMeshEdge', n='rivetCurveFromMeshEdge#')
+        cFME1.setAttr('ihi', 1)
+        cFME1.setAttr('ei[0]', edge1Index)
+
+        cFME2 = pm.createNode('curveFromMeshEdge', n='rivetCurveFromMeshEdge#')
+        cFME2.setAttr('ihi', 1)
+        cFME2.setAttr('ei[0]', edge2Index)
+
+        loft = pm.createNode('loft', n='rivetLoft#')
+        loft.setAttr('ic', s=2)
+        loft.setAttr('u', 1)
+        loft.setAttr('rsn', 1)
+
+        pOSI = pm.createNode('pointOnSurfaceInfo',
+                             n='rivetPointOnSurfaceInfo#')
+        pOSI.setAttr('turnOnPercentage', 1)
+        pOSI.setAttr('parameterU', 0.5)
+        pOSI.setAttr('parameterV', 0.5)
+
+        loft.attr('os') >> pOSI.attr('is')
+        cFME1.attr('oc') >> loft.attr('ic[0]')
+        cFME2.attr('oc') >> loft.attr('ic[1]')
+        shape.attr('w') >> cFME1.attr('im')
+        shape.attr('w') >> cFME2.attr('im')
+    else:
+        selection_list = pm.filterExpand(sm=41)
+
+        if selection_list is not None and len(selection_list) > 0:
+            size = len(selection_list)
+            if size != 1:
+                raise pm.MayaObjectError('No one point selected')
+
+            point = pm.PyNode(selection_list[0])
+            shape = point.node()
+            u = float(point.name().split('][')[0].split('[')[1])
+            v = float(point.name().split('][')[1].split(']')[0])
+
+            pOSI = pm.createNode('pointOnSurfaceInfo',
+                                 n='rivetPointOnSurfaceInfo#')
+            pOSI.setAttr('turnOnPercentage', 0)
+            pOSI.setAttr('parameterU', u)
+            pOSI.setAttr('parameterV', v)
+            shape.attr('ws') >> pOSI.attr('is')
+        else:
+            raise pm.MayaObjectError('No edges or point selected')
+
+    locator = pm.spaceLocator(n='rivet#')
+    aimCons = pm.createNode('aimConstraint',
+                            p=locator,
+                            n=locator.name() + '_rivetAimConstraint#')
+    aimCons.setAttr('tg[0].tw', 1)
+    aimCons.setAttr('a', (0, 1, 0))
+    aimCons.setAttr('u', (0, 0, 1))
+    aimCons.setAttr('v', k=0)
+    aimCons.setAttr('tx', k=0)
+    aimCons.setAttr('ty', k=0)
+    aimCons.setAttr('tz', k=0)
+    aimCons.setAttr('rx', k=0)
+    aimCons.setAttr('ry', k=0)
+    aimCons.setAttr('rz', k=0)
+    aimCons.setAttr('sx', k=0)
+    aimCons.setAttr('sy', k=0)
+    aimCons.setAttr('sz', k=0)
+
+    pOSI.attr('position') >> locator.attr('translate')
+    pOSI.attr('n') >> aimCons.attr('tg[0].tt')
+    pOSI.attr('tv') >> aimCons.attr('wu')
+    aimCons.attr('crx') >> locator.attr('rx')
+    aimCons.attr('cry') >> locator.attr('ry')
+    aimCons.attr('crz') >> locator.attr('rz')
+
+    pm.select(locator)
+    return locator
+
+
+def auto_rivet():
+    """creates hair follicles around selection
+    """
+    sel_list = pm.ls(sl=1)
+
+    # the last selection is the mesh
+    objects = sel_list[:-1]
+    geo = sel_list[-1]
+
+    # get the closest point to the surface
+    geo_shape = geo.getShape()
+
+    follicles = []
+
+    for obj in objects:
+        # pivot point of the obj
+        pivot = obj.getRotatePivot(space='world')
+        uv = geo_shape.getUVAtPoint(pivot, space='world')
+
+        # create a hair follicle
+        follicle = pm.nt.Follicle()
+        follicles.append(follicle)
+        follicle.simulationMethod.set(0)
+        geo_shape.worldMatrix >> follicle.inputWorldMatrix
+        geo_shape.outMesh >> follicle.inputMesh
+        follicle.parameterU.set(uv[0])
+        follicle.parameterV.set(uv[1])
+
+        # parent the object to the follicles transform node
+        follicle_transform = follicle.getParent()
+
+        follicle.outTranslate >> follicle_transform.translate
+        follicle.outRotate >> follicle_transform.rotate
+
+        pm.parent(obj, follicle_transform)
+
+    return follicles
+
+
+def hair_from_curves():
+    """creates hairs from curves
+    """
+
+    selection_list = pm.ls(sl=1)
+
+    curves = []
+    curve_shapes = []
+
+    mesh = ""
+    mesh_shape = ""
+
+    for i in range(0, len(selection_list)):
+        shapes = pm.listRelatives(selection_list[i], s=True)
+        node_type = pm.nodeType(shapes[0])
+
+        if node_type == 'nurbsCurve':
+            curves.append(selection_list[i])
+            curve_shapes.append(shapes[0])
+        elif node_type == 'mesh':
+            mesh = selection_list[i]
+            mesh_shape = shapes[0]
+
+    do_output_curve = 1
+    hide_output_curve = 0
+
+    #create hair
+    hair_system = pm.createNode('hairSystem')
+    pm.connectAttr('time1.outTime', (hair_system + '.currentTime'))
+
+    hair_system_group = ""
+    hair_system_out_hair_group = ""
+    hair_system_parent = pm.listTransforms(hair_system)
+    if len(hair_system_parent) > 0:
+        hair_system_group = hair_system_parent[0] + "Follicles"
+        if not pm.objExists(hair_system_group):
+            hair_system_group = pm.group(em=1, name='hsysGroup')
+        if do_output_curve:
+            hair_system_out_hair_group = hair_system_parent[0] + "OutputCurves"
+            if not pm.objExists(hair_system_out_hair_group):
+                hair_system_out_hair_group = pm.group(em=1, name='hsysOutHairGroup')
+            if hide_output_curve:
+                pm.setAttr(hair_system_out_hair_group + '.visibility', False)
+
+    #create closestPointOnMesh to read the closest point parameter
+    cpom = pm.createNode('closestPointOnMesh')
+    pm.connectAttr((mesh_shape + '.worldMesh[0]'), (cpom + '.inMesh'))
+
+    num_of_curves = len(curves)
+
+    for i in range(0, num_of_curves):
+        dup_name = pm.duplicate(curves[i])
+        dup_shape = pm.listRelatives(dup_name[0], s=True)
+
+        first_cv_tra = pm.xform(q=True, ws=True, t=(curves[i] + '.cv[0'))
+
+        pm.setAttr(
+            (cpom + '.ip'),
+            (first_cv_tra[0], first_cv_tra[1], first_cv_tra[2]),
+            type="double3"
+        )
+
+        pu = pm.getAttr(cpom + '.r.u')
+        pv = pm.getAttr(cpom + '.r.v')
+
+        hair_curve_name_prefix = mesh + "Follicle"
+        naming_index = num_of_curves * int(pu * float(num_of_curves - 1) + 0.5) + int(pv * float(num_of_curves - 1) + 0.5)
+
+        new_name = hair_curve_name_prefix + str(naming_index)
+
+        #create follicle
+        hair = pm.createNode('follicle')
+        pm.setAttr(pu, hair + '.parameterU')
+        pm.setAttr(pv, hair + '.parameterV')
+
+        pm.connectAttr((curve_shapes[i] + '.worldSpace[0]'), (hair + '.sp'))
+
+        transforms = pm.listTransforms(hair)
+        hair_dag = transforms[0]
+
+        pm.connectAttr((mesh_shape + '.worldMatrix[0]'), (hair + '.inputWorldMatrix'))
+
+        pm.connectAttr((mesh_shape + '.outMesh'), (hair + '.inputMesh'))
+        current_uv_set = pm.polyUVSet(q=True, currentUVSet=mesh_shape)
+        pm.setAttr(current_uv_set[0], (hair + '.mapSetName'), type="string")
+
+        pm.connectAttr((hair + '.outTranslate'), (hair_dag + '.translate'))
+        pm.connectAttr((hair + '.outRotate'), (hair_dag + '.rotate'))
+        pm.setAttr((hair_dag + '.translate'), lock=True)
+        pm.setAttr((hair_dag + '.rotate'), lock=True)
+
+        pm.setAttr(hair + '.degree', 3)
+        pm.setAttr(hair + '.startDirection', 1)
+        pm.setAttr(hair + '.restPose', 3)
+
+        pm.parent(hair_system_group, relative=hair_dag)
+
+        pm.parent(hair_dag, absolute=curves[i])
+
+        pm.setAttr(hair + '.simulationMethod', 2)
+
+        #initHairCurveDisplay(curves[i], "start")
+
+        hair_index = i
+        pm.connectAttr(
+            (hair + '.outHair'),
+            (hair_system + '.inputHair[%f]' % hair_index)
+        )
+        pm.connectAttr(
+            (hair_system + '.inputHair[%f]' % hair_index),
+            (hair + '.currentPosition')
+        )
+
+        crv = dup_shape[0]
+        pm.connectAttr((hair + '.outCurve'), (crv + '.create'))
+        #initHairCurveDisplay(crv, "current")
+
+        transforms = pm.listTransforms(crv)
+        pm.parent(transforms[0], hair_system_out_hair_group, r=True)
+
+        pm.rename(hair_dag, new_name)
+
+    pm.select(hair_system, r=True)
+    mel.eval('displayHairCurves("current", true')
+
+    pm.delete(cpom)
+
+
+def align_to_pole_vector():
+    """aligns the object to the pole vector of the selected ikHandle
+    """
+    selection_list = pm.ls(sl=1)
+
+    ik_handle = ""
+    control_object = ""
+
+    for obj in selection_list:
+        if pm.nodeType(obj) == 'ikHandle':
+           ik_handle = obj
+        else:
+            control_object = obj
+
+    temp = pm.listConnections((ik_handle + '.startJoint'), s=1)
+    start_joint = temp[0]
+    start_joint_pos = pm.xform(start_joint, q=True, ws=True, t=True)
+
+    temp = pm.listConnections((ik_handle + '.endEffector'), s=1)
+    end_effector = temp[0]
+    pm.xform(
+        control_object,
+        ws=True,
+        t=(start_joint_pos[0], start_joint_pos[1], start_joint_pos[2])
+    )
+
+    pm.parent(control_object, end_effector)
+    pm.setAttr(control_object + '.r', 0, 0, 0)
+
+    pm.parent(control_object, w=True)
+
+
+def export_blend_connections():
+    """Exports the connection commands from selected objects to the blendShape
+    of another object. The resulted text file contains all the MEL scripts to
+    reconnect the objects to the blendShape node. So after exporting the
+    connection commands you can export the blendShape targets as another maya
+    file and delete them from the scene, thus your scene gets lite and loads
+    much more quickly.
+    """
+    selection_list = pm.ls(tr=1, sl=1, l=1)
+
+    dialog_return = pm.fileDialog2(cap="Save As", fm=0, ff='Text Files(*.txt)')
+
+    filename = dialog_return[0]
+    print filename
+
+    print "\n\nFiles written:\n---------------------------------------------\n"
+
+    with open(filename, 'w') as fileId:
+        for i in range(0, len(selection_list)):
+            shapes = pm.listRelatives(selection_list[i], s=True, f=True)
+
+            main_shape = ""
+            for j in range(0, len(shapes)):
+                if pm.getAttr(shapes[j] + '.intermediateObject') == 0:
+                    main_shape = shapes
+                    break
+            if main_shape == "":
+                main_shape = shapes[0]
+
+            con = pm.listConnections(main_shape, t="blendShape", c=1, s=1, p=1)
+
+            cmd = "connectAttr -f %s.worldMesh[0] %s;" % (
+                ''.join(map(str, main_shape)),
+                ''.join(map(str, con[0].name()))
+            )
+            print (cmd + "\n")
+            fileId.write("%s\n"%cmd)
+
+    print "\n------------------------------------------------------\n"
+    print ("filename: %s     ...done\n" % filename)
+
+
+def transfer_shaders(source, target):
+    """transfers shader from source to target
+    """
+    source_shape = source.getShape()
+    target_shape = target.getShape()
+
+    # get the shadingEngines
+    shading_engines = [shEn
+                       for shEn in source.getShape().inputs()
+                       if isinstance(shEn, pm.nodetypes.ShadingEngine)]
+
+    data_storage = []
+
+    # get the assigned faces
+    for shading_engine in shading_engines:
+        faces = pm.sets(shading_engine, q=1)
+        for faceGroup in faces:
+            str_face = str(faceGroup)
+            # replace the objectName
+            new_face = \
+                str_face.replace(source_shape.name(), target_shape.name())
+            data_storage.append((shading_engine.name(), new_face))
+
+    for data in data_storage:
+        shading_engine = data[0]
+        new_face = data[1]
+        pm.select(new_face)
+        # now assign the newFaces to the set
+        pm.sets(shading_engine, fe=1)
+
+
+def cam_to_chan(startFrame, endFrame):
+    """Exports maya camera to nuke
+
+    Select camera to export and call oyCam2Chan(startFrame, endFrame)
+
+
+    :param startFrame: start frame
+    :param endFrame: end frame
+    :return:
+    """
+    selection = pm.ls(sl=1)
+    chan_file = pm.fileDialog2(cap="Save", fm=0, ff="(*.chan)")[0]
+
+    camera = selection[0]
+
+    template = "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t" \
+               "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
+
+    lines = []
+
+    for i in range(startFrame, endFrame + 1):
+        pm.currentTime(i, e=True)
+
+        pos = pm.xform(camera, q=True, ws=True, t=True)
+        rot = pm.xform(camera, q=True, ws=True, ro=True)
+        vfv = pm.camera(camera, q=True, vfv=True)
+
+        lines.append(
+            template % {
+                'frame': i,
+                'posx': pos[0],
+                'posy': pos[1],
+                'posz': pos[2],
+                'rotx': rot[0],
+                'roty': rot[1],
+                'rotz': rot[2],
+                'vfv': vfv
+            }
+        )
+
+    with open(chan_file, 'w') as f:
+        f.writelines('\n'.join(lines))
+
+
+def benchmark(iter_cnt):
+    """benchmarks playback rate
+
+    :param iter_cnt: Count of iteration
+    """
+    import time
+
+    start = pm.playbackOptions(q=1, min=1)
+    stop = pm.playbackOptions(q=1, max=1)
+
+    start_time = time.time()
+
+    for j in range(iter_cnt):
+        for i in range(start, stop + 1):
+            pm.currentTime(e=i)
+
+    total_time = time.time() - start_time
+    print("------------------------------")
+    print("BenchmarkTime : %s" % total_time)
+    print("Total iterCnt : %s" % iter_cnt)
+    print("Average FPS   : %s" % ((stop - start) * iter_cnt / total_time))
+
