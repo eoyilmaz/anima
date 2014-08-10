@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.env.mayaEnv.camera_tools import cam_to_chan
 
 __version__ = "0.1.9"
 
@@ -2331,7 +2332,7 @@ class Animation(object):
     def cam_2_chan(cls, startButton, endButton):
         start = int(pm.textField(startButton, q=True, tx=True))
         end = int(pm.textField(endButton, q=True, tx=True))
-        aux.cam_to_chan(start, end)
+        cam_to_chan(start, end)
 
     @classmethod
     def create_alembic_command(cls):

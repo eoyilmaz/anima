@@ -3,121 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-"""
-Auxiliary Function
-
-v10.7.20
-
-Description :
--------------
-The Python version of the original Mel script
-
-contains algorithms that I use often
-
-Version History :
------------------
-v10.7.20
-- added rivet
-
-v10.6.18
-- axial_correction_group now can correctly zero out joint transformations
-
-v10.5.17
-- modifications for Maya 2011 and PyMel 1.0.2
-
-v10.3.24
-- added functions to remove pasted from node names
-
-v10.2.16
-- fixed concatenateLists function
-
-v10.2.6:
-- concatenateLists is updated with a new and much faster method
-
-v10.1.30:
-- added: maintainMaximumBackup function
-- added: maximum_backup_count option to the backup_file function
-
-v10.1.13
-- updated: the validChars splitted in to two different strings now, to have one
-  set for file names and another set for valid characters in regular texts
-
-v10.1.5
-- added: get_backup_number, get_maximum_backup_number
-
-v10.1.4
-- embedded_numbers function now converts the input to str, to allow classes
-  to be sorted too
-
-v9.12.29
-- added getBackUpFiles
-- added invalid_character_remover
-
-v9.12.24
-- added backUpFile
-
-v9.12.23
-- added get_child_folders, get_child_files to easily and quickly get the files and
-  folders
-
-v9.11.20
-- added unFixWindowsPath to replace \\ with /
-
-v9.11.14
-- moved to new versioning scheme
-- axial_correction_group moved to this script
-
-v1.3.7
-- updated padNumber, it now uses zfill method of the python string object
-- updated fixWindowsPath, it now uses replace method of the python string
-  object
-
-v1.3.6
-- added fixWindowsPath which replaces / with \\
-
-v1.3.5
-- added string_conditioner to remove any unwanted characters
-- added tr_chars dict as a global variable
-
-v1.3.4
-- file_name_conditioner now uses multiple_replace to reduce code replication
-
-v1.3.3
-- added multiple_replace
-
-v1.3.2
-- fixed a bug in file_name_conditioner, where it was not accepting unicodes
-
-v1.3.1
-- fixed a rare bug in padNumber where an error occurs when the number to pad is
-  supplied as a string
-
-v1.3.0
-- added sort_strings_with_embedded_numbers
-
-v1.2.1
-- added __version__
-- createFolder now also creates all the intermediate directories
-
-v1.2.0
-- added :
-  file_name_conditioner
-  unique
-- moved the non-standar library imports to the functions those needs that
-  module
-
-v1.1.0
-- added:
-  getValidNode
-  getAnimCurves
-  setAnimCurveColor
-  concatenateList
-
-v1.0.0
-- initial working version
-
-"""
-
 
 import pymel.core as pm
 import maya.mel as mel
@@ -132,15 +17,15 @@ def get_valid_dag_node(node):
     import pymel.core as pm
 
     try:
-        dagNode = pm.nodetypes.DagNode(node)
+        dag_node = pm.nodetypes.DagNode(node)
     except pm.MayaNodeError:
         print 'Error: no node named : %s' % node
         return None
 
-    return dagNode
+    return dag_node
 
 
-def getValidNode(node):
+def get_valid_node(node):
     """returns a valid PyNode even the input is string
     """
     import pymel.core as pm
@@ -154,34 +39,31 @@ def getValidNode(node):
     return PyNode
 
 
-def getAnimCurves(node):
+def get_anim_curves(node):
     """returns all the animation curves connected to the
     given node
     """
-
     import pymel.core as pm
 
     # list all connections to the node
-    connectedNodes = pm.listConnections(node)
+    connected_nodes = pm.listConnections(node)
 
-    animCurve = "animCurve"
+    anim_curve = "animCurve"
 
-    returnList = list()
+    return_list = []
+    for cNode in connected_nodes:
+        if pm.nodeType(cNode)[0:len(anim_curve)] == anim_curve:
+            return_list.append(cNode)
 
-    for cNode in connectedNodes:
-        if pm.nodeType(cNode)[0:len(animCurve)] == animCurve:
-            returnList.append(cNode)
-
-    return returnList
+    return return_list
 
 
-def setAnimCurveColor(animCurve, color):
+def set_anim_curve_color(anim_curve, color):
     """sets animCurve color to color
     """
-    animCurve = getValidNode(animCurve)
-
-    animCurve.setAttr("useCurveColor", True)
-    animCurve.setAttr("curveColor", color, type="double3")
+    anim_curve = get_valid_node(anim_curve)
+    anim_curve.setAttr("useCurveColor", True)
+    anim_curve.setAttr("curveColor", color, type="double3")
 
 
 def axial_correction_group(obj,
@@ -190,10 +72,11 @@ def axial_correction_group(obj,
                            name_postfix="_ACGroup#"):
     """creates a new parent to zero out the transformations
 
-    if to_parents_origin is set to True, it doesn't zero outs the transformations
-    but creates a new parent at the same place of the original parent
+    if to_parents_origin is set to True, it doesn't zero outs the
+    transformations but creates a new parent at the same place of the original
+    parent
 
-    returns the acGroup
+    :returns: pymel.core.nodeTypes.Transform
     """
     import pymel.core as pm
 
@@ -235,7 +118,7 @@ def axial_correction_group(obj,
     return ac_group
 
 
-def goHome(node):
+def go_home(node):
     """sets all the transformations to zero
     """
     if node.attr('t').isSettable():
@@ -381,7 +264,6 @@ def auto_rivet():
 def hair_from_curves():
     """creates hairs from curves
     """
-
     selection_list = pm.ls(sl=1)
 
     curves = []
@@ -611,50 +493,6 @@ def transfer_shaders(source, target):
         pm.sets(shading_engine, fe=1)
 
 
-def cam_to_chan(startFrame, endFrame):
-    """Exports maya camera to nuke
-
-    Select camera to export and call oyCam2Chan(startFrame, endFrame)
-
-
-    :param startFrame: start frame
-    :param endFrame: end frame
-    :return:
-    """
-    selection = pm.ls(sl=1)
-    chan_file = pm.fileDialog2(cap="Save", fm=0, ff="(*.chan)")[0]
-
-    camera = selection[0]
-
-    template = "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t" \
-               "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
-
-    lines = []
-
-    for i in range(startFrame, endFrame + 1):
-        pm.currentTime(i, e=True)
-
-        pos = pm.xform(camera, q=True, ws=True, t=True)
-        rot = pm.xform(camera, q=True, ws=True, ro=True)
-        vfv = pm.camera(camera, q=True, vfv=True)
-
-        lines.append(
-            template % {
-                'frame': i,
-                'posx': pos[0],
-                'posy': pos[1],
-                'posz': pos[2],
-                'rotx': rot[0],
-                'roty': rot[1],
-                'rotz': rot[2],
-                'vfv': vfv
-            }
-        )
-
-    with open(chan_file, 'w') as f:
-        f.writelines('\n'.join(lines))
-
-
 def benchmark(iter_cnt):
     """benchmarks playback rate
 
@@ -676,4 +514,3 @@ def benchmark(iter_cnt):
     print("BenchmarkTime : %s" % total_time)
     print("Total iterCnt : %s" % iter_cnt)
     print("Average FPS   : %s" % ((stop - start) * iter_cnt / total_time))
-

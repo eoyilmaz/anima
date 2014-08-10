@@ -876,8 +876,8 @@ class PickedObject(object):
             return
 
         pm.select(
-            aux.getAnimCurves(self._parent_constraint),
-            aux.getAnimCurves(self._stabilizer_parent)
+            aux.get_anim_curves(self._parent_constraint),
+            aux.get_anim_curves(self._stabilizer_parent)
         )
 
     def set_keyframe_colors(self):
@@ -885,14 +885,14 @@ class PickedObject(object):
         """
         # get all animCurves
         animCurves = aux.concatenateLists(
-            aux.getAnimCurves(self._parent_constraint),
-            aux.getAnimCurves(self._stabilizer_parent))
+            aux.get_anim_curves(self._parent_constraint),
+            aux.get_anim_curves(self._stabilizer_parent))
 
         color = [0, 1, 0] # green
 
         # set anim curve colors to green
         for animCurve in animCurves:
-            aux.setAnimCurveColor(animCurve, color)
+            aux.set_anim_curve_color(animCurve, color)
 
     def delete_parent_key(self, frame):
         """deletes parent keyframes at the given keyframe

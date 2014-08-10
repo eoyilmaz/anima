@@ -164,3 +164,47 @@ def camera_focus_plane_tool():
     frame.setAttr('sx', lock=True, keyable=False)
     frame.setAttr('sy', lock=True, keyable=False)
     frame.setAttr('sz', lock=True, keyable=False)
+
+
+def cam_to_chan(start_frame, end_frame):
+    """Exports maya camera to nuke
+
+    Select camera to export and call cam2Chan(startFrame, endFrame)
+
+
+    :param start_frame: start frame
+    :param end_frame: end frame
+    :return:
+    """
+    selection = pm.ls(sl=1)
+    chan_file = pm.fileDialog2(cap="Save", fm=0, ff="(*.chan)")[0]
+
+    camera = selection[0]
+
+    template = "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t" \
+               "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
+
+    lines = []
+
+    for i in range(start_frame, end_frame + 1):
+        pm.currentTime(i, e=True)
+
+        pos = pm.xform(camera, q=True, ws=True, t=True)
+        rot = pm.xform(camera, q=True, ws=True, ro=True)
+        vfv = pm.camera(camera, q=True, vfv=True)
+
+        lines.append(
+            template % {
+                'frame': i,
+                'posx': pos[0],
+                'posy': pos[1],
+                'posz': pos[2],
+                'rotx': rot[0],
+                'roty': rot[1],
+                'rotz': rot[2],
+                'vfv': vfv
+            }
+        )
+
+    with open(chan_file, 'w') as f:
+        f.writelines('\n'.join(lines))
