@@ -1567,8 +1567,7 @@ class General(object):
                 assert(isinstance(version, Version))
                 assert(isinstance(task, Task))
             project_name = version.nice_name
-            project_path = arch.flatten_external(path,
-                                                 project_name=project_name)
+            project_path = arch.flatten(path, project_name=project_name)
 
             # append link file
             stalker_link_file_path = os.path.join(project_path,
