@@ -1213,7 +1213,24 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
                 if new_path != orig_path:
                     logger.info("with: %s" % new_path)
-                    node.setAttr(attr_name, new_path)
+
+                    # check if it has any incoming connections
+                    inputs = node.attr(attr_name).inputs(p=1)
+                    if len(inputs):
+                        # it has incoming connections
+                        # so set the other side
+                        try:
+                            inputs[0].set(new_path)
+                        except RuntimeError:
+                            pass
+                    else:
+                        try:
+                            # do it normally
+                            node.setAttr(attr_name, new_path)
+                        except RuntimeError:
+                            # it is locked or something
+                            # skip it
+                            pass
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path
