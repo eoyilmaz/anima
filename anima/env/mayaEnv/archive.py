@@ -8,8 +8,6 @@ import tempfile
 import logging
 import re
 
-import pymel.core as pm
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
@@ -126,122 +124,6 @@ sourceimages/3dPaintTextures"""
 
     @classmethod
     def flatten(cls, path, project_name='DefaultProject'):
-        """Flattens the given maya scene in to a new default project and
-        returns the project path.
-
-        It will also flatten all the referenced files, textures, image planes
-        and Arnold Scene Source files.
-
-        :param path: The path to the file which wanted to be flattened
-        :return:
-        """
-        current_workspace_path = pm.workspace.path
-
-        # create a new Default Project
-        tempdir = tempfile.gettempdir()
-
-        default_project_path = cls.create_default_project(path=tempdir,
-                                                          name=project_name)
-        logger.debug(
-            'creating new default project at: %s' % default_project_path
-        )
-
-        original_file_name = os.path.basename(path)
-        logger.debug('original_file_name: %s' % original_file_name)
-
-        # update the workspace
-        # do it as early as possible to be able to set unresolved paths
-        # correctly
-        pm.workspace.open(default_project_path)
-
-        # open the given maya scene
-        # any references that uses relative paths will not work at this moment
-        # but hopefully we are using absolute paths in Anima
-        #
-        # check if the scene is already open
-        if pm.sceneName() != path:
-            pm.openFile(path, force=True, loadReferenceDepth='all')
-
-        all_refs = pm.listReferences(recursive=True)
-        if len(all_refs):
-            # There are references
-            # so copy them all starting from the deepest one
-            logger.debug('There are references in the original file!')
-
-            # create a reference resolution
-            logger.debug('Creating reference resolution')
-            reference_resolution = {}
-
-            all_ref_paths = [ref.path for ref in all_refs]
-
-            for ref_path in reversed(all_ref_paths):
-                # if this reference is already resolved skip it
-                if ref_path in reference_resolution:
-                    continue
-
-                pm.openFile(ref_path, force=True, loadReferenceDepth='all')
-                # check their first level references
-                # they should be on the reference resolution list
-                for c_ref in pm.listReferences():
-                    if c_ref.path in reference_resolution:
-                        c_ref.replaceWith(reference_resolution[c_ref.path])
-
-                # save it to the DefaultProject/scenes
-                new_ref_unresolved_path = os.path.join(
-                    'scenes/refs',
-                    os.path.basename(ref_path)
-                )
-                new_ref_path = os.path.join(
-                    default_project_path,
-                    new_ref_unresolved_path
-                )
-                logger.debug('new_ref_path: %s' % new_ref_path)
-
-                pm.saveAs(new_ref_path)
-
-                # add it to the reference_resolution
-                reference_resolution[ref_path] = new_ref_unresolved_path
-
-            # re open the original file
-            logger.debug('re-opening the original file at: %s' % path)
-            pm.openFile(path, force=True)
-
-            logger.debug(
-                'reference_resolution: {0:s}'.format(reference_resolution)
-            )
-
-            # replace all first level references
-            logger.debug('replacing references!')
-            for c_ref in pm.listReferences():
-                original_ref_path = c_ref.path
-                if original_ref_path in reference_resolution:
-                    resolved_ref_path = reference_resolution[c_ref.path]
-                    logger.debug(
-                        'found reference: %s -> %s' %
-                        (original_ref_path, resolved_ref_path)
-                    )
-                    c_ref.replaceWith(resolved_ref_path)
-                else:
-                    logger.devug(
-                        'no reference resolution for: %s' % original_ref_path
-                    )
-
-        # and save it to the scenes folder of the default project
-        pm.saveAs(
-            os.path.join(default_project_path, 'scenes', original_file_name),
-            type='mayaAscii'
-        )
-
-        # renew the scene
-        pm.newFile(force=True)
-
-        # restore the current workspace
-        pm.workspace.open(current_workspace_path)
-
-        return default_project_path
-
-    @classmethod
-    def flatten_external(cls, path, project_name='DefaultProject'):
         """Flattens the given maya scene in to a new default project externally
         that is without opening it and returns the project path.
 
@@ -254,13 +136,16 @@ sourceimages/3dPaintTextures"""
         # create a new Default Project
         tempdir = tempfile.gettempdir()
 
-        default_project_path = cls.create_default_project(path=tempdir,
-                                                          name=project_name)
+        default_project_path = \
+            cls.create_default_project(path=tempdir, name=project_name)
+
         logger.debug(
             'creating new default project at: %s' % default_project_path
         )
 
-        ref_paths = cls._move_file_and_fix_references(path, default_project_path)
+        ref_paths = \
+            cls._move_file_and_fix_references(path, default_project_path)
+
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
             new_ref_paths = \
@@ -379,29 +264,32 @@ sourceimages/3dPaintTextures"""
 
         :return:
         """
-        # open the given path
-        # but do not load any references
-        pm.openFile(path, force=True, loadReferenceDepth='none')
+        # get all reference paths
+        with open(path) as f:
+            data = f.read()
 
-        from stalker import Version
-
-        # list all references
-        for ref in pm.listReferences():
-            ref_file_name = os.path.basename(ref.unresolvedPath())
+        ref_paths = cls._extract_references(data)
+        for ref_path in ref_paths:
+            ref_file_name = os.path.basename(ref_path)
 
             # try to find a corresponding Stalker Version instance with it
+            from stalker import Version
             version = Version.query\
                 .filter(Version.full_path.endswith(ref_file_name))\
                 .first()
+
             if version:
+                repo = version.task.project.repository
                 # replace it
-                ref.replaceWith(version.absolute_full_path)
-                # leave it to anima.env.mayaEnv to replace the external paths
+                data = data.replace(
+                    ref_path,
+                    version.absolute_full_path.replace(
+                        repo.path,
+                        '$REPO%s/' % repo.id
+                    )
+                )
 
-        # finally replace absolute paths with repo relative paths
-        from anima.env.mayaEnv import Maya
-        m_env = Maya()
-        m_env.replace_external_paths()
-
-        # save the file over itself
-        pm.saveFile(force=True)
+        if len(ref_paths):
+            # save the file over itself
+            with open(path, 'w+') as f:
+                f.write(data)
