@@ -6,7 +6,7 @@
 import os
 import tempfile
 import logging
-
+import re
 
 import pymel.core as pm
 
@@ -239,6 +239,107 @@ sourceimages/3dPaintTextures"""
         pm.workspace.open(current_workspace_path)
 
         return default_project_path
+
+    @classmethod
+    def flatten_external(cls, path, project_name='DefaultProject'):
+        """Flattens the given maya scene in to a new default project externally
+        that is without opening it and returns the project path.
+
+        It will also flatten all the referenced files, textures, image planes
+        and Arnold Scene Source files.
+
+        :param path: The path to the file which wanted to be flattened
+        :return:
+        """
+        # create a new Default Project
+        tempdir = tempfile.gettempdir()
+
+        default_project_path = cls.create_default_project(path=tempdir,
+                                                          name=project_name)
+        logger.debug(
+            'creating new default project at: %s' % default_project_path
+        )
+
+        ref_paths = cls._move_file_and_fix_references(path, default_project_path)
+        while len(ref_paths):
+            ref_path = ref_paths.pop(0)
+            new_ref_paths = \
+                cls._move_file_and_fix_references(
+                    ref_path,
+                    default_project_path,
+                    scenes_folder='scenes/refs'
+                )
+
+            # extend ref_paths with new ones
+            for new_ref_path in new_ref_paths:
+                if new_ref_path not in ref_paths:
+                    ref_paths.append(new_ref_path)
+
+        return default_project_path
+
+    @classmethod
+    def _move_file_and_fix_references(cls, path, project_path,
+                                      scenes_folder='scenes',
+                                      refs_folder='scenes/refs'):
+        """Moves the given maya file to the given project path and moves any
+        references of it to
+
+        :param str path: The path of the maya file
+        :param str project_path: The project path
+        :param str scenes_folder: The scenes folder to store the original maya
+          scene.
+        :param str refs_folder: The references folder to replace reference
+          paths with.
+        :return list: returns a list of paths
+        """
+        #reference_resolution = {}
+        original_file_name = os.path.basename(path)
+        logger.debug('original_file_name: %s' % original_file_name)
+
+        # read the data of the original file
+        with open(os.path.expandvars(path)) as f:
+            data = f.read()
+
+        ref_paths = cls._extract_references(data)
+        print 'extracted reference paths: %s' % ref_paths
+        # fix all reference paths
+        for ref_path in ref_paths:
+            data = data.replace(
+                ref_path,
+                '%s/%s' % (refs_folder, os.path.basename(ref_path))
+            )
+
+        # now write all the data back to a new temp scene
+        temp_file_path = \
+            os.path.join(project_path, scenes_folder, original_file_name)
+
+        with open(temp_file_path, 'w+') as f:
+            f.write(data)
+
+        return ref_paths
+
+    @classmethod
+    def _extract_references(cls, data):
+        """returns the list of references in the given maya file
+
+        :param str data: The content of the maya scene file
+
+        :return:
+        """
+        # path_regex = r'\$REPO[\w\./]+'
+        split_regex = r'\s'
+
+        # so we have all the data
+        # extract references
+        ref_paths = []
+        lines = data.split(';\n')
+        for line in lines:
+            if line.startswith('file -r'):
+                ref_path = re.split(split_regex, line)[-1].replace('"', '')
+                # and store it
+                ref_paths.append(ref_path)
+
+        return ref_paths
 
     @classmethod
     def archive(cls, path):

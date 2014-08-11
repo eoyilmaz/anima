@@ -33,8 +33,13 @@ logging.basicConfig()
 logging_level = logging.DEBUG
 
 
-stalker_server_internal_address = defaults.stalker_server_internal_address
-stalker_server_external_address = defaults.stalker_server_external_address
+stalker_server_internal_address = ''
+stalker_server_external_address = ''
+try:
+    stalker_server_internal_address = defaults.stalker_server_internal_address
+    stalker_server_external_address = defaults.stalker_server_external_address
+except KeyError:
+    pass
 
 stalker_dummy_user_login = 'anima'
 stalker_dummy_user_pass = 'anima'
