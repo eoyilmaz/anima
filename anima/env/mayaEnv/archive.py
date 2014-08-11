@@ -135,6 +135,8 @@ sourceimages/3dPaintTextures"""
         """
         # create a new Default Project
         tempdir = tempfile.gettempdir()
+        from stalker import Repository
+        all_repos = Repository.query.all()
 
         default_project_path = \
             cls.create_default_project(path=tempdir, name=project_name)
@@ -148,6 +150,11 @@ sourceimages/3dPaintTextures"""
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
+            # fix different OS paths
+            for repo in all_repos:
+                if repo.is_in_repo(ref_path):
+                    ref_path = repo.to_native_path(ref_path)
+
             new_ref_paths = \
                 cls._move_file_and_fix_references(
                     ref_path,
@@ -177,7 +184,6 @@ sourceimages/3dPaintTextures"""
           paths with.
         :return list: returns a list of paths
         """
-        #reference_resolution = {}
         original_file_name = os.path.basename(path)
         logger.debug('original_file_name: %s' % original_file_name)
 
@@ -186,7 +192,6 @@ sourceimages/3dPaintTextures"""
             data = f.read()
 
         ref_paths = cls._extract_references(data)
-        print 'extracted reference paths: %s' % ref_paths
         # fix all reference paths
         for ref_path in ref_paths:
             data = data.replace(
