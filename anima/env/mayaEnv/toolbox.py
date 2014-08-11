@@ -1567,7 +1567,8 @@ class General(object):
                 assert(isinstance(version, Version))
                 assert(isinstance(task, Task))
             project_name = version.nice_name
-            project_path = arch.flatten(path, project_name=project_name)
+            project_path = arch.flatten_external(path,
+                                                 project_name=project_name)
 
             # append link file
             stalker_link_file_path = os.path.join(project_path,
@@ -1593,13 +1594,9 @@ class General(object):
             # move the zip right beside the original version file
             shutil.move(zip_path, new_zip_path)
 
-            # re-open the current scene
-            m_env.open(version, force=True)
-
             # open the zip file in browser
             from anima.utils import open_browser_in_location
             open_browser_in_location(new_zip_path)
-
 
 
 class Modeling(object):
