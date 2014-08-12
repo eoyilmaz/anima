@@ -510,6 +510,14 @@ def benchmark(iter_cnt):
     print("Average FPS   : %s" % ((stop - start) * iter_cnt / total_time))
 
 
+def load_shelf_tab(shelf_path):
+    """loads the given shelf tab
+    """
+    # look in to the shelf mel file from user folders
+    if os.path.exists(shelf_path):
+        pm.mel.eval('loadNewShelf "%s"' % shelf_path)
+
+
 def delete_shelf_tab(shelf_name, confirm=True):
     """The python version of the original mel script of Maya
     :param shelf_name: The name of the shelf to delete

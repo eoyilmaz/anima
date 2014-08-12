@@ -162,7 +162,6 @@ def discover_env_vars(env_name=''):
     PYTHONPATH in your system environment then the variables defined in
     env.json will be appended to them.
     """
-
     env_path = os.environ[anima_env_var]
 
     env_json_path = os.path.join(env_path, env_var_file_name)
