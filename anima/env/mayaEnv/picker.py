@@ -884,11 +884,10 @@ class PickedObject(object):
         """sets the keyframe colors for the parentConstraint and stabilizerParent
         """
         # get all animCurves
-        animCurves = auxiliary.concatenateLists(
-            auxiliary.get_anim_curves(self._parent_constraint),
-            auxiliary.get_anim_curves(self._stabilizer_parent))
+        animCurves = auxiliary.get_anim_curves(self._parent_constraint) + \
+            auxiliary.get_anim_curves(self._stabilizer_parent)
 
-        color = [0, 1, 0] # green
+        color = [0, 1, 0]  # green
 
         # set anim curve colors to green
         for animCurve in animCurves:
