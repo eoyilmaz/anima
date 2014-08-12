@@ -4,6 +4,8 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+import os
+
 import pymel.core as pm
 import maya.mel as mel
 
@@ -14,8 +16,6 @@ __version__ = "v10.1.13"
 def get_valid_dag_node(node):
     """returns a valid dag node even the input is string
     """
-    import pymel.core as pm
-
     try:
         dag_node = pm.nodetypes.DagNode(node)
     except pm.MayaNodeError:
@@ -28,8 +28,6 @@ def get_valid_dag_node(node):
 def get_valid_node(node):
     """returns a valid PyNode even the input is string
     """
-    import pymel.core as pm
-
     try:
         PyNode = pm.PyNode(node)
     except pm.MayaNodeError:
@@ -43,8 +41,6 @@ def get_anim_curves(node):
     """returns all the animation curves connected to the
     given node
     """
-    import pymel.core as pm
-
     # list all connections to the node
     connected_nodes = pm.listConnections(node)
 
@@ -78,8 +74,6 @@ def axial_correction_group(obj,
 
     :returns: pymel.core.nodeTypes.Transform
     """
-    import pymel.core as pm
-
     obj = get_valid_dag_node(obj)
 
     if name_postfix == "":
@@ -514,3 +508,73 @@ def benchmark(iter_cnt):
     print("BenchmarkTime : %s" % total_time)
     print("Total iterCnt : %s" % iter_cnt)
     print("Average FPS   : %s" % ((stop - start) * iter_cnt / total_time))
+
+
+def delete_shelf_tab(shelf_name, confirm=True):
+    """The python version of the original mel script of Maya
+    :param shelf_name: The name of the shelf to delete
+    """
+    shelf_top_level_path = pm.melGlobals['gShelfTopLevel']
+    shelf_top_level = pm.windows.tabLayout(shelf_top_level_path, e=1)
+
+    if len(shelf_top_level.children()) < 0:
+        return
+
+    if confirm:
+        # before doing anything ask it
+        response = pm.confirmDialog(
+            title='Delete Shelf?',
+            message='Delete %s?' % shelf_name,
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+        if response == 'No':
+            return
+
+    # update the preferences
+    shelf_number = -1
+    number_of_shelves = pm.optionVar['numShelves']
+    for i in range(1, number_of_shelves + 1):
+        if pm.optionVar['shelfName%s' % i] == shelf_name:
+            shelf_number = i
+            break
+
+    if shelf_number == -1:
+        # there should be no shelf with this name
+        return
+
+    # offset shelves
+    for i in range(shelf_number, number_of_shelves):
+        pm.optionVar['shelfLoad%s' % i] = pm.optionVar['shelfLoad%s' % (i + 1)]
+        pm.optionVar['shelfName%s' % i] = pm.optionVar['shelfName%s' % (i + 1)]
+        pm.optionVar['shelfFile%s' % i] = pm.optionVar['shelfFile%s' % (i + 1)]
+
+    pm.optionVar.pop('shelfLoad%s' % number_of_shelves)
+    number_of_shelves -= 1
+    pm.optionVar['numShelves'] = number_of_shelves
+
+    pm.windows.deleteUI('%s|%s' % (shelf_top_level_path, shelf_name), layout=1)
+
+    # remove the shelf mel file from user folders
+    for path in pm.internalVar(userShelfDir=1).split(os.path.pathsep):
+        shelf_file_name = 'shelf_%s.mel' % shelf_name
+        shelf_file_full_path = os.path.join(path, shelf_file_name)
+
+        deleted_file_name = '%s.deleted' % shelf_file_name
+        deleted_file_full_path = os.path.join(path, deleted_file_name)
+
+        try:
+            os.remove(deleted_file_full_path)
+        except OSError:
+            pass
+
+        try:
+            os.remove(shelf_file_full_path)
+            break
+        except OSError:
+            pass
+
+    # Make sure the new active shelf tab has buttons
+    pm.mel.eval('shelfTabChange();')
