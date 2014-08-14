@@ -159,6 +159,16 @@ def check_namespaces():
 # MODEL #
 #*******#
 @publisher('model')
+def check_no_references():
+    """there should be no references
+    """
+    if len(pm.listReferences()):
+        raise PublishError(
+            'There should be no <b>References</b> in a <b>Model</b> scene.'
+        )
+
+
+@publisher('model')
 def check_history():
     """there should be no history on the objects
     """
