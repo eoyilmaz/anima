@@ -25,7 +25,7 @@ def read(fname):
 
 
 required_packages = [
-    'stalker', 'edl', 'timecode'
+    'stalker', 'edl', 'timecode', 'sqlalchemy'
 ]
 
 setup(

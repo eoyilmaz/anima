@@ -7,22 +7,3 @@
 This package contains scripts to be used inside host environment to initialize
 the UI.
 """
-from sqlalchemy.exc import UnboundExecutionError
-
-
-def do_db_setup():
-    """the common routing for setting up the database
-    """
-    from stalker import db
-    from stalker.db import DBSession
-
-    DBSession.remove()
-    DBSession.close()
-
-    try:
-        conn = DBSession.connection()
-        print 'already connected, not creating any new connections'
-    except UnboundExecutionError:
-        # no connection do setup
-        print 'doing a new connection'
-        db.setup()

@@ -18,7 +18,7 @@ qt_lib = PYSIDE
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-if os.environ.has_key(qt_lib_key):
+if qt_lib_key in os.environ:
     qt_lib = os.environ[qt_lib_key]
 
 

@@ -8,11 +8,12 @@ import subprocess
 import tempfile
 import threading
 from anima.env import nukeEnv
-from anima.ui.scripts import do_db_setup
 import nuke
 
 
 import logging
+from anima.utils import do_db_setup
+
 logger = logging.getLogger(__name__)
 handler = logging.FileHandler(
     os.path.join(

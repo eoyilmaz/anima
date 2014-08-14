@@ -4,6 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from anima.env.mayaEnv.camera_tools import cam_to_chan
+from anima.utils import do_db_setup
 
 __version__ = "0.1.9"
 
@@ -1354,7 +1355,7 @@ class General(object):
 
         from stalker import db, Task, Version, Type, LocalSession, defaults
         from anima.env import mayaEnv
-        from anima.ui.scripts import do_db_setup
+
         do_db_setup()
         m = mayaEnv.Maya()
 

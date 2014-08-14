@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.ui.scripts import do_db_setup
+from anima.utils import do_db_setup
 
 
 def version_creator(lib='PySide'):
