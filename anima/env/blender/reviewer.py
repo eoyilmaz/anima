@@ -25,6 +25,24 @@ idname_template = 'stalker.%s_%s_menu'
 registered_menus = []
 
 
+class StripGenerator(object):
+    """Generates strips
+    """
+
+    def __init__(self):
+        pass
+
+    def storyboard(self):
+        """When a task with Scene type is given it will return the storyboard
+        """
+        pass
+
+    def previs(self):
+        """when a Shot task
+        """
+        pass
+
+
 class StalkerMenu(bpy.types.Menu):
     """The Stalker menu for Blender
     """
@@ -110,22 +128,43 @@ class StalkerSceneMenu(bpy.types.Operator):
     scene_name = bpy.props.StringProperty(name='scene_name')
 
     def execute(self, context):
-        logger.debug('inside')
-        return {'FINISHED'}
+        logger.debug('inside StalkerSceneMenu.execute()')
+
+        # get the scene and all the shots under it
+        from stalker import Task, Shot
+        scene = Task.query.get(self.scene_id)
+
+        # find the "Shots" task
+        shots_task = Task.query\
+            .filter_by(parent=scene)\
+            .filter_by(name='Shots')\
+            .first()
+
+        if not shots_task:
+            return set(['FINISHED'])
+
+        # get all the shots under it
+        for shot in shots_task.children:
+            logger.debug('shot.name: %s' % shot.name)
+
+            # get the
+
+        return set(['FINISHED'])
+
 
 class StalkerSceneAddAllShots(bpy.types.Operator):
     """Adds all the Shots of this Sequence to the sequencer"""
 
     bl_idname = 'sequencer.stalker_sequence_add_all_shots'
     bl_label = 'Add All Shots'
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = set(['REGISTER', 'UNDO'])
 
     def execute(self, context):
 
         logger.debug(self.bl_label)
         # get all the shots under this sequence
 
-        return {'FINISHED'}
+        return set(['FINISHED'])
 
 
 # class Reviewer(bpy.types.Panel):
