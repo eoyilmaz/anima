@@ -1521,7 +1521,9 @@ class General(object):
 
         for ref in all_refs:
             if '$REPO' not in ref.unresolvedPath():
-                refs_with_wrong_prefix.append(ref.parent())
+                parent = ref.parent()
+                if parent:
+                    refs_with_wrong_prefix.append(parent)
 
         ref_paths = [ref.path for ref in refs_with_wrong_prefix]
         for ref_path in ref_paths:
