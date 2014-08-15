@@ -42,7 +42,10 @@ class Houdini(EnvironmentBase):
         version.update_paths()
 
         # set the extension to hip
-        version.extension = '.hip'
+        if not hou.isApprentice():
+            version.extension = '.hip'
+        else:
+            version.extension = '.hipnc'
 
         # define that this version is created with Houdini
         version.created_with = self.name
