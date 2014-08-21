@@ -360,10 +360,9 @@ def check_out_of_space_uvs():
     caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
 
     for node in all_meshes:
-
         u, v = node.getUVs()
         u = sorted(u)
-        if u[-1] > 10.0:
+        if u[0] < 0.0 or u[-1] > 10.0 or v[0] < 0.0:
             nodes_with_out_of_space_uvs.append(node)
 
         caller.step()

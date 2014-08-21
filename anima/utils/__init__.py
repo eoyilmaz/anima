@@ -106,7 +106,7 @@ def open_browser_in_location(path):
 
     platform_info = platform.platform()
 
-    path = os.path.normpath(path)
+    path = os.path.normpath(os.path.expandvars(path))
 
     if not os.path.exists(path):
         path = os.path.dirname(path)
