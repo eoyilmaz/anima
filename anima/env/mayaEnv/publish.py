@@ -183,7 +183,7 @@ def check_history():
             if h_node.type() not in excluded_types:
                 history_nodes.append(h_node)
 
-        if len(history_nodes) > 1:
+        if len(history_nodes) > 0:
             nodes_with_history.append(node)
 
     if len(nodes_with_history):
@@ -350,8 +350,9 @@ def check_uv_existence():
     all_meshes = pm.ls(type='mesh')
     nodes_with_no_uvs = []
     for node in all_meshes:
-        if not len(node.getUVs(uvSet='map1')[0]):
-            nodes_with_no_uvs.append(node)
+        if not node.getAttr('intermediateObject'):
+            if not len(node.getUVs(uvSet='map1')[0]):
+                nodes_with_no_uvs.append(node)
 
     if len(nodes_with_no_uvs) > 0:
         # get transform nodes
