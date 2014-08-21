@@ -344,6 +344,34 @@ def check_empty_groups():
 
 
 @publisher('model')
+def check_uv_existence():
+    """check if there are uvs in all objects
+    """
+    all_meshes = pm.ls(type='mesh')
+    mesh_count = len(all_meshes)
+    nodes_with_no_uvs = []
+    for node in all_meshes:
+        if not len(node.getUVs()):
+            nodes_with_no_uvs.append(node)
+
+    if len(nodes_with_no_uvs):
+        # get transform nodes
+        tra_nodes = map(
+            lambda x: x.getParent(),
+            nodes_with_no_uvs
+        )
+        pm.select(tra_nodes)
+        raise RuntimeError(
+            """There are nodes with <b>no UVs</b>:
+            <br><br>%s""" %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    tra_nodes[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+@publisher('model')
 def check_out_of_space_uvs():
     """checks if there are uvs with u values that are bigger than 10.0
     """
