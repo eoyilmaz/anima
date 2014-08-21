@@ -348,13 +348,12 @@ def check_uv_existence():
     """check if there are uvs in all objects
     """
     all_meshes = pm.ls(type='mesh')
-    mesh_count = len(all_meshes)
     nodes_with_no_uvs = []
     for node in all_meshes:
-        if not len(node.getUVs()):
+        if not len(node.getUVs(uvSet='map1')[0]):
             nodes_with_no_uvs.append(node)
 
-    if len(nodes_with_no_uvs):
+    if len(nodes_with_no_uvs) > 0:
         # get transform nodes
         tra_nodes = map(
             lambda x: x.getParent(),
