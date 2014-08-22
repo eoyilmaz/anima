@@ -20,6 +20,28 @@ MAX_NODE_DISPLAY = 80
 # GENERIC #
 #*********#
 @publisher
+def check_node_names_with_bad_characters():
+    """checks node names and ensures that there are no nodes with ord(c) > 127
+    """
+    nodes_with_bad_name = []
+    for node in pm.ls():
+        if any(map(lambda x: x == '?' or ord(x) > 127, node.name())):
+            nodes_with_bad_name.append(node)
+
+    if len(nodes_with_bad_name) > 0:
+        pm.select(nodes_with_bad_name)
+        raise PublishError(
+            'There are nodes with <b>unknown characters</b> in their names:'
+            '<br><br>'
+            '%s' %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    nodes_with_bad_name)[:MAX_NODE_DISPLAY]
+            )
+        )
+
+
+@publisher
 def check_representations():
     """checks if the referenced versions are all matching the representation
     type of the current version
