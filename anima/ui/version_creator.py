@@ -1400,7 +1400,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtGui.QMessageBox.critical(
                 self,
                 'Error',
-                str(e)
+                e.__repr__()
             )
             return
 
