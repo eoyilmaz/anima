@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 import bpy
 import logging
@@ -25,20 +26,170 @@ idname_template = 'stalker.%s_%s_menu'
 registered_menus = []
 
 
+output_types = {
+    'image': ['.jpg', '.jpeg', '.png', '.tiff', '.tga'],
+    'movie': ['.mov', '.avi', '.webm', '.mpeg', '.mpg']
+}
+
+
 class StripGenerator(object):
-    """Generates strips
+    """Generates strips out of tasks given to it.
     """
 
     def __init__(self):
         pass
 
-    def storyboard(self):
-        """When a task with Scene type is given it will return the storyboard
+    def add_output(self, full_path, name=None, channel=1):
+        """adds the media in the given path to the time line
+
+        :param str full_path: The path of the file
+        """
+        logger.debug('adding output from: %s' % full_path)
+        extension = os.path.splitext(full_path)[-1].lower()
+
+        logger.debug('extension: %s' % extension)
+
+        output_type = None
+        for key in output_types.keys():
+            if extension in output_types[key]:
+                output_type = key
+                break
+
+        if output_type == 'image':
+            logger.debug('output is image')
+            bpy.ops.sequencer.image_strip_add(
+                directory=os.path.dirname(full_path),
+                files=[
+                    {
+                        "name": os.path.basename(full_path),
+                        # "name": os.path.basename(full_path)
+                    }
+                ],
+                relative_path=True,
+                frame_start=1,
+                frame_end=26,
+                channel=channel
+            )
+        elif output_type == 'movie':
+            logger.debug('output is movie')
+            logger.debug('full_path: %s' % full_path)
+            bpy.ops.sequencer.movie_strip_add(
+                filepath=full_path,
+                files=[
+                    {
+                        "name": os.path.basename(full_path),
+                        # "name": os.path.basename(full_path)
+                    }
+                ],
+                relative_path=True,
+                frame_start=1,
+                channel=channel
+            )
+        else:
+            logger.debug('output_type is unknown: %s' % output_type)
+
+    def storyboard(self, task):
+        """When a Scene task is given it will create a strip from the output of
+        the Storyboard task under it.
+
+        :param task: A :class:`stalker.models.task.Task` class instance.
+        """
+        from stalker import Task
+
+        # get the storyboard task
+        storyboard = Task.query\
+            .filter(Task.parent == task)\
+            .filter(Task.name == 'Storyboard')\
+            .first()
+
+        if not storyboard:
+            # inform the user
+            logger.debug('no storyboard task under %s' % task)
+            return
+
+        # get the repo
+        repo = storyboard.project.repository
+
+        # do it in dirty way
+        latest_version_number = 0
+        latest_version_outputs = []
+        for v in storyboard.versions:
+            if len(v.outputs):
+                if v.version_number > latest_version_number:
+                    latest_version_number = v.version_number
+                    latest_version_outputs = v.outputs
+
+        # just use the latest one with outputs
+        if len(latest_version_outputs):
+            output = latest_version_outputs[-1]
+            output_absolute_full_path = os.path.join(
+                repo.path,
+                output.full_path
+            )
+            self.add_output(output_absolute_full_path)
+        else:
+            logger.debug('no storyboard version with outputs')
+
+    def previs(self, task):
+        """when a Shot task is given it will create a strip from the output of
+        the Previs task under it.
+
+        :param task: A :class:`stalker.models.task.Task` class instance.
+        """
+        from stalker import Task
+
+        # get the storyboard task
+        previs = Task.query\
+            .filter(Task.parent == task)\
+            .filter(Task.name == 'Previs')\
+            .first()
+
+        if not previs:
+            # inform the user
+            return
+
+        # get the repo
+        repo = previs.project.repository
+
+        # do it in dirty way
+        latest_version_number = 0
+        latest_version_outputs = []
+        for v in previs.versions:
+            if len(v.outputs):
+                if v.version_number > latest_version_number:
+                    latest_version_number = v.version_number
+                    latest_version_outputs = v.outputs
+
+        if len(latest_version_outputs):
+            # just use the latest one
+            output = latest_version_outputs[-1]
+            output_absolute_full_path = os.path.join(
+                repo.path,
+                output.full_path
+            )
+            self.add_output(output_absolute_full_path)
+
+    def animation(self, task):
+        """when a Shot task is given it will create a strip from the output of
+        the Animation task under it.
+
+        :param task: A :class:`stalker.models.task.Task` class instance.
         """
         pass
 
-    def previs(self):
-        """when a Shot task
+    def lighting(self, task):
+        """when a Shot task is given it will create a strip from the output of
+        the Lighting task under it.
+
+        :param task: A :class:`stalker.models.task.Task` class instance.
+        """
+        pass
+
+    def comp(self, task):
+        """when a Shot task is given it will create a strip from the output of
+        the Compositing task under it.
+
+        :param task: A :class:`stalker.models.task.Task` class instance.
         """
         pass
 
@@ -98,14 +249,200 @@ def draw_stalker_sequence_menu_item(self, context):
 
     # add all the child tasks under it
     for scene in sorted(seq.children, key=lambda x: x.name):
-        op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
-        op.scene_id = scene.id
-        op.scene_name = scene.name
+        # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
+        # op.scene_id = scene.id
+        # op.scene_name = scene.name
+        idname = idname_template % (scene.entity_type, scene.id)
+        layout.menu(idname, text=scene.name)
+
+
+def draw_stalker_scene_menu_item(self, context):
+    """draws one scene menu item
+    """
+    logger.debug('entity_id   : %s' % self.stalker_entity_id)
+    logger.debug('entity_name : %s' % self.stalker_entity_name)
+
+    layout = self.layout
+
+    from stalker import Task
+    scene = Task.query.get(self.stalker_entity_id)
+
+    # Add Everything
+    op = layout.operator(
+        StalkerSceneAddEverythingOperator.bl_idname,
+        text='Add Everything'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    layout.separator()
+
+    # Add Storyboard Only
+    op = layout.operator(
+        StalkerSceneAddStoryboardOperator.bl_idname,
+        text='Storyboard'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # Add Previs Only
+    op = layout.operator(
+        StalkerSceneAddPrevisOperator.bl_idname,
+        text='Previs'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    layout.separator()
+
+    # Add From Shots Menu
+    idname = '%s%s' % (
+        idname_template % (scene.entity_type, scene.id),
+        '_add_from_shots_menu'
+    )
+    layout.menu(idname)
+
+
+def draw_stalker_scene_add_from_shots_menu_item(self, context):
+    """draws one scene/add from shots scene menu item
+    """
+
+    logger.debug('entity_id   : %s' % self.stalker_entity_id)
+    logger.debug('entity_name : %s' % self.stalker_entity_name)
+
+    layout = self.layout
+
+    from stalker import Task
+    scene = Task.query.get(self.stalker_entity_id)
+
+    # Add All Shot Task Outputs
+    op = layout.operator(
+        StalkerSceneAddAllShotOutputsOperator.bl_idname,
+        text='Add All Shot Outputs'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # separator
+    layout.separator()
+
+    # Previs
+    op = layout.operator(
+        StalkerSceneAddAllShotPrevisOutputsOperator.bl_idname,
+        text='Previs'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # Animation
+    op = layout.operator(
+        StalkerSceneAddAllShotAnimationOutputsOperator.bl_idname,
+        text='Animation'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # Lighting
+    op = layout.operator(
+        StalkerSceneAddAllShotLightingOutputsOperator.bl_idname,
+        text='Lighting'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # Comp
+    op = layout.operator(
+        StalkerSceneAddAllShotCompOutputsOperator.bl_idname,
+        text='Comp'
+    )
+    op.scene_id = scene.id
+    op.scene_name = scene.name
+
+    # separator
+    layout.separator()
+
+    # then add menu for each shot under its "Shots" tasks
+    shots_task = Task.query\
+        .filter(Task.parent == scene)\
+        .filter(Task.name == 'Shots')\
+        .first()
+
+    if shots_task:
+        for shot in shots_task.children:
+            # add a shot menu
+            idname = idname_template % (shot.entity_type, shot.id)
+            layout.menu(idname)
+
+
+def draw_stalker_shot_menu_item(self, context):
+    """draws one menu item
+    """
+    logger.debug('entity_id   : %s' % self.stalker_entity_id)
+    logger.debug('entity_name : %s' % self.stalker_entity_name)
+
+    layout = self.layout
+
+    # get the sequence
+    from stalker import Shot
+
+    shot = Shot.query.get(self.stalker_entity_id)
+
+    # add all the child tasks under it
+    # for scene in sorted(seq.children, key=lambda x: x.name):
+    #     # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
+    #     # op.scene_id = scene.id
+    #     # op.scene_name = scene.name
+    #     idname = idname_template % (scene.entity_type, scene.id)
+    #     layout.menu(idname, text=scene.name)
+
+    # add a menu operator for
+    # Add All Task Outputs
+    op = layout.operator(
+        StalkerShotAddAllTaskOutputsOperator.bl_idname,
+        text='Add All Task Outputs'
+    )
+    op.shot_id = self.stalker_entity_id
+    op.shot_name = self.stalker_entity_name
+
+    # ------
+    # Add a separator
+    layout.separator()
+
+    # Previs
+    op = layout.operator(
+        StalkerShotAddPrevisOutputOperator.bl_idname,
+        text='Previs'
+    )
+    op.shot_id = self.stalker_entity_id
+    op.shot_name = self.stalker_entity_name
+
+    # Animation
+    op = layout.operator(
+        StalkerShotAddAnimationOutputOperator.bl_idname,
+        text='Animation'
+    )
+    op.shot_id = self.stalker_entity_id
+    op.shot_name = self.stalker_entity_name
+
+    # Lighting
+    op = layout.operator(
+        StalkerShotAddLightingOutputOperator.bl_idname,
+        text='Lighting'
+    )
+    op.shot_id = self.stalker_entity_id
+    op.shot_name = self.stalker_entity_name
+
+    # Comp
+    op = layout.operator(
+        StalkerShotAddCompOutputOperator.bl_idname,
+        text='Comp'
+    )
+    op.shot_id = self.stalker_entity_id
+    op.shot_name = self.stalker_entity_name
 
 
 class StalkerAddFromProjectMenu(bpy.types.Menu):
-    """The Add From Project menu for Blender
-    """
+    """The Add From Project menu for Blender"""
     bl_label = "From Project..."
     bl_idname = "stalker.add_from_project_menu"
 
@@ -117,52 +454,379 @@ class StalkerAddFromProjectMenu(bpy.types.Menu):
             layout.menu(idname)
 
 
-class StalkerSceneMenu(bpy.types.Operator):
-    """The Scene menu for Blender
-    """
+class StalkerSceneAddEverythingOperator(bpy.types.Operator):
+    """Adds all of the outputs of everything under this scene"""
 
-    bl_label = 'Scene'
-    bl_idname = 'stalker.scene_menu'
+    bl_label = 'Add Everything'
+    bl_idname = 'stalker.scene_add_everything_op'
 
     scene_id = bpy.props.IntProperty(name='scene_id')
     scene_name = bpy.props.StringProperty(name='scene_name')
 
     def execute(self, context):
-        logger.debug('inside StalkerSceneMenu.execute()')
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task, Shot
+        from stalker import Task
         scene = Task.query.get(self.scene_id)
 
-        # find the "Shots" task
-        shots_task = Task.query\
-            .filter_by(parent=scene)\
-            .filter_by(name='Shots')\
-            .first()
+        logger.debug('scene: %s' % scene)
 
-        if not shots_task:
-            return set(['FINISHED'])
-
-        # get all the shots under it
-        for shot in shots_task.children:
-            logger.debug('shot.name: %s' % shot.name)
-
-            # get the
+        # generate storyboard
+        strip_gen = StripGenerator()
+        strip_gen.storyboard(scene)
+        strip_gen.previs(scene)
+        strip_gen.animation(scene)
+        strip_gen.lighting(scene)
+        strip_gen.comp(scene)
 
         return set(['FINISHED'])
 
 
-class StalkerSceneAddAllShots(bpy.types.Operator):
-    """Adds all the Shots of this Sequence to the sequencer"""
+class StalkerSceneAddStoryboardOperator(bpy.types.Operator):
+    """Adds the storyboard output of this scene"""
 
-    bl_idname = 'sequencer.stalker_sequence_add_all_shots'
-    bl_label = 'Add All Shots'
-    bl_options = set(['REGISTER', 'UNDO'])
+    bl_label = 'Add Storyboard Only'
+    bl_idname = 'stalker.scene_add_storyboard_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
 
     def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
 
-        logger.debug(self.bl_label)
-        # get all the shots under this sequence
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # generate storyboard
+        strip_gen = StripGenerator()
+        strip_gen.storyboard(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddPrevisOperator(bpy.types.Operator):
+    """Adds the previs output of this scene"""
+
+    bl_label = 'Add Previs Only'
+    bl_idname = 'stalker.scene_add_previs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # generate storyboard
+        strip_gen = StripGenerator()
+        strip_gen.previs(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddAllShotOutputsOperator(bpy.types.Operator):
+    """Adds all of the shot task outputs under this scene"""
+
+    bl_label = 'Add All Shot Outputs'
+    bl_idname = 'stalker.scene_add_all_shot_outputs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # find the "Shots" Task and get all the shots under it
+        # for each shot add the animation, lighting and comp
+
+        # for shot in scene.children
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddAllShotPrevisOutputsOperator(bpy.types.Operator):
+    """Adds all the Previs task outputs from all of the shots"""
+
+    bl_label = 'Add All Shot Previs Outputs'
+    bl_idname = 'stalker.scene_add_all_shot_previs_outputs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # find the "Shots" Task and get all the shots under it
+        # for each shot add the animation, lighting and comp
+
+        # for shot in scene.children
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddAllShotAnimationOutputsOperator(bpy.types.Operator):
+    """Adds all the Animation task outputs from all of the shots"""
+
+    bl_label = 'Add All Shot Animation Outputs'
+    bl_idname = 'stalker.scene_add_all_shot_animation_outputs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # find the "Shots" Task and get all the shots under it
+        # for each shot add the animation, lighting and comp
+
+        # for shot in scene.children
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddAllShotLightingOutputsOperator(bpy.types.Operator):
+    """Adds all the Lighting task outputs from all of the shots"""
+
+    bl_label = 'Add All Shot Lighting Outputs'
+    bl_idname = 'stalker.scene_add_all_shot_lighting_outputs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # find the "Shots" Task and get all the shots under it
+        # for each shot add the animation, lighting and comp
+
+        # for shot in scene.children
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerSceneAddAllShotCompOutputsOperator(bpy.types.Operator):
+    """Adds all the Comp task outputs from all of the shots"""
+
+    bl_label = 'Add All Shot Comp Outputs'
+    bl_idname = 'stalker.scene_add_all_shot_comp_outputs_op'
+
+    scene_id = bpy.props.IntProperty(name='scene_id')
+    scene_name = bpy.props.StringProperty(name='scene_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Task
+        scene = Task.query.get(self.scene_id)
+
+        logger.debug('scene: %s' % scene)
+
+        # find the "Shots" Task and get all the shots under it
+        # for each shot add the animation, lighting and comp
+
+        # for shot in scene.children
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerShotAddAllTaskOutputsOperator(bpy.types.Operator):
+    """Adds all task outputs of this shot"""
+
+    bl_label = 'Add All Task Outputs'
+    bl_idname = 'stalker.shot_add_all_task_outputs_op'
+
+    shot_id = bpy.props.IntProperty(name='shot_id')
+    shot_name = bpy.props.StringProperty(name='shot_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Shot
+        shot = Shot.query.get(self.shot_id)
+
+        logger.debug('shot: %s' % shot)
+
+        # find Previs, Animation, Lighting and Comp tasks
+
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(scene)
+        # strip_gen.animation(scene)
+        # strip_gen.lighting(scene)
+        # strip_gen.comp(scene)
+
+        return set(['FINISHED'])
+
+
+class StalkerShotAddPrevisOutputOperator(bpy.types.Operator):
+    """Adds just the Previs output of this shot"""
+
+    bl_label = 'Add Previs Output'
+    bl_idname = 'stalker.shot_add_previs_output_op'
+
+    shot_id = bpy.props.IntProperty(name='shot_id')
+    shot_name = bpy.props.StringProperty(name='shot_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Shot
+        shot = Shot.query.get(self.shot_id)
+
+        logger.debug('shot: %s' % shot)
+
+        # find Previs, Animation, Lighting and Comp tasks
+
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.previs(shot)
+
+        return set(['FINISHED'])
+
+
+class StalkerShotAddAnimationOutputOperator(bpy.types.Operator):
+    """Adds just the Animation output of this shot"""
+
+    bl_label = 'Add Animation Output'
+    bl_idname = 'stalker.shot_add_animation_output_op'
+
+    shot_id = bpy.props.IntProperty(name='shot_id')
+    shot_name = bpy.props.StringProperty(name='shot_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Shot
+        shot = Shot.query.get(self.shot_id)
+
+        logger.debug('shot: %s' % shot)
+
+        # find Previs, Animation, Lighting and Comp tasks
+
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.animation(shot)
+
+        return set(['FINISHED'])
+
+
+class StalkerShotAddLightingOutputOperator(bpy.types.Operator):
+    """Adds just the Lighting output of this shot"""
+
+    bl_label = 'Add Lighting Output'
+    bl_idname = 'stalker.shot_add_lighting_output_op'
+
+    shot_id = bpy.props.IntProperty(name='shot_id')
+    shot_name = bpy.props.StringProperty(name='shot_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Shot
+        shot = Shot.query.get(self.shot_id)
+
+        logger.debug('shot: %s' % shot)
+
+        # find Previs, Animation, Lighting and Comp tasks
+
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.lighting(shot)
+
+        return set(['FINISHED'])
+
+
+class StalkerShotAddCompOutputOperator(bpy.types.Operator):
+    """Adds just the Comp output of this shot"""
+
+    bl_label = 'Add Comp Output'
+    bl_idname = 'stalker.shot_add_comp_output_op'
+
+    shot_id = bpy.props.IntProperty(name='shot_id')
+    shot_name = bpy.props.StringProperty(name='shot_name')
+
+    def execute(self, context):
+        logger.debug('inside %s.execute()' % self.__class__.__name__)
+
+        # get the scene and all the shots under it
+        from stalker import Shot
+        shot = Shot.query.get(self.shot_id)
+
+        logger.debug('shot: %s' % shot)
+
+        # find Previs, Animation, Lighting and Comp tasks
+
+        # # generate storyboard
+        # strip_gen = StripGenerator()
+        # strip_gen.comp(shot)
 
         return set(['FINISHED'])
 
@@ -205,19 +869,26 @@ def draw_stalker_menu(self, context):
     layout.menu(StalkerMenu.bl_idname)
 
 
-def generate_op_class(entity, draw=draw_stalker_entity_menu_item):
+def generate_op_class(entity,
+                      draw=draw_stalker_entity_menu_item,
+                      idpostfix='',
+                      label=None):
     """generates clunky opclass for given entity
 
     :param entity: The Stalker entity
     :param draw: The draw function, defaults to draw_stalker_entity_menu_item
+    :param label: Label of this menu
     """
-    idname = idname_template % (entity.entity_type, entity.id)
+    idname = '%s%s' % (
+        idname_template % (entity.entity_type, entity.id),
+        idpostfix
+    )
     return type(
         idname,
         (bpy.types.Menu, ),
         {
             'bl_idname': idname,
-            'bl_label': entity.name,
+            'bl_label': label if label else entity.name,
             'stalker_entity_id': entity.id,
             'stalker_entity_type': entity.entity_type,
             'stalker_entity_name': entity.name,
@@ -242,7 +913,7 @@ def register():
     # classes which is a very very very very bad practice, which essentially
     # does nothing better than bloating the python name space.
     #
-    from stalker import Project, Sequence
+    from stalker import Project, Sequence, Shot
     for project in Project.query.order_by(Project.name).all():
         opclass = generate_op_class(
             project,
@@ -267,10 +938,52 @@ def register():
             bpy.utils.register_class(opclass)
             registered_menus.append(opclass)
 
+            # for each sequence register a scene menu
+            for sce in seq.children:
+                opclass = generate_op_class(
+                    sce,
+                    draw=draw_stalker_scene_menu_item
+                )
+                bpy.utils.register_class(opclass)
+                registered_menus.append(opclass)
+
+                # generate a "Add From Shots" menu for each of them
+                opclass = generate_op_class(
+                    sce,
+                    draw=draw_stalker_scene_add_from_shots_menu_item,
+                    idpostfix='_add_from_shots_menu',
+                    label='Add From Shots'
+                )
+                bpy.utils.register_class(opclass)
+                registered_menus.append(opclass)
+
+        # for each Shot generate a menu item
+        for shot in Shot.query.filter(Shot.project == project).all():
+            opclass = generate_op_class(
+                shot,
+                draw=draw_stalker_shot_menu_item
+            )
+            bpy.utils.register_class(opclass)
+            registered_menus.append(opclass)
+
     bpy.utils.register_class(StalkerMenu)
     bpy.utils.register_class(StalkerAddFromProjectMenu)
-    bpy.utils.register_class(StalkerSceneMenu)
-    bpy.utils.register_class(StalkerSceneAddAllShots)
+
+    bpy.utils.register_class(StalkerSceneAddEverythingOperator)
+    bpy.utils.register_class(StalkerSceneAddStoryboardOperator)
+    bpy.utils.register_class(StalkerSceneAddPrevisOperator)
+
+    bpy.utils.register_class(StalkerSceneAddAllShotOutputsOperator)
+    bpy.utils.register_class(StalkerSceneAddAllShotPrevisOutputsOperator)
+    bpy.utils.register_class(StalkerSceneAddAllShotAnimationOutputsOperator)
+    bpy.utils.register_class(StalkerSceneAddAllShotLightingOutputsOperator)
+    bpy.utils.register_class(StalkerSceneAddAllShotCompOutputsOperator)
+
+    bpy.utils.register_class(StalkerShotAddAllTaskOutputsOperator)
+    bpy.utils.register_class(StalkerShotAddPrevisOutputOperator)
+    bpy.utils.register_class(StalkerShotAddAnimationOutputOperator)
+    bpy.utils.register_class(StalkerShotAddLightingOutputOperator)
+    bpy.utils.register_class(StalkerShotAddCompOutputOperator)
 
     bpy.types.SEQUENCER_MT_add.append(draw_stalker_menu)
 
@@ -280,8 +993,21 @@ def unregister():
     """
     bpy.utils.unregister_class(StalkerMenu)
     bpy.utils.unregister_class(StalkerAddFromProjectMenu)
-    bpy.utils.unregister_class(StalkerSceneMenu)
-    bpy.utils.unregister_class(StalkerSceneAddAllShots)
+
+    bpy.utils.unregister_class(StalkerSceneAddEverythingOperator)
+    bpy.utils.unregister_class(StalkerSceneAddStoryboardOperator)
+    bpy.utils.unregister_class(StalkerSceneAddPrevisOperator)
+
+    bpy.utils.unregister_class(StalkerSceneAddAllShotOutputsOperator)
+    bpy.utils.unregister_class(StalkerSceneAddAllShotPrevisOutputsOperator)
+    bpy.utils.unregister_class(StalkerSceneAddAllShotAnimationOutputsOperator)
+    bpy.utils.unregister_class(StalkerSceneAddAllShotLightingOutputsOperator)
+    bpy.utils.unregister_class(StalkerSceneAddAllShotCompOutputsOperator)
+
+    bpy.utils.unregister_class(StalkerShotAddPrevisOutputOperator)
+    bpy.utils.unregister_class(StalkerShotAddAnimationOutputOperator)
+    bpy.utils.unregister_class(StalkerShotAddLightingOutputOperator)
+    bpy.utils.unregister_class(StalkerShotAddCompOutputOperator)
 
     # unregister dynamically created menu items
     for opclass in registered_menus:
