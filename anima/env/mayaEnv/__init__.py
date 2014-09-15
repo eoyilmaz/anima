@@ -1177,7 +1177,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             'aiImage': 'filename',
             'aiStandIn': 'dso',
             'file': 'fileTextureName',
-            'imagePlane': 'imageName'
+            'imagePlane': 'imageName',
+            'audio': 'filename'
         }
         for node_type in types_and_attrs.keys():
             attr_name = types_and_attrs[node_type]
