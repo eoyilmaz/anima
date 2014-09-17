@@ -3,7 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-
+from anima.env import to_os_independent_path
 
 import os
 import subprocess
@@ -106,7 +106,7 @@ class ReferenceExtension(object):
         """
         rep_v = self.find_repr(repr_name)
         if rep_v is not None:
-            self.replaceWith(rep_v.absolute_full_path)
+            self.replaceWith(to_os_independent_path(rep_v.absolute_full_path))
 
     @extends(FileReference)
     def find_repr(self, repr_name):
