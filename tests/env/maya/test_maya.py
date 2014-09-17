@@ -5790,6 +5790,133 @@ workspace -fr "shaders" "renderData/shaders";
             archived_version7_unresolved_path
         )
 
+    def test_flatten_is_working_properly_with_the_external_files_of_the_references(self):
+        """testing if the Archiver.flatten() is working properly for a scene
+        with references that has external files like textures, sound etc.
+        """
+        # open self.version7
+        self.maya_env.open(self.version7, force=True)
+
+        # create an image file at the project root
+        image_filename = 'test.jpg'
+        image_path = os.path.join(self.version7.absolute_path, 'Textures')
+        image_full_path = os.path.join(image_path, image_filename)
+
+        # create the file
+        os.makedirs(image_path)
+        with open(image_full_path, 'w+') as f:
+            f.writelines([''])
+
+        audio_filename = 'test.wav'
+        audio_path = os.path.join(self.version7.absolute_path, 'Sounds')
+        audio_full_path = os.path.join(audio_path, audio_filename)
+
+        # create the file
+        os.makedirs(audio_path)
+        with open(audio_full_path, 'w+') as f:
+            f.writelines([''])
+
+        # create one image and one audio node
+        pm.createNode('file').attr('fileTextureName').set(image_full_path)
+        pm.createNode('audio').attr('filename').set(audio_full_path)
+
+        # save it
+        # replace external paths
+        self.maya_env.replace_external_paths()
+        pm.saveFile()
+
+        # open self.version4
+        self.maya_env.open(self.version4, force=True)
+
+        # and reference self.version7 to it
+        self.maya_env.reference(self.version7)
+
+        # and save it
+        pm.saveFile()
+
+        # open self.version1
+        self.maya_env.open(self.version1, force=True)
+
+        # and reference self.version4 to it
+        self.maya_env.reference(self.version4)
+
+        # and save it
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        project_path = arch.flatten(self.version1.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
+
+        # now check if we have the files under the path/scenes directory
+        archived_version1_path = \
+            os.path.join(project_path, 'scenes', self.version1.filename)
+
+        # and references under path/scenes/refs path
+        archived_version4_path = \
+            os.path.join(project_path, 'scenes/refs', self.version4.filename)
+
+        archived_version4_unresolved_path = \
+            os.path.join('scenes/refs', self.version4.filename)
+
+        archived_version7_path = \
+            os.path.join(project_path, 'scenes/refs', self.version7.filename)
+
+        archived_version7_unresolved_path = \
+            os.path.join('scenes/refs', self.version7.filename)
+
+        archived_image_path = \
+            os.path.join(project_path, 'scenes/refs', image_filename)
+
+        archived_audio_path = \
+            os.path.join(project_path, 'scenes/refs', audio_filename)
+
+        self.assertTrue(os.path.exists(archived_version1_path))
+        self.assertTrue(os.path.exists(archived_version4_path))
+        self.assertTrue(os.path.exists(archived_version7_path))
+        self.assertTrue(os.path.exists(archived_image_path))
+        self.assertTrue(os.path.exists(archived_audio_path))
+
+        # open the archived version1
+        pm.workspace.open(project_path)
+        pm.openFile(archived_version1_path)
+
+        # expect it to have one reference
+        all_refs = pm.listReferences()
+        self.assertEqual(len(all_refs), 1)
+
+        # and the path is matching to archived version4 path
+        ref = all_refs[0]
+        self.assertEqual(ref.path, archived_version4_path)
+        self.assertEqual(
+            ref.unresolvedPath(),
+            archived_version4_unresolved_path
+        )
+
+        # check the deeper level references
+        deeper_ref = pm.listReferences(parentReference=ref)[0]
+        self.assertEqual(deeper_ref.path, archived_version7_path)
+        self.assertEqual(
+            deeper_ref.unresolvedPath(),
+            archived_version7_unresolved_path
+        )
+
+        # and deeper level files
+        ref_image_path = pm.ls(type='file')[0].attr('fileTextureName').get()
+        self.assertEqual(
+            ref_image_path,
+            os.path.join(project_path, 'scenes/refs', image_filename)
+        )
+        ref_audio_path = pm.ls(type='audio')[0].attr('filename').get()
+        self.assertEqual(
+            ref_audio_path,
+            os.path.join(project_path, 'scenes/refs', audio_filename)
+        )
+
     def test_flatten_is_working_properly_with_multiple_reference_to_the_same_file_with_multiple_level_of_references(self):
         """testing if the Archiver.flatten() is working properly for a scene
         with multiple levels of references.
@@ -5915,23 +6042,75 @@ workspace -fr "shaders" "renderData/shaders";
             archived_version7_unresolved_path
         )
 
-    def test_flatten_is_working_properly_for_textures(self):
+    def test_flatten_is_working_properly_for_external_files(self):
         """testing if the Archiver.flatten() is working properly for a scene
-        with textures
+        with textures, audio etc. external files
         """
-        self.fail('test is not implemented yet')
+        # open self.version7
+        self.maya_env.open(self.version7, force=True)
 
-    def test_flatten_is_working_properly_for_image_planes(self):
-        """testing if the Archiver.flatten() is working properly for a scene
-        with image planes
-        """
-        self.fail('test is not implemented yet')
+        # create an image file at the project root
+        image_filename = 'test.jpg'
+        image_path = os.path.join(self.version7.absolute_path, 'Textures')
+        image_full_path = os.path.join(image_path, image_filename)
 
-    def test_flatten_is_working_properly_for_ass_files(self):
-        """testing if the Archiver.flatten() is working properly for a scene
-        with Arnold Ass files
-        """
-        self.fail('test is not implemented yet')
+        # create the file
+        os.makedirs(image_path)
+        with open(image_full_path, 'w+') as f:
+            f.writelines([''])
+
+        audio_filename = 'test.wav'
+        audio_path = os.path.join(self.version7.absolute_path, 'Sounds')
+        audio_full_path = os.path.join(audio_path, audio_filename)
+
+        # create the file
+        os.makedirs(audio_path)
+        with open(audio_full_path, 'w+') as f:
+            f.writelines([''])
+
+        # create one image and one audio node
+        pm.createNode('file').attr('fileTextureName').set(image_full_path)
+        pm.createNode('audio').attr('filename').set(audio_full_path)
+
+        # save it
+        # replace external paths
+        self.maya_env.replace_external_paths()
+        pm.saveFile()
+
+        # renew the scene
+        pm.newFile(force=1)
+
+        # create an archiver
+        arch = Archiver()
+
+        project_path = arch.flatten(self.version7.absolute_full_path)
+        self.remove_these_files_buffer.append(project_path)
+
+        # now check if we have the files under the path/scenes directory
+        archived_version7_path = \
+            os.path.join(project_path, 'scenes', self.version7.filename)
+
+        archived_image_path = \
+            os.path.join(project_path, 'scenes/refs', image_filename)
+
+        self.assertTrue(os.path.exists(archived_version7_path))
+        self.assertTrue(os.path.exists(archived_image_path))
+
+        # open the archived version1
+        pm.workspace.open(project_path)
+        pm.openFile(archived_version7_path)
+
+        # and image files
+        ref_image_path = pm.ls(type='file')[0].attr('fileTextureName').get()
+        self.assertEqual(
+            ref_image_path,
+            os.path.join(project_path, 'scenes/refs', image_filename)
+        )
+        ref_audio_path = pm.ls(type='audio')[0].attr('filename').get()
+        self.assertEqual(
+            ref_audio_path,
+            os.path.join(project_path, 'scenes/refs', audio_filename)
+        )
 
     def test_flatten_will_restore_the_current_workspace(self):
         """testing if the Archiver.flatten() will restore the current workspace
