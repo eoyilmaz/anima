@@ -242,7 +242,6 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         if version:
             latest_published_version = version.latest_published_version
 
-
         item_action = item.action
 
         # if item_action != 'create':
@@ -260,7 +259,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         absolute_full_path = version.absolute_full_path
         if absolute_full_path:
             action = menu.addAction('Open...')
-            action.version = latest_published_version
+            if latest_published_version:
+                action.version = latest_published_version
+            else:
+                action.version = version
 
         selected_action = menu.exec_(global_position)
 
