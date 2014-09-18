@@ -242,6 +242,16 @@ def UI():
 
             color.change()
             pm.button(
+                'delete_unused_intermediate_shapes_button',
+                l='Delete Unused Intermediate Shape Nodes',
+                c=RepeatedCallback(General.delete_unused_intermediate_shapes),
+                ann='Deletes unused (no connection) intermediate shape nodes',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.text(l='===== Reference Tools =====')
+            pm.button(
                 'duplicate_selected_reference_button',
                 l='Duplicate Selected Reference',
                 c=RepeatedCallback(General.duplicate_selected_reference),
@@ -267,15 +277,6 @@ def UI():
                 ann='References the current Model scene to the LookDev scene '
                     'of the same task, creates the LookDev scene if '
                     'necessary, also reopens the current model scene.',
-                bgc=color.color
-            )
-
-            color.change()
-            pm.button(
-                'delete_unused_intermediate_shapes_button',
-                l='Delete Unused Intermediate Shape Nodes',
-                c=RepeatedCallback(General.delete_unused_intermediate_shapes),
-                ann='Deletes unused (no connection) intermediate shape nodes',
                 bgc=color.color
             )
 

@@ -238,10 +238,10 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         version = item.version
-        item_action = item.action
+        #item_action = item.action
 
-        if item_action != 'create':
-            return
+        #if item_action != 'create':
+        #    return
 
         from stalker import Version
         if not isinstance(version, Version):
