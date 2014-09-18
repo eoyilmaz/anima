@@ -1021,6 +1021,322 @@ class MayaTestCase(MayaTestBase):
         self.assertTrue(refs[1].isLoaded())
         self.assertFalse(refs[0].isLoaded())
 
+    def test_open_with_reference_depth_parameter_is_skipped(self):
+        """testing if the open method doesn't load unloaded references when
+        the reference_depth parameter is skipped
+        """
+        # create a couple of versions and reference them to each other
+        # and reference them to the the scene and check if maya updates the
+        # Version.references list
+
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # reference the given versions
+        self.maya_env.reference(version1)
+        self.maya_env.reference(version2)
+
+        # unload a couple of them
+        refs = pm.listReferences()
+        refs[0].unload()
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # save it as versionBase
+        self.maya_env.save_as(version_base)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # clean scene
+        pm.newFile(force=True)
+
+        # re-open the file
+        self.maya_env.open(version_base, force=True)
+
+        # check if the references are loaded
+        refs = pm.listReferences()
+        self.assertTrue(refs[1].isLoaded())
+        self.assertFalse(refs[0].isLoaded())
+
+    def test_open_with_reference_depth_parameter_is_0(self):
+        """testing if the open method doesn't load unloaded references when
+        the reference_depth parameter is 0
+        """
+        # create a couple of versions and reference them to each other
+        # and reference them to the the scene and check if maya updates the
+        # Version.references list
+
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # reference the given versions
+        self.maya_env.reference(version1)
+        self.maya_env.reference(version2)
+
+        # unload a couple of them
+        refs = pm.listReferences()
+        refs[0].unload()
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # save it as versionBase
+        self.maya_env.save_as(version_base)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # clean scene
+        pm.newFile(force=True)
+
+        # re-open the file
+        self.maya_env.open(version_base, force=True, reference_depth=0)
+
+        # check if the references are loaded
+        refs = pm.listReferences()
+        self.assertTrue(refs[1].isLoaded())
+        self.assertFalse(refs[0].isLoaded())
+
+    def test_open_with_reference_depth_parameter_is_1(self):
+        """testing if the open method will load all unloaded references when
+        the reference_depth parameter is 1
+        """
+        # create a couple of versions and reference them to each other
+        # and reference them to the the scene and check if maya updates the
+        # Version.references list
+
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # reference the given versions
+        self.maya_env.reference(version1)
+        self.maya_env.reference(version2)
+
+        # unload a couple of them
+        refs = pm.listReferences()
+        refs[0].unload()
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # save it as versionBase
+        self.maya_env.save_as(version_base)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # clean scene
+        pm.newFile(force=True)
+
+        # re-open the file
+        self.maya_env.open(version_base, force=True, reference_depth=1)
+
+        # check if the references are loaded
+        refs = pm.listReferences()
+        self.assertTrue(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+    def test_open_with_reference_depth_parameter_is_2(self):
+        """testing if the open method will load top only references when the
+        reference_depth parameter is 2
+        """
+        # create a couple of versions and reference them to each other
+        # and reference them to the the scene and check if maya updates the
+        # Version.references list
+
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        version4 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+        self.maya_env.save_as(version4)
+
+        # reference version4 to version2
+        self.maya_env.open(version2, force=True)
+        self.maya_env.reference(version4)
+        pm.saveFile()
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # reference the given versions
+        self.maya_env.reference(version1)
+        self.maya_env.reference(version2)
+
+        # unload a couple of them
+        refs = pm.listReferences()
+        refs[0].unload()
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # save it as versionBase
+        self.maya_env.save_as(version_base)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # clean scene
+        pm.newFile(force=True)
+
+        # re-open the file
+        self.maya_env.open(version_base, force=True, reference_depth=2)
+
+        # check if the references are loaded
+        refs = pm.listReferences(recursive=True)
+        self.assertTrue(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+        self.assertFalse(refs[2].isLoaded())
+
+    def test_open_with_reference_depth_parameter_is_3(self):
+        """testing if the open method will load none of the references when the
+        reference_depth parameter is 3
+        """
+        # create a couple of versions and reference them to each other
+        # and reference them to the the scene and check if maya updates the
+        # Version.references list
+
+        version_base = Version(task=self.task1)
+        db.DBSession.add(version_base)
+        db.DBSession.commit()
+
+        # change the take name
+        version1 = Version(task=self.task1, take_name="Take1")
+        db.DBSession.add(version1)
+        db.DBSession.commit()
+
+        version2 = Version(task=self.task1, take_name="Take2")
+        db.DBSession.add(version2)
+        db.DBSession.commit()
+
+        version3 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        version4 = Version(task=self.task1, take_name="Take3")
+        db.DBSession.add(version3)
+        db.DBSession.commit()
+
+        # now create scenes with these files
+        self.maya_env.save_as(version1)
+        self.maya_env.save_as(version2)
+        self.maya_env.save_as(version3)  # this is the dummy version
+        self.maya_env.save_as(version4)
+
+        # reference version4 to version2
+        self.maya_env.open(version2, force=True)
+        self.maya_env.reference(version4)
+        pm.saveFile()
+
+        # create a new scene
+        pm.newFile(force=True)
+
+        # reference the given versions
+        self.maya_env.reference(version1)
+        self.maya_env.reference(version2)
+
+        # unload a couple of them
+        refs = pm.listReferences()
+        refs[0].unload()
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # save it as versionBase
+        self.maya_env.save_as(version_base)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertTrue(refs[1].isLoaded())
+
+        # clean scene
+        pm.newFile(force=True)
+
+        # re-open the file
+        self.maya_env.open(version_base, force=True, reference_depth=3)
+
+        # check if the references are loaded
+        refs = pm.listReferences(recursive=True)
+        self.assertFalse(refs[0].isLoaded())
+        self.assertFalse(refs[1].isLoaded())
+
     def test_open_replaces_first_level_reference_paths_with_os_independent_path(self):
         """testing if Maya.open() will replace first level reference paths with
         os independent path

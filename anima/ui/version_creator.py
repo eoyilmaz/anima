@@ -38,6 +38,14 @@ elif IS_PYQT4():
     from anima.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 
+ref_depth_res = [
+    'As Saved',
+    'All',
+    'Top Level Only',
+    'None'
+]
+
+
 class VersionsTableWidget(QtGui.QTableWidget):
     """A QTableWidget derivative specialized to hold version data
     """
@@ -1050,6 +1058,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         for r in reprs:
             self.representations_comboBox.addItem(r)
 
+        # add reference depth
+        for r in ref_depth_res:
+            self.ref_depth_comboBox.addItem(r)
+
         logger.debug("restoring the ui with the version from environment")
 
         # get the last version from the environment
@@ -1454,13 +1466,17 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
+            ref_depth = ref_depth_res.index(
+                self.ref_depth_comboBox.currentText()
+            )
 
             # environment can throw RuntimeError for unsaved changes
             try:
                 reference_resolution = \
                     self.environment.open(
                         old_version,
-                        representation=repr_name
+                        representation=repr_name,
+                        reference_depth=ref_depth
                     )
             except RuntimeError as e:
                 # pop a dialog and ask if the user really wants to open the
@@ -1480,7 +1496,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         self.environment.open(
                             old_version,
                             True,
-                            representation=repr_name
+                            representation=repr_name,
+                            reference_depth=ref_depth
                         )
                 else:
                     # no, just return

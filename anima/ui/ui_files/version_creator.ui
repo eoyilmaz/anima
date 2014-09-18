@@ -515,7 +515,18 @@ p, li { white-space: pre-wrap; }
               </widget>
              </item>
              <item>
-              <widget class="QComboBox" name="representations_comboBox"/>
+              <widget class="QComboBox" name="representations_comboBox">
+               <property name="toolTip">
+                <string>Choose Representation (if supported by the environment)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="ref_depth_comboBox">
+               <property name="toolTip">
+                <string>Choose reference depth (if supported by environment)</string>
+               </property>
+              </widget>
              </item>
              <item>
               <spacer name="horizontalSpacer_2">

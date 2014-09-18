@@ -120,7 +120,8 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def open(self, version, force=False, representation=None):
+    def open(self, version, force=False, representation=None,
+             reference_depth=0):
         """the open action
         """
         raise NotImplementedError

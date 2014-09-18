@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Wed Jul 16 12:30:52 2014
+# Created: Thu Sep 18 12:42:56 2014
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -248,6 +248,9 @@ class Ui_Dialog(object):
         self.representations_comboBox = QtGui.QComboBox(self.previous_versions_groupBox)
         self.representations_comboBox.setObjectName(_fromUtf8("representations_comboBox"))
         self.horizontalLayout_5.addWidget(self.representations_comboBox)
+        self.ref_depth_comboBox = QtGui.QComboBox(self.previous_versions_groupBox)
+        self.ref_depth_comboBox.setObjectName(_fromUtf8("ref_depth_comboBox"))
+        self.horizontalLayout_5.addWidget(self.ref_depth_comboBox)
         spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem5)
         self.chose_pushButton = QtGui.QPushButton(self.previous_versions_groupBox)
@@ -326,6 +329,8 @@ class Ui_Dialog(object):
         item.setText(_translate("Dialog", "Description", None))
         self.useNameSpace_checkBox.setToolTip(_translate("Dialog", "<html><head/><body><p>Uncheck it if you are going to use <span style=\" font-weight:600;\">Alembic Cache</span>.</p></body></html>", None))
         self.useNameSpace_checkBox.setText(_translate("Dialog", "Use Namespace", None))
+        self.representations_comboBox.setToolTip(_translate("Dialog", "Choose Representation (if supported by the environment)", None))
+        self.ref_depth_comboBox.setToolTip(_translate("Dialog", "Choose reference depth (if supported by environment)", None))
         self.chose_pushButton.setText(_translate("Dialog", "Choose", None))
         self.open_pushButton.setText(_translate("Dialog", "Open", None))
         self.reference_pushButton.setText(_translate("Dialog", "Reference", None))
