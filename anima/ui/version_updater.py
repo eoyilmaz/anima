@@ -238,9 +238,14 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         version = item.version
-        #item_action = item.action
+        latest_published_version = None
+        if version:
+            latest_published_version = version.latest_published_version
 
-        #if item_action != 'create':
+
+        item_action = item.action
+
+        # if item_action != 'create':
         #    return
 
         from stalker import Version
@@ -250,19 +255,19 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
         # create the menu
         menu = QtGui.QMenu()
 
-        # Add Depends To menu
+        # Add "Open..." action
+        # Always open the latest published version
         absolute_full_path = version.absolute_full_path
         if absolute_full_path:
             action = menu.addAction('Open...')
-            action.path = absolute_full_path
+            action.version = latest_published_version
 
-        selected_item = menu.exec_(global_position)
+        selected_action = menu.exec_(global_position)
 
-        if selected_item:
-            choice = selected_item.text()
-            path = selected_item.path
+        if selected_action:
+            choice = selected_action.text()
             if choice == 'Open...':
-                self.open_version(version)
+                self.open_version(selected_action.version)
 
     def open_version(self, version):
         """opens the given version in a new environment
