@@ -286,7 +286,8 @@ class Fusion(EnvironmentBase):
             'export_as() is not implemented yet for Fusion'
         )
 
-    def open(self, version, force=False, representation=None):
+    def open(self, version, force=False, representation=None,
+             reference_depth=0):
         """the open action for nuke environment
         """
         version_full_path = os.path.normpath(version.absolute_full_path)

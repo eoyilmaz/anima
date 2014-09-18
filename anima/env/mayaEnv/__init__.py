@@ -350,7 +350,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return True
 
-    def open(self, version, force=False, representation=None):
+    def open(self, version, force=False, representation=None,
+             reference_depth=0):
         """The open action for Maya environment.
 
         Opens the given Version file, sets the workspace etc.
@@ -367,11 +368,22 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         :meth:`.update_verions`, so only desired version instances are updated
         or a new version is created for them.
 
+        :param bool force: Force open the file.
         :param representation: Opens the given version with the given
           representations.
+        :param int reference_depth: An integer parameter for defining the
+         preferred reference depth to be loaded. Should be one of 0, 1, 2, 3
+         mapping the values of:
+
+          0: saved state
+          1: all
+          2: topOnly
+          3: none
 
         :returns: (Bool, Dictionary)
         """
+        reference_depth_res = [None, 'all', 'topOnly', 'none']
+
         # store current workspace path
         previous_workspace_path = pm.workspace.path
 
@@ -386,7 +398,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         try:
             # switch representations
-            if representation != Representation.base_repr_name:
+            if representation and representation != Representation.base_repr_name:
                 logger.info('requested representation: %s' % representation)
                 # so we have a representation request
                 pm.openFile(
@@ -401,11 +413,21 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # force load reference
                     ref.load()
             else:
-                pm.openFile(
-                    version.absolute_full_path,
-                    f=force,
-                    #loadReferenceDepth='none'
-                )
+                if reference_depth_res[reference_depth] is None:
+                    logger.info('not using loadReferenceDepth parameter')
+                    # load in saved state
+                    pm.openFile(
+                        version.absolute_full_path,
+                        f=force
+                    )
+                else:
+                    logger.info('using loadReferenceDepth:%s' %
+                                reference_depth_res[reference_depth])
+                    pm.openFile(
+                        version.absolute_full_path,
+                        f=force,
+                        loadReferenceDepth=reference_depth_res[reference_depth]
+                    )
         except RuntimeError as e:
             # restore the previous workspace
             pm.workspace.open(previous_workspace_path)
