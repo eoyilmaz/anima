@@ -3,10 +3,12 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import functools
+import os
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 import pymel.core as pm
 import maya.mel as mel
@@ -15,6 +17,8 @@ from anima.env.mayaEnv import auxiliary, camera_tools
 
 
 __last_commands__ = []  # list of dictionaries
+
+__last_tab__ = 'ANIMA_TOOLBOX_LAST_TAB_INDEX'
 
 
 def repeater(index):
@@ -122,7 +126,8 @@ def UI():
     )
 
     main_tabLayout = pm.tabLayout(
-        'main_tabLayout', scr=True, cr=True, parent=main_formLayout)
+        'main_tabLayout', scr=True, cr=True, parent=main_formLayout
+    )
 
     #attach the main_tabLayout to main_formLayout
     pm.formLayout(
@@ -146,58 +151,10 @@ def UI():
         with general_columnLayout:
             color.change()
             pm.button(
-                'deleteAllSound_button', l="delete all sound",
-                c=RepeatedCallback(General.delete_all_sound),
-                ann="delete all sound",
-                bgc=color.color
-            )
-
-            pm.button(
-                'displayHandlesOfSelectedObjects_button',
-                l="toggle handles of selected objects",
-                c=RepeatedCallback(
-                    General.toggle_attributes,
-                    "displayHandle"
-                ),
-                ann="select objects to toggle handle",
-                bgc=color.color
-            )
-
-            color.change()
-            pm.button(
                 'selectionManager_button',
                 l="Selection Manager",
                 c=RepeatedCallback(General.selection_manager),
                 ann="Selection Manager",
-                bgc=color.color
-            )
-
-            color.change()
-            pm.button(
-                'referenceSelectedObjects_button',
-                l="reference selected objects",
-                c=RepeatedCallback(
-                    General.reference_selected_objects
-                ),
-                ann="sets objects display override to reference",
-                bgc=color.color
-            )
-
-            pm.button(
-                'dereferenceSelectedObjects_button',
-                l="de-reference selected objects",
-                c=RepeatedCallback(
-                    General.dereference_selected_objects
-                ),
-                ann="sets objects display override to reference",
-                bgc=color.color
-            )
-
-            color.change()
-            pm.button(
-                'oyDeReferencer_button', l="dereferencer",
-                c=RepeatedCallback(General.dereferencer),
-                ann="sets all objects display override  to normal",
                 bgc=color.color
             )
 
@@ -939,6 +896,7 @@ def UI():
                 bgc=color.color
             )
 
+            pm.text(l='===== Exporters =====')
             color.change()
             rowLayout = pm.rowLayout(nc=3, adj=3, bgc=color.color)
             with rowLayout:
@@ -957,6 +915,7 @@ def UI():
                                              endButtonField),
                           bgc=color.color)
 
+            pm.text(l='===== Component Animation =====')
             color.change()
             smooth_component_anim = pm.textFieldButtonGrp(
                 'oySmoothComponentAnimation_button',
@@ -1138,6 +1097,54 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'deleteAllSound_button', l="delete all sound",
+                c=RepeatedCallback(General.delete_all_sound),
+                ann="delete all sound",
+                bgc=color.color
+            )
+
+            pm.button(
+                'displayHandlesOfSelectedObjects_button',
+                l="toggle handles of selected objects",
+                c=RepeatedCallback(
+                    General.toggle_attributes,
+                    "displayHandle"
+                ),
+                ann="select objects to toggle handle",
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'referenceSelectedObjects_button',
+                l="reference selected objects",
+                c=RepeatedCallback(
+                    General.reference_selected_objects
+                ),
+                ann="sets objects display override to reference",
+                bgc=color.color
+            )
+
+            pm.button(
+                'dereferenceSelectedObjects_button',
+                l="de-reference selected objects",
+                c=RepeatedCallback(
+                    General.dereference_selected_objects
+                ),
+                ann="sets objects display override to reference",
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'oyDeReferencer_button', l="dereferencer",
+                c=RepeatedCallback(General.dereferencer),
+                ann="sets all objects display override  to normal",
+                bgc=color.color
+            )
+
     pm.tabLayout(
         main_tabLayout,
         edit=True,
@@ -1148,7 +1155,8 @@ def UI():
             (render_columnLayout, "Ren"),
             (animation_columnLayout, "Ani"),
             (obsolete_columnLayout, "Obs")
-        ]
+        ],
+        cc=functools.partial(store_tab_index, main_tabLayout)
     )
 
     # pm.showWindow(toolbox_window)
@@ -1164,6 +1172,26 @@ def UI():
         allowedArea=["left", "right"],
         width=width
     )
+
+    # switch to last tab
+    last_tab_index = get_last_tab_index()
+    if last_tab_index:
+        pm.tabLayout(
+            main_tabLayout,
+            e=1,
+            sti=last_tab_index
+        )
+
+
+def store_tab_index(tab_layout):
+    val = pm.tabLayout(tab_layout, q=1, sti=1)
+    os.environ[__last_tab__] = str(val)
+
+
+def get_last_tab_index():
+    """returns the last tab index from settings
+    """
+    return int(os.environ.get(__last_tab__, 0))
 
 
 class General(object):
