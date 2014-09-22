@@ -250,8 +250,8 @@ def draw_stalker_sequence_menu_item(self, context):
     # add all the child tasks under it
     for scene in sorted(seq.children, key=lambda x: x.name):
         # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
-        # op.scene_id = scene.id
-        # op.scene_name = scene.name
+        # op.stalker_entity_id = scene.id
+        # op.stalker_entity_name = scene.name
         idname = idname_template % (scene.entity_type, scene.id)
         layout.menu(idname, text=scene.name)
 
@@ -272,8 +272,8 @@ def draw_stalker_scene_menu_item(self, context):
         StalkerSceneAddEverythingOperator.bl_idname,
         text='Add Everything'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     layout.separator()
 
@@ -282,16 +282,16 @@ def draw_stalker_scene_menu_item(self, context):
         StalkerSceneAddStoryboardOperator.bl_idname,
         text='Storyboard'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # Add Previs Only
     op = layout.operator(
         StalkerSceneAddPrevisOperator.bl_idname,
         text='Previs'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     layout.separator()
 
@@ -320,8 +320,8 @@ def draw_stalker_scene_add_from_shots_menu_item(self, context):
         StalkerSceneAddAllShotOutputsOperator.bl_idname,
         text='Add All Shot Outputs'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # separator
     layout.separator()
@@ -331,32 +331,32 @@ def draw_stalker_scene_add_from_shots_menu_item(self, context):
         StalkerSceneAddAllShotPrevisOutputsOperator.bl_idname,
         text='Previs'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # Animation
     op = layout.operator(
         StalkerSceneAddAllShotAnimationOutputsOperator.bl_idname,
         text='Animation'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # Lighting
     op = layout.operator(
         StalkerSceneAddAllShotLightingOutputsOperator.bl_idname,
         text='Lighting'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # Comp
     op = layout.operator(
         StalkerSceneAddAllShotCompOutputsOperator.bl_idname,
         text='Comp'
     )
-    op.scene_id = scene.id
-    op.scene_name = scene.name
+    op.stalker_entity_id = scene.id
+    op.stalker_entity_name = scene.name
 
     # separator
     layout.separator()
@@ -390,8 +390,8 @@ def draw_stalker_shot_menu_item(self, context):
     # add all the child tasks under it
     # for scene in sorted(seq.children, key=lambda x: x.name):
     #     # op = layout.operator(StalkerSceneMenu.bl_idname, text=scene.name)
-    #     # op.scene_id = scene.id
-    #     # op.scene_name = scene.name
+    #     # op.stalker_entity_id = scene.id
+    #     # op.stalker_entity_name = scene.name
     #     idname = idname_template % (scene.entity_type, scene.id)
     #     layout.menu(idname, text=scene.name)
 
@@ -401,8 +401,8 @@ def draw_stalker_shot_menu_item(self, context):
         StalkerShotAddAllTaskOutputsOperator.bl_idname,
         text='Add All Task Outputs'
     )
-    op.shot_id = self.stalker_entity_id
-    op.shot_name = self.stalker_entity_name
+    op.stalker_entity_id = self.stalker_entity_id
+    op.stalker_entity_name = self.stalker_entity_name
 
     # ------
     # Add a separator
@@ -413,32 +413,32 @@ def draw_stalker_shot_menu_item(self, context):
         StalkerShotAddPrevisOutputOperator.bl_idname,
         text='Previs'
     )
-    op.shot_id = self.stalker_entity_id
-    op.shot_name = self.stalker_entity_name
+    op.stalker_entity_id = self.stalker_entity_id
+    op.stalker_entity_name = self.stalker_entity_name
 
     # Animation
     op = layout.operator(
         StalkerShotAddAnimationOutputOperator.bl_idname,
         text='Animation'
     )
-    op.shot_id = self.stalker_entity_id
-    op.shot_name = self.stalker_entity_name
+    op.stalker_entity_id = self.stalker_entity_id
+    op.stalker_entity_name = self.stalker_entity_name
 
     # Lighting
     op = layout.operator(
         StalkerShotAddLightingOutputOperator.bl_idname,
         text='Lighting'
     )
-    op.shot_id = self.stalker_entity_id
-    op.shot_name = self.stalker_entity_name
+    op.stalker_entity_id = self.stalker_entity_id
+    op.stalker_entity_name = self.stalker_entity_name
 
     # Comp
     op = layout.operator(
         StalkerShotAddCompOutputOperator.bl_idname,
         text='Comp'
     )
-    op.shot_id = self.stalker_entity_id
-    op.shot_name = self.stalker_entity_name
+    op.stalker_entity_id = self.stalker_entity_id
+    op.stalker_entity_name = self.stalker_entity_name
 
 
 class StalkerAddFromProjectMenu(bpy.types.Menu):
@@ -460,15 +460,15 @@ class StalkerSceneAddEverythingOperator(bpy.types.Operator):
     bl_label = 'Add Everything'
     bl_idname = 'stalker.scene_add_everything_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -489,15 +489,15 @@ class StalkerSceneAddStoryboardOperator(bpy.types.Operator):
     bl_label = 'Add Storyboard Only'
     bl_idname = 'stalker.scene_add_storyboard_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -514,15 +514,15 @@ class StalkerSceneAddPrevisOperator(bpy.types.Operator):
     bl_label = 'Add Previs Only'
     bl_idname = 'stalker.scene_add_previs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -539,15 +539,15 @@ class StalkerSceneAddAllShotOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Shot Outputs'
     bl_idname = 'stalker.scene_add_all_shot_outputs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -571,15 +571,15 @@ class StalkerSceneAddAllShotPrevisOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Shot Previs Outputs'
     bl_idname = 'stalker.scene_add_all_shot_previs_outputs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -603,15 +603,15 @@ class StalkerSceneAddAllShotAnimationOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Shot Animation Outputs'
     bl_idname = 'stalker.scene_add_all_shot_animation_outputs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -635,15 +635,15 @@ class StalkerSceneAddAllShotLightingOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Shot Lighting Outputs'
     bl_idname = 'stalker.scene_add_all_shot_lighting_outputs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -667,15 +667,15 @@ class StalkerSceneAddAllShotCompOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Shot Comp Outputs'
     bl_idname = 'stalker.scene_add_all_shot_comp_outputs_op'
 
-    scene_id = bpy.props.IntProperty(name='scene_id')
-    scene_name = bpy.props.StringProperty(name='scene_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Task
-        scene = Task.query.get(self.scene_id)
+        scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
 
@@ -699,15 +699,15 @@ class StalkerShotAddAllTaskOutputsOperator(bpy.types.Operator):
     bl_label = 'Add All Task Outputs'
     bl_idname = 'stalker.shot_add_all_task_outputs_op'
 
-    shot_id = bpy.props.IntProperty(name='shot_id')
-    shot_name = bpy.props.StringProperty(name='shot_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Shot
-        shot = Shot.query.get(self.shot_id)
+        shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
 
@@ -729,15 +729,15 @@ class StalkerShotAddPrevisOutputOperator(bpy.types.Operator):
     bl_label = 'Add Previs Output'
     bl_idname = 'stalker.shot_add_previs_output_op'
 
-    shot_id = bpy.props.IntProperty(name='shot_id')
-    shot_name = bpy.props.StringProperty(name='shot_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Shot
-        shot = Shot.query.get(self.shot_id)
+        shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
 
@@ -756,15 +756,15 @@ class StalkerShotAddAnimationOutputOperator(bpy.types.Operator):
     bl_label = 'Add Animation Output'
     bl_idname = 'stalker.shot_add_animation_output_op'
 
-    shot_id = bpy.props.IntProperty(name='shot_id')
-    shot_name = bpy.props.StringProperty(name='shot_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Shot
-        shot = Shot.query.get(self.shot_id)
+        shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
 
@@ -783,15 +783,15 @@ class StalkerShotAddLightingOutputOperator(bpy.types.Operator):
     bl_label = 'Add Lighting Output'
     bl_idname = 'stalker.shot_add_lighting_output_op'
 
-    shot_id = bpy.props.IntProperty(name='shot_id')
-    shot_name = bpy.props.StringProperty(name='shot_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Shot
-        shot = Shot.query.get(self.shot_id)
+        shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
 
@@ -810,15 +810,15 @@ class StalkerShotAddCompOutputOperator(bpy.types.Operator):
     bl_label = 'Add Comp Output'
     bl_idname = 'stalker.shot_add_comp_output_op'
 
-    shot_id = bpy.props.IntProperty(name='shot_id')
-    shot_name = bpy.props.StringProperty(name='shot_name')
+    stalker_entity_id = bpy.props.IntProperty(name='stalker_entity_id')
+    stalker_entity_name = bpy.props.StringProperty(name='stalker_entity_name')
 
     def execute(self, context):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
         from stalker import Shot
-        shot = Shot.query.get(self.shot_id)
+        shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
 
