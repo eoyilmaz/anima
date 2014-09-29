@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 
 publishers = {}
+
+# This is a storage for intermediate data like newly created versions etc.
 staging = {}
 
 

@@ -7,6 +7,7 @@
 import os
 import pymel.core as pm
 import maya.cmds as mc
+from anima import stalker_server_internal_address
 
 from anima.publish import clear_publishers, publisher, staging
 from anima.exc import PublishError
@@ -19,6 +20,24 @@ MAX_NODE_DISPLAY = 80
 #*********#
 # GENERIC #
 #*********#
+@publisher
+def check_time_logs():
+    """do not allow publishing if there is no time logs for the task, do that
+    only for non WFD tasks
+    """
+    v = staging.get('version')
+
+    if v:
+        task = v.task
+        if task.status.code != 'WFD':
+            if len(task.time_logs) == 0:
+                raise PublishError(
+                    '<p>Please create a TimeLog before publishing this '
+                    'asset:<br><br>'
+                    '<a href="%s/tasks/%s/view">Open In WebBrowser</a>'
+                    '</p>' % (stalker_server_internal_address, task.id)
+                )
+
 @publisher
 def check_node_names_with_bad_characters():
     """checks node names and ensures that there are no nodes with ord(c) > 127

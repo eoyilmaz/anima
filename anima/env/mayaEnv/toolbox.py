@@ -43,19 +43,20 @@ def repeat_last(call_data):
     kwargs = call_data[2]
 
     command = \
-        'print \\"\\";python(\\\"from anima.env.mayaEnv.toolbox import repeater; repeater(%s);\\\");' % index
+        'print \\"\\";python(\\\"from anima.env.mayaEnv.toolbox import ' \
+        'repeater; repeater(%s);\\\");' % index
 
     repeat_last_command = 'repeatLast -ac "%(command)s" -acl "%(label)s";' % {
         'command': command,
         'label': callable_.__name__
     }
-    print repeat_last_command
+    print(repeat_last_command)
 
     pm.mel.eval(repeat_last_command)
     __last_commands__.append(call_data)
 
     # also call the callable
-    call_data[0](*call_data[1], **call_data[2])
+    callable_(*args, **kwargs)
 
 
 def RepeatedCallback(callable_, *args, **kwargs):
