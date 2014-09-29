@@ -5,6 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
+import datetime
 import pymel.core as pm
 import maya.cmds as mc
 from anima import stalker_server_internal_address
@@ -29,7 +30,8 @@ def check_time_logs():
 
     if v:
         task = v.task
-        if task.status.code != 'WFD':
+        now = datetime.datetime.now()
+        if task.status.code != 'WFD' and task.computed_start <= now:
             if len(task.time_logs) == 0:
                 raise PublishError(
                     '<p>Please create a TimeLog before publishing this '
