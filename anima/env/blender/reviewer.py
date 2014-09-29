@@ -4,6 +4,9 @@ import os
 import bpy
 import logging
 
+from stalker import Project, Task, Version, Sequence, Shot
+
+
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 logger.setLevel = logging.DEBUG
@@ -38,6 +41,38 @@ class StripGenerator(object):
 
     def __init__(self):
         pass
+
+    def add_from_task(self, task):
+        """adds the latest output of the given task
+        """
+        if not task:
+            # inform the user
+            return
+
+        # get the repo
+        repo = task.project.repository
+
+        # do it in dirty way
+        versions = Version.query\
+            .filter(Version.task == task)\
+            .order_by(Version.version_number.desc())\
+            .all()
+
+        found_output = False
+        for v in versions:
+            if len(v.outputs):
+                # get all outputs of this version
+                for output in v.outputs:
+                    output_absolute_full_path = os.path.join(
+                        repo.path,
+                        output.full_path
+                    )
+                    self.add_output(output_absolute_full_path)
+                    found_output = True
+                    break
+
+            if found_output:
+                break
 
     def add_output(self, full_path, name=None, channel=1):
         """adds the media in the given path to the time line
@@ -94,41 +129,13 @@ class StripGenerator(object):
 
         :param task: A :class:`stalker.models.task.Task` class instance.
         """
-        from stalker import Task
-
         # get the storyboard task
         storyboard = Task.query\
             .filter(Task.parent == task)\
             .filter(Task.name == 'Storyboard')\
             .first()
 
-        if not storyboard:
-            # inform the user
-            logger.debug('no storyboard task under %s' % task)
-            return
-
-        # get the repo
-        repo = storyboard.project.repository
-
-        # do it in dirty way
-        latest_version_number = 0
-        latest_version_outputs = []
-        for v in storyboard.versions:
-            if len(v.outputs):
-                if v.version_number > latest_version_number:
-                    latest_version_number = v.version_number
-                    latest_version_outputs = v.outputs
-
-        # just use the latest one with outputs
-        if len(latest_version_outputs):
-            output = latest_version_outputs[-1]
-            output_absolute_full_path = os.path.join(
-                repo.path,
-                output.full_path
-            )
-            self.add_output(output_absolute_full_path)
-        else:
-            logger.debug('no storyboard version with outputs')
+        self.add_from_task(storyboard)
 
     def previs(self, task):
         """when a Shot task is given it will create a strip from the output of
@@ -136,38 +143,13 @@ class StripGenerator(object):
 
         :param task: A :class:`stalker.models.task.Task` class instance.
         """
-        from stalker import Task
-
-        # get the storyboard task
+        # get the previs task
         previs = Task.query\
             .filter(Task.parent == task)\
             .filter(Task.name == 'Previs')\
             .first()
 
-        if not previs:
-            # inform the user
-            return
-
-        # get the repo
-        repo = previs.project.repository
-
-        # do it in dirty way
-        latest_version_number = 0
-        latest_version_outputs = []
-        for v in previs.versions:
-            if len(v.outputs):
-                if v.version_number > latest_version_number:
-                    latest_version_number = v.version_number
-                    latest_version_outputs = v.outputs
-
-        if len(latest_version_outputs):
-            # just use the latest one
-            output = latest_version_outputs[-1]
-            output_absolute_full_path = os.path.join(
-                repo.path,
-                output.full_path
-            )
-            self.add_output(output_absolute_full_path)
+        self.add_from_task(previs)
 
     def animation(self, task):
         """when a Shot task is given it will create a strip from the output of
@@ -175,7 +157,13 @@ class StripGenerator(object):
 
         :param task: A :class:`stalker.models.task.Task` class instance.
         """
-        pass
+        # get the storyboard task
+        animation = Task.query\
+            .filter(Task.parent == task)\
+            .filter(Task.name == 'Animation')\
+            .first()
+
+        self.add_from_task(animation)
 
     def lighting(self, task):
         """when a Shot task is given it will create a strip from the output of
@@ -183,7 +171,13 @@ class StripGenerator(object):
 
         :param task: A :class:`stalker.models.task.Task` class instance.
         """
-        pass
+        # get the storyboard task
+        animation = Task.query\
+            .filter(Task.parent == task)\
+            .filter(Task.name == 'Animation')\
+            .first()
+
+        self.add_from_task(animation)
 
     def comp(self, task):
         """when a Shot task is given it will create a strip from the output of
@@ -223,7 +217,6 @@ def draw_stalker_project_menu_item(self, context):
     layout = self.layout
 
     # get the project
-    from stalker import Project, Sequence
     project = Project.query.get(self.stalker_entity_id)
     all_seqs = Sequence.query\
         .filter(Sequence.project == project)\
@@ -243,8 +236,6 @@ def draw_stalker_sequence_menu_item(self, context):
     layout = self.layout
 
     # get the sequence
-    from stalker import Sequence
-
     seq = Sequence.query.get(self.stalker_entity_id)
 
     # add all the child tasks under it
@@ -264,7 +255,6 @@ def draw_stalker_scene_menu_item(self, context):
 
     layout = self.layout
 
-    from stalker import Task
     scene = Task.query.get(self.stalker_entity_id)
 
     # Add Everything
@@ -312,7 +302,6 @@ def draw_stalker_scene_add_from_shots_menu_item(self, context):
 
     layout = self.layout
 
-    from stalker import Task
     scene = Task.query.get(self.stalker_entity_id)
 
     # Add All Shot Task Outputs
@@ -383,7 +372,6 @@ def draw_stalker_shot_menu_item(self, context):
     layout = self.layout
 
     # get the sequence
-    from stalker import Shot
 
     shot = Shot.query.get(self.stalker_entity_id)
 
@@ -448,7 +436,6 @@ class StalkerAddFromProjectMenu(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        from stalker import Project
         for project in Project.query.order_by(Project.name).all():
             idname = 'stalker.%s_%s_menu' % (project.entity_type, project.id)
             layout.menu(idname)
@@ -467,7 +454,6 @@ class StalkerSceneAddEverythingOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -479,6 +465,12 @@ class StalkerSceneAddEverythingOperator(bpy.types.Operator):
         strip_gen.animation(scene)
         strip_gen.lighting(scene)
         strip_gen.comp(scene)
+
+        # go to each Shot and add latest outputs of everything under it
+        for task in scene.walk_hierarchy():
+            if isinstance(task, Shot):
+                # find the animation task under it
+                animation_task = Task.query.filter(Task.parent_id==task.id).filter(Task.name=='Animation').first()
 
         return set(['FINISHED'])
 
@@ -496,7 +488,6 @@ class StalkerSceneAddStoryboardOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -521,7 +512,6 @@ class StalkerSceneAddPrevisOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -546,7 +536,6 @@ class StalkerSceneAddAllShotOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -578,7 +567,6 @@ class StalkerSceneAddAllShotPrevisOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -610,7 +598,6 @@ class StalkerSceneAddAllShotAnimationOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -642,7 +629,6 @@ class StalkerSceneAddAllShotLightingOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -674,7 +660,6 @@ class StalkerSceneAddAllShotCompOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Task
         scene = Task.query.get(self.stalker_entity_id)
 
         logger.debug('scene: %s' % scene)
@@ -706,7 +691,6 @@ class StalkerShotAddAllTaskOutputsOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Shot
         shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
@@ -736,7 +720,6 @@ class StalkerShotAddPrevisOutputOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Shot
         shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
@@ -763,7 +746,6 @@ class StalkerShotAddAnimationOutputOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Shot
         shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
@@ -790,7 +772,6 @@ class StalkerShotAddLightingOutputOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Shot
         shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
@@ -817,7 +798,6 @@ class StalkerShotAddCompOutputOperator(bpy.types.Operator):
         logger.debug('inside %s.execute()' % self.__class__.__name__)
 
         # get the scene and all the shots under it
-        from stalker import Shot
         shot = Shot.query.get(self.stalker_entity_id)
 
         logger.debug('shot: %s' % shot)
@@ -913,7 +893,6 @@ def register():
     # classes which is a very very very very bad practice, which essentially
     # does nothing better than bloating the python name space.
     #
-    from stalker import Project, Sequence, Shot
     for project in Project.query.order_by(Project.name).all():
         opclass = generate_op_class(
             project,
