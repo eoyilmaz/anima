@@ -515,14 +515,23 @@ def load_shelf_tab(shelf_path):
     """
     # look in to the shelf mel file from user folders
     if os.path.exists(shelf_path):
-        pm.mel.eval('loadNewShelf "%s"' % shelf_path)
+        try:
+            pm.mel.eval('loadNewShelf "%s"' % shelf_path)
+        except Exception:
+            # probably not in GUI mode
+            return
 
 
 def delete_shelf_tab(shelf_name, confirm=True):
     """The python version of the original mel script of Maya
     :param shelf_name: The name of the shelf to delete
     """
-    shelf_top_level_path = pm.melGlobals['gShelfTopLevel']
+    try:
+        shelf_top_level_path = pm.melGlobals['gShelfTopLevel']
+    except KeyError:
+        # not in GUI mode
+        return
+
     shelf_top_level = pm.windows.tabLayout(shelf_top_level_path, e=1)
 
     if len(shelf_top_level.children()) < 0:
@@ -586,3 +595,4 @@ def delete_shelf_tab(shelf_name, confirm=True):
 
     # Make sure the new active shelf tab has buttons
     pm.mel.eval('shelfTabChange();')
+
