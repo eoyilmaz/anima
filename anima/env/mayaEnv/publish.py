@@ -31,7 +31,7 @@ def check_time_logs():
     if v:
         task = v.task
         now = datetime.datetime.now()
-        if task.status.code != 'WFD' and task.computed_start <= now:
+        if task.status.code != 'WFD' and task.start <= now:
             if len(task.time_logs) == 0:
                 raise PublishError(
                     '<p>Please create a TimeLog before publishing this '
