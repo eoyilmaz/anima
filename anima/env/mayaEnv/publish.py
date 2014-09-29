@@ -31,7 +31,8 @@ def check_time_logs():
     if v:
         task = v.task
         now = datetime.datetime.now()
-        if task.status.code != 'WFD' and task.start <= now:
+        task_start = task.computed_start if task.computed_start else task.start
+        if task.status.code != 'WFD' and task_start <= now:
             if len(task.time_logs) == 0:
                 raise PublishError(
                     '<p>Please create a TimeLog before publishing this '
@@ -39,6 +40,7 @@ def check_time_logs():
                     '<a href="%s/tasks/%s/view">Open In WebBrowser</a>'
                     '</p>' % (stalker_server_internal_address, task.id)
                 )
+
 
 @publisher
 def check_node_names_with_bad_characters():
