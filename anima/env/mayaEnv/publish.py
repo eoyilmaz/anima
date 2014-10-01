@@ -389,6 +389,26 @@ def check_empty_groups():
 
 
 @publisher('model')
+def check_empty_shapes():
+    """checks if there are empty mesh nodes
+    """
+    empty_shape_nodes = []
+    for node in pm.ls(type='mesh'):
+        if node.numVertices() == 0:
+            empty_shape_nodes.append(node)
+
+    if len(empty_shape_nodes) > 0:
+        pm.select(map(
+            lambda x: x.getParent(),
+            empty_shape_nodes
+        ))
+        raise PublishError(
+            'There are <b>meshes with no geometry</b> in your scene, '
+            'please delete them!!!'
+        )
+
+
+@publisher('model')
 def check_uv_existence():
     """check if there are uvs in all objects
     """
