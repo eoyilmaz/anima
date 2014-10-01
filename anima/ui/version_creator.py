@@ -1409,6 +1409,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         try:
             environment.save_as(new_version)
         except RuntimeError as e:
+            print(e)
             QtGui.QMessageBox.critical(
                 self,
                 'Error',
