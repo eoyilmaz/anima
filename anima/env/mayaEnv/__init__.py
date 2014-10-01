@@ -1238,7 +1238,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     logger.info("with: %s" % new_path)
 
                     # check if it has any incoming connections
-                    inputs = node.attr(attr_name).inputs(p=1)
+                    try:
+                        inputs = node.attr(attr_name).inputs(p=1)
+                    except TypeError as e:
+                        inputs = []
+                        print('ignoring this error: %s' % e)
+                        print('node     : %s' % node.name())
+                        print('attr_name: %s' % attr_name)
+
                     if len(inputs):
                         # it has incoming connections
                         # so set the other side
