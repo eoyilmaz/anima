@@ -1374,7 +1374,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             new_version = self.get_new_version()
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
-            QtGui.QMessageBox.critical(self, "Error", str(e))
+            try:
+                error_message = '%s' % e
+            except UnicodeEncodeError:
+                error_message = unicode(e)
+            QtGui.QMessageBox.critical(self, "Error", error_message)
             return None
 
         if not new_version:
