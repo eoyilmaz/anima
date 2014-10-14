@@ -12,6 +12,7 @@ from anima import stalker_server_internal_address
 
 from anima.publish import clear_publishers, publisher, staging
 from anima.exc import PublishError
+from anima.utils import utc_to_local
 
 clear_publishers()
 
@@ -32,6 +33,7 @@ def check_time_logs():
         task = v.task
         now = datetime.datetime.now()
         task_start = task.computed_start if task.computed_start else task.start
+        task_start = utc_to_local(task_start)
         if task.status.code != 'WFD' and task_start <= now:
             if len(task.time_logs) == 0:
                 raise PublishError(
