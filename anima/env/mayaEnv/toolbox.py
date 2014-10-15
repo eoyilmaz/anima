@@ -5,6 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import functools
 import os
+from anima.env import to_os_independent_path
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
@@ -1657,7 +1658,9 @@ class General(object):
                 .filter(Version.full_path.endswith(filename))\
                 .first()
             if v:
-                ref.replaceWith(v.absolute_full_path)
+                ref.replaceWith(
+                    to_os_independent_path(v.absolute_full_path)
+                )
 
 
 class Modeling(object):
