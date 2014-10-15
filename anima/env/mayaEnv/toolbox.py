@@ -324,6 +324,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'create_curve_from_mesh_edges_button',
+                l="Curve From Mesh Edges",
+                c=RepeatedCallback(Modeling.create_curve_from_mesh_edges),
+                ann="Creates a curve from selected mesh edges",
+                bgc=color.color
+            )
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -1544,8 +1553,7 @@ class General(object):
 
     @classmethod
     def delete_all_sound(cls):
-        selection = pm.ls(type="audio")
-        pm.delete(selection)
+        pm.delete(pm.ls(type="audio"))
 
     @classmethod
     def fix_reference_paths(cls):
@@ -1664,6 +1672,9 @@ class General(object):
 
 
 class Modeling(object):
+    """Modeling tools
+    """
+
     @classmethod
     def reverse_normals(cls):
         selection = pm.ls(sl=1)
@@ -1734,6 +1745,92 @@ class Modeling(object):
         """opens the mel script oyUVTools
         """
         pm.mel.eval('oyUVTools;')
+
+    @classmethod
+    def create_curve_from_mesh_edges(cls):
+        """creates 3rd degree curves from the selected mesh edges
+        """
+
+        def order_edges(edge_list):
+            """orders the given edge list according to their connectivity
+            """
+            edge_list = pm.ls(edge_list, fl=1)
+
+            # find a starting edge
+            starting_edge = None
+            for e in edge_list:
+                connected_edges = pm.ls(e.connectedEdges(), fl=1)
+                number_of_connected_edges_in_selection = 0
+                for e2 in connected_edges:
+                    if e2 in edge_list:
+                        number_of_connected_edges_in_selection += 1
+
+                if number_of_connected_edges_in_selection == 1:
+                    starting_edge = e
+                    break
+
+            if starting_edge is None:
+                starting_edge = edge_list[0]
+
+            current_edge = starting_edge
+            ordered_edges = [current_edge]
+            edge_list.remove(current_edge)
+
+            i = 0
+            while current_edge and len(edge_list) and i < 1000:
+                i += 1
+                # go over neighbours that are in the selection list
+                next_edge = None
+                connected_edges = pm.ls(current_edge.connectedEdges(), fl=1)
+                for e in connected_edges:
+                    if e in edge_list:
+                        next_edge = e
+                        break
+
+                if next_edge:
+                    edge_list.remove(next_edge)
+                    current_edge = next_edge
+                    ordered_edges.append(current_edge)
+
+            return ordered_edges
+
+        def order_vertices(ordered_edges):
+            """orders the vertices of the given ordered edge list
+            """
+            # now get an ordered list of vertices
+            ordered_vertices = []
+
+            for i, e in enumerate(ordered_edges[0:-1]):
+                v0, v1 = pm.ls(e.connectedVertices(), fl=1)
+
+                # get the connected edges of v0
+                if ordered_edges[i+1] not in pm.ls(v0.connectedEdges(), fl=1):
+                    # v0 is the first vertex
+                    ordered_vertices.append(v0)
+                else:
+                    # v0 is the second vertex
+                    ordered_vertices.append(v1)
+
+            # append the vertex of the last edge which is not in the list
+            v0, v1 = pm.ls(ordered_edges[-1].connectedVertices(), fl=1)
+            # get the connected edges of v0
+            if ordered_edges[-2] not in pm.ls(v0.connectedEdges(), fl=1):
+                # v0 is the last vertex
+                ordered_vertices.append(v1)
+                ordered_vertices.append(v0)
+            else:
+                # v1 is the last vertex
+                ordered_vertices.append(v0)
+                ordered_vertices.append(v1)
+
+            return ordered_vertices
+
+        selection = pm.ls(sl=1)
+        ordered_edges = order_edges(selection)
+        ordered_vertices = order_vertices(ordered_edges)
+
+        # now create a curve from the given vertices
+        pm.curve(p=map(lambda x: x.getPosition(), ordered_vertices), d=3)
 
 
 class Rigging(object):
