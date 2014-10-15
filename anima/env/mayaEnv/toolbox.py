@@ -268,6 +268,15 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'bind_to_original_button',
+                l='Bind To Original',
+                c=RepeatedCallback(General.bind_to_original),
+                ann='Binds the current local references to the ones on the '
+                    'repository',
+                bgc=color.color
+            )
+
         # ----- MODELING ------
         modeling_columnLayout = pm.columnLayout(
             'modeling_columnLayout',
@@ -1629,6 +1638,26 @@ class General(object):
             # open the zip file in browser
             from anima.utils import open_browser_in_location
             open_browser_in_location(new_zip_path)
+
+    @classmethod
+    def bind_to_original(cls):
+        """binds the current scene references to original references from the
+        repository
+        """
+        # get all reference paths
+        import os
+        from stalker import Version
+
+        for ref in pm.listReferences():
+            unresolved_path = ref.unresolvedPath()
+            filename = os.path.basename(unresolved_path)
+            # find the corresponding version
+            # TODO: get the versions from current project
+            v = Version.query\
+                .filter(Version.full_path.endswith(filename))\
+                .first()
+            if v:
+                ref.replaceWith(v.absolute_full_path)
 
 
 class Modeling(object):
