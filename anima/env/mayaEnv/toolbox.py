@@ -1830,7 +1830,10 @@ class Modeling(object):
         ordered_vertices = order_vertices(ordered_edges)
 
         # now create a curve from the given vertices
-        pm.curve(p=map(lambda x: x.getPosition(), ordered_vertices), d=3)
+        pm.curve(
+            p=map(lambda x: x.getPosition(space='world'), ordered_vertices),
+            d=3
+        )
 
 
 class Rigging(object):
