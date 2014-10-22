@@ -18,6 +18,7 @@ from anima import utils
 from anima import power_users_group_names
 from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
+from anima.exc import PublishError
 from anima.ui import utils as ui_utils
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
@@ -1412,7 +1413,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         try:
             environment.save_as(new_version)
-        except RuntimeError as e:
+        except (RuntimeError, PublishError) as e:
             try:
                 error_message = '%s' % e
             except UnicodeEncodeError:

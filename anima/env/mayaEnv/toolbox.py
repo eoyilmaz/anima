@@ -333,6 +333,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'vertex_aligned_locator_button',
+                l="Vertex Aligned Locator",
+                c=RepeatedCallback(Modeling.vertex_aligned_locator),
+                ann="Creates an aligned locator from selected vertices",
+                bgc=color.color
+            )
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -1834,6 +1843,45 @@ class Modeling(object):
             p=map(lambda x: x.getPosition(space='world'), ordered_vertices),
             d=3
         )
+
+    @classmethod
+    def vertex_aligned_locator(cls):
+        """creates vertex aligned locator, select 3 vertices
+        """
+        import pymel.core as pm
+        selection = pm.ls(os=1, fl=1)
+
+        # get the axises
+        p0 = selection[0].getPosition(space='world')
+        p1 = selection[1].getPosition(space='world')
+        p2 = selection[2].getPosition(space='world')
+
+        v1 = p0 - p1
+        v2 = p2 - p1
+        #v3 = p0 - p2
+
+        v1.normalize()
+        v2.normalize()
+
+        dcm = pm.createNode('decomposeMatrix')
+
+        x = v1
+        z = v2
+        y = z ^ x
+        y.normalize()
+
+        dcm.inputMatrix.set(
+            [x[0], x[1], x[2], 0,
+             y[0], y[1], y[2], 0,
+             z[0], z[1], z[2], 0,
+                0,    0,    0, 1], type='matrix')
+
+        loc = pm.spaceLocator()
+
+        loc.t.set(p1)
+        loc.r.set(dcm.outputRotate.get())
+
+        pm.delete(dcm)
 
 
 class Rigging(object):
