@@ -278,6 +278,15 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'unload_unselected_references_button',
+                l='Unload UnSelected References',
+                c=RepeatedCallback(General.unload_unselected_references),
+                ann='Unloads any references that is not related with the '
+                    'selected objects',
+                bgc=color.color
+            )
+
         # ----- MODELING ------
         modeling_columnLayout = pm.columnLayout(
             'modeling_columnLayout',
@@ -1678,6 +1687,36 @@ class General(object):
                 ref.replaceWith(
                     to_os_independent_path(v.absolute_full_path)
                 )
+
+    @classmethod
+    def unload_unselected_references(cls):
+        """unloads the references that is not related to the selected objects
+        """
+        import copy
+        selected_references = []
+
+        # store selected references
+        for node in pm.ls(sl=1):
+            ref = node.referenceFile()
+            if ref is not None and ref not in selected_references:
+                selected_references.append(ref)
+
+        temp_selected_references = copy.copy(selected_references)
+
+        # store parent references
+        for ref in temp_selected_references:
+            parent_ref = ref.parent()
+            if parent_ref is not None \
+               and parent_ref not in selected_references:
+                while parent_ref is not None:
+                    if parent_ref not in selected_references:
+                        selected_references.append(parent_ref)
+                    parent_ref = parent_ref.parent()
+
+        # now unload all the other references
+        for ref in reversed(pm.listReferences(recursive=1)):
+            if ref not in selected_references:
+                ref.unload()
 
 
 class Modeling(object):
