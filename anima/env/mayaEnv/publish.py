@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+from anima.env.mayaEnv import auxiliary
 
 import os
 import datetime
@@ -22,6 +23,50 @@ MAX_NODE_DISPLAY = 80
 #*********#
 # GENERIC #
 #*********#
+@publisher
+def delete_turtle_nodes():
+    """deletes the Turtle related nodes
+    """
+    # deletes Turtle from scene
+    turtle_node_names = [
+        'TurtleRenderOptions',
+        'TurtleDefaultBakeLayer',
+        'TurtleBakeLayerManager',
+        'TurtleUIOptions'
+    ]
+
+    for node_name in turtle_node_names:
+        try:
+            node = pm.PyNode(node_name)
+            node.unlock()
+            pm.delete(node)
+        except pm.MayaNodeError:
+            pass
+
+    try:
+        pymel_undo_node = pm.PyNode('__pymelUndoNode')
+        pymel_undo_node.unlock()
+        pm.delete(pymel_undo_node)
+    except pm.MayaNodeError:
+        pass
+
+    pm.unloadPlugin('Turtle', force=1)
+
+    pm.warning('Turtle deleted successfully.')
+
+
+@publisher
+def delete_unknown_nodes():
+    """deletes unknown nodes
+    """
+    # delete the unknown nodes
+    unknown_nodes = pm.ls(type='unknown')
+    # unlock each possible locked unknown nodes
+    for node in unknown_nodes:
+        node.unlock()
+    pm.delete(unknown_nodes)
+
+
 @publisher
 def check_time_logs():
     """do not allow publishing if there is no time logs for the task, do that
@@ -64,6 +109,16 @@ def check_node_names_with_bad_characters():
                     nodes_with_bad_name)[:MAX_NODE_DISPLAY]
             )
         )
+
+
+@publisher
+def check_unused_nodes():
+    """deletes unused shading nodes
+    """
+    num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
+    if num_of_items_deleted:
+        # do not raise any error just warn the user
+        pm.warning('Deleted unused nodes during Publish operation!!')
 
 
 @publisher
@@ -189,15 +244,17 @@ def check_if_previous_version_references():
 
 @publisher
 def check_namespaces():
-    """checks if there are unnecessary namespaces
+    """checks if there are empty namespaces
     """
-    # only allow namespaces as much as we have references
-    all_namespaces = pm.listNamespaces()
-    ref_namespaces = [ref.namespace for ref in pm.listReferences()]
-    if len(all_namespaces) > len(ref_namespaces):
+    # only allow namespaces with DAG objects in it
+    empty_namespaces = [
+        ns for ns in pm.listNamespaces(recursive=True)
+        if len(pm.ls(ns.listNodes(), dag=True, mat=True)) == 0
+    ]
+
+    if len(empty_namespaces):
         raise PublishError(
-            'There are more <b>namespaces</b> than the number of '
-            '<b>References</b> you have in your scene.<br><br>'
+            'There are empty <b>namespaces</b><br><br>'
             'Please remove them!!!'
         )
 
@@ -263,15 +320,7 @@ def check_if_default_shader():
 def check_if_root_nodes_have_no_transformation():
     """checks if transform nodes directly under world have 0 transformations
     """
-    root_transform_nodes = []
-    for node in pm.ls(dag=1, transforms=1):
-        if node.getParent() is None:
-            shape = node.getShape()
-            if shape:
-                if shape.type() not in ['camera']:
-                    root_transform_nodes.append(node)
-            else:
-                root_transform_nodes.append(node)
+    root_transform_nodes = auxiliary.get_root_nodes()
 
     non_freezed_root_nodes = []
     for node in root_transform_nodes:
@@ -655,16 +704,6 @@ def check_lights():
             'Please delete them!!!' %
             '<br>'.join(map(lambda x: x.name(), all_lights))
         )
-
-
-@publisher(look_dev_types)
-def check_unused_nodes():
-    """selects unused shading nodes
-    """
-    num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
-    if num_of_items_deleted:
-        # do not raise any error just warn the user
-        pm.warning('Deleted unused nodes during Publish operation!!')
 
 
 @publisher(look_dev_types)

@@ -596,3 +596,100 @@ def delete_shelf_tab(shelf_name, confirm=True):
     # Make sure the new active shelf tab has buttons
     pm.mel.eval('shelfTabChange();')
 
+
+def cube_from_bbox(bbox):
+    """creates a polyCube from the given bbox
+
+    :param bbox: pymel.core.dt.BoundingBox instance
+    """
+    cube = pm.polyCube(
+        width=bbox.width(),
+        height=bbox.height(),
+        depth=bbox.depth(),
+        ch=False
+    )
+    cube[0].setAttr('t', bbox.center())
+    return cube[0]
+
+
+def create_bbox(nodes, per_selection=False):
+    """creates bounding boxes for the selected objects
+
+    :param bool per_selection: If True will create a BBox for each
+      given object
+    """
+
+    if per_selection:
+        for node in nodes:
+            return cube_from_bbox(node.boundingBox())
+    else:
+        bbox = pm.dt.BoundingBox()
+        for node in nodes:
+            bbox.expand(node.boundingBox().min())
+            bbox.expand(node.boundingBox().max())
+        return cube_from_bbox(bbox)
+
+
+def replace_with_bbox(nodes):
+    """replaces the given nodes with a bbox object
+    """
+    node_names = []
+    bboxes = []
+    for node in nodes:
+        # create a bbox and parent it to the parent of
+        # the original node
+        bbox = cube_from_bbox(node.boundingBox())
+        bbox.setParent(node.getParent())
+        node_names.append(node.name())
+        bboxes.append(bbox)
+
+    # delete the nodes
+    pm.delete(nodes)
+
+    # rename the bboxes5454
+    for name, bbox in zip(node_names, bboxes):
+        bbox.rename(name)
+
+    return bboxes
+
+
+def get_root_nodes():
+    """returns the root DAG nodes
+    """
+    root_transform_nodes = []
+    for node in pm.ls(dag=1, transforms=1):
+        if node.getParent() is None:
+            shape = node.getShape()
+            if shape:
+                if shape.type() not in ['camera']:
+                    root_transform_nodes.append(node)
+            else:
+                root_transform_nodes.append(node)
+
+    return root_transform_nodes
+
+
+def create_arnold_stand_in(path=None):
+    """A fixed version of original arnold script of SolidAngle Arnold core API
+    """
+    if not pm.objExists('ArnoldStandInDefaultLightSet'):
+        pm.createNode(
+            "objectSet",
+            name="ArnoldStandInDefaultLightSet",
+            shared=True
+        )
+        pm.lightlink(
+            object='ArnoldStandInDefaultLightSet',
+            light='defaultLightSet'
+        )
+
+    stand_in = pm.createNode('aiStandIn', n='ArnoldStandInShape')
+    # temp fix until we can correct in c++ plugin
+    stand_in.setAttr('visibleInReflections', True)
+    stand_in.setAttr('visibleInRefractions', True)
+
+    pm.sets('ArnoldStandInDefaultLightSet', add=stand_in)
+    if path:
+        stand_in.setAttr('dso', path)
+
+    return stand_in

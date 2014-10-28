@@ -211,6 +211,15 @@ class ReferenceExtension(object):
         rep = Representation(version=v)
         return rep.find(rep.base_repr_name)
 
+    @extends(FileReference)
+    @property
+    def version(self):
+        """returns the Stalker Version instance related to this reference
+        """
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        return m.get_version_from_full_path(self.path)
+
 
 class PrevisBase(object):
     """The base for other Previs classes

@@ -51,7 +51,7 @@ class Maya(EnvironmentBase):
     """
 
     name = "Maya%s" % str(pm.versions.current())[0:4]
-    representations = ['Base', 'BBox', 'GPU']
+    representations = ['Base', 'BBOX', 'PROXY', 'GPU', 'ASS']
 
     time_to_fps = {
         u'sec': 1,
@@ -1200,8 +1200,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             'aiStandIn': 'dso',
             'file': 'fileTextureName',
             'imagePlane': 'imageName',
-            'audio': 'filename'
+            'audio': 'filename',
+            'AlembicNode': 'abc_File',
+            'gpuCache': 'cacheFileName',
         }
+
         for node_type in types_and_attrs.keys():
             attr_name = types_and_attrs[node_type]
             for node in pm.ls(type=node_type):
