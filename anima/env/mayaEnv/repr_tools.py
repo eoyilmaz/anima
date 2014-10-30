@@ -51,47 +51,113 @@ class RepresentationGenerator(object):
         return [node for node in auxiliary.get_root_nodes()
                 if node.referenceFile() is None]
 
+    @classmethod
+    def is_model_task(cls, task):
+        """checks if the given task is a model task
+
+        :param task: A Stalker Task instance
+        """
+        task_type = task.type
+        if task_type:
+            # check the task type name
+            if task_type.name.lower() in ['model']:
+                return True
+        else:
+            # check the task name
+            if task.name.lower() in ['model']:
+                return True
+
+        # if we came here it must not be a model task
+        return False
+
+    @classmethod
+    def is_look_dev_task(cls, task):
+        """checks if the given task is a look development task
+
+        :param task: A Stalker Task instance
+        """
+        task_type = task.type
+        if task_type:
+            # check the task type name
+            if task_type.name.lower() in ['look development']:
+                return True
+        else:
+            # check the task name
+            if task.name.lower() in ['look_dev', 'lookdev', 'look dev']:
+                return True
+
+        # if we came here it must not be a look dev task task
+        return False
+
+    @classmethod
+    def is_vegetation_task(cls, task):
+        """checks if the given task is a vegetation task
+
+        :param task: A Stalker Task instance
+        """
+        task_type = task.type
+        if task_type:
+            # check the task type name
+            if task_type.name.lower() in ['vegetation']:
+                return True
+        else:
+            # check the task name
+            if task.name.lower() in ['vegetation']:
+                return True
+
+        # if we came here it must not be a vegetation task task
+        return False
+
     def generate_all(self):
         """generates all representations at once
         """
         self.generate_bbox()
         self.generate_proxy()
         self.generate_gpu()
-
-        # do not generate ASS for model scenes
-        type_ = self.version.task.type
-        if type_:
-            if type_.name.lower() not in ['model']:
-                self.generate_ass()
-        else:
-            self.generate_ass()
+        self.generate_ass()
 
     def generate_bbox(self):
         """generates the BBox representation of the current scene
         """
-        # replace all root references with their BBOX representation
-        for ref in pm.listReferences():
-            ref.to_repr('BBOX')
 
-        # find all non referenced root nodes
-        root_nodes = self.get_local_root_nodes()
+        task = self.version.task
 
-        if len(root_nodes):
+        # do different things for Vegetation tasks
+        if self.is_vegetation_task(task):
+            # find the _pfxPolygons node
+            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+
             all_children = []
-            for root_node in root_nodes:
-                for child in root_node.getChildren():
-                    all_children.append(child)
+            for node in pfx_polygons_node.getChildren():
+                for child_node in node.getChildren():
+                    all_children.append(child_node)
 
-            bboxes = auxiliary.replace_with_bbox(all_children)
+            auxiliary.replace_with_bbox(all_children)
 
-            # correct bbox uvs
-            pm.polyEditUV(
-                pm.polyListComponentConversion(bboxes, tuv=1),
-                su=0.95,
-                sv=0.95,
-                pu=0.5,
-                pv=0.5
-            )
+            # clean up other nodes
+            pm.delete('kks___vegetation_pfxStrokes')
+            pm.delete('kks___vegetation_paintableGeos')
+
+        else:
+            # replace all root references with their BBOX representation
+            for ref in pm.listReferences():
+                ref.to_repr('BBOX')
+                ref.unload()
+
+            # find all non referenced root nodes
+            root_nodes = self.get_local_root_nodes()
+
+            if len(root_nodes):
+                all_children = []
+                for root_node in root_nodes:
+                    for child in root_node.getChildren():
+                        all_children.append(child)
+
+                auxiliary.replace_with_bbox(all_children)
+
+            # reload all references
+            for ref in pm.listReferences():
+                ref.load()
 
         # save the scene as {{original_take}}___BBOX
         # use maya
@@ -106,7 +172,7 @@ class RepresentationGenerator(object):
         v.is_published = True
         self.maya_env.save_as(v)
 
-        # 7. reopen the original version
+        # reopen the original version
         self.maya_env.open(self.version)
 
     def generate_proxy(self):
@@ -126,6 +192,8 @@ class RepresentationGenerator(object):
         for ref in pm.listReferences():
             # check if this is a Model reference
             ref.to_repr('GPU')
+            # unload all references
+            ref.unload()
 
         root_nodes = self.get_local_root_nodes()
 
@@ -152,10 +220,35 @@ class RepresentationGenerator(object):
 
             start_frame = end_frame = int(pm.currentTime(q=1))
 
+            allowed_shapes = (
+                pm.nt.Mesh,
+                pm.nt.NurbsCurve,
+                pm.nt.NurbsSurface
+            )
+
             for root_node in root_nodes:
                 # export each child of each root as separate nodes
                 for child_node in root_node.getChildren():
+
+                    # check if it is a transform node
+                    if not isinstance(child_node, pm.nt.Transform):
+                        continue
+
+                    # check the shape
+                    node_shape = child_node.getShape()
+                    if not node_shape:
+                        # check if it has child nodes
+                        if len(child_node.getChildren()) == 0:
+                            continue
+                    elif not isinstance(node_shape, allowed_shapes):
+                        continue
+
                     child_name = child_node.name()
+                    child_shape = child_node.getShape()
+                    child_shape_name = None
+                    if child_shape:
+                        child_shape_name = child_node.name()
+
                     child_full_path = \
                         child_node.fullPath()[1:].replace('|', '_')
                     output_filename =\
@@ -164,34 +257,48 @@ class RepresentationGenerator(object):
                         )
 
                     # check if file exists
-                    pm.mel.eval(
-                        gpu_command % {
-                            'start_frame': start_frame,
-                            'end_frame': end_frame,
-                            'node': child_node.fullPath(),
-                            'path': output_path,
-                            'filename': output_filename
-                        }
-                    )
+                    try:
+                        pm.mel.eval(
+                            gpu_command % {
+                                'start_frame': start_frame,
+                                'end_frame': end_frame,
+                                'node': child_node.fullPath(),
+                                'path': output_path,
+                                'filename': output_filename
+                            }
+                        )
+                    except pm.MelError:
+                        # just pass it
+                        pass
 
                     # delete the child and add a GPU node instead
                     pm.delete(child_node)
-                    gpu_node = pm.createNode('gpuCache')
-                    gpu_node_tra = gpu_node.getParent()
-
-                    pm.parent(gpu_node_tra, root_node)
-                    gpu_node_tra.rename(child_name)
-
                     cache_file_full_path = \
                         os.path\
                         .join(output_path, '%s.abc' % output_filename)\
                         .replace('\\', '/')
 
-                    gpu_node.setAttr(
-                        'cacheFileName',
-                        cache_file_full_path,
-                        type="string"
-                    )
+                    # check if file exists
+                    if os.path.exists(cache_file_full_path):
+                        gpu_node = pm.createNode('gpuCache')
+                        gpu_node_tra = gpu_node.getParent()
+
+                        pm.parent(gpu_node_tra, root_node)
+                        gpu_node_tra.rename(child_name)
+
+                        if child_shape_name is not None:
+                            gpu_node.rename(child_shape_name)
+
+                        gpu_node.setAttr(
+                            'cacheFileName',
+                            cache_file_full_path,
+                            type="string"
+                        )
+
+        # load all references again
+        for ref in pm.listReferences():
+            # load all references
+            ref.load()
 
         # 6. save the scene as {{original_take}}___GPU
         # use maya
@@ -211,70 +318,168 @@ class RepresentationGenerator(object):
 
     def generate_ass(self):
         """generates the ASS representation of the current scene
-        """
-        # convert all references to ASS
-        for ref in pm.listReferences():
-            # check if this is a Model reference
-            v = ref.version
-            type_ = v.task.type
-            if type_ and type_.name.lower() in ['model']:
-                # import the contents of this reference
-                ref.importContents()
-            else:
-                ref.to_repr('ASS')
 
-        # 1. select top group
-        root_nodes = self.get_local_root_nodes()
+        For Model Tasks the ASS is generated over the LookDev Task because it
+        is not possible to assign a material to an object inside an ASS file.
+        """
+        # before doing anything, check if this is a look dev task
+        # and export the objects from the referenced files with their current
+        # shadings, then replace all of the references to ASS repr and than
+        # add Stand-in nodes and parent them under the referenced models
+
+        task = self.version.task
 
         export_command = 'arnoldExportAss -f "%(path)s" -s -mask 255 ' \
                          '-lightLinks 1 -compressed -boundingBox ' \
                          '-shadowLinks 1 -cam perspShape;'
 
-        # 2. calculate output path
-        output_path = os.path.join(self.version.absolute_path, 'Outputs/ASS/')
+        # calculate output path
+        output_path = os.path.join(self.version.absolute_path, 'Outputs/ass/')
 
-        # 2a. go over each child node
-        for root_node in root_nodes:
-            for child_node in root_node.getChildren():
-                child_name = child_node.name()
+        allowed_shapes = (
+            pm.nt.Mesh,
+            pm.nt.NurbsCurve,
+            pm.nt.NurbsSurface
+        )
 
-                pm.select(child_node)
-                output_filename =\
-                    '%s.ass' % (
-                        child_name.replace(':', '_')
+        if self.is_look_dev_task(task):
+            # in look dev files, we export the ASS files directly from the Base
+            # version and parent the resulting Stand-In node to the parent of
+            # the child node
+
+            # unload any references that is not a Model file
+            for ref in pm.listReferences():
+                v = ref.version
+                unload_ref = True
+                if v:
+                    ref_task = v.task
+                    if self.is_model_task(ref_task):
+                        unload_ref = False
+
+                if unload_ref:
+                    ref.unload()
+
+            # export all root ass files as they are
+            for root_node in auxiliary.get_root_nodes():
+                for child_node in root_node.getChildren():
+                    print('processing %s' % child_node.name())
+                    # check if it is a transform node
+                    if not isinstance(child_node, pm.nt.Transform):
+                        continue
+
+                    # check if it is an empty node
+                    # check the shape
+                    node_shape = child_node.getShape()
+                    if not node_shape:
+                        # check if it has child nodes
+                        if len(child_node.getChildren()) == 0:
+                            continue
+                    elif not isinstance(node_shape, allowed_shapes):
+                        continue
+
+                    child_name = child_node.name()
+
+                    pm.select(child_node)
+                    output_filename =\
+                        '%s.ass' % (
+                            child_name.replace(':', '_').replace('|', '_')
+                        )
+
+                    output_full_path = \
+                        os.path.join(output_path, output_filename)
+
+                    # run the mel command
+                    pm.mel.eval(
+                        export_command % {
+                            'path': output_full_path.replace('\\', '/')
+                        }
                     )
 
-                output_full_path = os.path.join(output_path, output_filename)
+                    # 5. generate an aiStandIn node and set the path
+                    ass_node = auxiliary.create_arnold_stand_in(
+                        path='%s.gz' % output_full_path
+                    )
+                    ass_tra = ass_node.getParent()
 
-                # 3. run mel command
-                print(
-                    export_command % {
-                        'path': output_full_path.replace('\\', '/')
-                    }
-                )
+                    #ass_node.setAttr("overrideDisplayType", 2)
+                    #ass_node.setAttr("overrideEnabled", 1)
 
-                pm.mel.eval(
-                    export_command % {
-                        'path': output_full_path.replace('\\', '/')
-                    }
-                )
+                    # parent the ass node under the child_node so it will move
+                    # with the parent node
+                    pm.parent(ass_tra, child_node)
+                    # rename it to something meaningful
+                    ass_tra.rename('%s_ass' % (child_name.split(':')[-1]))
 
-                # 5. generate an aiStandIn node and set the path
-                ass_node = auxiliary.create_arnold_stand_in(
-                    path=output_full_path + '.gz'
-                )
-                ass_tra = ass_node.getParent()
+        elif self.is_vegetation_task(task):
+            # in vegetation files, we export the ASS files directly from the
+            # Base version, also we use the geometry under "pfxPolygons"
+            # and parent the resulting Stand-In nodes to the
+            # pfxPolygons
 
-                #ass_node.setAttr("overrideDisplayType", 2)
-                #ass_node.setAttr("overrideEnabled", 1)
+            # find the _pfxPolygons node
+            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
 
-                # delete the original object and replace it with the ass node
-                pm.delete(child_node)
+            for node in pfx_polygons_node.getChildren():
+                for child_node in node.getChildren():
+                    print('processing %s' % child_node.name())
+                    child_name = child_node.name().split('___')[-1]
 
-                pm.parent(ass_tra, root_node)
-                ass_tra.rename(child_name)
+                    pm.select(child_node)
+                    output_filename =\
+                        '%s.ass' % (
+                            child_name.replace(':', '_').replace('|', '_')
+                        )
 
-        # 6. save the scene as {{original_take}}___ASS
+                    output_full_path = \
+                        os.path.join(output_path, output_filename)
+
+                    # run the mel command
+                    pm.mel.eval(
+                        export_command % {
+                            'path': output_full_path.replace('\\', '/')
+                        }
+                    )
+
+                    # generate an aiStandIn node and set the path
+                    ass_node = auxiliary.create_arnold_stand_in(
+                        path='%s.gz' % output_full_path
+                    )
+                    ass_tra = ass_node.getParent()
+
+                    # parent the ass node under the current node
+                    # under pfx_polygons_node
+                    pm.parent(ass_tra, node)
+
+                    # delete the child_node
+                    pm.delete(child_node)
+
+                    # give it the same name with the original
+                    ass_tra.rename('%s' % child_name)
+
+            # clean up other nodes
+            pm.delete('kks___vegetation_pfxStrokes')
+            pm.delete('kks___vegetation_paintableGeos')
+
+        elif self.is_model_task(task):
+            # delete all grandchildren of the root node
+            # and save it as it is
+            root_nodes = self.get_local_root_nodes()
+
+            for root_node in root_nodes:
+                for child_node in root_node.getChildren():
+                    pm.delete(child_node.getChildren())
+
+        # convert all references to ASS
+        for ref in pm.listReferences():
+            ref.to_repr('ASS')
+
+        # fix an arnold bug
+        for node_name in ['initialShadingGroup', 'initialParticleSE']:
+            node = pm.PyNode(node_name)
+            node.setAttr("ai_surface_shader", (0, 0, 0), type="float3")
+            node.setAttr("ai_volume_shader", (0, 0, 0), type="float3")
+
+        # save the scene as {{original_take}}___ASS
         # use maya
         from stalker import Version
         v = Version(
@@ -287,5 +492,5 @@ class RepresentationGenerator(object):
         v.is_published = True
         self.maya_env.save_as(v)
 
-        # 7. reopen the original version
+        # reopen the original version
         self.maya_env.open(self.version)

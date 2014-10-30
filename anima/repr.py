@@ -36,7 +36,7 @@ class Representation(object):
     """
 
     base_repr_name = 'Base'
-    repr_separator = '___'
+    repr_separator = '@'
 
     def __init__(self, version=None):
         self._version = None

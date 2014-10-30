@@ -810,22 +810,52 @@ def UI():
             )
 
             color.change()
-            pm.text(l='===== ASS Tools =====')
+            pm.text(l='===== Representation Tools =====')
+
+            with pm.rowLayout(nc=2, adj=1):
+                pm.radioButtonGrp(
+                    'repr_apply_to_radio_button_grp',
+                    label='Apply To',
+                    # ad3=1,
+                    labelArray2=['Selected', 'All References'],
+                    numberOfRadioButtons=2,
+                    cl3=['left', 'left', 'left'],
+                    cw3=[50, 65, 65],
+                    sl=1
+                )
+
             pm.button(
-                'to_ass_button',
-                l='To ASS',
-                c=RepeatedCallback(Render.selected_to_ass),
-                ann='Convert selected to ASS take',
+                'to_base_button',
+                l='To Base',
+                c=RepeatedCallback(Render.to_base),
+                ann='Convert selected to Base representation',
                 bgc=color.color
             )
 
             pm.button(
-                'to_original_button',
-                l='To Original',
-                c=RepeatedCallback(Render.selected_to_original),
-                ann='Convert selected to Original take',
+                'to_bbox_button',
+                l='To BBOX',
+                c=RepeatedCallback(Render.to_bbox),
+                ann='Convert selected to BBOX representation',
                 bgc=color.color
             )
+
+            pm.button(
+                'to_gpu_button',
+                l='To GPU',
+                c=RepeatedCallback(Render.to_gpu),
+                ann='Convert selected to GPU representation',
+                bgc=color.color
+            )
+
+            pm.button(
+                'to_ass_button',
+                l='To ASS',
+                c=RepeatedCallback(Render.to_ass),
+                ann='Convert selected to ASS representation',
+                bgc=color.color
+            )
+
 
 
         # ----- ANIMATION ------
@@ -2492,78 +2522,75 @@ class Render(object):
                 pass
 
     @classmethod
-    def generate_ass_take(cls):
-        """generates an ASS take for the current scene
+    def to_base(cls):
+        """replaces the related references with Base representation
         """
-        pass
+        cls.to_repr('Base')
 
     @classmethod
-    def selected_to_ass(cls):
-        """replaces the related references of the selected objects with ASS
-        versions if available
+    def to_bbox(cls):
+        """replaces the related references with BBOX representation
         """
-        # work on every selected object
-        selection = pm.ls(sl=1)
-
-        # collect reference files first
-        references = []
-        for node in selection:
-            ref = node.referenceFile()
-            if ref is not None and ref not in references:
-                references.append(ref)
-
-        # now go over each reference
-        for ref in references:
-            # check if it has an ass
-            if ref.has_ass():
-                ref.to_ass()
-                continue
-            else:
-                ## use the highest parent ref with ASS take
-                #parent = ref.parent()
-                #all_parents = []
-                #while parent:
-                #    all_parents.append(parent)
-                #    ref = parent
-                #    parent = ref.parent()
-                #
-                ## go from the highest parent
-                #for p_ref in reversed(all_parents):
-                #    if p_ref.has_ass():
-                #        p_ref.to_ass()
-                #        break
-
-                # use the first parent ref with ASS take
-                ass_ref = None
-                parent = ref.parent()
-                while parent:
-                    ref = parent
-                    if ref.has_ass():
-                        ass_ref = ref
-                        break
-                    parent = ref.parent()
-
-                if ass_ref:
-                    ass_ref.to_ass()
+        cls.to_repr('BBOX')
 
     @classmethod
-    def selected_to_original(cls):
-        """replaces the related references of the selected ASS with original
-        versions if available
+    def to_gpu(cls):
+        """replaces the related references with GPU representation
         """
-        # work on every selected object
-        selection = pm.ls(sl=1)
+        cls.to_repr('GPU')
 
-        # collect reference files first
-        references = []
-        for node in selection:
-            ref = node.referenceFile()
-            if ref is not None and ref not in references and ref.is_ass():
-                references.append(ref)
+    @classmethod
+    def to_ass(cls):
+        """replaces the related references with the ASS representation
+        """
+        cls.to_repr('ASS')
 
-        # now go over each reference
-        for ref in references:
-            ref.to_original()
+    @classmethod
+    def to_repr(cls, repr_name):
+        """replaces the related references with the given representation
+
+        :param str repr_name: Desired representation name
+        """
+        # get apply to
+        apply_to = \
+            pm.radioButtonGrp('repr_apply_to_radio_button_grp', q=1, sl=1)
+
+        if apply_to == 1:
+            # work on every selected object
+            selection = pm.ls(sl=1)
+
+            # collect reference files first
+            references = []
+            for node in selection:
+                ref = node.referenceFile()
+                if ref is not None and ref not in references:
+                    references.append(ref)
+
+            from anima.env.mayaEnv.repr_tools import RepresentationGenerator
+
+            # now go over each reference
+            for ref in references:
+                if not ref.is_repr(repr_name):
+                    parent_ref = ref
+                    while parent_ref is not None:
+                        # check if it is a look dev node
+                        v = parent_ref.version
+                        if v:
+                            task = v.task
+                            if RepresentationGenerator.is_look_dev_task(task) \
+                               or RepresentationGenerator.is_vegetation_task(task):
+                                # convert it to repr
+                                parent_ref.to_repr(repr_name)
+                                break
+                            else:
+                                # go to parent ref
+                                parent_ref = parent_ref.parent()
+                        else:
+                            parent_ref = parent_ref.parent()
+        elif apply_to == 2:
+            # apply to all references
+            for ref in pm.listReferences():
+                ref.to_repr(repr_name)
 
 
 class Animation(object):

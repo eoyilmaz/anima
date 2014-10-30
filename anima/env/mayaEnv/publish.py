@@ -13,6 +13,7 @@ from anima import stalker_server_internal_address
 
 from anima.publish import clear_publishers, publisher, staging
 from anima.exc import PublishError
+from anima.repr import Representation
 from anima.utils import utc_to_local
 
 clear_publishers()
@@ -23,36 +24,36 @@ MAX_NODE_DISPLAY = 80
 #*********#
 # GENERIC #
 #*********#
-@publisher
-def delete_turtle_nodes():
-    """deletes the Turtle related nodes
-    """
-    # deletes Turtle from scene
-    turtle_node_names = [
-        'TurtleRenderOptions',
-        'TurtleDefaultBakeLayer',
-        'TurtleBakeLayerManager',
-        'TurtleUIOptions'
-    ]
-
-    for node_name in turtle_node_names:
-        try:
-            node = pm.PyNode(node_name)
-            node.unlock()
-            pm.delete(node)
-        except pm.MayaNodeError:
-            pass
-
-    try:
-        pymel_undo_node = pm.PyNode('__pymelUndoNode')
-        pymel_undo_node.unlock()
-        pm.delete(pymel_undo_node)
-    except pm.MayaNodeError:
-        pass
-
-    pm.unloadPlugin('Turtle', force=1)
-
-    pm.warning('Turtle deleted successfully.')
+# @publisher
+# def delete_turtle_nodes():
+#     """deletes the Turtle related nodes
+#     """
+#     # deletes Turtle from scene
+#     turtle_node_names = [
+#         'TurtleRenderOptions',
+#         'TurtleDefaultBakeLayer',
+#         'TurtleBakeLayerManager',
+#         'TurtleUIOptions'
+#     ]
+#
+#     for node_name in turtle_node_names:
+#         try:
+#             node = pm.PyNode(node_name)
+#             node.unlock()
+#             pm.delete(node)
+#         except pm.MayaNodeError:
+#             pass
+#
+#     try:
+#         pymel_undo_node = pm.PyNode('__pymelUndoNode')
+#         pymel_undo_node.unlock()
+#         pm.delete(pymel_undo_node)
+#     except pm.MayaNodeError:
+#         pass
+#
+#     pm.unloadPlugin('Turtle', force=1)
+#
+#     pm.warning('Turtle deleted successfully.')
 
 
 @publisher
@@ -112,7 +113,7 @@ def check_node_names_with_bad_characters():
 
 
 @publisher
-def check_unused_nodes():
+def delete_unused_nodes():
     """deletes unused shading nodes
     """
     num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
@@ -126,15 +127,19 @@ def check_representations():
     """checks if the referenced versions are all matching the representation
     type of the current version
     """
-    from anima.repr import Representation
-
     ref_reprs = []
     wrong_reprs = []
 
     v = staging.get('version')
+
     if v:
         r = Representation(version=v)
         current_repr = r.repr
+
+        # For **Base** representation
+        # allow any type of representation to be present in the scene
+        if r.is_base():
+            return
 
         for ref in pm.listReferences():
             ref_repr = ref.repr
@@ -243,20 +248,25 @@ def check_if_previous_version_references():
 
 
 @publisher
-def check_namespaces():
-    """checks if there are empty namespaces
+def delete_empty_namespaces():
+    """checks and deletes empty namespaces
     """
-    # only allow namespaces with DAG objects in it
+    # only allow namespaces with DAG objects in it and no child namespaces
     empty_namespaces = [
         ns for ns in pm.listNamespaces(recursive=True)
         if len(pm.ls(ns.listNodes(), dag=True, mat=True)) == 0
+        and len(ns.listNamespaces()) == 0
     ]
 
-    if len(empty_namespaces):
-        raise PublishError(
-            'There are empty <b>namespaces</b><br><br>'
-            'Please remove them!!!'
-        )
+    # remove all empty
+    for ns in empty_namespaces:
+        pm.namespace(rm=ns, mnr=1)
+
+    # if len(empty_namespaces):
+    #     raise PublishError(
+    #         'There are empty <b>namespaces</b><br><br>'
+    #         'Please remove them!!!'
+    #     )
 
 
 #*******#
@@ -310,6 +320,11 @@ def check_history():
 def check_if_default_shader():
     """check if only default shader is assigned
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     if len(pm.ls(mat=1)) > 2:
         raise PublishError(
             'Use only lambert1 as the shader!'
@@ -375,6 +390,11 @@ def check_if_leaf_mesh_nodes_have_no_transformation():
 def check_model_quality():
     """checks the quality of the model
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     pm.select(None)
     pm.mel.eval(
         'polyCleanupArgList 3 { "1","2","0","0","1","0","0","0","0","1e-005",'
@@ -426,6 +446,11 @@ def check_extra_cameras():
 def check_empty_groups():
     """check if there are empty groups
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     empty_groups = []
     for node in pm.ls(type='transform'):
         if len(node.listRelatives(children=1)) == 0:
@@ -463,6 +488,11 @@ def check_empty_shapes():
 def check_uv_existence():
     """check if there are uvs in all objects
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     all_meshes = pm.ls(type='mesh')
     nodes_with_no_uvs = []
     for node in all_meshes:
@@ -491,6 +521,12 @@ def check_uv_existence():
 def check_out_of_space_uvs():
     """checks if there are uvs with u values that are bigger than 10.0
     """
+
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
     nodes_with_out_of_space_uvs = []
@@ -532,6 +568,11 @@ def check_out_of_space_uvs():
 def check_uv_border_crossing():
     """checks if any of the uv shells are crossing uv borders
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
 
@@ -599,6 +640,12 @@ def check_uvs():
     The area of a 2d polygon calculation is based on the answer of Darius Bacon
     in http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
     """
+
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     def area(p):
         return 0.5 * abs(sum(x0 * y1 - x1 * y0
                              for ((x0, y0), (x1, y1)) in segments(p)))
@@ -753,6 +800,11 @@ def check_only_supported_materials_are_used():
 def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     objects_with_default_material = mc.sets('initialShadingGroup', q=1)
     if objects_with_default_material and len(objects_with_default_material):
         mc.select(objects_with_default_material)
@@ -769,6 +821,12 @@ def check_objects_still_using_default_shader():
 def check_component_edits_on_references():
     """check if there are component edits on references
     """
+
+    # skip if this is a representation
+    v = staging.get('version')
+    if Representation.repr_separator in v.take_name:
+        return
+
     import maya.cmds
     reference_query = maya.cmds.referenceQuery
 

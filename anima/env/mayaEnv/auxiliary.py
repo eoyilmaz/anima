@@ -633,22 +633,52 @@ def create_bbox(nodes, per_selection=False):
 def replace_with_bbox(nodes):
     """replaces the given nodes with a bbox object
     """
+    allowed_shapes = (
+        pm.nt.Mesh,
+        pm.nt.NurbsCurve,
+        pm.nt.NurbsSurface
+    )
+
     node_names = []
     bboxes = []
     for node in nodes:
         # create a bbox and parent it to the parent of
         # the original node
+
+        # check if it is a transform node
+        if not isinstance(node, pm.nt.Transform):
+            continue
+
+        # check the shape
+        node_shape = node.getShape()
+        if not node_shape:
+            # check if it has child nodes
+            if len(node.getChildren()) == 0:
+                continue
+        elif not isinstance(node_shape, allowed_shapes):
+            continue
+
         bbox = cube_from_bbox(node.boundingBox())
         bbox.setParent(node.getParent())
-        node_names.append(node.name())
+
+        node_name = node.name()
+        node_shape = node.getShape()
+        node_shape_name = None
+        if node_shape is not None:
+            node_shape_name = node_shape.name()
+
+        node_names.append((node_name, node_shape_name))
         bboxes.append(bbox)
 
     # delete the nodes
-    pm.delete(nodes)
+    if len(nodes):
+        pm.delete(nodes)
 
-    # rename the bboxes5454
-    for name, bbox in zip(node_names, bboxes):
-        bbox.rename(name)
+        # rename the bboxes
+        for name, bbox in zip(node_names, bboxes):
+            bbox.rename(name[0])
+            if name[1]:
+                bbox.getShape().rename(name[1])
 
     return bboxes
 
