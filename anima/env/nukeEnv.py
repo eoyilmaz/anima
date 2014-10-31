@@ -127,7 +127,7 @@ class Nuke(EnvironmentBase):
         return True
 
     def open(self, version, force=False, representation=None,
-             reference_depth=0):
+             reference_depth=0, skip_update_check=False):
         """the open action for nuke environment
         """
         nuke.scriptOpen(version.absolute_full_path)

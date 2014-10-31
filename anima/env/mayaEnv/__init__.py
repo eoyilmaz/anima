@@ -351,7 +351,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         return True
 
     def open(self, version, force=False, representation=None,
-             reference_depth=0):
+             reference_depth=0, skip_update_check=False):
         """The open action for Maya environment.
 
         Opens the given Version file, sets the workspace etc.
@@ -379,6 +379,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           1: all
           2: topOnly
           3: none
+
+        :param bool skip_update_check: Skip update check if True.
 
         :returns: (Bool, Dictionary)
         """
@@ -447,8 +449,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # replace_external_paths
         self.replace_external_paths()
 
-        # check the referenced versions for any possible updates
-        return self.check_referenced_versions()
+        if not skip_update_check:
+            # check the referenced versions for any possible updates
+            return self.check_referenced_versions()
+        else:
+            return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
         """Imports the content of the given Version instance to the current

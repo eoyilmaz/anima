@@ -36,7 +36,7 @@ class TestEnvironment(EnvironmentBase):
 
     @count_calls
     def open(self, version, force=False, representation=None,
-             reference_depth=0):
+             reference_depth=0, skip_update_check=False):
         self._version = version
         return self.check_referenced_versions()
 

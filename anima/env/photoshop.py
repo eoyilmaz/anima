@@ -124,7 +124,7 @@ class Photoshop(EnvironmentBase):
         return True
 
     def open(self, version, force=False, representation=None,
-             reference_depth=0):
+             reference_depth=0, skip_update_check=False):
         """open action for photoshop environment
 
         :param version: stalker.models.version.Version instance
