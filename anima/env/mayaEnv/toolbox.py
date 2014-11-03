@@ -351,6 +351,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'select_zero_uv_area_faces_button',
+                l="Filter Zero UV Area Faces",
+                c=RepeatedCallback(Modeling.select_zero_uv_area_faces),
+                ann="Selects faces with zero uv area",
+                bgc=color.color
+            )
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -811,6 +820,16 @@ def UI():
 
             color.change()
             pm.text(l='===== Representation Tools =====')
+
+            pm.button(
+                'generate_repr_of_all_references_button',
+                l='Generate Repr Of All References',
+                c=RepeatedCallback(Render.generate_repr_of_all_references),
+                ann='Generates all Representations of all references of '
+                    'this scene',
+                bgc=color.color
+            )
+            color.change()
 
             with pm.rowLayout(nc=2, adj=1):
                 pm.radioButtonGrp(
@@ -1952,6 +1971,59 @@ class Modeling(object):
 
         pm.delete(dcm)
 
+    @classmethod
+    def select_zero_uv_area_faces(cls):
+        """selects faces with zero UV area
+        """
+        def area(p):
+            return 0.5 * abs(sum(x0 * y1 - x1 * y0
+                                 for ((x0, y0), (x1, y1)) in segments(p)))
+
+        def segments(p):
+            return zip(p, p[1:] + [p[0]])
+
+        all_meshes = pm.ls(
+            [node.getShape() for node in pm.ls(sl=1)],
+            type='mesh'
+        )
+
+        mesh_count = len(all_meshes)
+
+        from anima.ui.progress_dialog import ProgressDialogManager
+        pdm = ProgressDialogManager()
+
+        if not pm.general.about(batch=1) and mesh_count:
+            pdm.use_ui = True
+
+        caller = pdm.register(mesh_count, 'check_uvs()')
+
+        meshes_with_zero_uv_area = []
+        faces_with_zero_uv_area = []
+        for node in all_meshes:
+            all_uvs = node.getUVs()
+            try:
+                for i in range(node.numFaces()):
+                    uvs = []
+                    for j in range(node.numPolygonVertices(i)):
+                        #uvs.append(node.getPolygonUV(i, j))
+                        uv_id = node.getPolygonUVid(i, j)
+                        uvs.append((all_uvs[0][uv_id], all_uvs[1][uv_id]))
+                    if area(uvs) == 0.0:
+                        #meshes_with_zero_uv_area.append(node)
+                        #break
+                        faces_with_zero_uv_area.append(
+                            '%s.f[%s]' % (node.fullPath(), i)
+                        )
+            except RuntimeError:
+                meshes_with_zero_uv_area.append(node)
+
+            caller.step()
+
+        if len(faces_with_zero_uv_area) == 0:
+            pm.warning('No Zero UV area polys found!!!')
+        else:
+            pm.select(faces_with_zero_uv_area)
+
 
 class Rigging(object):
     """Rigging tools
@@ -2591,6 +2663,83 @@ class Render(object):
             # apply to all references
             for ref in pm.listReferences():
                 ref.to_repr(repr_name)
+
+    @classmethod
+    def generate_repr_of_all_references(cls):
+        """generates all representations of all references of this scene
+        """
+        response = pm.confirmDialog(
+            title='Do Create Representations?',
+            message='Create all Repr of all References?',
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+        if response == 'No':
+            return
+
+        from stalker import Version
+        from anima.env.mayaEnv import Maya, repr_tools, auxiliary
+        reload(auxiliary)
+        reload(repr_tools)
+
+        m_env = Maya()
+
+        source_version = m_env.get_current_version()
+
+        gen = repr_tools.RepresentationGenerator()
+
+        paths_visited = []
+        versions_to_visit = []
+
+        # generate a sorted version list
+        # and visit each reference only once
+        for ref in reversed(pm.listReferences(recursive=True)):
+            ref_path = str(ref.path)
+            if ref_path not in paths_visited:
+                v = ref.version
+                if v is not None:
+                    paths_visited.append(ref_path)
+                    versions_to_visit.append(v)
+
+        # open each version
+        for v in versions_to_visit:
+            generate_bbox = True
+            generate_gpu = True
+            generate_ass = True
+
+            # check if there is a BBOX, GPU or ASS repr
+            # generated from this version
+            child_versions = Version.query.filter(Version.parent == v).all()
+            for cv in child_versions:
+                if generate_bbox is True and '@BBOX' in cv.take_name:
+                    generate_bbox = False
+
+                if generate_gpu is True and '@GPU' in cv.take_name:
+                    generate_gpu = False
+
+                if generate_ass is True and '@ASS' in cv.take_name:
+                    generate_ass = False
+
+            if generate_bbox or generate_gpu or generate_ass:
+                m_env.open(v, force=True)
+                gen.version = v
+                # generate representations
+                #gen.generate_all()
+                if generate_bbox:
+                    gen.generate_bbox()
+                if generate_gpu:
+                    gen.generate_gpu()
+                if generate_ass:
+                    gen.generate_ass()
+
+        # now open the source version again
+        m_env.open(source_version, force=True)
+
+        # and generate representation for the source
+        gen.version = source_version
+        gen.generate_all()
 
 
 class Animation(object):

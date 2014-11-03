@@ -322,7 +322,7 @@ def check_if_default_shader():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     if len(pm.ls(mat=1)) > 2:
@@ -392,7 +392,7 @@ def check_model_quality():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     pm.select(None)
@@ -448,7 +448,7 @@ def check_empty_groups():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     empty_groups = []
@@ -490,7 +490,7 @@ def check_uv_existence():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     all_meshes = pm.ls(type='mesh')
@@ -524,7 +524,7 @@ def check_out_of_space_uvs():
 
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     all_meshes = pm.ls(type='mesh')
@@ -570,7 +570,7 @@ def check_uv_border_crossing():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     all_meshes = pm.ls(type='mesh')
@@ -643,7 +643,7 @@ def check_uvs():
 
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     def area(p):
@@ -683,7 +683,7 @@ def check_uvs():
         caller.step()
 
     if len(meshes_with_zero_uv_area):
-        pm.select(meshes_with_zero_uv_area)
+        pm.select([node.getParent() for node in meshes_with_zero_uv_area])
         raise RuntimeError(
             """There are meshes with no uvs or faces with zero uv area:<br><br>
             %s""" %
@@ -802,7 +802,7 @@ def check_objects_still_using_default_shader():
     """
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     objects_with_default_material = mc.sets('initialShadingGroup', q=1)
@@ -824,7 +824,7 @@ def check_component_edits_on_references():
 
     # skip if this is a representation
     v = staging.get('version')
-    if Representation.repr_separator in v.take_name:
+    if v and Representation.repr_separator in v.take_name:
         return
 
     import maya.cmds
