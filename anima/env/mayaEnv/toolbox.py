@@ -1498,8 +1498,8 @@ class General(object):
 
         # find lookDev
         look_dev = Task.query\
-            .filter(Task.parent==model_task.parent)\
-            .filter(Task.type==look_dev_type).first()
+            .filter(Task.parent == model_task.parent)\
+            .filter(Task.type == look_dev_type).first()
 
         if not look_dev:
             raise RuntimeError(
@@ -1508,8 +1508,8 @@ class General(object):
 
         previous_look_dev_version = \
             Version.query\
-                .filter(Version.task==look_dev)\
-                .filter(Version.take_name=='Main')\
+                .filter(Version.task == look_dev)\
+                .filter(Version.take_name == 'Main')\
                 .first()
 
         description = 'Auto Created By %s ' % logged_in_user.name

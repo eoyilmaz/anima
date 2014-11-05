@@ -16,7 +16,7 @@ class RepresentationGenerator(object):
     """Generates different representations of the current scene
     """
 
-    def __init__(self):
+    def __init__(self, version=None):
         local_session = LocalSession()
         self.logged_in_user = local_session.logged_in_user
 
@@ -25,24 +25,9 @@ class RepresentationGenerator(object):
 
         from anima.env.mayaEnv import Maya
         self.maya_env = Maya()
-        v = self.maya_env.get_current_version()
-        if not v:
-            raise RuntimeError(
-                'Please save the current scene as a valid Stalker version '
-                'first'
-            )
 
-        r = Representation(version=v)
-
-        self.base_take_name = r.get_base_take_name(v)
-
-        if not r.is_base():
-            raise RuntimeError(
-                'This is not a Base take for this representation series, '
-                'please open the base (%s) take!!!' % r.get_base_take_name(v)
-            )
-
-        self.version = v
+        self.base_take_name = None
+        self.version = version
 
     @classmethod
     def get_local_root_nodes(cls):
@@ -108,6 +93,46 @@ class RepresentationGenerator(object):
         # if we came here it must not be a vegetation task task
         return False
 
+    def _validate_version(self, version):
+        """validates the given version value
+
+        :param version: A stalker.model.version.Version instance
+        :return:
+        """
+        if not version:
+            raise RuntimeError(
+                'Please supply a valid Stalker version!'
+            )
+
+        from stalker import Version
+        if not isinstance(version, Version):
+            raise TypeError(
+                'version should be a stalker.models.version.Version instance'
+            )
+
+        r = Representation(version=version)
+
+        self.base_take_name = r.get_base_take_name(version)
+
+        if not r.is_base():
+            raise RuntimeError(
+                'This is not a Base take for this representation series, '
+                'please open the base (%s) take!!!' %
+                r.get_base_take_name(version)
+            )
+
+        return version
+
+    def open_version(self, version=None):
+        """Opens the given version
+
+        :param version: A stalker.models.version.Version instance
+        :return:
+        """
+        current_v = self.maya_env.get_current_version()
+        if current_v is not version:
+            self.maya_env.open(version, force=True)
+
     def generate_all(self):
         """generates all representations at once
         """
@@ -119,8 +144,25 @@ class RepresentationGenerator(object):
     def generate_bbox(self):
         """generates the BBox representation of the current scene
         """
+        # validate the version first
+        self.version = self._validate_version(self.version)
+
+        self.open_version(self.version)
 
         task = self.version.task
+
+        # check if all references have an BBOX repr first
+        refs_with_no_bbox_repr = []
+        for ref in pm.listReferences():
+            if not ref.has_repr('BBOX'):
+                refs_with_no_bbox_repr.append(ref)
+
+        if len(refs_with_no_bbox_repr):
+            raise RuntimeError(
+                'Please generate the BBOX Representation of the references '
+                'first!!!\n%s' %
+                '\n'.join(map(lambda x: str(x.path), refs_with_no_bbox_repr))
+            )
 
         # do different things for Vegetation tasks
         if self.is_vegetation_task(task):
@@ -173,7 +215,7 @@ class RepresentationGenerator(object):
         self.maya_env.save_as(v)
 
         # reopen the original version
-        self.maya_env.open(self.version)
+        pm.newFile(force=True)
 
     def generate_proxy(self):
         """generates the Proxy representation of the current scene
@@ -183,10 +225,28 @@ class RepresentationGenerator(object):
     def generate_gpu(self):
         """generates the GPU representation of the current scene
         """
+        # validate the version first
+        self.version = self._validate_version(self.version)
+
+        self.open_version(self.version)
+
         # load necessary plugins
         pm.loadPlugin('gpuCache')
         pm.loadPlugin('AbcExport')
         pm.loadPlugin('AbcImport')
+
+        # check if all references have an GPU repr first
+        refs_with_no_gpu_repr = []
+        for ref in pm.listReferences():
+            if not ref.has_repr('GPU'):
+                refs_with_no_gpu_repr.append(ref)
+
+        if len(refs_with_no_gpu_repr):
+            raise RuntimeError(
+                'Please generate the GPU Representation of the references '
+                'first!!!\n%s' %
+                '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
+            )
 
         # convert all references to GPU
         for ref in pm.listReferences():
@@ -247,7 +307,7 @@ class RepresentationGenerator(object):
                     child_shape = child_node.getShape()
                     child_shape_name = None
                     if child_shape:
-                        child_shape_name = child_node.name()
+                        child_shape_name = child_shape.name()
 
                     child_full_path = \
                         child_node.fullPath()[1:].replace('|', '_')
@@ -313,8 +373,8 @@ class RepresentationGenerator(object):
         v.is_published = True
         self.maya_env.save_as(v)
 
-        # 7. reopen the original version
-        self.maya_env.open(self.version)
+        # clear scene
+        pm.newFile(force=True)
 
     def generate_ass(self):
         """generates the ASS representation of the current scene
@@ -326,6 +386,11 @@ class RepresentationGenerator(object):
         # and export the objects from the referenced files with their current
         # shadings, then replace all of the references to ASS repr and than
         # add Stand-in nodes and parent them under the referenced models
+
+        # validate the version first
+        self.version = self._validate_version(self.version)
+
+        self.open_version(self.version)
 
         task = self.version.task
 
@@ -341,6 +406,19 @@ class RepresentationGenerator(object):
             pm.nt.NurbsCurve,
             pm.nt.NurbsSurface
         )
+
+        # check if all references have an ASS repr first
+        refs_with_no_ass_repr = []
+        for ref in pm.listReferences():
+            if not ref.has_repr('ASS'):
+                refs_with_no_ass_repr.append(ref)
+
+        if len(refs_with_no_ass_repr):
+            raise RuntimeError(
+                'Please generate the ASS Representation of the references '
+                'first!!!\n%s' %
+                '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+            )
 
         if self.is_look_dev_task(task):
             # in look dev files, we export the ASS files directly from the Base
@@ -492,5 +570,5 @@ class RepresentationGenerator(object):
         v.is_published = True
         self.maya_env.save_as(v)
 
-        # reopen the original version
-        self.maya_env.open(self.version)
+        # new scene
+        pm.newFile(force=True)

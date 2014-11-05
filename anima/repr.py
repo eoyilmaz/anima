@@ -78,13 +78,22 @@ class Representation(object):
         """
         self._version = self._validate_version(version)
 
-    def has_repr(self):
+    def has_any_repr(self):
         """Returns true or false depending if the version has any
         representation or not
 
         :returns: bool
         """
         return len(self.list_all()) > 1
+
+    def has_repr(self, repr_name):
+        """Returns True or False depending on that this reference has a
+        Representation with the given name
+
+        :param str repr_name: The desired representation name
+        :return:
+        """
+        return self.find(repr_name) is not None
 
     def is_repr(self, repr_name=''):
         """Returns a bool value depending if the version is the requested

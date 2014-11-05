@@ -135,40 +135,42 @@ class RepresentationTestCase(unittest.TestCase):
 
         # create other reprs
         # BBOX
-        cls.version4 = cls.create_version(cls.task1, 'Main___BBox')
-        cls.version5 = cls.create_version(cls.task1, 'Main___BBox')
+        cls.version4 = cls.create_version(cls.task1, 'Main@BBox')
+        cls.version5 = cls.create_version(cls.task1, 'Main@BBox')
         cls.version5.is_published = True
         db.DBSession.commit()
 
         # ASS
-        cls.version6 = cls.create_version(cls.task1, 'Main___ASS')
-        cls.version7 = cls.create_version(cls.task1, 'Main___ASS')
+        cls.version6 = cls.create_version(cls.task1, 'Main@ASS')
+        cls.version7 = cls.create_version(cls.task1, 'Main@ASS')
         cls.version7.is_published = True
         db.DBSession.commit()
 
         # GPU
-        cls.version8 = cls.create_version(cls.task1, 'Main___GPU')
-        cls.version9 = cls.create_version(cls.task1, 'Main___GPU')
+        cls.version8 = cls.create_version(cls.task1, 'Main@GPU')
+        cls.version9 = cls.create_version(cls.task1, 'Main@GPU')
 
         # Non default take name
         cls.version10 = cls.create_version(cls.task1, 'alt1')
         cls.version11 = cls.create_version(cls.task1, 'alt1')
 
         # Hires
-        cls.version12 = cls.create_version(cls.task1, 'alt1___Hires')
-        cls.version13 = cls.create_version(cls.task1, 'alt1___Hires')
+        cls.version12 = cls.create_version(cls.task1, 'alt1@Hires')
+        cls.version13 = cls.create_version(cls.task1, 'alt1@Hires')
 
         # Midres
-        cls.version14 = cls.create_version(cls.task1, 'alt1___Midres')
-        cls.version15 = cls.create_version(cls.task1, 'alt1___Midres')
+        cls.version14 = cls.create_version(cls.task1, 'alt1@Midres')
+        cls.version15 = cls.create_version(cls.task1, 'alt1@Midres')
 
         # Lores
-        cls.version16 = cls.create_version(cls.task1, 'alt1___Lores')
-        cls.version17 = cls.create_version(cls.task1, 'alt1___Lores')
+        cls.version16 = cls.create_version(cls.task1, 'alt1@Lores')
+        cls.version17 = cls.create_version(cls.task1, 'alt1@Lores')
+        cls.version17.is_published = True
 
         # No Repr
         cls.version18 = cls.create_version(cls.task1, 'NoRepr')
         cls.version19 = cls.create_version(cls.task1, 'NoRepr')
+        db.DBSession.commit()
 
         # create a buffer for extra created files, which are to be removed
         cls.remove_these_files_buffer = []
@@ -230,17 +232,29 @@ class RepresentationTestCase(unittest.TestCase):
         rep = Representation(self.version4)
         self.assertTrue(rep.find('NonExists') is None)
 
+    def test_has_any_repr_method_is_working_properly(self):
+        """testing if Representation.has_any_repr() method is working properly
+        """
+        rep = Representation(self.version1)
+        self.assertTrue(rep.has_any_repr())
+
+        rep.version = self.version17
+        self.assertTrue(rep.has_any_repr())
+
+        rep.version = self.version19
+        self.assertFalse(rep.has_any_repr())
+
     def test_has_repr_method_is_working_properly(self):
         """testing if Representation.has_repr() method is working properly
         """
         rep = Representation(self.version1)
-        self.assertTrue(rep.has_repr())
+        self.assertTrue(rep.has_repr('BBox'))
 
         rep.version = self.version17
-        self.assertTrue(rep.has_repr())
+        self.assertTrue(rep.has_repr('Lores'))
 
         rep.version = self.version19
-        self.assertFalse(rep.has_repr())
+        self.assertFalse(rep.has_repr('BBox'))
 
     def test_get_base_take_name_is_working_properly(self):
         """testing if the Representation.get_base_take_name() method is working

@@ -75,8 +75,8 @@ class MayaExtension(object):
             return textField(self, q=1, tx=1)
 
 
-class ReferenceExtension(object):
-    """Extensions to Maya Reference node.
+class FileReferenceExtension(object):
+    """Extensions to Maya FileReference node.
 
     Manages the Referenced different representations in the current scene.
 
@@ -164,6 +164,24 @@ class ReferenceExtension(object):
 
         rep = Representation(version=v)
         return rep.is_base()
+
+    @extends(FileReference)
+    def has_repr(self, repr_name='Base'):
+        """checks if the reference has the given representation
+
+        :param str repr_name: The name of the desired representation
+        :return:
+        """
+
+        from anima.env.mayaEnv import Maya
+        m = Maya()
+        v = m.get_version_from_full_path(self.path)
+
+        if v is None:
+            return False
+
+        rep = Representation(version=v)
+        return rep.has_repr(repr_name=repr_name)
 
     @extends(FileReference)
     def is_repr(self, repr_name):

@@ -21,6 +21,8 @@ from anima import publish
 from anima.env import to_os_independent_path
 from anima.env.mayaEnv import Maya
 from anima.env.mayaEnv.archive import Archiver
+from anima.env.mayaEnv.repr_tools import (Representation,
+                                          RepresentationGenerator)
 
 
 class MayaTestBase(unittest.TestCase):
@@ -195,12 +197,10 @@ class MayaTestBase(unittest.TestCase):
         self.task5 = Task(
             name='Test Task 5',
             parent=self.task1,
-            #type=Type('Model', code='Model', target_entity_type='Task')
         )
         self.task6 = Task(
             name='Test Task 6',
             parent=self.task1,
-            #type=Type('LookDev', code='Model', target_entity_type='Task')
         )
 
         # create a root asset
@@ -251,6 +251,352 @@ class MayaTestBase(unittest.TestCase):
             parent=self.sequence2
         )
 
+        # ******************************************************************
+        #
+        # Lets create some real data
+        #
+        # ******************************************************************
+
+        # Types
+        self.character_design_type = Type(
+            name='Character Design',
+            code='chardesign',
+            target_entity_type='Task'
+        )
+
+        self.model_type = Type(
+            name='Model',
+            code='model',
+            target_entity_type='Task'
+        )
+
+        self.look_development_type = Type(
+            name='Look Development',
+            code='lookdev',
+            target_entity_type='Task'
+        )
+
+        self.rig_type = Type(
+            name='Rig',
+            code='rig',
+            target_entity_type='Task'
+        )
+
+        self.exterior_type = Type(
+            name='Exterior',
+            code='rig',
+            target_entity_type='Asset'
+        )
+
+        self.building_type = Type(
+            name='Building',
+            code='building',
+            target_entity_type='Asset'
+        )
+
+        self.layout_type = Type(
+            name='Layout',
+            code='layout',
+            target_entity_type='Task'
+        )
+
+        self.prop_type = Type(
+            name='Prop',
+            code='prop',
+            target_entity_type='Asset'
+        )
+
+        self.vegetation_type = Type(
+            name='Vegetation',
+            code='vegetation',
+            target_entity_type='Task'
+        )
+
+        # Tasks
+        self.assets = Task(
+            name='Assets',
+            project=self.project
+        )
+
+        self.characters = Task(
+            name='Characters',
+            parent=self.assets
+        )
+
+        self.char1 = Asset(
+            name='Char1',
+            code='Char1',
+            type=self.character_type,
+            parent=self.characters
+        )
+
+        self.character_design = Task(
+            name='Character Design',
+            type=self.character_design_type,
+            parent=self.char1
+        )
+
+        self.char1_model = Task(
+            name='Model',
+            parent=self.char1,
+            type=self.model_type,
+            depends=[self.character_design]
+        )
+
+        self.char1_look_dev = Task(
+            name='Look Dev',    # this is named Look Dev instead of LookDev on
+            parent=self.char1,  # purpose
+            type=self.look_development_type,
+            depends=[self.char1_model]
+        )
+
+        self.char1_rig = Task(
+            name='Rig',    # this is named Look Dev instead of LookDev on
+            parent=self.char1,  # purpose
+            type=self.rig_type,
+            depends=[self.char1_model]
+        )
+
+        self.environments = Task(
+            name='Environments',
+            parent=self.assets
+        )
+
+        self.exteriors = Task(
+            name='Exteriors',
+            parent=self.environments
+        )
+
+        self.ext1 = Asset(
+            name='Ext1',
+            code='Ext1',
+            type=self.exterior_type,
+            parent=self.exteriors
+        )
+
+        # Building 1
+        self.building1 = Asset(
+            name='Building1',
+            code='Building1',
+            type=self.building_type,
+            parent=self.ext1
+        )
+
+        self.building1_layout = Task(
+            name='Layout',
+            type=self.layout_type,
+            parent=self.building1
+        )
+
+        self.building1_layout_proxy = Task(
+            name='Proxy',
+            type=self.layout_type,
+            parent=self.building1_layout
+        )
+
+        self.building1_layout_hires = Task(
+            name='Hires',
+            type=self.layout_type,
+            parent=self.building1_layout,
+            depends=[self.building1_layout_proxy]
+        )
+
+        self.building1_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.building1
+        )
+
+        self.building1_props = Task(
+            name='Props',
+            parent=self.building1
+        )
+
+        self.building1_yapi = Task(
+            name='YAPI',
+            parent=self.building1_props
+        )
+
+        self.building1_yapi_model = Task(
+            name='Model',
+            type=self.model_type,
+            parent=self.building1_yapi
+        )
+
+        self.building1_yapi_model_proxy = Task(
+            name='Proxy',
+            type=self.model_type,
+            parent=self.building1_yapi_model
+        )
+
+        self.building1_yapi_model_hires = Task(
+            name='Hires',
+            type=self.model_type,
+            parent=self.building1_yapi_model
+        )
+
+        self.building1_yapi_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.building1_yapi,
+            depends=[self.building1_yapi_model_hires]
+        )
+
+        self.building1_layout_proxy.depends.append(
+            self.building1_yapi_model_proxy
+        )
+
+        self.building1_layout_hires.depends.append(
+            self.building1_yapi_model_hires
+        )
+
+        # Building 2
+        self.building2 = Asset(
+            name='Building2',
+            code='Building2',
+            type=self.building_type,
+            parent=self.ext1
+        )
+
+        self.building2_layout = Task(
+            name='Layout',
+            type=self.layout_type,
+            parent=self.building2
+        )
+
+        self.building2_layout_proxy = Task(
+            name='Proxy',
+            type=self.layout_type,
+            parent=self.building2_layout
+        )
+
+        self.building2_layout_hires = Task(
+            name='Hires',
+            type=self.layout_type,
+            parent=self.building2_layout,
+            depends=[self.building2_layout_proxy]
+        )
+
+        self.building2_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.building2
+        )
+
+        self.building2_props = Task(
+            name='Props',
+            parent=self.building2
+        )
+
+        self.building2_yapi = Task(
+            name='YAPI',
+            parent=self.building2_props
+        )
+
+        self.building2_yapi_model = Task(
+            name='Model',
+            type=self.model_type,
+            parent=self.building2_yapi
+        )
+
+        self.building2_yapi_model_proxy = Task(
+            name='Proxy',
+            type=self.model_type,
+            parent=self.building2_yapi_model
+        )
+
+        self.building2_yapi_model_hires = Task(
+            name='Hires',
+            type=self.model_type,
+            parent=self.building2_yapi_model
+        )
+
+        self.building2_yapi_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.building2_yapi,
+            depends=[self.building2_yapi_model_hires]
+        )
+
+        self.building2_layout_proxy.depends.append(
+            self.building2_yapi_model_proxy
+        )
+
+        self.building2_layout_hires.depends.append(
+            self.building2_yapi_model_hires
+        )
+
+        # continue to ext1 layout
+        self.ext1_layout = Task(
+            name='Layout',
+            type=self.layout_type,
+            parent=self.ext1
+        )
+
+        self.ext1_layout_proxy = Task(
+            name='Proxy',
+            type=self.layout_type,
+            parent=self.ext1_layout
+        )
+
+        self.ext1_layout_hires = Task(
+            name='Hires',
+            type=self.layout_type,
+            parent=self.ext1_layout,
+            depends=[self.ext1_layout_proxy]
+        )
+
+        self.ext1_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.ext1,
+            depends=[self.ext1_layout]
+        )
+
+        self.ext1_props = Task(
+            name='Props',
+            parent=self.ext1
+        )
+
+        self.prop1 = Asset(
+            name='Prop1',
+            code='Prop1',
+            type=self.prop_type,
+            parent=self.ext1_props
+        )
+
+        self.prop1_model = Task(
+            name='Model',
+            type=self.model_type,
+            parent=self.prop1
+        )
+
+        self.prop1_model_proxy = Task(
+            name='Proxy',
+            type=self.model_type,
+            parent=self.prop1_model
+        )
+
+        self.prop1_model_hires = Task(
+            name='Hires',
+            type=self.model_type,
+            parent=self.prop1_model,
+            depends=[self.prop1_model_proxy]
+        )
+
+        self.prop1_look_dev = Task(
+            name='LookDev',
+            type=self.look_development_type,
+            parent=self.prop1
+        )
+
+        # and finally vegetation
+        self.ext1_vegetation = Task(
+            name='Vegetation',
+            parent=self.ext1,
+            type=self.vegetation_type
+        )
+
         # commit everything
         db.DBSession.add_all([
             self.repo1, self.status_new, self.status_wip, self.status_comp,
@@ -260,7 +606,31 @@ class MayaTestBase(unittest.TestCase):
             self.task4, self.task5, self.task6, self.asset1, self.asset2,
             self.shot1, self.shot2, self.shot3, self.sequence1, self.sequence2,
             self.task_template, self.asset_template, self.shot_template,
-            self.sequence_template
+            self.sequence_template,
+
+            self.character_design_type, self.model_type,
+            self.look_development_type, self.rig_type, self.exterior_type,
+            self.building_type, self.layout_type, self.prop_type,
+            self.vegetation_type, self.assets, self.characters, self.char1,
+            self.character_design, self.char1_model, self.char1_look_dev,
+            self.char1_rig, self.environments, self.exteriors, self.ext1,
+
+            self.building1, self.building1_layout, self.building1_layout_proxy,
+            self.building1_layout_hires, self.building1_look_dev,
+            self.building1_props, self.building1_yapi,
+            self.building1_yapi_model, self.building1_yapi_model_proxy,
+            self.building1_yapi_model_hires, self.building1_yapi_look_dev,
+
+            self.building2, self.building2_layout, self.building2_layout_proxy,
+            self.building2_layout_hires, self.building2_look_dev,
+            self.building2_props, self.building2_yapi,
+            self.building2_yapi_model, self.building2_yapi_model_proxy,
+            self.building2_yapi_model_hires, self.building2_yapi_look_dev,
+
+            self.ext1_layout, self.ext1_layout_proxy, self.ext1_layout_hires,
+            self.ext1_look_dev, self.ext1_props, self.prop1, self.prop1_model,
+            self.prop1_model_proxy, self.prop1_model_hires,
+            self.prop1_look_dev, self.ext1_vegetation
         ])
         db.DBSession.commit()
 
@@ -339,6 +709,323 @@ class MayaTestBase(unittest.TestCase):
         self.version46 = self.create_version(self.shot1, 'Take1')
         self.version47 = self.create_version(self.shot1, 'Take1')
         self.version48 = self.create_version(self.shot1, 'Take1')
+
+        # Reflected Data
+        # Char1 - Character Design
+        self.version49 = self.create_version(self.character_design, 'Main')
+        self.version50 = self.create_version(self.character_design, 'Main')
+        self.version51 = self.create_version(self.character_design, 'Main')
+
+        # Char1 - Model
+        self.version52 = self.create_version(self.char1_model, 'Main')
+        self.version53 = self.create_version(self.char1_model, 'Main')
+        self.version54 = self.create_version(self.char1_model, 'Main')
+
+        # Char1 - Look Dev
+        self.version55 = self.create_version(self.char1_look_dev, 'Main')
+        self.version56 = self.create_version(self.char1_look_dev, 'Main')
+        self.version57 = self.create_version(self.char1_look_dev, 'Main')
+
+        # Char1 - Rig
+        self.version58 = self.create_version(self.char1_rig, 'Main')
+        self.version59 = self.create_version(self.char1_rig, 'Main')
+        self.version60 = self.create_version(self.char1_rig, 'Main')
+
+        # Building1
+        # Building1 - Layout - Proxy
+        self.version61 = self.create_version(self.building1_layout_proxy, 'Main')
+        self.version62 = self.create_version(self.building1_layout_proxy, 'Main')
+        self.version63 = self.create_version(self.building1_layout_proxy, 'Main')
+
+        # Building1 - Layout - Hires
+        self.version64 = self.create_version(self.building1_layout_hires, 'Main')
+        self.version65 = self.create_version(self.building1_layout_hires, 'Main')
+        self.version66 = self.create_version(self.building1_layout_hires, 'Main')
+
+        # Building1 - LookDev
+        self.version67 = self.create_version(self.building1_look_dev, 'Main')
+        self.version68 = self.create_version(self.building1_look_dev, 'Main')
+        self.version69 = self.create_version(self.building1_look_dev, 'Main')
+
+        # Building1 | Props | Yapi | Model | Proxy
+        self.version70 = self.create_version(self.building1_yapi_model_proxy, 'Main')
+        self.version71 = self.create_version(self.building1_yapi_model_proxy, 'Main')
+        self.version72 = self.create_version(self.building1_yapi_model_proxy, 'Main')
+
+        # Building1 | Props | Yapi | Model | Hires
+        self.version73 = self.create_version(self.building1_yapi_model_hires, 'Main')
+        self.version74 = self.create_version(self.building1_yapi_model_hires, 'Main')
+        self.version75 = self.create_version(self.building1_yapi_model_hires, 'Main')
+
+        # Building1 | Props | Yapi | LookDev
+        self.version76 = self.create_version(self.building1_yapi_look_dev, 'Main')
+        self.version77 = self.create_version(self.building1_yapi_look_dev, 'Main')
+        self.version78 = self.create_version(self.building1_yapi_look_dev, 'Main')
+
+        # Building2 | Layout | Proxy
+        self.version79 = self.create_version(self.building2_layout_proxy, 'Main')
+        self.version80 = self.create_version(self.building2_layout_proxy, 'Main')
+        self.version81 = self.create_version(self.building2_layout_proxy, 'Main')
+
+        # Building2 | Layout | Hires
+        self.version82 = self.create_version(self.building2_layout_hires, 'Main')
+        self.version83 = self.create_version(self.building2_layout_hires, 'Main')
+        self.version84 = self.create_version(self.building2_layout_hires, 'Main')
+
+        # Building2 | LookDev
+        self.version85 = self.create_version(self.building2_look_dev, 'Main')
+        self.version86 = self.create_version(self.building2_look_dev, 'Main')
+        self.version87 = self.create_version(self.building2_look_dev, 'Main')
+
+        # Building2 | Props | Yapi | Model | Proxy
+        self.version88 = self.create_version(self.building2_yapi_model_proxy, 'Main')
+        self.version89 = self.create_version(self.building2_yapi_model_proxy, 'Main')
+        self.version90 = self.create_version(self.building2_yapi_model_proxy, 'Main')
+
+        # Building2 | Props | Yapi | Model | Hires
+        self.version91 = self.create_version(self.building2_yapi_model_hires, 'Main')
+        self.version92 = self.create_version(self.building2_yapi_model_hires, 'Main')
+        self.version93 = self.create_version(self.building2_yapi_model_hires, 'Main')
+
+        # Building2 | Props | Yapi | LookDev
+        self.version94 = self.create_version(self.building2_yapi_look_dev, 'Main')
+        self.version95 = self.create_version(self.building2_yapi_look_dev, 'Main')
+        self.version96 = self.create_version(self.building2_yapi_look_dev, 'Main')
+
+        # Ext1 | Layout | Proxy
+        self.version97 = self.create_version(self.ext1_layout_proxy, 'Main')
+        self.version98 = self.create_version(self.ext1_layout_proxy, 'Main')
+        self.version99 = self.create_version(self.ext1_layout_proxy, 'Main')
+
+        # Ext1 | Layout | Hires
+        self.version100 = self.create_version(self.ext1_layout_hires, 'Main')
+        self.version101 = self.create_version(self.ext1_layout_hires, 'Main')
+        self.version102 = self.create_version(self.ext1_layout_hires, 'Main')
+
+        # Ext1 | LookDev
+        self.version103 = self.create_version(self.ext1_look_dev, 'Main')
+        self.version104 = self.create_version(self.ext1_look_dev, 'Main')
+        self.version105 = self.create_version(self.ext1_look_dev, 'Main')
+
+        # Ext1 | Props | Prop1 | Model | Proxy
+        self.version106 = self.create_version(self.prop1_model_proxy, 'Main')
+        self.version107 = self.create_version(self.prop1_model_proxy, 'Main')
+        self.version108 = self.create_version(self.prop1_model_proxy, 'Main')
+
+        # Ext1 | Props | Prop1 | Model | Hires
+        self.version109 = self.create_version(self.prop1_model_hires, 'Main')
+        self.version110 = self.create_version(self.prop1_model_hires, 'Main')
+        self.version111 = self.create_version(self.prop1_model_hires, 'Main')
+
+        # Ext1 | Props | Prop1 | LookDev
+        self.version112 = self.create_version(self.prop1_look_dev, 'Main')
+        self.version113 = self.create_version(self.prop1_look_dev, 'Main')
+        self.version114 = self.create_version(self.prop1_look_dev, 'Main')
+
+        # Ext1 | Vegetation
+        self.version115 = self.create_version(self.ext1_vegetation, 'Main')
+        self.version116 = self.create_version(self.ext1_vegetation, 'Main')
+        self.version117 = self.create_version(self.ext1_vegetation, 'Main')
+
+        # now fill some content
+        # Vegetation
+        pm.newFile(force=True)
+
+        # add the nodes
+        base_transform = pm.nt.Transform(name='kksEnv___vegetation_ALL')
+        strokes = pm.nt.Transform(name='kks___vegetation_pfxStrokes')
+        polygons = pm.nt.Transform(name='kks___vegetation_pfxPolygons')
+        paintable_geos = pm.nt.Transform(name='kks___vegetation_paintableGeos')
+
+        # hide paintable geos
+        paintable_geos.setAttr('v', False)
+
+        pm.parent(strokes, base_transform)
+        pm.parent(polygons, base_transform)
+        pm.parent(paintable_geos, base_transform)
+
+        # create some flowers
+        pm.parent(
+            pm.nt.Transform(name='KksEnv_PFXbrush___acacia___strokes'),
+            strokes
+        )
+
+        pm.parent(
+            pm.nt.Transform(name='Kks_PFXbrush___clover___strokes'),
+            strokes
+        )
+
+        # create some transform nodes
+        acacia_polygons = \
+            pm.nt.Transform(name='KksEnv_PFXbrush___acacia___polygons')
+        pm.parent(
+            acacia_polygons,
+            polygons
+        )
+
+        # and polygons
+        acacia_mesh_group = \
+            pm.nt.Transform(name='kksEnv_PFXbrush___acacia1MeshGroup')
+        acacia_main = pm.polyCube(name='kksEnv_PFXbrush___acacia1Main')[0]
+        acacia_leaf = pm.polyCube(name='kksEnv_PFXbrush___acacia1Leaf')[0]
+
+        pm.parent(acacia_mesh_group, acacia_polygons)
+        pm.parent(acacia_main, acacia_mesh_group)
+        pm.parent(acacia_leaf, acacia_mesh_group)
+
+        clover_polygons = \
+            pm.nt.Transform(name='KksEnv_PFXbrush___clover___polygons')
+        pm.parent(
+            clover_polygons,
+            polygons
+        )
+
+        # and polygons
+        clover_mesh_group = \
+            pm.nt.Transform(name='kksEnv_PFXbrush___clover1MeshGroup')
+        clover_main = pm.polyCube(name='kksEnv_PFXbrush___clover1Main')[0]
+        clover_leaf = pm.polyCube(name='kksEnv_PFXbrush___clover1Leaf')[0]
+
+        pm.parent(clover_mesh_group, clover_polygons)
+        pm.parent(clover_main, clover_mesh_group)
+        pm.parent(clover_leaf, clover_mesh_group)
+
+        # save it
+        self.maya_env.save_as(version=self.version115)
+        self.maya_env.save_as(version=self.version116)
+        self.maya_env.save_as(version=self.version117)
+
+        #****************************************
+        # create Building1
+        #****************************************
+        # hires model
+        pm.newFile(force=True)
+
+        building1_yapi = pm.nt.Transform(name='building1_yapi')
+        some_cube = pm.polyCube(name='duvarlar')
+        pm.runtime.DeleteHistory(some_cube[1])
+        pm.parent(some_cube[0], building1_yapi)
+
+        # save it
+        self.maya_env.save_as(self.version73)
+        self.maya_env.save_as(self.version74)
+        self.maya_env.save_as(self.version75)
+        self.version75.is_published = True
+
+        # save it also for Building2 | Props | Yapi | Model
+        building1_yapi.rename('building2_yapi')
+        self.maya_env.save_as(self.version91)
+        self.maya_env.save_as(self.version92)
+        self.maya_env.save_as(self.version93)
+        self.version93.is_published = True
+
+        # Building1 | Props | Yapi | Look Dev
+        pm.newFile(force=True)
+        self.maya_env.reference(self.version75)
+
+        # create an arnold material
+        mat = pm.createSurfaceShader('aiStandard', name='bina_aiStandard')
+        pm.sets(mat[1], fe=pm.ls(type='mesh'))
+
+        # save it
+        self.maya_env.save_as(self.version76)
+        self.maya_env.save_as(self.version77)
+        self.maya_env.save_as(self.version78)
+        self.version78.is_published = True
+
+        # save it for Building2 | Props | Yapi | Look Dev
+        pm.listReferences()[0].replaceWith(self.version93.absolute_full_path)
+        self.maya_env.save_as(self.version94)
+        self.maya_env.save_as(self.version95)
+        self.maya_env.save_as(self.version96)
+        self.version96.is_published = True
+
+        # building1 layout
+        pm.newFile(force=1)
+        base_group = pm.nt.Transform(name='building1_layout')
+
+        ref = self.maya_env.reference(self.version78)
+        ref_root_node = pm.ls('*:*:*building1_yapi')[0]
+        pm.parent(ref_root_node, base_group)
+
+        self.maya_env.save_as(self.version64)
+        self.maya_env.save_as(self.version65)
+        self.maya_env.save_as(self.version66)
+        self.version66.is_published = True
+
+        # building2 layout
+        pm.newFile(force=1)
+        base_group = pm.nt.Transform(name='building2_layout')
+
+        # reference building2 | yapi | look dev
+        ref = self.maya_env.reference(self.version96)
+        ref_root_node = pm.ls('*:*:*building2_yapi')[0]
+        pm.parent(ref_root_node, base_group)
+
+        self.maya_env.save_as(self.version82)
+        self.maya_env.save_as(self.version83)
+        self.maya_env.save_as(self.version84)
+        self.version84.is_published = True
+
+        # building1 | look dev
+        pm.newFile(force=True)
+        # reference building1 | Layout | Hires
+        self.maya_env.reference(self.version66)
+        # just save it
+        self.maya_env.save_as(self.version67)
+        self.maya_env.save_as(self.version68)
+        self.maya_env.save_as(self.version69)
+        self.version69.is_published = True
+
+        # building2 | look dev
+        pm.newFile(force=True)
+        # reference building1 | Layout | Hires
+        self.maya_env.reference(self.version84)
+        # just save it
+        self.maya_env.save_as(self.version85)
+        self.maya_env.save_as(self.version86)
+        self.maya_env.save_as(self.version87)
+        self.version87.is_published = True
+
+        # prepare the main layout of the exterior
+        pm.newFile(force=True)
+        # reference Building1 | Layout | Hires
+        self.maya_env.reference(self.version66)
+        # reference Building2 | Layout | Hires
+        self.maya_env.reference(self.version84)
+
+        # create the layout root node
+        root_node = pm.nt.Transform(name='ext1_layout')
+        # parent the other buildings under this node
+        building1_layout = pm.ls('*:*building1_layout')[0]
+        building2_layout = pm.ls('*:*building2_layout')[0]
+
+        pm.parent(building1_layout, root_node)
+        pm.parent(building2_layout, root_node)
+
+        # move them around
+        building1_layout.setAttr('t', (10, 0, 0))
+        building2_layout.setAttr('t', (0, 0, 10))
+
+        # reference the vegetation
+        self.maya_env.reference(self.version117)
+
+        # save it
+        self.maya_env.save_as(self.version100)
+        self.maya_env.save_as(self.version101)
+        self.maya_env.save_as(self.version102)
+        self.version102.is_published = True
+
+        #*********************************
+        # The Look Dev of the environment
+        #*********************************
+        pm.newFile(force=True)
+        self.maya_env.reference(self.version102)
+        self.maya_env.save_as(self.version103)
+        self.maya_env.save_as(self.version104)
+        self.maya_env.save_as(self.version105)
+        self.version105.is_published = True
+        pm.newFile(force=True)
 
         # +- task1
         # |  |
@@ -421,14 +1108,149 @@ class MayaTestBase(unittest.TestCase):
         # |        +- version42
         # |
         # +- shot1
-        #    +- Main
-        #    |  +- version43
-        #    |  +- version44
-        #    |  +- version45
-        #    +- Take1
-        #       +- version46
-        #       +- version47
-        #       +- version48
+        # |  +- Main
+        # |  |  +- version43
+        # |  |  +- version44
+        # |  |  +- version45
+        # |  +- Take1
+        # |     +- version46
+        # |     +- version47
+        # |     +- version48
+        # |
+        # +- Assets (Task)
+        #    +- Characters (Task)
+        #    |  +- Char1 (Asset - Character)
+        #    |     +- Character Design (Task - Character Design)
+        #    |     |  +- version49
+        #    |     |  +- version50
+        #    |     |  +- version51
+        #    |     |
+        #    |     +- Model (Task - Model)
+        #    |     |  +- version52
+        #    |     |  +- version53
+        #    |     |  +- version54
+        #    |     |
+        #    |     +- Look Dev (Task - Look Development)
+        #    |     |  +- version55
+        #    |     |  +- version56
+        #    |     |  +- version57
+        #    |     |
+        #    |     +- Rig (Task - Rig)
+        #    |        +- version58
+        #    |        +- version59
+        #    |        +- version60
+        #    |
+        #    +- Environments (Task)
+        #       +- Exteriors (Task)
+        #          +- Ext1 (Asset - Exterior)
+        #             +- Building1 (Asset - Building)
+        #             |  +- Layout (Task - Layout)
+        #             |  |  +- Proxy (Task - Layout)
+        #             |  |  |  +- version61
+        #             |  |  |  +- version62
+        #             |  |  |  +- version63
+        #             |  |  |
+        #             |  |  +- Hires (Task - Layout)
+        #             |  |     +- version64
+        #             |  |     +- version65
+        #             |  |     +- version66
+        #             |  |
+        #             |  +- LookDev (Task - Look Development)
+        #             |  |  +- version67
+        #             |  |  +- version68
+        #             |  |  +- version69
+        #             |  |
+        #             |  +- Props (Task)
+        #             |     +- YAPI (Task)
+        #             |        +- Model (Task - Model)
+        #             |        |  +- Proxy (Task - Model)
+        #             |        |  |  +- version70
+        #             |        |  |  +- version71
+        #             |        |  |  +- version72
+        #             |        |  |
+        #             |        |  +- Hires (Task - Model)
+        #             |        |     +- version73
+        #             |        |     +- version74
+        #             |        |     +- version75
+        #             |        |
+        #             |        +- LookDev (Task - Look Development)
+        #             |           +- version76
+        #             |           +- version77
+        #             |           +- version78
+        #             |
+        #             +- Building2 (Asset - Building)
+        #             |  +- Layout (Task - Layout)
+        #             |  |  +- Proxy (Task - Layout)
+        #             |  |  |  +- version79
+        #             |  |  |  +- version80
+        #             |  |  |  +- version81
+        #             |  |  |
+        #             |  |  +- Hires (Task - Layout)
+        #             |  |     +- version82
+        #             |  |     +- version83
+        #             |  |     +- version84
+        #             |  |
+        #             |  +- LookDev (Task - Look Development)
+        #             |  |  +- version85
+        #             |  |  +- version86
+        #             |  |  +- version87
+        #             |  |
+        #             |  +- Props (Task)
+        #             |     +- YAPI (Task)
+        #             |        +- Model (Task - Model)
+        #             |        |  +- Proxy (Task - Model)
+        #             |        |  |  +- version88
+        #             |        |  |  +- version89
+        #             |        |  |  +- version90
+        #             |        |  |
+        #             |        |  +- Hires (Task - Model)
+        #             |        |     +- version91
+        #             |        |     +- version92
+        #             |        |     +- version93
+        #             |        |
+        #             |        +- LookDev (Task - Look Development)
+        #             |           +- version94
+        #             |           +- version95
+        #             |           +- version96
+        #             |
+        #             +- Layout (Task - Layout)
+        #             |  +- Proxy (Task - Layout)
+        #             |  |  +- version97
+        #             |  |  +- version98
+        #             |  |  +- version99
+        #             |  |
+        #             |  +- Hires (Task - Layout)
+        #             |     +- version100
+        #             |     +- version101
+        #             |     +- version102
+        #             |
+        #             +- LookDev (Task - Look Development)
+        #             |  +- version103
+        #             |  +- version104
+        #             |  +- version105
+        #             |
+        #             +- Props (Task)
+        #             |  +- Prop1 (Asset)
+        #             |     +- Model (Task - Model)
+        #             |     |  +- Proxy (Task - Model)
+        #             |     |  |  +- version106
+        #             |     |  |  +- version107
+        #             |     |  |  +- version108
+        #             |     |  |
+        #             |     |  +- Hires (Task - Model)
+        #             |     |     +- version109
+        #             |     |     +- version110
+        #             |     |     +- version111
+        #             |     |
+        #             |     +- LookDev (Task - Look Development)
+        #             |        +- version112
+        #             |        +- version113
+        #             |        +- version114
+        #             |
+        #             +- Vegetation (Task - Vegetation)
+        #                +- version115
+        #                +- version116
+        #                +- version117
 
         # just renew the scene
         pm.newFile(force=True)
@@ -1425,12 +2247,12 @@ class MayaTestCase(MayaTestBase):
         a_base_v3.is_published = True
 
         # BBox repr
-        a_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+        a_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
 
-        a_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        a_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
         a_bbox_v2.is_published = True
 
-        a_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        a_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
         a_bbox_v3.is_published = True
 
         # a new series of versions
@@ -1444,12 +2266,12 @@ class MayaTestCase(MayaTestBase):
         b_base_v3.is_published = True
 
         # BBox repr
-        b_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+        b_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
 
-        b_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        b_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
         b_bbox_v2.is_published = True
 
-        b_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        b_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
         b_bbox_v3.is_published = True
 
         # and another one
@@ -1464,12 +2286,12 @@ class MayaTestCase(MayaTestBase):
         c_base_v3.is_published = True
 
         # BBox repr
-        c_bbox_v1 = self.create_version(self.asset1, 'Main___BBox')
+        c_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
 
-        c_bbox_v2 = self.create_version(self.asset1, 'Main___BBox')
+        c_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
         c_bbox_v2.is_published = True
 
-        c_bbox_v3 = self.create_version(self.asset1, 'Main___BBox')
+        c_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
         c_bbox_v3.is_published = True
 
         # save it as a new version
@@ -5506,41 +6328,41 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
 
         # now do your addition
         # create ass take for asset2
-        self.repr_version1 = self.create_version(self.asset2, 'Main___ASS')
-        self.repr_version2 = self.create_version(self.asset2, 'Main___ASS')
-        self.repr_version3 = self.create_version(self.asset2, 'Main___ASS')
+        self.repr_version1 = self.create_version(self.asset2, 'Main@ASS')
+        self.repr_version2 = self.create_version(self.asset2, 'Main@ASS')
+        self.repr_version3 = self.create_version(self.asset2, 'Main@ASS')
 
         self.repr_version1.is_published = True
         self.repr_version3.is_published = True
 
-        self.repr_version4 = self.create_version(self.asset2, 'Main___BBox')
-        self.repr_version5 = self.create_version(self.asset2, 'Main___BBox')
-        self.repr_version6 = self.create_version(self.asset2, 'Main___BBox')
+        self.repr_version4 = self.create_version(self.asset2, 'Main@BBox')
+        self.repr_version5 = self.create_version(self.asset2, 'Main@BBox')
+        self.repr_version6 = self.create_version(self.asset2, 'Main@BBox')
 
         self.repr_version4.is_published = True
         self.repr_version6.is_published = True
 
-        self.repr_version7 = self.create_version(self.asset2, 'Main___GPU')
-        self.repr_version8 = self.create_version(self.asset2, 'Main___GPU')
-        self.repr_version9 = self.create_version(self.asset2, 'Main___GPU')
+        self.repr_version7 = self.create_version(self.asset2, 'Main@GPU')
+        self.repr_version8 = self.create_version(self.asset2, 'Main@GPU')
+        self.repr_version9 = self.create_version(self.asset2, 'Main@GPU')
 
         self.repr_version9.is_published = True
 
-        self.repr_version10 = self.create_version(self.asset2, 'Take1___ASS')
-        self.repr_version11 = self.create_version(self.asset2, 'Take1___ASS')
-        self.repr_version12 = self.create_version(self.asset2, 'Take1___ASS')
+        self.repr_version10 = self.create_version(self.asset2, 'Take1@ASS')
+        self.repr_version11 = self.create_version(self.asset2, 'Take1@ASS')
+        self.repr_version12 = self.create_version(self.asset2, 'Take1@ASS')
 
         self.repr_version11.is_published = True
 
-        self.repr_version13 = self.create_version(self.asset2, 'Take1___BBox')
-        self.repr_version14 = self.create_version(self.asset2, 'Take1___BBox')
-        self.repr_version15 = self.create_version(self.asset2, 'Take1___BBox')
+        self.repr_version13 = self.create_version(self.asset2, 'Take1@BBox')
+        self.repr_version14 = self.create_version(self.asset2, 'Take1@BBox')
+        self.repr_version15 = self.create_version(self.asset2, 'Take1@BBox')
 
         self.repr_version14.is_published = True
 
-        self.repr_version16 = self.create_version(self.asset2, 'Take1___GPU')
-        self.repr_version17 = self.create_version(self.asset2, 'Take1___GPU')
-        self.repr_version18 = self.create_version(self.asset2, 'Take1___GPU')
+        self.repr_version16 = self.create_version(self.asset2, 'Take1@GPU')
+        self.repr_version17 = self.create_version(self.asset2, 'Take1@GPU')
+        self.repr_version18 = self.create_version(self.asset2, 'Take1@GPU')
 
         self.repr_version16.is_published = True
         self.repr_version17.is_published = True
@@ -5553,9 +6375,9 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
 
         self.repr_version21.is_published = True
 
-        self.repr_version22 = self.create_version(self.asset2, 'Take2___ASS')
-        self.repr_version23 = self.create_version(self.asset2, 'Take2___ASS')
-        self.repr_version24 = self.create_version(self.asset2, 'Take2___ASS')
+        self.repr_version22 = self.create_version(self.asset2, 'Take2@ASS')
+        self.repr_version23 = self.create_version(self.asset2, 'Take2@ASS')
+        self.repr_version24 = self.create_version(self.asset2, 'Take2@ASS')
 
         self.repr_version24.is_published = True
 
@@ -5670,6 +6492,1172 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
         ref = self.maya_env.reference(self.repr_version1)
         self.assertEqual(ref.path, self.repr_version1.absolute_full_path)
         self.assertEqual(ref.repr, 'ASS')
+
+
+class ToolboxRepresentationToolsTestCase(MayaTestBase):
+    """tests anima.env.mayaEnv.toolbox representation tools
+    """
+
+    def setUp(self):
+        """set up class level
+        """
+        super(ToolboxRepresentationToolsTestCase, self).setUp()
+
+        # login
+        from stalker import User, LocalSession
+        u = User.query.first()
+        l = LocalSession()
+        l.store_user(u)
+        l.save()
+
+        # first path pm.confirmDialog
+        self.orig_confirm_dialog = pm.confirmDialog
+
+        def patched_confirm_dialog(*args, **kwargs):
+            return 'Yes'
+
+        pm.confirmDialog = patched_confirm_dialog
+
+    def tearDown(self):
+        """clean up
+        """
+        from stalker import LocalSession
+        l = LocalSession()
+        l.delete()
+
+        # restore confirm dialog
+        pm.confirmDialog = self.orig_confirm_dialog
+
+    def test_generating_all_representations_through_environment_layout_scene(self):
+        """testing if generating all representations of all references from the
+        environment layout scene is working properly
+        """
+        from anima.env.mayaEnv import toolbox
+
+        # open up the environment | layout | hires
+        self.maya_env.open(self.version102, force=True)
+
+        # generate all from here
+        toolbox.Render.generate_repr_of_all_references()
+
+        # expect all of the representations to be generated for all of the
+        # referenced scenes
+
+        # start from deepest
+        r = Representation()
+
+        # Building1 | Props | YAPI | Model | Hires
+        r.version = self.version75
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Building1 | Props | YAPI | LookDev
+        r.version = self.version78
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Building1 | Layout | Hires
+        r.version = self.version66
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Building2 | Props | YAPI | Model | Hires
+        r.version = self.version93
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Building2 | Props | YAPI | LookDev
+        r.version = self.version96
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Building2 | Layout | Hires
+        r.version = self.version84
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Vegetation
+        r.version = self.version117
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+        # Layout | Hires
+        r.version = self.version102
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+
+class RepresentationGeneratorTestCase(MayaTestBase):
+    """tests Representation generator
+    """
+
+    def setUp(self):
+        """set up class level
+        """
+        super(RepresentationGeneratorTestCase, self).setUp()
+
+        # login
+        from stalker import User, LocalSession
+        u = User.query.first()
+        l = LocalSession()
+        l.store_user(u)
+        l.save()
+
+    def tearDown(self):
+        """clean up
+        """
+        from stalker import LocalSession
+        l = LocalSession()
+        l.delete()
+
+    # BBOX
+    # - of a model
+    # - of a look dev
+    # - of a layout of a building
+    # - of a look dev of a building
+    # - of a layout of an environment
+    # - of a look dev of an environment
+    # - of a vegetation scene
+
+    def test_generate_bbox_will_end_up_with_an_empty_scene(self):
+        """testing if generate_bbox will end up with an empty scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # we should be on an untitled scene
+        self.assertEqual(
+            pm.sceneName(),
+            ''
+        )
+
+    def test_generate_bbox_scene_with_references_before_generating_bboxes_of_references_first(self):
+        """testing if a RuntimeError will be raised when trying to generate
+        the BBOX Repr of a scene before generating the BBOX of all of the
+        references
+        """
+        gen = RepresentationGenerator(version=self.version76)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_bbox()
+
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the BBOX Representation of the references '
+            'first!!!\n%s' % self.version75.absolute_full_path
+        )
+
+    def test_generate_bbox_of_a_simple_model(self):
+        """testing if generate_bbox will generate bounding boxes for each
+        object with the same name in a model scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        r = Representation(version=self.version75)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # the name of the BBox object should be the same
+        node = pm.PyNode('duvarlar')
+
+        self.assertTrue(node is not None)
+
+    def test_generate_bbox_of_a_simple_look_dev(self):
+        """testing if generate_bbox will just replace the references for a
+        simple look dev scene
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_bbox()
+
+        r = Representation(version=self.version78)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with BBOX repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('BBOX'))
+
+    def test_generate_bbox_of_a_layout_of_a_building(self):
+        """testing if generate_bbox of the layout scene of a building is
+        working properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_bbox()
+
+        r = Representation(version=self.version66)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with BBOX repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('BBOX'))
+
+    def test_generate_bbox_of_a_look_dev_of_a_building(self):
+        """testing if generate_bbox of the look dev scene of a building is
+        working properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_bbox()
+
+        # building | look dev
+        gen.version = self.version69
+        gen.generate_bbox()
+
+        r = Representation(version=self.version69)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with BBOX repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('BBOX'))
+
+    def test_generate_bbox_of_a_layout_of_an_environment(self):
+        """testing if generate_bbox of the layout scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_bbox()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_bbox()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_bbox()
+
+        # Environment
+        gen.version = self.version102
+        gen.generate_bbox()
+
+        r = Representation(version=self.version102)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with BBOX repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('BBOX'))
+
+    def test_generate_bbox_of_a_look_dev_of_an_environment(self):
+        """testing if generate_bbox of the look dev scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_bbox()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_bbox()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_bbox()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_bbox()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_bbox()
+
+        # Environment Layout
+        gen.version = self.version102
+        gen.generate_bbox()
+
+        # Environment Look dev
+        gen.version = self.version105
+        gen.generate_bbox()
+
+        r = Representation(version=self.version105)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with BBOX repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('BBOX'))
+
+    def test_generate_bbox_of_a_vegetation_scene(self):
+        """testing if generate_bbox of the vegetation scene is working properly
+        """
+        gen = RepresentationGenerator(version=self.version117)
+        gen.generate_bbox()
+
+        r = Representation(version=self.version117)
+        v = r.find('BBOX')
+        self.maya_env.open(v, force=True)
+
+        # we should have all polygons converted to a bounding box object
+        root_node = pm.PyNode('kksEnv___vegetation_ALL')
+        self.assertTrue(root_node is not None)
+
+        children = root_node.getChildren()
+        self.assertEqual(len(children), 1)
+
+        pfx_polygons = children[0]
+        self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
+
+        children = pfx_polygons.getChildren()
+        self.assertEqual(len(children), 2)
+
+        acacia = children[0]
+        clover = children[1]
+
+        self.assertEqual(acacia.name(), 'KksEnv_PFXbrush___acacia___polygons')
+        self.assertEqual(clover.name(), 'KksEnv_PFXbrush___clover___polygons')
+
+        # they should have only one child each
+        acacia_mesh_group = acacia.getChildren()[0]
+        clover_mesh_group = clover.getChildren()[0]
+
+        self.assertEqual(
+            acacia_mesh_group.name(),
+            'kksEnv_PFXbrush___acacia1MeshGroup'
+        )
+
+        self.assertEqual(
+            clover_mesh_group.name(),
+            'kksEnv_PFXbrush___clover1MeshGroup'
+        )
+
+        # and they should have a mesh shape
+        self.assertTrue(
+            acacia_mesh_group.getShape().type(), 'mesh'
+        )
+
+        self.assertTrue(
+            clover_mesh_group.getShape().type(), 'mesh'
+        )
+
+    # GPU
+    # - of a model
+    # - of a look dev
+    # - of a layout of a building
+    # - of a look dev of a building
+    # - of a layout of an environment
+    # - of a look dev of an environment
+    # - of a vegetation scene
+
+    def test_generate_gpu_will_end_up_with_an_empty_scene(self):
+        """testing if generate_gpu will end up with an empty scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # we should be on an untitled scene
+        self.assertEqual(
+            pm.sceneName(),
+            ''
+        )
+
+    def test_generate_gpu_scene_with_references_before_generating_gpu_of_references_first(self):
+        """testing if a RuntimeError will be raised when trying to generate
+        the GPU Repr of a scene before generating the GPU of all of the
+        references
+        """
+        gen = RepresentationGenerator(version=self.version76)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_gpu()
+
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the GPU Representation of the references '
+            'first!!!\n%s' % self.version75.absolute_full_path
+        )
+
+    def test_generate_gpu_of_a_simple_model(self):
+        """testing if generate_gpu will generate bounding boxes for each
+        object with the same name in a model scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        r = Representation(version=self.version75)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # the name of the GPU object should be the same
+        node = pm.PyNode('duvarlar')
+
+        self.assertTrue(node is not None)
+
+        # and the type of the shape should be gpuCache
+        self.assertEqual(node.getShape().type(), 'gpuCache')
+
+    def test_generate_gpu_of_a_simple_look_dev(self):
+        """testing if generate_gpu will just replace the references for a
+        simple look dev scene
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_gpu()
+
+        r = Representation(version=self.version78)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with GPU repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('GPU'))
+
+    def test_generate_gpu_of_a_layout_of_a_building(self):
+        """testing if generate_gpu of the layout scene of a building is
+        working properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_gpu()
+
+        r = Representation(version=self.version66)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with GPU repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('GPU'))
+
+    def test_generate_gpu_of_a_look_dev_of_a_building(self):
+        """testing if generate_gpu of the look dev scene of a building is
+        working properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_gpu()
+
+        # building | look dev
+        gen.version = self.version69
+        gen.generate_gpu()
+
+        r = Representation(version=self.version69)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with GPU repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('GPU'))
+
+    def test_generate_gpu_of_a_layout_of_an_environment(self):
+        """testing if generate_gpu of the layout scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_gpu()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_gpu()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_gpu()
+
+        # Environment
+        gen.version = self.version102
+        gen.generate_gpu()
+
+        r = Representation(version=self.version102)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with GPU repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('GPU'))
+
+    def test_generate_gpu_of_a_look_dev_of_an_environment(self):
+        """testing if generate_gpu of the look dev scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_gpu()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_gpu()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_gpu()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_gpu()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_gpu()
+
+        # Environment Layout
+        gen.version = self.version102
+        gen.generate_gpu()
+
+        # Environment Look dev
+        gen.version = self.version105
+        gen.generate_gpu()
+
+        r = Representation(version=self.version105)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # nothing special here, the reference should be replaced with GPU repr
+        for ref in pm.listReferences():
+            self.assertTrue(ref.is_repr('GPU'))
+
+    def test_generate_gpu_of_a_vegetation_scene(self):
+        """testing if generate_gpu of the vegetation scene is working properly
+        """
+        gen = RepresentationGenerator(version=self.version117)
+        gen.generate_gpu()
+
+        r = Representation(version=self.version117)
+        v = r.find('GPU')
+        self.maya_env.open(v, force=True)
+
+        # we should have all polygons converted to a bounding box object
+        root_node = pm.PyNode('kksEnv___vegetation_ALL')
+        self.assertTrue(root_node is not None)
+
+        children = root_node.getChildren()
+        self.assertEqual(len(children), 2)  #including paintableGeos group
+
+        pfx_polygons = children[1]
+        self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
+
+        # and they should have a gpuCache shape
+        self.assertTrue(
+            pfx_polygons.getShape().type(), 'gpuCache'
+        )
+
+    # ASS
+    # - of a model
+    # - of a look dev
+    # - of a layout of a building
+    # - of a look dev of a building
+    # - of a layout of an environment
+    # - of a look dev of an environment
+    # - of a vegetation scene
+
+    def test_generate_ass_will_end_up_with_an_empty_scene(self):
+        """testing if generate_ass will end up with a new empty scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_ass()
+
+        # we should be on an untitled scene
+        self.assertEqual(
+            pm.sceneName(),
+            ''
+        )
+
+    def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_first(self):
+        """testing if a RuntimeError will be raised when trying to generate a
+        the ASS Repr for a Look Dev task before generating ASS for the model
+        first
+        """
+        gen = RepresentationGenerator(version=self.version76)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_ass()
+
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the ASS Representation of the references '
+            'first!!!\n%s' % self.version75.absolute_full_path
+        )
+
+    def test_generate_ass_repr_for_building_layout_without_creating_building_look_dev_first(self):
+        """testing if a RuntimeError will be raised when trying to generate a
+        the ASS Repr for a Layout task before generating ASS for the Look Dev
+        first
+        """
+        gen = RepresentationGenerator(version=self.version66)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_ass()
+
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the ASS Representation of the references '
+            'first!!!\n%s' % self.version78.absolute_full_path
+        )
+
+    def test_generate_ass_repr_for_building_yapi_model(self):
+        """testing if creating ASS repr for a model is working properly
+        """
+        gen = RepresentationGenerator(version=self.version73)
+        gen.generate_ass()
+
+        # check if a proper ASS repr is generated
+        repr = Representation(version=self.version73)
+        ass_v = repr.find('ASS')
+        self.assertTrue(ass_v is not None)
+        self.assertTrue('@ASS' in ass_v.take_name)
+        self.assertTrue(os.path.exists(ass_v.absolute_full_path))
+
+        # open the file and check content
+        self.maya_env.open(ass_v, force=True)
+        yapi = pm.ls('building1_yapi')[0]
+
+        # it should have only one child
+        all_children = yapi.getChildren()
+        self.assertEqual(len(all_children), 1)
+
+        # and it should not have any other children
+        bina = all_children[0]
+        self.assertEqual(len(bina.getChildren()), 0)
+
+    def test_generate_ass_repr_for_building_yapi_look_dev_is_working_properly(self):
+        """testing if ASS repr generation is working properly for a look dev
+        version
+        """
+        # first generate for the model
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_ass()
+
+        # then for the look dev version
+        gen.version = self.version76
+        gen.generate_ass()
+
+        # open the file
+        r = Representation(version=self.version76)
+        # get the ASS repr
+        v = r.find('ASS')
+        self.maya_env.open(v, force=True)
+
+        # check if "alles in ordnung!"
+        # the reference should be a ASS repr of the model
+        ref = pm.listReferences()[0]
+        self.assertTrue(ref.is_repr('ASS'))
+
+        # there should be Stand-In nodes under the referenced nodes
+        all_stand_ins = pm.ls(type='aiStandIn')
+        self.assertEqual(len(all_stand_ins), 1)
+
+        # it should be parented under a referenced node
+        parent = all_stand_ins[0].getParent().getParent()
+        self.assertEqual(
+            parent.referenceFile(),
+            ref
+        )
+
+    def test_generate_ass_repr_for_building_layout_is_working_properly(self):
+        """testing if a generating the ASS Repr for a Layout task is working
+        properly
+        """
+        # generate for the model first
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_ass()
+
+        # then look dev
+        gen.version = self.version78
+        gen.generate_ass()
+
+        # then for the layout
+        gen.version = self.version66
+        gen.generate_ass()
+
+        # open the Layout:Main@ASS
+        r = Representation(version=self.version66)
+        v = r.find('ASS')
+        self.assertTrue(v is not None)
+        self.maya_env.open(v, force=True)
+
+        # there should be nothing so special, instead of the regular look dev
+        # the ASS repr of the look dev should have been referenced
+        ref = pm.listReferences()[0]
+        self.assertTrue(ref.is_repr('ASS'))
+
+    def test_generate_ass_repr_for_building_look_dev_is_working_properly(self):
+        """testing if generate_ass() will properly generate an ASS repr for the
+        look dev of a building
+        """
+        #Building1
+        # generate for the model first
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_ass()
+
+        # then building | yapi | look dev
+        gen.version = self.version78
+        gen.generate_ass()
+
+        # then for the building | layout | hires
+        gen.version = self.version66
+        gen.generate_ass()
+
+        # then the building | look dev
+        gen.version = self.version69
+        gen.generate_ass()
+
+        # open up the ASS file
+        r = Representation(version=self.version69)
+        v = r.find('ASS')
+        self.maya_env.open(v, force=True)
+
+        # now check references
+        ref = pm.listReferences()[0]
+        self.assertTrue(ref.is_repr('ASS'))
+
+    def test_generate_ass_repr_for_vegetation_scene(self):
+        """testing if generating ass of a vegetation scene is working properly
+        """
+        gen = RepresentationGenerator(version=self.version117)
+        gen.generate_ass()
+
+        # open the ASS scene
+        r = Representation(version=self.version117)
+        v = r.find('ASS')
+        self.maya_env.open(v, force=True)
+
+        # there should be only "pfxPolygons" group
+        root_node = pm.PyNode('kksEnv___vegetation_ALL')
+        children = root_node.getChildren()
+
+        self.assertEqual(len(children), 1)
+
+        # and there should be 2 other
+        # transform nodes under it (for our test case)
+        pfx_polygons = children[0]
+        self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
+
+        children = pfx_polygons.getChildren()
+        self.assertEqual(len(children), 2)
+
+        # they should have a transform node with aiStandIn shape
+        for child in children:
+            mesh_group = child.getChildren()[0]
+            self.assertTrue(
+                mesh_group.getShape().type(),
+                'aiStandIn'
+            )
+
+    def test_generate_ass_repr_for_environment_layout_is_working_properly(self):
+        """testing if generate_ass() will properly generate an ASS repr for the
+        environment layout
+        """
+        #Building1
+        # generate for the model first
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_ass()
+
+        # then building | yapi | look dev
+        gen.version = self.version78
+        gen.generate_ass()
+
+        # then for the building | layout | hires
+        gen.version = self.version66
+        gen.generate_ass()
+
+        #Building2
+        # generate for the model first
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_ass()
+
+        # then building | yapi | look dev
+        gen.version = self.version96
+        gen.generate_ass()
+
+        # then for the building | layout | hires
+        gen.version = self.version84
+        gen.generate_ass()
+
+        # The vegetation
+        gen.version = self.version117
+        gen.generate_ass()
+
+        # Environment | Layout | Hires
+        gen.version = self.version102
+        gen.generate_ass()
+
+        # open up the ASS file
+        r = Representation(version=self.version102)
+        v = r.find('ASS')
+        self.maya_env.open(v, force=True)
+
+        # now check references
+        ref = pm.listReferences()[0]
+        self.assertTrue(ref.is_repr('ASS'))
+
+    # ALL
+    # - of a model
+    # - of a look dev
+    # - of a layout of a building
+    # - of a look dev of a building
+    # - of a layout of an environment
+    # - of a look dev of an environment
+    # - of a vegetation scene
+
+    def test_generate_all_will_end_up_with_an_empty_scene(self):
+        """testing if generate_all will end up with an empty scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # we should be on an untitled scene
+        self.assertEqual(
+            pm.sceneName(),
+            ''
+        )
+
+    def test_generate_all_scene_with_references_before_generating_all_of_references_first(self):
+        """testing if a RuntimeError will be raised when trying to generate
+        the all representations of a scene before generating all of the
+        representations of all of the references
+        """
+        gen = RepresentationGenerator(version=self.version76)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_all()
+
+        # BBOX will complain first
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the BBOX Representation of the references '
+            'first!!!\n%s' % self.version75.absolute_full_path
+        )
+
+    def test_generate_all_of_a_simple_model(self):
+        """testing if generate_all will generate all representations of a model
+        scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        r = Representation(version=self.version75)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+    def test_generate_all_of_a_simple_look_dev(self):
+        """testing if generate_all generate all of the representations of a
+        simple look dev scene
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        r = Representation(version=self.version78)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+    def test_generate_all_of_a_layout_of_a_building(self):
+        """testing if generate_all of the layout scene of a building is working
+        properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        r = Representation(version=self.version66)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+    def test_generate_all_of_a_look_dev_of_a_building(self):
+        """testing if generate_all of the look dev scene of a building is
+        working properly
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        # building | look dev
+        gen.version = self.version69
+        gen.generate_all()
+
+        r = Representation(version=self.version69)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+    def test_generate_all_of_a_layout_of_an_environment(self):
+        """testing if generate_all of the layout scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_all()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_all()
+
+        # Environment
+        gen.version = self.version102
+        gen.generate_all()
+
+        r = Representation(version=self.version102)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+    def test_generate_all_of_a_look_dev_of_an_environment(self):
+        """testing if generate_all of the look dev scene of an environment is
+        working properly
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_all()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_all()
+
+        # Environment Layout
+        gen.version = self.version102
+        gen.generate_all()
+
+        # Environment Look dev
+        gen.version = self.version105
+        gen.generate_all()
+
+        r = Representation(version=self.version105)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
+
+    def test_generate_all_of_a_vegetation_scene(self):
+        """testing if generate_all of the vegetation scene is working properly
+        """
+        gen = RepresentationGenerator(version=self.version117)
+        gen.generate_all()
+
+        r = Representation(version=self.version117)
+        v_bbox = r.find('BBOX')
+        v_gpu = r.find('GPU')
+        v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
 
 
 class PublisherTestCase(MayaTestBase):
