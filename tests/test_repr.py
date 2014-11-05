@@ -263,6 +263,7 @@ class RepresentationTestCase(unittest.TestCase):
         rep = Representation()
         self.assertEqual('Main', rep.get_base_take_name(self.version1))
         self.assertEqual('alt1', rep.get_base_take_name(self.version10))
+        self.assertEqual('alt1', rep.get_base_take_name(self.version12))
         self.assertEqual('NoRepr', rep.get_base_take_name(self.version18))
 
     def test_version_argument_is_skipped(self):

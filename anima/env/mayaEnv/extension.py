@@ -166,13 +166,12 @@ class FileReferenceExtension(object):
         return rep.is_base()
 
     @extends(FileReference)
-    def has_repr(self, repr_name='Base'):
+    def has_repr(self, repr_name):
         """checks if the reference has the given representation
 
         :param str repr_name: The name of the desired representation
         :return:
         """
-
         from anima.env.mayaEnv import Maya
         m = Maya()
         v = m.get_version_from_full_path(self.path)
@@ -181,7 +180,7 @@ class FileReferenceExtension(object):
             return False
 
         rep = Representation(version=v)
-        return rep.has_repr(repr_name=repr_name)
+        return rep.has_repr(repr_name)
 
     @extends(FileReference)
     def is_repr(self, repr_name):

@@ -113,12 +113,10 @@ class RepresentationGenerator(object):
         r = Representation(version=version)
 
         self.base_take_name = r.get_base_take_name(version)
-
         if not r.is_base():
             raise RuntimeError(
                 'This is not a Base take for this representation series, '
-                'please open the base (%s) take!!!' %
-                r.get_base_take_name(version)
+                'please open the base (%s) take!!!' % self.base_take_name
             )
 
         return version
@@ -386,6 +384,9 @@ class RepresentationGenerator(object):
         # and export the objects from the referenced files with their current
         # shadings, then replace all of the references to ASS repr and than
         # add Stand-in nodes and parent them under the referenced models
+
+        # load necessary plugins
+        pm.loadPlugin('mtoa')
 
         # validate the version first
         self.version = self._validate_version(self.version)

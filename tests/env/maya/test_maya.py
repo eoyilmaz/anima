@@ -827,6 +827,16 @@ class MayaTestBase(unittest.TestCase):
         self.version116 = self.create_version(self.ext1_vegetation, 'Main')
         self.version117 = self.create_version(self.ext1_vegetation, 'Main')
 
+        # Ext1 | Prop | LookDev (Kisa)
+        self.version118 = self.create_version(self.prop1_look_dev, 'Kisa')
+        self.version119 = self.create_version(self.prop1_look_dev, 'Kisa')
+        self.version120 = self.create_version(self.prop1_look_dev, 'Kisa')
+
+        # Ext1 | Prop | Model (Kisa)
+        self.version121 = self.create_version(self.prop1_model_hires, 'Kisa')
+        self.version122 = self.create_version(self.prop1_model_hires, 'Kisa')
+        self.version123 = self.create_version(self.prop1_model_hires, 'Kisa')
+
         # now fill some content
         # Vegetation
         pm.newFile(force=True)
@@ -894,6 +904,51 @@ class MayaTestBase(unittest.TestCase):
         self.maya_env.save_as(version=self.version115)
         self.maya_env.save_as(version=self.version116)
         self.maya_env.save_as(version=self.version117)
+
+        #***************************************
+        # Prop1
+        #***************************************
+        # Prop1 | Model | Hires | Main take
+        pm.newFile(force=True)
+        root_node = pm.nt.Transform(name='prop1')
+        kulp = pm.polyCube(name='kulp')
+        pm.parent(kulp[0], root_node)
+        self.maya_env.save_as(self.version109)
+        self.maya_env.save_as(self.version110)
+        self.maya_env.save_as(self.version111)
+        self.version111.is_published = True
+
+        # save it also under "Kisa" take
+        self.maya_env.save_as(self.version121)
+        self.maya_env.save_as(self.version122)
+        self.maya_env.save_as(self.version123)
+        self.version123.is_published = True
+
+        # Prop1 | Look Dev | Main
+        pm.newFile(force=True)
+        self.maya_env.reference(self.version111)
+        # assign a material to the object
+        mat = pm.createSurfaceShader('aiStandard', name='kulp_aiStandard')
+        pm.sets(mat[1], fe=pm.ls(type='mesh'))
+
+        # save it
+        self.maya_env.save_as(self.version112)
+        self.maya_env.save_as(self.version113)
+        self.maya_env.save_as(self.version114)
+        self.version114.is_published = True
+
+        # create "Kisa" take
+        # Prop1 | Look Dev | Kisa
+        pm.newFile(force=True)
+        self.maya_env.reference(self.version123)
+        # assign a material to the object
+        mat = pm.createSurfaceShader('aiStandard', name='kulp_aiStandard')
+        pm.sets(mat[1], fe=pm.ls(type='mesh'))
+
+        self.maya_env.save_as(self.version118)
+        self.maya_env.save_as(self.version119)
+        self.maya_env.save_as(self.version120)
+        self.version120.is_published = True
 
         #****************************************
         # create Building1
@@ -1238,14 +1293,24 @@ class MayaTestBase(unittest.TestCase):
         #             |     |  |  +- version108
         #             |     |  |
         #             |     |  +- Hires (Task - Model)
-        #             |     |     +- version109
-        #             |     |     +- version110
-        #             |     |     +- version111
+        #             |     |     +- **Main** (Take)
+        #             |     |     |  +- version109
+        #             |     |     |  +- version110
+        #             |     |     |  +- version111
+        #             |     |     +- **Kisa** (Take)
+        #             |     |        +- version121
+        #             |     |        +- version122
+        #             |     |        +- version123
         #             |     |
         #             |     +- LookDev (Task - Look Development)
-        #             |        +- version112
-        #             |        +- version113
-        #             |        +- version114
+        #             |        +- **Main** (Take)
+        #             |        |  +- version112
+        #             |        |  +- version113
+        #             |        |  +- version114
+        #             |        +- **Kisa** (Take)
+        #             |           +- version118
+        #             |           +- version119
+        #             |           +- version120
         #             |
         #             +- Vegetation (Task - Vegetation)
         #                +- version115
@@ -6779,9 +6844,18 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         """testing if generate_bbox of the layout scene of an environment is
         working properly
         """
+        gen = RepresentationGenerator()
+        # Prop1 (Model | Hires | Kisa)
+        gen.version = self.version123
+        gen.generate_all()
+
+        # Prop1 (LookDev | Kisa)
+        gen.version = self.version120
+        gen.generate_all()
+
         # Building1
         # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
+        gen.version = self.version75
         gen.generate_bbox()
 
         # building | props | yapi | look dev
@@ -7055,9 +7129,18 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         """testing if generate_gpu of the layout scene of an environment is
         working properly
         """
+        gen = RepresentationGenerator()
+        # Prop1 (Model | Hires | Kisa)
+        gen.version = self.version123
+        gen.generate_all()
+
+        # Prop1 (LookDev | Kisa)
+        gen.version = self.version120
+        gen.generate_all()
+
         # Building1
         # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
+        gen.version = self.version75
         gen.generate_gpu()
 
         # building | props | yapi | look dev
@@ -7374,7 +7457,7 @@ class RepresentationGeneratorTestCase(MayaTestBase):
                 'aiStandIn'
             )
 
-    def test_generate_ass_repr_for_environment_layout_is_working_properly(self):
+    def test_generate_ass_of_a_layout_of_an_environment(self):
         """testing if generate_ass() will properly generate an ASS repr for the
         environment layout
         """
@@ -7554,9 +7637,18 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         """testing if generate_all of the layout scene of an environment is
         working properly
         """
+        gen = RepresentationGenerator()
+        # Prop1 (Model | Hires | Kisa)
+        gen.version = self.version123
+        gen.generate_all()
+
+        # Prop1 (LookDev | Kisa)
+        gen.version = self.version120
+        gen.generate_all()
+
         # Building1
         # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
+        gen.version = self.version75
         gen.generate_all()
 
         # building | props | yapi | look dev
@@ -7592,6 +7684,10 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
+
+        self.assertTrue(v_bbox is not None)
+        self.assertTrue(v_gpu is not None)
+        self.assertTrue(v_ass is not None)
 
     def test_generate_all_of_a_look_dev_of_an_environment(self):
         """testing if generate_all of the look dev scene of an environment is
