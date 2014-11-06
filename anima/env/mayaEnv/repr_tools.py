@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import re
 import os
 
 import pymel.core as pm
@@ -159,7 +160,7 @@ class RepresentationGenerator(object):
         """
         current_v = self.maya_env.get_current_version()
         if current_v is not version:
-            self.maya_env.open(version, force=True)
+            self.maya_env.open(version, force=True, skip_update_check=True)
 
     def generate_all(self):
         """generates all representations at once
@@ -459,6 +460,25 @@ class RepresentationGenerator(object):
 
                 if unload_ref:
                     ref.unload()
+
+            # Make all texture paths relative
+            # replace all "$REPO#" from all texture paths first
+            types_and_attrs = {
+                'aiImage': 'filename',
+                'file': 'fileTextureName',
+                'imagePlane': 'imageName'
+            }
+
+            for node_type in types_and_attrs.keys():
+                attr_name = types_and_attrs[node_type]
+                for node in pm.ls(type=node_type):
+                    orig_path = node.getAttr(attr_name).replace("\\", "/")
+                    path = re.sub(
+                        r'(\$REPO[0-9/]+)',
+                        '',
+                        orig_path
+                    )
+                    node.setAttr(attr_name, path)
 
             # export all root ass files as they are
             for root_node in auxiliary.get_root_nodes():

@@ -105,7 +105,7 @@ class FileReferenceExtension(object):
         :return:
         """
         rep_v = self.find_repr(repr_name)
-        if rep_v is not None:
+        if rep_v is not None and rep_v != self.version:
             self.replaceWith(to_os_independent_path(rep_v.absolute_full_path))
 
     @extends(FileReference)

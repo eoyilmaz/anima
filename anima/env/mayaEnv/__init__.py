@@ -169,6 +169,38 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         if not pm.general.about(batch=1):
             self.use_progress_window = True
 
+        self.set_arnold_texture_search_path()
+
+    def set_arnold_texture_search_path(self):
+        """sets environment defaults
+        """
+        from stalker import Repository
+
+        # try to get a version from current scene
+        v = self.get_current_version()
+
+        all_repos = []
+        if v:
+            # just append the project repo
+            all_repos = [v.task.project.repository]
+        else:
+            # no version append all repositories
+            all_repos = Repository.query.all()
+
+        try:
+            # add all repo paths to Arnold Texture search path
+            texture_search_path = []
+            for repo in all_repos:
+                texture_search_path.append(repo.windows_path)
+                texture_search_path.append(repo.linux_path)
+
+            texture_search_path = ';'.join(texture_search_path)
+
+            dARO = pm.PyNode('defaultArnoldRenderOptions')
+            dARO.setAttr('texture_searchpath', texture_search_path)
+        except pm.MayaNodeError:
+            pass
+
     def save_as(self, version):
         """The save_as action for maya environment.
 
@@ -259,6 +291,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 self.set_resolution(project.image_format.width,
                                     project.image_format.height,
                                     project.image_format.pixel_aspect)
+
+        # set arnold texture search paths
+        self.set_arnold_texture_search_path()
 
         # set the render file name and version
         self.set_render_filename(version)
@@ -448,6 +483,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # replace_external_paths
         self.replace_external_paths()
+
+        # set arnold texture search paths
+        self.set_arnold_texture_search_path()
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
@@ -711,7 +749,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         mrG = pm.PyNode("mentalrayGlobals")
 
                     mrG.imageCompression.set(4)
-            except AttributeError, pm.general.MayaNodeError:
+            except (AttributeError, pm.general.MayaNodeError) as e:
                 pass
 
             # if the renderer is not registered this causes a _objectError
@@ -719,7 +757,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             try:
                 miDF = pm.PyNode('miDefaultFramebuffer')
                 miDF.datatype.set(16)
-            except TypeError, pm.general.MayaNodeError:
+            except (TypeError, pm.general.MayaNodeError) as e:
                 # just don't do anything
                 pass
         elif current_renderer == 'arnold':

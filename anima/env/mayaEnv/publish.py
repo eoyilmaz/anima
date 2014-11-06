@@ -3,22 +3,47 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.env.mayaEnv import auxiliary
 
 import os
 import datetime
+import uuid
+
 import pymel.core as pm
 import maya.cmds as mc
-from anima import stalker_server_internal_address
 
+from anima import stalker_server_internal_address
 from anima.publish import clear_publishers, publisher, staging
 from anima.exc import PublishError
 from anima.repr import Representation
 from anima.utils import utc_to_local
+from anima.env.mayaEnv import auxiliary
 
 clear_publishers()
 
 MAX_NODE_DISPLAY = 80
+
+# TODO: this should be depending on to the project some projects still can
+#       use mental ray
+VALID_MATERIALS = [
+    u'aiAmbientOcclusion',
+    u'aiHair',
+    u'aiRaySwitch',
+    u'aiShadowCatcher',
+    u'aiSkin',
+    u'aiSkinSss',
+    u'aiStandard',
+    u'aiUtility',
+    u'aiWireframe',
+    u'displacementShader',
+    u'lambert',
+    u'blinn',
+    u'layeredShader',
+    u'oceanShader',
+    u'phong',
+    u'phongE',
+    u'rampShader',
+    u'surfaceShader',
+]
 
 
 #*********#
@@ -697,10 +722,10 @@ def check_uvs():
 #******************#
 # LOOK DEVELOPMENT #
 #******************#
-look_dev_types = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
+LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
-@publisher(look_dev_types)
+@publisher(LOOK_DEV_TYPES)
 def check_all_tx_textures():
     """checks if tx textures are created for all of the texture nodes in the
     current scene
@@ -737,7 +762,7 @@ def check_all_tx_textures():
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 
-@publisher(look_dev_types)
+@publisher(LOOK_DEV_TYPES)
 def check_lights():
     """checks if there are lights in the scene
     """
@@ -753,38 +778,15 @@ def check_lights():
         )
 
 
-@publisher(look_dev_types)
+@publisher(LOOK_DEV_TYPES)
 def check_only_supported_materials_are_used():
     """check if only supported materials are used
     """
-    # TODO: this should be depending on to the project some projects still can
-    #       use mental ray
-    valid_materials = [
-        u'aiAmbientOcclusion',
-        u'aiHair',
-        u'aiRaySwitch',
-        u'aiShadowCatcher',
-        u'aiSkin',
-        u'aiSkinSss',
-        u'aiStandard',
-        u'aiUtility',
-        u'aiWireframe',
-        u'displacementShader',
-        u'lambert',
-        u'blinn',
-        u'layeredShader',
-        u'oceanShader',
-        u'phong',
-        u'phongE',
-        u'rampShader',
-        u'surfaceShader',
-    ]
-
     non_arnold_materials = []
 
     for material in pm.ls(mat=1):
         if material.name() not in ['lambert1', 'particleCloud1']:
-            if material.type() not in valid_materials:
+            if material.type() not in VALID_MATERIALS:
                 non_arnold_materials.append(material)
 
     if len(non_arnold_materials):
@@ -796,7 +798,7 @@ def check_only_supported_materials_are_used():
         )
 
 
-@publisher(look_dev_types)
+@publisher(LOOK_DEV_TYPES)
 def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """
@@ -817,7 +819,7 @@ def check_objects_still_using_default_shader():
         )
 
 
-@publisher(look_dev_types + ['layout'])
+@publisher(LOOK_DEV_TYPES + ['layout'])
 def check_component_edits_on_references():
     """check if there are component edits on references
     """
@@ -850,24 +852,54 @@ def check_component_edits_on_references():
         )
 
 
-@publisher(look_dev_types)
-def check_material_names():
-    """check if the name of materials are not starting with the material type
-    name
+@publisher(LOOK_DEV_TYPES)
+def make_material_names_unique():
+    """makes the material names unique
     """
-    material_with_simple_names = []
-    for mat in pm.ls(mat=1):
-        mat_name = mat.name()
-        if mat_name not in ['lambert1', 'particleCloud1'] \
-           and mat.name().startswith(mat.type()):
-            material_with_simple_names.append(mat_name)
+    v = staging.get('version')
 
-    if len(material_with_simple_names):
-        pm.select(material_with_simple_names)
-        print('Use a more **descriptive** name for the following materials:')
-        print('\n'.join(material_with_simple_names))
-        raise(PublishError(
-            'Please use a more <b>descriptive</b> name<br>'
-            'for the following materials:<br><br>%s' %
-            '<br>'.join(material_with_simple_names)
-        ))
+    if not v:
+        from anima.env import mayaEnv
+        mEnv = mayaEnv.Maya()
+        v = mEnv.get_current_version()
+
+    if not v:
+        return
+
+    asset_nice_name = v.naming_parents[0].nice_name
+
+    non_referenced_materials = [
+        mat
+        for mat in pm.ls(mat=1, type=VALID_MATERIALS)
+        if mat.referenceFile() is None
+    ]
+
+    for mat in non_referenced_materials:
+        # material type name
+        mat_type_name = mat.type()
+
+        # find the first object using this material
+        shading_engine = mat.outputs(type='shadingEngine')[0]
+        objects_using_this_material = pm.sets(shading_engine, q=1)
+
+        object_name = 'node'
+        if len(objects_using_this_material):
+            object_name = \
+                objects_using_this_material[0].getParent().name().split(':')[-1]
+
+        base_material_name = \
+            '%s_%s_%s' % (asset_nice_name, object_name, mat_type_name)
+
+        random_part = uuid.uuid4().hex[0:4]
+
+        desired_material_name = \
+            '%s_%s' % (base_material_name, random_part)
+
+        desired_shading_engine_name = '%sSG' % desired_material_name
+
+        if mat.name() not in ['lambert1', 'particleCloud1']:
+            if not mat.name().startswith(base_material_name):
+                mat.rename(desired_material_name)
+
+            if not shading_engine.name().startswith(base_material_name):
+                shading_engine.rename(desired_shading_engine_name)

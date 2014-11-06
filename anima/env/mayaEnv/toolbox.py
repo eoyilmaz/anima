@@ -1875,9 +1875,12 @@ class Reference(object):
     def generate_repr_of_all_references(cls):
         """generates all representations of all references of this scene
         """
+        # get total reference count
+        ref_count = len(pm.listReferences(recursive=True))
+
         response = pm.confirmDialog(
             title='Do Create Representations?',
-            message='Create all Repr of all References?',
+            message='Create all Repr. for all %s FileReferences?' % ref_count,
             button=['Yes', 'No'],
             defaultButton='No',
             cancelButton='No',
@@ -1886,7 +1889,7 @@ class Reference(object):
         if response == 'No':
             return
 
-        from stalker import Version
+        #from stalker import Version
         from anima.env.mayaEnv import Maya, repr_tools, auxiliary
         reload(auxiliary)
         reload(repr_tools)
@@ -1912,34 +1915,34 @@ class Reference(object):
 
         # open each version
         for v in versions_to_visit:
-            generate_bbox = True
-            generate_gpu = True
-            generate_ass = True
+            #generate_bbox = True
+            #generate_gpu = True
+            #generate_ass = True
 
-            # check if there is a BBOX, GPU or ASS repr
-            # generated from this version
-            child_versions = Version.query.filter(Version.parent == v).all()
-            for cv in child_versions:
-                if generate_bbox is True and '@BBOX' in cv.take_name:
-                    generate_bbox = False
+            # # check if there is a BBOX, GPU or ASS repr
+            # # generated from this version
+            # child_versions = Version.query.filter(Version.parent == v).all()
+            # for cv in child_versions:
+            #     if generate_bbox is True and '@BBOX' in cv.take_name:
+            #         generate_bbox = False
+            #
+            #     if generate_gpu is True and '@GPU' in cv.take_name:
+            #         generate_gpu = False
+            #
+            #     if generate_ass is True and '@ASS' in cv.take_name:
+            #         generate_ass = False
 
-                if generate_gpu is True and '@GPU' in cv.take_name:
-                    generate_gpu = False
-
-                if generate_ass is True and '@ASS' in cv.take_name:
-                    generate_ass = False
-
-            if generate_bbox or generate_gpu or generate_ass:
-                m_env.open(v, force=True)
-                gen.version = v
-                # generate representations
-                #gen.generate_all()
-                if generate_bbox:
-                    gen.generate_bbox()
-                if generate_gpu:
-                    gen.generate_gpu()
-                if generate_ass:
-                    gen.generate_ass()
+            #if generate_bbox or generate_gpu or generate_ass:
+            m_env.open(v, force=True)
+            gen.version = v
+            # generate representations
+            #gen.generate_all()
+            #if generate_bbox:
+            gen.generate_bbox()
+            #if generate_gpu:
+            gen.generate_gpu()
+            #if generate_ass:
+            gen.generate_ass()
 
         # now open the source version again
         m_env.open(source_version, force=True)
@@ -1947,7 +1950,6 @@ class Reference(object):
         # and generate representation for the source
         gen.version = source_version
         gen.generate_all()
-
 
 
 class Modeling(object):
