@@ -502,15 +502,9 @@ p, li { white-space: pre-wrap; }
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_5">
              <item>
-              <widget class="QCheckBox" name="useNameSpace_checkBox">
-               <property name="toolTip">
-                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Uncheck it if you are going to use &lt;span style=&quot; font-weight:600;&quot;&gt;Alembic Cache&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-               </property>
+              <widget class="QLabel" name="label">
                <property name="text">
-                <string>Use Namespace</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
+                <string>Repr</string>
                </property>
               </widget>
              </item>
@@ -518,6 +512,13 @@ p, li { white-space: pre-wrap; }
               <widget class="QComboBox" name="representations_comboBox">
                <property name="toolTip">
                 <string>Choose Representation (if supported by the environment)</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>Refs</string>
                </property>
               </widget>
              </item>
@@ -542,9 +543,35 @@ p, li { white-space: pre-wrap; }
               </spacer>
              </item>
              <item>
+              <widget class="QCheckBox" name="useNameSpace_checkBox">
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Uncheck it if you are going to use &lt;span style=&quot; font-weight:600;&quot;&gt;Alembic Cache&lt;/span&gt;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="text">
+                <string>Use Namespace</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
               <widget class="QPushButton" name="chose_pushButton">
                <property name="text">
                 <string>Choose</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="checkUpdates_checkBox">
+               <property name="toolTip">
+                <string>Disable update check (faster)</string>
+               </property>
+               <property name="text">
+                <string>Check Updates</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

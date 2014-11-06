@@ -1475,6 +1475,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         logger.debug("opening version %s" % old_version)
 
+        skip_update_check = not self.checkUpdates_checkBox.isChecked()
+
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
@@ -1488,7 +1490,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     self.environment.open(
                         old_version,
                         representation=repr_name,
-                        reference_depth=ref_depth
+                        reference_depth=ref_depth,
+                        skip_update_check=skip_update_check
                     )
             except RuntimeError as e:
                 # pop a dialog and ask if the user really wants to open the
@@ -1509,7 +1512,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                             old_version,
                             True,
                             representation=repr_name,
-                            reference_depth=ref_depth
+                            reference_depth=ref_depth,
+                            skip_update_check=skip_update_check
                         )
                 else:
                     # no, just return
