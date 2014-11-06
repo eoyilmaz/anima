@@ -208,21 +208,34 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+        # ----- REFERENCE ------
+        reference_columnLayout = pm.columnLayout(
+            'reference_columnLayout',
+            adj=True, cal="center", rs=row_spacing)
+        with reference_columnLayout:
+            color.reset()
             pm.text(l='===== Reference Tools =====')
             pm.button(
                 'duplicate_selected_reference_button',
                 l='Duplicate Selected Reference',
-                c=RepeatedCallback(General.duplicate_selected_reference),
+                c=RepeatedCallback(Reference.duplicate_selected_reference),
                 ann='Duplicates the selected reference',
                 bgc=color.color
             )
 
             color.change()
             pm.button(
+                'get_selected_reference_path_button',
+                l='Get Selected Reference Path',
+                c=RepeatedCallback(Reference.get_selected_reference_path),
+                ann='Prints the selected reference full path',
+                bgc=color.color
+            )
+
+            pm.button(
                 'open_selected_reference_button',
                 l='Open Selected Reference in New Maya',
-                c=RepeatedCallback(General.open_reference_in_new_maya),
+                c=RepeatedCallback(Reference.open_reference_in_new_maya),
                 ann='Opens the selected reference in new Maya '
                     'instance',
                 bgc=color.color
@@ -232,7 +245,7 @@ def UI():
             pm.button(
                 'publish_model_as_look_dev_button',
                 l='Model -> LookDev',
-                c=RepeatedCallback(General.publish_model_as_look_dev),
+                c=RepeatedCallback(Reference.publish_model_as_look_dev),
                 ann='References the current Model scene to the LookDev scene '
                     'of the same task, creates the LookDev scene if '
                     'necessary, also reopens the current model scene.',
@@ -243,7 +256,7 @@ def UI():
             pm.button(
                 'fix_reference_namespace_button',
                 l='Fix Reference Namespace',
-                c=RepeatedCallback(General.fix_reference_namespace),
+                c=RepeatedCallback(Reference.fix_reference_namespace),
                 ann='Fixes old style reference namespaces with new one, '
                     'creates new versions if necessary.',
                 bgc=color.color
@@ -253,7 +266,7 @@ def UI():
             pm.button(
                 'fix_reference_paths_button',
                 l='Fix Reference Paths',
-                c=RepeatedCallback(General.fix_reference_paths),
+                c=RepeatedCallback(Reference.fix_reference_paths),
                 ann='Fixes reference paths deeply, so they will use'
                     '$REPO env var.',
                 bgc=color.color
@@ -262,7 +275,7 @@ def UI():
             pm.button(
                 'archive_button',
                 l='Archive Current Scene',
-                c=RepeatedCallback(General.archive_current_scene),
+                c=RepeatedCallback(Reference.archive_current_scene),
                 ann='Creates a ZIP file containing the current scene and its'
                     'references in a flat Maya default project folder '
                     'structure',
@@ -272,7 +285,7 @@ def UI():
             pm.button(
                 'bind_to_original_button',
                 l='Bind To Original',
-                c=RepeatedCallback(General.bind_to_original),
+                c=RepeatedCallback(Reference.bind_to_original),
                 ann='Binds the current local references to the ones on the '
                     'repository',
                 bgc=color.color
@@ -281,11 +294,69 @@ def UI():
             pm.button(
                 'unload_unselected_references_button',
                 l='Unload UnSelected References',
-                c=RepeatedCallback(General.unload_unselected_references),
+                c=RepeatedCallback(Reference.unload_unselected_references),
                 ann='Unloads any references that is not related with the '
                     'selected objects',
                 bgc=color.color
             )
+
+            color.change()
+            pm.text(l='===== Representation Tools =====')
+
+            pm.button(
+                'generate_repr_of_all_references_button',
+                l='Generate Repr Of All References',
+                c=RepeatedCallback(Reference.generate_repr_of_all_references),
+                ann='Generates all Representations of all references of '
+                    'this scene',
+                bgc=color.color
+            )
+            color.change()
+
+            with pm.rowLayout(nc=2, adj=1):
+                pm.radioButtonGrp(
+                    'repr_apply_to_radio_button_grp',
+                    label='Apply To',
+                    # ad3=1,
+                    labelArray2=['Selected', 'All References'],
+                    numberOfRadioButtons=2,
+                    cl3=['left', 'left', 'left'],
+                    cw3=[50, 65, 65],
+                    sl=1
+                )
+
+            pm.button(
+                'to_base_button',
+                l='To Base',
+                c=RepeatedCallback(Reference.to_base),
+                ann='Convert selected to Base representation',
+                bgc=color.color
+            )
+
+            pm.button(
+                'to_bbox_button',
+                l='To BBOX',
+                c=RepeatedCallback(Reference.to_bbox),
+                ann='Convert selected to BBOX representation',
+                bgc=color.color
+            )
+
+            pm.button(
+                'to_gpu_button',
+                l='To GPU',
+                c=RepeatedCallback(Reference.to_gpu),
+                ann='Convert selected to GPU representation',
+                bgc=color.color
+            )
+
+            pm.button(
+                'to_ass_button',
+                l='To ASS',
+                c=RepeatedCallback(Reference.to_ass),
+                ann='Convert selected to ASS representation',
+                bgc=color.color
+            )
+
 
         # ----- MODELING ------
         modeling_columnLayout = pm.columnLayout(
@@ -818,65 +889,6 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
-            pm.text(l='===== Representation Tools =====')
-
-            pm.button(
-                'generate_repr_of_all_references_button',
-                l='Generate Repr Of All References',
-                c=RepeatedCallback(Render.generate_repr_of_all_references),
-                ann='Generates all Representations of all references of '
-                    'this scene',
-                bgc=color.color
-            )
-            color.change()
-
-            with pm.rowLayout(nc=2, adj=1):
-                pm.radioButtonGrp(
-                    'repr_apply_to_radio_button_grp',
-                    label='Apply To',
-                    # ad3=1,
-                    labelArray2=['Selected', 'All References'],
-                    numberOfRadioButtons=2,
-                    cl3=['left', 'left', 'left'],
-                    cw3=[50, 65, 65],
-                    sl=1
-                )
-
-            pm.button(
-                'to_base_button',
-                l='To Base',
-                c=RepeatedCallback(Render.to_base),
-                ann='Convert selected to Base representation',
-                bgc=color.color
-            )
-
-            pm.button(
-                'to_bbox_button',
-                l='To BBOX',
-                c=RepeatedCallback(Render.to_bbox),
-                ann='Convert selected to BBOX representation',
-                bgc=color.color
-            )
-
-            pm.button(
-                'to_gpu_button',
-                l='To GPU',
-                c=RepeatedCallback(Render.to_gpu),
-                ann='Convert selected to GPU representation',
-                bgc=color.color
-            )
-
-            pm.button(
-                'to_ass_button',
-                l='To ASS',
-                c=RepeatedCallback(Render.to_ass),
-                ann='Convert selected to ASS representation',
-                bgc=color.color
-            )
-
-
-
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -1237,6 +1249,7 @@ def UI():
         edit=True,
         tabLabel=[
             (general_columnLayout, "Gen"),
+            (reference_columnLayout, "Ref"),
             (modeling_columnLayout, "Mod"),
             (rigging_columnLayout, "Rig"),
             (render_columnLayout, "Ren"),
@@ -1399,6 +1412,26 @@ class General(object):
             pm.select(selection[0].inputs())
 
     @classmethod
+    def delete_unused_intermediate_shapes(cls):
+        """clears unused intermediate shape nodes
+        """
+        unused_nodes = []
+        for node in pm.ls(type=pm.nt.Mesh):
+            if len(node.inputs()) == 0 and len(node.outputs()) == 0 \
+               and node.attr('intermediateObject').get():
+                unused_nodes.append(node)
+        pm.delete(unused_nodes)
+
+    @classmethod
+    def delete_all_sound(cls):
+        pm.delete(pm.ls(type="audio"))
+
+
+class Reference(object):
+    """supplies reference related tools
+    """
+
+    @classmethod
     def get_no_parent_transform(cls, ref):
         """returns the top most parent node in the given subReferences
 
@@ -1423,8 +1456,6 @@ class General(object):
     def duplicate_selected_reference(cls):
         """duplicates the selected referenced object as reference
         """
-        from pymel.core import xform
-
         ref = pm.ls(sl=1)[0].referenceFile()
         # get the highest parent ref
         if ref.parent():
@@ -1442,14 +1473,14 @@ class General(object):
         top_parent = cls.get_no_parent_transform(ref)
         if top_parent:
             node = top_parent
-            tra = xform(node, q=1, ws=1, t=1)
-            rot = xform(node, q=1, ws=1, ro=1)
-            sca = xform(node, q=1, ws=1, s=1)
+            tra = pm.xform(node, q=1, ws=1, t=1)
+            rot = pm.xform(node, q=1, ws=1, ro=1)
+            sca = pm.xform(node, q=1, ws=1, s=1)
 
             new_top_parent_node = cls.get_no_parent_transform(dup_ref)
-            xform(new_top_parent_node, ws=1, t=tra)
-            xform(new_top_parent_node, ws=1, ro=rot)
-            xform(new_top_parent_node, ws=1, s=sca)
+            pm.xform(new_top_parent_node, ws=1, t=tra)
+            pm.xform(new_top_parent_node, ws=1, ro=rot)
+            pm.xform(new_top_parent_node, ws=1, s=sca)
 
             # parent to the same group
             group = node.getParent()
@@ -1563,29 +1594,31 @@ class General(object):
         m.open(current_version, force=True)
 
     @classmethod
+    def get_selected_reference_path(cls):
+        """prints the path of the selected reference path
+        """
+        selection = pm.ls(sl=1)
+        if len(selection):
+            node = selection[0]
+            ref = node.referenceFile()
+            if ref:
+                pm.warning(node.referenceFile().path)
+
+    @classmethod
     def open_reference_in_new_maya(cls):
         """opens the selected references in new maya session
         """
         import subprocess
 
-        node = pm.ls(sl=1)[0]
-        if node:
-            process = subprocess.Popen(
-                ['maya',
-                 node.referenceFile().path],
-                stderr=subprocess.PIPE
-            )
-
-    @classmethod
-    def delete_unused_intermediate_shapes(cls):
-        """clears unused intermediate shape nodes
-        """
-        unused_nodes = []
-        for node in pm.ls(type=pm.nt.Mesh):
-            if len(node.inputs()) == 0 and len(node.outputs()) == 0 \
-               and node.attr('intermediateObject').get():
-                unused_nodes.append(node)
-        pm.delete(unused_nodes)
+        selection = pm.ls(sl=1)
+        if len(selection):
+            node = selection[0]
+            ref = node.referenceFile()
+            if ref:
+                process = subprocess.Popen(
+                    ['maya', ref.path],
+                    stderr=subprocess.PIPE
+                )
 
     @classmethod
     def fix_reference_namespace(cls):
@@ -1617,10 +1650,6 @@ class General(object):
             version.created_by = logged_in_user
 
         db.DBSession.commit()
-
-    @classmethod
-    def delete_all_sound(cls):
-        pm.delete(pm.ls(type="audio"))
 
     @classmethod
     def fix_reference_paths(cls):
@@ -1766,6 +1795,155 @@ class General(object):
         for ref in reversed(pm.listReferences(recursive=1)):
             if ref not in selected_references:
                 ref.unload()
+
+    @classmethod
+    def to_base(cls):
+        """replaces the related references with Base representation
+        """
+        cls.to_repr('Base')
+
+    @classmethod
+    def to_bbox(cls):
+        """replaces the related references with BBOX representation
+        """
+        cls.to_repr('BBOX')
+
+    @classmethod
+    def to_gpu(cls):
+        """replaces the related references with GPU representation
+        """
+        cls.to_repr('GPU')
+
+    @classmethod
+    def to_ass(cls):
+        """replaces the related references with the ASS representation
+        """
+        cls.to_repr('ASS')
+
+    @classmethod
+    def to_repr(cls, repr_name):
+        """replaces the related references with the given representation
+
+        :param str repr_name: Desired representation name
+        """
+        # get apply to
+        apply_to = \
+            pm.radioButtonGrp('repr_apply_to_radio_button_grp', q=1, sl=1)
+
+        if apply_to == 1:
+            # work on every selected object
+            selection = pm.ls(sl=1)
+
+            # collect reference files first
+            references = []
+            for node in selection:
+                ref = node.referenceFile()
+                if ref is not None and ref not in references:
+                    references.append(ref)
+
+            from anima.env.mayaEnv.repr_tools import RepresentationGenerator
+
+            # now go over each reference
+            for ref in references:
+                if not ref.is_repr(repr_name):
+                    parent_ref = ref
+                    while parent_ref is not None:
+                        # check if it is a look dev node
+                        v = parent_ref.version
+                        if v:
+                            task = v.task
+                            if RepresentationGenerator.is_look_dev_task(task) \
+                               or RepresentationGenerator.is_vegetation_task(task):
+                                # convert it to repr
+                                parent_ref.to_repr(repr_name)
+                                break
+                            else:
+                                # go to parent ref
+                                parent_ref = parent_ref.parent()
+                        else:
+                            parent_ref = parent_ref.parent()
+        elif apply_to == 2:
+            # apply to all references
+            for ref in pm.listReferences():
+                ref.to_repr(repr_name)
+
+    @classmethod
+    def generate_repr_of_all_references(cls):
+        """generates all representations of all references of this scene
+        """
+        response = pm.confirmDialog(
+            title='Do Create Representations?',
+            message='Create all Repr of all References?',
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+        if response == 'No':
+            return
+
+        from stalker import Version
+        from anima.env.mayaEnv import Maya, repr_tools, auxiliary
+        reload(auxiliary)
+        reload(repr_tools)
+
+        m_env = Maya()
+
+        source_version = m_env.get_current_version()
+
+        gen = repr_tools.RepresentationGenerator()
+
+        paths_visited = []
+        versions_to_visit = []
+
+        # generate a sorted version list
+        # and visit each reference only once
+        for ref in reversed(pm.listReferences(recursive=True)):
+            ref_path = str(ref.path)
+            if ref_path not in paths_visited:
+                v = ref.version
+                if v is not None:
+                    paths_visited.append(ref_path)
+                    versions_to_visit.append(v)
+
+        # open each version
+        for v in versions_to_visit:
+            generate_bbox = True
+            generate_gpu = True
+            generate_ass = True
+
+            # check if there is a BBOX, GPU or ASS repr
+            # generated from this version
+            child_versions = Version.query.filter(Version.parent == v).all()
+            for cv in child_versions:
+                if generate_bbox is True and '@BBOX' in cv.take_name:
+                    generate_bbox = False
+
+                if generate_gpu is True and '@GPU' in cv.take_name:
+                    generate_gpu = False
+
+                if generate_ass is True and '@ASS' in cv.take_name:
+                    generate_ass = False
+
+            if generate_bbox or generate_gpu or generate_ass:
+                m_env.open(v, force=True)
+                gen.version = v
+                # generate representations
+                #gen.generate_all()
+                if generate_bbox:
+                    gen.generate_bbox()
+                if generate_gpu:
+                    gen.generate_gpu()
+                if generate_ass:
+                    gen.generate_ass()
+
+        # now open the source version again
+        m_env.open(source_version, force=True)
+
+        # and generate representation for the source
+        gen.version = source_version
+        gen.generate_all()
+
 
 
 class Modeling(object):
@@ -1936,7 +2114,6 @@ class Modeling(object):
     def vertex_aligned_locator(cls):
         """creates vertex aligned locator, select 3 vertices
         """
-        import pymel.core as pm
         selection = pm.ls(os=1, fl=1)
 
         # get the axises
@@ -2593,154 +2770,6 @@ class Render(object):
             except AttributeError:
                 pass
 
-    @classmethod
-    def to_base(cls):
-        """replaces the related references with Base representation
-        """
-        cls.to_repr('Base')
-
-    @classmethod
-    def to_bbox(cls):
-        """replaces the related references with BBOX representation
-        """
-        cls.to_repr('BBOX')
-
-    @classmethod
-    def to_gpu(cls):
-        """replaces the related references with GPU representation
-        """
-        cls.to_repr('GPU')
-
-    @classmethod
-    def to_ass(cls):
-        """replaces the related references with the ASS representation
-        """
-        cls.to_repr('ASS')
-
-    @classmethod
-    def to_repr(cls, repr_name):
-        """replaces the related references with the given representation
-
-        :param str repr_name: Desired representation name
-        """
-        # get apply to
-        apply_to = \
-            pm.radioButtonGrp('repr_apply_to_radio_button_grp', q=1, sl=1)
-
-        if apply_to == 1:
-            # work on every selected object
-            selection = pm.ls(sl=1)
-
-            # collect reference files first
-            references = []
-            for node in selection:
-                ref = node.referenceFile()
-                if ref is not None and ref not in references:
-                    references.append(ref)
-
-            from anima.env.mayaEnv.repr_tools import RepresentationGenerator
-
-            # now go over each reference
-            for ref in references:
-                if not ref.is_repr(repr_name):
-                    parent_ref = ref
-                    while parent_ref is not None:
-                        # check if it is a look dev node
-                        v = parent_ref.version
-                        if v:
-                            task = v.task
-                            if RepresentationGenerator.is_look_dev_task(task) \
-                               or RepresentationGenerator.is_vegetation_task(task):
-                                # convert it to repr
-                                parent_ref.to_repr(repr_name)
-                                break
-                            else:
-                                # go to parent ref
-                                parent_ref = parent_ref.parent()
-                        else:
-                            parent_ref = parent_ref.parent()
-        elif apply_to == 2:
-            # apply to all references
-            for ref in pm.listReferences():
-                ref.to_repr(repr_name)
-
-    @classmethod
-    def generate_repr_of_all_references(cls):
-        """generates all representations of all references of this scene
-        """
-        response = pm.confirmDialog(
-            title='Do Create Representations?',
-            message='Create all Repr of all References?',
-            button=['Yes', 'No'],
-            defaultButton='No',
-            cancelButton='No',
-            dismissString='No'
-        )
-        if response == 'No':
-            return
-
-        from stalker import Version
-        from anima.env.mayaEnv import Maya, repr_tools, auxiliary
-        reload(auxiliary)
-        reload(repr_tools)
-
-        m_env = Maya()
-
-        source_version = m_env.get_current_version()
-
-        gen = repr_tools.RepresentationGenerator()
-
-        paths_visited = []
-        versions_to_visit = []
-
-        # generate a sorted version list
-        # and visit each reference only once
-        for ref in reversed(pm.listReferences(recursive=True)):
-            ref_path = str(ref.path)
-            if ref_path not in paths_visited:
-                v = ref.version
-                if v is not None:
-                    paths_visited.append(ref_path)
-                    versions_to_visit.append(v)
-
-        # open each version
-        for v in versions_to_visit:
-            generate_bbox = True
-            generate_gpu = True
-            generate_ass = True
-
-            # check if there is a BBOX, GPU or ASS repr
-            # generated from this version
-            child_versions = Version.query.filter(Version.parent == v).all()
-            for cv in child_versions:
-                if generate_bbox is True and '@BBOX' in cv.take_name:
-                    generate_bbox = False
-
-                if generate_gpu is True and '@GPU' in cv.take_name:
-                    generate_gpu = False
-
-                if generate_ass is True and '@ASS' in cv.take_name:
-                    generate_ass = False
-
-            if generate_bbox or generate_gpu or generate_ass:
-                m_env.open(v, force=True)
-                gen.version = v
-                # generate representations
-                #gen.generate_all()
-                if generate_bbox:
-                    gen.generate_bbox()
-                if generate_gpu:
-                    gen.generate_gpu()
-                if generate_ass:
-                    gen.generate_ass()
-
-        # now open the source version again
-        m_env.open(source_version, force=True)
-
-        # and generate representation for the source
-        gen.version = source_version
-        gen.generate_all()
-
 
 class Animation(object):
     """animation tools
@@ -2936,27 +2965,25 @@ class Animation(object):
     def bake_component_animation(cls):
         """bakes the selected component animation to a space locator
         """
-        from pymel.core import spaceLocator, setKeyframe, xform
-
         start = int(pm.playbackOptions(q=1, minTime=1))
         end = int(pm.playbackOptions(q=1, maxTime=1))
 
         vertices = pm.ls(sl=1, fl=1)
 
-        locator = spaceLocator()
+        locator = pm.spaceLocator()
 
         for i in range(start, end+1):
             pm.currentTime(i)
-            point_positions = xform(vertices, q=1, ws=1, t=1)
+            point_positions = pm.xform(vertices, q=1, ws=1, t=1)
             point_count = len(point_positions) / 3
             px = reduce(lambda x, y: x+y, point_positions[0::3]) / point_count
             py = reduce(lambda x, y: x+y, point_positions[1::3]) / point_count
             pz = reduce(lambda x, y: x+y, point_positions[2::3]) / point_count
 
             locator.t.set(px, py, pz)
-            setKeyframe(locator.tx)
-            setKeyframe(locator.ty)
-            setKeyframe(locator.tz)
+            pm.setKeyframe(locator.tx)
+            pm.setKeyframe(locator.ty)
+            pm.setKeyframe(locator.tz)
 
 
 def fur_map_unlocker(furD, lock=False):

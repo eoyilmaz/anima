@@ -641,6 +641,7 @@ def replace_with_bbox(nodes):
 
     node_names = []
     bboxes = []
+    processed_nodes = []
     for node in nodes:
         # create a bbox and parent it to the parent of
         # the original node
@@ -669,10 +670,11 @@ def replace_with_bbox(nodes):
 
         node_names.append((node_name, node_shape_name))
         bboxes.append(bbox)
+        processed_nodes.append(node)
 
     # delete the nodes
-    if len(nodes):
-        pm.delete(nodes)
+    if len(processed_nodes):
+        pm.delete(processed_nodes)
 
         # rename the bboxes
         for name, bbox in zip(node_names, bboxes):
