@@ -36,6 +36,36 @@ class RepresentationGenerator(object):
         return [node for node in auxiliary.get_root_nodes()
                 if node.referenceFile() is None]
 
+    def get_latest_repr_version(self, take_name):
+        """returns the latest published version or creates a new version
+
+        :param str take_name: The take_name
+        :return:
+        """
+        from stalker import Version
+
+        # filter to get the latest published version
+        v = Version.query\
+            .filter(Version.task == self.version.task)\
+            .filter(Version.take_name == take_name)\
+            .filter(Version.is_published == True)\
+            .order_by(Version.version_number.desc())\
+            .first()
+
+        if v is None:
+            # create a new version
+            v = Version(
+                created_by=self.logged_in_user,
+                task=self.version.task,
+                take_name=take_name
+            )
+            v.is_published = True
+        else:
+            # change updated by
+            v.updated_by = self.logged_in_user
+
+        return v
+
     @classmethod
     def is_model_task(cls, task):
         """checks if the given task is a model task
@@ -201,15 +231,12 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}___BBOX
         # use maya
-        from stalker import Version
-        v = Version(
-            created_by=self.logged_in_user,
-            task=self.version.task,
-            take_name='%s%s%s' % (
-                self.base_take_name, Representation.repr_separator, 'BBOX'
-            )
+
+        take_name = '%s%s%s' % (
+            self.base_take_name, Representation.repr_separator, 'BBOX'
         )
-        v.is_published = True
+        v = self.get_latest_repr_version(take_name)
+
         self.maya_env.save_as(v)
 
         # reopen the original version
@@ -360,15 +387,10 @@ class RepresentationGenerator(object):
 
         # 6. save the scene as {{original_take}}___GPU
         # use maya
-        from stalker import Version
-        v = Version(
-            created_by=self.logged_in_user,
-            task=self.version.task,
-            take_name='%s%s%s' % (
-                self.base_take_name, Representation.repr_separator, 'GPU'
-            )
+        take_name = '%s%s%s' % (
+            self.base_take_name, Representation.repr_separator, 'GPU'
         )
-        v.is_published = True
+        v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
 
         # clear scene
@@ -560,15 +582,10 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}___ASS
         # use maya
-        from stalker import Version
-        v = Version(
-            created_by=self.logged_in_user,
-            task=self.version.task,
-            take_name='%s%s%s' % (
-                self.base_take_name, Representation.repr_separator, 'ASS'
-            )
+        take_name = '%s%s%s' % (
+            self.base_take_name, Representation.repr_separator, 'ASS'
         )
-        v.is_published = True
+        v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
 
         # new scene

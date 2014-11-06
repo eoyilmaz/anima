@@ -6736,6 +6736,26 @@ class RepresentationGeneratorTestCase(MayaTestBase):
             ''
         )
 
+    def test_generate_bbox_will_overwrite_previous_bbox_version(self):
+        """testing if generate_bbox will overwrite to the previous BBOX version
+        """
+        gen = RepresentationGenerator()
+
+        gen.version = self.version75
+        gen.generate_bbox()
+
+        r = Representation(version=self.version75)
+        v1 = r.find('BBOX')
+        self.assertTrue(v1 is not None)
+
+        # generate again
+        gen.generate_bbox()
+        v2 = r.find('BBOX')
+        self.assertTrue(v2 is not None)
+
+        # and they should be the same version
+        self.assertEqual(v1, v2)
+
     def test_generate_bbox_scene_with_references_before_generating_bboxes_of_references_first(self):
         """testing if a RuntimeError will be raised when trying to generate
         the BBOX Repr of a scene before generating the BBOX of all of the
@@ -7018,6 +7038,26 @@ class RepresentationGeneratorTestCase(MayaTestBase):
             ''
         )
 
+    def test_generate_gpu_will_overwrite_previous_gpu_version(self):
+        """testing if generate_gpu will overwrite to the previous GPU version
+        """
+        gen = RepresentationGenerator()
+
+        gen.version = self.version75
+        gen.generate_gpu()
+
+        r = Representation(version=self.version75)
+        v1 = r.find('GPU')
+        self.assertTrue(v1 is not None)
+
+        # generate again
+        gen.generate_gpu()
+        v2 = r.find('GPU')
+        self.assertTrue(v2 is not None)
+
+        # and they should be the same version
+        self.assertEqual(v1, v2)
+
     def test_generate_gpu_scene_with_references_before_generating_gpu_of_references_first(self):
         """testing if a RuntimeError will be raised when trying to generate
         the GPU Repr of a scene before generating the GPU of all of the
@@ -7275,6 +7315,26 @@ class RepresentationGeneratorTestCase(MayaTestBase):
             pm.sceneName(),
             ''
         )
+
+    def test_generate_ass_will_overwrite_previous_ass_version(self):
+        """testing if generate_ass will overwrite to the previous ASS version
+        """
+        gen = RepresentationGenerator()
+
+        gen.version = self.version75
+        gen.generate_ass()
+
+        r = Representation(version=self.version75)
+        v1 = r.find('ASS')
+        self.assertTrue(v1 is not None)
+
+        # generate again
+        gen.generate_ass()
+        v2 = r.find('ASS')
+        self.assertTrue(v2 is not None)
+
+        # and they should be the same version
+        self.assertEqual(v1, v2)
 
     def test_generate_ass_repr_for_building_yapi_look_dev_without_creating_model_first(self):
         """testing if a RuntimeError will be raised when trying to generate a
