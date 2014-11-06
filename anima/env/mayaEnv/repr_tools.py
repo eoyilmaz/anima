@@ -418,9 +418,9 @@ class RepresentationGenerator(object):
 
         task = self.version.task
 
-        export_command = 'arnoldExportAss -f "%(path)s" -s -mask 255 ' \
-                         '-lightLinks 1 -compressed -boundingBox ' \
-                         '-shadowLinks 1 -cam perspShape;'
+        export_command = 'arnoldExportAss -f "%(path)s" -s -mask 24 ' \
+                         '-lightLinks 0 -compressed -boundingBox ' \
+                         '-shadowLinks 0 -cam perspShape;'
 
         # calculate output path
         output_path = os.path.join(self.version.absolute_path, 'Outputs/ass/')
