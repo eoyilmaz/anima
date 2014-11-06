@@ -1602,7 +1602,11 @@ class Reference(object):
             node = selection[0]
             ref = node.referenceFile()
             if ref:
-                pm.warning(node.referenceFile().path)
+                print(ref.path)
+                parent_ref = ref.parent()
+                while parent_ref is not None:
+                    print(parent_ref.path)
+                    parent_ref = parent_ref.parent()
 
     @classmethod
     def open_reference_in_new_maya(cls):
