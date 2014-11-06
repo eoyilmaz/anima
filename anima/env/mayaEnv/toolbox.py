@@ -303,6 +303,17 @@ def UI():
             color.change()
             pm.text(l='===== Representation Tools =====')
 
+            with pm.rowLayout(nc=2, adj=1):
+                pm.checkBoxGrp(
+                    'generate_repr_types_checkbox_grp',
+                    label='Reprs',
+                    numberOfCheckBoxes=3,
+                    labelArray3=['BBOX', 'GPU', 'ASS'],
+                    cl4=['left', 'left', 'left', 'left'],
+                    cw4=[50, 50, 50, 50],
+                    valueArray3=[1, 1, 1]
+                )
+
             pm.button(
                 'generate_repr_of_all_references_button',
                 l='Generate Repr Of All References',
@@ -1883,6 +1894,10 @@ class Reference(object):
         paths_visited = []
         versions_to_visit = []
 
+        generate_bbox = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
+        generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
+        generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
+
         # generate a sorted version list
         # and visit each reference only once
         pdm = ProgressDialogManager()
@@ -1917,6 +1932,9 @@ class Reference(object):
         if response == 'No':
             return
 
+        # register a new caller
+        caller = pdm.register(versions_to_visit, 'Generate Reprs')
+
         m_env = Maya()
         source_version = m_env.get_current_version()
         gen = repr_tools.RepresentationGenerator()
@@ -1927,9 +1945,13 @@ class Reference(object):
             m_env.open(v, force=True, skip_update_check=True)
             gen.version = v
             # generate representations
-            gen.generate_bbox()
-            gen.generate_gpu()
-            gen.generate_ass()
+            if generate_bbox:
+                gen.generate_bbox()
+            if generate_gpu:
+                gen.generate_gpu()
+            if generate_ass:
+                gen.generate_ass()
+            caller.step()
 
         # now open the source version again
         m_env.open(source_version, force=True, skip_update_check=True)
