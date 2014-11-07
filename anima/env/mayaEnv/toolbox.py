@@ -1933,7 +1933,8 @@ class Reference(object):
             return
 
         # register a new caller
-        caller = pdm.register(versions_to_visit, 'Generate Reprs')
+        caller = pdm.register(max_iteration=len(versions_to_visit),
+                              title='Generate Reprs')
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -1958,7 +1959,13 @@ class Reference(object):
 
         # and generate representation for the source
         gen.version = source_version
-        gen.generate_all()
+        # generate representations
+        if generate_bbox:
+            gen.generate_bbox()
+        if generate_gpu:
+            gen.generate_gpu()
+        if generate_ass:
+            gen.generate_ass()
 
 
 class Modeling(object):

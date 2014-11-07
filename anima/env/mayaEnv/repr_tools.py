@@ -3,14 +3,107 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import re
 import os
+import re
+import subprocess
+import uuid
 
 import pymel.core as pm
 from stalker import LocalSession
 
 from anima.repr import Representation
 from anima.env.mayaEnv import auxiliary
+
+
+RENDER_RELATED_NODE_TYPES = [
+    'shadingEngine',
+
+    'anisotropic',
+    'blinn',
+    'lambert',
+    'layeredShader',
+    'oceanShader',
+    'phong',
+    'phongE',
+    'rampShader',
+    'shadingMap',
+    'surfaceShader',
+    'useBackground',
+
+    'bulge',
+    'checker',
+    'cloth',
+    'file',
+    'fluidTexture2D',
+    'fractal',
+    'grid',
+    'mandelbrot',
+    'mountain',
+    'movie',
+    'noise',
+    'ocean',
+    'psdFileTex',
+    'ramp',
+    'water',
+
+    'brownian',
+    'cloud',
+    'crater',
+    'fluidTexture3D',
+    'granite',
+    'leather',
+    'mandelbrot3D',
+    'marble',
+    'rock',
+    'snow',
+    'solidFractal',
+    'stucco',
+    'volumeNoise',
+    'wood',
+
+    'bump2d',
+    'bump3d',
+    'place2dTexture',
+    'place3dTexture',
+    'plusMinusAverage',
+    'samplerInfo',
+    'stencil',
+    'uvChooser',
+    'surfaceInfo',
+    'blendColors',
+    'clamp',
+    'contrast',
+    'gammaCorrect',
+    'hsvToRgb',
+    'luminance',
+    'remapColor',
+    'remapHsv',
+    'remapValue',
+    'rgbToHsv',
+    'surfaceLuminance',
+    'imagePlane',
+
+    'aiImage',
+    'aiNoise',
+    'aiAmbientOcclusion',
+    'aiHair',
+    'aiRaySwitch',
+    'aiShadowCatcher',
+    'aiSkin',
+    'aiSkinSss',  # To be removed
+    'aiStandard',
+    'aiUtility',
+    'aiWireframe',
+]
+
+
+READ_ONLY_NODE_NAMES = [
+    'lambert1',
+    'particleCloud1',
+    'shaderGlow1',
+    'initialParticleSE',
+    'initialShadingGroup'
+]
 
 
 class RepresentationGenerator(object):
@@ -397,6 +490,30 @@ class RepresentationGenerator(object):
         # clear scene
         pm.newFile(force=True)
 
+    def make_tx(self, texture_path):
+        """converts the given texture to TX
+        """
+        tx_path = ''.join([os.path.splitext(texture_path)[0], '.tx'])
+
+        # generate if not exists
+        if not os.path.exists(tx_path):
+            cmd = 'maketx -o "%s" -u --oiio %s' % (tx_path, texture_path)
+
+            if os.name == 'nt':
+                proc = subprocess.Popen(
+                    cmd,
+                    creationflags=subprocess.SW_HIDE,
+                    shell=True
+                )
+            else:
+                proc = subprocess.Popen(
+                    cmd,
+                    shell=True
+                )
+
+            proc.wait()
+        return tx_path
+
     def generate_ass(self):
         """generates the ASS representation of the current scene
 
@@ -478,7 +595,14 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    node.setAttr(attr_name, path)
+                    tx_path = self.make_tx(path)
+                    node.setAttr(attr_name, tx_path)
+
+            # randomize all render node names
+            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+                if node.referenceFile() is None and \
+                   node.name() not in READ_ONLY_NODE_NAMES:
+                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
 
             # export all root ass files as they are
             for root_node in auxiliary.get_root_nodes():
