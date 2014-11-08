@@ -314,6 +314,12 @@ def UI():
                     valueArray3=[1, 1, 1]
                 )
 
+            pm.checkBox(
+                'generate_repr_skip_existing_checkBox',
+                label='Skip existing Reprs.',
+                value=0
+            )
+
             pm.button(
                 'generate_repr_of_all_references_button',
                 l='Generate Repr Of All References',
@@ -1898,6 +1904,9 @@ class Reference(object):
         generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
         generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
 
+        skip_existing = \
+            pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
+
         # generate a sorted version list
         # and visit each reference only once
         pdm = ProgressDialogManager()
@@ -1941,17 +1950,34 @@ class Reference(object):
         gen = repr_tools.RepresentationGenerator()
 
         # open each version
+        from stalker import Version
         for v in versions_to_visit:
-            #if generate_bbox or generate_gpu or generate_ass:
-            m_env.open(v, force=True, skip_update_check=True)
+            local_generate_bbox = generate_bbox
+            local_generate_gpu = generate_gpu
+            local_generate_ass = generate_ass
+            if skip_existing:
+                # check if there is a BBOX, GPU or ASS repr
+                # generated from this version
+                child_versions = Version.query.filter(Version.parent == v).all()
+                for cv in child_versions:
+                    if local_generate_bbox and '@BBOX' in cv.take_name:
+                        local_generate_bbox = False
+
+                    if local_generate_gpu is True and '@GPU' in cv.take_name:
+                        local_generate_gpu = False
+
+                    if local_generate_ass is True and '@ASS' in cv.take_name:
+                        local_generate_ass = False
+
             gen.version = v
             # generate representations
-            if generate_bbox:
+            if local_generate_bbox:
                 gen.generate_bbox()
-            if generate_gpu:
+            if local_generate_gpu:
                 gen.generate_gpu()
-            if generate_ass:
+            if local_generate_ass:
                 gen.generate_ass()
+
             caller.step()
 
         # now open the source version again

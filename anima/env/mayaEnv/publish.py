@@ -215,7 +215,7 @@ def cleanup_intermediate_objects():
         [node
          for node in pm.ls(type='mesh')
          if len(node.inputs()) == 0 and len(node.outputs()) == 0 and
-            node.intermediateObject.get()]
+            node.intermediateObject.get() and node.fileReference() is None]
     )
 
 
@@ -726,10 +726,23 @@ LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
 @publisher(LOOK_DEV_TYPES)
+def disable_internal_reflections_in_aiStandard():
+    """disable internal reflections in aiStandard
+    """
+    for mat in pm.ls(type='aiStandard'):
+        if mat.referenceFile() is None:
+            mat.setAttr('enableInternalReflections', 0)
+
+
+@publisher(LOOK_DEV_TYPES)
 def check_all_tx_textures():
     """checks if tx textures are created for all of the texture nodes in the
     current scene
     """
+    v = staging.get('version')
+    if v and Representation.repr_separator in v.take_name:
+        return
+
     texture_file_paths = []
     workspace_path = pm.workspace.path
 

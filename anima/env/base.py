@@ -233,7 +233,9 @@ class EnvironmentBase(object):
         :return: :class:`~stalker.models.version.Version`
         """
         # convert '\\' to '/'
-        full_path = os.path.normpath(full_path).replace('\\', '/')
+        full_path = os.path.normpath(
+            os.path.expandvars(full_path)
+        ).replace('\\', '/')
 
         # trim repo path
         full_path_trimmed = self.trim_repo_path(full_path)
