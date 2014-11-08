@@ -2596,6 +2596,12 @@ class MayaTestCase(MayaTestBase):
 
         self.assertTrue(ref.isLoaded())
 
+    def test_reference_creates_references_of_representations_with_correct_namespace(self):
+        """testing if references of representations will be referenced with
+        correct namespace
+        """
+        self.fail('test is not implemented yet')
+
     def test_save_as_replaces_image_plane_filename_with_env_variable(self):
         """testing if save_as replaces the imagePlane filename with repository
         environment variable

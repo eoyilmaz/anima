@@ -524,6 +524,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # use the file name without extension as the namespace
         namespace = os.path.basename(version.nice_name)
 
+        # do not use representation part of the filename
+        namespace = namespace.split(Representation.repr_separator)[0]
+
         if use_namespace:
             ref = pm.createReference(
                 to_os_independent_path(version.absolute_full_path),
