@@ -892,7 +892,15 @@ def make_material_names_unique():
         mat_type_name = mat.type()
 
         # find the first object using this material
-        shading_engine = mat.outputs(type='shadingEngine')[0]
+        shading_engine = None
+        outputs = mat.outputs(type='shadingEngine')
+        if len(outputs):
+            shading_engine = outputs[0]
+
+        if not shading_engine:
+            # skip this one
+            continue
+
         objects_using_this_material = pm.sets(shading_engine, q=1)
 
         object_name = 'node'
