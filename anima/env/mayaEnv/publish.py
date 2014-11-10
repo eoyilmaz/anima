@@ -215,7 +215,7 @@ def cleanup_intermediate_objects():
         [node
          for node in pm.ls(type='mesh')
          if len(node.inputs()) == 0 and len(node.outputs()) == 0 and
-            node.intermediateObject.get() and node.fileReference() is None]
+            node.intermediateObject.get() and node.referenceFile() is None]
     )
 
 
