@@ -262,6 +262,7 @@ class RepresentationGenerator(object):
         self.generate_proxy()
         self.generate_gpu()
         self.generate_ass()
+        self.generate_flat()
 
     def generate_bbox(self):
         """generates the BBox representation of the current scene
@@ -607,7 +608,7 @@ class RepresentationGenerator(object):
             # export all root ass files as they are
             for root_node in auxiliary.get_root_nodes():
                 for child_node in root_node.getChildren():
-                    print('processing %s' % child_node.name())
+                    #print('processing %s' % child_node.name())
                     # check if it is a transform node
                     if not isinstance(child_node, pm.nt.Transform):
                         continue
@@ -666,7 +667,7 @@ class RepresentationGenerator(object):
 
             for node in pfx_polygons_node.getChildren():
                 for child_node in node.getChildren():
-                    print('processing %s' % child_node.name())
+                    #print('processing %s' % child_node.name())
                     child_name = child_node.name().split('___')[-1]
 
                     pm.select(child_node)
@@ -734,3 +735,52 @@ class RepresentationGenerator(object):
 
         # new scene
         pm.newFile(force=True)
+
+    def generate_flat(self):
+        """generates the flat version
+        """
+        self.version = self._validate_version(self.version)
+
+        self.open_version(self.version)
+
+        task = self.version.task
+
+        # generate flat representation of the Layout task of Exteriors or
+        # Interiors only
+        if task.type and task.type.name.lower() == 'layout':
+            parent = task.parent
+            if parent and parent.parent and parent.parent.type \
+               and parent.parent.type.name.lower() in ['exterior', 'interior']:
+                # we found a proper layout to flatten do your job
+                # fist expect to have an ASS repr
+                r = Representation(version=self.version)
+                ass_v = r.find('ASS')
+                if ass_v:
+                    # open it
+                    self.maya_env.open(version=ass_v, force=True,
+                                       skip_update_check=True)
+
+                    # and import all of the references
+                    all_refs = pm.listReferences()
+                    while len(all_refs) != 0:
+                        for ref in all_refs:
+                            ref.importContents()
+                        all_refs = pm.listReferences()
+
+                    # save the scene as {{original_take}}___ASS
+                    # use maya
+                    take_name = '%s%s%s' % (
+                        self.base_take_name,
+                        Representation.repr_separator,
+                        'FLAT'
+                    )
+                    v = self.get_latest_repr_version(take_name)
+                    self.maya_env.save_as(v)
+
+                    # new scene
+                    pm.newFile(force=True)
+
+                else:
+                    raise RuntimeError(
+                        'Please generate the ASS representation first!'
+                    )

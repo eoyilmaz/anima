@@ -51,7 +51,7 @@ class Maya(EnvironmentBase):
     """
 
     name = "Maya%s" % str(pm.versions.current())[0:4]
-    representations = ['Base', 'BBOX', 'PROXY', 'GPU', 'ASS']
+    representations = ['Base', 'BBOX', 'PROXY', 'GPU', 'ASS', 'FLAT']
 
     time_to_fps = {
         u'sec': 1,
@@ -1042,6 +1042,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # try to get a version with the given path
                 version = self.get_version_from_full_path(path)
                 if version:
+                    # check if this is a representation
+                    if Representation.repr_separator in version.take_name:
+                        # use the parent version
+                        version = version.parent
                     versions.append(version)
                     prev_path = path
             if caller is not None:
@@ -1062,6 +1066,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version = self.get_version_from_full_path(parent_ref.path)
 
         if version:
+            # use the original version if
+            if Representation.repr_separator in version.take_name:
+                version = version.parent
+
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
