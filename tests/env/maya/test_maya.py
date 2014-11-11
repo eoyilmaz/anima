@@ -3693,6 +3693,49 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
                    key=lambda x: x.name)
         )
 
+    def test_get_referenced_versions_returns_a_list_of_Version_instances_even_with_representations(self):
+        """testing if Maya.get_referenced_versions returns a list of Versions
+        instances referenced in the current scene
+        """
+        from stalker import User, LocalSession
+        u = User.query.first()
+        l = LocalSession()
+        l.store_user(u)
+        l.save()
+
+        gen = RepresentationGenerator()
+
+        gen.version = self.version4
+        gen.generate_all()
+
+        gen.version = self.version5
+        gen.generate_all()
+
+        gen.version = self.version3
+        gen.generate_all()
+
+        # create references to various versions
+        self.maya_env.open(self.version6)
+
+        self.maya_env.reference(self.version4)
+        self.maya_env.reference(self.version5)
+        self.maya_env.reference(self.version5)  # duplicate refs
+        self.maya_env.reference(self.version4)  # duplicate refs
+        self.maya_env.reference(self.version3)
+
+        # switch all references to bbox representation
+        for ref in pm.listReferences():
+            ref.to_repr('BBOX')
+
+        # now try to get the referenced versions
+        referenced_versions = self.maya_env.get_referenced_versions()
+
+        self.assertEqual(
+            sorted(referenced_versions, key=lambda x: x.name),
+            sorted([self.version3, self.version5],  # version4 will be skipped
+                   key=lambda x: x.name)
+        )
+
     def test_get_referenced_versions_returns_a_list_of_Version_instances_referenced_under_the_given_reference(self):
         """testing if Maya.get_referenced_versions returns a list of Versions
         referenced in the current scene under the given reference
@@ -7569,6 +7612,252 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         # now check references
         ref = pm.listReferences()[0]
         self.assertTrue(ref.is_repr('ASS'))
+
+    # FLAT
+    # - of a model
+    # - of a look dev
+    # - of a layout of a building
+    # - of a look dev of a building
+    # - of a layout of an environment
+    # - of a look dev of an environment
+    # - of a vegetation scene
+
+    def test_generate_flat_will_end_up_with_an_empty_scene(self):
+        """testing if generate_flat will end up with an empty scene
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_flat()
+
+        # we should be on an untitled scene
+        self.assertEqual(
+            pm.sceneName(),
+            ''
+        )
+
+    def test_generate_flat_will_overwrite_previous_flat_version(self):
+        """testing if generate_flat will overwrite to the previous FLAT version
+        """
+        gen = RepresentationGenerator()
+
+        gen.version = self.version75
+        gen.generate_flat()
+
+        r = Representation(version=self.version75)
+        v1 = r.find('FLAT')
+        self.assertTrue(v1 is not None)
+
+        # generate again
+        gen.generate_flat()
+        v2 = r.find('FLAT')
+        self.assertTrue(v2 is not None)
+
+        # and they should be the same version
+        self.assertEqual(v1, v2)
+
+    def test_generate_flat_scene_with_references_before_generating_flates_of_references_first(self):
+        """testing if a RuntimeError will be raised when trying to generate
+        the FLAT Repr of a scene before generating the ASS of all of the
+        references
+        """
+        gen = RepresentationGenerator(version=self.version76)
+
+        with self.assertRaises(RuntimeError) as cm:
+            gen.generate_flat()
+
+        self.assertEqual(
+            str(cm.exception),
+            'Please generate the ASS Representation of the references '
+            'first!!!\n%s' % self.version75.absolute_full_path
+        )
+
+    def test_generate_flat_of_a_simple_model(self):
+        """testing if generate_flat will not generate anything for a model
+        """
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_flat()
+
+        r = Representation(version=self.version75)
+        v = r.find('FLAT')
+        self.assertTrue(v is None)
+
+    def test_generate_flat_of_a_simple_look_dev(self):
+        """testing if generate_flat not do anything for a Look Dev file
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_flat()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_flat()
+
+        r = Representation(version=self.version78)
+        v = r.find('FLAT')
+
+        self.assertTrue(v is None)
+
+    def test_generate_flat_of_a_layout_of_a_building(self):
+        """testing if generate_flat of the layout scene of a building will not
+        generate anything
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_flat()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_flat()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_flat()
+
+        r = Representation(version=self.version66)
+        v = r.find('FLAT')
+        self.assertTrue(v is None)
+
+    def test_generate_flat_of_a_look_dev_of_a_building(self):
+        """testing if generate_flat of the look dev scene of a building will
+        not generate anything
+        """
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_flat()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_flat()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_flat()
+
+        # building | look dev
+        gen.version = self.version69
+        gen.generate_flat()
+
+        r = Representation(version=self.version69)
+        v = r.find('FLAT')
+
+        self.assertTrue(v is None)
+
+    def test_generate_flat_of_a_layout_of_an_environment(self):
+        """testing if generate_flat of the layout scene of an environment is
+        working properly
+        """
+        gen = RepresentationGenerator()
+        # Prop1 (Model | Hires | Kisa)
+        gen.version = self.version123
+        gen.generate_all()
+
+        # Prop1 (LookDev | Kisa)
+        gen.version = self.version120
+        gen.generate_all()
+
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen.version = self.version75
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_all()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_all()
+
+        # Environment
+        gen.version = self.version102
+        gen.generate_all()
+
+        r = Representation(version=self.version102)
+        v = r.find('FLAT')
+        self.assertTrue(v is not None)
+        self.maya_env.open(v, force=True)
+
+        # there should be no references
+        self.assertEqual(len(pm.listReferences()), 0)
+
+        # we should have the contents of the ASS representations
+        self.assertTrue(len(pm.ls(type='aiStandIn')) > 0)
+
+    def test_generate_flat_of_a_look_dev_of_an_environment(self):
+        """testing if generate_flat of the look dev scene of an environment
+        will not generate anything
+        """
+        # Building1
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version75)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version78
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version66
+        gen.generate_all()
+
+        # Building2
+        # start with building | props | yapi | model | hires
+        gen = RepresentationGenerator(version=self.version93)
+        gen.generate_all()
+
+        # building | props | yapi | look dev
+        gen.version = self.version96
+        gen.generate_all()
+
+        # building | layout | hires
+        gen.version = self.version84
+        gen.generate_all()
+
+        # vegetation
+        gen.version = self.version117
+        gen.generate_all()
+
+        # Environment Layout
+        gen.version = self.version102
+        gen.generate_all()
+
+        # Environment Look dev
+        gen.version = self.version105
+        gen.generate_all()
+
+        r = Representation(version=self.version105)
+        v = r.find('FLAT')
+
+        self.assertTrue(v is None)
+
+    def test_generate_flat_of_a_vegetation_scene(self):
+        """testing if generate_flat of the vegetation scene will not generate
+        anything
+        """
+        gen = RepresentationGenerator(version=self.version117)
+        gen.generate_all()
+
+        r = Representation(version=self.version117)
+        v = r.find('FLAT')
+
+        self.assertTrue(v is None)
+
 
     # ALL
     # - of a model
