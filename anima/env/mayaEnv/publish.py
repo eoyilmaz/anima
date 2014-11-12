@@ -12,7 +12,8 @@ import pymel.core as pm
 import maya.cmds as mc
 
 from anima import stalker_server_internal_address
-from anima.publish import clear_publishers, publisher, staging
+from anima.publish import (clear_publishers, publisher, staging,
+                           PRE_PUBLISHER_TYPE, POST_PUBLISHER_TYPE)
 from anima.exc import PublishError
 from anima.repr import Representation
 from anima.utils import utc_to_local
@@ -924,3 +925,32 @@ def make_material_names_unique():
 
             if not shading_engine.name().startswith(base_material_name):
                 shading_engine.rename(desired_shading_engine_name)
+
+
+@publisher(publisher_type=POST_PUBLISHER_TYPE)
+def create_representations():
+    """creates the representations of the scene
+    """
+    v = staging.get('version')
+
+    from anima.env import mayaEnv
+    if not v:
+        m_env = mayaEnv.Maya()
+        v = m_env.get_current_version()
+
+    if not v:
+        return
+
+    if Representation.repr_separator in v.take_name:
+        return
+
+    from anima.env.mayaEnv import repr_tools
+    gen = repr_tools.RepresentationGenerator(version=v)
+    gen.generate_all()
+
+    # re-open the original scene
+    m_env = mayaEnv.Maya()
+    current_version = m_env.get_current_version()
+
+    if current_version != v:
+        m_env.open(v, force=True)
