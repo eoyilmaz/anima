@@ -22,7 +22,8 @@ from anima.ui.progress_dialog import ProgressDialogManager
 from anima.env.mayaEnv import publish as publish_scripts  # register publishers
 reload(publish_scripts)
 
-from anima.publish import run_publishers, staging
+from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
+                           POST_PUBLISHER_TYPE)
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -214,7 +215,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # before running use the staging area to store the current version
             staging['version'] = version
-            run_publishers(type_name)
+            run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
             # do not forget to clean up the staging area
             staging.clear()
 
@@ -354,7 +355,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # before running use the staging area to store the current version
             staging['version'] = version
-            run_post_publishers(type_name)
+            run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
             # do not forget to clean up the staging area
             staging.clear()
 

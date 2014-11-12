@@ -651,12 +651,17 @@ def replace_with_bbox(nodes):
             continue
 
         # check the shape
-        node_shape = node.getShape()
-        if not node_shape:
-            # check if it has child nodes
-            if len(node.getChildren()) == 0:
-                continue
-        elif not isinstance(node_shape, allowed_shapes):
+        # check if it has at least one shape under it
+        has_shape = False
+        children = node.getChildren()
+        while len(children) and not has_shape:
+            child = children.pop(0)
+            if isinstance(child, allowed_shapes):
+                has_shape = True
+                break
+            children += child.getChildren()
+
+        if not has_shape:
             continue
 
         bbox = cube_from_bbox(node.boundingBox())
