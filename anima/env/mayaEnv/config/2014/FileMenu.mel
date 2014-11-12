@@ -42,12 +42,12 @@ global proc forceSavePreferences()
 
 global proc run_pre_publishers()
 {
-    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_pre_publishers(););
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_pre_publishers();");
 }
 
 global proc run_post_publishers()
 {
-    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_pre_publishers(););
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_pre_publishers();");
 }
 
 global proc FileMenu_SaveItem()
