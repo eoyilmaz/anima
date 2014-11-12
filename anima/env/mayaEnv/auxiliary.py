@@ -730,3 +730,73 @@ def create_arnold_stand_in(path=None):
         stand_in.setAttr('dso', path)
 
     return stand_in
+
+
+def run_pre_publishers():
+    """runs pre publishers if the current scene is a published version
+
+    This is written to prevent users to save on top of a Published version and
+    create a back door to skip un publishable scene to publish
+    """
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+
+    version = m_env.get_current_version()
+
+    # check if we have a proper version
+    if not version:
+        return
+
+    # check if it is a Representation
+    from anima.repr import Representation
+    if Representation.repr_separator in version.take_name:
+        return
+
+    if version.is_published:
+        from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
+                                   POST_PUBLISHER_TYPE)
+        # before doing anything run all publishers
+        type_name = ''
+        if version.task.type:
+            type_name = version.task.type.name
+
+        # before running use the staging area to store the current version
+        staging['version'] = version
+        run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
+        # do not forget to clean up the staging area
+        staging.clear()
+
+
+def run_post_publishers():
+    """runs post publishers if the current scene is a published version
+
+    This is written to prevent users to save on top of a Published version and
+    create a back door to skip un publishable scene to publish
+    """
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+
+    version = m_env.get_current_version()
+
+    # check if we have a proper version
+    if not version:
+        return
+
+    # check if it is a Representation
+    from anima.repr import Representation
+    if Representation.repr_separator in version.take_name:
+        return
+
+    if version.is_published:
+        from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
+                                   POST_PUBLISHER_TYPE)
+        # before doing anything run all publishers
+        type_name = ''
+        if version.task.type:
+            type_name = version.task.type.name
+
+        # before running use the staging area to store the current version
+        staging['version'] = version
+        run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
+        # do not forget to clean up the staging area
+        staging.clear()
