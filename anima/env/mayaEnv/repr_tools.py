@@ -217,6 +217,23 @@ class RepresentationGenerator(object):
         # if we came here it must not be a vegetation task task
         return False
 
+    @classmethod
+    def is_exterior_or_interior_task(cls, task):
+        """checks if the given task is the first Layout task of an
+        Exterior or Interior task.
+
+        :param task: a stalker.task
+        :return:
+        """
+
+        if task.type and task.type.name.lower() == 'layout':
+            parent = task.parent
+            if parent and parent.parent and parent.parent.type \
+               and parent.parent.type.name.lower() in ['exterior', 'interior']:
+                return True
+
+        return False
+
     def _validate_version(self, version):
         """validates the given version value
 
@@ -262,7 +279,6 @@ class RepresentationGenerator(object):
         self.generate_proxy()
         self.generate_gpu()
         self.generate_ass()
-        self.generate_flat()
 
     def generate_bbox(self):
         """generates the BBox representation of the current scene
@@ -324,9 +340,17 @@ class RepresentationGenerator(object):
             for ref in pm.listReferences():
                 ref.load()
 
+        # if this is an Exterior/Interior -> Layout -> Hires task flatten it
+        if self.is_exterior_or_interior_task(task):
+            # and import all of the references
+            all_refs = pm.listReferences()
+            while len(all_refs) != 0:
+                for ref in all_refs:
+                    ref.importContents()
+                all_refs = pm.listReferences()
+
         # save the scene as {{original_take}}___BBOX
         # use maya
-
         take_name = '%s%s%s' % (
             self.base_take_name, Representation.repr_separator, 'BBOX'
         )
@@ -479,6 +503,16 @@ class RepresentationGenerator(object):
         for ref in pm.listReferences():
             # load all references
             ref.load()
+
+        # if this is an Exterior/Interior -> Layout -> Hires task flatten it
+        task = self.version.task
+        if self.is_exterior_or_interior_task(task):
+            # and import all of the references
+            all_refs = pm.listReferences()
+            while len(all_refs) != 0:
+                for ref in all_refs:
+                    ref.importContents()
+                all_refs = pm.listReferences()
 
         # 6. save the scene as {{original_take}}___GPU
         # use maya
@@ -725,6 +759,15 @@ class RepresentationGenerator(object):
             node.setAttr("ai_surface_shader", (0, 0, 0), type="float3")
             node.setAttr("ai_volume_shader", (0, 0, 0), type="float3")
 
+        # if this is an Exterior/Interior -> Layout -> Hires task flatten it
+        if self.is_exterior_or_interior_task(task):
+            # and import all of the references
+            all_refs = pm.listReferences()
+            while len(all_refs) != 0:
+                for ref in all_refs:
+                    ref.importContents()
+                all_refs = pm.listReferences()
+
         # save the scene as {{original_take}}___ASS
         # use maya
         take_name = '%s%s%s' % (
@@ -735,52 +778,3 @@ class RepresentationGenerator(object):
 
         # new scene
         pm.newFile(force=True)
-
-    def generate_flat(self):
-        """generates the flat version
-        """
-        self.version = self._validate_version(self.version)
-
-        self.open_version(self.version)
-
-        task = self.version.task
-
-        # generate flat representation of the Layout task of Exteriors or
-        # Interiors only
-        if task.type and task.type.name.lower() == 'layout':
-            parent = task.parent
-            if parent and parent.parent and parent.parent.type \
-               and parent.parent.type.name.lower() in ['exterior', 'interior']:
-                # we found a proper layout to flatten do your job
-                # fist expect to have an ASS repr
-                r = Representation(version=self.version)
-                ass_v = r.find('ASS')
-                if ass_v:
-                    # open it
-                    self.maya_env.open(version=ass_v, force=True,
-                                       skip_update_check=True)
-
-                    # and import all of the references
-                    all_refs = pm.listReferences()
-                    while len(all_refs) != 0:
-                        for ref in all_refs:
-                            ref.importContents()
-                        all_refs = pm.listReferences()
-
-                    # save the scene as {{original_take}}___ASS
-                    # use maya
-                    take_name = '%s%s%s' % (
-                        self.base_take_name,
-                        Representation.repr_separator,
-                        'FLAT'
-                    )
-                    v = self.get_latest_repr_version(take_name)
-                    self.maya_env.save_as(v)
-
-                    # new scene
-                    pm.newFile(force=True)
-
-                else:
-                    raise RuntimeError(
-                        'Please generate the ASS representation first!'
-                    )

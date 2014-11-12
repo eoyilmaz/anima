@@ -1909,7 +1909,6 @@ class Reference(object):
         generate_bbox = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
         generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
         generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
-        generate_flat = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v4=1) else 0
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -1950,11 +1949,7 @@ class Reference(object):
                 if generate_ass is True and '@ASS' in cv.take_name:
                     generate_ass = False
 
-                if generate_flat is True and '@FLAT' in cv.take_name:
-                    generate_flat = False
-
-        total_number_of_reprs = \
-            generate_bbox + generate_gpu + generate_ass + generate_flat
+        total_number_of_reprs = generate_bbox + generate_gpu + generate_ass
         caller = pdm.register(total_number_of_reprs, title='Generate Reprs')
 
         gen.version = source_version
@@ -1969,10 +1964,6 @@ class Reference(object):
 
         if generate_ass:
             gen.generate_ass()
-            caller.step()
-
-        if generate_flat:
-            gen.generate_flat()
             caller.step()
 
         # now open the source version again
@@ -1993,7 +1984,6 @@ class Reference(object):
         generate_bbox = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
         generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
         generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
-        generate_flat = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v4=1)
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -2046,7 +2036,6 @@ class Reference(object):
             local_generate_bbox = generate_bbox
             local_generate_gpu = generate_gpu
             local_generate_ass = generate_ass
-            local_generate_flat = generate_flat
             if skip_existing:
                 # check if there is a BBOX, GPU or ASS repr
                 # generated from this version
@@ -2061,9 +2050,6 @@ class Reference(object):
                     if local_generate_ass is True and '@ASS' in cv.take_name:
                         local_generate_ass = False
 
-                    if local_generate_flat is True and '@FLAT' in cv.take_name:
-                        local_generate_flat = False
-
             gen.version = v
             # generate representations
             if local_generate_bbox:
@@ -2074,9 +2060,6 @@ class Reference(object):
 
             if local_generate_ass:
                 gen.generate_ass()
-
-            if local_generate_flat:
-                gen.generate_flat()
 
             caller.step()
 
@@ -2093,8 +2076,6 @@ class Reference(object):
             gen.generate_gpu()
         if generate_ass:
             gen.generate_ass()
-        if generate_flat:
-            gen.generate_flat()
 
 
 class Modeling(object):
