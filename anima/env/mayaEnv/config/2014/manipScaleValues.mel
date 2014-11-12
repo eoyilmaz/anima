@@ -1,0 +1,180 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+
+global int $showScaleManipPivotWarning = 1;
+
+global proc orientAxesChanged( string $toolName)
+{
+	float $angles[] = `floatFieldGrp -q -v manipScaleOrientFields`;
+	manipScaleContext -e -orientAxes $angles[0] $angles[1] $angles[2] $toolName;
+}
+
+global proc manipScaleValues ( string $toolName ) {
+
+	global int $showScaleManipPivotWarning;
+
+	string $parent = (`toolPropertyWindow -q -location` + "|manipScale");
+	setParent $parent;
+
+	// Initialize settings
+	//
+	int $manipMode = `manipScaleContext -q -mode $toolName`;
+	switch ($manipMode)
+	{
+		case 0:
+			radioButtonGrp -e -sl 1 ModeObjectLocal_RB;
+			$manipMode = 1;
+		break;
+
+		case 1:
+			radioButtonGrp -e -sl 2  ModeObjectLocal_RB;
+			$manipMode = 2;
+		break;
+
+		case 2:
+			radioButtonGrp -e -sl 1 ModeWorldNormal_RB;
+			$manipMode = 3;
+		break;
+
+		case 3 :
+			radioButtonGrp -e -sl 2 ModeWorldNormal_RB;
+			$manipMode = 4 ;
+		break;
+
+		case 4 :
+			radioButtonGrp -e -sl 1 ModeRotationAuto_RB;
+			$manipMode = 5 ;
+		break;
+
+		case 5 :
+			radioButtonGrp -e -sl 1 ModeAlongLive_RB;
+			$manipMode = 6 ;
+		break;
+
+		case 6 :
+			radioButtonGrp -e -sl 1 ModeCustomAxis_RB;
+			$manipMode = 6 ;
+		break;
+
+		case 9 :
+			radioButtonGrp -e -sl 2 ModeRotationAuto_RB;
+			$manipMode = 9 ;
+	}
+
+	// Object vs Local vs Global Space vs vertex Normal
+	//
+	radioButtonGrp -e
+		-nrb 2
+		-on1 ("manipScaleContext -e -mode 0 " + $toolName)
+		-on2 ("manipScaleContext -e -mode 1 " + $toolName)
+		ModeObjectLocal_RB ;
+
+	radioButtonGrp -e
+		-nrb 2
+		-on1 ("manipScaleContext -e -mode 0 " + $toolName + "; warning(\"You've set the manipulator to World, which is forbidden in Anima.\");")
+		-on2 ("manipScaleContext -e -mode 3 " + $toolName)
+		ModeWorldNormal_RB;
+
+	radioButtonGrp -e
+		-nrb 2
+		-on1 ("manipScaleContext -e -mode 4 " + $toolName)
+		-on2 ("manipScaleContext -e -mode 9 " + $toolName)
+		ModeRotationAuto_RB;
+
+	radioButtonGrp -e
+		-nrb 1
+		-on1 ("manipScaleContext -e -mode 5 " + $toolName)
+		ModeAlongLive_RB;
+
+	radioButtonGrp -e
+		-nrb 1
+		-on1 ("manipScaleContext -e -mode 6 " + $toolName)
+		ModeCustomAxis_RB;
+
+	float $orientation[] = `manipScaleContext -q -orientAxes $toolName`;
+	floatFieldGrp -e 
+		-v1 $orientation[0] -v2 $orientation[1] -v3 $orientation[2] 
+		-cc ("orientAxesChanged " + $toolName)
+		manipScaleOrientFields;
+
+	int $pivotMode = 1;
+	if( `manipScaleContext -q -useManipPivot $toolName`)
+	{
+		if( $showScaleManipPivotWarning )
+		{
+			warning (uiRes("m_manipScaleValues.kManipPivotNotForAnimation"));
+			$showScaleManipPivotWarning = 0;
+		}
+		$pivotMode = 3;
+	}
+	else if( `manipScaleContext -q -useObjectPivot $toolName`)
+	{
+		$pivotMode = 2;
+	}
+	radioButtonGrp -e
+		-nrb 3
+		-on1 ("manipScaleContext -e -useManipPivot 0 -useObjectPivot 0 " + $toolName)
+		-on2 ("manipScaleContext -e -useManipPivot 0 -useObjectPivot 1 " + $toolName)
+		-on3 ("manipScaleContext -e -useManipPivot 1 -useObjectPivot 0 " + $toolName)
+		-select $pivotMode
+		manipPivotRadio;
+		
+	reflectionValues( );
+	softSelectValues( $parent );
+	commonSelectValues( $parent );
+
+	int    $isSnap  = `manipScaleContext -q -snap $toolName`;
+	int    $isRelative = `manipScaleContext -q -snapRelative $toolName`;
+    float  $snapVal = `manipScaleContext -q -snapValue $toolName`;
+
+	checkBoxGrp -e -v1 $isSnap manipScaleSnapCheck;
+	checkBoxGrp -e -enable $isSnap -v1 $isRelative manipScaleSnapRelative;
+	floatFieldGrp -e -enable $isSnap -v1 $snapVal manipScaleSnapValue;
+
+	checkBoxGrp -e 
+		-cc1 ("manipScaleContext -e -snap #1 " + $toolName)
+		manipScaleSnapCheck;
+
+	checkBoxGrp -e 
+		-cc1 ("manipScaleContext -e -snapRelative #1 " + $toolName)
+		manipScaleSnapRelative;
+
+	floatFieldGrp -e 
+		-cc ("manipScaleContext -e -snapValue #1" + " " + $toolName )
+		manipScaleSnapValue;
+
+	int		$pcp = `manipScaleContext -q -preserveChildPosition $toolName`;
+	int 	$puv = `manipScaleContext -q -preserveUV $toolName`;
+
+	checkBoxGrp -e -v1 $pcp scalePreserveChildCheckBx;
+	checkBoxGrp -e -v1 $puv scalePreserveUVCheckBx;
+
+	checkBoxGrp -e -cc1 ("setTRSPreserveChildPosition #1")
+		scalePreserveChildCheckBx;
+
+	checkBoxGrp -e -cc1 ("setTRSPreserveUVs #1")
+		scalePreserveUVCheckBx;
+
+	string $helpTag = "ScaleTool";
+	toolPropertySetCommon $toolName "scale_M.png" $helpTag;
+	toolPropertySelect "manipScale";
+}

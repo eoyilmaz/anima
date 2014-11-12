@@ -307,11 +307,11 @@ def UI():
                 pm.checkBoxGrp(
                     'generate_repr_types_checkbox_grp',
                     label='Reprs',
-                    numberOfCheckBoxes=4,
-                    labelArray4=['BBOX', 'GPU', 'ASS', 'FLAT'],
-                    cl5=['left', 'left', 'left', 'left', 'left'],
-                    cw5=[50, 50, 50, 50, 50],
-                    valueArray4=[1, 1, 1, 1]
+                    numberOfCheckBoxes=3,
+                    labelArray3=['BBOX', 'GPU', 'ASS'],
+                    cl4=['left', 'left', 'left', 'left'],
+                    cw4=[50, 50, 50, 50],
+                    valueArray3=[1, 1, 1]
                 )
 
             pm.checkBox(

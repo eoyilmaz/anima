@@ -1,0 +1,1064 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+//
+//  Creation Date:  18 April 1997
+//
+//  Description:
+//      camera default options box.  The content for each tab 
+//		is not created until it is accessed for the first time.
+//
+//////////////////////////////////////////////////////////////////////
+//
+//  Procedure Name:
+//      setOptionVars
+//
+//  Description:
+//		Initialize the option values.
+//
+//  Input Arguments:
+//		Whether to set the options to default values.
+//
+//  Return Value:
+//      None.
+//
+proc setOptionVars(int $forceFactorySettings)
+{
+	//	Center of Interest.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraInterest`) {
+		optionVar -floatValue cameraInterest 5.0;
+	}
+
+	//	Focal Length.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraFocalLength`) {
+		optionVar -floatValue cameraFocalLength 35.0;
+	}
+
+	//	Lens Squeeze Ratio.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraLensSqueeze`) {
+		optionVar -floatValue cameraLensSqueeze 1.0;
+	}
+
+	//	Camera Scale.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraScale`) {
+		optionVar -floatValue cameraScale 1.0;
+	}
+
+	//	Horizontal Film Aperture.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraHorizAper`) {
+		optionVar -floatValue cameraHorizAper 0.935;
+	}
+
+	//	Vertical Film Aperture.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraVertAper`) {
+		optionVar -floatValue cameraVertAper 0.52618110236220472;
+	}
+
+	//	Horizontal Film Offset.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraHorizOffset`) {
+		optionVar -floatValue cameraHorizOffset 0;
+	}
+
+	//	Vertical Film Offset.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraVertOffset`) {
+		optionVar -floatValue cameraVertOffset 0;
+	}
+
+	//	Film Fit.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraFilmFitMode`) {
+		optionVar -intValue cameraFilmFitMode 1; // Fill
+	}
+
+	//	Film Fit Offset.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraFilmFitOffset`) {
+		optionVar -floatValue cameraFilmFitOffset 0.0;
+	}
+
+	//	Overscan.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraOverscan`) {
+		optionVar -floatValue cameraOverscan 1.0;
+	}
+
+	//	Shutter Angle.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraShutterAngle`) {
+		optionVar -floatValue cameraShutterAngle 144.0;
+	}
+
+	//	Near Clip Plane.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraNearClip`) {
+		optionVar -floatValue cameraNearClip 1;
+	}
+
+	//	Far Clip Plane.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraFarClip`) {
+		optionVar -floatValue cameraFarClip 10000.0;
+	}
+
+	//	Orthographic.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraOrtho`) {
+		optionVar -intValue cameraOrtho false;
+	}
+
+	//	Orthographic Width.
+	//
+	if ($forceFactorySettings || !`optionVar -exists cameraOrthoWidth`) {
+		optionVar -floatValue cameraOrthoWidth 30.0;
+	}
+
+    //  2D Pan/Zoom Enabled.
+    //
+    if ($forceFactorySettings || !`optionVar -exists cameraPanZoomEnabled`) {
+        optionVar -intValue cameraPanZoomEnabled false;
+    }
+
+    // Horizontal Pan.
+    //
+    if ($forceFactorySettings || !`optionVar -exists cameraHoriziontalPan`) {
+        optionVar -floatValue cameraHoriziontalPan 0.0;
+    }
+
+    // Vertical Pan.
+    //
+    if ($forceFactorySettings || !`optionVar -exists cameraVerticalPan`) {
+        optionVar -floatValue cameraVerticalPan 0.0;
+    }
+
+    // Zoom.
+    //
+    if ($forceFactorySettings || !`optionVar -exists cameraZoom`) {
+        optionVar -floatValue cameraZoom 1.0;
+    }
+}
+
+//
+//  Procedure Name:
+//      cameraSetup
+//
+//  Description:
+//		Update the state of the option box UI to reflect the option values.
+//
+//  Input Arguments:
+//      parent               - Top level parent layout of the option box UI.
+//                             Required so that UI object names can be 
+//                             successfully resolved.
+//
+//		forceFactorySettings - Whether the option values should be set to
+//                             default values.
+//
+//  Return Value:
+//      None.
+//
+global proc cameraSetup(string $parent, int $forceFactorySettings)
+{
+	//	Retrieve the option settings
+	//
+	setOptionVars($forceFactorySettings);
+
+	setParent $parent;
+
+	//	Query the optionVar's and set the values into the controls.
+
+	//	Center of Interest.
+	//
+	if (`floatSliderGrp -exists cameraInterest`) {
+		floatSliderGrp -edit 
+			-value `optionVar -query cameraInterest`
+			cameraInterest;
+	}
+
+	//	Focal Length.
+	//
+	if (`floatSliderGrp -exists cameraFocalLength`) {
+		floatSliderGrp -edit 
+			-value `optionVar -query cameraFocalLength`
+		cameraFocalLength;
+	}
+
+	//	Lens Squeeze Ratio.
+	//
+	if (`floatSliderGrp -exists cameraLensSqueeze`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraLensSqueeze`
+			cameraLensSqueeze;
+	}
+
+	//	Camera Scale.
+	//
+	if (`floatSliderGrp -exists cameraScale`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraScale`
+			cameraScale;
+	}
+
+	//	Horizontal Film Aperture.
+	//
+	if (`floatSliderGrp -exists cameraHorizAper`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraHorizAper`
+			cameraHorizAper;
+	}
+
+	//	Vertical Film Aperture.
+	//
+	if (`floatSliderGrp -exists cameraVertAper`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraVertAper`
+			cameraVertAper;
+	}
+
+	//	Horizontal Film Offset.
+	//
+	if (`floatSliderGrp -exists cameraHorizOffset`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraHorizOffset`
+			cameraHorizOffset;
+	}
+
+	//	Vertical Film Offset.
+	//
+	if (`floatSliderGrp -exists cameraVertOffset`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraVertOffset`
+			cameraVertOffset;
+	}
+
+	//	Film Fit.
+	//
+	if (`optionMenuGrp -exists cameraFilmFit`) {
+		int $index = `optionVar -query cameraFilmFitMode`;
+		if($index > 0) {
+			optionMenuGrp -edit -select $index cameraFilmFit;
+		}
+	}
+
+	//	Film Fit Offset.
+	//
+	if (`floatSliderGrp -exists cameraFilmFitOffset`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraFilmFitOffset`
+			cameraFilmFitOffset;
+	}
+
+	//	Overscan.
+	//
+	if (`floatSliderGrp -exists cameraOverscan`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraOverscan`
+			cameraOverscan;
+	}
+
+	//	Shutter Angle.
+	//
+	if (`floatSliderGrp -exists cameraShutterAngle`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraShutterAngle`
+			cameraShutterAngle;
+	}
+
+	//	Near Clip Plane.
+	//
+	if (`floatSliderGrp -exists cameraNearClip`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraNearClip`
+			cameraNearClip;
+	}
+
+	//	Far Clip Plane.
+	//
+	if (`floatSliderGrp -exists cameraFarClip`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraFarClip`
+			cameraFarClip;
+	}
+
+	//	Orthographic.
+	//
+	if (`checkBoxGrp -exists cameraOrtho`) {
+		checkBoxGrp -edit
+			-value1 `optionVar -query cameraOrtho`
+			cameraOrtho;
+	}
+
+	//	Orthographic Width.
+	//
+	if (`floatSliderGrp -exists cameraOrthoWidth`) {
+		floatSliderGrp -edit
+			-value `optionVar -query cameraOrthoWidth`
+			cameraOrthoWidth;
+	}
+
+    //  2D Pan/Zoom Enabled.
+    //
+    if (`checkBoxGrp -exists cameraPanZoomEnabled`) {
+        checkBoxGrp -edit
+            -value1 `optionVar -query cameraPanZoomEnabled`
+            cameraPanZoomEnabled;
+    }
+
+    //  Horizontal Pan.
+    //
+    if (`floatSliderGrp -exists cameraHorizontalPan`) {
+        floatSliderGrp -edit
+            -value `optionVar -query cameraHorizontalPan`
+            cameraHorizontalPan;
+    }
+
+    //  Vertical Pan.
+    //
+    if (`floatSliderGrp -exists cameraVerticalPan`) {
+        floatSliderGrp -edit
+            -value `optionVar -query cameraVerticalPan`
+            cameraVerticalPan;
+    }
+
+    //  Zoom.
+    //
+    if (`floatSliderGrp -exists cameraZoom`) {
+        floatSliderGrp -edit
+            -value `optionVar -query cameraZoom`
+            cameraZoom;
+    }
+}
+
+//
+//  Procedure Name:
+//      cameraCallback
+//
+//  Description:
+//		Update the option values with the current state of the option box UI.
+//
+//  Input Arguments:
+//      parent - Top level parent layout of the option box UI.  Required so
+//               that UI object names can be successfully resolved.
+//
+//		doIt   - Whether the command should execute.
+//
+//  Return Value:
+//      None.
+//
+global proc cameraCallback(string $parent, int $doIt)
+{
+    setParent $parent;
+	
+	//	Set the optionVar's from the control values, and then
+	//	perform the command.
+
+	//	Center of Interest.
+	//
+	if (`floatSliderGrp -exists cameraInterest`) {
+		optionVar -floatValue cameraInterest
+			`floatSliderGrp -query -value cameraInterest`;
+	}
+
+	//	Focal Length.
+	//
+	if (`floatSliderGrp -exists cameraFocalLength`) {
+		optionVar -floatValue cameraFocalLength
+			`floatSliderGrp -query -value cameraFocalLength`;
+	}
+
+	//	Lens Squeeze Ratio.
+	//
+	if (`floatSliderGrp -exists cameraLensSqueeze`) {
+		optionVar -floatValue cameraLensSqueeze
+			`floatSliderGrp -query -value cameraLensSqueeze`;
+	}
+
+	//	Camera Scale.
+	//
+	if (`floatSliderGrp -exists cameraScale`) {
+		optionVar -floatValue cameraScale
+			`floatSliderGrp -query -value cameraScale`;
+	}
+
+	//	Horizontal Film Aperture.
+	//
+	if (`floatSliderGrp -exists cameraHorizAper`) {
+		optionVar -floatValue cameraHorizAper
+			`floatSliderGrp -query -value cameraHorizAper`;
+	}
+
+	//	Vertical Film Aperture.
+	//
+	if (`floatSliderGrp -exists cameraVertAper`) {
+		optionVar -floatValue cameraVertAper
+			`floatSliderGrp -query -value cameraVertAper`;
+	}
+
+	//	Horizontal Film Offset.
+	//
+	if (`floatSliderGrp -exists cameraHorizOffset`) {
+		optionVar -floatValue cameraHorizOffset
+			`floatSliderGrp -query -value cameraHorizOffset`;
+	}
+
+	//	Vertical Film Offset.
+	//
+	if (`floatSliderGrp -exists cameraVertOffset`) {
+		optionVar -floatValue cameraVertOffset
+			`floatSliderGrp -query -value cameraVertOffset`;
+	}
+
+	//	Film Fit.
+	//
+	if (`optionMenuGrp -exists cameraFilmFit`) {
+		optionVar -intValue cameraFilmFitMode
+			`optionMenuGrp -query -select cameraFilmFit`;
+	}
+
+	//	Film Fit Offset.
+	//
+	if (`floatSliderGrp -exists cameraFilmFitOffset`) {
+		optionVar -floatValue cameraFilmFitOffset
+			`floatSliderGrp -query -value cameraFilmFitOffset`;
+	}
+
+	//	Overscan.
+	//
+	if (`floatSliderGrp -exists cameraOverscan`) {
+		optionVar -floatValue cameraOverscan
+			`floatSliderGrp -query -value cameraOverscan`;
+	}
+
+	//	Shutter Angle.
+	//
+	if (`floatSliderGrp -exists cameraShutterAngle`) {
+		optionVar -floatValue cameraShutterAngle
+			`floatSliderGrp -query -value cameraShutterAngle`;
+	}
+
+	//	Near Clip Plane.
+	//
+	if (`floatSliderGrp -exists cameraNearClip`) {
+		optionVar -floatValue cameraNearClip
+			`floatSliderGrp -query -value cameraNearClip`;
+	}
+
+	//	Far Clip Plane.
+	//
+	if (`floatSliderGrp -exists cameraFarClip`) {
+		optionVar -floatValue cameraFarClip
+			`floatSliderGrp -query -value cameraFarClip`;
+	}
+
+	//	Orthographic.
+	//
+	if (`checkBoxGrp -exists cameraOrtho`) {
+		optionVar -intValue cameraOrtho
+			`checkBoxGrp -query -value1 cameraOrtho`;
+	}
+
+	//	Orthographic Width.
+	//
+	if (`floatSliderGrp -exists cameraOrthoWidth`) {
+		optionVar -floatValue cameraOrthoWidth
+			`floatSliderGrp -query -value cameraOrthoWidth`;
+	}
+
+	//	2D Pan/Zoom Enabled.
+	//
+	if (`checkBoxGrp -exists cameraPanZoomEnabled`) {
+		optionVar -intValue cameraPanZoomEnabled
+			`checkBoxGrp -query -value1 cameraPanZoomEnabled`;
+	}
+
+    //  Horizontal Pan.
+    //
+    if (`checkBoxGrp -exists cameraHorizontalPan`) {
+        optionVar -floatValue cameraHorizontalPan
+            `floatSliderGrp -query -value cameraHorizontalPan`;
+    }
+
+    //  Vertical Pan.
+    //
+    if (`checkBoxGrp -exists cameraVerticalPan`) {
+        optionVar -floatValue cameraVerticalPan
+            `floatSliderGrp -query -value cameraVerticalPan`;
+    }
+
+    //  Zoom.
+    //
+    if (`checkBoxGrp -exists cameraZoom`) {
+        optionVar -floatValue cameraZoom
+            `floatSliderGrp -query -value cameraZoom`;
+    }
+
+	if ($doIt) {
+		string $performCommand = "";
+		int    $cameraCount = `optionVar -q cameraNodeCount`;
+		
+		switch( $cameraCount ) {
+			case 2:
+				$performCommand = "performCameraAim 0";
+				break;
+			case 3:
+				$performCommand = "performCameraAimUp 0";
+				break;
+			default:
+				$performCommand = "performCameraOnly 0";
+				break;
+		}
+
+		eval( $performCommand );
+		addToRecentCommandQueue $performCommand "Camera";
+	}
+}
+
+//
+//  Procedure Name:
+//      createCameraTabUI
+//
+//  Description:
+//		Create the tab UI.  The contents of each tab are created only 
+//		when it is required, ie. if the tab is initially visible or 
+//		if the tab is selected by the user.
+//
+//  Input Arguments:
+//      The name of the tab layout.
+//
+//  Return Value:
+//      None.
+//
+global proc createCameraTabUI(string $tabLayout)
+{
+	string $tab[] = `tabLayout -query -childArray $tabLayout`;
+	int $currentTabIndex = `tabLayout -query -selectTabIndex $tabLayout`;
+
+	//	Determine if the UI for this tab has been created yet.
+	//	This is accomplished by querying the number of children
+	//	in the current tab.  If the tab has no children then the UI
+	//	must be created.
+	//
+	if (0 == `columnLayout -query -numberOfChildren $tab[$currentTabIndex-1]`) {
+
+		setParent $tab[$currentTabIndex-1];
+
+		string $label;
+		int $index;
+
+		//	Activate the default UI template so that the layout of this 
+		//	option box is consistent with the layout of the rest of the 
+		//	application.
+		//
+		setUITemplate -pushTemplate DefaultTemplate;
+
+		//	Turn on the wait cursor.
+		//
+		waitCursor -state 1;
+
+		//	The current tab has no children.  Determine which tab is
+		//	active and create its UI.
+		//
+		//	RECOMMENDATION:  Use the 'Grp' commands where possible because
+		//	they obey the formatting specified in the default template.
+		//	This will result in a more consistent look throughout the
+		//	application.
+		//	
+		if (1 == $currentTabIndex) {
+	
+			// This layout will make the frame layouts line up
+			// on the right.
+			//
+			columnLayout 
+				-adj true 
+				-columnAttach "both" 5 
+				-columnOffset "both" 5; 
+			
+			frameLayout -label (uiRes("m_performCamera.kCameraProperties"))
+				-collapsable true -collapse false cameraProperties;
+				
+				columnLayout -adj true;
+
+	    		//	Create UI for the first tab.
+	    		//
+	    		floatSliderGrp -label (uiRes("m_performCamera.kCenterOfInterest"))  -min 0.1 -max 1000
+	    			cameraInterest;
+					
+				setParent ..;
+    		setParent ..;
+    
+   			frameLayout -label (uiRes("m_performCamera.kLensProperties"))
+				-collapsable true -collapse false lensProperties;
+				
+				columnLayout;    
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kFocalLength"))  -min 0.001 -max 1000
+	    			cameraFocalLength;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kLensSqueezeRatio"))  -min 0.001 -max 10
+	    			cameraLensSqueeze;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kCameraScale"))  -min 0.001 -max 10
+	    			cameraScale;
+	    		
+   				setParent ..;
+			setParent ..;
+
+   			frameLayout -label (uiRes("m_performCamera.kFilmBackProperties"))
+				-collapsable true -collapse false cameraFilmBackProperties;
+				
+				columnLayout;    
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kHorizontalFilmAperture"))  -min .1 -max 10
+	    			cameraHorizAper;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kVerticalFilmAperture"))  -min .1 -max 10
+	    			cameraVertAper;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kHorizontalFilmOffset"))  -min -10 -max 10
+	    			cameraHorizOffset;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kVerticalFilmOffset"))  -min -10 -max 10
+	    			cameraVertOffset;
+
+				optionMenuGrp -label (uiRes("m_performCamera.kFilmFit")) 
+					cameraFilmFit;
+					menuItem -label (uiRes("m_performCamera.kHorizontal"));
+					menuItem -label (uiRes("m_performCamera.kVertical"));
+					menuItem -label (uiRes("m_performCamera.kFill"));
+					menuItem -label (uiRes("m_performCamera.kOverscan"));
+				setParent -menu ..;
+				
+	    		floatSliderGrp -label (uiRes("m_performCamera.kFilmFitOffset"))
+					-min -5 -max 5 cameraFilmFitOffset;
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kOverscanLabel"))
+					-min 0.1 -max 10 cameraOverscan;
+
+				setParent..;
+			setParent..;
+
+   			frameLayout -label (uiRes("m_performCamera.kMotionBlur"))
+				-collapsable true -collapse false cameraMotionBlurFrame;
+				
+				columnLayout;    
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kShutterAngle"))  -min 0.1 -max 180
+	    			cameraShutterAngle;
+
+				setParent..;
+			setParent..;
+
+   			frameLayout -label (uiRes("m_performCamera.kClippingPlanes"))
+				-collapsable true -collapse false cameraClippingPlanes;
+				
+				columnLayout;    
+
+	    		floatSliderGrp -label (uiRes("m_performCamera.kNearClipPlane")) 
+                    -fieldMinValue -1000 -fieldMaxValue 1000000000
+                    -min 0.1 -max 1000
+	    			-pre 2 cameraNearClip;
+				
+	    		floatSliderGrp -label (uiRes("m_performCamera.kFarClipPlane")) 
+                    -fieldMinValue -1000 -fieldMaxValue 1000000000
+                    -min 0.1 -max 10000
+	    			-pre 2 cameraFarClip;
+
+				setParent..;
+			setParent..;
+
+   			frameLayout -label (uiRes("m_performCamera.kOrthographicViews"))
+				-collapsable true -collapse false cameraOrthoFrame;
+				
+				columnLayout;    
+
+				checkBoxGrp -ncb 1 -label1 (uiRes("m_performCamera.kOrthographic")) 
+					cameraOrtho;
+				
+	    		floatSliderGrp -label (uiRes("m_performCamera.kOrthographicWidth"))  -min 0.1 -max 1000
+	    			cameraOrthoWidth;
+
+				setParent..;
+			setParent..;
+
+   			frameLayout -label (uiRes("m_performCamera.kPanZoom"))
+				-collapsable true -collapse false cameraPanZoomFrame;
+				
+				columnLayout;    
+
+				checkBoxGrp -ncb 1 -label1 (uiRes("m_performCamera.kPanZoomEnabled")) 
+					cameraPanZoomEnabled;
+				
+                floatSliderGrp -label (uiRes("m_performCamera.kHorizontalPan"))  -min -10 -max 10
+	    			cameraHorizontalPan;
+
+                floatSliderGrp -label (uiRes("m_performCamera.kVerticalPan"))  -min -10 -max 10
+	    			cameraVerticalPan;
+
+                floatSliderGrp -label (uiRes("m_performCamera.kZoom"))  -min 0.001 -max 1000
+	    			cameraZoom;
+
+				setParent..;
+			setParent..;
+		}
+
+		//	Update the control values to match the options.
+		//
+		eval (("cameraSetup " + $tabLayout + " " + 0));	
+	
+		//	Turn off the wait cursor.
+		//
+		waitCursor -state 0;
+		
+		//	Deactivate the default UI template.
+		//
+		setUITemplate -popTemplate;
+	}
+}
+
+//
+//  Procedure Name:
+//      cameraOptions
+//
+//  Description:
+//		Construct the option box UI.  Involves accessing the standard option
+//		box and customizing the UI accordingly.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+// ********* Change 'camera' in this proc to be the name of your command
+proc cameraOptions()
+{
+	//	Name of the command for this option box.
+	//
+	string $commandName = "camera";
+
+	//	Build the option box actions.
+	//
+	string $callback = ($commandName + "Callback");
+	string $setup = ($commandName + "Setup");
+
+	//	STEP 1:  Get the option box.
+	//	============================
+	//
+	//  The value returned is the name of the layout to be used as
+	//	the parent for the option box UI.
+	//
+	string $layout = getOptionBox();
+	setParent $layout;
+	
+	//	STEP 2:  Pass the command name to the option box.
+	//	=================================================
+	//
+	//	Any default option box behaviour based on the command name is set 
+	//	up with this call.  For example, updating the 'Help' menu item with
+	//	the name of the command.
+	//
+	setOptionBoxCommandName($commandName);
+
+	//	STEP 3:  Activate the default UI template.
+	//	==========================================
+	//
+	//	Activate the default UI template so that the layout of this 
+	//	option box is consistent with the layout of the rest of the 
+	//	application.
+	//
+	//	Note: this option box example delays the creation of the UI
+	//	until it's required.  Therefore this step is moved to the
+	//	procedure where the UI is actually created. 
+	//
+	//setUITemplate -pushTemplate DefaultTemplate;
+
+	//	STEP 4: Create option box contents.
+	//	===================================
+	//	
+	//	This, of course, will vary from option box to option box.	
+	
+	//	Demonstrate the delaying of UI creation via tab layouts.
+	//	Instead of creating all of the option box UI initially, only
+	//	create that which is initially visible.  Wait, until the 
+	//	other tabs are selected to create the remaining UI.
+	//
+	string $tabLayout = `tabLayout -scrollable 1`;
+
+	//	Attach an action that will be invoked before a tab is selected.
+	//	
+	tabLayout -edit 
+		-tabsVisible false
+		-preSelectCommand ("createCameraTabUI " + $tabLayout)
+		$tabLayout;
+
+	//	Create just the immediate children of the tab layout so that
+	//	the tabs appear.
+	//
+	columnLayout;
+		setParent ..;
+	
+	//	Set the tab labels.
+	//
+	tabLayout -edit
+		$tabLayout;
+
+	//	Create the UI for the tab that is initially visible.
+	//
+	createCameraTabUI($tabLayout);
+
+	//	Step 5: Deactivate the default UI template.
+	//  ===========================================
+	//
+	//	Note: this option box example delays the creation of the UI
+	//	until it's required.  Therefore this step is moved to the
+	//	procedure where the UI is actually created.
+	//
+	//	See also Step 2. 
+	//
+	//setUITemplate -popTemplate;
+
+	//	Step 6: Customize the buttons.  
+	//	==============================
+	//
+	//	Provide more descriptive labels for the buttons.  This is not 
+	//	necessary, but in some cases, for example, a button labelled 
+	//	'Create' may be more meaningful to the user than one labelled
+	//	'Apply'.
+	//
+	//  Disable those buttons that are not applicable to the option box.
+	//
+	//	Attach actions to those buttons that are applicable to the option
+	//	box.  Note that the 'Close' button has a default action attached 
+	//	to it that will hide the window.  If a a custom action is
+	//	attached to the 'Close' button then be sure to call the 'hide the
+	//	option box' procedure within the custom action so that the option
+	//	box is hidden properly.
+
+	//	'Apply' button.
+	//
+	string $applyBtn = getOptionBoxApplyBtn();
+	button -edit
+		-label (uiRes("m_performCamera.kCreate")) 
+		-command ($callback + " " + $tabLayout + " " + 1)
+		$applyBtn;
+
+	//	'Save' button.
+	//
+	string $saveBtn = getOptionBoxSaveBtn();
+	button -edit 
+		-command ($callback + " " + $tabLayout + " " + 0 + "; hideOptionBox")
+		$saveBtn;
+
+	//	'Reset' button.
+	//
+	string $resetBtn = getOptionBoxResetBtn();
+	button -edit 
+		-command ($setup + " " + $tabLayout + " " + 1)
+		$resetBtn;
+
+	//	Step 7: Set the option box title.
+	//	=================================
+	//
+	string $boxTitle = "";
+	string $boxHelpTag = "";
+	int $cameraNodeCount = `optionVar -q cameraNodeCount`;
+	switch( $cameraNodeCount ) {
+		case 2:
+			$boxTitle = (uiRes("m_performCamera.kCreateCameraandAimOptions"));
+			$boxHelpTag = "CreateCameraAim";
+			break;
+		case 3:
+			$boxTitle = (uiRes("m_performCamera.kCreateCameraAimandUpOptions"));
+			$boxHelpTag = "CreateCameraAimUp";
+			break;
+		default:
+			$boxTitle = (uiRes("m_performCamera.kCreateCameraOptions"));
+			$boxHelpTag = "CreateCamera";
+			break;
+	}
+	setOptionBoxTitle( $boxTitle );
+
+	//	Step 8: Customize the 'Help' menu item text.
+	//	============================================
+	//
+	setOptionBoxHelpTag($boxHelpTag);
+
+	//	Step 9: Set the current values of the option box.
+	//	=================================================
+	//
+	//	NOTE:  Can not do this here since we do not know what UI is
+	//	currently visible.  This is moved to where the UI is created.
+	//
+	//eval (($setup + " " + $tabLayout + " " + 0));	
+	
+	//	Step 10: Show the option box.
+	//	=============================
+	//
+	showOptionBox();
+}
+
+//
+//  Procedure Name:
+//      optionBoxExample1Help
+//
+//  Description:
+//		Return a short description about this command.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      string.
+//
+proc string cameraHelp()
+{
+	return 
+	"  Command: camera - creates a camera\n" +
+	"Selection: None.";	
+}
+
+//
+//  Procedure Name:
+//      assembleCmd
+//
+//  Description:
+//		Construct the command that will apply the option box values.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+proc string assembleCmd()
+{
+	string $cmd = "camera";
+
+	setOptionVars(false);
+
+	string $filmFit = "Fill";
+	int $filmFitMode = `optionVar -query cameraFilmFitMode`;
+	if ($filmFitMode == 1) $filmFit = "Horizontal";
+	else if ($filmFitMode == 2) $filmFit = "Vertical";
+	else if ($filmFitMode == 4) $filmFit = "Overscan";
+
+	$cmd = ($cmd 
+ 		+ " -centerOfInterest " + `optionVar -query cameraInterest` 
+ 		+ " -focalLength " + `optionVar -query cameraFocalLength` 
+ 		+ " -lensSqueezeRatio " + `optionVar -query cameraLensSqueeze`
+ 		+ " -cameraScale " + `optionVar -query cameraScale` 
+ 		+ " -horizontalFilmAperture " + `optionVar -query cameraHorizAper` 
+ 		+ " -horizontalFilmOffset " + `optionVar -query cameraHorizOffset` 
+ 		+ " -verticalFilmAperture " + `optionVar -query cameraVertAper` 
+ 		+ " -verticalFilmOffset " + `optionVar -query cameraVertOffset` 
+ 		+ " -filmFit " + $filmFit
+ 		+ " -overscan " + `optionVar -query cameraOverscan` 
+ 		+ " -motionBlur " + `optionVar -query cameraMotionBlur` 
+ 		+ " -shutterAngle " + `optionVar -query cameraShutterAngle` 
+ 		+ " -nearClipPlane " + `optionVar -query cameraNearClip` 
+ 		+ " -farClipPlane " + `optionVar -query cameraFarClip` 
+ 		+ " -orthographic " + `optionVar -query cameraOrtho` 
+ 		+ " -orthographicWidth " + `optionVar -query cameraOrthoWidth` 
+        + " -panZoomEnabled " + `optionVar -query cameraPanZoomEnabled`
+        + " -horizontalPan " + `optionVar -query cameraHorizontalPan`
+        + " -verticalPan " + `optionVar -query cameraVerticalPan`
+        + " -zoom " + `optionVar -query cameraZoom`
+ 		+ "; objectMoveCommand; "
+ 		+ "cameraMakeNode " + `optionVar -query cameraNodeCount` + " \"\"");
+
+	return $cmd;
+}
+
+//
+//  Procedure Name:
+//      performCamera
+//
+//  Description:
+//		Perform the camera command using the corresponding 
+//		option values.  This procedure will also show the option box
+//		window if necessary as well as construct the command string
+//		that will invoke the camera command with the current
+//		option box values.
+//
+//  Input Arguments:
+//      0 - Execute the command.
+//      1 - Show the option box dialog.
+//      2 - Return the command.
+//
+//  Return Value:
+//      None.
+//
+global proc string performCamera(int $action)
+{
+	string $cmd = "";
+
+	switch ($action) {
+
+		//	Execute the command.
+		//
+		case 0:
+			//	Retrieve the option settings
+			//
+			setOptionVars(false);
+
+			//	Get the command.
+			//
+			$cmd = `assembleCmd`;
+
+			//	Execute the command with the option settings.
+			//
+			//	NOTE:  This following evaluation will fail because
+			//	this entire file exists only to serve as an example
+			//	for using option boxes.  There is no command called
+			//	'camera'.
+			//
+			evalEcho($cmd);
+
+			break;
+
+		//	Show the option box.
+		//
+		case 1:
+			cameraOptions;
+			break;
+
+		//	Return the command string.
+		//
+		case 2:
+			//	Retrieve the option settings.
+			//
+			setOptionVars (false);
+
+			//	Get the command.
+			//
+			$cmd = `assembleCmd`;
+			break;
+	}
+	return $cmd;
+}
+

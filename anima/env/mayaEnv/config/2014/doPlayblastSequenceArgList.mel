@@ -1,0 +1,176 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//  Creation Date:  Nov, 2009
+//
+//	Procedure Name:
+//		doPlayblastSequenceArgList
+//
+//	Description:
+//		Playblast an entire sequence
+//
+//	Input Arguments:
+//	$version: The version of this option box.  Used to know how to 
+//	interpret the $args array.
+//		"1" : first verison of shot creation command
+//  
+//	$args
+//	Version 1
+//	[0]		$path :  directory where to put the plasted sequence
+//	[1]		$filename: name of the file
+//	[2]    	$format:  qt avi or iff
+//	[3]		$compression: the codec
+//	[4]		$quality: 0 to 100 range
+//  [5]     $useViewer:  send to the a viewer
+//  [6]     $offscreen:  
+//	[7]		$resolutionW 
+//	[8] 	$resolutionH
+//
+//	Return Value:
+//		none
+//
+
+
+
+global proc
+doPlayblastSequenceArgList( string $version, string $args[])
+{
+	if ( !`exists doPlayblastArgList`) {
+		source doPlayblastArgList.mel;
+	}
+	
+	if( ($version == 1 && size($args) != 6) ||
+		( $version == 3 && size($args) != 9 ) )
+	{
+		print (uiRes("m_doPlayblastSequenceArgList.kArgListWrongLength"));
+		return;
+	}	
+
+	// get the current display options of the view port
+	getEditorViewVars();
+	
+	// set display options from the playblast controls
+	setPlayblastViewVars();
+
+	string $path = $args[0];
+	string $filename = $args[1];
+	string $format  = $args[2];
+	string $compression = $args[3];
+	int $quality = $args[4];
+	int $useViewer = $args[5];
+
+	int $wantOffscreen = 1;   // default to offscreen
+	int $resolutionW = 1024; 
+	int $resolutionH = 778;  
+	
+	if ($version == 3) {
+		$wantOffscreen = $args[6];
+		$resolutionW = $args[7];
+		$resolutionH = $args[8]; 
+	}
+	
+	if(!endsWith($path,"/") &&
+	   !endsWith($path,"\\"))
+	{
+		$path += "/";
+	}
+	$path = substituteAllString($path, "\\", "/");
+	
+	int $useMovie = true;			
+	if( $format == "iff" ) $useMovie = false;
+	
+	string $offscreen = ""; 
+	if ($wantOffscreen) {
+		$offscreen = " -offScreen";
+	}
+	
+	if ($format == "avi") {
+		if(!endsWith($filename,".avi") &&
+		   !endsWith($filename,".AVI"))
+		{
+			$filename += ".avi";
+		}
+	}
+	else if ($format == "qt") {
+		if(!endsWith($filename,".mov") &&
+		   !endsWith($filename,".MOV"))
+		{
+			$filename += ".mov";
+		}
+	} 
+		 
+	string $fullPath = $path + $filename;
+
+	// Change any namespace delimiters into underscores.
+	string $seq = `sequenceManager -q -writableSequencer`;	
+
+	float $start = `getAttr ( $seq + ".minFrame")`;
+	float $end = `getAttr ( $seq + ".maxFrame")`;
+	float $duration = $end - $start;
+	string $cmd ="";
+	
+	if ( $useMovie )
+	{
+		
+		$cmd   = "playblast -fmt \"" + $format +
+					 "\" -startTime " + $start + " -endTime " + $end +
+					 " -sequenceTime 1 -forceOverwrite -filename \"" + $fullPath + 
+					 "\" -clearCache 1 -showOrnaments 1 -percent 100 -wh " +
+					 $resolutionW + " " + $resolutionH + $offscreen +
+					 " -viewer " + $useViewer + " -useTraxSounds";
+					 
+		if ( $compression != "" && $compression != "global") {
+			// TODO internationalization this string. 
+	        // global is used for get the render setting from the global render settings
+	        // this will be used if there is no compression flag set.
+			$cmd += " -compression \""+ $compression + "\" -quality " + $quality;
+		}
+		
+		evalEcho($cmd);
+	}
+	else
+	{
+		// Playblast out the images to IFF files
+		string $image = $fullPath;
+        // TO DO number extensions		
+		
+		$cmd   = "playblast -ifz  -fmt \"iff\" -startTime " + $start + " -endTime " + $end +
+				 " -sequenceTime 1 -forceOverwrite -filename \"" + $fullPath +
+				 "\" -clearCache 1 -showOrnaments 1 -percent 100 -wh " +
+					 $resolutionW + " " + $resolutionH + $offscreen +
+				 " -viewer " + $useViewer + " -fp 4";
+		if ( $compression != ""&& $compression != "global") {
+			// TODO internationalization this string. 
+	        // global is used for get the render setting from the global render settings
+	        // this will be used if there is no compression flag set.
+			$cmd += " -compression \""+ $compression + "\" -quality " + $quality;
+		}
+				
+		evalEcho($cmd);
+	}	
+
+	// recover the display options
+	restoreEditorViewVars();	
+			
+	// Snap back to the first frame in the shot, handy for playback/verification of playblast
+	sequenceManager -currentTime $start;	
+}
+

@@ -749,6 +749,12 @@ class RepresentationGenerator(object):
                 for child_node in root_node.getChildren():
                     pm.delete(child_node.getChildren())
 
+        # There is a bug about StandIns light linking so
+        # set the aiStandIn.overrideLightLinking to False
+        [node.setAttr('overrideLightLinking', False)
+         for node in pm.ls(type='aiStandIn')
+         if node.referenceFile() is None]
+
         # convert all references to ASS
         for ref in pm.listReferences():
             ref.to_repr('ASS')

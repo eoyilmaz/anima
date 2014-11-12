@@ -345,6 +345,19 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         db.DBSession.add(version)
         db.DBSession.commit()
 
+        # run post publishers here
+        if version.is_published:
+            # before doing anything run all publishers
+            type_name = ''
+            if version.task.type:
+                type_name = version.task.type.name
+
+            # before running use the staging area to store the current version
+            staging['version'] = version
+            run_post_publishers(type_name)
+            # do not forget to clean up the staging area
+            staging.clear()
+
         return True
 
     def export_as(self, version):

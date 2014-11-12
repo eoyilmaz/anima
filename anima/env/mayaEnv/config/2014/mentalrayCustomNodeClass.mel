@@ -1,0 +1,295 @@
+//****************************************************************************
+// Contains Maya node classificaation strings for known mental ray shaders.
+//****************************************************************************
+
+global proc int mentalrayCustomNodeClassIsLegacy(string $nodeType)
+{
+    if ($nodeType == "mia_material" ||
+        $nodeType == "misss_fast_shader" ||
+        $nodeType == "mi_car_paint_phen" ||
+        $nodeType == "mi_metallic_paint" ||
+        $nodeType == "misss_fast_shader2" ||
+        $nodeType == "misss_fast_shader" ||
+        $nodeType == "mib_glossy_reflection" ||
+	    $nodeType == "mib_glossy_refraction" ||
+	    $nodeType == "builtin_bsdf_architectural" ||
+	    $nodeType == "builtin_bsdf_architectural_comp" ||
+	    $nodeType == "builtin_bsdf_ashikhmin" ||
+	    $nodeType == "builtin_bsdf_carpaint" ||
+	    $nodeType == "builtin_bsdf_lambert" ||
+	    $nodeType == "builtin_bsdf_mirror" ||
+	    $nodeType == "builtin_bsdf_phong" ||
+        $nodeType == "path_material" ||
+	    $nodeType == "mib_illum_lambert" ||
+	    $nodeType == "mib_illum_phong" ||
+	    $nodeType == "mib_illum_blinn" ||
+	    $nodeType == "mib_illum_cooktorr" ||
+	    $nodeType == "mib_illum_ward" ||
+	    $nodeType == "mib_illum_ward_deriv" ||
+	    $nodeType == "path_material" ||
+        $nodeType == "misss_mia_skin_phen_d" ||
+		$nodeType == "misss_mia_skin2_phen_d" ||
+        $nodeType == "mib_texture_turbulence" ||
+        $nodeType == "mib_texture_checkerboard" ||
+		$nodeType == "mib_texture_polkadot" ||
+		$nodeType == "mib_texture_polkasphere" ||
+		$nodeType == "mib_texture_wave" ||
+		$nodeType == "mib_texture_lookup" ||
+		$nodeType == "mib_texture_lookup2" ||
+		$nodeType == "mib_texture_filter_lookup" ||
+        $nodeType == "mib_bump_basis" ||
+		$nodeType == "mi_bump_flakes" ||
+		$nodeType == "mib_bent_normal_env" ||
+		$nodeType == "mib_bump_basis" ||
+		$nodeType == "mib_bump_map" ||
+		$nodeType == "mib_bump_map2" ||
+		$nodeType == "mib_passthrough_bump_map" ||
+		$nodeType == "mib_texture_remap" ||
+		$nodeType == "mib_texture_rotate" ||
+		$nodeType == "mib_texture_vector" ||
+		$nodeType == "miv_tecture_wave" ||
+        $nodeType == "dielectric_material_photon" ||
+        $nodeType == "transmat" ||
+		$nodeType == "dgs_material" ||
+		$nodeType == "dielectric_material" ||
+        $nodeType == "dielectric_material" ||
+		$nodeType == "dgs_material_photon" ||
+		$nodeType == "transmat_photon" ||
+		$nodeType == "mib_photon_basic" || 
+        $nodeType == "oversampling_lens" ||
+		$nodeType == "mib_lens_clamp" ||
+		$nodeType == "mib_lens_stencil" ||
+		$nodeType == "mib_lookup_background" ||
+		$nodeType == "physical_lens_dof" ||
+        $nodeType == "mib_dielectric" ||
+		$nodeType == "mib_opacity" ||
+		$nodeType == "mib_reflect" ||
+		$nodeType == "mib_refract" ||
+		$nodeType == "mib_refraction_index" ||
+		$nodeType == "mib_transparency" ||
+        $nodeType == "misss_physical" ||
+        $nodeType == "misss_skin_specular" ||
+        $nodeType == "mib_light_infinite" ||
+		$nodeType == "mib_light_point" ||
+		$nodeType == "mib_light_spot" ||
+		$nodeType == "mib_light_photometric" ||
+		$nodeType == "mib_fg_occlusion" ||
+        $nodeType == "mib_shadow_transparency" ||
+        $nodeType == "mia_physicalsky" ||
+		$nodeType == "mib_lookup_cube1" ||
+		$nodeType == "mib_lookup_cube6" ||
+		$nodeType == "mib_lookup_cylindrical" ||
+		$nodeType == "mib_lookup_spherical")
+            return 1;
+        
+        if(startsWith($nodeType, "mib_geo_") == 1)
+            return 1;
+           
+    return 0;
+}
+        
+global proc string mentalrayCustomNodeClass(string $nodeType)
+{
+	assignViewportFactories -materialFactory "MentalRayMaterial"
+							-textureFactory "MentalRayTexture"
+							-nodeType $nodeType;
+
+	// Materials, Material surface shaders.
+	// Provides additional functionalities on top of
+	// Material shaders(rendernode/mentalray/material).
+	// "Assign New Material", "Assign Existing Material" RMB,
+	// Created with a SG.
+	// RMB on the node.
+
+	// mia_material needs 3 connections as a default. The connection/*
+	// classifications only affect the defualt connection to the
+	// shading engine without interfering with the create node panels
+
+    int $isLegacyNode = mentalrayCustomNodeClassIsLegacy($nodeType);
+
+    string $legacyClassification = "";
+    if($isLegacyNode == 1)
+        $legacyClassification = $legacyClassification + ":rendernode/mentalray/legacy";
+     
+	if ($nodeType == "mia_material" ||
+		$nodeType == "mia_material_x" ||
+		$nodeType == "mia_material_x_passes")
+		return "rendernode/mentalray/material:connection/mentalray/shadow:/connection/mentalray/photon:shader/surface:swatch/mentalRaySwatchGen:drawdb/shader/surface/mentalray/mia_material" + $legacyClassification;
+
+	if ($nodeType == "misss_fast_shader" ||
+	    $nodeType == "misss_fast_shader_x" ||
+	    $nodeType == "misss_fast_shader_x_passes")
+		return "rendernode/mentalray/material:shader/surface:swatch/mentalRaySwatchGen:drawdb/shader/surface/mentalray/misss_fast_shader" + $legacyClassification;
+
+	if ($nodeType == "mi_car_paint_phen" ||
+	    $nodeType == "mi_car_paint_phen_x" ||
+	    $nodeType == "mi_car_paint_phen_x_passes")
+		return "rendernode/mentalray/material:shader/surface:swatch/mentalRaySwatchGen:drawdb/shader/surface/mentalray/mi_car_paint_phen" + $legacyClassification;
+
+	if ($nodeType == "mi_metallic_paint" ||
+	    $nodeType == "mi_metallic_paint_x" ||
+	    $nodeType == "mi_metallic_paint_x_passes")
+		return "rendernode/mentalray/material:shader/surface:swatch/mentalRaySwatchGen:drawdb/shader/surface/mentalray/mi_metallic_paint" + $legacyClassification;
+
+	if ($nodeType == "transmat" ||
+		$nodeType == "misss_physical" ||
+		$nodeType == "dgs_material" ||
+		$nodeType == "dielectric_material" )
+		return "rendernode/mentalray/material:/connection/mentalray/photon:shader/surface:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+	if ($nodeType == "mib_illum_lambert" ||
+	    $nodeType == "mib_illum_phong" ||
+	    $nodeType == "mib_illum_blinn" ||
+	    $nodeType == "mib_illum_cooktorr" ||
+	    $nodeType == "mib_illum_ward" ||
+	    $nodeType == "mib_illum_ward_deriv" ||
+	    $nodeType == "mib_illum_hair" ||
+	    $nodeType == "path_material" ||
+	    $nodeType == "misss_fast_simple_maya" ||
+	    $nodeType == "misss_fast_skin_maya" ||
+	    $nodeType == "misss_skin_specular")
+		return "rendernode/mentalray/material:shader/surface:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+	// texture shaders supported by swatch
+
+	if ($nodeType == "mib_texture_turbulence" ||
+		$nodeType == "mib_amb_occlusion" ||
+		$nodeType == "mib_fast_occlusion")
+		return "rendernode/mentalray/texture:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+	// texture shaders supported by swatch and VP2.0. Any node with outputs
+	// named outValue (3float) and outValueA (float) will be baked for VP2.0
+	// display.
+
+	if ($nodeType == "mib_texture_checkerboard" ||
+		$nodeType == "mib_texture_polkadot" ||
+		$nodeType == "mib_texture_polkasphere" ||
+		$nodeType == "mib_texture_wave" ||
+		$nodeType == "mib_texture_lookup" ||
+		$nodeType == "mib_texture_lookup2" ||
+		$nodeType == "mib_texture_filter_lookup")
+		return "rendernode/mentalray/texture:swatch/mentalRaySwatchGen:drawdb/shader/texture/2d/mentalray/mentalrayTexture" + $legacyClassification;
+
+	// Contour
+	// Contour store functions
+
+	if ($nodeType == "contour_store_function" ||
+	    $nodeType == "contour_store_function_simple" )
+		return "rendernode/mentalray/contour/store" + $legacyClassification;
+
+	// Contour contrast functions
+
+	if ($nodeType == "contour_contrast_function_levels" ||
+	    $nodeType == "contour_contrast_function_simple" )
+		return "rendernode/mentalray/contour/contrast" + $legacyClassification;
+
+	// Contour shaders
+
+	if ($nodeType == "contour_shader_simple" ||
+	    $nodeType == "contour_shader_randomwidth" ||
+	    $nodeType == "contour_shader_randomtransparency" ||
+	    $nodeType == "contour_shader_silhouette" ||
+	    $nodeType == "contour_shader_maxcolor" ||
+	    $nodeType == "contour_shader_curvature" ||
+	    $nodeType == "contour_shader_factorcolor" ||
+	    $nodeType == "contour_shader_depthfade" ||
+	    $nodeType == "contour_shader_framefade" ||
+	    $nodeType == "contour_shader_layerthinner" ||
+	    $nodeType == "contour_shader_widthfromcolor" ||
+	    $nodeType == "contour_shader_widthfromlightdir" ||
+	    $nodeType == "contour_shader_widthfromlight" ||
+	    $nodeType == "contour_shader_combi")
+
+		return "rendernode/mentalray/contour/shader" + $legacyClassification;
+
+	// Contour output shaders
+
+	if ($nodeType == "contour_only" ||
+	    $nodeType == "contour_composite" ||
+	    $nodeType == "contour_ps")
+
+		return "rendernode/mentalray/contour/output" + $legacyClassification;
+
+	// Sample Compositing
+
+	if ($nodeType == "mib_reflect" ||
+	    $nodeType == "mib_refract" ||
+	    $nodeType == "mib_transparency" ||
+	    $nodeType == "mib_opacity" ||
+	    $nodeType == "mib_dielectric" ||
+	    $nodeType == "mib_twosided" ||
+	    $nodeType == "mib_refraction_index" ||
+	    $nodeType == "mib_continue")
+
+		return "rendernode/mentalray/composite:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+	// Data Conversion
+
+	if ($nodeType == "mib_color_alpha" ||
+	    $nodeType == "mib_color_average" ||
+	    $nodeType == "mib_color_intensity" ||
+	    $nodeType == "mib_color_interpolate" ||
+	    $nodeType == "mib_color_mix" ||
+	    $nodeType == "mib_color_spread")
+
+		return "rendernode/mentalray/conversion:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+    if (startsWith($nodeType, "mib_data_") == 1)
+		return "rendernode/mentalray/conversion:swatch/File" + $legacyClassification;
+
+	// Misc Shader
+ 
+    if ($nodeType == "misss_call_shader")
+	
+		return "rendernode/mentalray/material:rendernode/mentalray/misc:shader/surface:swatch/mentalRaySwatchGen" + $legacyClassification;
+
+    if ($nodeType == "misss_mia_skin2_surface_phen")
+	
+		return "rendernode/mentalray/material:rendernode/mentalray/misc:shader/surface:swatch/File" + $legacyClassification;
+        
+    if ($nodeType == "misss_set_normal")
+
+		return "rendernode/mentalray/material:rendernode/mentalray/misc:shader/surface:swatch/File" + $legacyClassification;
+
+    if ($nodeType == "misss_lambert_gamma")
+
+		return "rendernode/mentalray/texture:rendernode/mentalray/misc:shader/surface:swatch/File" + $legacyClassification;
+        
+	// Internal MentalRay Nodes. Not meant to be used with Maya.
+	int $enableMIPShaders = (`optionVar -query "MIP_SHD_EXPOSE"`== 0);
+	int $enableMAPShaders = (`optionVar -query "MAP_SHD_EXPOSE"`== 0);
+
+	if ((($nodeType == "mip_rayswitch" ||
+	    $nodeType == "mip_rayswitch_advanced" ||
+	    $nodeType == "mip_rayswitch_stage" ||
+	    $nodeType == "mip_rayswitch_environment" ||
+	    $nodeType == "mip_card_opacity" ||
+	    $nodeType == "mip_fgshooter" ||
+	    $nodeType == "mip_motionblur" ||
+	    $nodeType == "mip_matteshadow" ||
+	    $nodeType == "mip_cameramap" ||
+	    $nodeType == "mip_mirrorball" ||
+	    $nodeType == "mip_grayball" ||
+	    $nodeType == "mip_gamma_gain" ||
+	    $nodeType == "mip_render_subset" ||
+	    $nodeType == "mip_matteshadow_mtl" ||
+	    $nodeType == "mip_motion_vector" ||
+	    $nodeType == "mip_binaryproxy"
+	    ) &&
+	    $enableMIPShaders == 0 ) ||
+	  (($nodeType == "mib_map_get_scalar" ||
+	    $nodeType == "mib_map_get_integer" ||
+	    $nodeType == "mib_map_get_vector" ||
+	    $nodeType == "mib_map_get_color" ||
+	    $nodeType == "mib_map_get_transform" ||
+	    $nodeType == "mib_map_get_scalar_array" ||
+	    $nodeType == "mib_map_get_integer_array" ) &&
+	    $enableMAPShaders == 0 ) ||
+	    $nodeType == "misss_physical_phen"  ||
+	    $nodeType == "mi_metallic_paint_output_mixer" ||
+	    $nodeType == "surfaceSampler" )
+
+		return "rendernode/mentalray/internal" + $legacyClassification;
+
+	return $legacyClassification;
+}

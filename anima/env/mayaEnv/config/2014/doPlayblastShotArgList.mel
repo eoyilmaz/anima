@@ -1,0 +1,317 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//  Creation Date:  Oct, 1999
+//
+//	Procedure Name:
+//		doPlayblastShotArgList
+//
+//	Description:
+//		Playblast a new shot
+//
+//	Input Arguments:
+//	$version: The version of this option box.  Used to know how to 
+//	interpret the $args array.
+//		"1" : first verison of shot creation command
+//  
+//	$args
+//	Version 1
+//	[0]		$name :  name to give the new shot
+//
+//	Return Value:
+//		none
+//
+
+source AEimagePlaneTemplate.mel;
+
+proc int playblastShot( string $path, string $template, int $setupImagePlane,
+						float $opacity, string $shot, int $handles, string $format, string $compression, 
+						int $qualityPercent, int $wantOffscreen )
+{
+
+	if ( $handles < 0 )
+	{
+		$handles = 0;	// just in case
+	}
+
+	// Adjust the shot to cover the range of the handles
+	float $origHandles = $handles;
+	float $origStart = `getAttr ( $shot + ".startFrame")`;
+	float $origSequenceStart = `getAttr ( $shot + ".sequenceStartFrame")`;
+	float $origEnd = `getAttr ( $shot + ".endFrame")`;
+	float $origPreHold  = `getAttr ( $shot + ".preHold")`;
+	float $origPostHold = `getAttr ( $shot + ".postHold")`;
+	int   $origTrack    = `getAttr ( $shot + ".track")`;
+
+	float $newHandles = $handles;
+	float $newStart = $origStart - $handles;	
+	float $newSequenceStart = $origSequenceStart - $handles;	
+	float $newEnd = $origEnd + $handles;
+
+	int $useMovie = true;			
+	if( ($format == "iff")||($format == "image") ) $useMovie = false;
+
+	int $resolutionW = `getAttr ( $shot + ".wres")`;
+	int $resolutionH = `getAttr ( $shot + ".hres")`;
+
+	string $offscreen = ""; 
+	if ($wantOffscreen) {
+		$offscreen = " -offScreen";
+	}
+
+	// TO DO we will want to expose the codec as well. 
+	if ($handles > 0)
+	{
+		// If the shot has a pre or post hold, treat the handles area as
+		// a hold as opposed to extending the maya frame range.
+		if ($origPreHold > 0)
+		{
+			setAttr ($shot + ".preHold") ($origPreHold + $handles);
+			$newStart += $handles;
+			$newHandles = 0;
+		}
+		if ($origPostHold > 0)
+		{
+			setAttr ($shot + ".postHold") ($origPostHold + $handles);
+			$newEnd -= $handles;
+			$newHandles = 0;
+		}
+		setAttr  ($shot + ".startFrame") $newStart;
+		setAttr  ($shot + ".endFrame") $newEnd;
+		setAttr  ($shot + ".sequenceStartFrame") $newSequenceStart;
+	}
+
+	// If the shot is in a group but not the active shot, make it the active shot.
+	string $curActiveShot = "";
+	if (isShotInactive($shot))
+	{
+		// Remember the currently active shot of the shot's group.
+		string $group = getShotsGroup($shot);
+		$curActiveShot = getActiveShot($group);
+
+		setShotActive($shot);
+	}
+
+ 	// Mute all the other shots, retaining their current state for later reset.
+ 	$shots = `ls -type shot`;
+ 	int $shotState[] = isolateShot($shot, $shots);
+
+	// Now playblast out the entire range
+	float $start = `getAttr ( $shot + ".sequenceStartFrame")`;
+	float $end = `getAttr ( $shot + ".sequenceEndFrame")`;
+
+	//
+	sequenceManager -currentTime $start;
+
+	// Make sure the camera name is valid.
+	string $camera = getShotsCamera( $shot );
+ 	string $shotName = legalizeShotName( $shot, $camera, $template );
+ 	if ($shotName == "" )
+ 		error ( (uiRes("m_doPlayblastShotArgList.kInvalidOutputName")));
+
+	// If there's an existing IP, disconnect it, and clear out it's name
+	// to ensure it's never rendered or accessed.  If there is more than one,
+	// just remember the first one, as the others are corrupted.
+	string $oldClip = getShotsClip($shot);
+	string $oldIP[] = getCamerasImagePlanes($camera); 
+	float $savedAlpha = 1.0;
+	string $savedImage = "";
+	int $savedType = 0;
+
+	if (size($oldIP) > 0)
+	{
+		$savedAlpha = `getAttr ($oldIP[0] + ".alphaGain")`;
+		$savedImage = `getAttr ($oldIP[0] + ".imageName")`;
+		$savedType = `getAttr ($oldIP[0] + ".type")`;
+		string $ip;
+		for ($ip in $oldIP)
+			seqDisconnectImagePlane($ip, $camera);
+	}
+
+	// Playblast out the images to a QT file
+	string $image, $cmd;
+	string $outFile = "";
+	
+	if ( $useMovie )
+	{
+	
+		if ($format == "qt" && (`about -mac`)) {
+			// mac extension
+			$image = $path + "/" + $shotName + ".mov";
+		}
+		else if ($format == "avi") {
+			$image = $path + "/" + $shotName + ".avi";
+		}
+		else {
+			$image = $path + "/" + $shotName + ".mov";
+		}
+			
+		$cmd   = "playblast  -fmt \"" + $format +
+				 "\" -startTime " + $start + " -endTime " + $end +
+				 " -sequenceTime 1 -forceOverwrite -filename \"" + $image + 
+				 "\" -clearCache 1 -showOrnaments 1 -percent 100 -wh " +
+				 $resolutionW + " " + $resolutionH + $offscreen +
+				 " -viewer 0 -useTraxSounds";
+				 
+		
+		if( $compression != "" && $compression != "global") {
+			// TODO internationalization this string. 
+	        // global is used for get the render setting from the global render settings
+	        // this will be used if there is no compression flag set.
+			$cmd += " -compression \""+ $compression + "\" -quality "+$qualityPercent;
+		}
+		
+		
+		// Use catch() to ensure the remainder of the code, especially
+		// the un-mute of tracks, happens
+		if ( catch ( $outFile = evalEcho($cmd) ) )
+		{
+			$setupImagePlane = false;	// Don't try do anything with the image plane.
+			print (uiRes("m_doPlayblastShotArgList.kQtPlayblastFailed"));
+		}
+		if ($outFile == "")
+		{
+			// An image was not generated.  Don't try do anything with the image plane.
+			$setupImagePlane = false;
+		}
+	}
+	else
+	{
+		// Playblast out the images to IFF files
+		$image = $path + "/" + $shotName;
+		$cmd   = "playblast -ifz  -fmt \"iff\" -startTime " + $start + " -endTime " + $end +
+				 " -sequenceTime 1 -forceOverwrite -filename \"" + $image +
+				 "\" -clearCache 1 -showOrnaments 1 -percent 100 -wh " +
+					 $resolutionW + " " + $resolutionH + $offscreen +
+				 " -viewer 0 -fp 4";
+		
+		if( $compression != "" && $compression != "global") {
+			// TODO internationalization this string. 
+	        // global is used for get the render setting from the global render settings
+	        // this will be used if there is no compression flag set.
+			$cmd += " -compression \""+ $compression + "\" -quality "+$qualityPercent;
+		}		 
+				 
+		if ( catch ( $outFile = evalEcho($cmd) ) )
+		{
+			$setupImagePlane = false;	// Don't try do anything with the image plane
+			print (uiRes("m_doPlayblastShotArgList.kIffPlayblastFailed"));
+		}
+		
+		string $extension = "iff";
+		string $buffer[];
+		tokenize($outFile,".",$buffer);
+		if (size($buffer) > 0) {
+			$extension = $buffer[size($buffer) -1];
+		}
+		
+		$image += ".0000." + $extension;	// we are starting from the 0 frame
+	}
+
+	// Snap back to the first frame in the shot, handy for 
+	// playback/verification of playblast
+	sequenceManager -currentTime ($start + $handles);
+
+	// Update the shot with the new images, this will build any
+	// needed image plane, and set the name
+	if ($setupImagePlane && ($outFile != ""))
+	{
+		setupShotImagePlane($shot, $handles, $start, $end,
+				$image, $opacity);
+	}
+	else if ( size($oldIP) > 0 )
+	{
+		// Restore the old image plane.
+		seqRestoreImagePlane($oldIP[0], $camera, $savedImage, $savedAlpha, $savedType);
+	}
+
+	// Restore the original active shot if it had been changed.
+	if ($curActiveShot != "")
+		setShotActive($curActiveShot);
+
+	// Reset (un-mute) all the shot states
+	setShotTrackStates($shots, $shotState);
+
+	if ($handles > 0)
+	{
+		// Return the shot back to its original length, it was expanded for handles
+		setAttr ($shot + ".preHold")    $origPreHold;
+		setAttr ($shot + ".postHold")   $origPostHold;
+		setAttr ($shot + ".sequenceStartFrame") $origSequenceStart;
+		setAttr ($shot + ".startFrame") $origStart;
+		setAttr ($shot + ".endFrame")   $origEnd;
+		setAttr ($shot + ".track") 	$origTrack; // Sometimes changing lengths disturbs the indices
+	}
+	return ($outFile != "");
+}
+
+global proc
+doPlayblastShotArgList( string $version, string $args[], string $shots )
+{
+	if ( !`exists doPlayblastArgList`) {
+		source doPlayblastArgList.mel;
+	}
+
+	if( ($version == 1 && size($args) != 8) || 
+		($version == 3 && size($args) != 9) ) 
+	{
+		print (uiRes("m_doPlayblastShotArgList.kArgListWrongLength"));
+		return;
+	}
+
+	string $path = $args[0];
+	string $template = $args[1];
+	int $ip = $args[2];
+	int $opacity = $args[3];
+	int $handles = $args[4];
+	string $format  = $args[5];
+	string $compression = $args[6];
+	int $quality = $args[7];
+	
+	int $wantOffscreen = 1;   // default to offscreen
+	if ($version == 3) {
+		$wantOffscreen = $args[8];
+	}
+
+	$path = substituteAllString($path, "\\", "/");
+
+	// get the current display options of the view port
+	getEditorViewVars();
+	
+	// set display options from the playblast controls
+	setPlayblastViewVars();
+
+	string $shotArray[];
+	tokenize $shots $shotArray;
+	for ( $shot in $shotArray )
+	{
+		if (!playblastShot( $path, $template, $ip, $opacity, $shot, $handles, $format, $compression, $quality, $wantOffscreen))
+		{
+			// recover the display options
+			restoreEditorViewVars();		
+			return;
+		}
+	}
+	
+	// recover the display options
+	restoreEditorViewVars();	
+}
+

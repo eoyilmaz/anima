@@ -1,0 +1,152 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+// Create marking menu for both w-LMB and CTRL-SHIFT-RMB popup's
+//
+global proc scaleMarkingMenuImpl()
+{
+	int $mode = `manipScaleContext -q -mode Scale`;
+	
+	//
+	// Top level non-submenu
+	//
+    //menuItem -radialPosition "W" 
+    //    -label (uiRes("m_scaleMarkingMenuImpl.kWorldScale"))  
+    //    -command ("manipScaleContext -e -mode 2 Scale") 
+    //    -checkBox (2 == $mode)
+//		;
+
+    menuItem -radialPosition "NW" 
+        -label (uiRes("m_scaleMarkingMenuImpl.kObjectScale"))  
+        -command ("manipScaleContext -e -mode 0 Scale") 
+        -checkBox (0 == $mode)
+		;
+
+    menuItem -radialPosition "NE" 
+        -label (uiRes("m_scaleMarkingMenuImpl.kNormalAverageScale"))  
+        -command ("manipScaleContext -e -mode 9 Scale") 
+        -checkBox (9 == $mode)
+		;
+
+	menuItem 
+		-label (uiRes("m_scaleMarkingMenuImpl.kAxisLabel"))
+		-subMenu 1
+		-radialPosition	"SW";
+
+			menuItem -radialPosition "W" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kLocalScale"))  
+				-command ("manipScaleContext -e -mode 1 Scale") 
+				-checkBox (1 == $mode)
+				;
+
+			menuItem -radialPosition "NW" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kNormalScale"))  
+				-command ("manipScaleContext -e -mode 3 Scale") 
+				-checkBox (3 == $mode)
+				;
+			menuItem -radialPosition "N" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kLiveObjectAxisScale"))  
+				-command ("manipScaleContext -e -mode 5 Scale") 
+				-checkBox (5 == $mode)
+				;
+			menuItem -radialPosition "NE" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kAlongRotationAxisScale"))  
+				-command ("manipScaleContext -e -mode 4 Scale") 
+				-checkBox (4 == $mode)
+				;
+
+			menuItem -radialPosition "E" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kCustomAxisScale"))  
+				-command ("manipScaleContext -e -mode 6 Scale") 
+				-checkBox (6 == $mode)
+				;
+
+			menuItem -radialPosition "SW" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kSetToPointScale"))  
+				-command ("manipScaleOrient 1; manipScaleContext -edit -mode 6 Scale") 
+				;
+
+			menuItem -radialPosition "S" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kSetToEdgeScale"))  
+				-command ("manipScaleOrient 2; manipScaleContext -edit -mode 6 Scale") 
+				;
+
+			menuItem -radialPosition "SE" 
+				-label (uiRes("m_scaleMarkingMenuImpl.kSetToFaceScale"))  
+				-command ("manipScaleOrient 3; manipScaleContext -edit -mode 6 Scale") 
+				;
+
+			setParent -m ..;
+
+    menuItem -radialPosition "E" 
+        -label (uiRes("m_scaleMarkingMenuImpl.kSnapScale"))  
+        -command ("manipScaleContext -edit -snap #1 Scale;") 
+        -checkBox `manipScaleContext -query -snap Scale`
+		-annotation (uiRes("m_scaleMarkingMenuImpl.kScaleSnappingToggleAnnot")) ;
+
+    menuItem -radialPosition "SE" 
+        -label (uiRes("m_scaleMarkingMenuImpl.kRelativeMode"))  
+        -command ("int $val = `manipScaleContext -q -snapRelative Scale`;" +
+		          "$val = !$val;manipScaleContext -edit -snapRelative $val Scale;") 
+        -checkBox `manipScaleContext -q -snapRelative Scale`
+		-annotation (uiRes("m_scaleMarkingMenuImpl.kRelativeModeScaleSnappingAnnot")) ;
+
+	//
+	// North submenu
+	//
+	commonReflectionOptionsPopup();
+
+
+	//
+	// South submenu
+	//
+	commonSelectOptionsPopup();
+
+
+	//
+	// Lower non-gestural menus
+	//
+    menuItem
+        -label (uiRes("m_scaleMarkingMenuImpl.kComponentUseObjectPivot"))  
+        -command ("manipScaleContext -edit -useObjectPivot #1 -useManipPivot 0 Scale;") 
+        -checkBox (`manipScaleContext -q -useObjectPivot Scale` && !`manipScaleContext -q -useManipPivot Scale`)
+		-annotation (uiRes("m_scaleMarkingMenuImpl.kComponentUseObjectAnnot")) ;
+
+	 menuItem
+		-label (uiRes("m_scaleMarkingMenuImpl.kPreserveUVs"))
+		-command ("setTRSPreserveUVs #1")
+		-checkBox `manipScaleContext -q -preserveUV Scale`
+		-annotation (uiRes("m_scaleMarkingMenuImpl.kPreserveUVsAnnot")) ;
+
+	menuItem
+		-label (uiRes("m_translateMarkingMenuImpl.kPreserveChild"))
+		-command ("setTRSPreserveChildPosition #1")
+		-checkBox `manipScaleContext -q -preserveChildPosition Scale`
+		-annotation (uiRes("m_translateMarkingMenuImpl.kPreserveChildAnnot")) ;
+
+    menuItem
+        -label (uiRes("m_scaleMarkingMenuImpl.kScaleOptions"))  
+        -command ("ToggleToolSettings")
+		-annotation (uiRes("m_scaleMarkingMenuImpl.kScaleOptionBoxAnnot")) 
+        ;
+	
+}
