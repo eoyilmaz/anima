@@ -6,8 +6,9 @@
 
 import unittest
 
-from anima.publish import publishers, publisher, run_publishers
-from anima.publish import register_publisher
+from anima.publish import (publishers, publisher, run_publishers,
+                           clear_publishers, register_publisher,
+                           PRE_PUBLISHER_TYPE, POST_PUBLISHER_TYPE)
 
 
 class PublishersTestCase(unittest.TestCase):
@@ -18,21 +19,43 @@ class PublishersTestCase(unittest.TestCase):
         """clean up test
         """
         # clean up publishers dictionary
-        publishers = {}
+        clear_publishers()
 
     def test_registering_a_publisher(self):
         """testing if registering a publisher is working properly
         """
-        self.assertEqual(publishers, {})
+        self.assertEqual(publishers, {PRE_PUBLISHER_TYPE: {},
+                                      POST_PUBLISHER_TYPE: {}})
 
         def some_callable():
             pass
 
         register_publisher(some_callable, 'Test')
 
-        self.assertTrue('test' in publishers)
-        self.assertIsInstance(publishers['test'], list)
-        self.assertTrue(publishers['test'][0], some_callable)
+        self.assertTrue('test' in publishers[PRE_PUBLISHER_TYPE])
+        self.assertTrue(
+            isinstance(publishers[PRE_PUBLISHER_TYPE]['test'], list)
+        )
+        self.assertTrue(publishers[PRE_PUBLISHER_TYPE]['test'][0],
+                        some_callable)
+
+    def test_registering_a_post_publisher(self):
+        """testing if registering a post publisher is working properly
+        """
+        self.assertEqual(publishers, {PRE_PUBLISHER_TYPE: {},
+                                      POST_PUBLISHER_TYPE: {}})
+
+        def some_callable():
+            pass
+
+        register_publisher(some_callable, 'Test', POST_PUBLISHER_TYPE)
+
+        self.assertTrue('test' in publishers[POST_PUBLISHER_TYPE])
+        self.assertTrue(
+            isinstance(publishers[POST_PUBLISHER_TYPE]['test'], list)
+        )
+        self.assertTrue(publishers[POST_PUBLISHER_TYPE]['test'][0],
+                        some_callable)
 
     def test_registering_with_the_decorator_is_working_properly(self):
         """testing if registering with decorator is working properly
@@ -41,9 +64,14 @@ class PublishersTestCase(unittest.TestCase):
         def some_callable():
             pass
 
-        self.assertTrue('test' in publishers)
-        self.assertIsInstance(publishers['test'], list)
-        self.assertTrue(publishers['test'][0], some_callable)
+        self.assertTrue('test' in publishers[PRE_PUBLISHER_TYPE])
+        self.assertTrue(
+            isinstance(publishers[PRE_PUBLISHER_TYPE]['test'], list)
+        )
+        self.assertTrue(
+            publishers[PRE_PUBLISHER_TYPE]['test'][0],
+            some_callable
+        )
 
     def test_run_publishers_is_working_properly(self):
         """testing if the run_publishers() function calls all the publishers
@@ -76,6 +104,94 @@ class PublishersTestCase(unittest.TestCase):
 
         # now run all publishers
         run_publishers('Test')
+        self.assertEqual(called, ['func4', 'func1', 'func2'])
+
+    def test_run_publishers_is_working_properly_with_pre_publishers_specified(self):
+        """testing if the run_publishers() function calls all the pre
+        publishers under given name
+        """
+        called = []
+
+        @publisher('Test', publisher_type=PRE_PUBLISHER_TYPE)
+        def func1():
+            called.append('func1')
+
+        @publisher('Test', publisher_type=PRE_PUBLISHER_TYPE)
+        def func2():
+            called.append('func2')
+
+        @publisher('Test2', publisher_type=PRE_PUBLISHER_TYPE)
+        def func3():
+            """another publisher for some other type
+            """
+            called.append('func3')
+
+        @publisher(publisher_type=PRE_PUBLISHER_TYPE)
+        def func4():
+            """this should run for everything
+            """
+            called.append('func4')
+
+        # be sure that the called is still empty
+        self.assertEqual(called, [])
+
+        # now run all publishers
+        run_publishers('Test')
+        self.assertEqual(called, ['func4', 'func1', 'func2'])
+
+    def test_run_publishers_is_working_properly_with_post_publishers_specified(self):
+        """testing if the run_publishers() function calls all the post
+        publishers under given name
+        """
+        called = []
+
+        # Register some pre publishers
+        @publisher('Test', publisher_type=PRE_PUBLISHER_TYPE)
+        def pre_func1():
+            called.append('pre_func1')
+
+        @publisher('Test', publisher_type=PRE_PUBLISHER_TYPE)
+        def pre_func2():
+            called.append('pre_func2')
+
+        @publisher('Test2', publisher_type=PRE_PUBLISHER_TYPE)
+        def pre_func3():
+            """another publisher for some other type
+            """
+            called.append('pre_func3')
+
+        @publisher(publisher_type=PRE_PUBLISHER_TYPE)
+        def pre_func4():
+            """this should run for everything
+            """
+            called.append('pre_func4')
+
+        # Register some post publishers
+        @publisher('Test', publisher_type=POST_PUBLISHER_TYPE)
+        def func1():
+            called.append('func1')
+
+        @publisher('Test', publisher_type=POST_PUBLISHER_TYPE)
+        def func2():
+            called.append('func2')
+
+        @publisher('Test2', publisher_type=POST_PUBLISHER_TYPE)
+        def func3():
+            """another publisher for some other type
+            """
+            called.append('func3')
+
+        @publisher(publisher_type=POST_PUBLISHER_TYPE)
+        def func4():
+            """this should run for everything
+            """
+            called.append('func4')
+
+        # be sure that the called is still empty
+        self.assertEqual(called, [])
+
+        # now run all publishers
+        run_publishers('Test', publisher_type=POST_PUBLISHER_TYPE)
         self.assertEqual(called, ['func4', 'func1', 'func2'])
 
     def test_registering_a_callable_multiple_times(self):
