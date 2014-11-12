@@ -2306,13 +2306,12 @@ class Modeling(object):
 
         caller = pdm.register(mesh_count, 'check_uvs()')
 
-        meshes_with_zero_uv_area = []
         faces_with_zero_uv_area = []
         for node in all_meshes:
             all_uvs = node.getUVs()
-            try:
-                for i in range(node.numFaces()):
-                    uvs = []
+            for i in range(node.numFaces()):
+                uvs = []
+                try:
                     for j in range(node.numPolygonVertices(i)):
                         #uvs.append(node.getPolygonUV(i, j))
                         uv_id = node.getPolygonUVid(i, j)
@@ -2323,8 +2322,10 @@ class Modeling(object):
                         faces_with_zero_uv_area.append(
                             '%s.f[%s]' % (node.fullPath(), i)
                         )
-            except RuntimeError:
-                meshes_with_zero_uv_area.append(node)
+                except RuntimeError:
+                    faces_with_zero_uv_area.append(
+                        '%s.f[%s]' % (node.fullPath(), i)
+                    )
 
             caller.step()
 
