@@ -99,7 +99,10 @@ def check_time_logs():
     """do not allow publishing if there is no time logs for the task, do that
     only for non WFD tasks
     """
+    # skip if this is a representation
     v = staging.get('version')
+    if v and Representation.repr_separator in v.take_name:
+        return
 
     if v:
         task = v.task
@@ -931,12 +934,9 @@ def make_material_names_unique():
 def create_representations():
     """creates the representations of the scene
     """
-    v = staging.get('version')
-
     from anima.env import mayaEnv
-    if not v:
-        m_env = mayaEnv.Maya()
-        v = m_env.get_current_version()
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
 
     if not v:
         return
