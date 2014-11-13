@@ -800,3 +800,25 @@ def run_post_publishers():
         run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
         # do not forget to clean up the staging area
         staging.clear()
+
+
+def has_shape(node):
+    """checks if the given node has at least one child that has a shape
+    """
+    allowed_shapes = (
+        pm.nt.Mesh,
+        pm.nt.NurbsCurve,
+        pm.nt.NurbsSurface
+    )
+
+    has_it = False
+
+    children = node.getChildren()
+    while len(children) and not has_it:
+        child = children.pop(0)
+        if isinstance(child, allowed_shapes):
+            has_it = True
+            break
+        children += child.getChildren()
+
+    return has_it
