@@ -293,7 +293,7 @@ class RepresentationGenerator(object):
         # check if all references have an BBOX repr first
         refs_with_no_bbox_repr = []
         for ref in pm.listReferences():
-            if not ref.has_repr('BBOX'):
+            if ref.version and not ref.has_repr('BBOX'):
                 refs_with_no_bbox_repr.append(ref)
 
         if len(refs_with_no_bbox_repr):
@@ -382,7 +382,7 @@ class RepresentationGenerator(object):
         # check if all references have an GPU repr first
         refs_with_no_gpu_repr = []
         for ref in pm.listReferences():
-            if not ref.has_repr('GPU'):
+            if ref.version and not ref.has_repr('GPU'):
                 refs_with_no_gpu_repr.append(ref)
 
         if len(refs_with_no_gpu_repr):
@@ -591,7 +591,7 @@ class RepresentationGenerator(object):
         # check if all references have an ASS repr first
         refs_with_no_ass_repr = []
         for ref in pm.listReferences():
-            if not ref.has_repr('ASS'):
+            if ref.version and not ref.has_repr('ASS'):
                 refs_with_no_ass_repr.append(ref)
 
         if len(refs_with_no_ass_repr):
