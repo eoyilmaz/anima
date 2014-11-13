@@ -930,7 +930,8 @@ def make_material_names_unique():
                 shading_engine.rename(desired_shading_engine_name)
 
 
-@publisher(publisher_type=POST_PUBLISHER_TYPE)
+@publisher(LOOK_DEV_TYPES + ['layout', 'model'],
+           publisher_type=POST_PUBLISHER_TYPE)
 def create_representations():
     """creates the representations of the scene
     """
