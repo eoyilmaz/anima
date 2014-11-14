@@ -930,7 +930,7 @@ def check_component_edits_on_references():
 #                 shading_engine.rename(desired_shading_engine_name)
 
 
-@publisher(LOOK_DEV_TYPES + ['layout', 'model'],
+@publisher(LOOK_DEV_TYPES + ['layout', 'model', 'vegetation'],
            publisher_type=POST_PUBLISHER_TYPE)
 def create_representations():
     """creates the representations of the scene
