@@ -869,65 +869,65 @@ def check_component_edits_on_references():
         )
 
 
-@publisher(LOOK_DEV_TYPES)
-def make_material_names_unique():
-    """makes the material names unique
-    """
-    v = staging.get('version')
-
-    if not v:
-        from anima.env import mayaEnv
-        mEnv = mayaEnv.Maya()
-        v = mEnv.get_current_version()
-
-    if not v:
-        return
-
-    asset_nice_name = v.naming_parents[0].nice_name
-
-    non_referenced_materials = [
-        mat
-        for mat in pm.ls(mat=1, type=VALID_MATERIALS)
-        if mat.referenceFile() is None
-    ]
-
-    for mat in non_referenced_materials:
-        # material type name
-        mat_type_name = mat.type()
-
-        # find the first object using this material
-        shading_engine = None
-        outputs = mat.outputs(type='shadingEngine')
-        if len(outputs):
-            shading_engine = outputs[0]
-
-        if not shading_engine:
-            # skip this one
-            continue
-
-        objects_using_this_material = pm.sets(shading_engine, q=1)
-
-        object_name = 'node'
-        if len(objects_using_this_material):
-            object_name = \
-                objects_using_this_material[0].getParent().name().split(':')[-1]
-
-        base_material_name = \
-            '%s_%s_%s' % (asset_nice_name, object_name, mat_type_name)
-
-        random_part = uuid.uuid4().hex[0:4]
-
-        desired_material_name = \
-            '%s_%s' % (base_material_name, random_part)
-
-        desired_shading_engine_name = '%sSG' % desired_material_name
-
-        if mat.name() not in ['lambert1', 'particleCloud1']:
-            if not mat.name().startswith(base_material_name):
-                mat.rename(desired_material_name)
-
-            if not shading_engine.name().startswith(base_material_name):
-                shading_engine.rename(desired_shading_engine_name)
+# @publisher(LOOK_DEV_TYPES)
+# def make_material_names_unique():
+#     """makes the material names unique
+#     """
+#     v = staging.get('version')
+#
+#     if not v:
+#         from anima.env import mayaEnv
+#         mEnv = mayaEnv.Maya()
+#         v = mEnv.get_current_version()
+#
+#     if not v:
+#         return
+#
+#     asset_nice_name = v.naming_parents[0].nice_name
+#
+#     non_referenced_materials = [
+#         mat
+#         for mat in pm.ls(mat=1, type=VALID_MATERIALS)
+#         if mat.referenceFile() is None
+#     ]
+#
+#     for mat in non_referenced_materials:
+#         # material type name
+#         mat_type_name = mat.type()
+#
+#         # find the first object using this material
+#         shading_engine = None
+#         outputs = mat.outputs(type='shadingEngine')
+#         if len(outputs):
+#             shading_engine = outputs[0]
+#
+#         if not shading_engine:
+#             # skip this one
+#             continue
+#
+#         objects_using_this_material = pm.sets(shading_engine, q=1)
+#
+#         object_name = 'node'
+#         if len(objects_using_this_material):
+#             object_name = \
+#                 objects_using_this_material[0].getParent().name().split(':')[-1]
+#
+#         base_material_name = \
+#             '%s_%s_%s' % (asset_nice_name, object_name, mat_type_name)
+#
+#         random_part = uuid.uuid4().hex[0:4]
+#
+#         desired_material_name = \
+#             '%s_%s' % (base_material_name, random_part)
+#
+#         desired_shading_engine_name = '%sSG' % desired_material_name
+#
+#         if mat.name() not in ['lambert1', 'particleCloud1']:
+#             if not mat.name().startswith(base_material_name):
+#                 mat.rename(desired_material_name)
+#
+#             if not shading_engine.name().startswith(base_material_name):
+#                 shading_engine.rename(desired_shading_engine_name)
 
 
 @publisher(LOOK_DEV_TYPES + ['layout', 'model'],
