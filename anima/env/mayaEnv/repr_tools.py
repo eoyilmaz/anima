@@ -270,7 +270,8 @@ class RepresentationGenerator(object):
         """
         current_v = self.maya_env.get_current_version()
         if current_v is not version:
-            self.maya_env.open(version, force=True, skip_update_check=True)
+            self.maya_env.open(version, force=True, skip_update_check=True,
+                               reference_depth=3)
 
     def generate_all(self):
         """generates all representations at once
@@ -305,6 +306,10 @@ class RepresentationGenerator(object):
 
         # do different things for Vegetation tasks
         if self.is_vegetation_task(task):
+            # load all references back
+            for ref in pm.listReferences():
+                ref.load()
+
             # find the _pfxPolygons node
             pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
 
@@ -320,11 +325,6 @@ class RepresentationGenerator(object):
             pm.delete('kks___vegetation_paintableGeos')
 
         else:
-            # replace all root references with their BBOX representation
-            for ref in pm.listReferences():
-                ref.to_repr('BBOX')
-                ref.unload()
-
             # find all non referenced root nodes
             root_nodes = self.get_local_root_nodes()
 
@@ -337,8 +337,9 @@ class RepresentationGenerator(object):
                 auxiliary.replace_with_bbox(all_children)
 
             # reload all references
+            # replace all root references with their BBOX representation
             for ref in pm.listReferences():
-                ref.load()
+                ref.to_repr('BBOX')
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
         if self.is_exterior_or_interior_task(task):
@@ -391,13 +392,6 @@ class RepresentationGenerator(object):
                 'first!!!\n%s' %
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
             )
-
-        # convert all references to GPU
-        for ref in pm.listReferences():
-            # check if this is a Model reference
-            ref.to_repr('GPU')
-            # unload all references
-            ref.unload()
 
         root_nodes = self.get_local_root_nodes()
 
@@ -505,9 +499,10 @@ class RepresentationGenerator(object):
                         )
 
         # load all references again
+        # convert all references to GPU
         for ref in pm.listReferences():
-            # load all references
-            ref.load()
+            # check if this is a Model reference
+            ref.to_repr('GPU')
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
         task = self.version.task
@@ -606,17 +601,17 @@ class RepresentationGenerator(object):
             # version and parent the resulting Stand-In node to the parent of
             # the child node
 
-            # unload any references that is not a Model file
+            # load only Model references
             for ref in pm.listReferences():
                 v = ref.version
-                unload_ref = True
+                load_ref = False
                 if v:
                     ref_task = v.task
                     if self.is_model_task(ref_task):
-                        unload_ref = False
+                        load_ref = True
 
-                if unload_ref:
-                    ref.unload()
+                if load_ref:
+                    ref.load()
 
             # Make all texture paths relative
             # replace all "$REPO#" from all texture paths first
