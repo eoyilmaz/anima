@@ -1448,8 +1448,21 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 QtGui.QMessageBox.Ok
             )
 
-        # save the new version to the database
-        DBSession.add(new_version)
+        # check if the new version is pointing to a valid file
+        if os.path.exists(new_version.absolute_full_path):
+            # save the new version to the database
+            DBSession.add(new_version)
+        else:
+            # raise an error
+            QtGui.QMessageBox.critical(
+                self,
+                'Error',
+                'Something went wrong with %s\n'
+                'and the file is not created!\n\n'
+                'Please save again!' % environment.name
+            )
+            DBSession.rollback()
+
         DBSession.commit()
 
         if is_external_env:
