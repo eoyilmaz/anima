@@ -347,6 +347,8 @@ class RepresentationGenerator(object):
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
                 for ref in all_refs:
+                    if not ref.isLoaded():
+                        ref.load()
                     ref.importContents()
                 all_refs = pm.listReferences()
 
@@ -511,6 +513,8 @@ class RepresentationGenerator(object):
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
                 for ref in all_refs:
+                    if not ref.isLoaded():
+                        ref.load()
                     ref.importContents()
                 all_refs = pm.listReferences()
 
@@ -570,9 +574,13 @@ class RepresentationGenerator(object):
 
         task = self.version.task
 
-        export_command = 'arnoldExportAss -f "%(path)s" -s -mask 24 ' \
-                         '-lightLinks 0 -compressed -boundingBox ' \
-                         '-shadowLinks 0 -cam perspShape;'
+        # export_command = 'arnoldExportAss -f "%(path)s" -s -mask 24 ' \
+        #                  '-lightLinks 0 -compressed -boundingBox ' \
+        #                  '-shadowLinks 0 -cam perspShape;'
+
+        export_command = 'arnoldExportAss -f "%(path)s" -s -mask 60' \
+                         '-lightLinks 1 -compressed -boundingBox ' \
+                         '-shadowLinks 1 -cam perspShape;'
 
         # calculate output path
         output_path = os.path.join(self.version.absolute_path, 'Outputs/ass/')
@@ -699,6 +707,9 @@ class RepresentationGenerator(object):
             # Base version, also we use the geometry under "pfxPolygons"
             # and parent the resulting Stand-In nodes to the
             # pfxPolygons
+            # load all references
+            for ref in pm.listReferences():
+                ref.load()
 
             # find the _pfxPolygons node
             pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
@@ -755,9 +766,9 @@ class RepresentationGenerator(object):
 
         # There is a bug about StandIns light linking so
         # set the aiStandIn.overrideLightLinking to False
-        [node.setAttr('overrideLightLinking', False)
-         for node in pm.ls(type='aiStandIn')
-         if node.referenceFile() is None]
+        #[node.setAttr('overrideLightLinking', False)
+         # for node in pm.ls(type='aiStandIn')
+         # if node.referenceFile() is None]
 
         # convert all references to ASS
         for ref in pm.listReferences():
@@ -775,8 +786,25 @@ class RepresentationGenerator(object):
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
                 for ref in all_refs:
+                    if not ref.isLoaded():
+                        ref.load()
                     ref.importContents()
                 all_refs = pm.listReferences()
+
+            # check if all aiStandIn nodes are included in
+            # ArnoldStandInDefaultLightSet set
+            try:
+                arnold_stand_in_default_light_set = \
+                    pm.PyNode('ArnoldStandInDefaultLightSet')
+            except pm.MayaNodeError:
+                # just create it
+                arnold_stand_in_default_light_set = \
+                    pm.sets('ArnoldStandInDefaultLightSet')
+
+            pm.sets(
+                arnold_stand_in_default_light_set,
+                fe=pm.ls(type='aiStandIn')
+            )
 
         # save the scene as {{original_take}}___ASS
         # use maya

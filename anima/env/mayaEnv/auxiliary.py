@@ -5,6 +5,8 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
+import tempfile
+import shutil
 
 import pymel.core as pm
 import maya.mel as mel
@@ -19,7 +21,7 @@ def get_valid_dag_node(node):
     try:
         dag_node = pm.nodetypes.DagNode(node)
     except pm.MayaNodeError:
-        print 'Error: no node named : %s' % node
+        print('Error: no node named : %s' % node)
         return None
 
     return dag_node
@@ -31,7 +33,7 @@ def get_valid_node(node):
     try:
         PyNode = pm.PyNode(node)
     except pm.MayaNodeError:
-        print 'Error: no node named : %s' % node
+        print('Error: no node named : %s' % node)
         return None
 
     return PyNode
@@ -294,7 +296,8 @@ def hair_from_curves():
         if do_output_curve:
             hair_system_out_hair_group = hair_system_parent[0] + "OutputCurves"
             if not pm.objExists(hair_system_out_hair_group):
-                hair_system_out_hair_group = pm.group(em=1, name='hsysOutHairGroup')
+                hair_system_out_hair_group = \
+                    pm.group(em=1, name='hsysOutHairGroup')
             if hide_output_curve:
                 pm.setAttr(hair_system_out_hair_group + '.visibility', False)
 
@@ -320,7 +323,9 @@ def hair_from_curves():
         pv = pm.getAttr(cpom + '.r.v')
 
         hair_curve_name_prefix = mesh + "Follicle"
-        naming_index = num_of_curves * int(pu * float(num_of_curves - 1) + 0.5) + int(pv * float(num_of_curves - 1) + 0.5)
+        naming_index = \
+            num_of_curves * int(pu * float(num_of_curves - 1) + 0.5) + \
+            int(pv * float(num_of_curves - 1) + 0.5)
 
         new_name = hair_curve_name_prefix + str(naming_index)
 
@@ -392,7 +397,7 @@ def align_to_pole_vector():
 
     for obj in selection_list:
         if pm.nodeType(obj) == 'ikHandle':
-           ik_handle = obj
+            ik_handle = obj
         else:
             control_object = obj
 
@@ -427,9 +432,9 @@ def export_blend_connections():
     dialog_return = pm.fileDialog2(cap="Save As", fm=0, ff='Text Files(*.txt)')
 
     filename = dialog_return[0]
-    print filename
+    print(filename)
 
-    print "\n\nFiles written:\n---------------------------------------------\n"
+    print("\n\nFiles written:\n--------------------------------------------\n")
 
     with open(filename, 'w') as fileId:
         for i in range(0, len(selection_list)):
@@ -450,10 +455,10 @@ def export_blend_connections():
                 ''.join(map(str, con[0].name()))
             )
             print (cmd + "\n")
-            fileId.write("%s\n"%cmd)
+            fileId.write("%s\n" % cmd)
 
-    print "\n------------------------------------------------------\n"
-    print ("filename: %s     ...done\n" % filename)
+    print("\n------------------------------------------------------\n")
+    print("filename: %s     ...done\n" % filename)
 
 
 def transfer_shaders(source, target):
@@ -633,12 +638,6 @@ def create_bbox(nodes, per_selection=False):
 def replace_with_bbox(nodes):
     """replaces the given nodes with a bbox object
     """
-    allowed_shapes = (
-        pm.nt.Mesh,
-        pm.nt.NurbsCurve,
-        pm.nt.NurbsSurface
-    )
-
     node_names = []
     bboxes = []
     processed_nodes = []
@@ -652,16 +651,7 @@ def replace_with_bbox(nodes):
 
         # check the shape
         # check if it has at least one shape under it
-        has_shape = False
-        children = node.getChildren()
-        while len(children) and not has_shape:
-            child = children.pop(0)
-            if isinstance(child, allowed_shapes):
-                has_shape = True
-                break
-            children += child.getChildren()
-
-        if not has_shape:
+        if not has_shape(node):
             continue
 
         bbox = cube_from_bbox(node.boundingBox())
@@ -762,7 +752,7 @@ def run_pre_publishers():
 
         # before running use the staging area to store the current version
         staging['version'] = version
-        run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
+        run_publishers(type_name)
         # do not forget to clean up the staging area
         staging.clear()
 
@@ -822,3 +812,343 @@ def has_shape(node):
         children += child.getChildren()
 
     return has_it
+
+
+class ShotPlayblaster(object):
+    """Generates playblasts for each shot in the scene and uploads it to the
+    server
+    """
+
+    display_flags = [
+        'nurbsCurves', 'nurbsSurfaces', 'cv', 'hulls', 'polymeshes',
+        'subdivSurfaces', 'planes', 'lights', 'cameras', 'imagePlane',
+        'joints', 'ikHandles', 'deformers', 'dynamics', 'fluids',
+        'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
+        'dynamicConstraints', 'locators', 'dimensions', 'pivots',
+        'handles', 'textures', 'strokes', 'motionTrails', 'pluginShapes',
+        'clipGhosts', 'greasePencils', 'manipulators', 'grid'
+    ]
+
+    cam_attribute_names = [
+        'overscan',
+        'filmFit',
+        'displayFilmGate',
+        'displayResolution',
+        'displayGateMask',
+        'displayFieldChart',
+        'displaySafeAction',
+        'displaySafeTitle',
+        'displayFilmPivot',
+        'displayFilmOrigin'
+    ]
+
+    def __init__(self):
+        from stalker import LocalSession
+        local_session = LocalSession()
+        self.logged_in_user = local_session.logged_in_user
+
+        if not self.logged_in_user:
+            raise RuntimeError('Please login first!')
+
+        self.version = None
+        from anima.env.mayaEnv import Maya
+        self.m_env = Maya()
+        self.version = self.m_env.get_current_version()
+
+        self.user_view_options = {}
+        self.reset_user_view_options_storage()
+
+    def get_hud_data(self):
+        """
+        """
+        current_shot = pm.sequenceManager(q=1, currentShot=1)
+
+        if not current_shot:
+            return ''
+
+        shot_name = pm.getAttr('%s.shotName' % current_shot)
+        current_cam = pm.shot(current_shot, q=1, cc=1)
+        focal_length = pm.PyNode(current_cam).getShape().getAttr('focalLength')
+        sequencer = pm.ls(type='sequencer')[0]
+        if sequencer.getAttr('sequence_name') != '':
+            shot_info = sequencer.getAttr('sequence_name')
+        else:
+            shot_info = 'INVALID'
+
+        cf = pm.currentTime(q=1) + 1
+
+        import timecode
+        # TODO: This should use project frame rate
+        tc = timecode.Timecode('24', frames=cf)
+
+        start_time = pm.shot(current_shot, q=1, st=1)
+        end_time = pm.shot(current_shot, q=1, et=1)
+
+        cs_frame = int(cf - start_time)
+
+        length = int(end_time - start_time) + 1
+
+        user_name = self.logged_in_user.name
+
+        hud_string = \
+            '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
+                shot_info,
+                current_cam.split(':')[-1],
+                int(focal_length),
+                tc,
+                str(int(cf)-1).zfill(4),
+                shot_name.split(':')[-1],
+                cs_frame,
+                str(length).zfill(3),
+                user_name
+            )
+        return hud_string
+
+    def create_hud(self, hud_name):
+        """creates HUD
+        """
+        if pm.headsUpDisplay(hud_name, q=1, ex=1):
+            #pm.warning('HUD already exists.')
+            pm.headsUpDisplay(hud_name, rem=1)
+
+        pm.headsUpDisplay(
+            hud_name,
+            section=7,
+            block=1,
+            ao=1,
+            blockSize="medium",
+            labelFontSize="large",
+            dfs="large",
+            command=self.get_hud_data,
+            atr=1
+        )
+
+    @classmethod
+    def get_shot_cameras(cls):
+        # store camera display options
+        cameras = []
+        for shot in pm.sequenceManager(listShots=1):
+            camera_name = pm.shot(shot, q=1, cc=1)
+            camera = pm.PyNode(camera_name)
+            if isinstance(camera, pm.nt.Transform):
+                camera = camera.getShape()
+            cameras.append(camera)
+        return cameras
+
+    def reset_user_view_options_storage(self):
+        """resets the user view options storage
+        """
+        self.user_view_options = {
+            'display_flags': {},
+            'hud_flags': {},
+            'camera_flags': {}
+        }
+
+    def store_user_options(self):
+        """stores user options
+        """
+        # query active model panel
+        active_panel = self.get_active_panel()
+
+        # store show/hide display options for active panel
+        self.reset_user_view_options_storage()
+
+        for flag in self.display_flags:
+            val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
+            self.user_view_options['display_flags'][flag] = val
+
+        # store hud display options
+        hud_flags = pm.headsUpDisplay(lh=1)
+        for flag in hud_flags:
+            val = pm.headsUpDisplay(flag, q=1, vis=1)
+            self.user_view_options['hud_flags'][flag] = val
+
+        for camera in self.get_shot_cameras():
+            camera_name = camera.name()
+            per_camera_attr_dict = {}
+            for attr in self.cam_attribute_names:
+                per_camera_attr_dict[attr] = camera.getAttr(attr)
+            self.user_view_options['camera_flags'][camera_name] = \
+                per_camera_attr_dict
+
+    def set_view_options(self):
+        """set view options for playblast
+        """
+        active_panel = self.get_active_panel()
+        # turn all show/hide display options off except for polygons and
+        # surfaces
+        pm.modelEditor(active_panel, e=1, allObjects=False)
+        pm.modelEditor(active_panel, e=1, manipulators=False)
+        pm.modelEditor(active_panel, e=1, grid=False)
+
+        pm.modelEditor(active_panel, e=1, polymeshes=True)
+        pm.modelEditor(active_panel, e=1, nurbsSurfaces=True)
+        pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
+        pm.modelEditor(active_panel, e=1, planes=True)
+
+        # turn all hud displays off
+        hud_flags = pm.headsUpDisplay(lh=1)
+        for flag in hud_flags:
+            pm.headsUpDisplay(flag, e=1, vis=0)
+
+        # set camera options for playblast
+        for camera in self.get_shot_cameras():
+            camera.setAttr('overscan', 1)
+            camera.setAttr('filmFit', 1)
+            camera.setAttr('displayFilmGate', 1)
+            camera.setAttr('displayResolution', 0)
+
+    def restore_user_options(self):
+        """restores user options
+        """
+        active_panel = self.get_active_panel()
+        for flag, value in self.user_view_options['display_flags'].items():
+            pm.modelEditor(active_panel, **{'e': 1, flag: value})
+
+        # reassign original hud display options
+        for flag, value in self.user_view_options['hud_flags'].items():
+            pm.headsUpDisplay(flag, e=1, vis=value)
+
+        # reassign original camera options
+        for camera in self.get_shot_cameras():
+            camera_name = camera.name()
+            camera_flags = self.user_view_options['camera_flags'][camera_name]
+            for attr, value in camera_flags.items():
+                camera.setAttr(attr, value)
+
+    @classmethod
+    def get_active_panel(cls):
+        """returns the active model panel
+        """
+        active_panel = None
+        panel_list = pm.getPanel(type='modelPanel')
+        for panel in panel_list:
+            if pm.modelEditor(panel, q=1, av=1):
+                active_panel = panel
+                break
+
+        return active_panel
+
+    def playblast(self):
+        """does the real thing
+        """
+        # check camera sequencer nodes
+        if len(pm.ls(type='sequenceManager')) != 1:
+            raise RuntimeError(
+                'Only 1 Sequence Manager node must be present in your scene.'
+            )
+
+        if len(pm.ls(type='sequencer')) != 1:
+            raise RuntimeError(
+                'Just 1 Sequencer node must be present in your scene.'
+            )
+
+        shots = pm.sequenceManager(listShots=1)
+        if len(shots) <= 0:
+            raise RuntimeError('There are no Shots in your Camera Sequencer.')
+
+        self.store_user_options()
+        self.set_view_options()
+
+        # deselect all
+        pm.select(cl=1)
+
+        from anima.ui.progress_dialog import ProgressDialogManager
+        pdm = ProgressDialogManager()
+        pdm.close()
+        caller = pdm.register(len(shots), 'Exporting Playblast...')
+
+        # playblast
+        # get project resolution
+        if self.version:
+            project = self.version.task.project
+            # get the resolution
+            imf = project.image_format
+            width = int(imf.width * 0.5)
+            height = int(imf.height * 0.5)
+        else:
+            # use half HD
+            width = 960
+            height = 540
+
+        for shot in shots:
+            temp_output = tempfile.mktemp(suffix='.mov')
+            start_frame = int(pm.shot(shot, q=1, st=1))
+            end_frame = int(pm.shot(shot, q=1, et=1))
+            self.create_hud('kksCameraHUD')
+            pm.playblast(
+                fmt='qt', startTime=start_frame, endTime=end_frame + 1,
+                sequenceTime=1, forceOverwrite=1, filename=temp_output,
+                clearCache=1, showOrnaments=1, percent=100, wh=(width, height),
+                offScreen=1, viewer=0, useTraxSounds=1, compression='PNG',
+                quality=70
+            )
+
+            # upload output to server
+            self.upload_as_output(
+                version=self.version,
+                file_path=temp_output,
+                shot=shot
+            )
+
+            caller.step()
+
+        self.restore_user_options()
+
+    def upload_as_output(self, version=None, file_path='', shot=None):
+        """upload the given file as an output
+
+        # import urllib
+        # import urllib2
+        # import cookielib
+        # import anima
+        #
+        # login_url = '%s/login' % anima.stalker_server_internal_address
+        #
+        # cj = cookielib.CookieJar()
+        # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
+        # login_data = urllib.urlencode({
+        #     'login': anima.stalker_dummy_user_login,
+        #     'password': anima.stalker_dummy_user_pass,
+        #     'submit': True
+        # })
+        # opener.open(login_url, login_data)
+        #
+        # resp = opener.open(url)
+        # data = resp.read()
+        """
+
+        output_file_name = '%s_%s.mov' % (
+            os.path.splitext(self.version.filename)[0],
+            shot.name().split(':')[-1] if shot else 'None'
+        )
+
+        task = version.task
+        upload_path = '%s/Outputs/Playblast/%s' %\
+                      (task.absolute_path, output_file_name)
+
+        print('file_path: %s' % file_path)
+        print('upload_path: %s' % upload_path)
+
+        # repo = task.project.repository
+        #
+        # from stalker import db, Link, Repository
+        # assert isinstance(repo, Repository)
+        #
+        # link_path = repo.make_relative(upload_path)
+        #
+        # shutil.move(file_path, upload_path)
+        #
+        # # record this as an output to the Version
+        #
+        # # first query if there is a link with same path
+        # existing_link = Link.query.filter(Link.full_path == link_path).first()
+        #
+        # if not existing_link:
+        #     l = Link(
+        #         full_path=link_path,
+        #         original_filename=output_file_name
+        #     )
+        #     self.version.outputs.append(l)
+        #     db.DBSession.add(l)
+        #     db.DBSession.commit()
