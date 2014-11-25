@@ -965,6 +965,13 @@ def create_representations():
     if Representation.repr_separator in v.take_name:
         return
 
+    # skip if it is a Character
+    skip_types = ['character']
+    for t in v.naming_parents:
+        for st in skip_types:
+            if t.type and t.type.name.lower().startswith(st):
+                return
+
     from anima.env.mayaEnv import repr_tools
     gen = repr_tools.RepresentationGenerator(version=v)
     gen.generate_all()
