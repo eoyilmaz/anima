@@ -3,7 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.env import to_os_independent_path
 
 import os
 import subprocess
@@ -17,6 +16,7 @@ from pymel.core.system import FileReference
 
 from anima.extension import extends
 from anima.repr import Representation
+from anima.env import to_os_independent_path
 
 
 default_handle_count = 15

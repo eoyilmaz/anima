@@ -298,6 +298,26 @@ def delete_empty_namespaces():
     #     )
 
 
+@publisher
+def check_only_published_versions_are_used():
+    """checks if only published versions are used in this scene
+    """
+    non_published_versions = []
+    for ref in pm.listReferences():
+        v = ref.version
+        if v and not v.is_published:
+            non_published_versions.append(v)
+
+    if len(non_published_versions):
+        raise PublishError(
+            'Please use only <b>published</b> versions for:<br><br>%s' %
+            '<br>'.join(
+                map(lambda x: x.nice_name,
+                    non_published_versions[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
 #*******#
 # MODEL #
 #*******#

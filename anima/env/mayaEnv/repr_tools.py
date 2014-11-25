@@ -799,8 +799,12 @@ class RepresentationGenerator(object):
             except pm.MayaNodeError:
                 # just create it
                 arnold_stand_in_default_light_set = \
-                    pm.sets('ArnoldStandInDefaultLightSet')
+                    pm.createNode(
+                        'objectSet',
+                        name='ArnoldStandInDefaultLightSet'
+                    )
 
+            pm.select(None)
             pm.sets(
                 arnold_stand_in_default_light_set,
                 fe=pm.ls(type='aiStandIn')
