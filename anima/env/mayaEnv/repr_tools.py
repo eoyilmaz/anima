@@ -434,18 +434,7 @@ class RepresentationGenerator(object):
                     if not isinstance(child_node, pm.nt.Transform):
                         continue
 
-                    # check the shape
-                    # check if it has at least one shape under it
-                    has_shape = False
-                    children = child_node.getChildren()
-                    while len(children) and not has_shape:
-                        child = children.pop(0)
-                        if isinstance(child, allowed_shapes):
-                            has_shape = True
-                            break
-                        children += child.getChildren()
-
-                    if not has_shape:
+                    if not auxiliary.has_shape(child_node):
                         continue
 
                     child_name = child_node.name()
@@ -655,18 +644,7 @@ class RepresentationGenerator(object):
                     if not isinstance(child_node, pm.nt.Transform):
                         continue
 
-                    # check the shape
-                    # check if it has at least one shape under it
-                    has_shape = False
-                    children = child_node.getChildren()
-                    while len(children) and not has_shape:
-                        child = children.pop(0)
-                        if isinstance(child, allowed_shapes):
-                            has_shape = True
-                            break
-                        children += child.getChildren()
-
-                    if not has_shape:
+                    if not auxiliary.has_shape(child_node):
                         continue
 
                     child_name = child_node.name()
