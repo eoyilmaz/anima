@@ -72,7 +72,7 @@ def geometry2ass(**kwargs):
     export_type = kwargs['export_type']
     export_motion = kwargs['export_motion']
 
-    print '*******************************************************************'
+    print('******************************************************************')
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
@@ -84,14 +84,14 @@ def geometry2ass(**kwargs):
     else:
         basename = parts[0]
 
-    asstoc_path = basename + '.asstoc'
+    asstoc_path = '%s.asstoc' % basename
 
     node = hou.pwd()
 
     write_start = time.time()
-    filehandler = open
+    file_handler = open
     if use_gzip:
-        filehandler = gzip.open
+        file_handler = gzip.open
 
     # normalize path
     ass_path = os.path.normpath(ass_path)
@@ -106,12 +106,12 @@ def geometry2ass(**kwargs):
     elif export_type == 1:
         data = polygon2ass(node, name, export_motion)
 
-    ass_file = filehandler(ass_path, 'w')
+    ass_file = file_handler(ass_path, 'w')
     ass_file.write(data)
     ass_file.close()
     write_end = time.time()
 
-    print 'Writing to file            : %3.3f' % (write_end - write_start)
+    print('Writing to file            : %3.3f' % (write_end - write_start))
 
     node_inputs = node.inputs()
     try:
@@ -134,8 +134,8 @@ def geometry2ass(**kwargs):
         asstoc_file.write(bounding_box_info)
 
     end_time = time.time()
-    print 'All Conversion took       : %3.3f sec' % (end_time - start_time)
-    print '*******************************************************************'
+    print('All Conversion took       : %3.3f sec' % (end_time - start_time))
+    print('******************************************************************')
 
 
 def polygon2ass(node, name, export_motion=False):
@@ -260,7 +260,7 @@ polymesh
     #)
     encoded_number_of_points_per_primitive = '\n'.join(combined_number_of_points_per_primitive)
     encode_end = time.time()
-    print 'Encoding Number of Points  : %3.3f' % (encode_end - encode_start)
+    print('Encoding Number of Points  : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     #splitted_number_of_points_per_primitive = \
@@ -273,7 +273,7 @@ polymesh
     #splitted_number_of_points_per_primitive = ' '.join(encoded_number_of_points_per_primitive)
     splitted_number_of_points_per_primitive = encoded_number_of_points_per_primitive
     split_end = time.time()
-    print 'Splitting Number of Points : %3.3f' % (split_end - split_start)
+    print('Splitting Number of Points : %3.3f' % (split_end - split_start))
 
 
     #
@@ -282,12 +282,12 @@ polymesh
     encode_start = time.time()
     encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
-    print 'Encoding Point Position    : %3.3f' % (encode_end - encode_start)
+    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
     split_end = time.time()
-    print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
+    print('Splitting Point Poisitions : %3.3f' % (split_end - split_start))
 
     #
     # Vertex Ids
@@ -301,7 +301,7 @@ polymesh
     #)
     encoded_vertex_ids = '\n'.join(combined_vertex_ids)
     encode_end = time.time()
-    print 'Encoding Vertex Ids        : %3.3f' % (encode_end - encode_start)
+    print('Encoding Vertex Ids        : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     #splitted_vertex_ids = re.sub(
@@ -313,7 +313,7 @@ polymesh
     #splitted_vertex_ids = ' '.join(encoded_vertex_ids)
     splitted_vertex_ids = encoded_vertex_ids
     split_end = time.time()
-    print 'Splitting Vertex Ids       : %3.3f' % (split_end - split_start)
+    print('Splitting Vertex Ids       : %3.3f' % (split_end - split_start))
 
     matrix = """1 0 0 0
 0 1 0 0
@@ -394,7 +394,7 @@ curves
     number_of_points_in_one_curve = real_number_of_points_in_one_curve + 2
     number_of_points_per_curve = [`number_of_points_in_one_curve`] * number_of_curves
 
-    curve_ids = ' '.join(`id` for id in xrange(number_of_curves))
+    curve_ids = ' '.join(`id_` for id_ in xrange(number_of_curves))
 
     radius = None
 
@@ -445,36 +445,37 @@ curves
         point_positions = '%s%s' % (point_positions, point_prime_positions)
 
     getting_point_positions_end = time.time()
-    print 'Getting Point Position     : %3.3f' % \
-          (getting_point_positions_end - getting_point_positions_start)
+    print('Getting Point Position     : %3.3f' %
+          (getting_point_positions_end - getting_point_positions_start))
 
     # repeat every first and last point coordinates
     # (3 value each 3 * 4 = 12 characters) of every curve
     zip_start = time.time()
     point_positions = ''.join(
-        map(lambda x: '%s%s%s' % (x[:12], x, x[-12:]),
-            map(''.join,
-                zip(*[iter(point_positions)]*(real_number_of_points_in_one_curve*4*3))
-            )
+        map(
+            lambda x: '%s%s%s' % (x[:12], x, x[-12:]),
+            map(
+                ''.join,
+                zip(*[iter(point_positions)] * (real_number_of_points_in_one_curve*4*3)))
         )
     )
     zip_end = time.time()
-    print 'Zipping Point Position     : %3.3f' % (zip_end - zip_start)
+    print('Zipping Point Position     : %3.3f' % (zip_end - zip_start))
 
     encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
-    print 'Encoding Point Position    : %3.3f' % (encode_end - encode_start)
+    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
     split_end = time.time()
-    print 'Splitting Point Poisitions : %3.3f' % (split_end - split_start)
+    print('Splitting Point Poisitions : %3.3f' % (split_end - split_start))
 
     # radius
     encode_start = time.time()
     encoded_radius = base85.arnold_b85_encode(radius)
     encode_end = time.time()
-    print 'Radius encode              : %3.3f' % (encode_end - encode_start)
+    print('Radius encode              : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_radius = re.sub("(.{500})", "\\1\n", encoded_radius, 0)
@@ -482,46 +483,46 @@ curves
     if export_motion:
         splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
     split_end = time.time()
-    print 'Splitting Radius           : %3.3f' % (split_end - split_start)
+    print('Splitting Radius           : %3.3f' % (split_end - split_start))
 
     # uv
     getting_uv_start = time.time()
     u = geo.primFloatAttribValuesAsString('uv_u')
     v = geo.primFloatAttribValuesAsString('uv_v')
     getting_uv_end = time.time()
-    print 'Getting uv                 : %3.3f' % \
-          (getting_uv_end - getting_uv_start)
+    print('Getting uv                 : %3.3f' %
+          (getting_uv_end - getting_uv_start))
 
     encode_start = time.time()
     encoded_u = base85.arnold_b85_encode(u)
     encode_end = time.time()
-    print 'Encoding UParamcoord       : %3.3f' % (encode_end - encode_start)
+    print('Encoding UParamcoord       : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_u = re.sub("(.{500})", "\\1\n", encoded_u, 0)
     if export_motion:
         splitted_u = '%(data)s%(data)s' % {'data': splitted_u}
     split_end = time.time()
-    print 'Splitting UParamCoord      : %3.3f' % (split_end - split_start)
+    print('Splitting UParamCoord      : %3.3f' % (split_end - split_start))
 
     encode_start = time.time()
     encoded_v = base85.arnold_b85_encode(v)
     encode_end = time.time()
-    print 'Encoding VParamcoord       : %3.3f' % (encode_end - encode_start)
+    print('Encoding VParamcoord       : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_v = re.sub("(.{500})", "\\1\n", encoded_v, 0)
     if export_motion:
         splitted_v = '%(data)s%(data)s' % {'data': splitted_v}
     split_end = time.time()
-    print 'Splitting VParamCoord      : %3.3f' % (split_end - split_start)
+    print('Splitting VParamCoord      : %3.3f' % (split_end - split_start))
 
-    print 'len(encoded_point_positions) : %s' % len(encoded_point_positions)
-    print '(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3)
-    print 'len(encoded_radius)          : %s' % len(encoded_radius)
-    print 'len(uv)                      : %s' % len(u)
-    print 'len(encoded_u)               : %s' % len(encoded_u)
-    print 'len(encoded_v)               : %s' % len(encoded_v)
+    print('len(encoded_point_positions) : %s' % len(encoded_point_positions))
+    print('(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3))
+    print('len(encoded_radius)          : %s' % len(encoded_radius))
+    print('len(uv)                      : %s' % len(u))
+    print('len(encoded_u)               : %s' % len(encoded_u))
+    print('len(encoded_v)               : %s' % len(encoded_v))
 
     # extend for motion blur
     matrix = """1 0 0 0

@@ -420,12 +420,6 @@ class RepresentationGenerator(object):
 
             start_frame = end_frame = int(pm.currentTime(q=1))
 
-            allowed_shapes = (
-                pm.nt.Mesh,
-                pm.nt.NurbsCurve,
-                pm.nt.NurbsSurface
-            )
-
             for root_node in root_nodes:
                 # export each child of each root as separate nodes
                 for child_node in root_node.getChildren():
@@ -572,13 +566,9 @@ class RepresentationGenerator(object):
                          '-shadowLinks 1 -cam perspShape;'
 
         # calculate output path
-        output_path = os.path.join(self.version.absolute_path, 'Outputs/ass/')
-
-        allowed_shapes = (
-            pm.nt.Mesh,
-            pm.nt.NurbsCurve,
-            pm.nt.NurbsSurface
-        )
+        output_path = \
+            os.path.join(self.version.absolute_path, 'Outputs/ass/')\
+            .replace('\\', '/')
 
         # check if all references have an ASS repr first
         refs_with_no_ass_repr = []
