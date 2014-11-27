@@ -416,7 +416,7 @@ class RepresentationGenerator(object):
 
             # for local models generate an ABC file
             output_path = os.path.join(self.version.absolute_path,
-                                       'Outputs/alembic/')
+                                       'Outputs/alembic/').replace('\\', '/')
 
             start_frame = end_frame = int(pm.currentTime(q=1))
 
