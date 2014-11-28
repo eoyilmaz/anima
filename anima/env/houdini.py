@@ -192,7 +192,12 @@ class Houdini(EnvironmentBase):
             # should be Houdini 12
             hou.allowEnvironmentToOverwriteVariable(var, True)
         os.environ[var] = value
-        hou.hscript("set -g %s = '%s'" % (var, value))
+        hscript_command = "set -g %s = '%s'" % (var, value)
+
+        try:
+            hou.hscript(hscript_command)
+        except TypeError:
+            pass
 
     def get_recent_file_list(self):
         """returns the recent HIP files list from the houdini
