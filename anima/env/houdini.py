@@ -11,7 +11,7 @@ import logging
 from stalker.db import DBSession
 
 import hou
-from .. import utils
+from anima import utils
 from anima.env import empty_reference_resolution
 from base import EnvironmentBase
 
@@ -25,6 +25,17 @@ class Houdini(EnvironmentBase):
     """
 
     name = 'Houdini'
+
+    def __init__(self, name="", extensions=None, version=None):
+        super(Houdini, self).__init__(name, extensions, version)
+
+        from anima import repo_env_template
+        from stalker import Repository
+        # re initialize repo vars
+        for repo in Repository.query.all():
+            name = repo_env_template % {'id': repo.id}
+            value = repo.path
+            self.set_environment_variable(name, value)
 
     def save_as(self, version):
         """the save action for houdini environment
@@ -186,18 +197,15 @@ class Houdini(EnvironmentBase):
         :param str var: The name of the var
         :param value: The value of the variable
         """
+        os.environ[var] = value
         try:
             hou.allowEnvironmentVariableToOverwriteVariable(var, True)
         except AttributeError:
             # should be Houdini 12
             hou.allowEnvironmentToOverwriteVariable(var, True)
-        os.environ[var] = value
-        hscript_command = "set -g %s = '%s'" % (var, value)
 
-        try:
-            hou.hscript(hscript_command)
-        except TypeError:
-            pass
+        hscript_command = "set -g %s = '%s'" % (var, value)
+        hou.hscript(str(hscript_command))
 
     def get_recent_file_list(self):
         """returns the recent HIP files list from the houdini
@@ -373,12 +381,12 @@ class FileHistory(object):
         self._history_file_name = 'file.history'
         self._history_file_path = ''
 
-        if os.name == 'nt':
+        # if os.name == 'nt':
             # under windows the HIH is useless
             # interpret the HIH from POSE environment variable
-            self._history_file_path = os.path.dirname(os.getenv('POSE'))
-        else:
-            self._history_file_path = os.getenv('HIH')
+        self._history_file_path = os.path.dirname(os.getenv('POSE'))
+        # else:
+        #     self._history_file_path = os.getenv('HIH')
 
         self._history_file_full_path = os.path.join(
             self._history_file_path,
