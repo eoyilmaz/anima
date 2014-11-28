@@ -160,40 +160,39 @@ class Houdini(EnvironmentBase):
         logger.debug('version.path: %s' % version.absolute_path)
         logger.debug('version.filename: %s' % version.filename)
         logger.debug('version.full_path: %s' % version.absolute_full_path)
-        logger.debug('version.full_path (calculated): %s' %
-                     os.path.join(
-                         version.absolute_full_path,
-                         version.filename
-                     ).replace("\\", "/")
+        logger.debug(
+            'version.full_path (calculated): %s' %
+            os.path.join(
+                version.absolute_full_path,
+                version.filename
+            ).replace("\\", "/")
         )
         job = str(version.absolute_path)
         hip = job
-        hipName = os.path.basename(str(version.absolute_full_path))
+        hip_name = os.path.basename(str(version.absolute_full_path))
 
         logger.debug('job     : %s' % job)
         logger.debug('hip     : %s' % hip)
-        logger.debug('hipName : %s' % hipName)
+        logger.debug('hipName : %s' % hip_name)
 
+        self.set_environment_variable('JOB', job)
+        self.set_environment_variable('HIP', hip)
+        self.set_environment_variable('HIPNAME', hip_name)
+
+    @classmethod
+    def set_environment_variable(cls, var, value):
+        """sets environment var
+
+        :param str var: The name of the var
+        :param value: The value of the variable
+        """
         try:
-            hou.allowEnvironmentVariableToOverwriteVariable("JOB", True)
-            hou.allowEnvironmentVariableToOverwriteVariable("HIP", True)
-            hou.allowEnvironmentVariableToOverwriteVariable("HIPNAME", True)
+            hou.allowEnvironmentVariableToOverwriteVariable(var, True)
         except AttributeError:
             # should be Houdini 12
-            hou.allowEnvironmentToOverwriteVariable('JOB', True)
-            hou.allowEnvironmentToOverwriteVariable('HIP', True)
-            hou.allowEnvironmentToOverwriteVariable('HIPNAME', True)
-
-        # update the environment variables
-        os.environ["JOB"] = job
-        os.environ["HIP"] = hip
-        os.environ["HIPNAME"] = hipName
-
-        # also set it using hscript, hou is a little bit problematic
-        hou.hscript("set -g JOB = '%s'" % job)
-        hou.hscript("set -g HIP = '%s'" % hip)
-        hou.hscript("set -g HIPNAME = '%s'" % hipName)
-        
+            hou.allowEnvironmentToOverwriteVariable(var, True)
+        os.environ[var] = value
+        hou.hscript("set -g %s = '%s'" % (var, value))
 
     def get_recent_file_list(self):
         """returns the recent HIP files list from the houdini
