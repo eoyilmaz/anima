@@ -1060,7 +1060,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     if Representation.repr_separator in version.take_name:
                         # use the parent version
                         version = version.parent
-                    versions.append(version)
+                    if version not in versions:
+                        versions.append(version)
                     prev_path = path
             if caller is not None:
                 caller.step()
