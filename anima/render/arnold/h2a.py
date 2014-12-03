@@ -148,9 +148,9 @@ def polygon2ass(node, name, export_motion=False):
 polymesh
 {
  name %(name)s
- nsides %(primitive_count)i %(sample_count)s UINT
+ nsides %(primitive_count)i 1 UINT
 %(number_of_points_per_primitive)s
- vidxs %(vertex_count)s %(sample_count)s UINT
+ vidxs %(vertex_count)s 1 UINT
 %(vertex_ids)s
  vlist %(point_count)s %(sample_count)s b85POINT
 %(point_positions)s
@@ -241,6 +241,10 @@ polymesh
 
     point_positions = geo.pointFloatAttribValuesAsString('P')
 
+    if export_motion:
+        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
+        point_positions = '%s%s' % (point_positions, point_prime_positions)
+
     #try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
     #except hou.OperationFailed:
@@ -318,9 +322,10 @@ polymesh
     matrix = """1 0 0 0
 0 1 0 0
 0 0 1 0
-0 0 0 1"""
+0 0 0 1
+"""
     if export_motion:
-        matrix = '%s%s' % (matrix, matrix)
+        matrix += matrix
 
     data = base_template % {
         'name': name,
@@ -431,7 +436,8 @@ curves
         radius_file_str_write(''.join(radius_str_buffer))
         radius = radius_file_str.getvalue()
     getting_radius_end = time.time()
-    print 'Getting Radius Info        : %3.3f' % (getting_radius_end - getting_radius_start)
+    print('Getting Radius Info        : %3.3f' %
+          (getting_radius_end - getting_radius_start))
 
     # point positions
     encode_start = time.time()

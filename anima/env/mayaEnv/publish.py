@@ -966,7 +966,7 @@ def create_representations():
         return
 
     # skip if it is a Character
-    skip_types = ['character']
+    skip_types = ['character', 'animation', 'previs']
     for t in v.naming_parents:
         for st in skip_types:
             if t.type and t.type.name.lower().startswith(st):
