@@ -24,7 +24,7 @@ Place the following variables in to the config.py file::
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
 
-__version__ = "0.1.10"
+__version__ = "0.1.12"
 
 from stalker import defaults
 

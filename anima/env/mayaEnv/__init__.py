@@ -556,10 +556,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 options='v=0'
             )
 
-        # replace external paths
+        # replace external paths
         self.replace_external_paths()
 
-        # set the reference state to loaded
+        # set the reference state to loaded
         if not ref.isLoaded():
             ref.load()
 
@@ -1081,14 +1081,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version = self.get_version_from_full_path(parent_ref.path)
 
         if version:
-            # use the original version if
-            if Representation.repr_separator in version.take_name:
+            # use the original version if it is a Repr version
+            if Representation.repr_separator in version.take_name \
+               and version.parent:
                 version = version.parent
 
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
             from stalker import db
+            # TODO: this is an early commit and this may result an empty Version instance
             db.DBSession.commit()
 
     def update_first_level_versions(self, reference_resolution):
@@ -1281,8 +1283,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 if node.referenceFile():
                     continue
 
-                orig_path = node.getAttr(attr_name).replace("\\", "/")
-                if '$' in orig_path:
+                orig_path = node.getAttr(attr_name)
+                if orig_path is None or '$' in orig_path:
                     # do nothing it is already using an environment variable
                     continue
 

@@ -29,7 +29,7 @@ class MayaTestBase(unittest.TestCase):
     """The base class for Maya Tests
     """
 
-    def create_version(self, task, take_name):
+    def create_version(self, task, take_name, parent=None):
         """A helper method for creating a new version
 
         :param task: the task
@@ -39,7 +39,11 @@ class MayaTestBase(unittest.TestCase):
         # just renew the scene
         pm.newFile(force=True)
 
+        if parent:
+            self.maya_env.open(parent, force=True)
+
         v = Version(task=task, take_name=take_name)
+
         db.DBSession.add(v)
         self.maya_env.save_as(v)
 
@@ -844,6 +848,7 @@ class MayaTestBase(unittest.TestCase):
         # add the nodes
         base_transform = pm.nt.Transform(name='kksEnv___vegetation_ALL')
         strokes = pm.nt.Transform(name='kks___vegetation_pfxStrokes')
+        strokes.v.set(0)
         polygons = pm.nt.Transform(name='kks___vegetation_pfxPolygons')
         paintable_geos = pm.nt.Transform(name='kks___vegetation_paintableGeos')
 
@@ -900,7 +905,7 @@ class MayaTestBase(unittest.TestCase):
         pm.parent(clover_main, clover_mesh_group)
         pm.parent(clover_leaf, clover_mesh_group)
 
-        # save it
+        # save its
         self.maya_env.save_as(version=self.version115)
         self.maya_env.save_as(version=self.version116)
         self.maya_env.save_as(version=self.version117)
@@ -2312,12 +2317,12 @@ class MayaTestCase(MayaTestBase):
         a_base_v3.is_published = True
 
         # BBox repr
-        a_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
+        a_bbox_v1 = self.create_version(self.asset1, 'Main@BBox', a_base_v3)
 
-        a_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
+        a_bbox_v2 = self.create_version(self.asset1, 'Main@BBox', a_base_v3)
         a_bbox_v2.is_published = True
 
-        a_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
+        a_bbox_v3 = self.create_version(self.asset1, 'Main@BBox', a_base_v3)
         a_bbox_v3.is_published = True
 
         # a new series of versions
@@ -2331,12 +2336,12 @@ class MayaTestCase(MayaTestBase):
         b_base_v3.is_published = True
 
         # BBox repr
-        b_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
+        b_bbox_v1 = self.create_version(self.asset1, 'Main@BBox', b_base_v3)
 
-        b_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
+        b_bbox_v2 = self.create_version(self.asset1, 'Main@BBox', b_base_v3)
         b_bbox_v2.is_published = True
 
-        b_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
+        b_bbox_v3 = self.create_version(self.asset1, 'Main@BBox', b_base_v3)
         b_bbox_v3.is_published = True
 
         # and another one
@@ -2351,12 +2356,12 @@ class MayaTestCase(MayaTestBase):
         c_base_v3.is_published = True
 
         # BBox repr
-        c_bbox_v1 = self.create_version(self.asset1, 'Main@BBox')
+        c_bbox_v1 = self.create_version(self.asset1, 'Main@BBox', c_base_v3)
 
-        c_bbox_v2 = self.create_version(self.asset1, 'Main@BBox')
+        c_bbox_v2 = self.create_version(self.asset1, 'Main@BBox', c_base_v3)
         c_bbox_v2.is_published = True
 
-        c_bbox_v3 = self.create_version(self.asset1, 'Main@BBox')
+        c_bbox_v3 = self.create_version(self.asset1, 'Main@BBox', c_base_v3)
         c_bbox_v3.is_published = True
 
         # save it as a new version
@@ -2600,7 +2605,13 @@ class MayaTestCase(MayaTestBase):
         """testing if references of representations will be referenced with
         correct namespace
         """
-        self.fail('test is not implemented yet')
+        pm.newFile(force=True)
+        a_base_v3 = self.create_version(self.asset1, 'Main')
+        a_bbox_v1 = self.create_version(self.asset1, 'Main@BBox', a_base_v3)
+        pm.newFile(force=True)
+
+        ref = self.maya_env.reference(a_bbox_v1)
+        self.assertEqual(ref.namespace, os.path.basename(a_base_v3.nice_name))
 
     def test_save_as_replaces_image_plane_filename_with_env_variable(self):
         """testing if save_as replaces the imagePlane filename with repository
@@ -6442,41 +6453,41 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
 
         # now do your addition
         # create ass take for asset2
-        self.repr_version1 = self.create_version(self.asset2, 'Main@ASS')
-        self.repr_version2 = self.create_version(self.asset2, 'Main@ASS')
-        self.repr_version3 = self.create_version(self.asset2, 'Main@ASS')
+        self.repr_version1 = self.create_version(self.asset2, 'Main@ASS', self.version3)
+        self.repr_version2 = self.create_version(self.asset2, 'Main@ASS', self.version3)
+        self.repr_version3 = self.create_version(self.asset2, 'Main@ASS', self.version3)
 
         self.repr_version1.is_published = True
         self.repr_version3.is_published = True
 
-        self.repr_version4 = self.create_version(self.asset2, 'Main@BBox')
-        self.repr_version5 = self.create_version(self.asset2, 'Main@BBox')
-        self.repr_version6 = self.create_version(self.asset2, 'Main@BBox')
+        self.repr_version4 = self.create_version(self.asset2, 'Main@BBox', self.version3)
+        self.repr_version5 = self.create_version(self.asset2, 'Main@BBox', self.version3)
+        self.repr_version6 = self.create_version(self.asset2, 'Main@BBox', self.version3)
 
         self.repr_version4.is_published = True
         self.repr_version6.is_published = True
 
-        self.repr_version7 = self.create_version(self.asset2, 'Main@GPU')
-        self.repr_version8 = self.create_version(self.asset2, 'Main@GPU')
-        self.repr_version9 = self.create_version(self.asset2, 'Main@GPU')
+        self.repr_version7 = self.create_version(self.asset2, 'Main@GPU', self.version3)
+        self.repr_version8 = self.create_version(self.asset2, 'Main@GPU', self.version3)
+        self.repr_version9 = self.create_version(self.asset2, 'Main@GPU', self.version3)
 
         self.repr_version9.is_published = True
 
-        self.repr_version10 = self.create_version(self.asset2, 'Take1@ASS')
-        self.repr_version11 = self.create_version(self.asset2, 'Take1@ASS')
-        self.repr_version12 = self.create_version(self.asset2, 'Take1@ASS')
+        self.repr_version10 = self.create_version(self.asset2, 'Take1@ASS', self.version3)
+        self.repr_version11 = self.create_version(self.asset2, 'Take1@ASS', self.version3)
+        self.repr_version12 = self.create_version(self.asset2, 'Take1@ASS', self.version3)
 
         self.repr_version11.is_published = True
 
-        self.repr_version13 = self.create_version(self.asset2, 'Take1@BBox')
-        self.repr_version14 = self.create_version(self.asset2, 'Take1@BBox')
-        self.repr_version15 = self.create_version(self.asset2, 'Take1@BBox')
+        self.repr_version13 = self.create_version(self.asset2, 'Take1@BBox', self.version3)
+        self.repr_version14 = self.create_version(self.asset2, 'Take1@BBox', self.version3)
+        self.repr_version15 = self.create_version(self.asset2, 'Take1@BBox', self.version3)
 
         self.repr_version14.is_published = True
 
-        self.repr_version16 = self.create_version(self.asset2, 'Take1@GPU')
-        self.repr_version17 = self.create_version(self.asset2, 'Take1@GPU')
-        self.repr_version18 = self.create_version(self.asset2, 'Take1@GPU')
+        self.repr_version16 = self.create_version(self.asset2, 'Take1@GPU', self.version3)
+        self.repr_version17 = self.create_version(self.asset2, 'Take1@GPU', self.version3)
+        self.repr_version18 = self.create_version(self.asset2, 'Take1@GPU', self.version3)
 
         self.repr_version16.is_published = True
         self.repr_version17.is_published = True
@@ -6489,9 +6500,9 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
 
         self.repr_version21.is_published = True
 
-        self.repr_version22 = self.create_version(self.asset2, 'Take2@ASS')
-        self.repr_version23 = self.create_version(self.asset2, 'Take2@ASS')
-        self.repr_version24 = self.create_version(self.asset2, 'Take2@ASS')
+        self.repr_version22 = self.create_version(self.asset2, 'Take2@ASS', self.version21)
+        self.repr_version23 = self.create_version(self.asset2, 'Take2@ASS', self.version21)
+        self.repr_version24 = self.create_version(self.asset2, 'Take2@ASS', self.version21)
 
         self.repr_version24.is_published = True
 
@@ -6652,7 +6663,7 @@ class ToolboxRepresentationToolsTestCase(MayaTestBase):
         self.maya_env.open(self.version102, force=True)
 
         # generate all from here
-        toolbox.Render.generate_repr_of_all_references()
+        toolbox.Reference.generate_repr_of_all_references()
 
         # expect all of the representations to be generated for all of the
         # referenced scenes
@@ -7332,9 +7343,11 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         self.assertTrue(root_node is not None)
 
         children = root_node.getChildren()
-        self.assertEqual(len(children), 2)  #including paintableGeos group
+        for child in children:
+            print(child.name())
+        self.assertEqual(len(children), 3)  # including paintableGeos group
 
-        pfx_polygons = children[1]
+        pfx_polygons = children[2]
         self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
 
         # and they should have a gpuCache shape
@@ -7436,9 +7449,12 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         all_children = yapi.getChildren()
         self.assertEqual(len(all_children), 1)
 
-        # and it should not have any other children
+        # and it should have an aiStandIn node as the shape
         bina = all_children[0]
-        self.assertEqual(len(bina.getChildren()), 0)
+        self.assertEqual(len(bina.getChildren()), 1)
+        stand_in = bina.getChildren()[0]
+        self.assertEqual(stand_in.type(), 'aiStandIn')
+        self.assertTrue(stand_in.getAttr('dso') is None)
 
     def test_generate_ass_repr_for_building_yapi_look_dev_is_working_properly(self):
         """testing if ASS repr generation is working properly for a look dev
@@ -7467,11 +7483,26 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         all_stand_ins = pm.ls(type='aiStandIn')
         self.assertEqual(len(all_stand_ins), 1)
 
-        # it should be parented under a referenced node
-        parent = all_stand_ins[0].getParent().getParent()
+        # it should be a referenced node
+        parent = all_stand_ins[0].getParent()
         self.assertEqual(
             parent.referenceFile(),
             ref
+        )
+
+        # the standIn node it self should be coming from the model
+        self.assertEqual(
+            all_stand_ins[0].referenceFile(),
+            ref
+        )
+
+        # and the path of hte aiStandIn is pointing to a ass file under the
+        # LookDev/Outputs
+        self.assertTrue(
+            'LookDev/Outputs' in all_stand_ins[0].getAttr('dso')
+        )
+        self.assertTrue(
+            '.ass.gz' in all_stand_ins[0].getAttr('dso')
         )
 
     def test_generate_ass_repr_for_building_layout_is_working_properly(self):
@@ -7877,7 +7908,7 @@ class PublisherTestCase(MayaTestBase):
         super(PublisherTestCase, cls).setUpClass()
 
         cls.backup_publishers = publish.publishers
-        publish.publishers = {}
+        publish.clear_publishers()
 
     @classmethod
     def tearDownClass(cls):
@@ -7892,13 +7923,13 @@ class PublisherTestCase(MayaTestBase):
         """clean up tests
         """
         super(PublisherTestCase, self).setUp()
-        publish.publishers = {}
+        publish.clear_publishers()
 
     def tearDown(self):
         """clean up tests
         """
         super(PublisherTestCase, self).tearDown()
-        publish.publishers = {}
+        publish.clear_publishers()
 
     def test_save_as_calls_publishers_for_published_versions(self):
         """testing if Maya.save_as() runs the registered publishers for

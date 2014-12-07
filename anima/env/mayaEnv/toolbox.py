@@ -323,7 +323,9 @@ def UI():
             pm.button(
                 'generate_repr_of_all_references_button',
                 l='Deep Generate Repr Of All References',
-                c=RepeatedCallback(Reference.generate_repr_of_all_references),
+                c=RepeatedCallback(
+                    Reference.generate_repr_of_all_references_caller
+                ),
                 ann='Deeply generates desired Representations of all '
                     'references of this scene',
                 bgc=color.color
@@ -331,7 +333,7 @@ def UI():
             pm.button(
                 'generate_repr_of_scene_button',
                 l='Generate Repr Of This Scene',
-                c=RepeatedCallback(Reference.generate_repr_of_scene),
+                c=RepeatedCallback(Reference.generate_repr_of_scene_caller),
                 ann='Generates desired Representations of this scene',
                 bgc=color.color
             )
@@ -1895,23 +1897,37 @@ class Reference(object):
             for ref in pm.listReferences():
                 ref.to_repr(repr_name)
 
-
-
     @classmethod
-    def generate_repr_of_scene(cls):
-        """generates desired representations of this scene
+    def generate_repr_of_scene_caller(cls):
+        """helper method to call Reference.generate_repr_of_scene() with data
+        coming from UI
         """
-        from anima.ui.progress_dialog import ProgressDialogManager
-        from anima.env.mayaEnv import Maya, repr_tools, auxiliary
-        reload(auxiliary)
-        reload(repr_tools)
-
         generate_bbox = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
         generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
         generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
+
+        cls.generate_repr_of_scene(
+            generate_bbox,
+            generate_gpu,
+            generate_ass,
+            skip_existing
+        )
+
+    @classmethod
+    def generate_repr_of_scene(cls,
+                               generate_bbox=True,
+                               generate_gpu=True,
+                               generate_ass=True,
+                               skip_existing=False):
+        """generates desired representations of this scene
+        """
+        from anima.ui.progress_dialog import ProgressDialogManager
+        from anima.env.mayaEnv import Maya, repr_tools, auxiliary
+        reload(auxiliary)
+        reload(repr_tools)
 
         response = pm.confirmDialog(
             title='Do Create Representations?',
@@ -1926,7 +1942,6 @@ class Reference(object):
 
         # register a new caller
         pdm = ProgressDialogManager()
-
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -1969,8 +1984,32 @@ class Reference(object):
         # now open the source version again
         m_env.open(source_version, force=True, skip_update_check=True)
 
+
     @classmethod
-    def generate_repr_of_all_references(cls):
+    def generate_repr_of_all_references_caller(cls):
+        """a helper method that calls
+        References.generate_repr_of_all_references() with paremeters from the
+        UI
+        """
+        generate_bbox = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
+        generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
+        generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
+
+        skip_existing = \
+            pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
+
+        cls.generate_repr_of_all_references(
+            generate_bbox,
+            generate_gpu,
+            generate_ass
+        )
+
+    @classmethod
+    def generate_repr_of_all_references(cls,
+                                        generate_bbox=True,
+                                        generate_gpu=True,
+                                        generate_ass=True,
+                                        skip_existing=False):
         """generates all representations of all references of this scene
         """
         from anima.ui.progress_dialog import ProgressDialogManager
@@ -1980,13 +2019,6 @@ class Reference(object):
 
         paths_visited = []
         versions_to_visit = []
-
-        generate_bbox = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
-        generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
-        generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
-
-        skip_existing = \
-            pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
 
         # generate a sorted version list
         # and visit each reference only once
