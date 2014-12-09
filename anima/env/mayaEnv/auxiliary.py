@@ -1152,3 +1152,74 @@ class ShotPlayblaster(object):
         #     self.version.outputs.append(l)
         #     db.DBSession.add(l)
         #     db.DBSession.commit()
+
+
+def export_alembic_from_cache_node():
+    from anima.ui.progress_dialog import ProgressDialogManager
+    import os
+
+    pdm = ProgressDialogManager()
+    pdm.close()
+
+    # list all cacheable nodes
+    cacheable_nodes = []
+    tr_list = pm.ls(tr=1, type='transform')
+
+    caller = pdm.register(len(tr_list), 'Searching for Cacheable Nodes')
+
+    for tr in tr_list:
+        if tr.hasAttr('cacheable') and tr.getAttr('cacheable'):
+            cacheable_nodes.append(tr)
+            caller.step()
+
+    # stop if there are no cacheable nodes in the scene
+    if not cacheable_nodes:
+        return
+
+    cacheable_nodes.sort(key=lambda x: x.getAttr('cacheable'))
+
+    caller = pdm.register(len(cacheable_nodes), 'Exporting Alembic Caches')
+
+    start_frame = pm.playbackOptions(q=1, ast=1)
+    end_frame = pm.playbackOptions(q=1, aet=1)
+
+    current_file_full_path = pm.sceneName()
+    current_file_path = os.path.dirname(current_file_full_path)
+    current_file_name = os.path.basename(current_file_full_path)
+
+    # export alembic caches
+    previous_cacheable_attr_value = ''
+    i = 1
+    for cacheable_node in cacheable_nodes:
+        cacheable_attr_value = cacheable_node.getAttr('cacheable')
+        if cacheable_attr_value == previous_cacheable_attr_value:
+            i += 1
+        else:
+            i = 1
+
+        output_path = os.path.join(
+            current_file_path,
+            'Outputs/alembic/%s%i/' % (cacheable_attr_value, i)
+        )
+
+        output_filename = '%s_%i_%i_%s%i%s' % (
+            os.path.splitext(current_file_name)[0],
+            start_frame, end_frame, cacheable_attr_value, i, '.abc'
+        )
+
+        output_full_path = \
+            os.path.join(output_path, output_filename).replace('\\', '/')
+        if not os.path.exists(os.path.dirname(output_full_path)):
+            os.makedirs(os.path.dirname(output_full_path))
+
+        pm.mel.eval(
+            'AbcExport -j "-frameRange %s %s -ro -stripNamespaces -uvWrite -wholeFrameGeo -worldSpace '
+            '-root |%s -file %s";' % (
+                int(start_frame),
+                int(end_frame),
+                cacheable_node,
+                output_full_path
+            )
+        )
+        previous_cacheable_attr_value = cacheable_attr_value
+        caller.step()
