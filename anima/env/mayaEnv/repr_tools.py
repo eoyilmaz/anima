@@ -618,7 +618,13 @@ class RepresentationGenerator(object):
                         orig_path
                     )
                     tx_path = self.make_tx(path)
-                    node.setAttr(attr_name, tx_path)
+                    inputs = node.attr(attr_name).inputs(p=1)
+                    if len(inputs):
+                        # set the input attribute
+                        for input_node_attr in inputs:
+                            input_node_attr.set(tx_path)
+                    else:
+                        node.setAttr(attr_name, tx_path)
 
             # randomize all render node names
             for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
