@@ -415,8 +415,10 @@ class RepresentationGenerator(object):
                 '%(node)s;'
 
             # for local models generate an ABC file
-            output_path = os.path.join(self.version.absolute_path,
-                                       'Outputs/alembic/').replace('\\', '/')
+            output_path = os.path.join(
+                self.version.absolute_path,
+                'Outputs/alembic/'
+            ).replace('\\', '/')
 
             start_frame = end_frame = int(pm.currentTime(q=1))
 
@@ -602,6 +604,8 @@ class RepresentationGenerator(object):
 
             # Make all texture paths relative
             # replace all "$REPO#" from all texture paths first
+            #
+            # This is needed to properly render textures with any OS
             types_and_attrs = {
                 'aiImage': 'filename',
                 'file': 'fileTextureName',
@@ -627,15 +631,17 @@ class RepresentationGenerator(object):
                         node.setAttr(attr_name, tx_path)
 
             # randomize all render node names
+            # This is needed to prevent clashing of materials in a bigger scene
             for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
                 if node.referenceFile() is None and \
                    node.name() not in READ_ONLY_NODE_NAMES:
                     node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
 
+            nodes_to_ass_files = {}
+
             # export all root ass files as they are
             for root_node in auxiliary.get_root_nodes():
                 for child_node in root_node.getChildren():
-                    #print('processing %s' % child_node.name())
                     # check if it is a transform node
                     if not isinstance(child_node, pm.nt.Transform):
                         continue
@@ -643,12 +649,14 @@ class RepresentationGenerator(object):
                     if not auxiliary.has_shape(child_node):
                         continue
 
-                    child_name = child_node.name()
+                    child_node_name = child_node.name()
+
+                    child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
                     output_filename =\
                         '%s.ass' % (
-                            child_name.replace(':', '_').replace('|', '_')
+                            child_node_name.replace(':', '_').replace('|', '_')
                         )
 
                     output_full_path = \
@@ -660,21 +668,22 @@ class RepresentationGenerator(object):
                             'path': output_full_path.replace('\\', '/')
                         }
                     )
+                    nodes_to_ass_files[child_node_full_path] = \
+                        '%s.gz' % output_full_path
+                    print('%s -> %s' % (child_node_full_path, output_full_path))
 
-                    # 5. generate an aiStandIn node and set the path
-                    ass_node = auxiliary.create_arnold_stand_in(
-                        path='%s.gz' % output_full_path
-                    )
-                    ass_tra = ass_node.getParent()
+            # convert all references to ASS
+            # we are doing it a little bit early here, but we need to
+            for ref in pm.listReferences():
+                ref.to_repr('ASS')
 
-                    #ass_node.setAttr("overrideDisplayType", 2)
-                    #ass_node.setAttr("overrideEnabled", 1)
-
-                    # parent the ass node under the child_node so it will move
-                    # with the parent node
-                    pm.parent(ass_tra, child_node)
-                    # rename it to something meaningful
-                    ass_tra.rename('%s_ass' % (child_name.split(':')[-1]))
+            all_stand_ins = pm.ls(type='aiStandIn')
+            for ass_node in all_stand_ins:
+                ass_tra = ass_node.getParent()
+                full_path = ass_tra.fullPath()
+                if full_path in nodes_to_ass_files:
+                    ass_file_path = nodes_to_ass_files[full_path]
+                    ass_node.setAttr('dso', ass_file_path)
 
         elif self.is_vegetation_task(task):
             # in vegetation files, we export the ASS files directly from the
@@ -691,12 +700,12 @@ class RepresentationGenerator(object):
             for node in pfx_polygons_node.getChildren():
                 for child_node in node.getChildren():
                     #print('processing %s' % child_node.name())
-                    child_name = child_node.name().split('___')[-1]
+                    child_node_name = child_node.name().split('___')[-1]
 
                     pm.select(child_node)
                     output_filename =\
                         '%s.ass' % (
-                            child_name.replace(':', '_').replace('|', '_')
+                            child_node_name.replace(':', '_').replace('|', '_')
                         )
 
                     output_full_path = \
@@ -723,26 +732,27 @@ class RepresentationGenerator(object):
                     pm.delete(child_node)
 
                     # give it the same name with the original
-                    ass_tra.rename('%s' % child_name)
+                    ass_tra.rename('%s' % child_node_name)
 
             # clean up other nodes
             pm.delete('kks___vegetation_pfxStrokes')
             pm.delete('kks___vegetation_paintableGeos')
 
         elif self.is_model_task(task):
-            # delete all grandchildren of the root node
+            # convert all children of the root node
+            # to an empty aiStandIn node
             # and save it as it is
             root_nodes = self.get_local_root_nodes()
 
             for root_node in root_nodes:
                 for child_node in root_node.getChildren():
-                    pm.delete(child_node.getChildren())
+                    child_node_name = child_node.name()
+                    pm.delete(child_node)
 
-        # There is a bug about StandIns light linking so
-        # set the aiStandIn.overrideLightLinking to False
-        #[node.setAttr('overrideLightLinking', False)
-         # for node in pm.ls(type='aiStandIn')
-         # if node.referenceFile() is None]
+                    ass_node = auxiliary.create_arnold_stand_in(path='')
+                    ass_tra = ass_node.getParent()
+                    pm.parent(ass_tra, root_node)
+                    ass_tra.rename(child_node_name)
 
         # convert all references to ASS
         for ref in pm.listReferences():

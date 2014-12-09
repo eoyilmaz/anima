@@ -2,6 +2,27 @@
 Changes
 =======
 
+0.1.12
+======
+
+* **New:** Added Representations. In supporting environments (like Maya)
+  Representations are accompanying versions to the original one holding
+  representational data or in another word the same data in another
+  representation.
+
+  For example, a Maya scene may contain a very complex high res polygonal
+  object, which can not be easily drawn in view port. It is now possible to
+  create a Representation (may called GPU) that holds the same data in a
+  gpuCache node. The current implementation for Maya automatically generates a
+  BoudingBox representation (BBOX) a GPU (GPU) representation and an Arnold
+  Stand In representation (ASS) for certain types of versions during
+  publishing.
+
+* **New:** There are now two types of publishers, one called "Pre Publisher"
+  and the other called "Post Publisher". The Pre Publishers are run before
+  publishing the file and the Post Publishers are run after a successful
+  publish operation.
+
 0.1.11
 ======
 

@@ -41,7 +41,15 @@ class AnimaDialogBase(object):
             dialog = login_dialog.MainDialog(parent=self)
             dialog.exec_()
             logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
-            if dialog.DialogCode == QtGui.QDialog.DialogCode.Accepted:
+
+            try:
+                # PySide
+                accepted = QtGui.QDialog.DialogCode.Accepted
+            except AttributeError:
+                # PyQt4
+                accepted = QtGui.QDialog.Accepted
+
+            if dialog.DialogCode == accepted:
                 local_session = LocalSession()
                 logged_in_user = local_session.logged_in_user
             else:
