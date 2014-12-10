@@ -754,6 +754,10 @@ class RepresentationGenerator(object):
                     pm.parent(ass_tra, root_node)
                     ass_tra.rename(child_node_name)
 
+                    # because there will be possible material assignments
+                    # in look dev disable overrideShaders
+                    ass_node.setAttr('overrideShaders', False)
+
         # convert all references to ASS
         for ref in pm.listReferences():
             ref.to_repr('ASS')
