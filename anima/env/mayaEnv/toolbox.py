@@ -2068,6 +2068,14 @@ class Reference(object):
             local_generate_bbox = generate_bbox
             local_generate_gpu = generate_gpu
             local_generate_ass = generate_ass
+
+            # check if this is a repr
+            if '@' in v.take_name:
+                # use the parent
+                v = v.parent
+                if not v:
+                    continue
+
             if skip_existing:
                 # check if there is a BBOX, GPU or ASS repr
                 # generated from this version
