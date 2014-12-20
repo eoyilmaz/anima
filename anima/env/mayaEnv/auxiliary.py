@@ -657,6 +657,12 @@ def replace_with_bbox(nodes):
         bbox = cube_from_bbox(node.boundingBox())
         bbox.setParent(node.getParent())
 
+        # set pivots
+        rp = pm.xform(node, ws=1, rp=1)
+        sp = pm.xform(node, ws=1, sp=1)
+        pm.xform(bbox, ws=1, rp=rp)
+        pm.xform(bbox, ws=1, sp=sp)
+
         node_name = node.name()
         node_shape = node.getShape()
         node_shape_name = None

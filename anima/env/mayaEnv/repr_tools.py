@@ -12,6 +12,7 @@ import pymel.core as pm
 from stalker import LocalSession
 
 from anima.repr import Representation
+from anima.env import to_os_independent_path
 from anima.env.mayaEnv import auxiliary
 
 
@@ -479,6 +480,13 @@ class RepresentationGenerator(object):
                         if child_shape_name is not None:
                             gpu_node.rename(child_shape_name)
 
+                        # set rotate and scale pivots
+                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
+                        pm.xform(gpu_node_tra, ws=1, rp=rp)
+                        pm.xform(gpu_node_tra, ws=1, sp=sp)
+
                         gpu_node.setAttr(
                             'cacheFileName',
                             cache_file_full_path,
@@ -670,7 +678,10 @@ class RepresentationGenerator(object):
                     )
                     nodes_to_ass_files[child_node_full_path] = \
                         '%s.gz' % output_full_path
-                    print('%s -> %s' % (child_node_full_path, output_full_path))
+                    # print('%s -> %s' % (
+                    #     child_node_full_path,
+                    #     output_full_path)
+                    # )
 
             # convert all references to ASS
             # we are doing it a little bit early here, but we need to
@@ -682,7 +693,8 @@ class RepresentationGenerator(object):
                 ass_tra = ass_node.getParent()
                 full_path = ass_tra.fullPath()
                 if full_path in nodes_to_ass_files:
-                    ass_file_path = nodes_to_ass_files[full_path]
+                    ass_file_path = \
+                        to_os_independent_path(nodes_to_ass_files[full_path])
                     ass_node.setAttr('dso', ass_file_path)
 
         elif self.is_vegetation_task(task):
@@ -728,6 +740,13 @@ class RepresentationGenerator(object):
                     # under pfx_polygons_node
                     pm.parent(ass_tra, node)
 
+                    # set pivots
+                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
+                    pm.xform(ass_node, ws=1, rp=rp)
+                    pm.xform(ass_node, ws=1, sp=sp)
+
                     # delete the child_node
                     pm.delete(child_node)
 
@@ -747,12 +766,20 @@ class RepresentationGenerator(object):
             for root_node in root_nodes:
                 for child_node in root_node.getChildren():
                     child_node_name = child_node.name()
+
+                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
                     pm.delete(child_node)
 
                     ass_node = auxiliary.create_arnold_stand_in(path='')
                     ass_tra = ass_node.getParent()
                     pm.parent(ass_tra, root_node)
                     ass_tra.rename(child_node_name)
+
+                    # set pivots
+                    pm.xform(ass_tra, ws=1, rp=rp)
+                    pm.xform(ass_tra, ws=1, sp=sp)
 
                     # because there will be possible material assignments
                     # in look dev disable overrideShaders

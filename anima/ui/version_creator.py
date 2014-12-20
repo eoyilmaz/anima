@@ -19,6 +19,7 @@ from anima import power_users_group_names
 from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
 from anima.exc import PublishError
+from anima.repr import Representation
 from anima.ui import utils as ui_utils
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
@@ -273,6 +274,21 @@ class VersionsTableWidget(QtGui.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         logger.debug('VersionsTableWidget.update_content() is finished')
+
+
+# class RepresentationMessageBox(QtGui.QDialog, AnimaDialogBase):
+#     """A message box variant
+#     """
+#
+#     def __init__(self, parent=None):
+#         super(RepresentationMessageBox, self).__init__(parent)
+#         self.desired_repr = 'Base'
+#
+#     def _setup_ui_(self):
+#         """generates default buttons
+#         """
+#         verticalLayout = QtGui.QVBoxLayout(self)
+#         question_label =
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -1572,6 +1588,47 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if self.environment is not None:
             # get the use namespace state
             use_namespace = self.useNameSpace_checkBox.isChecked()
+
+
+            # check if it has any representations
+            all_reprs = Version.query\
+                .filter(Version.parent == previous_version)\
+                .filter(Version.take_name.ilike('%@%'))\
+                .all()
+
+            if len(all_reprs):
+
+                # ask which one to reference
+                repr_message_box = QtGui.QMessageBox()
+                repr_message_box.setText('Which Repr.?')
+                base_button = \
+                    repr_message_box.addButton(
+                        Representation.base_repr_name,
+                        QtGui.QMessageBox.ActionRole
+                    )
+                setattr(base_button, 'repr_version', previous_version)
+
+                for repr_name in self.environment.representations:
+                    repr_str = '%{repr_separator}{repr_name}%'.format(
+                        repr_name=repr_name,
+                        repr_separator=Representation.repr_separator
+                    )
+                    repr_version = Version.query\
+                        .filter(Version.parent == previous_version)\
+                        .filter(Version.take_name.ilike(repr_str))\
+                        .first()
+
+                    if repr_version:
+                        repr_button = repr_message_box.addButton(
+                            repr_name,
+                            QtGui.QMessageBox.ActionRole
+                        )
+                        setattr(repr_button, 'repr_version', repr_version)
+
+                repr_message_box.exec_()
+                clicked_button = repr_message_box.clickedButton()
+                if clicked_button.repr_version:
+                    previous_version = clicked_button.repr_version
 
             self.environment.reference(previous_version, use_namespace)
 

@@ -2,6 +2,15 @@
 Changes
 =======
 
+0.1.13.dev
+==========
+
+* **New:** Representations in Maya now also have the same pivot points of the
+  objects at the base representation.
+
+* **New:** Added option to choose which representation to reference in
+  Version Creator UI.
+
 0.1.12
 ======
 
