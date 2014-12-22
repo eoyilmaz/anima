@@ -903,7 +903,7 @@ def check_cacheable_attr():
         )
 
 
-@publisher(LOOK_DEV_TYPES + ['layout', 'model', 'vegetation'],
+@publisher(LOOK_DEV_TYPES + ['layout', 'model', 'vegetation', 'scene assembly'],
            publisher_type=POST_PUBLISHER_TYPE)
 def create_representations():
     """creates the representations of the scene

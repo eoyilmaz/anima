@@ -200,6 +200,25 @@ class RepresentationGenerator(object):
         return False
 
     @classmethod
+    def is_scene_assembly_task(cls, task):
+        """checks if the given task is a scene assembly task
+
+        :param task: A Stalker Task instance
+        """
+        task_type = task.type
+        if task_type:
+            # check the task type name
+            if task_type.name.lower() in ['scene assembly']:
+                return True
+        else:
+            # check the task name
+            if task.name.lower() in ['scene assembly']:
+                return True
+
+        # if we came here it must not be a scene assembly task task
+        return False
+
+    @classmethod
     def is_vegetation_task(cls, task):
         """checks if the given task is a vegetation task
 
@@ -277,8 +296,6 @@ class RepresentationGenerator(object):
     def generate_all(self):
         """generates all representations at once
         """
-        self.generate_bbox()
-        self.generate_proxy()
         self.generate_gpu()
         self.generate_ass()
 
@@ -324,7 +341,11 @@ class RepresentationGenerator(object):
             # clean up other nodes
             pm.delete('kks___vegetation_pfxStrokes')
             pm.delete('kks___vegetation_paintableGeos')
-
+        elif self.is_scene_assembly_task(task):
+            # reload all references
+            # replace all root references with their BBOX representation
+            for ref in pm.listReferences():
+                ref.to_repr('BBOX')
         else:
             # find all non referenced root nodes
             root_nodes = self.get_local_root_nodes()
@@ -396,102 +417,104 @@ class RepresentationGenerator(object):
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
             )
 
-        root_nodes = self.get_local_root_nodes()
+        if not self.is_scene_assembly_task(self.version.task):
+            root_nodes = self.get_local_root_nodes()
+            if len(root_nodes):
+                abc_command = \
+                    'AbcExport -j "-frameRange %(start_frame)s ' \
+                    '%(end_frame)s ' \
+                    '-ro -stripNamespaces ' \
+                    '-uvWrite ' \
+                    '-wholeFrameGeo ' \
+                    '-worldSpace ' \
+                    '-root |%(node)s -file %(file_path)s";'
 
-        if len(root_nodes):
-            abc_command = \
-                'AbcExport -j "-frameRange %(start_frame)s %(end_frame)s ' \
-                '-ro -stripNamespaces ' \
-                '-uvWrite ' \
-                '-wholeFrameGeo ' \
-                '-worldSpace ' \
-                '-root |%(node)s -file %(file_path)s";'
+                gpu_command = \
+                    'gpuCache -startTime %(start_frame)s ' \
+                    '-endTime %(end_frame)s ' \
+                    '-optimize -optimizationThreshold 40000 ' \
+                    '-writeMaterials ' \
+                    '-directory "%(path)s" ' \
+                    '-fileName "%(filename)s" ' \
+                    '%(node)s;'
 
-            gpu_command = \
-                'gpuCache -startTime %(start_frame)s -endTime %(end_frame)s ' \
-                '-optimize -optimizationThreshold 40000 ' \
-                '-writeMaterials ' \
-                '-directory "%(path)s" ' \
-                '-fileName "%(filename)s" ' \
-                '%(node)s;'
+                # for local models generate an ABC file
+                output_path = os.path.join(
+                    self.version.absolute_path,
+                    'Outputs/alembic/'
+                ).replace('\\', '/')
 
-            # for local models generate an ABC file
-            output_path = os.path.join(
-                self.version.absolute_path,
-                'Outputs/alembic/'
-            ).replace('\\', '/')
+                start_frame = end_frame = int(pm.currentTime(q=1))
 
-            start_frame = end_frame = int(pm.currentTime(q=1))
+                for root_node in root_nodes:
+                    # export each child of each root as separate nodes
+                    for child_node in root_node.getChildren():
 
-            for root_node in root_nodes:
-                # export each child of each root as separate nodes
-                for child_node in root_node.getChildren():
+                        # check if it is a transform node
+                        if not isinstance(child_node, pm.nt.Transform):
+                            continue
 
-                    # check if it is a transform node
-                    if not isinstance(child_node, pm.nt.Transform):
-                        continue
+                        if not auxiliary.has_shape(child_node):
+                            continue
 
-                    if not auxiliary.has_shape(child_node):
-                        continue
+                        child_name = child_node.name()
+                        child_shape = child_node.getShape()
+                        child_shape_name = None
+                        if child_shape:
+                            child_shape_name = child_shape.name()
 
-                    child_name = child_node.name()
-                    child_shape = child_node.getShape()
-                    child_shape_name = None
-                    if child_shape:
-                        child_shape_name = child_shape.name()
+                        child_full_path = \
+                            child_node.fullPath()[1:].replace('|', '_')
+                        output_filename =\
+                            '%s' % (
+                                child_full_path
+                            )
 
-                    child_full_path = \
-                        child_node.fullPath()[1:].replace('|', '_')
-                    output_filename =\
-                        '%s' % (
-                            child_full_path
-                        )
+                        # check if file exists
+                        try:
+                            pm.mel.eval(
+                                gpu_command % {
+                                    'start_frame': start_frame,
+                                    'end_frame': end_frame,
+                                    'node': child_node.fullPath(),
+                                    'path': output_path,
+                                    'filename': output_filename
+                                }
+                            )
+                        except pm.MelError:
+                            # just pass it
+                            pass
 
-                    # check if file exists
-                    try:
-                        pm.mel.eval(
-                            gpu_command % {
-                                'start_frame': start_frame,
-                                'end_frame': end_frame,
-                                'node': child_node.fullPath(),
-                                'path': output_path,
-                                'filename': output_filename
-                            }
-                        )
-                    except pm.MelError:
-                        # just pass it
-                        pass
+                        # delete the child and add a GPU node instead
+                        pm.delete(child_node)
+                        cache_file_full_path = \
+                            os.path\
+                            .join(output_path, '%s.abc' % output_filename)\
+                            .replace('\\', '/')
 
-                    # delete the child and add a GPU node instead
-                    pm.delete(child_node)
-                    cache_file_full_path = \
-                        os.path\
-                        .join(output_path, '%s.abc' % output_filename)\
-                        .replace('\\', '/')
+                        # check if file exists
+                        if os.path.exists(cache_file_full_path):
+                            gpu_node = pm.createNode('gpuCache')
+                            gpu_node_tra = gpu_node.getParent()
 
-                    # check if file exists
-                    if os.path.exists(cache_file_full_path):
-                        gpu_node = pm.createNode('gpuCache')
-                        gpu_node_tra = gpu_node.getParent()
+                            pm.parent(gpu_node_tra, root_node)
+                            gpu_node_tra.rename(child_name)
 
-                        pm.parent(gpu_node_tra, root_node)
-                        gpu_node_tra.rename(child_name)
+                            if child_shape_name is not None:
+                                gpu_node.rename(child_shape_name)
 
-                        if child_shape_name is not None:
-                            gpu_node.rename(child_shape_name)
+                            # set rotate and scale pivots
+                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
 
-                        # set rotate and scale pivots
-                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                            pm.xform(gpu_node_tra, ws=1, rp=rp)
+                            pm.xform(gpu_node_tra, ws=1, sp=sp)
 
-                        pm.xform(gpu_node_tra, ws=1, rp=rp)
-                        pm.xform(gpu_node_tra, ws=1, sp=sp)
-
-                        gpu_node.setAttr(
-                            'cacheFileName',
-                            cache_file_full_path,
-                            type="string"
-                        )
+                            gpu_node.setAttr(
+                                'cacheFileName',
+                                cache_file_full_path,
+                                type="string"
+                            )
 
         # load all references again
         # convert all references to GPU
