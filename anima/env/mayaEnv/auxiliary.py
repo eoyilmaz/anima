@@ -658,8 +658,8 @@ def replace_with_bbox(nodes):
         bbox.setParent(node.getParent())
 
         # set pivots
-        rp = pm.xform(node, ws=1, rp=1)
-        sp = pm.xform(node, ws=1, sp=1)
+        rp = pm.xform(node, q=1, ws=1, rp=1)
+        sp = pm.xform(node, q=1, ws=1, sp=1)
         pm.xform(bbox, ws=1, rp=rp)
         pm.xform(bbox, ws=1, sp=sp)
 
