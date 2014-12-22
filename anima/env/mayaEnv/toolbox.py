@@ -859,7 +859,7 @@ def UI():
             pm.button('oyTransferShaders_button',
                       l="Transfer Shaders",
                       c=RepeatedCallback(Render.transfer_shaders),
-                      ann="Transfers Shaders from one group to another, use it"
+                      ann="Transfers Shaders from one group to other, use it"
                           "for LookDev -> Alembic",
                       bgc=color.color)
 
