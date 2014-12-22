@@ -857,9 +857,10 @@ def UI():
 
             color.change()
             pm.button('oyTransferShaders_button',
-                      l="transfer_shaders",
+                      l="Transfer Shaders",
                       c=RepeatedCallback(Render.transfer_shaders),
-                      ann="TransferShaders",
+                      ann="Transfers Shaders from one group to another, use it"
+                          "for LookDev -> Alembic",
                       bgc=color.color)
 
             color.change()
@@ -2830,8 +2831,90 @@ class Render(object):
         pm.select(None)
         source = selection[0]
         target = selection[1]
-        auxiliary.transfer_shaders(source, target)
-        pm.select(selection)
+        # auxiliary.transfer_shaders(source, target)
+        # pm.select(selection)
+
+        source_nodes = source.listRelatives(
+            ad=1,
+            type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+        )
+        target_nodes = target.listRelatives(
+            ad=1,
+            type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+        )
+
+        source_node_names = []
+        target_node_names = []
+
+        for node in source_nodes:
+            name = node.name().split(':')[-1].split('|')[-1]
+            source_node_names.append(name)
+
+        for node in target_nodes:
+            name = node.name().split(':')[-1].split('|')[-1]
+            target_node_names.append(name)
+
+        lut = []
+
+        for i, target_node in enumerate(target_nodes):
+            target_node_name = target_node_names[i]
+            try:
+                index = source_node_names.index(target_node_name)
+            except ValueError:
+                pass
+            else:
+                lut.append((source_nodes[index], target_nodes[i]))
+
+        attr_names = [
+            'aiSelfShadows',
+            'aiOpaque',
+            'aiVisibleInDiffuse',
+            'aiVisibleInGlossy',
+            'aiExportTangents',
+            'aiExportColors',
+            'aiExportRefPoints',
+            'aiExportRefNormals',
+            'aiExportRefTangents',
+            'color',
+            'intensity',
+            'aiExposure',
+            'aiColorTemperature',
+            'emitDiffuse',
+            'emitSpecular',
+            'aiDecayType',
+            'lightVisible',
+            'aiSamples',
+            'aiNormalize',
+            'aiCastShadows',
+            'aiShadowDensity',
+            'aiShadowColor',
+            'aiAffectVolumetrics',
+            'aiCastVolumetricShadows',
+            'aiVolumeSamples',
+            'aiDiffuse',
+            'aiSpecular',
+            'aiSss',
+            'aiIndirect',
+            'aiMaxBounces',
+
+            'aiSubdivType',
+            'aiSubdivIterations',
+            'aiSubdivAdaptiveMetric',
+            'aiSubdivPixelError',
+            'aiSubdivUvSmoothing',
+            'aiSubdivSmoothDerivs',
+            'aiDispHeight',
+            'aiDispPadding',
+            'aiDispZeroValue',
+            'aiDispAutobump',
+            'aiStepSize'
+        ]
+
+        for source_node, target_node in lut:
+            auxiliary.transfer_shaders(source_node, target_node)
+            # also transfer render attributes
+            for attr_name in attr_names:
+                target_node.setAttr(attr_name, source_node.getAttr(attr_name))
 
     @classmethod
     def fit_placement_to_UV(cls):

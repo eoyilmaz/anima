@@ -464,13 +464,18 @@ def export_blend_connections():
 def transfer_shaders(source, target):
     """transfers shader from source to target
     """
-    source_shape = source.getShape()
-    target_shape = target.getShape()
+    if isinstance(source, pm.nt.Transform):
+        source_shape = source.getShape()
+    else:
+        source_shape = source
+
+    if isinstance(target, pm.nt.Transform):
+        target_shape = target.getShape()
+    else:
+        target_shape = target
 
     # get the shadingEngines
-    shading_engines = [shEn
-                       for shEn in source.getShape().inputs()
-                       if isinstance(shEn, pm.nodetypes.ShadingEngine)]
+    shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
 
     data_storage = []
 
