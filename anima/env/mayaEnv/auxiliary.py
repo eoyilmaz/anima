@@ -1180,8 +1180,17 @@ def export_alembic_from_cache_node():
 
     for tr in tr_list:
         if tr.hasAttr('cacheable') and tr.getAttr('cacheable'):
-            cacheable_nodes.append(tr)
-            caller.step()
+            # check if any of its parents has a cacheable attribute
+            has_cacheable_parent = False
+            for parent in tr.getAllParents():
+                if parent.hasAttr('cacheable'):
+                    has_cacheable_parent = True
+                    break
+
+            if not has_cacheable_parent:
+                cacheable_nodes.append(tr)
+
+        caller.step()
 
     # stop if there are no cacheable nodes in the scene
     if not cacheable_nodes:
@@ -1223,9 +1232,13 @@ def export_alembic_from_cache_node():
         if not os.path.exists(os.path.dirname(output_full_path)):
             os.makedirs(os.path.dirname(output_full_path))
 
+        # command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
+        #           '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
+        command = 'AbcExport -j "-frameRange %s %s -ro ' \
+                  '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
+
         pm.mel.eval(
-            'AbcExport -j "-frameRange %s %s -ro -stripNamespaces -uvWrite -wholeFrameGeo -worldSpace '
-            '-root |%s -file %s";' % (
+            command % (
                 int(start_frame),
                 int(end_frame),
                 cacheable_node,
