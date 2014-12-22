@@ -1232,10 +1232,10 @@ def export_alembic_from_cache_node():
         if not os.path.exists(os.path.dirname(output_full_path)):
             os.makedirs(os.path.dirname(output_full_path))
 
-        # command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
-        #           '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
-        command = 'AbcExport -j "-frameRange %s %s -ro ' \
+        command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
                   '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
+        # command = 'AbcExport -j "-frameRange %s %s -ro ' \
+        #           '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
 
         pm.mel.eval(
             command % (

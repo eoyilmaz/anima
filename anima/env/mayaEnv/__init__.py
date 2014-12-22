@@ -52,7 +52,7 @@ class Maya(EnvironmentBase):
     """
 
     name = "Maya%s" % str(pm.versions.current())[0:4]
-    representations = ['Base', 'BBOX', 'PROXY', 'GPU', 'ASS']
+    representations = ['Base', 'GPU', 'ASS']
 
     time_to_fps = {
         u'sec': 1,

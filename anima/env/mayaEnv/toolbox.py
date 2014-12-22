@@ -9,7 +9,7 @@ from anima.env import to_os_independent_path
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
-__version__ = "0.1.10"
+__version__ = "0.1.11"
 
 import pymel.core as pm
 import maya.mel as mel
@@ -307,11 +307,11 @@ def UI():
                 pm.checkBoxGrp(
                     'generate_repr_types_checkbox_grp',
                     label='Reprs',
-                    numberOfCheckBoxes=3,
-                    labelArray3=['BBOX', 'GPU', 'ASS'],
-                    cl4=['left', 'left', 'left', 'left'],
-                    cw4=[50, 50, 50, 50],
-                    valueArray3=[1, 1, 1]
+                    numberOfCheckBoxes=2,
+                    labelArray2=['GPU', 'ASS'],
+                    cl3=['left', 'left', 'left'],
+                    cw3=[67, 67, 67],
+                    valueArray2=[1, 1]
                 )
 
             pm.checkBox(
@@ -356,14 +356,6 @@ def UI():
                 l='To Base',
                 c=RepeatedCallback(Reference.to_base),
                 ann='Convert selected to Base representation',
-                bgc=color.color
-            )
-
-            pm.button(
-                'to_bbox_button',
-                l='To BBOX',
-                c=RepeatedCallback(Reference.to_bbox),
-                ann='Convert selected to BBOX representation',
                 bgc=color.color
             )
 
@@ -1834,12 +1826,6 @@ class Reference(object):
         cls.to_repr('Base')
 
     @classmethod
-    def to_bbox(cls):
-        """replaces the related references with BBOX representation
-        """
-        cls.to_repr('BBOX')
-
-    @classmethod
     def to_gpu(cls):
         """replaces the related references with GPU representation
         """
@@ -1903,7 +1889,6 @@ class Reference(object):
         """helper method to call Reference.generate_repr_of_scene() with data
         coming from UI
         """
-        generate_bbox = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
         generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
         generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
 
@@ -1911,7 +1896,6 @@ class Reference(object):
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
 
         cls.generate_repr_of_scene(
-            generate_bbox,
             generate_gpu,
             generate_ass,
             skip_existing
@@ -1919,7 +1903,6 @@ class Reference(object):
 
     @classmethod
     def generate_repr_of_scene(cls,
-                               generate_bbox=True,
                                generate_gpu=True,
                                generate_ass=True,
                                skip_existing=False):
@@ -1951,29 +1934,22 @@ class Reference(object):
         # open each version
         from stalker import Version
         if skip_existing:
-            # check if there is a BBOX, GPU or ASS repr
+            # check if there is a GPU or ASS repr
             # generated from this version
             child_versions = \
                 Version.query.filter(Version.parent == source_version).all()
             for cv in child_versions:
-                if generate_bbox and '@BBOX' in cv.take_name:
-                    generate_bbox = False
-
                 if generate_gpu is True and '@GPU' in cv.take_name:
                     generate_gpu = False
 
                 if generate_ass is True and '@ASS' in cv.take_name:
                     generate_ass = False
 
-        total_number_of_reprs = generate_bbox + generate_gpu + generate_ass
+        total_number_of_reprs = generate_gpu + generate_ass
         caller = pdm.register(total_number_of_reprs, title='Generate Reprs')
 
         gen.version = source_version
         # generate representations
-        if generate_bbox:
-            gen.generate_bbox()
-            caller.step()
-
         if generate_gpu:
             gen.generate_gpu()
             caller.step()
@@ -1992,7 +1968,6 @@ class Reference(object):
         References.generate_repr_of_all_references() with paremeters from the
         UI
         """
-        generate_bbox = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
         generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
         generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
 
@@ -2000,14 +1975,13 @@ class Reference(object):
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
 
         cls.generate_repr_of_all_references(
-            generate_bbox,
             generate_gpu,
-            generate_ass
+            generate_ass,
+            skip_existing
         )
 
     @classmethod
     def generate_repr_of_all_references(cls,
-                                        generate_bbox=True,
                                         generate_gpu=True,
                                         generate_ass=True,
                                         skip_existing=False):
@@ -2066,7 +2040,6 @@ class Reference(object):
         # open each version
         from stalker import Version
         for v in versions_to_visit:
-            local_generate_bbox = generate_bbox
             local_generate_gpu = generate_gpu
             local_generate_ass = generate_ass
 
@@ -2078,13 +2051,10 @@ class Reference(object):
                     continue
 
             if skip_existing:
-                # check if there is a BBOX, GPU or ASS repr
+                # check if there is a GPU or ASS repr
                 # generated from this version
                 child_versions = Version.query.filter(Version.parent == v).all()
                 for cv in child_versions:
-                    if local_generate_bbox and '@BBOX' in cv.take_name:
-                        local_generate_bbox = False
-
                     if local_generate_gpu is True and '@GPU' in cv.take_name:
                         local_generate_gpu = False
 
@@ -2093,9 +2063,6 @@ class Reference(object):
 
             gen.version = v
             # generate representations
-            if local_generate_bbox:
-                gen.generate_bbox()
-
             if local_generate_gpu:
                 gen.generate_gpu()
 
@@ -2111,8 +2078,6 @@ class Reference(object):
         gen.version = source_version
 
         # generate representations
-        if generate_bbox:
-            gen.generate_bbox()
         if generate_gpu:
             gen.generate_gpu()
         if generate_ass:
