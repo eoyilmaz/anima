@@ -6,14 +6,13 @@
 
 import os
 import datetime
-import uuid
 
 import pymel.core as pm
 import maya.cmds as mc
 
 from anima import stalker_server_internal_address
 from anima.publish import (clear_publishers, publisher, staging,
-                           PRE_PUBLISHER_TYPE, POST_PUBLISHER_TYPE)
+                           POST_PUBLISHER_TYPE)
 from anima.exc import PublishError
 from anima.repr import Representation
 from anima.utils import utc_to_local

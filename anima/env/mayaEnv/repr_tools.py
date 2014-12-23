@@ -417,59 +417,63 @@ class RepresentationGenerator(object):
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
             )
 
+        # for local models generate an ABC file
+        output_path = os.path.join(
+            self.version.absolute_path,
+            'Outputs/alembic/'
+        ).replace('\\', '/')
+
+        abc_command = \
+            'AbcExport -j "-frameRange %(start_frame)s ' \
+            '%(end_frame)s ' \
+            '-ro -stripNamespaces ' \
+            '-uvWrite ' \
+            '-wholeFrameGeo ' \
+            '-worldSpace ' \
+            '-root |%(node)s -file %(file_path)s";'
+
+        gpu_command = \
+            'gpuCache -startTime %(start_frame)s ' \
+            '-endTime %(end_frame)s ' \
+            '-optimize -optimizationThreshold 40000 ' \
+            '-writeMaterials ' \
+            '-directory "%(path)s" ' \
+            '-fileName "%(filename)s" ' \
+            '%(node)s;'
+
+        start_frame = end_frame = int(pm.currentTime(q=1))
+
         if not self.is_scene_assembly_task(self.version.task):
-            root_nodes = self.get_local_root_nodes()
-            if len(root_nodes):
-                abc_command = \
-                    'AbcExport -j "-frameRange %(start_frame)s ' \
-                    '%(end_frame)s ' \
-                    '-ro -stripNamespaces ' \
-                    '-uvWrite ' \
-                    '-wholeFrameGeo ' \
-                    '-worldSpace ' \
-                    '-root |%(node)s -file %(file_path)s";'
 
-                gpu_command = \
-                    'gpuCache -startTime %(start_frame)s ' \
-                    '-endTime %(end_frame)s ' \
-                    '-optimize -optimizationThreshold 40000 ' \
-                    '-writeMaterials ' \
-                    '-directory "%(path)s" ' \
-                    '-fileName "%(filename)s" ' \
-                    '%(node)s;'
+            if self.is_vegetation_task(self.version.task):
+                # in vegetation files, we export the GPU files directly from
+                # the Base version, also we use the geometry under
+                # "pfxPolygons" and parent the resulting Stand-In nodes to the
+                # pfxPolygons
+                # load all references
+                for ref in pm.listReferences():
+                    ref.load()
 
-                # for local models generate an ABC file
-                output_path = os.path.join(
-                    self.version.absolute_path,
-                    'Outputs/alembic/'
-                ).replace('\\', '/')
+                # find the _pfxPolygons node
+                pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
 
-                start_frame = end_frame = int(pm.currentTime(q=1))
+                for node in pfx_polygons_node.getChildren():
+                    for child_node in node.getChildren():
+                        #print('processing %s' % child_node.name())
+                        child_node_name = child_node.name().split('___')[-1]
+                        child_node_shape = child_node.getShape()
+                        child_node_shape_name = None
 
-                for root_node in root_nodes:
-                    # export each child of each root as separate nodes
-                    for child_node in root_node.getChildren():
+                        if child_node_shape:
+                            child_node_shape_name = child_node_shape.name()
 
-                        # check if it is a transform node
-                        if not isinstance(child_node, pm.nt.Transform):
-                            continue
-
-                        if not auxiliary.has_shape(child_node):
-                            continue
-
-                        child_name = child_node.name()
-                        child_shape = child_node.getShape()
-                        child_shape_name = None
-                        if child_shape:
-                            child_shape_name = child_shape.name()
-
-                        child_full_path = \
-                            child_node.fullPath()[1:].replace('|', '_')
+                        pm.select(child_node)
                         output_filename =\
-                            '%s' % (
-                                child_full_path
+                            '%s.ass' % (
+                                child_node_name.replace(':', '_').replace('|', '_')
                             )
 
+                        # run the mel command
                         # check if file exists
                         try:
                             pm.mel.eval(
@@ -486,6 +490,10 @@ class RepresentationGenerator(object):
                             pass
 
                         # delete the child and add a GPU node instead
+                        # set rotate and scale pivots
+                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
                         pm.delete(child_node)
                         cache_file_full_path = \
                             os.path\
@@ -497,15 +505,11 @@ class RepresentationGenerator(object):
                             gpu_node = pm.createNode('gpuCache')
                             gpu_node_tra = gpu_node.getParent()
 
-                            pm.parent(gpu_node_tra, root_node)
-                            gpu_node_tra.rename(child_name)
+                            pm.parent(gpu_node_tra, node)
+                            gpu_node_tra.rename(child_node_name)
 
-                            if child_shape_name is not None:
-                                gpu_node.rename(child_shape_name)
-
-                            # set rotate and scale pivots
-                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                            if child_node_shape_name is not None:
+                                gpu_node.rename(child_node_shape_name)
 
                             pm.xform(gpu_node_tra, ws=1, rp=rp)
                             pm.xform(gpu_node_tra, ws=1, sp=sp)
@@ -515,6 +519,83 @@ class RepresentationGenerator(object):
                                 cache_file_full_path,
                                 type="string"
                             )
+
+                # clean up other nodes
+                pm.delete('kks___vegetation_pfxStrokes')
+                pm.delete('kks___vegetation_paintableGeos')
+
+            else:
+                root_nodes = self.get_local_root_nodes()
+                if len(root_nodes):
+                    for root_node in root_nodes:
+                        # export each child of each root as separate nodes
+                        for child_node in root_node.getChildren():
+
+                            # check if it is a transform node
+                            if not isinstance(child_node, pm.nt.Transform):
+                                continue
+
+                            if not auxiliary.has_shape(child_node):
+                                continue
+
+                            child_name = child_node.name()
+                            child_shape = child_node.getShape()
+                            child_shape_name = None
+                            if child_shape:
+                                child_shape_name = child_shape.name()
+
+                            child_full_path = \
+                                child_node.fullPath()[1:].replace('|', '_')
+                            output_filename =\
+                                '%s' % (
+                                    child_full_path
+                                )
+
+                            # check if file exists
+                            try:
+                                pm.mel.eval(
+                                    gpu_command % {
+                                        'start_frame': start_frame,
+                                        'end_frame': end_frame,
+                                        'node': child_node.fullPath(),
+                                        'path': output_path,
+                                        'filename': output_filename
+                                    }
+                                )
+                            except pm.MelError:
+                                # just pass it
+                                pass
+
+                            # delete the child and add a GPU node instead
+                            pm.delete(child_node)
+                            cache_file_full_path = \
+                                os.path\
+                                .join(output_path, '%s.abc' % output_filename)\
+                                .replace('\\', '/')
+
+                            # check if file exists
+                            if os.path.exists(cache_file_full_path):
+                                gpu_node = pm.createNode('gpuCache')
+                                gpu_node_tra = gpu_node.getParent()
+
+                                pm.parent(gpu_node_tra, root_node)
+                                gpu_node_tra.rename(child_name)
+
+                                if child_shape_name is not None:
+                                    gpu_node.rename(child_shape_name)
+
+                                # set rotate and scale pivots
+                                rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                                sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
+                                pm.xform(gpu_node_tra, ws=1, rp=rp)
+                                pm.xform(gpu_node_tra, ws=1, sp=sp)
+
+                                gpu_node.setAttr(
+                                    'cacheFileName',
+                                    cache_file_full_path,
+                                    type="string"
+                                )
 
         # load all references again
         # convert all references to GPU
