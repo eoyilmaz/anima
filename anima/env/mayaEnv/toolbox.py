@@ -1889,8 +1889,8 @@ class Reference(object):
         """helper method to call Reference.generate_repr_of_scene() with data
         coming from UI
         """
-        generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
-        generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
+        generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
+        generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -1968,8 +1968,8 @@ class Reference(object):
         References.generate_repr_of_all_references() with paremeters from the
         UI
         """
-        generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
-        generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
+        generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
+        generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
