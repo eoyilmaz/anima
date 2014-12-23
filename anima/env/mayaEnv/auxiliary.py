@@ -1188,7 +1188,10 @@ def export_alembic_from_cache_node():
                     break
 
             if not has_cacheable_parent:
-                cacheable_nodes.append(tr)
+                # only include direct references
+                ref = tr.referenceFile()
+                if ref is not None and ref.parent() is None:
+                    cacheable_nodes.append(tr)
 
         caller.step()
 
