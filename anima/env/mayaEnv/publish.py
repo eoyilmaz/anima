@@ -902,8 +902,45 @@ def check_cacheable_attr():
         )
 
 
-@publisher(LOOK_DEV_TYPES + ['layout', 'model', 'vegetation', 'scene assembly'],
-           publisher_type=POST_PUBLISHER_TYPE)
+@publisher('animation')
+def check_shot_nodes():
+    """checks if there is a shot node
+    """
+    shot_nodes = pm.ls(type='shot')
+    if len(shot_nodes) == 0:
+        raise PublishError('There is no <b>Shot</b> node in the scene')
+
+    if len(shot_nodes) > 1:
+        raise PublishError('There is multiple <b>Shot</b> nodes in the scene')
+
+
+@publisher('animation')
+def set_frame_range():
+    """sets the frame range from the shot node
+    """
+    shot_node = pm.ls(type='shot')[0]
+    start_frame = shot_node.startFrame.get()
+    end_frame = shot_node.endFrame.get()
+
+    handle_count = 1
+    try:
+        handle_count = shot_node.handle.attr()
+    except AttributeError:
+        pass
+
+    # set it in the playback
+    pm.playbackOptions(
+        ast=start_frame,
+        aet=end_frame,
+        min=start_frame-handle_count,
+        max=end_frame+handle_count
+    )
+
+
+@publisher(
+    LOOK_DEV_TYPES + ['layout', 'model', 'vegetation', 'scene assembly'],
+    publisher_type=POST_PUBLISHER_TYPE
+)
 def create_representations():
     """creates the representations of the scene
     """
