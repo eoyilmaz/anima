@@ -924,7 +924,7 @@ def set_frame_range():
 
     handle_count = 1
     try:
-        handle_count = shot_node.handle.attr()
+        handle_count = shot_node.getAttr('handle')
     except AttributeError:
         pass
 
