@@ -937,6 +937,82 @@ def set_frame_range():
     )
 
 
+@publisher(publisher_type=POST_PUBLISHER_TYPE)
+def generate_thumbnail():
+    """generates thumbnail for the current scene
+    """
+    import tempfile
+    import glob
+    import shutil
+    from stalker import Link
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+
+    if not v:
+        return
+
+    task = v.task
+    project = task.project
+    imf = project.image_format
+    width = int(imf.width * 0.5)
+    height = int(imf.height * 0.5)
+
+    temp_output = tempfile.mktemp()
+
+    current_frame = pm.currentTime(q=1)
+    output_file = pm.playblast(
+        fmt='image',
+        startTime=current_frame,
+        endTime=current_frame,
+        sequenceTime=1,
+        forceOverwrite=1,
+        filename=temp_output,
+        clearCache=1,
+        showOrnaments=1,
+        percent=100,
+        wh=(width, height),
+        offScreen=1,
+        viewer=0,
+        compression='PNG',
+        quality=70,
+        framePadding=0
+    )
+    pm.currentTime(current_frame)
+
+    output_file = output_file.replace('####', '*')
+    output_file = glob.glob(output_file)[0]
+
+    # move the file to the task thumbnail folder
+    # and mimic StalkerPyramids output format
+    hires_path = os.path.join(
+        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'from_maya.png'
+    )
+    for_web_path = os.path.join(
+        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'ForWeb',
+        'from_maya.png'
+    )
+    thumbnail_path = os.path.join(
+        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
+        'from_maya.png'
+    )
+
+    shutil.copy(output_file, hires_path)
+    shutil.copy(output_file, for_web_path)
+    shutil.copy(output_file, thumbnail_path)
+    l_hires = Link(full_path=hires_path, original_filename='from_maya.png')
+    l_for_web = Link(full_path=hires_path, original_filename='from_maya.png')
+    l_thumb = Link(full_path=hires_path, original_filename='from_maya.png')
+
+    l_hires.thumbnail = l_for_web
+    l_for_web.thumbnail = l_thumb
+
+    task.thumbnail = l_hires
+    from stalker import db
+    db.DBsession.add_all([l_hires, l_for_web, l_thumb])
+    db.DBSession.commit()
+
+
 @publisher(
     LOOK_DEV_TYPES + ['layout', 'model', 'vegetation', 'scene assembly'],
     publisher_type=POST_PUBLISHER_TYPE
