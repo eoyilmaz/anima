@@ -417,6 +417,10 @@ class RepresentationGenerator(object):
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
             )
 
+        # unload all references
+        for ref in pm.listReferences():
+            ref.unload()
+
         # for local models generate an ABC file
         output_path = os.path.join(
             self.version.absolute_path,
