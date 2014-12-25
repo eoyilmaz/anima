@@ -1589,7 +1589,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # get the use namespace state
             use_namespace = self.useNameSpace_checkBox.isChecked()
 
-
             # check if it has any representations
             all_reprs = Version.query\
                 .filter(Version.parent == previous_version)\
@@ -1632,7 +1631,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             self.environment.reference(previous_version, use_namespace)
 
-            # inform the user about what happened
+            # inform the user about what happened
             if logger.level != logging.DEBUG:
                 QtGui.QMessageBox.information(
                     self,

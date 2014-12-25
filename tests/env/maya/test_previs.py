@@ -3,12 +3,17 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import tempfile
 
+import tempfile
 import unittest
 
-from stalker import db, User, Repository, Status, FilenameTemplate, Structure, \
-    StatusList, ImageFormat, Project, Task, Sequence, Shot
+import pymel.core as pm
+
+from stalker import (db, User, Repository, Status, FilenameTemplate, Structure,
+                     StatusList, ImageFormat, Project, Task, Sequence, Shot,
+                     Type, Version)
+
+from anima.env.mayaEnv import previs, Maya
 
 
 class ShotSplitterTestCase(unittest.TestCase):
@@ -122,7 +127,7 @@ class ShotSplitterTestCase(unittest.TestCase):
         self.assets = Task(
             name='Assets',
             project=self.project,
-            responsible=self.user1
+            responsible=[self.user1]
         )
 
         #
@@ -131,17 +136,35 @@ class ShotSplitterTestCase(unittest.TestCase):
         self.sequences = Task(
             name='Sequences',
             project=self.project,
-            responsible=self.user1
+            responsible=[self.user1]
         )
 
         self.seq001 = Sequence(
             name='Seq001',
+            code='Seq001',
             parent=self.sequences
+        )
+
+        self.scene_task = Task(
+            name='001_IST',
+            parent=self.seq001
+        )
+
+        self.scene_previs_type = Type(
+            name='Scene Previs',
+            code='Scene Previs',
+            target_entity_type='Task'
+        )
+
+        self.scene_previs = Task(
+            name='Scene Previs',
+            parent=self.scene_task,
+            type=self.scene_previs_type
         )
 
         self.shots = Task(
             name='Shots',
-            parent=self.seq001
+            parent=self.scene_task
         )
 
         self.shot1 = Shot(
@@ -150,7 +173,70 @@ class ShotSplitterTestCase(unittest.TestCase):
             parent=self.shots
         )
 
-        def test_test_setup():
-            """to test test setup
-            """
-            pass
+        # create shot tasks
+        self.previs = Task(
+            name='Previs',
+            parent=self.shot1
+        )
+
+        self.camera = Task(
+            name='Camera',
+            parent=self.shot1
+        )
+
+        self.animation = Task(
+            name='Animation',
+            parent=self.shot1
+        )
+
+        self.scene_assembly = Task(
+            name='SceneAssembly',
+            parent=self.shot1
+        )
+
+        self.lighting = Task(
+            name='Lighting',
+            parent=self.shot1
+        )
+
+        self.comp = Task(
+            name='Comp',
+            parent=self.shot1
+        )
+
+        # create maya files
+        self.maya_env = Maya()
+        pm.newFile(force=True)
+
+        sm = pm.PyNode('sequenceManager1')
+
+        seq1 = sm.create_sequence('001_IST')
+
+        # create 3 shots
+        shot1 = seq1.create_shot('shot1')
+        shot2 = seq1.create_shot('shot2')
+        shot3 = seq1.create_shot('shot3')
+
+        # set shot ranges
+        shot1.startFrame.set(1)
+        shot1.endFrame.set(100)
+
+        shot2.startFrame.set(101)
+        shot2.endFrame.set(200)
+        shot2.sequenceStartFrame.set(101)
+
+        shot3.startFrame.set(201)
+        shot3.endFrame.set(300)
+        shot3.sequenceStartFrame.set(201)
+
+        # save the file under scene previs
+        v = Version(task=self.scene_previs)
+
+        self.maya_env.save_as(v)
+        pm.newFile(force=1)
+        print(v.absolute_full_path)
+
+    def test_test_setup(self):
+        """to test test setup
+        """
+        pass

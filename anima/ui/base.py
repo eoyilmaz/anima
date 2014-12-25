@@ -54,7 +54,7 @@ class AnimaDialogBase(object):
                 logged_in_user = local_session.logged_in_user
             else:
                 # close the ui
-                #logged_in_user = self.get_logged_in_user()
+                # logged_in_user = self.get_logged_in_user()
                 logger.debug("no logged in user")
                 self.close()
 

@@ -7,6 +7,7 @@
 
 import os
 import pymel.core as pm
+from stalker import LocalSession
 from anima.env import mayaEnv
 
 
@@ -105,7 +106,7 @@ class ShotExporter(object):
         """saves the file under the given shot name
         """
         # first find the shot
-        from stalker import Shot, Task
+        from stalker import Version, Shot, Task
         shot = Shot.query.filter(Shot.name == shot_name).first()
         if not shot:
             raise RuntimeError('No shot found with shot name: %s' % shot_name)
@@ -116,8 +117,11 @@ class ShotExporter(object):
             .filter(Task.name == child_task_name)\
             .first()
 
+        logged_in_user = LocalSession().logged_in_user
 
+        v = Version(task=child_task, created_by=logged_in_user)
+        self.m_env.save_as(v)
 
     def open_again(self, working_file_name):  # open base file again!
         pm.openFile(working_file_name, force=True, loadReferenceDepth="none")
-        print ("reopening scene: " + str(working_file_name))
+        print("reopening scene: " + str(working_file_name))
