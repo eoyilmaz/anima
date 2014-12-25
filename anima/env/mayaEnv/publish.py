@@ -952,8 +952,13 @@ def generate_thumbnail():
     if not v:
         return
 
+    # do not generate a thumbnail from a Repr
+    if '@' in v.take_name:
+        return
+
     task = v.task
     project = task.project
+    repo = project.repository
     imf = project.image_format
     width = int(imf.width * 0.5)
     height = int(imf.height * 0.5)
@@ -986,30 +991,56 @@ def generate_thumbnail():
     # move the file to the task thumbnail folder
     # and mimic StalkerPyramids output format
     hires_path = os.path.join(
-        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'from_maya.png'
+        task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'from_maya.png'
     )
     for_web_path = os.path.join(
-        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'ForWeb',
+        task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'ForWeb',
         'from_maya.png'
     )
     thumbnail_path = os.path.join(
-        task.absolute_path(), 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
+        task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
         'from_maya.png'
     )
+
+    # create folders
+    try:
+        os.makedirs(os.path.dirname(hires_path))
+    except OSError:
+        pass
+
+    try:
+        os.makedirs(os.path.dirname(for_web_path))
+    except OSError:
+        pass
+
+    try:
+        os.makedirs(os.path.dirname(thumbnail_path))
+    except OSError:
+        pass
 
     shutil.copy(output_file, hires_path)
     shutil.copy(output_file, for_web_path)
     shutil.copy(output_file, thumbnail_path)
-    l_hires = Link(full_path=hires_path, original_filename='from_maya.png')
-    l_for_web = Link(full_path=hires_path, original_filename='from_maya.png')
-    l_thumb = Link(full_path=hires_path, original_filename='from_maya.png')
+
+    l_hires = Link(
+        full_path=repo.make_relative(hires_path),
+        original_filename='from_maya.png'
+    )
+    l_for_web = Link(
+        full_path=repo.make_relative(for_web_path),
+        original_filename='from_maya.png'
+    )
+    l_thumb = Link(
+        full_path=repo.make_relative(thumbnail_path),
+        original_filename='from_maya.png'
+    )
 
     l_hires.thumbnail = l_for_web
     l_for_web.thumbnail = l_thumb
 
     task.thumbnail = l_hires
     from stalker import db
-    db.DBsession.add_all([l_hires, l_for_web, l_thumb])
+    db.DBSession.add_all([l_hires, l_for_web, l_thumb])
     db.DBSession.commit()
 
 

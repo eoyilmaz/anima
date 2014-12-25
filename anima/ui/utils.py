@@ -64,11 +64,21 @@ def update_gview_with_task_thumbnail(task, gview, login, password):
     full_path = None
     if task.thumbnail:
         # use the cache system to get the thumbnail
-        full_path = StalkerThumbnailCache.get(
-            task.thumbnail.full_path,
-            login,
-            password
-        )
+        if 'SPL' in task.thumbnail.full_path:
+            full_path = StalkerThumbnailCache.get(
+                task.thumbnail.full_path,
+                login,
+                password
+            )
+        else:
+            # try to get it as a normal file
+            repo = task.project.repository
+            full_path = os.path.join(
+                repo.path,
+                task.thumbnail.full_path
+            )
+            if not os.path.exists(full_path):
+                full_path = None
     else:
         logger.debug('there is no thumbnail')
         # try to get the thumbnail from parents
