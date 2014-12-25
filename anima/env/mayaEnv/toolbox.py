@@ -5,6 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import functools
 import os
+import tempfile
 from anima.env import to_os_independent_path
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
@@ -205,6 +206,23 @@ def UI():
                 l='Delete Unused Intermediate Shape Nodes',
                 c=RepeatedCallback(General.delete_unused_intermediate_shapes),
                 ann='Deletes unused (no connection) intermediate shape nodes',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'export_transform_info_button',
+                l='Export Transform Info',
+                c=RepeatedCallback(General.export_transform_info),
+                ann='exports transform info',
+                bgc=color.color
+            )
+
+            pm.button(
+                'import_transform_info_button',
+                l='Import Transform Info',
+                c=RepeatedCallback(General.import_transform_info),
+                ann='imports transform info',
                 bgc=color.color
             )
 
@@ -1316,6 +1334,51 @@ def get_last_tab_index():
 class General(object):
     """General tools
     """
+
+    transform_info_temp_file_path = os.path.join(
+        tempfile.gettempdir(),
+        'transform_info'
+    )
+
+    @classmethod
+    def export_transform_info(cls):
+        """exports the transformation data in to a temp file
+        """
+        data = []
+        for node in pm.ls(sl=1):
+
+            tra = node.t.get()
+            rot = node.r.get()
+            sca = node.s.get()
+
+            data.append('%s' % tra[0])
+            data.append('%s' % tra[1])
+            data.append('%s' % tra[2])
+
+            data.append('%s' % rot[0])
+            data.append('%s' % rot[1])
+            data.append('%s' % rot[2])
+
+            data.append('%s' % sca[0])
+            data.append('%s' % sca[1])
+            data.append('%s' % sca[2])
+
+        with open(cls.transform_info_temp_file_path, 'w') as f:
+            f.write('\n'.join(data))
+
+    @classmethod
+    def import_transform_info(cls):
+        """imports the transform info from the temp file
+        """
+
+        with open(cls.transform_info_temp_file_path) as f:
+            data = f.readlines()
+
+        for i, node in enumerate(pm.ls(sl=1)):
+            j = i * 9
+            node.t.set(float(data[j]), float(data[j + 1]), float(data[j + 2]))
+            node.r.set(float(data[j + 3]), float(data[j + 4]), float(data[j + 5]))
+            node.s.set(float(data[j + 6]), float(data[j + 7]), float(data[j + 8]))
 
     @classmethod
     def toggle_attributes(cls, attribute_name):
