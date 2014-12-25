@@ -1615,6 +1615,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     repr_version = Version.query\
                         .filter(Version.parent == previous_version)\
                         .filter(Version.take_name.ilike(repr_str))\
+                        .order_by(Version.version_number.desc())\
                         .first()
 
                     if repr_version:
