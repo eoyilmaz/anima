@@ -919,24 +919,24 @@ class RepresentationGenerator(object):
                     ref.importContents()
                 all_refs = pm.listReferences()
 
-            # check if all aiStandIn nodes are included in
-            # ArnoldStandInDefaultLightSet set
-            try:
-                arnold_stand_in_default_light_set = \
-                    pm.PyNode('ArnoldStandInDefaultLightSet')
-            except pm.MayaNodeError:
-                # just create it
-                arnold_stand_in_default_light_set = \
-                    pm.createNode(
-                        'objectSet',
-                        name='ArnoldStandInDefaultLightSet'
-                    )
+        # check if all aiStandIn nodes are included in
+        # ArnoldStandInDefaultLightSet set
+        try:
+            arnold_stand_in_default_light_set = \
+                pm.PyNode('ArnoldStandInDefaultLightSet')
+        except pm.MayaNodeError:
+            # just create it
+            arnold_stand_in_default_light_set = \
+                pm.createNode(
+                    'objectSet',
+                    name='ArnoldStandInDefaultLightSet'
+                )
 
-            pm.select(None)
-            pm.sets(
-                arnold_stand_in_default_light_set,
-                fe=pm.ls(type='aiStandIn')
-            )
+        pm.select(None)
+        pm.sets(
+            arnold_stand_in_default_light_set,
+            fe=pm.ls(type='aiStandIn')
+        )
 
         # save the scene as {{original_take}}___ASS
         # use maya
