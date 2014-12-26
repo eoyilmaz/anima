@@ -267,7 +267,7 @@ class RepresentationGenerator(object):
         """
         if not version:
             raise RuntimeError(
-                'Please supply a valid Stalker version!'
+                'Please supply a valid Stalker Version object!'
             )
 
         from stalker import Version
