@@ -248,9 +248,14 @@ class RepresentationGenerator(object):
 
         if task.type and task.type.name.lower() == 'layout':
             parent = task.parent
-            if parent and parent.parent and parent.parent.type \
-               and parent.parent.type.name.lower() in ['exterior', 'interior']:
-                return True
+            if task.name.lower == 'hires':
+                if parent and parent.parent and parent.parent.type \
+                   and parent.parent.type.name.lower() in ['exterior', 'interior']:
+                    return True
+            elif task.name.lower == 'layout':
+                if parent and parent.type \
+                   and parent.type.name.lower() in ['exterior', 'interior']:
+                    return True
 
         return False
 
