@@ -1077,7 +1077,7 @@ def create_representations():
     current_version = m_env.get_current_version()
 
     if current_version != v:
-        m_env.open(v, force=True)
+        m_env.open(v, force=True, skip_update_check=True)
 
 
 @publisher('animation', publisher_type=POST_PUBLISHER_TYPE)

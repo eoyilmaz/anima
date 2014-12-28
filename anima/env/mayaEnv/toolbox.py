@@ -1655,7 +1655,8 @@ class Reference(object):
 
         else:
             latest_look_dev_version = previous_look_dev_version.latest_version
-            reference_resolution = m.open(latest_look_dev_version, force=True)
+            reference_resolution = m.open(latest_look_dev_version, force=True,
+                                          skip_update_check=True)
             m.update_versions(reference_resolution)
 
             if reference_resolution['update'] \
@@ -1673,7 +1674,7 @@ class Reference(object):
                 m.save_as(new_version)
 
         # reopen model scene
-        m.open(current_version, force=True)
+        m.open(current_version, force=True, skip_update_check=True)
 
     @classmethod
     def get_selected_reference_path(cls):
@@ -1759,11 +1760,11 @@ class Reference(object):
         for ref_path in ref_paths:
             version = m_env.get_version_from_full_path(ref_path)
             if version:
-                m_env.open(version, force=True)
+                m_env.open(version, force=True, skip_update_check=True)
                 pm.saveFile()
 
         if pm.env.sceneName() != current_version.absolute_full_path:
-            m_env.open(current_version, force=True)
+            m_env.open(current_version, force=True, skip_update_check=True)
 
     @classmethod
     def archive_current_scene(cls):

@@ -295,7 +295,8 @@ class RepresentationGenerator(object):
         """
         current_v = self.maya_env.get_current_version()
         if current_v is not version:
-            self.maya_env.open(version, force=True, skip_update_check=True,
+            self.maya_env.open(version, force=True,
+                               skip_update_check=True,
                                reference_depth=3)
 
     def generate_all(self):

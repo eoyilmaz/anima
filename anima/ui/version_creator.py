@@ -96,7 +96,8 @@ class VersionsTableWidget(QtGui.QTableWidget):
         self.labels = [
             '#',
             'App',
-            'User',
+            'Created By',
+            'Updated By',
             'Size',
             'Date',
             'Description',
@@ -201,6 +202,22 @@ class VersionsTableWidget(QtGui.QTableWidget):
             if version.created_by:
                 created_by = version.created_by.name
             item = QtGui.QTableWidgetItem(created_by)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # user.name
+            updated_by = ''
+            if version.updated_by:
+                updated_by = version.updated_by.name
+            item = QtGui.QTableWidgetItem(updated_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
