@@ -1250,3 +1250,213 @@ def export_alembic_from_cache_node():
         )
         previous_cacheable_attr_value = cacheable_attr_value
         caller.step()
+
+
+# noinspection PyStatementEffect
+class BarnDoorSimulator(object):
+    """A aiBarnDoor simulator
+    """
+
+    sides = ['top', 'bottom', 'left', 'right']
+    storage_attr_name = 'barnDoorSimulatorData'
+
+    def __init__(self):
+        self.frame_curve = None
+        self.light = None
+        self.barn_door = None
+
+        self.preview_curves = {
+            'top': None,
+            'bottom': None,
+            'left': None,
+            'right': None
+        }
+
+        self.joints = {
+            'top': [],
+            'bottom': [],
+            'left': [],
+            'right': [],
+        }
+
+    def create_barn_door(self):
+        """creates the barn door node
+        """
+        light_shape = self.light.getShape()
+        inputs = light_shape.inputs(type='aiBarndoor')
+        if inputs:
+            self.barn_door = inputs[0]
+        else:
+            self.barn_door = pm.createNode('aiBarndoor')
+            self.barn_door.attr('message') >> \
+                light_shape.attr('aiFilters').next_available
+
+    def store_nodes(self, nodes):
+        """stores the nodes
+        """
+        for node in nodes:
+            self.store_node(node)
+
+    def store_node(self, node):
+        """stores the node in the storage attribute
+        """
+        if not self.light.hasAttr(self.storage_attr_name):
+            pm.addAttr(
+                self.light,
+                ln=self.storage_attr_name,
+                m=1
+            )
+
+        node.message >> self.light.attr(self.storage_attr_name).next_available
+
+    def create_frame_curve(self):
+        """creates the frame curve
+        """
+        self.frame_curve = pm.curve(
+            d=1,
+            p=[(-0.5, 0.5, 0),
+               (0.5, 0.5, 0),
+               (0.5, -0.5, 0),
+               (-0.5, -0.5, 0),
+               (-0.5, 0.5, 0)],
+            k=[0, 1, 2, 3, 4]
+        )
+        self.store_node(self.frame_curve)
+
+    def create_preview_curve(self, side):
+        """creates preview curves
+        """
+        # create two joints
+        j1 = pm.createNode('joint')
+        j2 = pm.createNode('joint')
+
+        j1.t.set(-0.5, 0, 0)
+        j2.t.set(0.5, 0, 0)
+
+        self.joints[side] = [j1, j2]
+
+        # create one nurbs curve
+        preview_curve = pm.curve(
+            d=1,
+            p=[(-0.5, 0, 0),
+               (0.5, 0, 0)],
+            k=[0, 1]
+        )
+        self.preview_curves[side] = preview_curve
+
+        # bind the joints to the curveShape
+        pm.select([preview_curve, j1, j2])
+        skin_cluster = pm.skinCluster()
+
+        self.store_nodes([
+            j1, j2, preview_curve, skin_cluster
+        ])
+
+    def create_expression(self):
+        """creates the expression
+        """
+        expr = """float $frame_scale;
+        $frame_scale = tan(deg_to_rad({light}.coneAngle * 0.5));
+        {frame}.sx = {frame}.sy = {frame}.sz = $frame_scale;
+
+        // top
+        {top_left_joint}.ty = -{barn_door}.barndoorTopLeft + 0.5;
+        {top_left_joint}.tx = -0.5;
+        {top_right_joint}.ty = -{barn_door}.barndoorTopRight + 0.5;
+        {top_right_joint}.tx = 0.5;
+
+        // bottom
+        {bottom_left_joint}.ty = -{barn_door}.barndoorBottomLeft + 0.5;
+        {bottom_left_joint}.tx = -0.5;
+        {bottom_right_joint}.ty = -{barn_door}.barndoorBottomRight + 0.5;
+        {bottom_right_joint}.tx = 0.5;
+
+        // left
+        {left_top_joint}.tx = {barn_door}.barndoorLeftTop - 0.5;
+        {left_top_joint}.ty = 0.5;
+        {left_bottom_joint}.tx = {barn_door}.barndoorLeftBottom - 0.5;
+        {left_bottom_joint}.ty = -0.5;
+
+        // right
+        {right_top_joint}.tx = {barn_door}.barndoorRightTop - 0.5;
+        {right_top_joint}.ty = 0.5;
+        {right_bottom_joint}.tx = {barn_door}.barndoorRightBottom - 0.5;
+        {right_bottom_joint}.ty = -0.5;
+        """.format(
+            **{
+                'light': self.light.name(),
+                'frame': self.frame_curve.name(),
+                'barn_door': self.barn_door.name(),
+
+                'top_left_joint': self.joints['top'][0],
+                'top_right_joint': self.joints['top'][1],
+
+                'bottom_left_joint': self.joints['bottom'][0],
+                'bottom_right_joint': self.joints['bottom'][1],
+
+                'left_top_joint': self.joints['left'][0],
+                'left_bottom_joint': self.joints['left'][1],
+
+                'right_top_joint': self.joints['right'][0],
+                'right_bottom_joint': self.joints['right'][1],
+            }
+        )
+
+        expr_node = pm.expression(s=expr)
+        self.store_node(expr_node)
+
+    def create_storage_attribute(self):
+        """creates a storage attribute to store the created nodes to be able
+        to remove them later on easily
+        """
+        self.light.addAttr(ln=self.storage_attr_name, at='compound', nc=1)
+
+    def setup(self):
+        """setup the magic
+        """
+        # create 4 preview curves
+        self.create_frame_curve()
+
+        for side in self.sides:
+            self.create_preview_curve(side)
+
+            # parent the joints to the frame curve
+            pm.parent(self.joints[side][0], self.frame_curve)
+            pm.parent(self.joints[side][1], self.frame_curve)
+
+        # parent it to the light
+        pm.parent(
+            self.frame_curve,
+            self.light
+        )
+
+        self.frame_curve.setAttr('t', [0, 0, -0.5])
+        self.frame_curve.setAttr('r', [0, 0, 0])
+        self.frame_curve.setAttr('s', [1, 1, 1])
+
+        self.create_barn_door()
+        self.create_expression()
+
+        # hide joints
+        for side in self.sides:
+            self.joints[side][0].v.set(0)
+            self.joints[side][1].v.set(0)
+
+        # group curves
+        shapes_group = pm.group(
+            [self.preview_curves.values()],
+            n='%s_barndoor_preview_curves' % self.light.name()
+        )
+
+        self.store_node(shapes_group)
+
+        # select the light again
+        pm.select(self.light)
+
+    def unsetup(self):
+        """deletes the barn door setup
+        """
+        try:
+            pm.delete(self.light.attr(self.storage_attr_name).inputs())
+        except AttributeError:
+            pass

@@ -926,6 +926,27 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.text(l='===== BarnDoor Simulator =====')
+
+            pm.button(
+                'barn_door_simulator_setup_button',
+                l='Setup',
+                c=RepeatedCallback(Render.barndoor_simulator_setup),
+                ann='Creates a arnold barnd door simulator to the selected '
+                    'light',
+                bgc=color.color
+            )
+
+            pm.button(
+                'barn_door_simulator_unsetup_button',
+                l='Un-Setup',
+                c=RepeatedCallback(Render.barndoor_simulator_unsetup),
+                ann='Removes the barn door simulator nodes from the selected '
+                    'light',
+                bgc=color.color
+            )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -3055,6 +3076,21 @@ class Render(object):
             except AttributeError:
                 pass
 
+    @classmethod
+    def barndoor_simulator_setup(cls):
+        """creates a barndoor simulator
+        """
+        bs = auxiliary.BarnDoorSimulator()
+        bs.light = pm.ls(sl=1)[0]
+        bs.setup()
+
+    @classmethod
+    def barndoor_simulator_unsetup(cls):
+        """removes the barndoor simulator
+        """
+        bs = auxiliary.BarnDoorSimulator()
+        bs.light = pm.ls(sl=1)[0]
+        bs.unsetup()
 
 class Animation(object):
     """animation tools
