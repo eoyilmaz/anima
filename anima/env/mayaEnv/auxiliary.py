@@ -1258,18 +1258,21 @@ class BarnDoorSimulator(object):
     """
 
     sides = ['top', 'bottom', 'left', 'right']
-    storage_attr_name = 'barnDoorSimulatorData'
+    message_storage_attr_name = 'barnDoorSimulatorData'
+    custom_data_storage_attr_name = 'barnDoorSimulatorCustomData'
 
     def __init__(self):
         self.frame_curve = None
         self.light = None
         self.barn_door = None
 
+        self.script_job_no = -1
+
         self.preview_curves = {
-            'top': None,
-            'bottom': None,
-            'left': None,
-            'right': None
+            'top': [],
+            'bottom': [],
+            'left': [],
+            'right': []
         }
 
         self.joints = {
@@ -1291,6 +1294,18 @@ class BarnDoorSimulator(object):
             self.barn_door.attr('message') >> \
                 light_shape.attr('aiFilters').next_available
 
+    def store_data(self, data):
+        """stores the given data
+        """
+        if not self.light.hasAttr(self.custom_data_storage_attr_name):
+            pm.addAttr(
+                self.light,
+                ln=self.custom_data_storage_attr_name,
+                dt='string'
+            )
+
+        self.light.setAttr(self.custom_data_storage_attr_name, data)
+
     def store_nodes(self, nodes):
         """stores the nodes
         """
@@ -1300,14 +1315,14 @@ class BarnDoorSimulator(object):
     def store_node(self, node):
         """stores the node in the storage attribute
         """
-        if not self.light.hasAttr(self.storage_attr_name):
+        if not self.light.hasAttr(self.message_storage_attr_name):
             pm.addAttr(
                 self.light,
-                ln=self.storage_attr_name,
+                ln=self.message_storage_attr_name,
                 m=1
             )
 
-        node.message >> self.light.attr(self.storage_attr_name).next_available
+        node.message >> self.light.attr(self.message_storage_attr_name).next_available
 
     def create_frame_curve(self):
         """creates the frame curve
@@ -1333,7 +1348,7 @@ class BarnDoorSimulator(object):
         j1.t.set(-0.5, 0, 0)
         j2.t.set(0.5, 0, 0)
 
-        self.joints[side] = [j1, j2]
+        self.joints[side] += [j1, j2]
 
         # create one nurbs curve
         preview_curve = pm.curve(
@@ -1342,7 +1357,7 @@ class BarnDoorSimulator(object):
                (0.5, 0, 0)],
             k=[0, 1]
         )
-        self.preview_curves[side] = preview_curve
+        self.preview_curves[side].append(preview_curve)
 
         # bind the joints to the curveShape
         pm.select([preview_curve, j1, j2])
@@ -1365,11 +1380,23 @@ class BarnDoorSimulator(object):
         {top_right_joint}.ty = -{barn_door}.barndoorTopRight + 0.5;
         {top_right_joint}.tx = 0.5;
 
+        // top edge
+        {top_edge_left_joint}.ty = {top_left_joint}.ty + {barn_door}.barndoorTopEdge;
+        {top_edge_left_joint}.tx = -0.5;
+        {top_edge_right_joint}.ty = {top_right_joint}.ty + {barn_door}.barndoorTopEdge;
+        {top_edge_right_joint}.tx = 0.5;
+
         // bottom
         {bottom_left_joint}.ty = -{barn_door}.barndoorBottomLeft + 0.5;
         {bottom_left_joint}.tx = -0.5;
         {bottom_right_joint}.ty = -{barn_door}.barndoorBottomRight + 0.5;
         {bottom_right_joint}.tx = 0.5;
+
+        // bottom edge
+        {bottom_edge_left_joint}.ty = {bottom_left_joint}.ty - {barn_door}.barndoorBottomEdge;
+        {bottom_edge_left_joint}.tx = -0.5;
+        {bottom_edge_right_joint}.ty = {bottom_right_joint}.ty - {barn_door}.barndoorBottomEdge;
+        {bottom_edge_right_joint}.tx = 0.5;
 
         // left
         {left_top_joint}.tx = {barn_door}.barndoorLeftTop - 0.5;
@@ -1377,11 +1404,23 @@ class BarnDoorSimulator(object):
         {left_bottom_joint}.tx = {barn_door}.barndoorLeftBottom - 0.5;
         {left_bottom_joint}.ty = -0.5;
 
+        // left edge
+        {left_edge_top_joint}.tx = {left_top_joint}.tx - {barn_door}.barndoorLeftEdge;
+        {left_edge_top_joint}.ty = 0.5;
+        {left_edge_bottom_joint}.tx = {left_bottom_joint}.tx - {barn_door}.barndoorLeftEdge;
+        {left_edge_bottom_joint}.ty = -0.5;
+
         // right
         {right_top_joint}.tx = {barn_door}.barndoorRightTop - 0.5;
         {right_top_joint}.ty = 0.5;
         {right_bottom_joint}.tx = {barn_door}.barndoorRightBottom - 0.5;
         {right_bottom_joint}.ty = -0.5;
+
+        // right edge
+        {right_edge_top_joint}.tx = {right_top_joint}.tx + {barn_door}.barndoorRightEdge;
+        {right_edge_top_joint}.ty = 0.5;
+        {right_edge_bottom_joint}.tx = {right_bottom_joint}.tx + {barn_door}.barndoorRightEdge;
+        {right_edge_bottom_joint}.ty = -0.5;
         """.format(
             **{
                 'light': self.light.name(),
@@ -1391,25 +1430,44 @@ class BarnDoorSimulator(object):
                 'top_left_joint': self.joints['top'][0],
                 'top_right_joint': self.joints['top'][1],
 
+                'top_edge_left_joint': self.joints['top'][2],
+                'top_edge_right_joint': self.joints['top'][3],
+
                 'bottom_left_joint': self.joints['bottom'][0],
                 'bottom_right_joint': self.joints['bottom'][1],
+
+                'bottom_edge_left_joint': self.joints['bottom'][2],
+                'bottom_edge_right_joint': self.joints['bottom'][3],
 
                 'left_top_joint': self.joints['left'][0],
                 'left_bottom_joint': self.joints['left'][1],
 
+                'left_edge_top_joint': self.joints['left'][2],
+                'left_edge_bottom_joint': self.joints['left'][3],
+
                 'right_top_joint': self.joints['right'][0],
                 'right_bottom_joint': self.joints['right'][1],
+
+                'right_edge_top_joint': self.joints['right'][2],
+                'right_edge_bottom_joint': self.joints['right'][3],
             }
         )
 
         expr_node = pm.expression(s=expr)
         self.store_node(expr_node)
 
-    def create_storage_attribute(self):
-        """creates a storage attribute to store the created nodes to be able
-        to remove them later on easily
+    def create_script_job(self):
+        """creates the script job that disables the affected highlight
         """
-        self.light.addAttr(ln=self.storage_attr_name, at='compound', nc=1)
+        script_job_no = pm.scriptJob(
+            e=["SelectionChanged",
+                'if pm.ls(sl=1) and pm.ls(sl=1)[0].name() == "%s":\n'
+                '    pm.displayPref(displayAffected=False)\n'
+                'else:\n'
+                '    pm.displayPref(displayAffected=True)' % self.light.name()
+            ]
+        )
+        self.store_data('%s' % script_job_no)
 
     def setup(self):
         """setup the magic
@@ -1419,10 +1477,24 @@ class BarnDoorSimulator(object):
 
         for side in self.sides:
             self.create_preview_curve(side)
+            # and one for the edge
+            self.create_preview_curve(side)
+
+            # set main curve to reference
+            preview_curve = self.preview_curves[side][0]
+            preview_curve.setAttr("overrideEnabled", 1)
+            preview_curve.setAttr("overrideColor", 6)
+
+            # set edge curve to template
+            edge_curve = self.preview_curves[side][1]
+            edge_curve.setAttr("overrideEnabled", 1)
+            edge_curve.setAttr("overrideColor", 13)
 
             # parent the joints to the frame curve
             pm.parent(self.joints[side][0], self.frame_curve)
             pm.parent(self.joints[side][1], self.frame_curve)
+            pm.parent(self.joints[side][2], self.frame_curve)
+            pm.parent(self.joints[side][3], self.frame_curve)
 
         # parent it to the light
         pm.parent(
@@ -1442,13 +1514,22 @@ class BarnDoorSimulator(object):
             self.joints[side][0].v.set(0)
             self.joints[side][1].v.set(0)
 
+            # and edge
+            self.joints[side][2].v.set(0)
+            self.joints[side][3].v.set(0)
+
         # group curves
+        all_preview_curves = []
+        map(all_preview_curves.extend, self.preview_curves.values())
         shapes_group = pm.group(
-            [self.preview_curves.values()],
+            all_preview_curves,
             n='%s_barndoor_preview_curves' % self.light.name()
         )
 
         self.store_node(shapes_group)
+
+        # create script job
+        self.create_script_job()
 
         # select the light again
         pm.select(self.light)
@@ -1457,6 +1538,10 @@ class BarnDoorSimulator(object):
         """deletes the barn door setup
         """
         try:
-            pm.delete(self.light.attr(self.storage_attr_name).inputs())
+            pm.delete(self.light.attr(self.message_storage_attr_name).inputs())
         except AttributeError:
             pass
+
+        pm.scriptJob(
+            k=int(self.light.getAttr(self.custom_data_storage_attr_name))
+        )

@@ -2463,7 +2463,6 @@ class Rigging(object):
             if item.type() == "joint":
                 joints.append(item)
         pm.select(joints)
-        print pm.ls(sl=1).sort
 
     @classmethod
     def axial_correction_group(cls):
@@ -3059,7 +3058,7 @@ class Render(object):
                         shader.attr("aiMatteColorA").set(colors[color][3])
                     except RuntimeError as e:
                         # there is some connections
-                        print str(e)
+                        print(str(e))
 
     @classmethod
     def enable_subdiv(cls):
@@ -3091,6 +3090,7 @@ class Render(object):
         bs = auxiliary.BarnDoorSimulator()
         bs.light = pm.ls(sl=1)[0]
         bs.unsetup()
+
 
 class Animation(object):
     """animation tools
