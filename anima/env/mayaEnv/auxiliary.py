@@ -1236,7 +1236,7 @@ def export_alembic_from_cache_node():
             os.makedirs(os.path.dirname(output_full_path))
 
         command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
-                  '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
+                  '-uvWrite -wholeFrameGeo -worldSpace -root %s -file %s";'
         # command = 'AbcExport -j "-frameRange %s %s -ro ' \
         #           '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
 
@@ -1244,7 +1244,7 @@ def export_alembic_from_cache_node():
             command % (
                 int(start_frame),
                 int(end_frame),
-                cacheable_node,
+                cacheable_node.fullPath(),
                 output_full_path
             )
         )
