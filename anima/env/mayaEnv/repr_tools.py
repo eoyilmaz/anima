@@ -503,6 +503,7 @@ class RepresentationGenerator(object):
                         # set rotate and scale pivots
                         rp = pm.xform(child_node, q=1, ws=1, rp=1)
                         sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                        #child_node.setRotatePivotTranslation([0, 0, 0])
 
                         pm.delete(child_node)
                         cache_file_full_path = \
@@ -597,9 +598,11 @@ class RepresentationGenerator(object):
                                 # set rotate and scale pivots
                                 rp = pm.xform(child_node, q=1, ws=1, rp=1)
                                 sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                                # rpt = child_node.getRotatePivotTranslation()
 
                                 pm.xform(gpu_node_tra, ws=1, rp=rp)
                                 pm.xform(gpu_node_tra, ws=1, sp=sp)
+                                # child_node.setRotatePivotTranslation(rpt)
 
                                 gpu_node.setAttr(
                                     'cacheFileName',
@@ -857,9 +860,11 @@ class RepresentationGenerator(object):
                     # set pivots
                     rp = pm.xform(child_node, q=1, ws=1, rp=1)
                     sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                    # rpt = child_node.getRotatePivotTranslation()
 
                     pm.xform(ass_node, ws=1, rp=rp)
                     pm.xform(ass_node, ws=1, sp=sp)
+                    # ass_node.setRotatePivotTranslation(rpt)
 
                     # delete the child_node
                     pm.delete(child_node)

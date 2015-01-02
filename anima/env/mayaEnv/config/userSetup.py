@@ -89,24 +89,17 @@ except pm.MayaNodeError:
 db.setup()
 create_repo_vars()
 
-# load shelves
+if not pm.general.about(batch=1):
+    # load shelves
+    shelves_path = '../../../../shelves'
+    shelf_names = ['kks_Tools', 'kks_Animation']
 
+    for shelf_name in shelf_names:
+        shelf_path = os.path.normpath(
+            os.path.join(here, shelves_path, 'shelf_%s.mel' % shelf_name)
+        ).replace('\\', '/')
 
-system_name = platform.system().lower()
+        pm.evalDeferred('auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name)
+        pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
 
-shelves_path = '../../../../shelves'
-
-shelf_names = ['kks_Tools']
-if system_name == 'linux':
-    shelf_names = ['kks_Tools_linux']
-
-
-for shelf_name in shelf_names:
-    shelf_path = os.path.normpath(
-        os.path.join(here, shelves_path, 'shelf_%s.mel' % shelf_name)
-    ).replace('\\', '/')
-
-    pm.evalDeferred('auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name)
-    pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
-
-    print('shelf_path: %s' % shelf_path)
+        print('shelf_path: %s' % shelf_path)
