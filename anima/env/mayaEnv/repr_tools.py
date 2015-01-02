@@ -628,6 +628,12 @@ class RepresentationGenerator(object):
                     ref.importContents()
                 all_refs = pm.listReferences()
 
+            # assign lambert1 to all GPU nodes
+            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+
+            # clean up
+            self.clean_up()
+
         # 6. save the scene as {{original_take}}___GPU
         # use maya
         take_name = '%s%s%s' % (
@@ -635,6 +641,15 @@ class RepresentationGenerator(object):
         )
         v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
+
+        # export the root nodes under the same file
+        if self.is_exterior_or_interior_task(task):
+            pm.select(auxiliary.get_root_nodes())
+            pm.exportSelected(
+                v.absolute_full_path,
+                type='mayaAscii',
+                force=True
+            )
 
         # clear scene
         pm.newFile(force=True)
@@ -662,6 +677,26 @@ class RepresentationGenerator(object):
 
             proc.wait()
         return tx_path
+
+    @classmethod
+    def clean_up(self):
+        """cleans up the scene
+        """
+        num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
+
+        delete_nodes_types = ['reference', 'unknown', 'objectMultiFilter',
+                              'hyperGraphInfo', 'hyperLayout', 'hyperView']
+        for node in pm.ls(type=delete_nodes_types):
+            node.unlock()
+        try:
+            pm.delete(pm.ls(type=delete_nodes_types))
+        except RuntimeError:
+            pass
+
+        delete_nodes_by_name = [
+            '*:defaultFurGlobals',
+            '*:defaultRenderLayer',
+        ]
 
     def generate_ass(self):
         """generates the ASS representation of the current scene
@@ -939,6 +974,10 @@ class RepresentationGenerator(object):
                     # in look dev disable overrideShaders
                     ass_node.setAttr('overrideShaders', False)
 
+                    # we definitely do not use light linking in our studio,
+                    # which seems to create more problems then it solves.
+                    ass_node.setAttr('overrideLightLinking', False)
+
         # convert all references to ASS
         for ref in pm.listReferences():
             ref.to_repr('ASS')
@@ -959,6 +998,19 @@ class RepresentationGenerator(object):
                         ref.load()
                     ref.importContents()
                 all_refs = pm.listReferences()
+
+            # assign lambert1 to all GPU nodes
+            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+
+            # now remove them from the group
+            pm.sets('initialShadingGroup', e=1, rm=pm.ls())
+
+            # and to make sure that no override is enabled
+            [node.setAttr('overrideLightLinking', False)
+             for node in pm.ls(type='aiStandIn')]
+
+            # clean up
+            self.clean_up()
 
         # check if all aiStandIn nodes are included in
         # ArnoldStandInDefaultLightSet set
@@ -986,6 +1038,15 @@ class RepresentationGenerator(object):
         )
         v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
+
+        # export the root nodes under the same file
+        if self.is_exterior_or_interior_task(task):
+            pm.select(auxiliary.get_root_nodes())
+            pm.exportSelected(
+                v.absolute_full_path,
+                type='mayaAscii',
+                force=True
+            )
 
         # new scene
         pm.newFile(force=True)
