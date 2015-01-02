@@ -823,6 +823,41 @@ class RepresentationGenerator(object):
             for ref in pm.listReferences():
                 ref.load()
 
+            # Make all texture paths relative
+            # replace all "$REPO#" from all texture paths first
+            #
+            # This is needed to properly render textures with any OS
+            types_and_attrs = {
+                'aiImage': 'filename',
+                'file': 'fileTextureName',
+                'imagePlane': 'imageName'
+            }
+
+            for node_type in types_and_attrs.keys():
+                attr_name = types_and_attrs[node_type]
+                for node in pm.ls(type=node_type):
+                    orig_path = node.getAttr(attr_name).replace("\\", "/")
+                    path = re.sub(
+                        r'(\$REPO[0-9/]+)',
+                        '',
+                        orig_path
+                    )
+                    tx_path = self.make_tx(path)
+                    inputs = node.attr(attr_name).inputs(p=1)
+                    if len(inputs):
+                        # set the input attribute
+                        for input_node_attr in inputs:
+                            input_node_attr.set(tx_path)
+                    else:
+                        node.setAttr(attr_name, tx_path)
+
+            # randomize all render node names
+            # This is needed to prevent clashing of materials in a bigger scene
+            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+                if node.referenceFile() is None and \
+                   node.name() not in READ_ONLY_NODE_NAMES:
+                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+
             # find the _pfxPolygons node
             pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
 
