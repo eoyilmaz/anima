@@ -615,10 +615,13 @@ class RepresentationGenerator(object):
         for ref in pm.listReferences():
             # check if this is a Model reference
             ref.to_repr('GPU')
+            ref.load()
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
         task = self.version.task
-        if self.is_exterior_or_interior_task(task):
+
+        is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
+        if is_exterior_or_interior_task:
             # and import all of the references
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
@@ -643,7 +646,7 @@ class RepresentationGenerator(object):
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file
-        if self.is_exterior_or_interior_task(task):
+        if is_exterior_or_interior_task:
             pm.select(auxiliary.get_root_nodes())
             pm.exportSelected(
                 v.absolute_full_path,
@@ -981,6 +984,7 @@ class RepresentationGenerator(object):
         # convert all references to ASS
         for ref in pm.listReferences():
             ref.to_repr('ASS')
+            ref.load()
 
         # fix an arnold bug
         for node_name in ['initialShadingGroup', 'initialParticleSE']:
@@ -989,7 +993,8 @@ class RepresentationGenerator(object):
             node.setAttr("ai_volume_shader", (0, 0, 0), type="float3")
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
-        if self.is_exterior_or_interior_task(task):
+        is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
+        if is_exterior_or_interior_task:
             # and import all of the references
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
@@ -1040,7 +1045,7 @@ class RepresentationGenerator(object):
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file
-        if self.is_exterior_or_interior_task(task):
+        if is_exterior_or_interior_task:
             pm.select(auxiliary.get_root_nodes())
             pm.exportSelected(
                 v.absolute_full_path,
