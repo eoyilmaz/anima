@@ -2915,6 +2915,16 @@ class Render(object):
                 lut.append((source_nodes[index], target_nodes[i]))
 
         attr_names = [
+            'castsShadows',
+            'receiveShadows',
+            'motionBlur',
+            'primaryVisibility',
+            'smoothShading',
+            'visibleInReflections',
+            'visibleInRefractions',
+            'doubleSided',
+            'opposite',
+
             'aiSelfShadows',
             'aiOpaque',
             'aiVisibleInDiffuse',
