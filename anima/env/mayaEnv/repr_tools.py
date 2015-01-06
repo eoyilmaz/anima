@@ -687,8 +687,7 @@ class RepresentationGenerator(object):
         """
         num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
 
-        delete_nodes_types = ['reference', 'unknown', 'objectMultiFilter',
-                              'hyperGraphInfo', 'hyperLayout', 'hyperView']
+        delete_nodes_types = ['reference', 'unknown']
         for node in pm.ls(type=delete_nodes_types):
             node.unlock()
         try:
