@@ -1220,6 +1220,15 @@ def export_alembic_from_cache_node():
         else:
             i = 1
 
+        # hide any child node that has "rig" or "proxy" or "low" in its name
+        wrong_node_names = ['rig', 'proxy', 'low']
+        hidden_nodes = []
+        for child in pm.ls(cacheable_node.getChildren(), type='transform'):
+            if any([n in child.name() for n in wrong_node_names]):
+                if child.v.get() is True:
+                    child.v.set(False)
+                    hidden_nodes.append(child)
+
         output_path = os.path.join(
             current_file_path,
             'Outputs/alembic/%s%i/' % (cacheable_attr_value, i)
@@ -1249,6 +1258,11 @@ def export_alembic_from_cache_node():
             )
         )
         previous_cacheable_attr_value = cacheable_attr_value
+
+        # reveal any previously hidden nodes
+        for node in hidden_nodes:
+            node.v.set(True)
+
         caller.step()
 
 
