@@ -6,10 +6,17 @@
 
 
 import os
+import logging
 
 import PeyeonScript
+
 from base import EnvironmentBase
 from anima.env import empty_reference_resolution
+from anima.recent import RecentFileManager
+
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 
 class Fusion(EnvironmentBase):
@@ -299,6 +306,9 @@ class Fusion(EnvironmentBase):
 
         self.fusion.LoadComp(version_full_path.encode())
 
+        rfm = RecentFileManager()
+        rfm.add(self.name, version.absolute_full_path)
+
         # set the project_directory
         #self.project_directory = os.path.dirname(version.absolute_path)
 
@@ -342,8 +352,27 @@ class Fusion(EnvironmentBase):
 
         :return: :class:`~oyProjectManager.models.version.Version`
         """
-        full_path = self.fusion_prefs["LastCompFile"]
-        return self.get_version_from_full_path(full_path)
+        # full_path = self.fusion_prefs["LastCompFile"]
+        # return self.get_version_from_full_path(full_path)
+
+        version = None
+        rfm = RecentFileManager()
+
+        try:
+            recent_files = rfm[self.name]
+        except KeyError:
+            logger.debug('no recent files')
+            recent_files = None
+
+        if recent_files is not None:
+            for i in range(len(recent_files)):
+                version = self.get_version_from_full_path(recent_files[i])
+                if version is not None:
+                    break
+
+            logger.debug("version from recent files is: %s" % version)
+
+        return version
 
     def get_version_from_project_dir(self):
         """Tries to find a Version from the current project directory

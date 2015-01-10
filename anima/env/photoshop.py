@@ -183,7 +183,7 @@ class Photoshop(EnvironmentBase):
         rfm = RecentFileManager()
 
         try:
-            recent_files = rfm['Photoshop']
+            recent_files = rfm[self.name]
         except KeyError:
             logger.debug("no recent files")
             recent_files = None
