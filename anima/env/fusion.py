@@ -455,7 +455,7 @@ class Fusion(EnvironmentBase):
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
-        file_formats = ['exr', 'tga']
+        file_formats = ['exr', 'png']
 
         # list all the save nodes in the current file
         saver_nodes = self.get_main_saver_node()
