@@ -835,6 +835,31 @@ def check_only_supported_materials_are_used():
 
 
 @publisher(LOOK_DEV_TYPES)
+def check_multiple_connections_for_textures():
+    """check if textures are only used in one material (not liking it very much
+    but it is breaking ASS files.
+    """
+    # get all the texture nodes
+    texture_nodes = ['file', 'aiImage']
+
+    # try to find the material it is been used by walking up the connections
+    nodes_with_multiple_materials = []
+    for node in pm.ls(type=texture_nodes):
+        if len(pm.ls(node.listHistory(future=True), mat=True)) > 1:
+            nodes_with_multiple_materials.append(node)
+
+    # if we find more than one material add it to the list
+    # raise a PublishError if we have an item in the list
+    if len(nodes_with_multiple_materials) > 0:
+        pm.select(nodes_with_multiple_materials)
+        raise PublishError(
+            'Please update the scene so the following nodes are connected <br>'
+            'to only <b>one material</b> (duplicate them):<br>' %
+            '<br>'.join(map(lambda x:x.name(), nodes_with_multiple_materials))
+        )
+
+
+@publisher(LOOK_DEV_TYPES)
 def check_objects_still_using_default_shader():
     """check if there are objects still using the default shader
     """

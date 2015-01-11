@@ -763,6 +763,7 @@ class RepresentationGenerator(object):
 
                 if load_ref:
                     ref.load()
+                    ref.importContents()
 
             # Make all texture paths relative
             # replace all "$REPO#" from all texture paths first
@@ -811,11 +812,14 @@ class RepresentationGenerator(object):
                     if not auxiliary.has_shape(child_node):
                         continue
 
+                    # randomize child node name
                     child_node_name = child_node.name()
 
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
+                    child_node.rename('%s_%s' % (child_node.name(), uuid.uuid4().hex))
+
                     output_filename =\
                         '%s.ass' % (
                             child_node_name.replace(':', '_').replace('|', '_')
@@ -836,6 +840,10 @@ class RepresentationGenerator(object):
                     #     child_node_full_path,
                     #     output_full_path)
                     # )
+
+            # reload the scene
+            pm.newFile(force=True)
+            self.open_version(self.version)
 
             # convert all references to ASS
             # we are doing it a little bit early here, but we need to

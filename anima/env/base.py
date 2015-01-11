@@ -239,7 +239,7 @@ class EnvironmentBase(object):
 
         # trim repo path
         full_path_trimmed = self.trim_repo_path(full_path)
-        logger.debug('full_path_trimmed: %s' % full_path_trimmed)
+        #logger.debug('full_path_trimmed: %s' % full_path_trimmed)
 
         from stalker import Version
 
