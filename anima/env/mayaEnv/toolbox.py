@@ -1044,14 +1044,14 @@ def UI():
                     bgc=color.color
                 )
 
-            pm.button(
-                'abc_from_source_to_target_button',
-                l='Source -> Target',
-                c=RepeatedCallback(Animation.copy_alembic_data),
-                ann='Copy Alembic Data from Source to Target by the matching '
-                    'node names',
-                bgc=color.color
-            )
+            # pm.button(
+            #     'abc_from_source_to_target_button',
+            #     l='Source -> Target',
+            #     c=RepeatedCallback(Animation.copy_alembic_data),
+            #     ann='Copy Alembic Data from Source to Target by the matching '
+            #         'node names',
+            #     bgc=color.color
+            # )
 
             pm.text(l='===== Exporters =====')
             color.change()
@@ -2651,8 +2651,19 @@ class Render(object):
             pm.select(hierarchy=1)
         objects = pm.ls(sl=1)
         for item in objects:
-            if item.hasAttr(attributeName):
+            try:
                 item.setAttr(attributeName, value)
+                # if this is an aiStandIn
+                # then also set override{Attr} to True
+                if isinstance(item, pm.nt.AiStandIn):
+                    override_attr_name = \
+                        'override%s%s' % (
+                            attributeName[0].upper(),
+                            attributeName[1:]
+                        )
+                    item.setAttr(override_attr_name, not value)
+            except TypeError:
+                pass
         pm.select(preSelectionList)
 
     @classmethod
@@ -2905,12 +2916,13 @@ class Render(object):
 
         lut = []
 
+        nodes_with_no_correspongding = []
         for i, target_node in enumerate(target_nodes):
             target_node_name = target_node_names[i]
             try:
                 index = source_node_names.index(target_node_name)
             except ValueError:
-                pass
+                nodes_with_no_correspongding.append(target_node)
             else:
                 lut.append((source_nodes[index], target_nodes[i]))
 
@@ -2974,6 +2986,16 @@ class Render(object):
             # also transfer render attributes
             for attr_name in attr_names:
                 target_node.setAttr(attr_name, source_node.getAttr(attr_name))
+
+        if len(nodes_with_no_correspongding):
+            pm.select(nodes_with_no_correspongding)
+            print(
+                'The following nodes has no corresponding source:\n%s' % (
+                    '\n'.join(
+                        [node.name for node in nodes_with_no_correspongding]
+                    )
+                )
+            )
 
     @classmethod
     def fit_placement_to_UV(cls):
