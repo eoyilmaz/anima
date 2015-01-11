@@ -803,6 +803,14 @@ def run_post_publishers():
         staging.clear()
 
 
+def fix_external_paths():
+    """fixes external paths in a maya scene
+    """
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+    m_env.replace_external_paths()
+
+
 def has_shape(node):
     """checks if the given node has at least one child that has a shape
     """

@@ -50,6 +50,11 @@ global proc run_post_publishers()
     python("from anima.env.mayaEnv import auxiliary; auxiliary.run_post_publishers();");
 }
 
+global proc fix_external_paths()
+{
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.fix_external_paths();");
+}
+
 global proc FileMenu_SaveItem()
 //
 // If the current file is named, save it.  If it
@@ -57,6 +62,8 @@ global proc FileMenu_SaveItem()
 // dialog.
 //
 {
+    // fix external paths
+    fix_external_paths();
 
     // before doing anything check if it is a published version and run
     // publishers again
