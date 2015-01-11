@@ -854,8 +854,8 @@ def check_multiple_connections_for_textures():
         pm.select(nodes_with_multiple_materials)
         raise PublishError(
             'Please update the scene so the following nodes are connected <br>'
-            'to only <b>one material</b> (duplicate them):<br>' %
-            '<br>'.join(map(lambda x:x.name(), nodes_with_multiple_materials))
+            'to only <b>one material</b> (duplicate them):<br><br>%s<br><br>' %
+            '<br>'.join(map(lambda x: x.name(), nodes_with_multiple_materials))
         )
 
 
