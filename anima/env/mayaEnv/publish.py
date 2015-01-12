@@ -1047,18 +1047,33 @@ def generate_thumbnail():
     shutil.copy(output_file, for_web_path)
     shutil.copy(output_file, thumbnail_path)
 
-    l_hires = Link(
-        full_path=repo.make_relative(hires_path),
-        original_filename='from_maya.png'
-    )
-    l_for_web = Link(
-        full_path=repo.make_relative(for_web_path),
-        original_filename='from_maya.png'
-    )
-    l_thumb = Link(
-        full_path=repo.make_relative(thumbnail_path),
-        original_filename='from_maya.png'
-    )
+    # try to get and update the thumbnails
+    l_hires = Link.query\
+        .filter(Link.full_path == repo.make_relative(hires_path)).first()
+
+    if not l_hires:
+        l_hires = Link(
+            full_path=repo.make_relative(hires_path),
+            original_filename='from_maya.png'
+        )
+
+    l_for_web = Link.query\
+        .filter(Link.full_path == repo.make_relative(for_web_path)).first()
+
+    if not l_for_web:
+        l_for_web = Link(
+            full_path=repo.make_relative(for_web_path),
+            original_filename='from_maya.png'
+        )
+
+    l_thumb = Link.query\
+        .filter(Link.full_path == repo.make_relative(thumbnail_path)).first()
+
+    if not l_thumb:
+        l_thumb = Link(
+            full_path=repo.make_relative(thumbnail_path),
+            original_filename='from_maya.png'
+        )
 
     l_hires.thumbnail = l_for_web
     l_for_web.thumbnail = l_thumb
