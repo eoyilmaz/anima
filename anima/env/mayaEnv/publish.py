@@ -840,7 +840,63 @@ def check_multiple_connections_for_textures():
     but it is breaking ASS files.
     """
     # get all the texture nodes
-    texture_nodes = ['file', 'aiImage']
+    texture_nodes = [
+        'bulge',
+        'checker',
+        'cloth',
+        'file',
+        'fluidTexture2D',
+        'fractal',
+        'grid',
+        'mandelbrot',
+        'mountain',
+        'movie',
+        'noise',
+        'ocean',
+        'psdFileTex',
+        'ramp',
+        'water',
+
+        'brownian',
+        'cloud',
+        'crater',
+        'fluidTexture3D',
+        'granite',
+        'leather',
+        'mandelbrot3D',
+        'marble',
+        'rock',
+        'snow',
+        'solidFractal',
+        'stucco',
+        'volumeNoise',
+        'wood',
+
+        'bump2d',
+        'bump3d',
+        'place2dTexture',
+        'place3dTexture',
+        'plusMinusAverage',
+        'samplerInfo',
+        'stencil',
+        'uvChooser',
+        'surfaceInfo',
+        'blendColors',
+        'clamp',
+        'contrast',
+        'gammaCorrect',
+        'hsvToRgb',
+        'luminance',
+        'remapColor',
+        'remapHsv',
+        'remapValue',
+        'rgbToHsv',
+        'surfaceLuminance',
+        'imagePlane',
+
+        'aiImage',
+        'aiNoise',
+    ]
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
