@@ -839,6 +839,16 @@ def check_multiple_connections_for_textures():
     """check if textures are only used in one material (not liking it very much
     but it is breaking ASS files.
     """
+
+    v = staging.get('version')
+
+    # skip if
+    skip_types = ['character', 'animation', 'previs']
+    for t in v.naming_parents:
+        for st in skip_types:
+            if t.type and t.type.name.lower().startswith(st):
+                return
+
     # get all the texture nodes
     texture_nodes = [
         'bulge',
@@ -901,7 +911,14 @@ def check_multiple_connections_for_textures():
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
     for node in pm.ls(type=texture_nodes):
-        if len(pm.ls(node.listHistory(future=True), mat=True)) > 1:
+        materials_connected_to_this_node = \
+            pm.ls(node.listHistory(future=True), mat=True)
+
+        # # remove any material that is used like a texture node
+        # for mat in materials_connected_to_this_node:
+        #     not isinstance(n, pm.nt.for n in mat.outputs():
+
+        if len(materials_connected_to_this_node) > 1:
             nodes_with_multiple_materials.append(node)
 
     # if we find more than one material add it to the list
