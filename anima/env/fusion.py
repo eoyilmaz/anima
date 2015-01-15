@@ -278,6 +278,9 @@ class Fusion(EnvironmentBase):
         self.comp.Save(version_full_path.encode())
         self.comp.Unlock()
 
+        rfm = RecentFileManager()
+        rfm.add(self.name, version.absolute_full_path)
+
         return True
 
     def export_as(self, version):

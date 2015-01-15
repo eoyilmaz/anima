@@ -2992,7 +2992,7 @@ class Render(object):
             print(
                 'The following nodes has no corresponding source:\n%s' % (
                     '\n'.join(
-                        [node.name for node in nodes_with_no_correspongding]
+                        [node.name() for node in nodes_with_no_correspongding]
                     )
                 )
             )
