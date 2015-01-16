@@ -1152,7 +1152,14 @@ def generate_thumbnail():
     l_for_web.thumbnail = l_thumb
 
     task.thumbnail = l_hires
+
     from stalker import db
+    # also check if the first naming parent have a thumbnail and update it
+    for naming_parent in v.naming_parents:
+        if not naming_parent.thumbnail:
+            naming_parent.thumbnail = l_hires
+            db.DBSession.add(naming_parent)
+
     db.DBSession.add_all([l_hires, l_for_web, l_thumb])
     db.DBSession.commit()
 
