@@ -586,7 +586,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.upload_thumbnail_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.upload_thumbnail_pushButton_clicked
+            self.upload_thumbnail_push_button_clicked
+        )
+
+        # upload_thumbnail_pushButton
+        QtCore.QObject.connect(
+            self.clear_thumbnail_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.clear_thumbnail_push_button_clicked
         )
 
         logger.debug("finished setting up interface signals")
@@ -1704,7 +1711,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 stalker_dummy_user_pass
             )
 
-    def upload_thumbnail_pushButton_clicked(self):
+    def upload_thumbnail_push_button_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
         thumbnail_full_path = ui_utils.choose_thumbnail(self)
@@ -1753,7 +1760,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             db.DBSession.commit()
 
             # update the thumbnail
-            self.update_thumbnail()
+            self.clear_thumbnail()
 
 
     def find_from_path_pushButton_clicked(self):
