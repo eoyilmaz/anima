@@ -947,6 +947,16 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'ai_skin_sss_to_ai_skin_button',
+                l='aiSkinSSS --> aiSkin',
+                c=RepeatedCallback(Render.convert_aiSkinSSS_to_aiSkin),
+                ann='Converts all aiSkinSSS nodes in the current scene to '
+                    'aiSkin + aiStandard node automatically',
+                bgc=color.color
+            )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -3122,6 +3132,175 @@ class Render(object):
         bs = auxiliary.BarnDoorSimulator()
         bs.light = pm.ls(sl=1)[0]
         bs.unsetup()
+
+    @classmethod
+    def convert_aiSkinSSS_to_aiSkin(cls):
+        """converts aiSkinSSS nodes in the current scene to aiSkin + aiStandard
+        nodes automatically
+        """
+        attr_mapper = {
+            # diffuse
+            'color': {
+                'node': 'aiStandard',
+                'attr_name': 'color'
+            },
+            'diffuseWeight': {
+                'node': 'aiStandard',
+                'attr_name': 'Kd',
+                'multiplier': 0.7
+            },
+            'diffuseRoughness': {
+                'node': 'aiStandard',
+                'attr_name': 'diffuseRoughness'
+            },
+
+            # sss
+            'sssWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'sssWeight'
+            },
+
+            # shallowScatter
+            'shallowScatterColor': {
+                'node': 'aiSkin',
+                'attr_name': 'shallowScatterColor',
+            },
+            'shallowScatterWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'shallowScatterWeight'
+            },
+            'shallowScatterRadius': {
+                'node': 'aiSkin',
+                'attr_name': 'shallowScatterRadius'
+            },
+
+            # midScatter
+            'midScatterColor': {
+                'node': 'aiSkin',
+                'attr_name': 'midScatterColor',
+            },
+            'midScatterWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'midScatterWeight'
+            },
+            'midScatterRadius': {
+                'node': 'aiSkin',
+                'attr_name': 'midScatterRadius'
+            },
+
+            # deepScatter
+            'deepScatterColor': {
+                'node': 'aiSkin',
+                'attr_name': 'deepScatterColor',
+            },
+            'deepScatterWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'deepScatterWeight'
+            },
+            'deepScatterRadius': {
+                'node': 'aiSkin',
+                'attr_name': 'deepScatterRadius'
+            },
+
+            # primaryReflection
+            'primaryReflectionColor': {
+                'node': 'aiSkin',
+                'attr_name': 'specularColor'
+            },
+            'primaryReflectionWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'specularWeight'
+            },
+            'primaryReflectionRoughness': {
+                'node': 'aiSkin',
+                'attr_name': 'specularRoughness'
+            },
+
+            # secondaryReflection
+            'secondaryReflectionColor': {
+                'node': 'aiSkin',
+                'attr_name': 'sheenColor'
+            },
+            'secondaryReflectionWeight': {
+                'node': 'aiSkin',
+                'attr_name': 'sheenWeight'
+            },
+            'secondaryReflectionRoughness': {
+                'node': 'aiSkin',
+                'attr_name': 'sheenRoughness'
+            },
+
+            # bump
+            'normalCamera': {
+                'node': 'aiSkin',
+                'attr_name': 'normalCamera'
+            },
+
+            # sss multiplier
+            'globalSssRadiusMultiplier': {
+                'node': 'aiSkin',
+                'attr_name': 'globalSssRadiusMultiplier'
+            },
+        }
+
+        all_skin_sss = pm.ls(type='aiSkinSss')
+        for skin_sss in all_skin_sss:
+            skin = pm.shadingNode('aiSkin', asShader=1)
+            standard = pm.shadingNode('aiStandard', asShader=1)
+
+            skin.attr('outColor') >> standard.attr('emissionColor')
+            standard.setAttr('emission', 1.0)
+            skin.setAttr('fresnelAffectSss',
+                         0)  # to match the previous behaviour
+
+            node_mapper = {
+                'aiSkin': skin,
+                'aiStandard': standard
+            }
+
+            for attr in attr_mapper.keys():
+                inputs = skin_sss.attr(attr).inputs(p=1, c=1)
+                if inputs:
+                    # copy inputs
+                    destination_attr_name = inputs[0][0].name().split('.')[-1]
+                    source = inputs[0][1]
+
+                    if destination_attr_name in attr_mapper:
+                        node = attr_mapper[destination_attr_name]['node']
+                        attr_name = attr_mapper[destination_attr_name][
+                            'attr_name']
+                        source >> node_mapper[node].attr(attr_name)
+                    else:
+                        source >> skin.attr(destination_attr_name)
+                else:
+                    # copy values
+                    node = node_mapper[attr_mapper[attr]['node']]
+                    attr_name = attr_mapper[attr]['attr_name']
+                    multiplier = attr_mapper[attr].get('multiplier', 1.0)
+
+                    attr_value = skin_sss.getAttr(attr)
+                    if isinstance(attr_value, tuple):
+                        attr_value = map(lambda x: x * multiplier, attr_value)
+                    else:
+                        attr_value *= multiplier
+                    node.attr(attr_name).set(attr_value)
+
+            # after everything is set up
+            # connect the aiStandard to the shadingEngine
+            for source, dest in skin_sss.outputs(p=1, c=1):
+                standard.attr('outColor') >> dest
+
+            # and rename the materials
+            orig_name = skin_sss.name()
+
+            # delete the skinSSS node
+            pm.delete(skin_sss)
+
+            skin_name = orig_name
+            standard_name = '%s_aiStandard' % orig_name
+
+            skin.rename(skin_name)
+            standard.rename(standard_name)
 
 
 class Animation(object):
