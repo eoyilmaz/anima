@@ -1720,7 +1720,41 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # update the thumbnail
         self.update_thumbnail()
-        pass
+
+    def clear_thumbnail_push_button_clicked(self):
+        """clears the thumbnail of the current task if it has one
+        """
+        task = self.get_task()
+
+        if not task:
+            return
+
+        t = task.thumbnail
+        if not t:
+            return
+
+        answer = QtGui.QMessageBox.question(
+            self,
+            'Delete Thumbnail?',
+            'Delete Thumbnail?',
+            QtGui.QMessageBox.Yes,
+            QtGui.QMessageBox.No
+        )
+
+        if answer == QtGui.QMessageBox.Yes:
+            # remove the thumbnail and its thumbnail and its thumbnail
+            from stalker import db
+            db.DBSession.delete(t)
+            if t.thumbnail:
+                db.DBSession.delete(t.thumbnail)
+                if t.thumbnail.thumbnail:
+                    db.DBSession.delete(t.thumbnail.thumbnail)
+            # leave the files there
+            db.DBSession.commit()
+
+            # update the thumbnail
+            self.update_thumbnail()
+
 
     def find_from_path_pushButton_clicked(self):
         """runs when find_from_path_pushButton is clicked

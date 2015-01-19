@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Thu Nov  6 12:16:26 2014
+# Created: Mon Jan 19 16:30:26 2015
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
         Dialog.setWindowModality(QtCore.Qt.ApplicationModal)
-        Dialog.resize(1704, 769)
+        Dialog.resize(1753, 769)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(1)
@@ -127,6 +127,9 @@ class Ui_Dialog(object):
         self.upload_thumbnail_pushButton = QtGui.QPushButton(self.tasks_groupBox)
         self.upload_thumbnail_pushButton.setObjectName(_fromUtf8("upload_thumbnail_pushButton"))
         self.horizontalLayout_16.addWidget(self.upload_thumbnail_pushButton)
+        self.clear_thumbnail_pushButton = QtGui.QPushButton(self.tasks_groupBox)
+        self.clear_thumbnail_pushButton.setObjectName(_fromUtf8("clear_thumbnail_pushButton"))
+        self.horizontalLayout_16.addWidget(self.clear_thumbnail_pushButton)
         self.verticalLayout_2.addLayout(self.horizontalLayout_16)
         self.horizontalLayout_14.addWidget(self.tasks_groupBox)
         self.new_version_groupBox = QtGui.QGroupBox(self.verticalWidget)
@@ -307,7 +310,8 @@ class Ui_Dialog(object):
         self.tasks_treeView.setToolTip(_translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None))
         self.find_from_path_lineEdit.setPlaceholderText(_translate("Dialog", "Find From Path", None))
         self.find_from_path_pushButton.setText(_translate("Dialog", "Find", None))
-        self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload Thumbnail...", None))
+        self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload", None))
+        self.clear_thumbnail_pushButton.setText(_translate("Dialog", "Clear", None))
         self.new_version_groupBox.setTitle(_translate("Dialog", "New Version", None))
         self.takes_label.setText(_translate("Dialog", "Take", None))
         self.description_label.setText(_translate("Dialog", "Desc.", None))

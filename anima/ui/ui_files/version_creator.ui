@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1704</width>
+    <width>1753</width>
     <height>769</height>
    </rect>
   </property>
@@ -224,7 +224,14 @@
              <item>
               <widget class="QPushButton" name="upload_thumbnail_pushButton">
                <property name="text">
-                <string>Upload Thumbnail...</string>
+                <string>Upload</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QPushButton" name="clear_thumbnail_pushButton">
+               <property name="text">
+                <string>Clear</string>
                </property>
               </widget>
              </item>
