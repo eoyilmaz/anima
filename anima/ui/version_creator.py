@@ -1707,20 +1707,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def upload_thumbnail_pushButton_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
-        #thumbnail_full_path = ui_utils.choose_thumbnail(self)
-        #
-        ## if the thumbnail_full_path is empty do not do anything
-        #if thumbnail_full_path == "":
-        #    return
-        #
-        ## get the current task
-        #task = self.get_task()
-        #
-        #ui_utils.upload_thumbnail(task, thumbnail_full_path)
-        #
-        ## update the thumbnail
-        #self.update_thumbnail()
-        # TODO: upload it to stalker server
+        thumbnail_full_path = ui_utils.choose_thumbnail(self)
+
+        # if the thumbnail_full_path is empty do not do anything
+        if thumbnail_full_path == "":
+            return
+
+        # get the current task
+        task = self.get_task()
+
+        ui_utils.upload_thumbnail(task, thumbnail_full_path)
+
+        # update the thumbnail
+        self.update_thumbnail()
         pass
 
     def find_from_path_pushButton_clicked(self):
