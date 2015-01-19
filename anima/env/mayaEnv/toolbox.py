@@ -957,6 +957,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'create_eye_shader_and_controls_button',
+                l='Create Eye Shader and Controls',
+                c=RepeatedCallback(Render.create_eye_shader_and_controls),
+                ann='Creates eye shaders and controls for the selected eyes',
+                bgc=color.color
+            )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -3301,6 +3310,44 @@ class Render(object):
 
             skin.rename(skin_name)
             standard.rename(standard_name)
+
+    def create_eye_shader_and_controls(self):
+        """This is pretty much specific to the way we are creating eye shaders
+        for characters in KKS project, but it is a useful trick, select the
+        inner eye objects before running
+        """
+        eyes = pm.ls(sl=1)
+        if not eyes:
+            return
+
+        char = eyes[0].getAllParents()[-1]
+        place = pm.shadingNode('place2dTexture', asUtility=1)
+        image = pm.shadingNode('aiImage', asTexture=1)
+
+        texture_path = '$REPO1977/KKS/Assets/Characters/Body_Parts/Textures/' \
+                       'char_eyeInner_light_v001.png'
+
+        image.setAttr('filename', texture_path)
+
+        place.outUV >> image.attr('uvcoords')
+
+        char.addAttr("eyeLightStrength", at='double', min=0, dv=0.5, k=1)
+        char.addAttr("eyeLightAngle", at='double', dv=0, k=1)
+
+        char.eyeLightStrength >> image.attr('multiplyR')
+        char.eyeLightStrength >> image.attr('multiplyG')
+        char.eyeLightStrength >> image.attr('multiplyB')
+
+        char.eyeLightAngle >> place.attr('rotateFrame')
+
+        for eye in eyes:
+            shadingEngine = eye.getShape().outputs()[0]
+            shader = pm.ls(shadingEngine.inputs(), mat=1)[0]
+
+            # connect the diffuse shader input to the emissionColor
+            diffuse_texture = shader.attr('color').inputs(p=1, s=1)[0]
+            diffuse_texture >> shader.attr('emissionColor')
+            image.outColorR >> shader.emission
 
 
 class Animation(object):
