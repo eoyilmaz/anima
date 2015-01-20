@@ -3160,9 +3160,15 @@ class Render(object):
             cone_angle = light.getAttr('coneAngle')
             penumbra_angle = light.getAttr('penumbraAngle')
             if penumbra_angle < 0:
-                light.setAttr('coneAngle', cone_angle + penumbra_angle)
+                light.setAttr(
+                    'coneAngle',
+                    max(cone_angle + penumbra_angle, 0.1)
+                )
             else:
-                light.setAttr('coneAngle', cone_angle - penumbra_angle)
+                light.setAttr(
+                    'coneAngle',
+                    max(cone_angle - penumbra_angle, 0.1)
+                )
 
     @classmethod
     def convert_aiSkinSSS_to_aiSkin(cls):
