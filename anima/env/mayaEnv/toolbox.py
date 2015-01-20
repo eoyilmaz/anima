@@ -3339,6 +3339,8 @@ class Render(object):
             skin.rename(skin_name)
             standard.rename(standard_name)
 
+            print('updated %s' % skin_name)
+
     @classmethod
     def create_eye_shader_and_controls(cls):
         """This is pretty much specific to the way we are creating eye shaders
