@@ -933,7 +933,7 @@ def UI():
                 'barn_door_simulator_setup_button',
                 l='Setup',
                 c=RepeatedCallback(Render.barndoor_simulator_setup),
-                ann='Creates a arnold barnd door simulator to the selected '
+                ann='Creates a arnold barn door simulator to the selected '
                     'light',
                 bgc=color.color
             )
@@ -944,6 +944,14 @@ def UI():
                 c=RepeatedCallback(Render.barndoor_simulator_unsetup),
                 ann='Removes the barn door simulator nodes from the selected '
                     'light',
+                bgc=color.color
+            )
+
+            pm.button(
+                'fix_barndoors_button',
+                l='Fix BarnDoors',
+                c=RepeatedCallback(Render.fix_barndoors),
+                ann=Render.fix_barndoors.__doc__,
                 bgc=color.color
             )
 
