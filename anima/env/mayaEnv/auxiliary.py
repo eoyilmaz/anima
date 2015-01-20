@@ -1392,58 +1392,64 @@ class BarnDoorSimulator(object):
     def create_expression(self):
         """creates the expression
         """
-        expr = """float $frame_scale;
-        $frame_scale = tan(deg_to_rad({light}.coneAngle * 0.5));
-        {frame}.sx = {frame}.sy = {frame}.sz = $frame_scale;
+        expr = """float $frame_scale, $cone_angle;
 
-        // top
-        {top_left_joint}.ty = -{barn_door}.barndoorTopLeft + 0.5;
-        {top_left_joint}.tx = -0.5;
-        {top_right_joint}.ty = -{barn_door}.barndoorTopRight + 0.5;
-        {top_right_joint}.tx = 0.5;
+if({light}.penumbraAngle < 0){
+    $cone_angle = {light}.coneAngle;
+} else {
+    $cone_angle = {light}.coneAngle + {light}.penumbraAngle;
+}
 
-        // top edge
-        {top_edge_left_joint}.ty = {top_left_joint}.ty + {barn_door}.barndoorTopEdge;
-        {top_edge_left_joint}.tx = -0.5;
-        {top_edge_right_joint}.ty = {top_right_joint}.ty + {barn_door}.barndoorTopEdge;
-        {top_edge_right_joint}.tx = 0.5;
+$frame_scale = tan(deg_to_rad({light}.coneAngle * 0.5));
+{frame}.sx = {frame}.sy = {frame}.sz = $frame_scale;
 
-        // bottom
-        {bottom_left_joint}.ty = -{barn_door}.barndoorBottomLeft + 0.5;
-        {bottom_left_joint}.tx = -0.5;
-        {bottom_right_joint}.ty = -{barn_door}.barndoorBottomRight + 0.5;
-        {bottom_right_joint}.tx = 0.5;
+// top
+{top_left_joint}.ty = -{barn_door}.barndoorTopLeft + 0.5;
+{top_left_joint}.tx = -0.5;
+{top_right_joint}.ty = -{barn_door}.barndoorTopRight + 0.5;
+{top_right_joint}.tx = 0.5;
 
-        // bottom edge
-        {bottom_edge_left_joint}.ty = {bottom_left_joint}.ty - {barn_door}.barndoorBottomEdge;
-        {bottom_edge_left_joint}.tx = -0.5;
-        {bottom_edge_right_joint}.ty = {bottom_right_joint}.ty - {barn_door}.barndoorBottomEdge;
-        {bottom_edge_right_joint}.tx = 0.5;
+// top edge
+{top_edge_left_joint}.ty = {top_left_joint}.ty + {barn_door}.barndoorTopEdge;
+{top_edge_left_joint}.tx = -0.5;
+{top_edge_right_joint}.ty = {top_right_joint}.ty + {barn_door}.barndoorTopEdge;
+{top_edge_right_joint}.tx = 0.5;
 
-        // left
-        {left_top_joint}.tx = {barn_door}.barndoorLeftTop - 0.5;
-        {left_top_joint}.ty = 0.5;
-        {left_bottom_joint}.tx = {barn_door}.barndoorLeftBottom - 0.5;
-        {left_bottom_joint}.ty = -0.5;
+// bottom
+{bottom_left_joint}.ty = -{barn_door}.barndoorBottomLeft + 0.5;
+{bottom_left_joint}.tx = -0.5;
+{bottom_right_joint}.ty = -{barn_door}.barndoorBottomRight + 0.5;
+{bottom_right_joint}.tx = 0.5;
 
-        // left edge
-        {left_edge_top_joint}.tx = {left_top_joint}.tx - {barn_door}.barndoorLeftEdge;
-        {left_edge_top_joint}.ty = 0.5;
-        {left_edge_bottom_joint}.tx = {left_bottom_joint}.tx - {barn_door}.barndoorLeftEdge;
-        {left_edge_bottom_joint}.ty = -0.5;
+// bottom edge
+{bottom_edge_left_joint}.ty = {bottom_left_joint}.ty - {barn_door}.barndoorBottomEdge;
+{bottom_edge_left_joint}.tx = -0.5;
+{bottom_edge_right_joint}.ty = {bottom_right_joint}.ty - {barn_door}.barndoorBottomEdge;
+{bottom_edge_right_joint}.tx = 0.5;
 
-        // right
-        {right_top_joint}.tx = {barn_door}.barndoorRightTop - 0.5;
-        {right_top_joint}.ty = 0.5;
-        {right_bottom_joint}.tx = {barn_door}.barndoorRightBottom - 0.5;
-        {right_bottom_joint}.ty = -0.5;
+// left
+{left_top_joint}.tx = {barn_door}.barndoorLeftTop - 0.5;
+{left_top_joint}.ty = 0.5;
+{left_bottom_joint}.tx = {barn_door}.barndoorLeftBottom - 0.5;
+{left_bottom_joint}.ty = -0.5;
 
-        // right edge
-        {right_edge_top_joint}.tx = {right_top_joint}.tx + {barn_door}.barndoorRightEdge;
-        {right_edge_top_joint}.ty = 0.5;
-        {right_edge_bottom_joint}.tx = {right_bottom_joint}.tx + {barn_door}.barndoorRightEdge;
-        {right_edge_bottom_joint}.ty = -0.5;
-        """.format(
+// left edge
+{left_edge_top_joint}.tx = {left_top_joint}.tx - {barn_door}.barndoorLeftEdge;
+{left_edge_top_joint}.ty = 0.5;
+{left_edge_bottom_joint}.tx = {left_bottom_joint}.tx - {barn_door}.barndoorLeftEdge;
+{left_edge_bottom_joint}.ty = -0.5;
+
+// right
+{right_top_joint}.tx = {barn_door}.barndoorRightTop - 0.5;
+{right_top_joint}.ty = 0.5;
+{right_bottom_joint}.tx = {barn_door}.barndoorRightBottom - 0.5;
+{right_bottom_joint}.ty = -0.5;
+
+// right edge
+{right_edge_top_joint}.tx = {right_top_joint}.tx + {barn_door}.barndoorRightEdge;
+{right_edge_top_joint}.ty = 0.5;
+{right_edge_bottom_joint}.tx = {right_bottom_joint}.tx + {barn_door}.barndoorRightEdge;
+{right_edge_bottom_joint}.ty = -0.5;""".format(
             **{
                 'light': self.light.name(),
                 'frame': self.frame_curve.name(),

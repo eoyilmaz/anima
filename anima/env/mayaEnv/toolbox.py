@@ -3311,7 +3311,8 @@ class Render(object):
             skin.rename(skin_name)
             standard.rename(standard_name)
 
-    def create_eye_shader_and_controls(self):
+    @classmethod
+    def create_eye_shader_and_controls(cls):
         """This is pretty much specific to the way we are creating eye shaders
         for characters in KKS project, but it is a useful trick, select the
         inner eye objects before running
