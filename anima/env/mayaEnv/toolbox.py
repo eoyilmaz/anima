@@ -960,8 +960,7 @@ def UI():
                 'ai_skin_sss_to_ai_skin_button',
                 l='aiSkinSSS --> aiSkin',
                 c=RepeatedCallback(Render.convert_aiSkinSSS_to_aiSkin),
-                ann='Converts all aiSkinSSS nodes in the current scene to '
-                    'aiSkin + aiStandard node automatically',
+                ann=Render.convert_aiSkinSSS_to_aiSkin.__doc__,
                 bgc=color.color
             )
 
@@ -971,6 +970,13 @@ def UI():
                 l='Create Eye Shader and Controls',
                 c=RepeatedCallback(Render.create_eye_shader_and_controls),
                 ann='Creates eye shaders and controls for the selected eyes',
+                bgc=color.color
+            )
+            pm.button(
+                'setup_outer_eye_render_attributes_button',
+                l='Setup Outer Eye Render Attributes',
+                c=RepeatedCallback(Render.setup_outer_eye_render_attributes),
+                ann=Render.setup_outer_eye_render_attributes.__doc__,
                 bgc=color.color
             )
 
@@ -3379,6 +3385,21 @@ class Render(object):
             diffuse_texture = shader.attr('color').inputs(p=1, s=1)[0]
             diffuse_texture >> shader.attr('emissionColor')
             image.outColorR >> shader.emission
+
+    @classmethod
+    def setup_outer_eye_render_attributes(cls):
+        """sets outer eye render attributes for characters, select outer eye
+        objects and run this
+        """
+        for node in pm.ls(sl=1):
+            shape = node.getShape()
+            shape.setAttr('castsShadows', 0)
+            shape.setAttr('visibleInReflections', 0)
+            shape.setAttr('visibleInRefractions', 0)
+            shape.setAttr('aiSelfShadows', 0)
+            shape.setAttr('aiOpaque', 0)
+            shape.setAttr('aiVisibleInDiffuse', 0)
+            shape.setAttr('aiVisibleInGlossy', 0)
 
 
 class Animation(object):
