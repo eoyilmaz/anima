@@ -3143,6 +3143,20 @@ class Render(object):
         bs.unsetup()
 
     @classmethod
+    def fix_barndoors(cls):
+        """fixes the barndoors on scene lights created in MtoA 1.0 to match the
+        new behaviour of barndoors in MtoA 1.1
+        """
+        for light in pm.ls(type='spotLight'):
+            # calculate scale
+            cone_angle = light.getAttr('coneAngle')
+            penumbra_angle = light.getAttr('penumbraAngle')
+            if penumbra_angle < 0:
+                light.setAttr('coneAngle', cone_angle + penumbra_angle)
+            else:
+                light.setAttr('coneAngle', cone_angle - penumbra_angle)
+
+    @classmethod
     def convert_aiSkinSSS_to_aiSkin(cls):
         """converts aiSkinSSS nodes in the current scene to aiSkin + aiStandard
         nodes automatically
