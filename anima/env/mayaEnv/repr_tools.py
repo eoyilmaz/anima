@@ -91,7 +91,6 @@ RENDER_RELATED_NODE_TYPES = [
     'aiRaySwitch',
     'aiShadowCatcher',
     'aiSkin',
-    'aiSkinSss',  # To be removed
     'aiStandard',
     'aiUtility',
     'aiWireframe',
