@@ -980,6 +980,16 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button('convert_to_ai_image_button',
+                      l="To aiImage",
+                      c=RepeatedCallback(Render.convert_file_node_to_ai_image_node),
+                      ann="Converts the selected File (file texture) nodes to "
+                          "aiImage nodes, also connects the place2dTexture "
+                          "node if necessary",
+                      bgc=color.color)
+
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -3400,6 +3410,55 @@ class Render(object):
             shape.setAttr('aiOpaque', 0)
             shape.setAttr('aiVisibleInDiffuse', 0)
             shape.setAttr('aiVisibleInGlossy', 0)
+
+    @classmethod
+    def convert_file_node_to_ai_image_node(cls):
+        """converts the file node to aiImage node
+        """
+        default_values = {
+            'coverageU': 1,
+            'coverageV': 1,
+            'translateFrameU': 0,
+            'translateFrameV': 0,
+            'rotateFrame': 0,
+            'repeatU': 1,
+            'repeatV': 1,
+            'offsetU': 0,
+            'offsetV': 0,
+            'rotateUV': 0,
+            'noiseU': 0,
+            'noiseV': 0
+        }
+
+        for node in pm.ls(sl=1, type='file'):
+            node_name = node.name()
+            path = node.getAttr('fileTextureName')
+            ai_image = pm.shadingNode('aiImage', asTexture=1)
+            ai_image.setAttr('filename', path)
+
+            # check the placement node
+            placements = node.listHistory(type='place2dTexture')
+            if len(placements):
+                placement = placements[0]
+                # check default values
+                if any([placement.getAttr(attr_name) != default_values[attr_name] for attr_name in default_values]):
+                    # connect the placement to the aiImage
+                    placement.outUV >> ai_image.uvcoords
+                else:
+                    # delete it
+                    pm.delete(placement)
+
+            # connect the aiImage
+            for attr_out, attr_in in node.outputs(p=1, c=1):
+                attr_name = attr_out.name().split('.')[-1]
+                if attr_name == 'message':
+                    continue
+                ai_image.attr(attr_name) >> attr_in
+
+            # delete the File node
+            pm.delete(node)
+            # rename the aiImage node
+            ai_image.rename(node_name)
 
 
 class Animation(object):
