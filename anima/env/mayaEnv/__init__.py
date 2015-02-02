@@ -448,6 +448,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # check for unsaved changes
         logger.info("opening file: %s" % version.absolute_full_path)
 
+        self.set_playblast_file_name(version)
         try:
             # switch representations
             if representation and representation != Representation.base_repr_name:
@@ -489,7 +490,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             raise e
 
         # set the playblast folder
-        self.set_playblast_file_name(version)
 
         # set sequence manager related data
         self.set_sequence_manager_data(version)
@@ -1436,6 +1436,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         dfs_version_references = []
 
         version = self.get_current_version()
+        if not version:
+            return reference_resolution
+
         for v in version.walk_inputs():
             dfs_version_references.append(v)
         caller.step()

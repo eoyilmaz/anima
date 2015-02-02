@@ -1157,9 +1157,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update recent files list
         if self.environment:
             rfm = RecentFileManager()
-            recent_files = rfm[self.environment.name]
-            # append them to the comboBox
-            self.recent_files_comboBox.addItems(recent_files[:10])
+            try:
+                recent_files = rfm[self.environment.name]
+                # append them to the comboBox
+                self.recent_files_comboBox.addItems(recent_files[:10])
+                self.recent_files_comboBox.setStyleSheet(
+                    "qproperty-textElideMode: ElideNone"
+                )
+                self.recent_files_comboBox.setSizePolicy(
+                    QtGui.QSizePolicy.MinimumExpanding,
+                    QtGui.QSizePolicy.Minimum
+                )
+            except KeyError:
+                pass
 
         logger.debug("finished setting up interface defaults")
 
