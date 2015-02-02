@@ -140,6 +140,9 @@
             </widget>
            </item>
            <item>
+            <widget class="QComboBox" name="recent_files_comboBox"/>
+           </item>
+           <item>
             <layout class="QHBoxLayout" name="horizontalLayout_3">
              <item>
               <widget class="QLineEdit" name="find_from_path_lineEdit">

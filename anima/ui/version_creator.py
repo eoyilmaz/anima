@@ -19,6 +19,7 @@ from anima import power_users_group_names
 from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
 from anima.exc import PublishError
+from anima.recent import RecentFileManager
 from anima.repr import Representation
 from anima.ui import utils as ui_utils
 from anima.ui.base import AnimaDialogBase, ui_caller
@@ -491,13 +492,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView_changed
         )
 
-
         # takes_listWidget
         QtCore.QObject.connect(
             self.takes_listWidget,
             QtCore.SIGNAL(
                 "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
             self.takes_listWidget_changed
+        )
+
+        # recent files comboBox
+        QtCore.QObject.connect(
+            self.recent_files_comboBox,
+            QtCore.SIGNAL('currentIndexChanged(QString)'),
+            self.recent_files_combo_box_index_changed
         )
 
         # find_from_path_lineEdit
@@ -552,7 +559,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             QtCore.SIGNAL("cliched()"),
             self.chose_pushButton_clicked
         )
-
 
         # reference
         QtCore.QObject.connect(
@@ -1148,6 +1154,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update description field
         self.description_textEdit.setText('')
 
+        # update recent files list
+        if self.environment:
+            rfm = RecentFileManager()
+            recent_files = rfm[self.environment.name]
+            # append them to the comboBox
+            self.recent_files_comboBox.addItems(recent_files[:10])
+
         logger.debug("finished setting up interface defaults")
 
     def restore_ui(self, version):
@@ -1682,7 +1695,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             self.environment.import_(previous_version, use_namespace)
 
-            # inform the user about what happened
+            # inform the user about what happened
             if logger.level != logging.DEBUG:
                 QtGui.QMessageBox.information(
                     self,
@@ -1762,7 +1775,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             # update the thumbnail
             self.clear_thumbnail()
 
-
     def find_from_path_pushButton_clicked(self):
         """runs when find_from_path_pushButton is clicked
         """
@@ -1801,3 +1813,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     #         items.append(hierarchy_name)
     #     self.search_task_comboBox.addItems(items)
     #
+
+    def recent_files_combo_box_index_changed(self, path):
+        """runs when the recent files combo box index has changed
+
+        :param path: 
+        :return:
+        """
+        path = self.recent_files_comboBox.currentText()
+        self.find_from_path_lineEdit.setText(path)
+        self.find_from_path_pushButton_clicked()

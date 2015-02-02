@@ -1039,6 +1039,10 @@ def set_frame_range():
 def generate_thumbnail():
     """generates thumbnail for the current scene
     """
+    # skip this if maya is running in batch mode
+    if pm.general.about(batch=1):
+        return
+
     import tempfile
     import glob
     from anima.env import mayaEnv
@@ -1082,10 +1086,12 @@ def generate_thumbnail():
     pm.currentTime(current_frame)
 
     output_file = output_file.replace('####', '*')
-    output_file = glob.glob(output_file)[0]
+    found_output_file = glob.glob(output_file)
+    if found_output_file:
+        output_file = found_output_file[0]
 
-    from anima.ui import utils
-    utils.upload_thumbnail(task, output_file)
+        from anima.ui import utils
+        utils.upload_thumbnail(task, output_file)
 
 
 @publisher(

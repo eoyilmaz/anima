@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Jan 19 16:30:26 2015
+# Created: Mon Feb  2 17:47:49 2015
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -79,6 +79,9 @@ class Ui_Dialog(object):
         self.tasks_treeView.setObjectName("tasks_treeView")
         self.tasks_treeView.header().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tasks_treeView)
+        self.recent_files_comboBox = QtGui.QComboBox(self.tasks_groupBox)
+        self.recent_files_comboBox.setObjectName("recent_files_comboBox")
+        self.verticalLayout_2.addWidget(self.recent_files_comboBox)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.find_from_path_lineEdit = QtGui.QLineEdit(self.tasks_groupBox)

@@ -15,6 +15,7 @@ import maya.cmds as mc
 from anima.env import empty_reference_resolution, to_os_independent_path
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
+from anima.recent import RecentFileManager
 from anima.repr import Representation
 from anima.ui.progress_dialog import ProgressDialogManager
 
@@ -629,10 +630,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # read the fileName from recent files list
         # try to get the a valid asset file from starting the last recent file
 
+        rfm = RecentFileManager()
+
         try:
-            recent_files = pm.optionVar['RecentFilesList']
+            recent_files = rfm[self.name]
         except KeyError:
-            logger.debug("no recent files")
+            logger.debug('no recent files')
             recent_files = None
 
         if recent_files is not None:
@@ -852,21 +855,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # set the current timeUnit to match with the environments
         cls.set_fps(version.task.project.fps)
 
-    @classmethod
-    def append_to_recent_files(cls, path):
+    def append_to_recent_files(self, path):
         """appends the given path to the recent files list
         """
         # add the file to the recent file list
-        try:
-            recent_files = pm.optionVar['RecentFilesList']
-        except KeyError:
-            # there is no recent files list so create one
-            # normally it is Maya's job
-            # but somehow it is not working for new installations
-            recent_files = pm.OptionVarList([], 'RecentFilesList')
-
-        #assert(isinstance(recentFiles,pm.OptionVarList))
-        recent_files.appendVar(path)
+        rfm = RecentFileManager()
+        rfm.add(self.name, path)
 
     @classmethod
     def is_in_repo(cls, path):
