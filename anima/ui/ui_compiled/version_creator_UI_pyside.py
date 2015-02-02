@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Feb  2 17:47:49 2015
+# Created: Mon Feb  2 18:45:13 2015
 #      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
@@ -299,6 +299,7 @@ class Ui_Dialog(object):
         self.tasks_groupBox.setTitle(QtGui.QApplication.translate("Dialog", "Tasks", None, QtGui.QApplication.UnicodeUTF8))
         self.my_tasks_only_checkBox.setText(QtGui.QApplication.translate("Dialog", "Show my tasks only", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_treeView.setToolTip(QtGui.QApplication.translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.recent_files_comboBox.setToolTip(QtGui.QApplication.translate("Dialog", "Recent Files", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_lineEdit.setPlaceholderText(QtGui.QApplication.translate("Dialog", "Find From Path", None, QtGui.QApplication.UnicodeUTF8))
         self.find_from_path_pushButton.setText(QtGui.QApplication.translate("Dialog", "Find", None, QtGui.QApplication.UnicodeUTF8))
         self.upload_thumbnail_pushButton.setText(QtGui.QApplication.translate("Dialog", "Upload", None, QtGui.QApplication.UnicodeUTF8))

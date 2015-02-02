@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Feb  2 17:47:49 2015
+# Created: Mon Feb  2 18:45:13 2015
 #      by: PyQt4 UI code generator 4.10.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -311,6 +311,7 @@ class Ui_Dialog(object):
         self.tasks_groupBox.setTitle(_translate("Dialog", "Tasks", None))
         self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
         self.tasks_treeView.setToolTip(_translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None))
+        self.recent_files_comboBox.setToolTip(_translate("Dialog", "Recent Files", None))
         self.find_from_path_lineEdit.setPlaceholderText(_translate("Dialog", "Find From Path", None))
         self.find_from_path_pushButton.setText(_translate("Dialog", "Find", None))
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload", None))
