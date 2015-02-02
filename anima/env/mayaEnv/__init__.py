@@ -575,6 +575,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # also update version.inputs for the referenced input
         self.update_version_inputs(ref)
 
+        # append it to reference path
+        self.append_to_recent_files(version.absolute_full_path)
+
         return ref
 
     def get_version_from_workspace(self):
