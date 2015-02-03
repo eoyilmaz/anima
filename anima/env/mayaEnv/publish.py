@@ -1036,6 +1036,24 @@ def set_frame_range():
 
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)
+def update_audit_info():
+    """updates the audit info of the version
+    """
+    from stalker import LocalSession
+    local_session = LocalSession()
+    logged_in_user = local_session.logged_in_user
+    if logged_in_user:
+        # update the version updated_by
+        from anima.env import mayaEnv
+        m_env = mayaEnv.Maya()
+        v = m_env.get_current_version()
+        v.updated_by = logged_in_user
+
+        from stalker import db
+        db.DBSession.commit()
+
+
+@publisher(publisher_type=POST_PUBLISHER_TYPE)
 def generate_thumbnail():
     """generates thumbnail for the current scene
     """
