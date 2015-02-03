@@ -608,7 +608,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         version = None
 
         # pm.env.sceneName() always uses "/"
-        full_path = pm.env.sceneName()
+        full_path = pm.sceneName()
         logger.debug('full_path : %s' % full_path)
         # try to get it from the current open scene
         if full_path != '':

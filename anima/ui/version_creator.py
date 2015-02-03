@@ -1159,6 +1159,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.environment.name]
+                recent_files.insert(0, '')
                 # append them to the comboBox
                 self.recent_files_comboBox.addItems(recent_files[:10])
                 self.recent_files_comboBox.setStyleSheet(
