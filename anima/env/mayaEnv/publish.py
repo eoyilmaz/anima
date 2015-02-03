@@ -1047,10 +1047,11 @@ def update_audit_info():
         from anima.env import mayaEnv
         m_env = mayaEnv.Maya()
         v = m_env.get_current_version()
-        v.updated_by = logged_in_user
+        if v:
+            v.updated_by = logged_in_user
 
-        from stalker import db
-        db.DBSession.commit()
+            from stalker import db
+            db.DBSession.commit()
 
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)
