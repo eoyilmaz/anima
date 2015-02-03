@@ -1162,9 +1162,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 recent_files.insert(0, '')
                 # append them to the comboBox
                 self.recent_files_comboBox.addItems(recent_files[:10])
-                self.recent_files_comboBox.setStyleSheet(
-                    "qproperty-textElideMode: ElideNone"
-                )
+
+                try:
+                    self.recent_files_comboBox.setStyleSheet(
+                        "qproperty-textElideMode: ElideNone"
+                    )
+                except:
+                    pass
+
                 self.recent_files_comboBox.setSizePolicy(
                     QtGui.QSizePolicy.MinimumExpanding,
                     QtGui.QSizePolicy.Minimum
