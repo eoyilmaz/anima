@@ -1094,6 +1094,13 @@ class ShotPlayblaster(object):
             width = 960
             height = 540
 
+        extra_frame = 0
+        import platform
+        if platform.system() == 'Windows':
+            # windows Maya version drops 1 frame from end where as Linux
+            # doesn't do that
+            extra_frame = 1
+
         for shot in shots:
             video_temp_output = tempfile.mktemp(suffix='.mov')
 
@@ -1103,7 +1110,8 @@ class ShotPlayblaster(object):
             self.create_hud('kksCameraHUD')
             # create video playblast
             pm.playblast(
-                fmt='qt', startTime=start_frame, endTime=end_frame,
+                fmt='qt', startTime=start_frame,
+                endTime=end_frame + extra_frame,
                 sequenceTime=1, forceOverwrite=1, filename=video_temp_output,
                 clearCache=1, showOrnaments=1, percent=100, wh=(width, height),
                 offScreen=1, viewer=0, useTraxSounds=1, compression='PNG',
@@ -1146,6 +1154,12 @@ class ShotPlayblaster(object):
             webres_extension
         )
 
+        thumbnail_output_file_name = '%s_%s%s' % (
+            os.path.splitext(self.version.filename)[0],
+            shot.name().split(':')[-1] if shot else 'None',
+            thumbnail_extension
+        )
+
         task = version.task
 
         hires_path = os.path.join(
@@ -1158,7 +1172,7 @@ class ShotPlayblaster(object):
         )
         thumbnail_path = os.path.join(
             task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
-            thumbnail_extension
+            thumbnail_output_file_name
         )
 
         # create folders
