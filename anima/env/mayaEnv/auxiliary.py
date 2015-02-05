@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import glob
 
 import os
 import tempfile
@@ -1091,22 +1092,44 @@ class ShotPlayblaster(object):
             height = 540
 
         for shot in shots:
-            temp_output = tempfile.mktemp(suffix='.mov')
+            video_temp_output = tempfile.mktemp(suffix='.mov')
+            thumbnail_temp_output = tempfile.mktemp(suffix='.png')
+
             start_frame = int(pm.shot(shot, q=1, st=1))
             end_frame = int(pm.shot(shot, q=1, et=1))
+
             self.create_hud('kksCameraHUD')
+            # create video playblast
             pm.playblast(
                 fmt='qt', startTime=start_frame, endTime=end_frame + 1,
-                sequenceTime=1, forceOverwrite=1, filename=temp_output,
+                sequenceTime=1, forceOverwrite=1, filename=video_temp_output,
                 clearCache=1, showOrnaments=1, percent=100, wh=(width, height),
                 offScreen=1, viewer=0, useTraxSounds=1, compression='PNG',
                 quality=70
             )
 
+            # create thumbnail playblast
+            thumbnail_temp_output = pm.playblast(
+                fmt='image', startTime=start_frame, endTime=start_frame,
+                sequenceTime=1, forceOverwrite=1,
+                filename=thumbnail_temp_output,
+                clearCache=1, showOrnaments=0, percent=100, wh=(width, height),
+                offScreen=1, viewer=0, compression='PNG', quality=70,
+                framePadding=0
+            )
+
+            thumbnail_temp_output = thumbnail_temp_output.replace('####', '*')
+            found_output_file = glob.glob(thumbnail_temp_output)
+            if found_output_file:
+                thumbnail_temp_output = found_output_file[0]
+            else:
+                thumbnail_temp_output = None
+
             # upload output to server
             self.upload_as_output(
                 version=self.version,
-                file_path=temp_output,
+                output_file_full_path=video_temp_output,
+                thumbnail_file_full_path=thumbnail_temp_output,
                 shot=shot
             )
 
@@ -1114,7 +1137,8 @@ class ShotPlayblaster(object):
 
         self.restore_user_options()
 
-    def upload_as_output(self, version=None, file_path='', shot=None):
+    def upload_as_output(self, version=None, output_file_full_path='',
+                         thumbnail_file_full_path=None, shot=None):
         """upload the given file as an output
 
         # import urllib
@@ -1137,40 +1161,98 @@ class ShotPlayblaster(object):
         # data = resp.read()
         """
 
-        output_file_name = '%s_%s.mov' % (
+        extension = '.mov'
+        thumbnail_extension = '.png'
+
+        output_file_name = '%s_%s%s' % (
             os.path.splitext(self.version.filename)[0],
-            shot.name().split(':')[-1] if shot else 'None'
+            shot.name().split(':')[-1] if shot else 'None',
+            extension
+        )
+        thumbnail_file_name = '%s_%s%s' % (
+            os.path.splitext(self.version.filename)[0],
+            shot.name().split(':')[-1] if shot else 'None',
+            extension
         )
 
         task = version.task
-        upload_path = '%s/Outputs/Playblast/%s' %\
-                      (task.absolute_path, output_file_name)
 
-        print('file_path: %s' % file_path)
-        print('upload_path: %s' % upload_path)
+        hires_path = os.path.join(
+            task.absolute_path, 'Outputs', 'Stalker_Pyramid',
+            output_file_name
+        )
+        for_web_path = os.path.join(
+            task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'ForWeb',
+            output_file_name
+        )
+        thumbnail_path = os.path.join(
+            task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
+            thumbnail_extension
+        )
 
-        # repo = task.project.repository
-        #
-        # from stalker import db, Link, Repository
-        # assert isinstance(repo, Repository)
-        #
-        # link_path = repo.make_relative(upload_path)
-        #
-        # shutil.move(file_path, upload_path)
-        #
-        # # record this as an output to the Version
-        #
-        # # first query if there is a link with same path
-        # existing_link = Link.query.filter(Link.full_path == link_path).first()
-        #
-        # if not existing_link:
-        #     l = Link(
-        #         full_path=link_path,
-        #         original_filename=output_file_name
-        #     )
-        #     self.version.outputs.append(l)
-        #     db.DBSession.add(l)
-        #     db.DBSession.commit()
+        # create folders
+        try:
+            os.makedirs(os.path.dirname(hires_path))
+        except OSError:
+            pass
+
+        try:
+            os.makedirs(os.path.dirname(for_web_path))
+        except OSError:
+            pass
+
+        try:
+            os.makedirs(os.path.dirname(thumbnail_path))
+        except OSError:
+            pass
+
+        shutil.copy(output_file_full_path, hires_path)
+        shutil.copy(output_file_full_path, for_web_path)
+        if thumbnail_file_full_path:
+            # also upload thumbnail
+            shutil.copy(thumbnail_file_full_path, thumbnail_path)
+
+        project = task.project
+        repo = project.repository
+
+        from stalker import db, Link
+
+        # try to find a file with the same name assigned to the version as
+        # output
+        found = None
+        hires_repo_relative_path = repo.make_relative(hires_path)
+        for output in version.outputs:
+            if output.full_path == hires_repo_relative_path:
+                found = True
+                break
+
+        # if we found a file with the same name as the output, just overwrite
+        # it
+        if not found:
+            l_hires = Link(
+                full_path=repo.make_relative(hires_path),
+                original_filename=output_file_name
+            )
+
+            l_for_web = Link(
+                full_path=repo.make_relative(for_web_path),
+                original_filename=output_file_name
+            )
+
+            l_hires.thumbnail = l_for_web
+
+            version.outputs.append(l_hires)
+            db.DBSession.add_all([l_hires, l_for_web])
+
+            if thumbnail_file_full_path:
+                l_thumb = Link(
+                    full_path=repo.make_relative(thumbnail_path),
+                    original_filename=output_file_name
+                )
+                l_for_web.thumbnail = l_thumb
+                db.DBSession.add(l_thumb)
+
+            db.DBSession.commit()
 
 
 def export_alembic_from_cache_node():
