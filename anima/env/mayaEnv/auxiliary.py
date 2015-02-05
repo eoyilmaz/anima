@@ -3,8 +3,6 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import glob
-
 import os
 import tempfile
 import shutil
@@ -832,6 +830,27 @@ def has_shape(node):
         children += child.getChildren()
 
     return has_it
+
+
+def perform_playblast(action):
+    """the patched version of the original perform playblast
+    """
+    # check if the current scene is a Stalker related version
+    print('called anima.env.mayaEnv.auxiliary.perform_playblast(%s)' % action)
+
+    # if not call the default playblast
+    # if it is call out ShotPlayblaster
+    from anima.env.mayaEnv import Maya
+    m = Maya()
+    v = m.get_current_version()
+
+    if v:
+        # do shot playblaster
+        sp = ShotPlayblaster()
+        sp.playblast()
+    else:
+        # call the original playblast
+        return pm.mel.eval('performPlayblast_orig(%s);' % action)
 
 
 class ShotPlayblaster(object):
