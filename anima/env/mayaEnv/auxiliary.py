@@ -1004,6 +1004,8 @@ class ShotPlayblaster(object):
         pm.modelEditor(active_panel, e=1, polymeshes=True)
         pm.modelEditor(active_panel, e=1, nurbsSurfaces=True)
         pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
+        pm.modelEditor(active_panel, e=1,
+                       pluginObjects=('gpuCacheDisplayFilter', True))
         pm.modelEditor(active_panel, e=1, planes=True)
 
         # turn all hud displays off
@@ -1076,6 +1078,7 @@ class ShotPlayblaster(object):
         from anima.ui.progress_dialog import ProgressDialogManager
         pdm = ProgressDialogManager()
         pdm.close()
+
         caller = pdm.register(len(shots), 'Exporting Playblast...')
 
         # playblast
@@ -1093,7 +1096,6 @@ class ShotPlayblaster(object):
 
         for shot in shots:
             video_temp_output = tempfile.mktemp(suffix='.mov')
-            thumbnail_temp_output = tempfile.mktemp(suffix='.png')
 
             start_frame = int(pm.shot(shot, q=1, st=1))
             end_frame = int(pm.shot(shot, q=1, et=1))
@@ -1101,35 +1103,17 @@ class ShotPlayblaster(object):
             self.create_hud('kksCameraHUD')
             # create video playblast
             pm.playblast(
-                fmt='qt', startTime=start_frame, endTime=end_frame + 1,
+                fmt='qt', startTime=start_frame, endTime=end_frame,
                 sequenceTime=1, forceOverwrite=1, filename=video_temp_output,
                 clearCache=1, showOrnaments=1, percent=100, wh=(width, height),
                 offScreen=1, viewer=0, useTraxSounds=1, compression='PNG',
                 quality=70
             )
 
-            # create thumbnail playblast
-            thumbnail_temp_output = pm.playblast(
-                fmt='image', startTime=start_frame, endTime=start_frame,
-                sequenceTime=1, forceOverwrite=1,
-                filename=thumbnail_temp_output,
-                clearCache=1, showOrnaments=0, percent=100, wh=(width, height),
-                offScreen=1, viewer=0, compression='PNG', quality=70,
-                framePadding=0
-            )
-
-            thumbnail_temp_output = thumbnail_temp_output.replace('####', '*')
-            found_output_file = glob.glob(thumbnail_temp_output)
-            if found_output_file:
-                thumbnail_temp_output = found_output_file[0]
-            else:
-                thumbnail_temp_output = None
-
             # upload output to server
-            self.upload_as_output(
+            self.set_as_output(
                 version=self.version,
                 output_file_full_path=video_temp_output,
-                thumbnail_file_full_path=thumbnail_temp_output,
                 shot=shot
             )
 
@@ -1137,53 +1121,40 @@ class ShotPlayblaster(object):
 
         self.restore_user_options()
 
-    def upload_as_output(self, version=None, output_file_full_path='',
-                         thumbnail_file_full_path=None, shot=None):
-        """upload the given file as an output
+    def set_as_output(self, version=None, output_file_full_path='', shot=None):
+        """sets the given file as the output of the given version, also
+        generates a thumbnail and a web version if it is a movie file
 
-        # import urllib
-        # import urllib2
-        # import cookielib
-        # import anima
-        #
-        # login_url = '%s/login' % anima.stalker_server_internal_address
-        #
-        # cj = cookielib.CookieJar()
-        # opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
-        # login_data = urllib.urlencode({
-        #     'login': anima.stalker_dummy_user_login,
-        #     'password': anima.stalker_dummy_user_pass,
-        #     'submit': True
-        # })
-        # opener.open(login_url, login_data)
-        #
-        # resp = opener.open(url)
-        # data = resp.read()
+        :param version: The stalker version instance
+        :param output_file_full_path: the path of the media file
+        :param shot: the Maya shot node
         """
-
-        extension = '.mov'
+        hires_extension = '.mov'
+        webres_extension = '.webm'
         thumbnail_extension = '.png'
 
-        output_file_name = '%s_%s%s' % (
+        # TODO: we shouldn't need a "shot" parameter, just ask the desired output name
+        hires_output_file_name = '%s_%s%s' % (
             os.path.splitext(self.version.filename)[0],
             shot.name().split(':')[-1] if shot else 'None',
-            extension
+            hires_extension
         )
-        thumbnail_file_name = '%s_%s%s' % (
+
+        webres_output_file_name = '%s_%s%s' % (
             os.path.splitext(self.version.filename)[0],
             shot.name().split(':')[-1] if shot else 'None',
-            extension
+            webres_extension
         )
 
         task = version.task
 
         hires_path = os.path.join(
             task.absolute_path, 'Outputs', 'Stalker_Pyramid',
-            output_file_name
+            hires_output_file_name
         )
-        for_web_path = os.path.join(
+        webres_path = os.path.join(
             task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'ForWeb',
-            output_file_name
+            webres_output_file_name
         )
         thumbnail_path = os.path.join(
             task.absolute_path, 'Outputs', 'Stalker_Pyramid', 'Thumbnail',
@@ -1197,7 +1168,7 @@ class ShotPlayblaster(object):
             pass
 
         try:
-            os.makedirs(os.path.dirname(for_web_path))
+            os.makedirs(os.path.dirname(webres_path))
         except OSError:
             pass
 
@@ -1207,10 +1178,25 @@ class ShotPlayblaster(object):
             pass
 
         shutil.copy(output_file_full_path, hires_path)
-        shutil.copy(output_file_full_path, for_web_path)
-        if thumbnail_file_full_path:
+
+        # generate the web version
+        from anima.utils import MediaManager
+        m = MediaManager()
+        temp_web_version_full_path = \
+            m.generate_media_for_web(output_file_full_path)
+
+        try:
+            shutil.copy(temp_web_version_full_path, webres_path)
+        except IOError:
+            pass
+
+        temp_thumbnail_full_path = \
+            m.generate_thumbnail(output_file_full_path)
+        try:
             # also upload thumbnail
-            shutil.copy(thumbnail_file_full_path, thumbnail_path)
+            shutil.copy(temp_thumbnail_full_path, thumbnail_path)
+        except IOError:
+            pass
 
         project = task.project
         repo = project.repository
@@ -1231,27 +1217,25 @@ class ShotPlayblaster(object):
         if not found:
             l_hires = Link(
                 full_path=repo.make_relative(hires_path),
-                original_filename=output_file_name
+                original_filename=hires_output_file_name
             )
 
             l_for_web = Link(
-                full_path=repo.make_relative(for_web_path),
-                original_filename=output_file_name
+                full_path=repo.make_relative(webres_path),
+                original_filename=hires_output_file_name
             )
 
             l_hires.thumbnail = l_for_web
 
             version.outputs.append(l_hires)
-            db.DBSession.add_all([l_hires, l_for_web])
 
-            if thumbnail_file_full_path:
-                l_thumb = Link(
-                    full_path=repo.make_relative(thumbnail_path),
-                    original_filename=output_file_name
-                )
-                l_for_web.thumbnail = l_thumb
-                db.DBSession.add(l_thumb)
+            l_thumb = Link(
+                full_path=repo.make_relative(thumbnail_path),
+                original_filename=hires_output_file_name
+            )
+            l_for_web.thumbnail = l_thumb
 
+            db.DBSession.add_all([l_hires, l_for_web, l_thumb])
             db.DBSession.commit()
 
 

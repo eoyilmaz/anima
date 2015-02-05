@@ -1153,4 +1153,19 @@ def create_representations():
 def cache_animations():
     """cache animations
     """
+    reload(auxiliary)
     auxiliary.export_alembic_from_cache_node()
+
+
+@publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
+def generate_playblast():
+    """generates a playblast for the current scene
+    """
+    import anima
+    from anima import utils
+    reload(anima)
+    reload(utils)
+    reload(auxiliary)
+
+    sp = auxiliary.ShotPlayblaster()
+    sp.playblast()
