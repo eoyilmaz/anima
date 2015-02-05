@@ -55,3 +55,7 @@ repo_env_template = 'REPO%(id)s'
 
 anima_env_var = 'ANIMAPATH'
 env_var_file_name = 'env.json'
+
+# some media
+ffmpeg_command_path = 'ffmpeg'
+ffprobe_command_path = 'ffprobe'
