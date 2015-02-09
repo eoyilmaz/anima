@@ -853,6 +853,8 @@ def perform_playblast(action):
             options={
                 'viewer': 1,
                 'offScreen': 0,
+                'compression': 'MPEG-4 Video',
+                'quality': 85
             }
         )
         from anima import utils
@@ -1120,7 +1122,7 @@ class ShotPlayblaster(object):
             'offScreen': 1,
             'viewer': 0,
             'compression': 'PNG',
-            'quality': 70
+            'quality': 85
         }
         if options:
             default_options.update(options)
