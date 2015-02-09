@@ -538,7 +538,7 @@ class MediaManager(object):
         # generate three thumbnails from the start, middle and end of the file
         start_frame = int(nb_frames * 0.10)
         mid_frame = int(nb_frames * 0.5)
-        end_frame = int(nb_frames * 0.90)
+        end_frame = int(nb_frames * 0.90) - 1
 
         #start_frame
         self.ffmpeg(**{
@@ -562,6 +562,29 @@ class MediaManager(object):
             'o': end_thumb_path
         })
 
+        # check if all of the thumbnails are present
+        if not os.path.exists(start_thumb_path):
+            if os.path.exists(mid_thumb_path):
+                start_thumb_path = mid_thumb_path
+            elif os.path.exists(end_thumb_path):
+                start_thumb_path = end_thumb_path
+                mid_thumb_path = end_thumb_path
+
+        if not os.path.exists(mid_thumb_path):
+            if os.path.exists(start_thumb_path):
+                mid_thumb_path = start_thumb_path
+            else:
+                start_thumb_path = end_thumb_path
+                mid_thumb_path = end_thumb_path
+
+        if not os.path.exists(end_thumb_path):
+            # use the mid frame if available or the start frame
+            if os.path.exists(mid_thumb_path):
+                end_thumb_path = mid_thumb_path
+            else:
+                mid_thumb_path = start_thumb_path
+                end_thumb_path = start_thumb_path
+
         # now merge them
         self.ffmpeg(**{
             'i': [start_thumb_path, mid_thumb_path, end_thumb_path],
@@ -579,9 +602,13 @@ class MediaManager(object):
         })
 
         # remove the intermediate data
-        os.remove(start_thumb_path)
-        os.remove(mid_thumb_path)
-        os.remove(end_thumb_path)
+        try:
+            os.remove(mid_thumb_path)
+            os.remove(start_thumb_path)
+            os.remove(end_thumb_path)
+        except OSError:
+            pass
+
         return thumbnail_path
 
     def generate_video_for_web(self, file_full_path):
