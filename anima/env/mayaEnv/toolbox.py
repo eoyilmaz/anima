@@ -3112,7 +3112,7 @@ class Render(object):
             [0, 0, 0, 1],  # Alpha
         ]
         arnold_shaders = (
-            pm.nt.AiStandard, pm.nt.AiHair, pm.nt.AiSkinSss, pm.nt.AiUtility
+            pm.nt.AiStandard, pm.nt.AiHair, pm.nt.AiSkin, pm.nt.AiUtility
         )
 
         for node in pm.ls(sl=1, dag=1, type=[pm.nt.Mesh, pm.nt.NurbsSurface,
