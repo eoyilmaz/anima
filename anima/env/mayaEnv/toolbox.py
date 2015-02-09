@@ -1409,7 +1409,7 @@ class General(object):
         """exports the transformation data in to a temp file
         """
         data = []
-        for node in pm.ls(sl=1):
+        for node in pm.ls(sl=1, type='transform'):
 
             tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
             rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
@@ -1438,7 +1438,7 @@ class General(object):
         with open(cls.transform_info_temp_file_path) as f:
             data = f.readlines()
 
-        for i, node in enumerate(pm.ls(sl=1)):
+        for i, node in enumerate(pm.ls(sl=1, type='transform')):
             j = i * 9
             # node.t.set(float(data[j]), float(data[j + 1]), float(data[j + 2]))
             # node.r.set(float(data[j + 3]), float(data[j + 4]), float(data[j + 5]))
