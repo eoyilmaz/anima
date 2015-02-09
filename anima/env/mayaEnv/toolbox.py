@@ -1411,9 +1411,13 @@ class General(object):
         data = []
         for node in pm.ls(sl=1, type='transform'):
 
-            tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
-            rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
-            sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
+            tra = node.t.get()
+            rot = node.r.get()
+            sca = node.s.get()
+
+            # tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
+            # rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
+            # sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
 
             data.append('%s' % tra[0])
             data.append('%s' % tra[1])
@@ -1440,12 +1444,12 @@ class General(object):
 
         for i, node in enumerate(pm.ls(sl=1, type='transform')):
             j = i * 9
-            # node.t.set(float(data[j]), float(data[j + 1]), float(data[j + 2]))
-            # node.r.set(float(data[j + 3]), float(data[j + 4]), float(data[j + 5]))
-            # node.s.set(float(data[j + 6]), float(data[j + 7]), float(data[j + 8]))
-            pm.xform(node, ws=1, t=(float(data[j]), float(data[j + 1]), float(data[j + 2])))
-            pm.xform(node, ws=1, ro=(float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
-            pm.xform(node, ws=1, s=(float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+            node.t.set(float(data[j]), float(data[j + 1]), float(data[j + 2]))
+            node.r.set(float(data[j + 3]), float(data[j + 4]), float(data[j + 5]))
+            node.s.set(float(data[j + 6]), float(data[j + 7]), float(data[j + 8]))
+            # pm.xform(node, ws=1, t=(float(data[j]), float(data[j + 1]), float(data[j + 2])))
+            # pm.xform(node, ws=1, ro=(float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
+            # pm.xform(node, ws=1, s=(float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
 
     @classmethod
     def toggle_attributes(cls, attribute_name):
