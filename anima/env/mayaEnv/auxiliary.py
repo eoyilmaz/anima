@@ -1590,7 +1590,7 @@ if({light}.penumbraAngle < 0){{
     $cone_angle = {light}.coneAngle + {light}.penumbraAngle;
 }}
 
-$frame_scale = tan(deg_to_rad({light}.coneAngle * 0.5));
+$frame_scale = tan(deg_to_rad($cone_angle * 0.5));
 {frame}.sx = {frame}.sy = {frame}.sz = $frame_scale;
 
 // top
