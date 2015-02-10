@@ -1128,17 +1128,17 @@ class ShotPlayblaster(object):
             default_options.update(options)
 
         # check camera sequencer nodes
-        if len(pm.ls(type='sequenceManager')) != 1:
-            raise RuntimeError(
-                'Only 1 Sequence Manager node must be present in your scene.'
-            )
+        # if len(pm.ls(type='sequenceManager')) != 1:
+        #     raise RuntimeError(
+        #         'Only 1 Sequence Manager node must be present in your scene.'
+        #     )
 
-        if len(pm.ls(type='sequencer')) != 1:
-            raise RuntimeError(
-                'Just 1 Sequencer node must be present in your scene.'
-            )
+        # if len(pm.ls(type='sequencer')) != 1:
+        #     raise RuntimeError(
+        #         'Just 1 Sequencer node must be present in your scene.'
+        #     )
 
-        shots = pm.sequenceManager(listShots=1)
+        shots = pm.ls(type='shot')
         if len(shots) <= 0:
             raise RuntimeError('There are no Shots in your Camera Sequencer.')
 
