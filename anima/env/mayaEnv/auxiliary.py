@@ -4,6 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
+from pprint import pprint
 import tempfile
 import shutil
 
@@ -847,7 +848,18 @@ def perform_playblast(action):
     if v:
         # do shot playblaster
         sp = ShotPlayblaster()
-        sp.playblast()
+        # TODO: make the viewer=1 and offScreen=0 options user selectable
+        outputs = sp.playblast(
+            options={
+                'viewer': 1,
+                'offScreen': 0,
+                'compression': 'MPEG-4 Video',
+                'quality': 85
+            }
+        )
+        from anima import utils
+        for output in outputs:
+            utils.open_browser_in_location(output)
     else:
         # call the original playblast
         return pm.mel.eval('performPlayblast_orig(%s);' % action)
@@ -974,6 +986,32 @@ class ShotPlayblaster(object):
             cameras.append(camera)
         return cameras
 
+    def get_frame_range(self):
+        """returns the playback range
+        """
+        return map(
+            int,
+            pm.timeControl(
+                pm.melGlobals['$gPlayBackSlider'],
+                q=1,
+                range=1
+            )[1:-1].split(':')
+        )
+
+    def get_audio_node(self):
+        """returns the audio node from the time slider
+        """
+        audio_node_name = pm.timeControl(
+            pm.melGlobals['$gPlayBackSlider'],
+            q=1,
+            sound=1
+        )
+        nodes = pm.ls(audio_node_name)
+        if nodes:
+            return nodes[0]
+        else:
+            return None
+
     def reset_user_view_options_storage(self):
         """resets the user view options storage
         """
@@ -1070,21 +1108,37 @@ class ShotPlayblaster(object):
 
         return active_panel
 
-    def playblast(self):
+    def playblast(self, options=None):
         """does the real thing
         """
+
+        default_options = {
+            'fmt': 'qt',
+            'sequenceTime': 1,
+            'forceOverwrite': 1,
+            'clearCache': 1,
+            'showOrnaments': 1,
+            'percent': 100,
+            'offScreen': 1,
+            'viewer': 0,
+            'compression': 'PNG',
+            'quality': 85
+        }
+        if options:
+            default_options.update(options)
+
         # check camera sequencer nodes
-        if len(pm.ls(type='sequenceManager')) != 1:
-            raise RuntimeError(
-                'Only 1 Sequence Manager node must be present in your scene.'
-            )
+        # if len(pm.ls(type='sequenceManager')) != 1:
+        #     raise RuntimeError(
+        #         'Only 1 Sequence Manager node must be present in your scene.'
+        #     )
 
-        if len(pm.ls(type='sequencer')) != 1:
-            raise RuntimeError(
-                'Just 1 Sequencer node must be present in your scene.'
-            )
+        # if len(pm.ls(type='sequencer')) != 1:
+        #     raise RuntimeError(
+        #         'Just 1 Sequencer node must be present in your scene.'
+        #     )
 
-        shots = pm.sequenceManager(listShots=1)
+        shots = pm.ls(type='shot')
         if len(shots) <= 0:
             raise RuntimeError('There are no Shots in your Camera Sequencer.')
 
@@ -1120,62 +1174,97 @@ class ShotPlayblaster(object):
             # doesn't do that
             extra_frame = 1
 
+        # if the time range is selected from the time line
+        # just use this range
+        global_start, global_end = self.get_frame_range()
+        use_global_start_end = False
+        if global_end - global_start > 1:
+            use_global_start_end = 1
+
+        audio_node = self.get_audio_node()
+
+        playblast_outputs = []
+
         for shot in shots:
             video_temp_output = tempfile.mktemp(suffix='.mov')
 
-            start_frame = int(pm.shot(shot, q=1, st=1))
-            end_frame = int(pm.shot(shot, q=1, et=1))
+            shot_start_frame = int(pm.shot(shot, q=1, st=1))
+            shot_end_frame = int(pm.shot(shot, q=1, et=1))
+
+            output_file_name = '%s_%s%s' % (
+                os.path.splitext(self.version.filename)[0],
+                shot.name().split(':')[-1] if shot else 'None',
+                '.mov'
+            )
+
+            if use_global_start_end:
+                if not global_start >= shot_start_frame \
+                   or not global_end <= shot_end_frame:
+                    continue
+                shot_start_frame = global_start
+                shot_end_frame = global_end
+
+                output_file_name = '%s_%s_%s_%s%s' % (
+                    os.path.splitext(self.version.filename)[0],
+                    shot.name().split(':')[-1] if shot else 'None',
+                    shot_start_frame,
+                    shot_end_frame,
+                    '.mov'
+                )
 
             self.create_hud('kksCameraHUD')
             # create video playblast
-            pm.playblast(
-                fmt='qt', startTime=start_frame,
-                endTime=end_frame + extra_frame,
-                sequenceTime=1, forceOverwrite=1, filename=video_temp_output,
-                clearCache=1, showOrnaments=1, percent=100, wh=(width, height),
-                offScreen=1, viewer=0, useTraxSounds=1, compression='PNG',
-                quality=70
-            )
+            per_shot_options = {
+                'startTime': shot_start_frame,
+                'endTime': shot_end_frame + extra_frame,
+                'filename': video_temp_output,
+                'wh': (width, height),
+                'sound': audio_node,
+            }
+            default_options.update(per_shot_options)
+            pprint(default_options)
+            pm.playblast(**default_options)
 
             # upload output to server
-            self.set_as_output(
+            output_path = self.set_as_output(
+                output_file_name=output_file_name,
                 version=self.version,
                 output_file_full_path=video_temp_output,
-                shot=shot
             )
+
+            playblast_outputs.append(output_path)
 
             caller.step()
 
         self.restore_user_options()
 
-    def set_as_output(self, version=None, output_file_full_path='', shot=None):
+        return playblast_outputs
+
+    def set_as_output(self, output_file_name='', version=None, output_file_full_path=''):
         """sets the given file as the output of the given version, also
         generates a thumbnail and a web version if it is a movie file
 
+        :param output_file_name: The output file name
         :param version: The stalker version instance
         :param output_file_full_path: the path of the media file
-        :param shot: the Maya shot node
         """
         hires_extension = '.mov'
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
         # TODO: we shouldn't need a "shot" parameter, just ask the desired output name
-        hires_output_file_name = '%s_%s%s' % (
-            os.path.splitext(self.version.filename)[0],
-            shot.name().split(':')[-1] if shot else 'None',
+        hires_output_file_name = '%s%s' % (
+            os.path.splitext(output_file_name)[0],
             hires_extension
         )
 
-        webres_output_file_name = '%s_%s%s' % (
-            os.path.splitext(self.version.filename)[0],
-            shot.name().split(':')[-1] if shot else 'None',
+        webres_output_file_name = '%s%s' % (
+            os.path.splitext(output_file_name)[0],
             webres_extension
         )
 
-        thumbnail_output_file_name = '%s_%s%s' % (
-            os.path.splitext(self.version.filename)[0],
-            shot.name().split(':')[-1] if shot else 'None',
+        thumbnail_output_file_name = '%s%s' % (
+            os.path.splitext(output_file_name)[0],
             thumbnail_extension
         )
 
@@ -1270,6 +1359,8 @@ class ShotPlayblaster(object):
 
             db.DBSession.add_all([l_hires, l_for_web, l_thumb])
             db.DBSession.commit()
+
+        return hires_path
 
 
 def export_alembic_from_cache_node():
@@ -1499,7 +1590,7 @@ if({light}.penumbraAngle < 0){{
     $cone_angle = {light}.coneAngle + {light}.penumbraAngle;
 }}
 
-$frame_scale = tan(deg_to_rad({light}.coneAngle * 0.5));
+$frame_scale = tan(deg_to_rad($cone_angle * 0.5));
 {frame}.sx = {frame}.sy = {frame}.sz = $frame_scale;
 
 // top
