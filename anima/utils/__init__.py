@@ -603,8 +603,16 @@ class MediaManager(object):
 
         # remove the intermediate data
         try:
-            os.remove(mid_thumb_path)
             os.remove(start_thumb_path)
+        except OSError:
+            pass
+
+        try:
+            os.remove(mid_thumb_path)
+        except OSError:
+            pass
+
+        try:
             os.remove(end_thumb_path)
         except OSError:
             pass

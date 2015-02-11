@@ -4,7 +4,6 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
-from pprint import pprint
 import tempfile
 import shutil
 
@@ -1222,7 +1221,6 @@ class ShotPlayblaster(object):
                 'sound': audio_node,
             }
             default_options.update(per_shot_options)
-            pprint(default_options)
             pm.playblast(**default_options)
 
             # upload output to server
