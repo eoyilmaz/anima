@@ -9,9 +9,6 @@ import os
 import shutil
 import logging
 
-from anima.utils import StalkerThumbnailCache
-
-
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -65,42 +62,23 @@ def update_gview_with_task_thumbnail(task, gview, login, password):
     full_path = None
     if task.thumbnail:
         # use the cache system to get the thumbnail
-        if 'SPL' in task.thumbnail.full_path:
-            full_path = StalkerThumbnailCache.get(
-                task.thumbnail.full_path,
-                login,
-                password
-            )
-        else:
-            # try to get it as a normal file
-            repo = task.project.repository
-            full_path = os.path.join(
-                repo.path,
-                task.thumbnail.full_path
-            )
-            if not os.path.exists(full_path):
-                full_path = None
+        # try to get it as a normal file
+        full_path = os.path.expandvars(
+            task.thumbnail.full_path
+        )
+        if not os.path.exists(full_path):
+            full_path = None
     else:
         logger.debug('there is no thumbnail')
         # try to get the thumbnail from parents
         for parent in task.parents:
             if parent.thumbnail:
-                # use the cache system to get the thumbnail
-                if 'SPL' in parent.thumbnail.full_path:
-                    full_path = StalkerThumbnailCache.get(
-                        parent.thumbnail.full_path,
-                        login,
-                        password
-                    )
-                else:
-                    # try to get it as a normal file
-                    repo = parent.project.repository
-                    full_path = os.path.join(
-                        repo.path,
-                        parent.thumbnail.full_path
-                    )
-                    if not os.path.exists(full_path):
-                        full_path = None
+                # try to get it as a normal file
+                full_path = os.path.expandvars(
+                    parent.thumbnail.full_path
+                )
+                if not os.path.exists(full_path):
+                    full_path = None
                 logger.debug('found parent thumbnail at: %s' % full_path)
                 break
 
@@ -159,29 +137,29 @@ def upload_thumbnail(task, thumbnail_full_path):
 
     # move the file to the task thumbnail folder
     # and mimic StalkerPyramids output format
-    thumbnail_path = os.path.join(
-        task.absolute_path, 'Thumbnail', 'thumbnail%s' % extension
+    thumbnail_original_file_name = 'thumbnail%s' % extension
+    thumbnail_final_full_path = os.path.join(
+        task.absolute_path, 'Thumbnail', thumbnail_original_file_name
     )
 
     try:
-        os.makedirs(os.path.dirname(thumbnail_path))
+        os.makedirs(os.path.dirname(thumbnail_final_full_path))
     except OSError:
         pass
 
-    shutil.copy(thumbnail_full_path, thumbnail_path)
+    shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
 
-    project = task.project
-    repo = project.repository
+    from stalker import db, Link, Version, Repository
 
-    from stalker import db, Link, Version
-
+    thumbnail_os_independent_path = \
+        Repository.to_os_independent_path(thumbnail_final_full_path)
     l_thumb = Link.query\
-        .filter(Link.full_path == repo.make_relative(thumbnail_path)).first()
+        .filter(Link.full_path == thumbnail_os_independent_path).first()
 
     if not l_thumb:
         l_thumb = Link(
-            full_path=repo.make_relative(thumbnail_path),
-            original_filename='thumbnail%s' % extension
+            full_path=thumbnail_os_independent_path,
+            original_filename=thumbnail_original_file_name
         )
 
     task.thumbnail = l_thumb
@@ -194,7 +172,7 @@ def upload_thumbnail(task, thumbnail_full_path):
                 naming_parent.thumbnail = l_thumb
                 db.DBSession.add(naming_parent)
 
-    db.DBSession.add_all([l_thumb])
+    db.DBSession.add(l_thumb)
     db.DBSession.commit()
 
 
