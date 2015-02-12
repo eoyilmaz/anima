@@ -11,6 +11,10 @@ Changes
 * **New:** Added option to choose which representation to reference in
   Version Creator UI.
 
+* **Update:** Updated the implementation of the RecentFileManager to use JSON
+  instead of Pickle to speed things up and do not struggle with future errors
+  of handling binary data.
+
 0.1.12
 ======
 

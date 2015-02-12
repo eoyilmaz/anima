@@ -16,6 +16,7 @@ import time
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
+from anima.exc import PublishError
 from anima.recent import RecentFileManager
 from anima.repr import Representation
 from anima.ui.progress_dialog import ProgressDialogManager
@@ -223,9 +224,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # before running use the staging area to store the current version
             staging['version'] = version
-            run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
-            # do not forget to clean up the staging area
-            staging.clear()
+            try:
+                run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
+            except PublishError as e:
+                # do not forget to clean up the staging area
+                staging.clear()
+                raise e
 
         # get the current version, and store it as the parent of the new
         # version
@@ -363,9 +367,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             # before running use the staging area to store the current version
             staging['version'] = version
-            run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-            # do not forget to clean up the staging area
-            staging.clear()
+            try:
+                run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
+            except PublishError as e:
+                # do not forget to clean up the staging area
+                staging.clear()
+                raise e
 
         end = time.time()
         logger.debug('anima.save_as took %f seconds' % (end - start))
@@ -1118,9 +1125,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
-            from stalker import db
-            # TODO: this is an early commit and this may result an empty Version instance
-            #db.DBSession.commit()
 
         end = time.time()
         logger.debug('anima.env.mayaEnv.Maya.update_version_inputs() took '
