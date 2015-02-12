@@ -40,7 +40,6 @@ import pymel.core as pm
 import maya.cmds as cmds
 
 from stalker import db
-from anima.env import create_repo_vars
 from anima.env.mayaEnv import auxiliary
 
 try:
@@ -84,10 +83,7 @@ except pm.MayaNodeError:
     pass
 
 # create environment variables for each Repository
-
-
 db.setup()
-create_repo_vars()
 
 if not pm.general.about(batch=1):
     # load shelves

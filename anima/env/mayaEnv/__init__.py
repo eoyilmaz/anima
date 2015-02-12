@@ -11,8 +11,9 @@ import logging
 
 import pymel.core as pm
 import maya.cmds as mc
+import time
 
-from anima.env import empty_reference_resolution, to_os_independent_path
+from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
 from anima.recent import RecentFileManager
@@ -176,6 +177,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def set_arnold_texture_search_path(self):
         """sets environment defaults
         """
+        start = time.time()
         from stalker import Repository
 
         # try to get a version from current scene
@@ -203,11 +205,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         except pm.MayaNodeError:
             pass
 
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.set_arnold_texture_search_path() '
+                     'took %f seconds' % (end - start))
+
     def save_as(self, version):
         """The save_as action for maya environment.
 
         It saves the given Version instance to the Version.absolute_full_path.
         """
+        start = time.time()
         if version.is_published:
             # before doing anything run all publishers
             type_name = ''
@@ -360,6 +367,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # do not forget to clean up the staging area
             staging.clear()
 
+        end = time.time()
+        logger.debug('anima.save_as took %f seconds' % (end - start))
         return True
 
     def export_as(self, version):
@@ -544,14 +553,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         if use_namespace:
             ref = pm.createReference(
-                to_os_independent_path(version.absolute_full_path),
+                version.full_path,
                 gl=True,
                 namespace=namespace,
                 options='v=0'
             )
         else:
             ref = pm.createReference(
-                to_os_independent_path(version.absolute_full_path),
+                version.full_path,
                 gl=True,
                 defaultNamespace=True,  # this is not "no namespace", but safe
                 options='v=0'
@@ -684,6 +693,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :param version: :class:`~stalker.models.version.Version`
         """
+        start = time.time()
         sm = pm.ls('sequenceManager1')[0]
         if sm is not None:
             sm.get_shot_name_template()
@@ -691,10 +701,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
             for seq in sm.sequences.get():
                 seq.get_sequence_name()
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.set_sequence_manager_data() took '
+                     '%f seconds' % (end - start))
 
     def set_render_filename(self, version):
         """sets the render file name
         """
+        start = time.time()
         # assert isinstance(version, Version)
         render_output_folder = os.path.join(
             version.absolute_path,
@@ -741,6 +755,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         dRG.setAttr('pff', 1)
 
         self.set_output_file_format()
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.set_render_filename() took %f '
+                     'seconds' % (end - start))
 
     @classmethod
     def set_output_file_format(cls):
@@ -805,6 +822,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def set_playblast_file_name(cls, version):
         """sets the playblast file name
         """
+        start = time.time()
         playblast_path = os.path.join(
             version.absolute_path,
             'Outputs', "Playblast"
@@ -829,6 +847,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             pass
 
         pm.optionVar['playblastFile'] = playblast_full_path
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.set_playblast_file_name() took '
+                     '%f seconds' % (end - start))
 
     @classmethod
     def set_resolution(cls, width, height, pixel_aspect=1.0):
@@ -862,8 +883,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """appends the given path to the recent files list
         """
         # add the file to the recent file list
+        start = time.time()
         rfm = RecentFileManager()
         rfm.add(self.name, path)
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.append_to_recent_files() took '
+                     '%f sedons' % (end - start))
 
     @classmethod
     def is_in_repo(cls, path):
@@ -911,6 +936,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             - IBL nodes
             - References
         """
+        start = time.time()
+        # TODO: make this one a publish script
         external_nodes = []
 
         # check for file textures
@@ -1018,6 +1045,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 'YOUR FILE IS NOT GOING TO BE SAVED!!!'
             )
 
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.check_external_files took %f '
+                     'seconds' % (end - start))
+
     def get_referenced_versions(self, parent_ref=None):
         """Returns the versions those been referenced to the current scene.
 
@@ -1072,6 +1103,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           version argument and a Version instance will be get from the given
           parent_ref.path.
         """
+        start = time.time()
         if not parent_ref:
             version = self.get_current_version()
         else:
@@ -1088,7 +1120,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.inputs = referenced_versions
             from stalker import db
             # TODO: this is an early commit and this may result an empty Version instance
-            db.DBSession.commit()
+            #db.DBSession.commit()
+
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.update_version_inputs() took '
+                     '%f seconds' % (end - start))
 
     def update_first_level_versions(self, reference_resolution):
         """Updates the versions to the latest version.
@@ -1109,6 +1145,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         updated_references = False
 
+        from stalker import Repository
+
         for reference in references:
             path = reference.path
             if path == previous_ref_path:
@@ -1122,7 +1160,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     full_path = None
 
             if full_path:
-                reference.replaceWith(to_os_independent_path(full_path))
+                reference.replaceWith(
+                    Repository.to_os_independent_path(full_path)
+                )
                 updated_references = True
 
         return updated_references
@@ -1159,6 +1199,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
     def set_fps(cls, fps=25):
         """sets the fps of the environment
         """
+        start = time.time()
         # get the current time, current playback min and max (because maya
         # changes them, try to restore the limits)
         current_time = pm.currentTime(q=1)
@@ -1186,6 +1227,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pm.currentTime(current_time)
         pm.playbackOptions(ast=pAst, aet=pAet)
         pm.playbackOptions(min=pMin, max=pMax)
+
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.set_fps() took %f seconds' %
+                     (end - start))
 
     @classmethod
     def load_referenced_versions(cls):
@@ -1235,6 +1280,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           regular maya file nodes with mib_texture_filter_lookup nodes to have
           the same sharp results.
         """
+        start = time.time()
         workspace_path = pm.workspace.path
 
         logger.debug('replace_external_paths is called!!!')
@@ -1242,6 +1288,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # *********************************************************************
         # References
         # replace reference paths with os independent absolute path
+        from stalker import Repository
         for ref in pm.listReferences():
             unresolved_path = \
                 os.path.normpath(ref.unresolvedPath()).replace("\\", "/")
@@ -1252,7 +1299,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                              'independent!: %s' % unresolved_path)
                 continue
 
-            new_ref_path = to_os_independent_path(unresolved_path)
+            new_ref_path = Repository.to_os_independent_path(unresolved_path)
             if new_ref_path != unresolved_path:
                 logger.info("replacing reference: %s" % ref.path)
                 logger.info("replacing with: %s" % new_ref_path)
@@ -1303,7 +1350,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         ).replace("\\", "/")
 
                 # convert to os independent absolute
-                new_path = to_os_independent_path(path)
+                new_path = Repository.to_os_independent_path(path)
 
                 if new_path != orig_path:
                     logger.info("with: %s" % new_path)
@@ -1332,10 +1379,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                             # it is locked or something
                             # skip it
                             pass
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.replace_external_paths took '
+                     '%f seconds' % (end - start))
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path
         """
+        start = time.time()
         content = self.maya_workspace_file_content
 
         # check if there is a workspace.mel at the given path
@@ -1353,12 +1404,17 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         with open(full_path, "w") as workspace_file:
             workspace_file.write(content)
 
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.create_workspace_file() took '
+                     '%f seconds' % (end - start))
+
     @classmethod
     def create_workspace_folders(cls, path):
         """creates the workspace folders
 
         :param path: the root of the workspace
         """
+        start = time.time()
         for key in pm.workspace.fileRules:
             rule_path = pm.workspace.fileRules[key]
             full_path = os.path.join(path, rule_path).replace('\\', '/')
@@ -1368,6 +1424,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             except OSError:
                 # dir exists
                 pass
+        end = time.time()
+        logger.debug('anima.env.mayaEnv.Maya.create_workspace_folders() took '
+                     '%f seconds' % (end - start))
 
     def deep_version_inputs_update(self):
         """updates the inputs of the references of the current scene
@@ -1564,6 +1623,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             'updating to new versions with: %s' % reference_resolution
         )
 
+        from stalker import Repository
+
         # just create a list from  first level references
         # and only update those references
         references_list = pm.listReferences()
@@ -1602,7 +1663,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
                     # replace the current reference with this one
                     current_ref.replaceWith(
-                        to_os_independent_path(
+                        Repository.to_os_independent_path(
                             latest_published_version.absolute_full_path
                         )
                     )

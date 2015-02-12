@@ -6,7 +6,7 @@
 
 import unittest
 
-import pymel
+import pymel.core as pm
 
 
 class AttributeExtensionsTester(unittest.TestCase):
@@ -15,26 +15,26 @@ class AttributeExtensionsTester(unittest.TestCase):
     def setUp(self):
         """setup test
         """
-        pymel.core.newFile(force=1)
+        pm.newFile(force=1)
 
     def test_next_available_extension_is_working_properly(self):
         """testing if Attribute.next_available extension is working properly
         """
         self.assertIsNotNone(
-            pymel.core.general.Attribute.next_available
+            pm.general.Attribute.next_available
         )
 
     def test_next_available_with_no_previous_connections(self):
         """testing if Attribute.next_available will work properly for an array
         attribute with no previous connections
         """
-        sequence_manager = pymel.core.ls(type=pymel.core.nt.SequenceManager)[0]
+        sequence_manager = pm.ls(type=pm.nt.SequenceManager)[0]
 
         attr = sequence_manager.sequences.next_available
 
         self.assertIsInstance(
             attr,
-            pymel.core.general.Attribute
+            pm.general.Attribute
         )
 
         self.assertEqual(
@@ -46,7 +46,7 @@ class AttributeExtensionsTester(unittest.TestCase):
         """testing if the attribute itself will be returned when it is not an
         multi attribute
         """
-        time = pymel.core.ls(type=pymel.core.nt.Time)[0]
+        time = pm.ls(type=pm.nt.Time)[0]
         self.assertEqual(
             time.outTime.next_available,
             time.outTime
@@ -56,11 +56,11 @@ class AttributeExtensionsTester(unittest.TestCase):
         """testing if the next available attribute will be returned when no
         empty plugs are present
         """
-        sequence_manager = pymel.core.ls(type=pymel.core.nt.SequenceManager)[0]
+        sequence_manager = pm.ls(type=pm.nt.SequenceManager)[0]
         # connect new sequences
-        seq1 = pymel.core.createNode('sequence')
-        seq2 = pymel.core.createNode('sequence')
-        seq3 = pymel.core.createNode('sequence')
+        seq1 = pm.createNode('sequence')
+        seq2 = pm.createNode('sequence')
+        seq3 = pm.createNode('sequence')
 
         seq1.message >> sequence_manager.sequences[0]
         seq2.message >> sequence_manager.sequences[1]
@@ -69,7 +69,7 @@ class AttributeExtensionsTester(unittest.TestCase):
         attr = sequence_manager.sequences.next_available
         self.assertIsInstance(
             attr,
-            pymel.core.general.Attribute
+            pm.general.Attribute
         )
         self.assertEqual(
             3,

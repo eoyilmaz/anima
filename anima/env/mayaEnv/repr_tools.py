@@ -9,10 +9,9 @@ import subprocess
 import uuid
 
 import pymel.core as pm
-from stalker import LocalSession
+from stalker import LocalSession, Repository
 
 from anima.repr import Representation
-from anima.env import to_os_independent_path
 from anima.env.mayaEnv import auxiliary
 
 
@@ -855,7 +854,9 @@ class RepresentationGenerator(object):
                 full_path = ass_tra.fullPath()
                 if full_path in nodes_to_ass_files:
                     ass_file_path = \
-                        to_os_independent_path(nodes_to_ass_files[full_path])
+                        Repository.to_os_independent_path(
+                            nodes_to_ass_files[full_path]
+                        )
                     ass_node.setAttr('dso', ass_file_path)
 
         elif self.is_vegetation_task(task):

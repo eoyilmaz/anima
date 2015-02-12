@@ -64,7 +64,8 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         task_ft = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',
-            path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
+            path='$REPO{{project.repository.id}}/{{project.code}}/'
+                 '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
             filename='{{task.nice_name}}_{{version.take_name}}'
                      '_v{{"%03d"|format(version.version_number)}}',
@@ -106,7 +107,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project1 = Project(
             name='Test Project 1',
             code='TP1',
-            repository=repo1,
+            repositories=[repo1],
             structure=structure1,
             status_list=proj_status_list
         )
@@ -115,7 +116,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project2 = Project(
             name='Test Project 2',
             code='TP2',
-            repository=repo2,
+            repositories=[repo2],
             structure=structure1,
             status_list=proj_status_list
         )
@@ -254,7 +255,8 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         task_ft = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',
-            path='{{project.code}}/{%- for parent_task in parent_tasks -%}'
+            path='$REPO{{project.repository.id}}/'
+                 '{{project.code}}/{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
             filename='{{task.nice_name}}_{{version.take_name}}'
                      '_v{{"%03d"|format(version.version_number)}}',
@@ -296,7 +298,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project1 = Project(
             name='Test Project 1',
             code='TP1',
-            repository=repo1,
+            repositories=[repo1],
             structure=structure1,
             status_list=proj_status_list
         )
@@ -305,7 +307,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project2 = Project(
             name='Test Project 2',
             code='TP2',
-            repository=repo2,
+            repositories=[repo2],
             structure=structure1,
             status_list=proj_status_list
         )
@@ -493,7 +495,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project1 = Project(
             name='Test Project 1',
             code='TP1',
-            repository=repo1,
+            repositories=[repo1],
             structure=structure1,
             status_list=proj_status_list
         )
@@ -502,7 +504,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         project2 = Project(
             name='Test Project 2',
             code='TP2',
-            repository=repo2,
+            repositories=[repo2],
             structure=structure1,
             status_list=proj_status_list
         )

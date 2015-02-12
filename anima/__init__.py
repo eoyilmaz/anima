@@ -59,3 +59,5 @@ env_var_file_name = 'env.json'
 # some media
 ffmpeg_command_path = 'ffmpeg'
 ffprobe_command_path = 'ffprobe'
+
+max_recent_files = 50

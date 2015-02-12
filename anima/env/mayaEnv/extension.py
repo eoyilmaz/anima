@@ -16,7 +16,6 @@ from pymel.core.system import FileReference
 
 from anima.extension import extends
 from anima.repr import Representation
-from anima.env import to_os_independent_path
 
 
 default_handle_count = 15
@@ -105,8 +104,11 @@ class FileReferenceExtension(object):
         :return:
         """
         rep_v = self.find_repr(repr_name)
+        from stalker import Repository
         if rep_v is not None and rep_v != self.version:
-            self.replaceWith(to_os_independent_path(rep_v.absolute_full_path))
+            self.replaceWith(
+                Repository.to_os_independent_path(rep_v.absolute_full_path)
+            )
 
     @extends(FileReference)
     def find_repr(self, repr_name):

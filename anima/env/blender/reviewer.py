@@ -63,8 +63,7 @@ class StripGenerator(object):
             if len(v.outputs):
                 # get all outputs of this version
                 for output in v.outputs:
-                    output_absolute_full_path = os.path.join(
-                        repo.path,
+                    output_absolute_full_path = os.path.expandvars(
                         output.full_path
                     )
                     self.add_output(output_absolute_full_path)

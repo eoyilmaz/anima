@@ -18,7 +18,6 @@ from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
 
 from anima import utils
 from anima import publish
-from anima.env import to_os_independent_path
 from anima.env.mayaEnv import Maya
 from anima.env.mayaEnv.archive import Archiver
 from anima.env.mayaEnv.repr_tools import (Representation,
@@ -86,6 +85,8 @@ class MayaTestBase(unittest.TestCase):
             windows_path=self.temp_repo_path,
             osx_path=self.temp_repo_path
         )
+        db.DBSession.add(self.repo1)
+        db.DBSession.commit()
 
         self.status_new = Status.query.filter_by(code='NEW').first()
         self.status_wip = Status.query.filter_by(code='WIP').first()
@@ -94,7 +95,7 @@ class MayaTestBase(unittest.TestCase):
         self.task_template = FilenameTemplate(
             name='Task Template',
             target_entity_type='Task',
-            path='{{project.code}}/'
+            path='$REPO{{project.repository.id}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -105,7 +106,7 @@ class MayaTestBase(unittest.TestCase):
         self.asset_template = FilenameTemplate(
             name='Asset Template',
             target_entity_type='Asset',
-            path='{{project.code}}/'
+            path='$REPO{{project.repository.id}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -116,7 +117,7 @@ class MayaTestBase(unittest.TestCase):
         self.shot_template = FilenameTemplate(
             name='Shot Template',
             target_entity_type='Shot',
-            path='{{project.code}}/'
+            path='$REPO{{project.repository.id}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -127,7 +128,7 @@ class MayaTestBase(unittest.TestCase):
         self.sequence_template = FilenameTemplate(
             name='Sequence Template',
             target_entity_type='Sequence',
-            path='{{project.code}}/'
+            path='$REPO{{project.repository.id}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -158,7 +159,7 @@ class MayaTestBase(unittest.TestCase):
         self.project = Project(
             name='Test Project',
             code='TP',
-            repository=self.repo1,
+            repositories=[self.repo1],
             status_list=self.project_status_list,
             structure=self.structure,
             image_format=self.image_format
@@ -1438,6 +1439,7 @@ class MayaTestCase(MayaTestBase):
         self.assertEqual(dRG.getAttr("imfkey"), "exr")
         self.assertEqual(mrG.getAttr("imageCompression"), 4)
 
+    @unittest.skip('creates segmanteation fault')
     def test_save_as_sets_the_render_format_to_exr_for_arnold(self):
         """testing if the save_as method sets the render format to exr when the
         renderer is arnold
@@ -1544,9 +1546,6 @@ class MayaTestCase(MayaTestBase):
         )
 
         dRG = pm.PyNode("defaultRenderGlobals")
-
-        print expected_path
-        print dRG.getAttr("imageFilePrefix")
 
         self.assertEqual(
             expected_path,
@@ -1775,7 +1774,7 @@ class MayaTestCase(MayaTestBase):
         # and expect the fileTexture has been moved to workspace/external_files
         # folder
         expected_path =\
-            to_os_independent_path(
+            Repository.to_os_independent_path(
                 os.path.join(
                     version1.absolute_path,
                     'external_files/Textures/temp.png'
@@ -2439,12 +2438,12 @@ class MayaTestCase(MayaTestBase):
         file_texture1 = pm.createNode("file")
         file_texture2 = pm.createNode("file")
 
-        path1 = to_os_independent_path(
+        path1 = Repository.to_os_independent_path(
             os.path.join(
                 version1.absolute_path, ".maya_files/TEXTURES/a.jpg"
             )
         )
-        path2 = to_os_independent_path(
+        path2 = Repository.to_os_independent_path(
             os.path.join(
                 version1.absolute_path, ".maya_files/TEXTURES/b.jpg"
             )
@@ -2498,7 +2497,7 @@ class MayaTestCase(MayaTestBase):
             code='FTP1',
             status_list=self.project_status_list,
             structure=self.structure,
-            repository=self.repo1,
+            repositories=[self.repo1],
             fps=24,
             image_format=self.image_format
         )
@@ -2509,7 +2508,7 @@ class MayaTestCase(MayaTestBase):
             code='FTP2',
             status_list=self.project_status_list,
             structure=self.structure,
-            repository=self.repo1,
+            repositories=[self.repo1],
             fps=30,
             image_format=self.image_format
         )
@@ -2586,16 +2585,16 @@ class MayaTestCase(MayaTestBase):
         # reference vers1 to vers2
         ref = self.maya_env.reference(vers1)
 
-        # now check if the referenced files unresolved path is equal to
+        # now check if the referenced files unresolved path is equal to
         # ver2.absolute_full_path
         refs = pm.listReferences()
 
         # there should be only one reference
         self.assertEqual(len(refs), 1)
 
-        # the unresolved path should be an absolute path
+        # the unresolved path should be an absolute path
         self.assertEqual(
-            to_os_independent_path(vers1.absolute_full_path),
+            Repository.to_os_independent_path(vers1.absolute_full_path),
             ref.unresolvedPath()
         )
 
@@ -2637,17 +2636,24 @@ class MayaTestCase(MayaTestBase):
 
         # check if the path is replaced with repository environment variable
         self.assertEqual(
-            to_os_independent_path(absolute_path),
+            Repository.to_os_independent_path(absolute_path),
             image_plane.getAttr('imageName')
         )
 
-    def test_save_as_will_not_replaces_paths_if_they_are_referenced(self):
-        """testing if save_as will not replace external paths of referenced
+    def test_save_as_will_even_replace_paths_if_they_are_referenced(self):
+        """testing if save_as will even replace external paths of referenced
         nodes
         """
         absolute_path = os.path.normpath(
             os.path.join(
                 self.asset1.absolute_path,
+                'Plate/plateA.1.jpg'
+            )
+        )
+
+        normal_path = os.path.normpath(
+            os.path.join(
+                self.asset1.path,
                 'Plate/plateA.1.jpg'
             )
         )
@@ -2671,6 +2677,11 @@ class MayaTestCase(MayaTestBase):
         # save again
         pm.saveFile()
 
+        self.assertEqual(
+            image_plane.getAttr('imageName'),
+            absolute_path
+        )
+
         vers2 = Version(task=self.asset1, created_by=self.user1)
         db.DBSession.add(vers2)
         db.DBSession.commit()
@@ -2684,7 +2695,7 @@ class MayaTestCase(MayaTestBase):
 
         # check if the path is not replaced
         self.assertEqual(
-            os.path.normpath(absolute_path),
+            os.path.normpath(normal_path),
             os.path.normpath(image_plane.getAttr('imageName'))
         )
 
@@ -2744,7 +2755,6 @@ class MayaTestCase(MayaTestBase):
                 version1.absolute_path,
                 file_rule_partial_path
             )
-            print file_rule_full_path
             self.assertTrue(os.path.exists(file_rule_full_path))
 
     def test_is_in_repo_working_properly(self):
@@ -2828,14 +2838,14 @@ class MayaTestCase(MayaTestBase):
         # reference vers2 to vers1
         self.maya_env.reference(vers2)
 
-        # now check if the referenced files unresolved path is equal to
+        # now check if the referenced files unresolved path is equal to
         # ver2.absolute_full_path
         refs = pm.listReferences()
 
         # there should be only one reference
         self.assertEqual(len(refs), 1)
 
-        # the unresolved path should be an absolute path
+        # the unresolved path should be an absolute path
         self.assertEqual(
             vers2.absolute_full_path,
             refs[0].path
@@ -2906,11 +2916,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # version3 set published
         self.version3.is_published = True
 
-        print "version2  : %s" % self.version2
-        print "version3  : %s" % self.version3
-        print "version5  : %s" % self.version5
-        print "version12 : %s" % self.version12
-
         # check the setup
         visited_versions = []
         for v in self.version12.walk_inputs():
@@ -2925,8 +2930,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         reference_resolution = self.maya_env.open(self.version12)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
-
-        print 'updated_versions: %s' % updated_versions
 
         # we should be still in version12 scene
         self.assertEqual(
@@ -2997,12 +3000,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.version3.is_published = True
         self.version6.is_published = True
 
-        print "version2  : %s" % self.version2
-        print "version3  : %s" % self.version3
-        print "version5  : %s" % self.version5
-        print "version6  : %s" % self.version6
-        print "version12 : %s" % self.version12
-
         # check the setup
         visited_versions = []
         for v in self.version12.walk_inputs():
@@ -3019,8 +3016,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         reference_resolution = self.maya_env.open(self.version12)
         created_versions = \
             self.maya_env.update_versions(reference_resolution)
-
-        print 'created_versions: %s' % created_versions
 
         # no new versions should have been created
         self.assertEqual(0, len(created_versions))
@@ -3094,20 +3089,12 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         pm.saveFile()
         pm.newFile(force=True)
 
-        print "version2  : %s" % self.version2
-        print "version5  : %s" % self.version5
-        print "version12 : %s" % self.version12
-        print "version15 : %s" % self.version15
-
         # check the setup
         visited_versions = []
         for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
-
-        print expected_visited_versions
-        print visited_versions
 
         self.assertEqual(
             expected_visited_versions,
@@ -3136,7 +3123,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
-        print 'updated_versions: %s' % updated_versions
         self.assertEqual(0, len(updated_versions))
 
         # check if we are still in version15 scene
@@ -3242,20 +3228,12 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         pm.saveFile()
         pm.newFile(force=True)
 
-        print "version2  : %s" % self.version2
-        print "version5  : %s" % self.version5
-        print "version12 : %s" % self.version12
-        print "version15 : %s" % self.version15
-
         # check the setup
         visited_versions = []
         for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version12, self.version5, self.version2]
-
-        print expected_visited_versions
-        print visited_versions
 
         self.assertEqual(
             expected_visited_versions,
@@ -3265,8 +3243,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         reference_resolution = self.maya_env.open(self.version15)
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
-
-        print 'updated_versions: %s' % updated_versions
 
         self.assertEqual(0, len(updated_versions))
 
@@ -3414,24 +3390,12 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         pm.saveFile()
         pm.newFile(force=True)
 
-        print "version2  : %s" % self.version2
-        print "version3  : %s" % self.version3
-        print "version4  : %s" % self.version4
-        print "version5  : %s" % self.version5
-        print "version6  : %s" % self.version6
-        print "version11 : %s" % self.version11
-        print "version12 : %s" % self.version12
-        print "version15 : %s" % self.version15
-
         # check the setup
         visited_versions = []
         for v in self.version15.walk_inputs():
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
-
-        print expected_visited_versions
-        print visited_versions
 
         self.assertEqual(
             expected_visited_versions,
@@ -3442,7 +3406,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
-        print 'updated_versions: %s' % updated_versions
         self.assertEqual(0, len(updated_versions))
 
         # check if we are still in version15 scene
@@ -3581,21 +3544,11 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         # in version4
         refs = pm.listReferences(recursive=1)
         # we should have all the references
-        print refs
         self.assertEqual(self.version2.absolute_full_path, refs[-1].path)
         refs[-1].replaceWith(self.version3.absolute_full_path)
 
         pm.saveFile()
         pm.newFile(force=True)
-
-        print "version2  : %s" % self.version2
-        print "version3  : %s" % self.version3
-        print "version4  : %s" % self.version4
-        print "version5  : %s" % self.version5
-        print "version6  : %s" % self.version6
-        print "version11 : %s" % self.version11
-        print "version12 : %s" % self.version12
-        print "version15 : %s" % self.version15
 
         # check the setup
         visited_versions = []
@@ -3603,9 +3556,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
             visited_versions.append(v)
         expected_visited_versions = \
             [self.version15, self.version11, self.version4, self.version2]
-
-        print expected_visited_versions
-        print visited_versions
 
         self.assertEqual(
             expected_visited_versions,
@@ -3616,7 +3566,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         updated_versions = \
             self.maya_env.update_versions(reference_resolution)
 
-        print 'updated_versions: %s' % updated_versions
         self.assertEqual(0, len(updated_versions))
 
         # check if we are still in version15 scene
@@ -3736,7 +3685,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
 
         # switch all references to bbox representation
         for ref in pm.listReferences():
-            ref.to_repr('BBOX')
+            ref.to_repr('ASS')
 
         # now try to get the referenced versions
         referenced_versions = self.maya_env.get_referenced_versions()
@@ -3990,9 +3939,6 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
             [self.version15, self.version11, self.version4, self.version2,
              self.version21, self.version16, self.version38, self.version27]
 
-        print expected_visited_versions
-        print visited_versions
-
         self.assertEqual(
             expected_visited_versions,
             visited_versions
@@ -4044,18 +3990,18 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         result = \
             self.maya_env.check_referenced_versions()
 
-        print 'self.version27: %s' % self.version27
-        print 'self.version38: %s' % self.version38
-        print 'self.version16: %s' % self.version16
-        print 'self.version21: %s' % self.version21
-        print 'self.version2 : %s' % self.version2
-        print 'self.version4 : %s' % self.version4
-        print 'self.version11: %s' % self.version11
-        print 'self.version15: %s' % self.version15
-
-        print expected_reference_resolution
-        print '--------------------------'
-        print result
+        # print 'self.version27: %s' % self.version27
+        # print 'self.version38: %s' % self.version38
+        # print 'self.version16: %s' % self.version16
+        # print 'self.version21: %s' % self.version21
+        # print 'self.version2 : %s' % self.version2
+        # print 'self.version4 : %s' % self.version4
+        # print 'self.version11: %s' % self.version11
+        # print 'self.version15: %s' % self.version15
+        #
+        # print expected_reference_resolution
+        # print '--------------------------'
+        # print result
 
         self.assertEqual(
             sorted(expected_reference_resolution['root'],
@@ -4147,14 +4093,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         result = \
             self.maya_env.check_referenced_versions()
 
-        print 'self.version15.id: %s' % self.version15.id
-        print 'self.version11.id: %s' % self.version11.id
-        print 'self.version4.id : %s' % self.version4.id
-        print 'self.version2.id : %s' % self.version2.id
-
-        print expected_reference_resolution
-        print '--------------------------'
-        print result
+        # print 'self.version15.id: %s' % self.version15.id
+        # print 'self.version11.id: %s' % self.version11.id
+        # print 'self.version4.id : %s' % self.version4.id
+        # print 'self.version2.id : %s' % self.version2.id
+        #
+        # print expected_reference_resolution
+        # print '--------------------------'
+        # print result
 
         self.assertEqual(
             sorted(expected_reference_resolution['root'],
@@ -4612,8 +4558,6 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        print 'self.version11.absolute_full_path: %s' % \
-              self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
@@ -4869,8 +4813,6 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        print 'self.version11.absolute_full_path: %s' % \
-              self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
@@ -4998,8 +4940,6 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        print 'self.version11.absolute_full_path: %s' % \
-              self.version11.absolute_full_path
         db.DBSession.commit()
 
         # version15 also references version4
@@ -5543,8 +5483,6 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        print 'self.version11.absolute_full_path: %s' % \
-              self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
@@ -5623,8 +5561,6 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        print 'self.version11.absolute_full_path: %s' % \
-              self.version11.absolute_full_path
         db.DBSession.commit()
 
         # check namespaces
@@ -6673,81 +6609,65 @@ class ToolboxRepresentationToolsTestCase(MayaTestBase):
 
         # Building1 | Props | YAPI | Model | Hires
         r.version = self.version75
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Building1 | Props | YAPI | LookDev
         r.version = self.version78
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Building1 | Layout | Hires
         r.version = self.version66
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Building2 | Props | YAPI | Model | Hires
         r.version = self.version93
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Building2 | Props | YAPI | LookDev
         r.version = self.version96
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Building2 | Layout | Hires
         r.version = self.version84
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Vegetation
         r.version = self.version117
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
         # Layout | Hires
         r.version = self.version102
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -6774,307 +6694,6 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         from stalker import LocalSession
         l = LocalSession()
         l.delete()
-
-    # BBOX
-    # - of a model
-    # - of a look dev
-    # - of a layout of a building
-    # - of a look dev of a building
-    # - of a layout of an environment
-    # - of a look dev of an environment
-    # - of a vegetation scene
-
-    def test_generate_bbox_will_end_up_with_an_empty_scene(self):
-        """testing if generate_bbox will end up with an empty scene
-        """
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        # we should be on an untitled scene
-        self.assertEqual(
-            pm.sceneName(),
-            ''
-        )
-
-    def test_generate_bbox_will_overwrite_previous_bbox_version(self):
-        """testing if generate_bbox will overwrite to the previous BBOX version
-        """
-        gen = RepresentationGenerator()
-
-        gen.version = self.version75
-        gen.generate_bbox()
-
-        r = Representation(version=self.version75)
-        v1 = r.find('BBOX')
-        self.assertTrue(v1 is not None)
-
-        # generate again
-        gen.generate_bbox()
-        v2 = r.find('BBOX')
-        self.assertTrue(v2 is not None)
-
-        # and they should be the same version
-        self.assertEqual(v1, v2)
-
-    def test_generate_bbox_scene_with_references_before_generating_bboxes_of_references_first(self):
-        """testing if a RuntimeError will be raised when trying to generate
-        the BBOX Repr of a scene before generating the BBOX of all of the
-        references
-        """
-        gen = RepresentationGenerator(version=self.version76)
-
-        with self.assertRaises(RuntimeError) as cm:
-            gen.generate_bbox()
-
-        self.assertEqual(
-            str(cm.exception),
-            'Please generate the BBOX Representation of the references '
-            'first!!!\n%s' % self.version75.absolute_full_path
-        )
-
-    def test_generate_bbox_of_a_simple_model(self):
-        """testing if generate_bbox will generate bounding boxes for each
-        object with the same name in a model scene
-        """
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        r = Representation(version=self.version75)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # the name of the BBox object should be the same
-        node = pm.PyNode('duvarlar')
-
-        self.assertTrue(node is not None)
-
-    def test_generate_bbox_of_a_simple_look_dev(self):
-        """testing if generate_bbox will just replace the references for a
-        simple look dev scene
-        """
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version78
-        gen.generate_bbox()
-
-        r = Representation(version=self.version78)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # nothing special here, the reference should be replaced with BBOX repr
-        for ref in pm.listReferences():
-            self.assertTrue(ref.is_repr('BBOX'))
-
-    def test_generate_bbox_of_a_layout_of_a_building(self):
-        """testing if generate_bbox of the layout scene of a building is
-        working properly
-        """
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version78
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version66
-        gen.generate_bbox()
-
-        r = Representation(version=self.version66)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # nothing special here, the reference should be replaced with BBOX repr
-        for ref in pm.listReferences():
-            self.assertTrue(ref.is_repr('BBOX'))
-
-    def test_generate_bbox_of_a_look_dev_of_a_building(self):
-        """testing if generate_bbox of the look dev scene of a building is
-        working properly
-        """
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version78
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version66
-        gen.generate_bbox()
-
-        # building | look dev
-        gen.version = self.version69
-        gen.generate_bbox()
-
-        r = Representation(version=self.version69)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # nothing special here, the reference should be replaced with BBOX repr
-        for ref in pm.listReferences():
-            self.assertTrue(ref.is_repr('BBOX'))
-
-    def test_generate_bbox_of_a_layout_of_an_environment(self):
-        """testing if generate_bbox of the layout scene of an environment is
-        working properly
-        """
-        gen = RepresentationGenerator()
-        # Prop1 (Model | Hires | Kisa)
-        gen.version = self.version123
-        gen.generate_all()
-
-        # Prop1 (LookDev | Kisa)
-        gen.version = self.version120
-        gen.generate_all()
-
-        # Building1
-        # start with building | props | yapi | model | hires
-        gen.version = self.version75
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version78
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version66
-        gen.generate_bbox()
-
-        # Building2
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version93)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version96
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version84
-        gen.generate_bbox()
-
-        # vegetation
-        gen.version = self.version117
-        gen.generate_bbox()
-
-        # Environment
-        gen.version = self.version102
-        gen.generate_bbox()
-
-        r = Representation(version=self.version102)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # there should be no references
-        self.assertTrue(len(pm.listReferences()) == 0)
-
-    def test_generate_bbox_of_a_look_dev_of_an_environment(self):
-        """testing if generate_bbox of the look dev scene of an environment is
-        working properly
-        """
-        # Building1
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version75)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version78
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version66
-        gen.generate_bbox()
-
-        # Building2
-        # start with building | props | yapi | model | hires
-        gen = RepresentationGenerator(version=self.version93)
-        gen.generate_bbox()
-
-        # building | props | yapi | look dev
-        gen.version = self.version96
-        gen.generate_bbox()
-
-        # building | layout | hires
-        gen.version = self.version84
-        gen.generate_bbox()
-
-        # vegetation
-        gen.version = self.version117
-        gen.generate_bbox()
-
-        # Environment Layout
-        gen.version = self.version102
-        gen.generate_bbox()
-
-        # Environment Look dev
-        gen.version = self.version105
-        gen.generate_bbox()
-
-        r = Representation(version=self.version105)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # nothing special here, the reference should be replaced with BBOX repr
-        for ref in pm.listReferences():
-            self.assertTrue(ref.is_repr('BBOX'))
-
-    def test_generate_bbox_of_a_vegetation_scene(self):
-        """testing if generate_bbox of the vegetation scene is working properly
-        """
-        gen = RepresentationGenerator(version=self.version117)
-        gen.generate_bbox()
-
-        r = Representation(version=self.version117)
-        v = r.find('BBOX')
-        self.maya_env.open(v, force=True)
-
-        # we should have all polygons converted to a bounding box object
-        root_node = pm.PyNode('kksEnv___vegetation_ALL')
-        self.assertTrue(root_node is not None)
-
-        children = root_node.getChildren()
-        self.assertEqual(len(children), 1)
-
-        pfx_polygons = children[0]
-        self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
-
-        children = pfx_polygons.getChildren()
-        self.assertEqual(len(children), 2)
-
-        acacia = children[0]
-        clover = children[1]
-
-        self.assertEqual(acacia.name(), 'KksEnv_PFXbrush___acacia___polygons')
-        self.assertEqual(clover.name(), 'KksEnv_PFXbrush___clover___polygons')
-
-        # they should have only one child each
-        acacia_mesh_group = acacia.getChildren()[0]
-        clover_mesh_group = clover.getChildren()[0]
-
-        self.assertEqual(
-            acacia_mesh_group.name(),
-            'kksEnv_PFXbrush___acacia1MeshGroup'
-        )
-
-        self.assertEqual(
-            clover_mesh_group.name(),
-            'kksEnv_PFXbrush___clover1MeshGroup'
-        )
-
-        # and they should have a mesh shape
-        self.assertTrue(
-            acacia_mesh_group.getShape().type(), 'mesh'
-        )
-
-        self.assertTrue(
-            clover_mesh_group.getShape().type(), 'mesh'
-        )
 
     # GPU
     # - of a model
@@ -7343,17 +6962,17 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         self.assertTrue(root_node is not None)
 
         children = root_node.getChildren()
-        for child in children:
-            print(child.name())
-        self.assertEqual(len(children), 3)  # including paintableGeos group
+        # for child in children:
+        #     print(child.name())
+        self.assertEqual(len(children), 1)  # including paintableGeos group
 
-        pfx_polygons = children[2]
-        self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
+        # pfx_polygons = children[2]
+        # self.assertEqual(pfx_polygons.name(), 'kks___vegetation_pfxPolygons')
 
         # and they should have a gpuCache shape
-        self.assertTrue(
-            pfx_polygons.getShape().type(), 'gpuCache'
-        )
+        # self.assertTrue(
+        #     pfx_polygons.getShape().type(), 'gpuCache'
+        # )
 
     # ASS
     # - of a model
@@ -7678,7 +7297,7 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         # BBOX will complain first
         self.assertEqual(
             str(cm.exception),
-            'Please generate the BBOX Representation of the references '
+            'Please generate the GPU Representation of the references '
             'first!!!\n%s' % self.version75.absolute_full_path
         )
 
@@ -7690,11 +7309,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version75)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7711,11 +7328,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version78)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7736,11 +7351,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version66)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7765,11 +7378,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version69)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7821,11 +7432,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version102)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7872,11 +7481,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version105)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -7887,11 +7494,9 @@ class RepresentationGeneratorTestCase(MayaTestBase):
         gen.generate_all()
 
         r = Representation(version=self.version117)
-        v_bbox = r.find('BBOX')
         v_gpu = r.find('GPU')
         v_ass = r.find('ASS')
 
-        self.assertTrue(v_bbox is not None)
         self.assertTrue(v_gpu is not None)
         self.assertTrue(v_ass is not None)
 
@@ -8803,21 +8408,16 @@ workspace -fr "shaders" "renderData/shaders";
         repo = self.version4.task.project.repository
 
         all_refs = pm.listReferences()
-        version4_os_independent_path = \
-            self.version4.absolute_full_path.replace(
-                repo.path,
-                '$REPO%s/' % repo.id
-            )
 
         self.assertEqual(
             all_refs[0].unresolvedPath(),
-            version4_os_independent_path
+            self.version4.full_path
         )
         self.assertEqual(
             all_refs[1].unresolvedPath(),
-            version4_os_independent_path
+            self.version4.full_path
         )
         self.assertEqual(
             all_refs[2].unresolvedPath(),
-            version4_os_independent_path
+            self.version4.full_path
         )

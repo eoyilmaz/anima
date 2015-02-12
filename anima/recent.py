@@ -3,8 +3,10 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import pickle
+import json
 import os
+
+from anima import max_recent_files
 
 
 class RecentFileManager(object):
@@ -57,7 +59,12 @@ class RecentFileManager(object):
     def save(self):
         """save itself to local cache
         """
-        dumped_data = pickle.dumps(self)
+        dumped_data = json.dumps(
+            self.recent_files,
+            sort_keys=True,
+            indent=4,
+            separators=(',', ': ')
+        )
         self._write_data(dumped_data)
 
     def _write_data(self, data):
@@ -76,18 +83,21 @@ class RecentFileManager(object):
             # dir exists
             pass
         finally:
-            with open(file_full_path, 'wb') as data_file:
+            with open(file_full_path, 'w+') as data_file:
                 data_file.writelines(data)
 
     def restore(self):
         """restore from local cache folder
         """
         try:
-            with open(RecentFileManager.cache_file_full_path(), 'rb') as s:
-                unpickled_object = pickle.load(s)
-                self.__dict__ = unpickled_object.__dict__
-        except IOError:
+            with open(RecentFileManager.cache_file_full_path(), 'r') as s:
+                self.recent_files = json.loads(s.read())
+        except (IOError, ValueError):
             pass
+
+        # limit maximum recent files
+        for env in self.recent_files:
+            self.recent_files[env] = self.recent_files[env][:max_recent_files]
 
     def add(self, env_name, file_path):
         """Saves the given file_path under the given environment name
@@ -103,6 +113,11 @@ class RecentFileManager(object):
             self.recent_files[env_name].remove(file_path)
 
         self.recent_files[env_name].insert(0, file_path)
+
+        # clamp max files stored
+        self.recent_files[env_name] = \
+            self.recent_files[env_name][:max_recent_files]
+
         self.save()
 
     def remove(self, env_name, file_path):

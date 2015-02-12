@@ -29,11 +29,10 @@ class Houdini(EnvironmentBase):
     def __init__(self, name="", extensions=None, version=None):
         super(Houdini, self).__init__(name, extensions, version)
 
-        from anima import repo_env_template
         from stalker import Repository
         # re initialize repo vars
         for repo in Repository.query.all():
-            name = repo_env_template % {'id': repo.id}
+            name = repo.env_var
             value = repo.path
             self.set_environment_variable(name, value)
 

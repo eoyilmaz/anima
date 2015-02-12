@@ -102,6 +102,19 @@ class RecentFileManagerTestCase(unittest.TestCase):
             {'New Env': ['some path']}
         )
 
+    def test_restore_limits_maximum_files_stored(self):
+        """testing if restore limits the maximum files stored
+        """
+        rm = RecentFileManager()
+        for i in range(anima.max_recent_files + 100):
+            rm.add('Env1', 'some path %s' % i)
+
+        rm2 = RecentFileManager()
+        self.assertEqual(
+            len(rm2['Env1']),
+            anima.max_recent_files
+        )
+
     def test_restore_is_working_properly(self):
         """testing if the restore method is working properly
         """

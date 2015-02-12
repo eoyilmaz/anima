@@ -306,14 +306,10 @@ sourceimages/3dPaintTextures"""
                 .first()
 
             if version:
-                repo = version.task.project.repository
                 # replace it
                 data = data.replace(
                     ref_path,
-                    version.absolute_full_path.replace(
-                        repo.path,
-                        '$REPO%s/' % repo.id
-                    )
+                    version.full_path
                 )
 
         if len(ref_paths):

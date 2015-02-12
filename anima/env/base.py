@@ -78,10 +78,6 @@ class EnvironmentBase(object):
         self._extensions = extensions
         self._version = version
 
-        # create repository environment variables
-        from anima.env import create_repo_vars
-        create_repo_vars()
-
     def __str__(self):
         """the string representation of the environment
         """
@@ -208,14 +204,15 @@ class EnvironmentBase(object):
 
         # convert '\\' to '/'
         path = os.path.normpath(path).replace('\\', '/')
-        path_trimmed = self.trim_repo_path(path)
-        logger.debug('path_trimmed: %s' % path_trimmed)
+        from stalker import Repository
+        os_independent_path = Repository.to_os_independent_path(path)
+        logger.debug('os_independent_path: %s' % os_independent_path)
 
         from stalker import Version
 
         # try to get all versions with that info
         versions = Version.query.\
-            filter(Version.full_path.startswith(path_trimmed)).all()
+            filter(Version.full_path.startswith(os_independent_path)).all()
 
         return versions
 
@@ -238,14 +235,14 @@ class EnvironmentBase(object):
         ).replace('\\', '/')
 
         # trim repo path
-        full_path_trimmed = self.trim_repo_path(full_path)
-        #logger.debug('full_path_trimmed: %s' % full_path_trimmed)
+        from stalker import Repository
+        os_independent_path = Repository.to_os_independent_path(full_path)
 
         from stalker import Version
 
         # try to get a version with that info
         version = Version.query\
-            .filter(Version.full_path == full_path_trimmed).first()
+            .filter(Version.full_path == os_independent_path).first()
         return version
 
     def get_current_version(self):

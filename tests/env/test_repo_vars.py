@@ -9,7 +9,6 @@ import unittest
 
 from stalker import db, Repository
 from anima import repo_env_template
-from anima.env import create_repo_vars, to_os_independent_path
 
 
 class RepoVarsTestCase(unittest.TestCase):
@@ -65,22 +64,9 @@ class RepoVarsTestCase(unittest.TestCase):
         db.DBSession.add_all(cls.all_repos)
         db.DBSession.commit()
 
-    def test_all_environ_vars_are_created(self):
-        """testing if all environment vars for all the repositories are created
-        upon call to create_repo_vars function
-        """
-        for repo in self.all_repos:
-            self.assertFalse(repo_env_template % {'id': repo.id} in os.environ)
-
-        create_repo_vars()
-
-        for repo in self.all_repos:
-            self.assertTrue(repo_env_template % {'id': repo.id} in os.environ)
-
     def test_environment_var_values_are_correct(self):
         """testing if all environment var values are correct
         """
-        create_repo_vars()
         for repo in self.all_repos:
             self.assertEqual(
                 os.environ[repo_env_template % {'id': repo.id}],
@@ -88,7 +74,8 @@ class RepoVarsTestCase(unittest.TestCase):
             )
 
     def test_to_os_independent_path_is_working_properly(self):
-        """testing if anima.env.to_os_independent_path() is working properly
+        """testing if stalker.Repository.to_os_independent_path() is working
+        as we are expecting it to work
         """
         # repo4
         linux_path = '/test/repo/4/linux/path/PRJ1/Assets/test.ma'
@@ -98,17 +85,17 @@ class RepoVarsTestCase(unittest.TestCase):
         os_independent_path = '$REPO%s/PRJ1/Assets/test.ma' % self.repo4.id
 
         self.assertEqual(
-            to_os_independent_path(linux_path),
+            Repository.to_os_independent_path(linux_path),
             os_independent_path
         )
 
         self.assertEqual(
-            to_os_independent_path(windows_path),
+            Repository.to_os_independent_path(windows_path),
             os_independent_path
         )
 
         self.assertEqual(
-            to_os_independent_path(osx_path),
+            Repository.to_os_independent_path(osx_path),
             os_independent_path
         )
 
@@ -120,17 +107,17 @@ class RepoVarsTestCase(unittest.TestCase):
         os_independent_path = '$REPO%s/PRJ1/Assets/test.ma' % self.repo5.id
 
         self.assertEqual(
-            to_os_independent_path(linux_path),
+            Repository.to_os_independent_path(linux_path),
             os_independent_path
         )
 
         self.assertEqual(
-            to_os_independent_path(windows_path),
+            Repository.to_os_independent_path(windows_path),
             os_independent_path
         )
 
         self.assertEqual(
-            to_os_independent_path(osx_path),
+            Repository.to_os_independent_path(osx_path),
             os_independent_path
         )
 

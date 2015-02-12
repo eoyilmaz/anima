@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 import unittest
-import pymel
+import pymel.core as pm
 
 from edl import List, Event
 
@@ -391,7 +391,7 @@ class SequenceTestCase(unittest.TestCase):
         """testing if the to_edl method will output a proper edl.List object
         """
         # create Sequence instance from XML
-        sm = pymel.core.PyNode('sequenceManager1')
+        sm = pm.PyNode('sequenceManager1')
         sm.set_version('v001')
         xml_path = os.path.abspath('./test_data/test_v001.xml')
         sm.from_xml(xml_path)

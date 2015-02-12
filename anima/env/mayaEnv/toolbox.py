@@ -6,7 +6,7 @@
 import functools
 import os
 import tempfile
-from anima.env import to_os_independent_path
+
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
@@ -1909,7 +1909,7 @@ class Reference(object):
         """
         # get all reference paths
         import os
-        from stalker import Version
+        from stalker import Repository, Version
 
         for ref in pm.listReferences():
             unresolved_path = ref.unresolvedPath()
@@ -1921,7 +1921,7 @@ class Reference(object):
                 .first()
             if v:
                 ref.replaceWith(
-                    to_os_independent_path(v.absolute_full_path)
+                    Repository.to_os_independent_path(v.absolute_full_path)
                 )
 
     @classmethod

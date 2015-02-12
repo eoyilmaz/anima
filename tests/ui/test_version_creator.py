@@ -270,7 +270,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         cls.test_version4 = Version(
             cls.test_task1,
-            take_name='Main___GPU',
+            take_name='Main@GPU',
             created_by=cls.admin,
             created_with='Test',
             description='Test Description'
@@ -566,7 +566,7 @@ class VersionCreatorTester(unittest.TestCase):
             )
 
             self.assertEqual(
-                self.dialog.previous_versions_tableWidget.item(i, 5).text(),
+                self.dialog.previous_versions_tableWidget.item(i, 6).text(),
                 versions[i].description
             )
 
@@ -689,10 +689,10 @@ class VersionCreatorTester(unittest.TestCase):
         # check the repr_as_separate_takes_checkBox
         self.dialog.repr_as_separate_takes_checkBox.setChecked(True)
 
-        # expect two takes of "Main" and "Main___GPU"
+        # expect two takes of "Main" and "Main@GPU"
         self.assertEqual(
             sorted(self.dialog.takes_listWidget.take_names),
-            ['Main', 'Main___GPU']
+            ['Main', 'Main@GPU']
         )
 
         # self.show_dialog(self.dialog)
