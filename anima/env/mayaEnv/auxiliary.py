@@ -936,7 +936,7 @@ class ShotPlayblaster(object):
 
         length = int(end_time - start_time) + 1
 
-        user_name = self.version.update_by.name
+        user_name = self.version.updated_by.name
 
         hud_string = \
             '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
