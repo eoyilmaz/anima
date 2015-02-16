@@ -1315,9 +1315,9 @@ class ShotPlayblaster(object):
         # try to find a file with the same name assigned to the version as
         # output
         found = None
-        hires_repo_relative_path = repo.make_relative(hires_path)
+        hires_os_independent_path = repo.to_os_independent_path(hires_path)
         for output in version.outputs:
-            if output.full_path == hires_repo_relative_path:
+            if output.full_path == hires_os_independent_path:
                 found = True
                 break
 
