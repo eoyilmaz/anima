@@ -1325,21 +1325,20 @@ class ShotPlayblaster(object):
         # it
         if not found:
             l_hires = Link(
-                full_path=repo.make_relative(hires_path),
+                full_path=repo.to_os_independent_path(hires_path),
                 original_filename=hires_output_file_name
             )
 
             l_for_web = Link(
-                full_path=repo.make_relative(webres_path),
+                full_path=repo.to_os_independent_path(webres_path),
                 original_filename=hires_output_file_name
             )
 
             l_hires.thumbnail = l_for_web
-
             version.outputs.append(l_hires)
 
             l_thumb = Link(
-                full_path=repo.make_relative(thumbnail_path),
+                full_path=repo.to_os_independent_path(thumbnail_path),
                 original_filename=hires_output_file_name
             )
             l_for_web.thumbnail = l_thumb
