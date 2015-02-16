@@ -1037,7 +1037,7 @@ class ShotPlayblaster(object):
             val = pm.headsUpDisplay(flag, q=1, vis=1)
             self.user_view_options['hud_flags'][flag] = val
 
-        for camera in self.get_shot_cameras():
+        for camera in pm.ls(type='camera'):
             camera_name = camera.name()
             per_camera_attr_dict = {}
             for attr in self.cam_attribute_names:
@@ -1117,7 +1117,7 @@ class ShotPlayblaster(object):
             'percent': 100,
             'offScreen': 1,
             'viewer': 0,
-            'compression': 'PNG',
+            'compression': 'MPEG-4 Video',
             'quality': 85
         }
         if options:
