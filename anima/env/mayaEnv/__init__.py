@@ -417,7 +417,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         return True
 
     def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
+             reference_depth=0, skip_update_check=False, prompt=True):
         """The open action for Maya environment.
 
         Opens the given Version file, sets the workspace etc.
@@ -473,7 +473,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 pm.openFile(
                     version.absolute_full_path,
                     f=force,
-                    loadReferenceDepth='none'
+                    loadReferenceDepth='none',
+                    prompt=prompt
                 )
                 # list all references and switch their paths
                 for ref in pm.listReferences():
@@ -487,7 +488,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     # load in saved state
                     pm.openFile(
                         version.absolute_full_path,
-                        f=force
+                        f=force,
+                        prompt=prompt
                     )
                 else:
                     logger.info('using loadReferenceDepth:%s' %
@@ -495,6 +497,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                     pm.openFile(
                         version.absolute_full_path,
                         f=force,
+                        prompt=prompt,
                         loadReferenceDepth=reference_depth_res[reference_depth]
                     )
         except RuntimeError as e:

@@ -853,12 +853,10 @@ def perform_playblast(action):
                 'viewer': 1,
                 'offScreen': 0,
                 'compression': 'MPEG-4 Video',
-                'quality': 85
+                'quality': 85,
+                'sequenceTime': 0
             }
         )
-        from anima import utils
-        for output in outputs:
-            utils.open_browser_in_location(output)
     else:
         # call the original playblast
         return pm.mel.eval('performPlayblast_orig(%s);' % action)
@@ -938,7 +936,7 @@ class ShotPlayblaster(object):
 
         length = int(end_time - start_time) + 1
 
-        user_name = self.logged_in_user.name
+        user_name = self.version.update_by.name
 
         hud_string = \
             '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
@@ -1070,7 +1068,7 @@ class ShotPlayblaster(object):
             pm.headsUpDisplay(flag, e=1, vis=0)
 
         # set camera options for playblast
-        for camera in self.get_shot_cameras():
+        for camera in pm.ls(type='camera'):
             camera.setAttr('overscan', 1)
             camera.setAttr('filmFit', 1)
             camera.setAttr('displayFilmGate', 1)
@@ -1088,7 +1086,7 @@ class ShotPlayblaster(object):
             pm.headsUpDisplay(flag, e=1, vis=value)
 
         # reassign original camera options
-        for camera in self.get_shot_cameras():
+        for camera in pm.ls(type='camera'):
             camera_name = camera.name()
             camera_flags = self.user_view_options['camera_flags'][camera_name]
             for attr, value in camera_flags.items():
@@ -1110,7 +1108,6 @@ class ShotPlayblaster(object):
     def playblast(self, options=None):
         """does the real thing
         """
-
         default_options = {
             'fmt': 'qt',
             'sequenceTime': 1,
@@ -1125,17 +1122,6 @@ class ShotPlayblaster(object):
         }
         if options:
             default_options.update(options)
-
-        # check camera sequencer nodes
-        # if len(pm.ls(type='sequenceManager')) != 1:
-        #     raise RuntimeError(
-        #         'Only 1 Sequence Manager node must be present in your scene.'
-        #     )
-
-        # if len(pm.ls(type='sequencer')) != 1:
-        #     raise RuntimeError(
-        #         'Just 1 Sequencer node must be present in your scene.'
-        #     )
 
         shots = pm.ls(type='shot')
         if len(shots) <= 0:
@@ -1155,16 +1141,18 @@ class ShotPlayblaster(object):
 
         # playblast
         # get project resolution
+        is_published = False
+
+        # use half HD by default
+        width = 960
+        height = 540
         if self.version:
             project = self.version.task.project
             # get the resolution
             imf = project.image_format
             width = int(imf.width * 0.5)
             height = int(imf.height * 0.5)
-        else:
-            # use half HD
-            width = 960
-            height = 540
+            is_published = self.version.is_published
 
         extra_frame = 0
         import platform
@@ -1219,6 +1207,7 @@ class ShotPlayblaster(object):
                 'filename': video_temp_output,
                 'wh': (width, height),
                 'sound': audio_node,
+                'sequenceTime': is_published
             }
             default_options.update(per_shot_options)
             pm.playblast(**default_options)
