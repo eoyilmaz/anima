@@ -226,6 +226,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'generate_thumbnail_button',
+                l='Generate Thumbanil',
+                c=RepeatedCallback(General.generate_thumbnail),
+                ann='Generates thumbnail for current scene',
+                bgc=color.color
+            )
+
         # ----- REFERENCE ------
         reference_columnLayout = pm.columnLayout(
             'reference_columnLayout',
@@ -1587,6 +1596,18 @@ class General(object):
     @classmethod
     def delete_all_sound(cls):
         pm.delete(pm.ls(type="audio"))
+
+    @classmethod
+    def generate_thumbnail(cls):
+        """generates thumbnail for current scene
+        """
+        from anima.env.mayaEnv import auxiliary
+        reload(auxiliary)
+        result = auxiliary.generate_thumbnail()
+        if result:
+            pm.informBox('Done!', 'Thumbnail generated successfully!')
+        else:
+            pm.informBox('Fail!', 'Thumbnail generation was unsuccessful!')
 
 
 class Reference(object):

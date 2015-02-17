@@ -1062,55 +1062,7 @@ def generate_thumbnail():
     if pm.general.about(batch=1):
         return
 
-    import tempfile
-    import glob
-    from anima.env import mayaEnv
-    m_env = mayaEnv.Maya()
-    v = m_env.get_current_version()
 
-    if not v:
-        return
-
-    # do not generate a thumbnail from a Repr
-    if '@' in v.take_name:
-        return
-
-    task = v.task
-    project = task.project
-    # repo = project.repository
-    imf = project.image_format
-    width = int(imf.width * 0.5)
-    height = int(imf.height * 0.5)
-
-    temp_output = tempfile.mktemp()
-
-    current_frame = pm.currentTime(q=1)
-    output_file = pm.playblast(
-        fmt='image',
-        startTime=current_frame,
-        endTime=current_frame,
-        sequenceTime=1,
-        forceOverwrite=1,
-        filename=temp_output,
-        clearCache=1,
-        showOrnaments=1,
-        percent=100,
-        wh=(width, height),
-        offScreen=1,
-        viewer=0,
-        compression='PNG',
-        quality=70,
-        framePadding=0
-    )
-    pm.currentTime(current_frame)
-
-    output_file = output_file.replace('####', '*')
-    found_output_file = glob.glob(output_file)
-    if found_output_file:
-        output_file = found_output_file[0]
-
-        from anima.ui import utils
-        utils.upload_thumbnail(task, output_file)
 
 
 @publisher(
