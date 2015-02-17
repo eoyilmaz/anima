@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Mon Feb  2 18:45:13 2015
-#      by: PyQt4 UI code generator 4.10.2
+# Created: Tue Feb 17 21:25:03 2015
+#      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -101,6 +101,7 @@ class Ui_Dialog(object):
         self.find_from_path_lineEdit.setObjectName(_fromUtf8("find_from_path_lineEdit"))
         self.horizontalLayout_3.addWidget(self.find_from_path_lineEdit)
         self.find_from_path_pushButton = QtGui.QPushButton(self.tasks_groupBox)
+        self.find_from_path_pushButton.setDefault(True)
         self.find_from_path_pushButton.setObjectName(_fromUtf8("find_from_path_pushButton"))
         self.horizontalLayout_3.addWidget(self.find_from_path_pushButton)
         self.verticalLayout_2.addLayout(self.horizontalLayout_3)
@@ -198,7 +199,7 @@ class Ui_Dialog(object):
         self.export_as_pushButton.setObjectName(_fromUtf8("export_as_pushButton"))
         self.horizontalLayout_2.addWidget(self.export_as_pushButton)
         self.save_as_pushButton = QtGui.QPushButton(self.new_version_groupBox)
-        self.save_as_pushButton.setDefault(True)
+        self.save_as_pushButton.setDefault(False)
         self.save_as_pushButton.setObjectName(_fromUtf8("save_as_pushButton"))
         self.horizontalLayout_2.addWidget(self.save_as_pushButton)
         self.verticalLayout_6.addLayout(self.horizontalLayout_2)
@@ -283,8 +284,6 @@ class Ui_Dialog(object):
         self.horizontalLayout_5.addWidget(self.import_pushButton)
         self.close_pushButton = QtGui.QPushButton(self.previous_versions_groupBox)
         self.close_pushButton.setStyleSheet(_fromUtf8(""))
-        self.close_pushButton.setDefault(False)
-        self.close_pushButton.setFlat(False)
         self.close_pushButton.setObjectName(_fromUtf8("close_pushButton"))
         self.horizontalLayout_5.addWidget(self.close_pushButton)
         self.verticalLayout_7.addLayout(self.horizontalLayout_5)

@@ -160,6 +160,9 @@
                <property name="text">
                 <string>Find</string>
                </property>
+               <property name="default">
+                <bool>true</bool>
+               </property>
               </widget>
              </item>
             </layout>
@@ -401,7 +404,7 @@ p, li { white-space: pre-wrap; }
                 <string>Save As</string>
                </property>
                <property name="default">
-                <bool>true</bool>
+                <bool>false</bool>
                </property>
               </widget>
              </item>
@@ -617,12 +620,6 @@ p, li { white-space: pre-wrap; }
                </property>
                <property name="text">
                 <string>Close</string>
-               </property>
-               <property name="default">
-                <bool>false</bool>
-               </property>
-               <property name="flat">
-                <bool>false</bool>
                </property>
               </widget>
              </item>
