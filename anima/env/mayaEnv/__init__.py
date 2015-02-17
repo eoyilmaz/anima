@@ -661,8 +661,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             recent_files = None
 
         if recent_files is not None:
-            for i in range(len(recent_files) - 1, -1, -1):
-                version = self.get_version_from_full_path(recent_files[i])
+            for recent_file in recent_files:
+                version = self.get_version_from_full_path(recent_file)
                 if version is not None:
                     break
 
