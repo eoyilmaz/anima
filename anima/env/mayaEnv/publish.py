@@ -1062,7 +1062,9 @@ def generate_thumbnail():
     if pm.general.about(batch=1):
         return
 
-
+    from anima.env.mayaEnv import auxiliary
+    reload(auxiliary)
+    auxiliary.generate_thumbnail()
 
 
 @publisher(
