@@ -42,7 +42,7 @@ def clear_thumbnail(gview):
     scene.clear()
 
 
-def update_gview_with_task_thumbnail(task, gview, login, password):
+def update_gview_with_task_thumbnail(task, gview):
     """Updates the given QGraphicsView with the given Task thumbnail
 
     :param task: A
@@ -53,7 +53,7 @@ def update_gview_with_task_thumbnail(task, gview, login, password):
     from stalker import Task
 
     if not isinstance(task, Task) or \
-            not isinstance(gview, QtGui.QGraphicsView):
+       not isinstance(gview, QtGui.QGraphicsView):
         # do nothing
         logger.debug('task is not a stalker.models.task.Task instance')
         return
@@ -71,7 +71,7 @@ def update_gview_with_task_thumbnail(task, gview, login, password):
     else:
         logger.debug('there is no thumbnail')
         # try to get the thumbnail from parents
-        for parent in task.parents:
+        for parent in reversed(task.parents):
             if parent.thumbnail:
                 # try to get it as a normal file
                 full_path = os.path.expandvars(
