@@ -1144,6 +1144,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'set_range_from_shot_node_button',
+                l='Range From Shot',
+                c=RepeatedCallback(Animation.set_range_from_shot),
+                ann='Sets the playback range from the shot node in the scene',
+                bgc=color.color
+            )
+
         # Obsolete
         obsolete_columnLayout = pm.columnLayout(
             'obsolete_columnLayout',
@@ -3681,6 +3690,24 @@ class Animation(object):
             pm.setKeyframe(locator.tx)
             pm.setKeyframe(locator.ty)
             pm.setKeyframe(locator.tz)
+
+    @classmethod
+    def set_range_from_shot(cls):
+        """sets the playback range from a shot node in the scene
+        """
+        shot = pm.ls(type='shot')[0]
+        if not shot:
+            return
+
+        min_frame = shot.getAttr('startFrame')
+        max_frame = shot.getAttr('endFrame')
+
+        pm.playbackOptions(
+            ast=min_frame,
+            aet=max_frame,
+            min=min_frame,
+            max=max_frame
+        )
 
 
 def fur_map_unlocker(furD, lock=False):
