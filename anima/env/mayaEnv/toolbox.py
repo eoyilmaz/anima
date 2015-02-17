@@ -682,140 +682,53 @@ def UI():
                 v=True
             )
 
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text(
-                    'castsShadows_text',
-                    l="castShadows",
-                    bgc=color.color
-                )
-                pm.button(
-                    'set_castsShadows_ON_button',
-                    l="ON",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "castsShadows",
-                        1,
-                        hierarchyCheckBox
-                    ),
-                    bgc=(0, 1, 0)
-                )
-                pm.button(
-                    'set_castsShadows_OFF_button',
-                    l="OFF",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "castsShadows",
-                        0,
-                        hierarchyCheckBox
-                    ),
-                    bgc=(1, 0, 0)
-                )
-
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text(
-                    'receiveShadows_text',
-                    l="receive shadows",
-                    bgc=color.color
-                )
-                pm.button(
-                    'set_receiveShadows_ON_button',
-                    l="ON",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "receiveShadows",
-                        1,
-                        hierarchyCheckBox
-                    ),
-                    bgc=(0, 1, 0)
-                )
-                pm.button(
-                    'set_receiveShadows_OFF_button',
-                    l="OFF",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "receiveShadows",
-                        0,
-                        hierarchyCheckBox
-                    ),
-                    bgc=(1, 0, 0)
-                )
-
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text(
-                    'motion_blur_text',
-                    l="motion blur",
-                    bgc=color.color
-                )
-                pm.button(
-                    'set_motion_blur_ON_button',
-                    l="ON",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "motionBlur", 1, hierarchyCheckBox
-                    ),
-                    bgc=(0, 1, 0)
-                )
-                pm.button(
-                    'set_motion_blur_OFF_button',
-                    l="OFF",
-                    c=RepeatedCallback(
-                        Render.set_shape_attribute,
-                        "motionBlur", 0, hierarchyCheckBox
-                    ),
-                    bgc=(1, 0, 0)
-                )
-
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text('primaryVisibility_text',
-                        l="primary visibility",
-                        bgc=color.color)
-                pm.button('set_primaryVisibility_ON_button', l="ON",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "primaryVisibility", 1,
-                                        hierarchyCheckBox),
-                          bgc=(0, 1, 0))
-                pm.button('set_primaryVisibility_OFF_button', l="OFF",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "primaryVisibility", 0,
-                                        hierarchyCheckBox),
-                          bgc=(1, 0, 0))
-
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text('visibleInReflections_text',
-                        l="visible in Reflection",
-                        bgc=color.color)
-                pm.button('set_visibleInReflections_ON_button', l="ON",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "visibleInReflections", 1,
-                                        hierarchyCheckBox),
-                          bgc=(0, 1, 0))
-                pm.button('set_visibleInReflections_OFF_button',
-                          l="OFF",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "visibleInReflections", 0,
-                                        hierarchyCheckBox),
-                          bgc=(1, 0, 0))
-
-            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
-                pm.text('visibleInRefractions_text',
-                        l="visible in Refractions",
-                        bgc=color.color)
-                pm.button('set_visibleInRefractions_ON_button', l="ON",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "visibleInRefractions", 1,
-                                        hierarchyCheckBox),
-                          bgc=(0, 1, 0))
-                pm.button('set_visibleInRefractions_OFF_button',
-                          l="OFF",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "visibleInRefractions", 0,
-                                        hierarchyCheckBox),
-                          bgc=(1, 0, 0))
+            attr_names = [
+                'castsShadows', 'receiveShadows', 'motionBlur',
+                'primaryVisibility', 'visibleInReflections',
+                'visibleInRefractions'
+            ]
+            for attr_name in attr_names:
+                with pm.rowLayout(nc=4, rat=(1, "both", 0), adj=1):
+                    pm.text('%s_text' % attr_name, l=attr_name, bgc=color.color)
+                    pm.button(
+                        'set_%s_ON_button' % attr_name,
+                        l="ON",
+                        c=RepeatedCallback(
+                            Render.set_shape_attribute,
+                            attr_name,
+                            1,
+                            hierarchyCheckBox
+                        ),
+                        bgc=(0, 1, 0)
+                    )
+                    pm.button(
+                        'set_%s_OFF_button' % attr_name,
+                        l="OFF",
+                        c=RepeatedCallback(
+                            Render.set_shape_attribute,
+                            attr_name,
+                            0,
+                            hierarchyCheckBox
+                        ),
+                        bgc=(1, 0, 0)
+                    )
+                    pm.button(
+                        'set_%s_REMOVE_button' % attr_name,
+                        l="REM",
+                        ann='Remove Override',
+                        c=RepeatedCallback(
+                            Render.set_shape_attribute,
+                            attr_name,
+                            -1,
+                            hierarchyCheckBox
+                        ),
+                        bgc=(0, 0.5, 1)
+                    )
 
             pm.separator()
             color.change()
 
-            with  pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
+            with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
                 pm.text('renderThumbnailUpdate_text',
                         l="renderThumbnailUpdate",
                         bgc=color.color)
@@ -2732,16 +2645,33 @@ class Render(object):
         objects = pm.ls(sl=1)
         for item in objects:
             try:
-                item.setAttr(attributeName, value)
-                # if this is an aiStandIn
-                # then also set override{Attr} to True
-                if isinstance(item, pm.nt.AiStandIn):
-                    override_attr_name = \
-                        'override%s%s' % (
-                            attributeName[0].upper(),
-                            attributeName[1:]
+                if value != -1:
+                    item.setAttr(attributeName, value)
+                    # if this is an aiStandIn
+                    # then also set override{Attr} to True
+                    if isinstance(item, pm.nt.AiStandIn):
+                        override_attr_name = \
+                            'override%s%s' % (
+                                attributeName[0].upper(),
+                                attributeName[1:]
+                            )
+                        item.setAttr(override_attr_name, not value)
+                else:
+                    # remove any overrides
+                    pm.editRenderLayerAdjustment(
+                        '%s.%s' % (item.name(), attributeName),
+                        remove=1
+                    )
+                    if isinstance(item, pm.nt.AiStandIn):
+                        override_attr_name = \
+                            'override%s%s' % (
+                                attributeName[0].upper(),
+                                attributeName[1:]
+                            )
+                        pm.editRenderLayerAdjustment(
+                            '%s.%s' % (item.name(), override_attr_name),
+                            remove=1
                         )
-                    item.setAttr(override_attr_name, not value)
             except TypeError:
                 pass
         pm.select(preSelectionList)
