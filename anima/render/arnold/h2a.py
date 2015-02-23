@@ -176,8 +176,8 @@ polymesh
     #%(uv_ids)s
     # vlist %(point_count) %(sample_count)s b85POINT
     #%(point_positions)s
-    # nlist %(point_count) %(sample_count)s b85VECTOR
-    #%(point_normals)s
+    # nlist %(normal_count)s %(sample_count)s VECTOR
+    #%(vertex_normals)s
     # uvlist %(vertex_count)s %(sample_count)s b85POINT2
     #%(uv_positions)s
     # smoothing on
@@ -203,6 +203,7 @@ polymesh
 
     number_of_points_per_primitive = []
     vertex_ids = []
+    # vertex_normals = []
 
     # just for the first vertex try to read the uv to determine if we should
     # skip the uvs or not
@@ -211,6 +212,7 @@ polymesh
     i = 0
     j = 0
     combined_vertex_ids = []
+    # combined_vertex_normals = []
     combined_number_of_points_per_primitive = []
 
     for prim in geo.iterPrims():
@@ -224,20 +226,24 @@ polymesh
             point = vertex.point()
             point_id = point.number()
             vertex_ids.append(`point_id`)
+            # vertex_normals.extend(point.floatListAttribValue('N'))
             j += 1
             if j > 500:
                 j = 0
                 combined_vertex_ids.append(' '.join(vertex_ids))
                 vertex_ids = []
+                # combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
+                # vertex_normals = []
 
     # join for a last time
     if number_of_points_per_primitive:
         combined_number_of_points_per_primitive.append(' '.join(number_of_points_per_primitive))
-        number_of_points_per_primitive = []
 
     if vertex_ids:
         combined_vertex_ids.append(' '.join(vertex_ids))
-        vertex_ids = []
+
+    # if vertex_normals:
+    #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
 
     point_positions = geo.pointFloatAttribValuesAsString('P')
 
@@ -245,12 +251,13 @@ polymesh
         point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
         point_positions = '%s%s' % (point_positions, point_prime_positions)
 
-    #try:
+    # try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
-    #except hou.OperationFailed:
+    #    # point_normals = geo.pointFloatAttribValues('N')
+    # except hou.OperationFailed:
     #    # no normal attribute skip it
     #    skip_normals = True
-    #    point_normals = []
+    #    point_normals = ''
 
     #
     # Number Of Points Per Primitive
@@ -292,6 +299,30 @@ polymesh
     splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
     split_end = time.time()
     print('Splitting Point Poisitions : %3.3f' % (split_end - split_start))
+
+    # #
+    # # Vertex Normals
+    # #
+    # encode_start = time.time()
+    # encoded_vertex_normals = '\n'.join(combined_vertex_normals)#base85.arnold_b85_encode(point_normals)
+    # encode_end = time.time()
+    # print('Encoding Point Normals     : %3.3f' % (encode_end - encode_start))
+    #
+    # split_start = time.time()
+    # # splitted_vertex_normals = re.sub("(.{500})", "\\1\n", encoded_point_normals, 0)
+    # splitted_vertex_normals = encoded_vertex_normals
+    # # # split every n-th data
+    # # n = 100
+    # # splitted_point_normals = []
+    # # for i in range(len(point_normals) / n):
+    # #     start_index = n * i
+    # #     end_index = n * (i+1)
+    # #     splitted_point_normals.extend(point_normals[start_index:end_index])
+    # #     splitted_point_normals.append('\n')
+    # #
+    # # splitted_point_normals = ' '.join(map(str, splitted_point_normals))
+    # split_end = time.time()
+    # print('Splitting Vertex Normals    : %3.3f' % (split_end - split_start))
 
     #
     # Vertex Ids
@@ -336,8 +367,9 @@ polymesh
         'number_of_points_per_primitive': splitted_number_of_points_per_primitive,
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
-        'matrix': matrix
-        #'point_normals': point_normals,
+        'matrix': matrix,
+        # 'normal_count': vertex_count,
+        # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
         #'uv_positions': uv_positions
     }
@@ -475,7 +507,7 @@ curves
     split_start = time.time()
     splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
     split_end = time.time()
-    print('Splitting Point Poisitions : %3.3f' % (split_end - split_start))
+    print('Splitting Point Positions  : %3.3f' % (split_end - split_start))
 
     # radius
     encode_start = time.time()
