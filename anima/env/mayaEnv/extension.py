@@ -1042,8 +1042,8 @@ class ShotExtension(object):
                 offScreen=True,
                 viewer=0,
                 useTraxSounds=True,
-                compression="PNG",
-                quality=70
+                compression='MPEG-4 Video',
+                quality=85
             )
             sequence.unmute_shots()
 
