@@ -229,7 +229,7 @@ def UI():
             color.change()
             pm.button(
                 'generate_thumbnail_button',
-                l='Generate Thumbanil',
+                l='Generate Thumbnail',
                 c=RepeatedCallback(General.generate_thumbnail),
                 ann='Generates thumbnail for current scene',
                 bgc=color.color
