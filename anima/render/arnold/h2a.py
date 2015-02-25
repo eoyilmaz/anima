@@ -72,7 +72,6 @@ def geometry2ass(**kwargs):
     export_type = kwargs['export_type']
     export_motion = kwargs['export_motion']
 
-    print('******************************************************************')
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)

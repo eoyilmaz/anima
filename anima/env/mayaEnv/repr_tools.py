@@ -17,6 +17,7 @@ from anima.env.mayaEnv import auxiliary
 
 RENDER_RELATED_NODE_TYPES = [
     'shadingEngine',
+    'displacementShader',
 
     'anisotropic',
     'blinn',
