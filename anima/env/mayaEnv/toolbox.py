@@ -6,6 +6,7 @@
 import functools
 import os
 import tempfile
+from anima.ui.progress_dialog import ProgressDialogManager
 
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
@@ -14,6 +15,7 @@ __version__ = "0.1.11"
 
 import pymel.core as pm
 import maya.mel as mel
+import maya.cmds as cmds
 
 from anima.env.mayaEnv import auxiliary, camera_tools
 
@@ -678,18 +680,41 @@ def UI():
 
             pm.separator()
             color.change()
-            apply_to_hierarchy_checkBox = pm.checkBox(
-                'apply_to_hierarchy_checkBox',
-                l="Apply to Hierarchy",
-                value=True,
-                bgc=color.color
-            )
+            with pm.rowLayout(nc=2, adj=2):
+                apply_to_hierarchy_checkBox = pm.checkBox(
+                    'apply_to_hierarchy_checkBox',
+                    l="Apply to Hierarchy",
+                    value=True,
+                    bgc=color.color
+                )
 
-            hierarchyCheckBox = pm.checkBox(
-                apply_to_hierarchy_checkBox,
-                q=True,
-                v=True
-            )
+                disable_undo_queue_check_box = pm.checkBox(
+                    'disable_undo_queue_checkBox',
+                    l="Disable Undo",
+                    value=False,
+                    bgc=color.color
+                )
+
+            def set_shape_attribute_wrapper(attr_name, value):
+                """a wrapper function for set_shape_attribute
+                """
+                apply_to_hierarchy = pm.checkBox(
+                    apply_to_hierarchy_checkBox,
+                    q=True,
+                    v=True
+                )
+                disable_undo = pm.checkBox(
+                    disable_undo_queue_check_box,
+                    q=True,
+                    v=True
+                )
+
+                Render.set_shape_attribute(
+                    attr_name,
+                    value,
+                    apply_to_hierarchy,
+                    disable_undo
+                )
 
             attr_names = [
                 'castsShadows', 'receiveShadows', 'motionBlur',
@@ -705,10 +730,9 @@ def UI():
                         'set_%s_ON_button' % attr_name,
                         l="ON",
                         c=RepeatedCallback(
-                            Render.set_shape_attribute,
+                            set_shape_attribute_wrapper,
                             attr_name,
                             1,
-                            hierarchyCheckBox
                         ),
                         bgc=(0, 1, 0)
                     )
@@ -716,10 +740,9 @@ def UI():
                         'set_%s_OFF_button' % attr_name,
                         l="OFF",
                         c=RepeatedCallback(
-                            Render.set_shape_attribute,
+                            set_shape_attribute_wrapper,
                             attr_name,
-                            0,
-                            hierarchyCheckBox
+                            0
                         ),
                         bgc=(1, 0, 0)
                     )
@@ -728,10 +751,9 @@ def UI():
                         l="REM",
                         ann='Remove Override',
                         c=RepeatedCallback(
-                            Render.set_shape_attribute,
+                            set_shape_attribute_wrapper,
                             attr_name,
-                            -1,
-                            hierarchyCheckBox
+                            -1
                         ),
                         bgc=(0, 0.5, 1)
                     )
@@ -1115,14 +1137,18 @@ def UI():
                         l="miFinalGatherCast",
                         bgc=color.color)
                 pm.button('set_miFinalGatherCast_ON_button', l="ON",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "miFinalGatherCast", 1,
-                                        hierarchyCheckBox),
+                          c=RepeatedCallback(
+                              set_shape_attribute_wrapper,
+                              "miFinalGatherCast",
+                              1
+                          ),
                           bgc=(0, 1, 0))
                 pm.button('set_miFinalGatherCast_OFF_button', l="OFF",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "miFinalGatherCast", 0,
-                                        hierarchyCheckBox),
+                          c=RepeatedCallback(
+                              set_shape_attribute_wrapper,
+                              "miFinalGatherCast",
+                              0
+                          ),
                           bgc=(1, 0, 0))
 
             with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
@@ -1130,15 +1156,19 @@ def UI():
                         l="miFinalGatherReceive",
                         bgc=color.color)
                 pm.button('set_miFinalGatherReceive_ON_button', l="ON",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "miFinalGatherReceive", 1,
-                                        hierarchyCheckBox),
+                          c=RepeatedCallback(
+                              set_shape_attribute_wrapper,
+                              "miFinalGatherReceive",
+                              1
+                          ),
                           bgc=(0, 1, 0))
                 pm.button('set_miFinalGatherReceive_OFF_button',
                           l="OFF",
-                          c=RepeatedCallback(Render.set_shape_attribute,
-                                        "miFinalGatherReceive", 0,
-                                        hierarchyCheckBox),
+                          c=RepeatedCallback(
+                              set_shape_attribute_wrapper,
+                              "miFinalGatherReceive",
+                              0
+                          ),
                           bgc=(1, 0, 0))
 
             with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
@@ -2648,9 +2678,14 @@ class Render(object):
                                              force=True)
 
     @classmethod
-    def set_shape_attribute(cls, attr_name, value, apply_to_hierarchy):
+    def set_shape_attribute(cls, attr_name, value, apply_to_hierarchy,
+                            disable_undo_queue=False):
         """sets shape attributes
         """
+        undo_state = pm.undoInfo(q=1, st=1)
+        if disable_undo_queue:
+            pm.undoInfo(st=False)
+
         supported_shapes = [
             'aiStandIn',
             'mesh',
@@ -2675,6 +2710,7 @@ class Render(object):
         hier = str(apply_to_hierarchy)
         if hier:
             pm.select(hierarchy=1)
+
         objects = pm.ls(sl=1, type=supported_shapes)
 
         # get override_attr_name from dictionary
@@ -2683,39 +2719,41 @@ class Render(object):
         else:
             override_attr_name = None
 
+        # register a caller
+        pdm = ProgressDialogManager()
+        caller = pdm.register(len(objects), 'Setting Shape Attribute')
+
         for item in objects:
             attr_full_name = '%s.%s' % (item.name(), attr_name)
             override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
-            try:
-                if value != -1:
-                    try:
-                        pm.editRenderLayerAdjustment(attr_full_name)
-                    except RuntimeError as e:
-                        pass
-                    item.setAttr(attr_name, value)
-                    # if this is an aiStandIn
-                    # then also set override{Attr} to True
-                    if isinstance(item, pm.nt.AiStandIn):
-                        try:
-                            pm.editRenderLayerAdjustment(
-                                override_attr_full_name
-                            )
-                        except RuntimeError as e:
-                            pass
-                        item.setAttr(override_attr_name, True)
-                else:
-                    # remove any overrides
+            caller.step(message=attr_full_name)
+            if value != -1:
+                pm.editRenderLayerAdjustment(attr_full_name)
+                item.setAttr(attr_name, value)
+                # if there is an accompanying override attribute like it is
+                # found in aiStandIn node
+                # then also set override{Attr} to True
+                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
                     pm.editRenderLayerAdjustment(
-                        attr_full_name,
+                        override_attr_full_name
+                    )
+                    item.setAttr(override_attr_name, True)
+            else:
+                # remove any overrides
+                pm.editRenderLayerAdjustment(
+                    attr_full_name,
+                    remove=1
+                )
+                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
+                    pm.editRenderLayerAdjustment(
+                        override_attr_full_name,
                         remove=1
                     )
-                    if isinstance(item, pm.nt.AiStandIn):
-                        pm.editRenderLayerAdjustment(
-                            override_attr_full_name,
-                            remove=1
-                        )
-            except TypeError as e:
-                pass
+
+        # caller.end_progress()
+
+        pm.undoInfo(st=undo_state)
+
         pm.select(pre_selection_list)
 
     @classmethod
