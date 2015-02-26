@@ -154,8 +154,8 @@ polymesh
  vlist %(point_count)s %(sample_count)s b85POINT
 %(point_positions)s
  smoothing on
- visibility 255
- sidedness 255
+ visibility 65535
+ sidedness 65535
  receive_shadows on
  self_shadows on
  matrix
@@ -180,8 +180,8 @@ polymesh
     # uvlist %(vertex_count)s %(sample_count)s b85POINT2
     #%(uv_positions)s
     # smoothing on
-    # visibility 255
-    # sidedness 255
+    # visibility 65535
+    # sidedness 65535
     # receive_shadows on
     # self_shadows on
     # matrix
@@ -398,7 +398,7 @@ curves
  basis "catmull-rom"
  mode "%(mode)s"
  min_pixel_width %(min_pixel_width)s
- visibility 65523
+ visibility 65535
  receive_shadows on
  self_shadows on
  matrix 1 %(sample_count)s MATRIX

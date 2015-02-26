@@ -667,6 +667,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'fix_render_layer_out_adjustment_errors_button',
+                l="fixRenderLayerOutAdjustmentErrors",
+                c='pm.mel.eval("fixRenderLayerOutAdjustmentErrors();")',
+                ann="fixRenderLayerOutAdjustmentErrors",
+                bgc=color.color
+            )
+
             pm.separator()
             color.change()
             apply_to_hierarchy_checkBox = pm.checkBox(
