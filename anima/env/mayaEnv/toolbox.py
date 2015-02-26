@@ -685,7 +685,9 @@ def UI():
             attr_names = [
                 'castsShadows', 'receiveShadows', 'motionBlur',
                 'primaryVisibility', 'visibleInReflections',
-                'visibleInRefractions'
+                'visibleInRefractions', 'aiSelfShadows', 'aiOpaque',
+                'aiVisibleInDiffuse', 'aiVisibleInGlossy', 'aiMatte',
+                'overrideShaders'
             ]
             for attr_name in attr_names:
                 with pm.rowLayout(nc=4, rat=(1, "both", 0), adj=1):
@@ -2637,44 +2639,75 @@ class Render(object):
                                              force=True)
 
     @classmethod
-    def set_shape_attribute(cls, attributeName, value, applyToHierarchy):
-        preSelectionList = pm.ls(sl=1)
-        hier = str(applyToHierarchy)
+    def set_shape_attribute(cls, attr_name, value, apply_to_hierarchy):
+        """sets shape attributes
+        """
+        supported_shapes = [
+            'aiStandIn',
+            'mesh',
+            'nurbsCurve'
+        ]
+
+        attr_mapper = {
+            'castsShadows': 'overrideCastsShadows',
+            'receiveShadows': 'overrideReceiveShadows',
+            'primaryVisibility': 'overridePrimaryVisibility',
+            'visibleInReflections': 'overrideVisibleInReflections',
+            'visibleInRefractions': 'overrideVisibleInRefractions',
+            'doubleSided': 'overrideDoubleSided',
+            'aiSelfShadows': 'overrideSelfShadows',
+            'aiOpaque': 'overrideOpaque',
+            'aiVisibleInDiffuse': 'overrideVisibleInDiffuse',
+            'aiVisibleInGlossy': 'overrideVisibleInGlossy',
+            'aiMatte': 'overrideMatte',
+        }
+
+        pre_selection_list = pm.ls(sl=1)
+        hier = str(apply_to_hierarchy)
         if hier:
             pm.select(hierarchy=1)
-        objects = pm.ls(sl=1)
+        objects = pm.ls(sl=1, type=supported_shapes)
+
+        # get override_attr_name from dictionary
+        if attr_name in attr_mapper:
+            override_attr_name = attr_mapper[attr_name]
+        else:
+            override_attr_name = None
+
         for item in objects:
+            attr_full_name = '%s.%s' % (item.name(), attr_name)
+            override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
             try:
                 if value != -1:
-                    item.setAttr(attributeName, value)
+                    try:
+                        pm.editRenderLayerAdjustment(attr_full_name)
+                    except RuntimeError as e:
+                        pass
+                    item.setAttr(attr_name, value)
                     # if this is an aiStandIn
                     # then also set override{Attr} to True
                     if isinstance(item, pm.nt.AiStandIn):
-                        override_attr_name = \
-                            'override%s%s' % (
-                                attributeName[0].upper(),
-                                attributeName[1:]
+                        try:
+                            pm.editRenderLayerAdjustment(
+                                override_attr_full_name
                             )
-                        item.setAttr(override_attr_name, not value)
+                        except RuntimeError as e:
+                            pass
+                        item.setAttr(override_attr_name, True)
                 else:
                     # remove any overrides
                     pm.editRenderLayerAdjustment(
-                        '%s.%s' % (item.name(), attributeName),
+                        attr_full_name,
                         remove=1
                     )
                     if isinstance(item, pm.nt.AiStandIn):
-                        override_attr_name = \
-                            'override%s%s' % (
-                                attributeName[0].upper(),
-                                attributeName[1:]
-                            )
                         pm.editRenderLayerAdjustment(
-                            '%s.%s' % (item.name(), override_attr_name),
+                            override_attr_full_name,
                             remove=1
                         )
-            except TypeError:
+            except TypeError as e:
                 pass
-        pm.select(preSelectionList)
+        pm.select(pre_selection_list)
 
     @classmethod
     def set_finalGatherHide(cls, value):
