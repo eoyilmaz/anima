@@ -694,11 +694,6 @@ class RepresentationGenerator(object):
         except RuntimeError:
             pass
 
-        delete_nodes_by_name = [
-            '*:defaultFurGlobals',
-            '*:defaultRenderLayer',
-        ]
-
     def generate_ass(self):
         """generates the ASS representation of the current scene
 
@@ -712,6 +707,11 @@ class RepresentationGenerator(object):
 
         # load necessary plugins
         pm.loadPlugin('mtoa')
+
+        # disable "show plugin shapes"
+        active_panel = auxiliary.ShotPlayblaster.get_active_panel()
+        show_plugin_shapes = pm.modelEditor(active_panel, q=1, pluginShapes=1)
+        pm.modelEditor(active_panel, e=1, pluginShapes=False)
 
         # validate the version first
         self.version = self._validate_version(self.version)
@@ -1063,3 +1063,7 @@ class RepresentationGenerator(object):
 
         # new scene
         pm.newFile(force=True)
+
+        # reset show plugin shapes option
+        active_panel = auxiliary.ShotPlayblaster.get_active_panel()
+        pm.modelEditor(active_panel, e=1, pluginShapes=show_plugin_shapes)
