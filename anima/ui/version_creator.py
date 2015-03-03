@@ -602,6 +602,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.clear_thumbnail_push_button_clicked
         )
 
+        # close button
+        QtCore.QObject.connect(
+            self.clear_recent_files_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.clear_recent_file_push_button_clicked
+        )
+
         logger.debug("finished setting up interface signals")
 
     def fill_logged_in_user(self):
