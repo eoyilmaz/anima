@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file './ui_files/version_creator.ui'
 #
-# Created: Tue Feb 17 21:25:03 2015
+# Created: Tue Mar  3 17:55:18 2015
 #      by: PyQt4 UI code generator 4.11.3
 #
 # WARNING! All changes made in this file will be lost!
@@ -92,9 +92,16 @@ class Ui_Dialog(object):
         self.tasks_treeView.setObjectName(_fromUtf8("tasks_treeView"))
         self.tasks_treeView.header().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tasks_treeView)
+        self.horizontalLayout_8 = QtGui.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName(_fromUtf8("horizontalLayout_8"))
         self.recent_files_comboBox = QtGui.QComboBox(self.tasks_groupBox)
         self.recent_files_comboBox.setObjectName(_fromUtf8("recent_files_comboBox"))
-        self.verticalLayout_2.addWidget(self.recent_files_comboBox)
+        self.horizontalLayout_8.addWidget(self.recent_files_comboBox)
+        self.clear_recent_files_pushButton = QtGui.QPushButton(self.tasks_groupBox)
+        self.clear_recent_files_pushButton.setObjectName(_fromUtf8("clear_recent_files_pushButton"))
+        self.horizontalLayout_8.addWidget(self.clear_recent_files_pushButton)
+        self.horizontalLayout_8.setStretch(0, 1)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_8)
         self.horizontalLayout_3 = QtGui.QHBoxLayout()
         self.horizontalLayout_3.setObjectName(_fromUtf8("horizontalLayout_3"))
         self.find_from_path_lineEdit = QtGui.QLineEdit(self.tasks_groupBox)
@@ -311,6 +318,7 @@ class Ui_Dialog(object):
         self.my_tasks_only_checkBox.setText(_translate("Dialog", "Show my tasks only", None))
         self.tasks_treeView.setToolTip(_translate("Dialog", "<html><head/><body><p>Right Click:</p><ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependent Tasks</span></li><li style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">To go to the <span style=\" font-weight:600;\">Dependee Tasks</span></li></ul><p><br/></p></body></html>", None))
         self.recent_files_comboBox.setToolTip(_translate("Dialog", "Recent Files", None))
+        self.clear_recent_files_pushButton.setText(_translate("Dialog", "Clear", None))
         self.find_from_path_lineEdit.setPlaceholderText(_translate("Dialog", "Find From Path", None))
         self.find_from_path_pushButton.setText(_translate("Dialog", "Find", None))
         self.upload_thumbnail_pushButton.setText(_translate("Dialog", "Upload", None))

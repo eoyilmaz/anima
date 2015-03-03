@@ -891,6 +891,47 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         pass
 
+    def clear_recent_files(self):
+        """clears the recent files
+        """
+        if self.environment:
+            rfm = RecentFileManager()
+            rfm[self.environment.name] = []
+            rfm.save()
+
+    def clear_recent_file_push_button_clicked(self):
+        """clear the recent files
+        """
+        self.clear_recent_files()
+        self.update_recent_files_combo_box()
+
+    def update_recent_files_combo_box(self):
+        """
+        """
+        self.recent_files_comboBox.clear()
+        # update recent files list
+        if self.environment:
+            rfm = RecentFileManager()
+            try:
+                recent_files = rfm[self.environment.name]
+                recent_files.insert(0, '')
+                # append them to the comboBox
+                self.recent_files_comboBox.addItems(recent_files[:50])
+
+                try:
+                    self.recent_files_comboBox.setStyleSheet(
+                        "qproperty-textElideMode: ElideNone"
+                    )
+                except:
+                    pass
+
+                self.recent_files_comboBox.setSizePolicy(
+                    QtGui.QSizePolicy.MinimumExpanding,
+                    QtGui.QSizePolicy.Minimum
+                )
+            except KeyError:
+                pass
+
     def fill_tasks_treeView(self):
         """sets up the tasks_treeView
         """
@@ -1154,28 +1195,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # update description field
         self.description_textEdit.setText('')
 
-        # update recent files list
-        if self.environment:
-            rfm = RecentFileManager()
-            try:
-                recent_files = rfm[self.environment.name]
-                recent_files.insert(0, '')
-                # append them to the comboBox
-                self.recent_files_comboBox.addItems(recent_files[:50])
-
-                try:
-                    self.recent_files_comboBox.setStyleSheet(
-                        "qproperty-textElideMode: ElideNone"
-                    )
-                except:
-                    pass
-
-                self.recent_files_comboBox.setSizePolicy(
-                    QtGui.QSizePolicy.MinimumExpanding,
-                    QtGui.QSizePolicy.Minimum
-                )
-            except KeyError:
-                pass
+        self.update_recent_files_combo_box()
 
         logger.debug("finished setting up interface defaults")
 
