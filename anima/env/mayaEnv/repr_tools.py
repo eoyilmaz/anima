@@ -576,6 +576,11 @@ class RepresentationGenerator(object):
                                 # just pass it
                                 pass
 
+                            # set rotate and scale pivots
+                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                            # rpt = child_node.getRotatePivotTranslation()
+
                             # delete the child and add a GPU node instead
                             pm.delete(child_node)
                             cache_file_full_path = \
@@ -593,11 +598,6 @@ class RepresentationGenerator(object):
 
                                 if child_shape_name is not None:
                                     gpu_node.rename(child_shape_name)
-
-                                # set rotate and scale pivots
-                                rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                                sp = pm.xform(child_node, q=1, ws=1, sp=1)
-                                # rpt = child_node.getRotatePivotTranslation()
 
                                 pm.xform(gpu_node_tra, ws=1, rp=rp)
                                 pm.xform(gpu_node_tra, ws=1, sp=sp)

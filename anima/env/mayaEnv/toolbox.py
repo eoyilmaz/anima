@@ -2707,8 +2707,7 @@ class Render(object):
         }
 
         pre_selection_list = pm.ls(sl=1)
-        hier = str(apply_to_hierarchy)
-        if hier:
+        if apply_to_hierarchy:
             pm.select(hierarchy=1)
 
         objects = pm.ls(sl=1, type=supported_shapes)
@@ -2723,11 +2722,12 @@ class Render(object):
         pdm = ProgressDialogManager()
         caller = pdm.register(len(objects), 'Setting Shape Attribute')
 
-        for item in objects:
-            attr_full_name = '%s.%s' % (item.name(), attr_name)
-            override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
-            caller.step(message=attr_full_name)
-            if value != -1:
+        if value != -1:
+            for item in objects:
+                attr_full_name = '%s.%s' % (item.name(), attr_name)
+                override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
+                caller.step(message=attr_full_name)
+
                 pm.editRenderLayerAdjustment(attr_full_name)
                 item.setAttr(attr_name, value)
                 # if there is an accompanying override attribute like it is
@@ -2738,12 +2738,18 @@ class Render(object):
                         override_attr_full_name
                     )
                     item.setAttr(override_attr_name, True)
-            else:
+        else:
+            for item in objects:
+                attr_full_name = '%s.%s' % (item.name(), attr_name)
+                override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
+                caller.step(message=attr_full_name)
+
                 # remove any overrides
                 pm.editRenderLayerAdjustment(
                     attr_full_name,
                     remove=1
                 )
+
                 if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
                     pm.editRenderLayerAdjustment(
                         override_attr_full_name,
