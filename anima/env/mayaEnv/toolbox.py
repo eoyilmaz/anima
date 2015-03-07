@@ -3022,7 +3022,7 @@ class Render(object):
                 tmp_target_node_name = target_node_name
                 if target_node_name.endswith('Deformed'):
                     tmp_target_node_name = \
-                        target_node_name.repalce('Deformed', '')
+                        target_node_name.replace('Deformed', '')
                 index = source_node_names.index(tmp_target_node_name)
             except ValueError:
                 nodes_with_no_correspongding.append(target_node)
