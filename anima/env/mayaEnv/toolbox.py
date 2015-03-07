@@ -2983,6 +2983,9 @@ class Render(object):
 
     @classmethod
     def transfer_shaders(cls):
+        """transfer shaders between selected objects. It can search for
+        hierarchies both in source and target sides.
+        """
         selection = pm.ls(sl=1)
         pm.select(None)
         source = selection[0]
@@ -3016,7 +3019,11 @@ class Render(object):
         for i, target_node in enumerate(target_nodes):
             target_node_name = target_node_names[i]
             try:
-                index = source_node_names.index(target_node_name)
+                tmp_target_node_name = target_node_name
+                if target_node_name.endswith('Deformed'):
+                    tmp_target_node_name = \
+                        target_node_name.repalce('Deformed', '')
+                index = source_node_names.index(tmp_target_node_name)
             except ValueError:
                 nodes_with_no_correspongding.append(target_node)
             else:
