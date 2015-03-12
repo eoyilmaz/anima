@@ -910,16 +910,25 @@ def check_multiple_connections_for_textures():
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
+    nodes_to_ignore = pm.ls(type='hyperLayout')
+    nodes_to_ignore += pm.ls('defaultTextureList*')
+    nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
+
     for node in pm.ls(type=texture_nodes):
         materials_connected_to_this_node = \
             pm.ls(node.listHistory(future=True), mat=True)
 
-        # # remove any material that is used like a texture node
-        # for mat in materials_connected_to_this_node:
-        #     not isinstance(n, pm.nt.for n in mat.outputs():
-
         if len(materials_connected_to_this_node) > 1:
             nodes_with_multiple_materials.append(node)
+        else:
+            connections_out_of_this_node = node.outputs()
+
+            [connections_out_of_this_node.remove(h)
+             for h in nodes_to_ignore
+             if h in connections_out_of_this_node]
+
+            if len(set(connections_out_of_this_node)) > 1:
+                nodes_with_multiple_materials.append(node)
 
     # if we find more than one material add it to the list
     # raise a PublishError if we have an item in the list

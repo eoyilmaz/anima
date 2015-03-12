@@ -82,10 +82,15 @@ class Houdini(EnvironmentBase):
 
         # houdini accepts only strings as file name, no unicode support as I
         # see
-        hou.hipFile.save(file_name=str(version.absolute_full_path))
+	hou.hipFile.save(file_name=str(version.absolute_full_path))
 
         # set the environment variables again
         self.set_environment_variables(version)
+
+        # append it to the recent file list
+        self.append_to_recent_files(
+            version.absolute_full_path
+        )
 
         # update the parent info
         if current_version:
@@ -114,6 +119,11 @@ class Houdini(EnvironmentBase):
         # set the environment variables
         self.set_environment_variables(version)
 
+        # append it to the recent file list
+        self.append_to_recent_files(
+            version.absolute_full_path
+        )
+
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
@@ -131,18 +141,18 @@ class Houdini(EnvironmentBase):
             version = self.get_version_from_full_path(full_path)
         return version
 
-    def get_version_from_recent_files(self):
-        """returns the version from the recent files
-        """
-        version = None
-        recent_files = self.get_recent_file_list()
-        for i in range(len(recent_files) - 1, 0, -1):
-            version = self.get_version_from_full_path(
-                os.path.expandvars(recent_files[i])
-            )
-            if version:
-                break
-        return version
+##     def get_version_from_recent_files(self):
+##        """returns the version from the recent files
+##        """
+##        version = None
+##        recent_files = self.get_recent_file_list()
+##        for i in range(len(recent_files) - 1, 0, -1):
+##            version = self.get_version_from_full_path(
+##                os.path.expandvars(recent_files[i])
+##            )
+##            if version:
+##                break
+##        return version
 
     def get_last_version(self):
         """gets the file name from houdini environment

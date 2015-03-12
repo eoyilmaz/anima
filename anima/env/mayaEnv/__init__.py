@@ -637,39 +637,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         return version
 
-    def get_version_from_recent_files(self):
-        """It will try to create a
-        :class:`~stalker.models.version.Version` instance by looking at
-        the recent files list.
-
-        It will return None if it can not find one.
-
-        :return: :class:`~stalker.models.version.Version`
-        """
-        version = None
-
-        logger.debug("trying to get the version from recent file list")
-        # read the fileName from recent files list
-        # try to get the a valid asset file from starting the last recent file
-
-        rfm = RecentFileManager()
-
-        try:
-            recent_files = rfm[self.name]
-        except KeyError:
-            logger.debug('no recent files')
-            recent_files = None
-
-        if recent_files is not None:
-            for recent_file in recent_files:
-                version = self.get_version_from_full_path(recent_file)
-                if version is not None:
-                    break
-
-            logger.debug("version from recent files is: %s" % version)
-
-        return version
-
     def get_last_version(self):
         """Returns the last opened or the current Version instance from the
         environment.
@@ -888,17 +855,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pm.workspace.open(version.absolute_path)
         # set the current timeUnit to match with the environments
         cls.set_fps(version.task.project.fps)
-
-    def append_to_recent_files(self, path):
-        """appends the given path to the recent files list
-        """
-        # add the file to the recent file list
-        start = time.time()
-        rfm = RecentFileManager()
-        rfm.add(self.name, path)
-        end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.append_to_recent_files() took '
-                     '%f sedons' % (end - start))
 
     @classmethod
     def is_in_repo(cls, path):
