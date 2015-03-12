@@ -8,9 +8,7 @@ import unittest
 import pymel.core as pm
 
 from edl import List, Event
-
-from anima.env.mayaEnv.extension import (Sequence, Media, Video, Track, Clip,
-                                         File)
+from anima.edit import Sequence, Media, Video, Track, Clip, File
 
 
 class SequenceTestCase(unittest.TestCase):

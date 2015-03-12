@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from anima.env.mayaEnv.extension import NameMixin
+from anima.edit import NameMixin
 
 
 class NameAttrMixinTestCase(unittest.TestCase):

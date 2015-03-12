@@ -7,9 +7,7 @@
 import unittest
 import os
 import pymel.core
-
-from anima.env.mayaEnv.extension import (Sequence, Media, Video, Track, Clip,
-                                         File)
+from anima.edit import Sequence, Media, Video, Track, Clip, File
 
 
 class SequenceManagerTestCase(unittest.TestCase):
