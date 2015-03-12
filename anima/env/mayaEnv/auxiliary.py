@@ -977,6 +977,7 @@ class ShotPlayblaster(object):
         if sequencer.getAttr('sequence_name') != '':
             shot_info = sequencer.getAttr('sequence_name')
         else:
+
             shot_info = 'INVALID'
 
         cf = pm.currentTime(q=1) + 1

@@ -7,6 +7,7 @@
 
 import os
 import logging
+from anima.recent import RecentFileManager
 
 
 logger = logging.getLogger(__name__)
@@ -252,16 +253,44 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
+    def append_to_recent_files(self, path):
+        """appends the given path to the recent files list
+        """
+        # add the file to the recent file list
+        rfm = RecentFileManager()
+        rfm.add(self.name, path)
+
     def get_version_from_recent_files(self):
-        """It will try to create a
-        :class:`~stalker.models.version.Version` instance by looking at
+        """This will try to create a :class:`.Version` instance by looking at
         the recent files list.
 
         It will return None if it can not find one.
 
-        :return: :class:`~stalker.models.version.Version`
+        :return: :class:`.Version`
         """
-        return None
+        version = None
+
+        logger.debug("trying to get the version from recent file list")
+        # read the fileName from recent files list
+        # try to get the a valid asset file from starting the last recent file
+
+        rfm = RecentFileManager()
+
+        try:
+            recent_files = rfm[self.name]
+        except KeyError:
+            logger.debug('no recent files')
+            recent_files = None
+
+        if recent_files is not None:
+            for recent_file in recent_files:
+                version = self.get_version_from_full_path(recent_file)
+                if version is not None:
+                    break
+
+            logger.debug("version from recent files is: %s" % version)
+
+        return version
 
     def get_last_version(self):
         """Returns the last opened Version instance from the environment.

@@ -2722,6 +2722,8 @@ class Render(object):
         pdm = ProgressDialogManager()
         caller = pdm.register(len(objects), 'Setting Shape Attribute')
 
+        is_default_layer = 
+
         if value != -1:
             for item in objects:
                 attr_full_name = '%s.%s' % (item.name(), attr_name)
