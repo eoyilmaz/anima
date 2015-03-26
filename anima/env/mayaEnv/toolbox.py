@@ -2720,9 +2720,12 @@ class Render(object):
 
         # register a caller
         pdm = ProgressDialogManager()
+        pdm.use_ui = True if len(objects) > 3 else False
         caller = pdm.register(len(objects), 'Setting Shape Attribute')
 
-        is_default_layer = 
+        layers = pm.ls(type='renderLayer')
+        is_default_layer = \
+            layers[0].currentLayer() == layers[0].defaultRenderLayer()
 
         if value != -1:
             for item in objects:
@@ -2730,15 +2733,18 @@ class Render(object):
                 override_attr_full_name = '%s.%s' % (item.name(), override_attr_name)
                 caller.step(message=attr_full_name)
 
-                pm.editRenderLayerAdjustment(attr_full_name)
+                if not is_default_layer:
+                    pm.editRenderLayerAdjustment(attr_full_name)
+
                 item.setAttr(attr_name, value)
                 # if there is an accompanying override attribute like it is
                 # found in aiStandIn node
                 # then also set override{Attr} to True
                 if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
-                    pm.editRenderLayerAdjustment(
-                        override_attr_full_name
-                    )
+                    if not is_default_layer:
+                        pm.editRenderLayerAdjustment(
+                            override_attr_full_name
+                        )
                     item.setAttr(override_attr_name, True)
         else:
             for item in objects:
@@ -2747,12 +2753,14 @@ class Render(object):
                 caller.step(message=attr_full_name)
 
                 # remove any overrides
-                pm.editRenderLayerAdjustment(
-                    attr_full_name,
-                    remove=1
-                )
+                if not is_default_layer:
+                    pm.editRenderLayerAdjustment(
+                        attr_full_name,
+                        remove=1
+                    )
 
-                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
+                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1) \
+                   and not is_default_layer:
                     pm.editRenderLayerAdjustment(
                         override_attr_full_name,
                         remove=1
