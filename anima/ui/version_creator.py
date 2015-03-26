@@ -1705,10 +1705,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         )
                         setattr(repr_button, 'repr_version', repr_version)
 
+                # add a cancel button
+                cancel_button = repr_message_box.addButton(
+                    'Cancel',
+                    QtGui.QMessageBox.RejectRole
+                )
+
                 repr_message_box.exec_()
                 clicked_button = repr_message_box.clickedButton()
-                if clicked_button.repr_version:
-                    previous_version = clicked_button.repr_version
+                if clicked_button.text() != 'Cancel':
+                    if clicked_button.repr_version:
+                        previous_version = clicked_button.repr_version
+                else:
+                    return
 
             self.environment.reference(previous_version, use_namespace)
 
