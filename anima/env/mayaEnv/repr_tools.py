@@ -478,8 +478,11 @@ class RepresentationGenerator(object):
 
                         pm.select(child_node)
                         output_filename =\
-                            '%s.ass' % (
-                                child_node_name.replace(':', '_').replace('|', '_')
+                            '%s_%s.abc' % (
+                                self.version.nice_name,
+                                child_node_name.splite(':')[-1]
+                                .replace(':', '_')
+                                .replace('|', '_')
                             )
 
                         # run the mel command
@@ -507,7 +510,7 @@ class RepresentationGenerator(object):
                         pm.delete(child_node)
                         cache_file_full_path = \
                             os.path\
-                            .join(output_path, '%s.abc' % output_filename)\
+                            .join(output_path,output_filename)\
                             .replace('\\', '/')
 
                         # check if file exists
@@ -557,7 +560,8 @@ class RepresentationGenerator(object):
                             child_full_path = \
                                 child_node.fullPath()[1:].replace('|', '_')
                             output_filename =\
-                                '%s' % (
+                                '%s_%s' % (
+                                    self.version.nice_name,
                                     child_full_path
                                 )
 
@@ -585,7 +589,13 @@ class RepresentationGenerator(object):
                             pm.delete(child_node)
                             cache_file_full_path = \
                                 os.path\
-                                .join(output_path, '%s.abc' % output_filename)\
+                                .join(
+                                    output_path,
+                                    '%s_%s.abc' % (
+                                        self.version.nice_name,
+                                        output_filename
+                                    )
+                                )\
                                 .replace('\\', '/')
 
                             # check if file exists
@@ -812,7 +822,12 @@ class RepresentationGenerator(object):
                         continue
 
                     # randomize child node name
-                    child_node_name = child_node.name()
+                    # TODO: This is not working as intended, node names are like |NS:node1|NS:node2
+                    #       resulting a child_node_name as "node2"
+                    child_node_name = child_node\
+                        .fullPath()\
+                        .replace('|', '_')\
+                        .split(':')[-1]
 
                     child_node_full_path = child_node.fullPath()
 
@@ -820,8 +835,9 @@ class RepresentationGenerator(object):
                     child_node.rename('%s_%s' % (child_node.name(), uuid.uuid4().hex))
 
                     output_filename =\
-                        '%s.ass' % (
-                            child_node_name.replace(':', '_').replace('|', '_')
+                        '%s_%s.ass' % (
+                            self.version.nice_name,
+                            child_node_name
                         )
 
                     output_full_path = \
@@ -914,7 +930,8 @@ class RepresentationGenerator(object):
 
                     pm.select(child_node)
                     output_filename =\
-                        '%s.ass' % (
+                        '%s_%s.ass' % (
+                            self.version.nice_name,
                             child_node_name.replace(':', '_').replace('|', '_')
                         )
 
