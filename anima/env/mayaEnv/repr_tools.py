@@ -497,7 +497,7 @@ class RepresentationGenerator(object):
                                     'filename': output_filename
                                 }
                             )
-                        except pm.MelError:
+                        except pm.MelError as e:
                             # just pass it
                             pass
 
@@ -510,7 +510,7 @@ class RepresentationGenerator(object):
                         pm.delete(child_node)
                         cache_file_full_path = \
                             os.path\
-                            .join(output_path,output_filename)\
+                            .join(output_path, output_filename)\
                             .replace('\\', '/')
 
                         # check if file exists
@@ -559,6 +559,7 @@ class RepresentationGenerator(object):
 
                             child_full_path = \
                                 child_node.fullPath()[1:].replace('|', '_')
+                            print('child_full_path: %s' % child_full_path)
                             output_filename =\
                                 '%s_%s' % (
                                     self.version.nice_name,
@@ -576,7 +577,7 @@ class RepresentationGenerator(object):
                                         'filename': output_filename
                                     }
                                 )
-                            except pm.MelError:
+                            except pm.MelError as e:
                                 # just pass it
                                 pass
 
@@ -591,8 +592,7 @@ class RepresentationGenerator(object):
                                 os.path\
                                 .join(
                                     output_path,
-                                    '%s_%s.abc' % (
-                                        self.version.nice_name,
+                                    '%s.abc' % (
                                         output_filename
                                     )
                                 )\
