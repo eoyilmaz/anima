@@ -748,6 +748,21 @@ def check_uvs():
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
+@publisher(LOOK_DEV_TYPES + ['model'])
+def set_pixel_error():
+    """sets the pixel error on objects which have a linear subdiv
+    """
+    for node in pm.ls(type='mesh'):
+        subdiv_type = node.getAttr('aiSubdivType')
+        pixel_error = node.getAttr('aiSubdivPixelError')
+        if subdiv_type == 2:  # linear
+            if pixel_error == 0:
+                node.setAttr('aiSubdivPixelError', 0.001)
+
+        pixel_error = node.getAttr('aiSubdivPixelError')
+        node.setAttr('aiSubdivPixelError', min(1, pixel_error))
+
+
 @publisher(LOOK_DEV_TYPES)
 def disable_internal_reflections_in_aiStandard():
     """disable internal reflections in aiStandard
