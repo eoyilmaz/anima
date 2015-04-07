@@ -918,6 +918,7 @@ def check_multiple_connections_for_textures():
         'rgbToHsv',
         'surfaceLuminance',
         'imagePlane',
+        'layeredTexture',
 
         'aiImage',
         'aiNoise',
