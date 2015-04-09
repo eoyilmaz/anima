@@ -46,6 +46,7 @@ RENDER_RELATED_NODE_TYPES = [
     'psdFileTex',
     'ramp',
     'water',
+    'layeredTexture',
 
     'brownian',
     'cloud',

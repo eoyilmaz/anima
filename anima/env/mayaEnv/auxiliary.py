@@ -1407,6 +1407,9 @@ class ShotPlayblaster(object):
 
 
 def export_alembic_from_cache_node():
+    """exports alembic caches by looking at the current scene and try to find
+    transform nodes which has an attribute called "cacheable"
+    """
     from anima.ui.progress_dialog import ProgressDialogManager
     import os
 
@@ -1488,8 +1491,6 @@ def export_alembic_from_cache_node():
         command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
                   '-uvWrite -wholeFrameGeo -worldSpace -eulerFilter ' \
                   '-root %s -file %s";'
-        # command = 'AbcExport -j "-frameRange %s %s -ro ' \
-        #           '-uvWrite -wholeFrameGeo -worldSpace -root |%s -file %s";'
 
         pm.mel.eval(
             command % (
