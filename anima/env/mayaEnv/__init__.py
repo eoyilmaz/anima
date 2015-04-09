@@ -1291,7 +1291,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 #     continue
 
                 orig_path = node.getAttr(attr_name)
-                if orig_path is None or '$' in orig_path:
+                if orig_path is None or orig_path == '' or '$' in orig_path:
                     # do nothing it is already using an environment variable
                     continue
 
