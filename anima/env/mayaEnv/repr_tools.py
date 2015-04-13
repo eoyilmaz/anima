@@ -481,7 +481,7 @@ class RepresentationGenerator(object):
                         output_filename =\
                             '%s_%s.abc' % (
                                 self.version.nice_name,
-                                child_node_name.splite(':')[-1]
+                                child_node_name.split(':')[-1]
                                 .replace(':', '_')
                                 .replace('|', '_')
                             )
