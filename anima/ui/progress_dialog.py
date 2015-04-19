@@ -75,6 +75,7 @@ class ProgressDialogManager(object):
                 self.dialog.setLabelText(self.title)
                 # self.dialog.setAutoClose(True)
                 # self.dialog.setAutoReset(True)
+                self.center_window()
                 self.dialog.show()
 
         # also set the Manager to in progress
@@ -105,10 +106,28 @@ class ProgressDialogManager(object):
                 # update the maximum
                 self.dialog.setRange(0, self.max_steps)
                 self.dialog.setValue(self.current_step)
+            self.center_window()
 
         # also store this
         self.callers.append(caller)
         return caller
+
+    def center_window(self):
+        """recenters the dialog window to the screen
+        """
+        if self.dialog is not None:
+            from anima.ui.lib import QtCore, QtGui
+            desktop = QtGui.QApplication.desktop()
+            cursor_pos = QtGui.QCursor.pos()
+            desktop_number = desktop.screenNumber(cursor_pos)
+            desktop_rect = desktop.screenGeometry(desktop_number)
+
+            size = self.dialog.geometry()
+
+            self.dialog.move(
+                (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
+                (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
+            )
 
     def step(self, caller, step=1, message=''):
         """Increments the progress by the given mount
@@ -122,6 +141,7 @@ class ProgressDialogManager(object):
         if self.dialog:
             self.dialog.setValue(self.current_step)
             self.dialog.setLabelText('%s : %s' % (caller.title, message))
+            self.center_window()
 
         if caller.current_step >= caller.max_steps:
             # kill the caller

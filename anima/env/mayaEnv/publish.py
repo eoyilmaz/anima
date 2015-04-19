@@ -982,7 +982,6 @@ def check_objects_still_using_default_shader():
 def check_component_edits_on_references():
     """check if there are component edits on references
     """
-
     # skip if this is a representation
     v = staging.get('version')
     if v and Representation.repr_separator in v.take_name:
@@ -993,12 +992,30 @@ def check_component_edits_on_references():
 
     references_with_component_edits = []
 
-    for ref in pm.listReferences(recursive=True):
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    all_refs = pm.listReferences(recursive=True)
+    ref_count = len(all_refs)
+
+    if not pm.general.about(batch=1) and ref_count:
+        pdm.use_ui = True
+
+    caller = pdm.register(
+        ref_count,
+        'Checking component edits on %i reference' % ref_count
+    )
+
+    for ref in all_refs:
         all_edits = reference_query(ref.refNode.name(), es=True)
-        joined_edits = '\n'.join(all_edits)
-        if '.pt[' in joined_edits or '.pnts[' in joined_edits:
-            references_with_component_edits.append(ref)
-            continue
+        # joined_edits = '\n'.join(all_edits)
+        # if '.pt[' in joined_edits or '.pnts[' in joined_edits:
+        #     references_with_component_edits.append(ref)
+        for edit in all_edits:
+            if '.pt[' in edit or '.pnts[' in edit:
+                references_with_component_edits.append(ref)
+                break
+        caller.step()
 
     if len(references_with_component_edits):
         raise PublishError(

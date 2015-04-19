@@ -65,6 +65,9 @@ __pluginLoader('fbxmaya')
 __pluginLoader('OpenEXRLoader')
 __pluginLoader('tiffFloatReader')
 
+from pymel import mayautils
+mayautils.executeDeferred(__pluginLoader, 'mtoa')
+
 
 # set the optionVar that enables hidden mentalray shaders
 if pymel.versions.current() <= pymel.versions.v2012:
