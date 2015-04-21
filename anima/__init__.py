@@ -28,9 +28,38 @@ __version__ = "0.1.13.dev"
 
 from stalker import defaults
 
+import os
+import datetime
+import tempfile
 import logging
-logging.basicConfig()
+
+# create logger
+#logging.basicConfig()
+logger = logging.getLogger(__name__)
 logging_level = logging.DEBUG
+logger.setLevel(logging_level)
+
+# create formatter
+logging_formatter = \
+    logging.Formatter('%(module)s: %(funcName)s: %(levelname)s: %(message)s')
+
+# create file handler
+log_file_path = os.path.join(
+    tempfile.gettempdir(),
+    'anima.log'
+)
+log_file_handler = logging.FileHandler(log_file_path)
+log_file_handler.setFormatter(logging_formatter)
+
+# add file handler
+logger.addHandler(log_file_handler)
+
+# set stalker to use the same logger
+
+# create initial log
+logger.debug('***************************************************************')
+logger.debug('started new anima instance on %s' % datetime.datetime.now())
+logger.debug('***************************************************************')
 
 
 stalker_server_internal_address = ''

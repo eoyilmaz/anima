@@ -3,14 +3,10 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-
-
 import os
-import logging
+
+from anima import logger, log_file_handler
 from anima.recent import RecentFileManager
-
-
-logger = logging.getLogger(__name__)
 
 
 class EnvironmentBase(object):
@@ -230,20 +226,22 @@ class EnvironmentBase(object):
 
         :return: :class:`~stalker.models.version.Version`
         """
+        logger.debug('full_path: %s' % full_path)
         # convert '\\' to '/'
         full_path = os.path.normpath(
             os.path.expandvars(full_path)
         ).replace('\\', '/')
 
         # trim repo path
-        from stalker import Repository
+        from stalker import Repository, Version
         os_independent_path = Repository.to_os_independent_path(full_path)
 
-        from stalker import Version
-
         # try to get a version with that info
+        logger.debug('getting a version with path: %s' % full_path)
+
         version = Version.query\
             .filter(Version.full_path == os_independent_path).first()
+        logger.debug('version: %s' % version)
         return version
 
     def get_current_version(self):

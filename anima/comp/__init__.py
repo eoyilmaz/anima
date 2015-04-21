@@ -11,19 +11,8 @@ from anima.env import nukeEnv
 import nuke
 
 
-import logging
+from anima import logger
 from anima.utils import do_db_setup
-
-logger = logging.getLogger(__name__)
-handler = logging.FileHandler(
-    os.path.join(
-        tempfile.gettempdir(),
-        'anima_comp.log'
-    )
-)
-
-logger.addHandler(handler)
-logger.setLevel(logging.DEBUG)
 
 
 def update_outputs():

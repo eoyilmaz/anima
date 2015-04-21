@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import logging
+from anima import logger
 
 # Choose between PyQt4 or PySide
 PYSIDE = 'PySide'
@@ -15,8 +15,6 @@ PYQT4 = 'PyQt4'
 qt_lib_key = "QT_LIB"
 qt_lib = PYSIDE
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 if qt_lib_key in os.environ:
     qt_lib = os.environ[qt_lib_key]

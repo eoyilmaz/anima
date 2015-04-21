@@ -14,8 +14,7 @@ from stalker.db import DBSession
 from stalker import (defaults, Version, Project, Task, LocalSession, Group)
 
 import anima
-from anima import utils
-from anima import power_users_group_names
+from anima import utils, logger, power_users_group_names
 from anima.env.base import EnvironmentBase
 from anima.env.external import ExternalEnvFactory
 from anima.exc import PublishError
@@ -27,13 +26,6 @@ from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
 from anima.ui.lib import QtGui, QtCore
 from anima.ui.models import TaskTreeModel, TakesListWidget
 
-
-logger = logging.getLogger(__name__)
-fh = logging.FileHandler(
-    os.path.join(tempfile.gettempdir(), 'version_creator.log')
-)
-logger.setLevel(logging.DEBUG)
-logger.addHandler(fh)
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI

@@ -6,17 +6,12 @@
 
 
 import os
-import logging
-
 import PeyeonScript
 
 from base import EnvironmentBase
+from anima import logger
 from anima.env import empty_reference_resolution
 from anima.recent import RecentFileManager
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
 
 
 class Fusion(EnvironmentBase):

@@ -3,6 +3,8 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+
+from anima import logger
 from anima.ui import SET_PYQT4
 from anima.utils import do_db_setup
 
@@ -27,9 +29,6 @@ def version_creator():
 
     h = houdini.Houdini()
 
-    logger = logging.getLogger('anima.ui.version_creator')
-    logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.ui.models')
     logger.setLevel(logging.WARNING)
 
     version_creator.UI(environment=h)

@@ -4,17 +4,14 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import logging
 from sqlalchemy import or_
 
 import anima
+from anima import logger
 from anima.ui import IS_PYQT4, IS_PYSIDE
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui
 
-# create a logger
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import login_dialog_UI_pyside as login_dialog_UI

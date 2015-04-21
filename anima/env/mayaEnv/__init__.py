@@ -7,17 +7,16 @@
 import os
 import re
 import shutil
-import logging
 
 import pymel.core as pm
 import maya.cmds as mc
 import time
 
+from anima import logger
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
 from anima.exc import PublishError
-from anima.recent import RecentFileManager
 from anima.repr import Representation
 from anima.ui.progress_dialog import ProgressDialogManager
 
@@ -27,10 +26,6 @@ reload(publish_scripts)
 
 from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                            POST_PUBLISHER_TYPE)
-
-logging.basicConfig()
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 
 class Maya(EnvironmentBase):
@@ -184,7 +179,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # try to get a version from current scene
         v = self.get_current_version()
 
-        all_repos = []
         if v:
             # just append the project repo
             all_repos = [v.task.project.repository]
@@ -207,8 +201,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             pass
 
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.set_arnold_texture_search_path() '
-                     'took %f seconds' % (end - start))
+        logger.debug('set_arnold_texture_search_path() took '
+                     '%f seconds' % (end - start))
 
     def save_as(self, version):
         """The save_as action for maya environment.
@@ -375,7 +369,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 raise e
 
         end = time.time()
-        logger.debug('anima.save_as took %f seconds' % (end - start))
+        logger.debug('save_as took %f seconds' % (end - start))
         return True
 
     def export_as(self, version):
@@ -679,7 +673,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             for seq in sm.sequences.get():
                 seq.get_sequence_name()
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.set_sequence_manager_data() took '
+        logger.debug('set_sequence_manager_data() took '
                      '%f seconds' % (end - start))
 
     def set_render_filename(self, version):
@@ -733,8 +727,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         self.set_output_file_format()
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.set_render_filename() took %f '
-                     'seconds' % (end - start))
+        logger.debug('set_render_filename() took '
+                     '%f seconds' % (end - start))
 
     @classmethod
     def set_output_file_format(cls):
@@ -825,7 +819,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         pm.optionVar['playblastFile'] = playblast_full_path
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.set_playblast_file_name() took '
+        logger.debug('set_playblast_file_name() took '
                      '%f seconds' % (end - start))
 
     @classmethod
@@ -1012,8 +1006,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             )
 
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.check_external_files took %f '
-                     'seconds' % (end - start))
+        logger.debug('check_external_files took %f seconds' % (end - start))
 
     def get_referenced_versions(self, parent_ref=None):
         """Returns the versions those been referenced to the current scene.
@@ -1024,27 +1017,33 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :returns: A list of Version instances
         """
-
         # get all the references
+        logger.debug('getting references')
         references = pm.listReferences(parent_ref)
 
         # sort them according to path
         # to make same paths together
+        logger.debug('sorting references')
         refs = sorted(references, key=lambda x: x.path)
+        ref_count = len(refs)
 
         # lets use a progress window
         caller = None
         if len(references):
+            logger.debug('register a new caller')
             pdm = ProgressDialogManager()
             pdm.use_ui = self.use_progress_window
             caller = pdm.register(
-                len(references),
-                'Maya.get_referenced_versions()'
+                ref_count,
+                'Maya.get_referenced_versions(%s) %i '
+                'in total' % (parent_ref, ref_count)
             )
 
         prev_path = ''
         versions = []
+        logger.debug('loop through %i references' % ref_count)
         for ref in refs:
+            logger.debug('checking ref: %s' % ref.path)
             path = ref.path
             if path != prev_path:
                 # try to get a version with the given path
@@ -1058,8 +1057,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                         versions.append(version)
                     prev_path = path
             if caller is not None:
-                caller.step()
+                caller.step(message='path: %s' % path)
+            logger.debug('stepping to next ref')
 
+        logger.debug('result: %s' % versions)
         return versions
 
     def update_version_inputs(self, parent_ref=None):
@@ -1069,25 +1070,35 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           version argument and a Version instance will be get from the given
           parent_ref.path.
         """
+        logger.debug('parent_ref: %s' % parent_ref)
         start = time.time()
+
+        # register a caller for Progress dialog
+        logger.debug('get a version')
         if not parent_ref:
+            logger.debug('got no parent_ref')
             version = self.get_current_version()
         else:
+            logger.debug('have a parent_ref')
             version = self.get_version_from_full_path(parent_ref.path)
 
         if version:
+            logger.debug('got a version: %s' % version.absolute_full_path)
             # use the original version if it is a Repr version
             if Representation.repr_separator in version.take_name \
                and version.parent:
                 version = version.parent
+                logger.debug(
+                    'this is a representation switching to its parent: %s' %
+                    version
+                )
 
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
 
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.update_version_inputs() took '
-                     '%f seconds' % (end - start))
+        logger.debug('update_version_inputs() took %f seconds' % (end - start))
 
     def update_first_level_versions(self, reference_resolution):
         """Updates the versions to the latest version.
@@ -1192,8 +1203,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         pm.playbackOptions(min=pMin, max=pMax)
 
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.set_fps() took %f seconds' %
-                     (end - start))
+        logger.debug('set_fps() took %f seconds' % (end - start))
 
     @classmethod
     def load_referenced_versions(cls):
@@ -1343,7 +1353,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                             # skip it
                             pass
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.replace_external_paths took '
+        logger.debug('replace_external_paths took '
                      '%f seconds' % (end - start))
 
     def create_workspace_file(self, path):
@@ -1368,7 +1378,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             workspace_file.write(content)
 
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.create_workspace_file() took '
+        logger.debug('create_workspace_file() took '
                      '%f seconds' % (end - start))
 
     @classmethod
@@ -1388,7 +1398,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # dir exists
                 pass
         end = time.time()
-        logger.debug('anima.env.mayaEnv.Maya.create_workspace_folders() took '
+        logger.debug('create_workspace_folders() took '
                      '%f seconds' % (end - start))
 
     def deep_version_inputs_update(self):
@@ -1403,21 +1413,25 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         prev_ref_path = None
         while len(references_list):
             current_ref = references_list.pop(0)
+            logger.debug('current_ref: %s' % current_ref.path)
             self.update_version_inputs(current_ref)
             # optimize it by only appending one instance of the same referenced
             # file
             # sort the references according to their paths so, all the
             # references of the same file will be got together
+            logger.debug('sorting references')
             all_refs = sorted(
                 pm.listReferences(current_ref),
                 key=lambda x: x.path
             )
+            logger.debug('filtering references')
             for ref in all_refs:
                 if ref.path != prev_ref_path:
                     prev_ref_path = ref.path
                     references_list.append(ref)
 
             prev_ref_path = None
+            logger.debug('advancing to next ref')
 
     def check_referenced_versions(self):
         """Deeply checks all the references in the scene and returns a

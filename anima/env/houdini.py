@@ -11,19 +11,14 @@ import logging
 from stalker.db import DBSession
 
 import hou
-from anima import utils
+from anima import utils, logger
 from anima.env import empty_reference_resolution
 from base import EnvironmentBase
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 
 class Houdini(EnvironmentBase):
     """the houdini environment class
     """
-
     name = 'Houdini'
 
     def __init__(self, name="", extensions=None, version=None):

@@ -5,12 +5,10 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 import tempfile
-import logging
 import re
 import shutil
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+from anima import logger
 
 
 class Archiver(object):

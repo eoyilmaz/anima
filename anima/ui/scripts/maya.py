@@ -3,11 +3,14 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import logging
+
+from anima import logger
 from anima.env.mayaEnv import Maya
 from anima.utils import do_db_setup
 
 
-def version_creator():
+def version_creator(logging_level=logging.WARNING):
     """Helper function for version_creator UI for Maya
     """
     # connect to db
@@ -30,16 +33,12 @@ def version_creator():
     m = Maya()
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
-    import logging
-    logger = logging.getLogger('anima.ui.version_creator')
-    logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.ui.models')
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(logging_level)
 
     version_creator.UI(environment=m)
 
 
-def version_updater():
+def version_updater(logging_level=logging.WARNING):
     """helper function for version_updater UI for Maya
     """
     # connect to db
@@ -62,16 +61,11 @@ def version_updater():
     m = Maya()
     m.name = "Maya" + str(pymel.versions.current())[0:4]
 
-    import logging
-    logger = logging.getLogger('anima.env.base')
-    logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.ui.version_updater')
-    logger.setLevel(logging.WARNING)
-    logger = logging.getLogger('anima.ui.models')
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(logging_level)
 
     # generate a reference_resolution
     version_updater.UI(environment=m)
+
 
 def version_mover():
     """

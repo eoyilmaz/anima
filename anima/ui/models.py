@@ -4,15 +4,10 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import logging
-import re
-
 from stalker import defaults, Task, Project
 
+from anima import logger
 from anima.ui.lib import QtGui, QtCore
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 def set_item_color(item, color):

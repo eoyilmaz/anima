@@ -4,13 +4,8 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import logging
-
+from anima import logger
 from anima.ui import IS_PYSIDE, IS_PYQT4
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 if IS_PYQT4():

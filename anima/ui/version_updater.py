@@ -3,17 +3,12 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import logging
-
+from anima import logger
 from anima.env import empty_reference_resolution
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models import VersionTreeModel
 from anima.ui.lib import QtGui, QtCore
 from anima.ui import IS_PYSIDE, IS_PYQT4
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 if IS_PYSIDE():

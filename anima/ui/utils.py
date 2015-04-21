@@ -7,11 +7,8 @@
 """
 import os
 import shutil
-import logging
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
+from anima import logger
 from anima.ui.lib import QtCore, QtGui
 
 

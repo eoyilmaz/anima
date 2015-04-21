@@ -1,15 +1,9 @@
 # -*- coding: utf-8 -*-
 import os
-
 import bpy
-import logging
 
 from stalker import Project, Task, Version, Sequence, Shot
-
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
-logger.setLevel = logging.DEBUG
+from anima import logger
 
 bl_info = {
     "name": "Stalker Reviewer",

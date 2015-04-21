@@ -12,13 +12,8 @@ import os
 import sys
 import subprocess
 import glob
-import logging
 
-from anima import utils
-
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+from anima import utils, logger
 
 
 class UIFile(object):

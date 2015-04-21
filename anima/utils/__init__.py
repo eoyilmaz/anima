@@ -7,7 +7,6 @@
 import os
 import re
 import itertools
-import logging
 import calendar
 import datetime
 import shutil
@@ -16,9 +15,8 @@ import uuid
 import copy
 import subprocess
 
+from anima import logger
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 # tr_chars = {
 #     # lower letters

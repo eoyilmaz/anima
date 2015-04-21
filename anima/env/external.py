@@ -4,14 +4,11 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import logging
 import os
 
+from anima import logger
 from anima.env.base import EnvironmentBase
 
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 external_environments = {
     'MudBox': {
