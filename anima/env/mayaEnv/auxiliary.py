@@ -1406,9 +1406,12 @@ class ShotPlayblaster(object):
         return hires_path
 
 
-def export_alembic_from_cache_node():
+def export_alembic_from_cache_node(handles=0):
     """exports alembic caches by looking at the current scene and try to find
     transform nodes which has an attribute called "cacheable"
+
+    :param int handles: An integer that shows the desired handles from start
+      and end.
     """
     from anima.ui.progress_dialog import ProgressDialogManager
     import os
@@ -1494,8 +1497,8 @@ def export_alembic_from_cache_node():
 
         pm.mel.eval(
             command % (
-                int(start_frame),
-                int(end_frame),
+                int(start_frame - handles),
+                int(end_frame + handles),
                 cacheable_node.fullPath(),
                 output_full_path
             )

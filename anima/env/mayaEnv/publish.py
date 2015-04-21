@@ -1150,7 +1150,7 @@ def cache_animations():
     """cache animations
     """
     reload(auxiliary)
-    auxiliary.export_alembic_from_cache_node()
+    auxiliary.export_alembic_from_cache_node(handles=1)
 
 
 @publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
