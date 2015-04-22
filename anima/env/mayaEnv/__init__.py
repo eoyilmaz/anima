@@ -1025,7 +1025,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # to make same paths together
         logger.debug('sorting references')
         refs = sorted(references, key=lambda x: x.path)
-        ref_count = len(refs)
+        ref_count = len(references)
 
         # lets use a progress window
         caller = None
@@ -1060,6 +1060,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 caller.step(message='path: %s' % path)
             logger.debug('stepping to next ref')
 
+        caller.end_progress()
+
         logger.debug('result: %s' % versions)
         return versions
 
@@ -1073,7 +1075,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         logger.debug('parent_ref: %s' % parent_ref)
         start = time.time()
 
-        # register a caller for Progress dialog
         logger.debug('get a version')
         if not parent_ref:
             logger.debug('got no parent_ref')

@@ -1017,6 +1017,8 @@ def check_component_edits_on_references():
                 break
         caller.step()
 
+    caller.end_progress()
+
     if len(references_with_component_edits):
         raise PublishError(
             'There are <b>component edits</b> on the following References:'
