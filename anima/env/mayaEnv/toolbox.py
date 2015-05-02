@@ -3448,8 +3448,11 @@ class Render(object):
 
         place.outUV >> image.attr('uvcoords')
 
-        char.addAttr("eyeLightStrength", at='double', min=0, dv=0.5, k=1)
-        char.addAttr("eyeLightAngle", at='double', dv=0, k=1)
+        if not char.hasAttr('eyeLightStrength'):
+            char.addAttr("eyeLightStrength", at='double', min=0, dv=0.5, k=1)
+
+        if not char.hasAttr('eyeLightAngle'):
+            char.addAttr("eyeLightAngle", at='double', dv=0, k=1)
 
         char.eyeLightStrength >> image.attr('multiplyR')
         char.eyeLightStrength >> image.attr('multiplyG')
