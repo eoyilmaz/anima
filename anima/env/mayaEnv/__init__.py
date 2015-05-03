@@ -1060,7 +1060,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 caller.step(message='path: %s' % path)
             logger.debug('stepping to next ref')
 
-        caller.end_progress()
+        if caller is not None:
+            caller.end_progress()
 
         logger.debug('result: %s' % versions)
         return versions
