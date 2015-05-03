@@ -3,10 +3,12 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import logging
+from anima import logger
 from anima.utils import do_db_setup
 
 
-def version_creator(lib='PyQt4'):
+def version_creator(lib='PyQt4', logging_level=logging.WARNING):
     """Helper function for version_creator UI for Fusion
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
@@ -30,12 +32,5 @@ def version_creator(lib='PyQt4'):
     fusion_env.name = 'Fusion'
 
     from anima.ui import version_creator
-    # paste only warning messages
-    import logging
-    logging.getLogger(version_creator.__name__).setLevel(logging.WARNING)
-    logging.getLogger("anima.ui").setLevel(logging.WARNING)
-    logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.env.fusion").setLevel(logging.WARNING)
-    logging.getLogger("stalker.db").setLevel(logging.WARNING)
-
+    logger.setLevel(logging_level)
     version_creator.UI(environment=fusion_env)
