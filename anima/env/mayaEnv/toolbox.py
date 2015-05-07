@@ -3003,41 +3003,7 @@ class Render(object):
         # auxiliary.transfer_shaders(source, target)
         # pm.select(selection)
 
-        source_nodes = source.listRelatives(
-            ad=1,
-            type=(pm.nt.Mesh, pm.nt.NurbsSurface)
-        )
-        target_nodes = target.listRelatives(
-            ad=1,
-            type=(pm.nt.Mesh, pm.nt.NurbsSurface)
-        )
-
-        source_node_names = []
-        target_node_names = []
-
-        for node in source_nodes:
-            name = node.name().split(':')[-1].split('|')[-1]
-            source_node_names.append(name)
-
-        for node in target_nodes:
-            name = node.name().split(':')[-1].split('|')[-1]
-            target_node_names.append(name)
-
-        lut = []
-
-        nodes_with_no_correspongding = []
-        for i, target_node in enumerate(target_nodes):
-            target_node_name = target_node_names[i]
-            try:
-                tmp_target_node_name = target_node_name
-                if target_node_name.endswith('Deformed'):
-                    tmp_target_node_name = \
-                        target_node_name.replace('Deformed', '')
-                index = source_node_names.index(tmp_target_node_name)
-            except ValueError:
-                nodes_with_no_correspongding.append(target_node)
-            else:
-                lut.append((source_nodes[index], target_nodes[i]))
+        lut = auxiliary.match_hierarchy(source, target)
 
         attr_names = [
             'castsShadows',
@@ -3094,18 +3060,18 @@ class Render(object):
             'aiStepSize'
         ]
 
-        for source_node, target_node in lut:
+        for source_node, target_node in lut['match']:
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes
             for attr_name in attr_names:
                 target_node.setAttr(attr_name, source_node.getAttr(attr_name))
 
-        if len(nodes_with_no_correspongding):
-            pm.select(nodes_with_no_correspongding)
+        if len(lut['no_match']):
+            pm.select(lut['no_match'])
             print(
                 'The following nodes has no corresponding source:\n%s' % (
                     '\n'.join(
-                        [node.name() for node in nodes_with_no_correspongding]
+                        [node.name() for node in lut['no_match']]
                     )
                 )
             )

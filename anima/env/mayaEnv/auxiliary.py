@@ -1811,3 +1811,50 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         pm.scriptJob(
             k=int(self.light.getAttr(self.custom_data_storage_attr_name))
         )
+
+
+def match_hierarchy(source, target):
+    """Matches the objects in two different hierarchy by looking at their
+    names.
+
+    Returns a dictionary where you can look up for matches by using the object
+    name.
+    """
+    source_nodes = source.listRelatives(
+        ad=1,
+        type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+    )
+    target_nodes = target.listRelatives(
+        ad=1,
+        type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+    )
+
+    source_node_names = []
+    target_node_names = []
+
+    lut = {
+        'match': [],
+        'no_match': []
+    }
+    for node in source_nodes:
+        name = node.name().split(':')[-1].split('|')[-1]
+        source_node_names.append(name)
+
+    for node in target_nodes:
+        name = node.name().split(':')[-1].split('|')[-1]
+        target_node_names.append(name)
+
+    for i, target_node in enumerate(target_nodes):
+        target_node_name = target_node_names[i]
+        try:
+            tmp_target_node_name = target_node_name
+            if target_node_name.endswith('Deformed'):
+                tmp_target_node_name = \
+                    target_node_name.replace('Deformed', '')
+            index = source_node_names.index(tmp_target_node_name)
+        except ValueError:
+            lut['no_match'].append(target_node)
+        else:
+            lut['match'].append((source_nodes[index], target_nodes[i]))
+
+    return lut
