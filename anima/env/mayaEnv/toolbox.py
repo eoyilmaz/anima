@@ -821,10 +821,17 @@ def UI():
                       bgc=color.color)
 
             color.change()
-            pm.button('oyTransferShaders_button',
+            pm.button('transfer_shaders_button',
                       l="Transfer Shaders",
                       c=RepeatedCallback(Render.transfer_shaders),
-                      ann="Transfers Shaders from one group to other, use it"
+                      ann="Transfers shaders from one group to other, use it"
+                          "for LookDev -> Alembic",
+                      bgc=color.color)
+
+            pm.button('transfer_uvs_button',
+                      l="Transfer UVs",
+                      c=RepeatedCallback(Render.transfer_uvs),
+                      ann="Transfers UVs from one group to other, use it"
                           "for LookDev -> Alembic",
                       bgc=color.color)
 
@@ -3074,6 +3081,35 @@ class Render(object):
                         [node.name() for node in lut['no_match']]
                     )
                 )
+            )
+
+    @classmethod
+    def transfer_uvs(cls):
+        """transfer uvs between selected objects. It can search for
+        hierarchies both in source and target sides.
+        """
+        selection = pm.ls(sl=1)
+        pm.select(None)
+        source = selection[0]
+        target = selection[1]
+        # auxiliary.transfer_shaders(source, target)
+        # pm.select(selection)
+
+        lut = auxiliary.match_hierarchy(source, target)
+
+        for source, target in lut['match']:
+            pm.transferAttributes(
+                source,
+                target,
+                transferPositions=0,
+                transferNormals=0,
+                transferUVs=2,
+                transferColors=2,
+                sampleSpace=4,
+                sourceUvSpace='map1',
+                searchMethod=3,
+                flipUVs=0,
+                colorBorders=1
             )
 
     @classmethod
