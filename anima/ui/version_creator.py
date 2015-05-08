@@ -404,10 +404,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("finished initializing the interface")
 
     def close(self):
-        # logger.debug('closing DBSession')
-        # db.DBSession.close()
-        # db.DBSession.remove()
-        # logger.debug('closing the ui')
+        logger.debug('closing DBSession')
+        DBSession.close()
+        DBSession.connection().close()
+        DBSession.remove()
+        logger.debug('closing the ui')
         QtGui.QDialog.close(self)
 
     def show(self):
