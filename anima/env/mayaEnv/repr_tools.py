@@ -13,6 +13,7 @@ from stalker import LocalSession, Repository
 
 from anima.repr import Representation
 from anima.env.mayaEnv import auxiliary
+from anima import logger
 
 
 RENDER_RELATED_NODE_TYPES = [
@@ -622,6 +623,7 @@ class RepresentationGenerator(object):
 
         # load all references again
         # convert all references to GPU
+        logger.debug('converting all references to GPU')
         for ref in pm.listReferences():
             # check if this is a Model reference
             ref.to_repr('GPU')
@@ -632,6 +634,7 @@ class RepresentationGenerator(object):
 
         is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
         if is_exterior_or_interior_task:
+            logger.debug('importing all references')
             # and import all of the references
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
@@ -657,6 +660,7 @@ class RepresentationGenerator(object):
 
         # export the root nodes under the same file
         if is_exterior_or_interior_task:
+            logger.debug('exporting root nodes')
             pm.select(auxiliary.get_root_nodes())
             pm.exportSelected(
                 v.absolute_full_path,
@@ -664,6 +668,7 @@ class RepresentationGenerator(object):
                 force=True
             )
 
+        logger.debug('renewing scene')
         # clear scene
         pm.newFile(force=True)
 
@@ -697,9 +702,12 @@ class RepresentationGenerator(object):
         """
         num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
 
+        logger.debug('deleting unknown references')
         delete_nodes_types = ['reference', 'unknown']
         for node in pm.ls(type=delete_nodes_types):
             node.unlock()
+
+        logger.debug('deleting "delete_nodes_types"')
         try:
             pm.delete(pm.ls(type=delete_nodes_types))
         except RuntimeError:
