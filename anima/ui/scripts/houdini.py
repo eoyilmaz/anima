@@ -4,13 +4,34 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+import hou
+
 from anima import logger
 from anima.ui import SET_PYQT4
 from anima.utils import do_db_setup
 
 SET_PYQT4()
 
-import logging
+
+class Executor(object):
+    """Executor that binds the UI element to Houdini event loop
+    """
+
+    def __init__(self):
+        self.application = None
+        from anima.ui.lib import QtCore
+        self.event_loop = QtCore.QEventLoop()
+
+    def exec_(self, app, dialog):
+        self.application = app
+
+        hou.ui.addEventLoopCallback(self.processEvents)
+
+        dialog.exec_()
+
+    def processEvents(self):
+        self.event_loop.processEvents()
+        self.application.sendPostedEvents(None, 0)
 
 
 def version_creator():
@@ -19,6 +40,7 @@ def version_creator():
     # connect to db
     do_db_setup()
 
+    import logging
     from stalker import log
     log.logging_level = logging.WARNING
 
@@ -31,4 +53,12 @@ def version_creator():
 
     logger.setLevel(logging.WARNING)
 
-    version_creator.UI(environment=h)
+    if hou.applicationVersion()[0] <= 13:
+        version_creator.UI(
+            environment=h
+        )
+    else:
+        version_creator.UI(
+            environment=h,
+            executor=Executor()
+        )
