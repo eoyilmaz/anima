@@ -5,10 +5,10 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 from anima import logger
-from anima.ui import SET_PYSIDE
+from anima.ui import SET_PYQT4
 from anima.utils import do_db_setup
 
-SET_PYSIDE()
+SET_PYQT4()
 
 import logging
 
