@@ -29,6 +29,7 @@ __version__ = "0.1.13.dev"
 from stalker import defaults
 
 import os
+import stat
 import datetime
 import tempfile
 import logging
@@ -61,6 +62,12 @@ logger.debug('***************************************************************')
 logger.debug('started new anima instance on %s' % datetime.datetime.now())
 logger.debug('***************************************************************')
 
+# fix file mod for log file
+os.chmod(
+    log_file_path,
+    stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO -
+    stat.S_IXUSR - stat.S_IXGRP - stat.S_IXOTH
+)
 
 stalker_server_internal_address = ''
 stalker_server_external_address = ''
