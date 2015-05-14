@@ -8,20 +8,14 @@ import pymel.core as pm
 
 
 def camera_film_offset_tool():
-    """Adds a locator to the selected camera with which you can adjust the film
-    offset and overscan.
+    """Adds a locator to the selected camera with which you can adjust the 2d
+    pan and zoom.
 
     Usage :
     -------
     - to add it, select the camera and use oyCameraFilmOffsetTool
     - to remove it, set the transformations to 0 0 1 and then simply delete
     the curve
-
-    Version History :
-    -----------------
-    v0.1.0
-    - initial version
-
     """
     sel_list = pm.ls(sl=1)
 
@@ -30,14 +24,13 @@ def camera_film_offset_tool():
 
     for obj in sel_list:
         #if it is a transform node query for shapes
-        if obj.type() == 'transform':
-            shapes = obj.listRelatives(s=True)
-            #check if it is a camera
-            if shapes[0].type() == 'camera':
-                camera_shape = shapes[0]
-                found_camera = 1
-                break
-        elif obj.type() == 'camera':
+        if isinstance(obj, pm.nt.Transform):
+            for shape in obj.listRelatives(s=True):
+                if isinstance(shape, pm.nt.Camera):
+                    camera_shape = shape
+                    found_camera = 1
+                    break
+        elif isinstance(obj, pm.nt.Camera):
             camera_shape = obj
             found_camera = 1
             break
@@ -71,18 +64,20 @@ def camera_film_offset_tool():
 
     #create the locator
     temp = pm.spaceLocator()
-    adjLoc = temp
-    adjLocShape = temp
+    adj_locator = temp
+    adj_locator_shape = temp
 
-    pm.parent(adjLoc, frame_curve, r=True)
+    adj_locator.addAttr('enable', at='bool', dv=True, k=True)
 
-    pm.transformLimits(adjLoc, tx=(-0.5, 0.5), etx=(True, True))
-    pm.transformLimits(adjLoc, ty=(-0.5, 0.5), ety=(True, True))
-    pm.transformLimits(adjLoc, sx=(0.01, 2.0), esx=(True, True))
+    pm.parent(adj_locator, frame_curve, r=True)
+
+    pm.transformLimits(adj_locator, tx=(-0.5, 0.5), etx=(True, True))
+    pm.transformLimits(adj_locator, ty=(-0.5, 0.5), ety=(True, True))
+    pm.transformLimits(adj_locator, sx=(0.01, 2.0), esx=(True, True))
 
     #connect the locator tx and ty to film offset x and y
-    adjLoc.tx.connect((camera_shape + '.horizontalFilmOffset'), force=True)
-    adjLoc.ty.connect((camera_shape + '.verticalFilmOffset'), force=True)
+    adj_locator.tx >> camera_shape.pan.horizontalPan
+    adj_locator.ty >> camera_shape.pan.verticalPan
 
     exp = 'float $flen = %s.focalLength;\n\n' \
           'float $hfa = %s.horizontalFilmAperture * 25.4;\n' \
@@ -90,18 +85,19 @@ def camera_film_offset_tool():
           camera_shape, camera_shape, frame_curve, frame_curve, frame_curve)
     pm.expression(s=exp, o='', ae=1, uc="all")
 
-    adjLoc.sx >> adjLoc.sy
-    adjLoc.sx >> adjLoc.sz
-    adjLoc.sx >> camera_shape.overscan
+    adj_locator.sx >> adj_locator.sy
+    adj_locator.sx >> adj_locator.sz
+    adj_locator.sx >> camera_shape.zoom
+    adj_locator.enable >> camera_shape.panZoomEnabled
 
-    adjLocShape.localScaleZ.set(0)
+    adj_locator_shape.localScaleZ.set(0)
 
-    adjLoc.tz.set(lock=True, keyable=False)
-    adjLoc.rx.set(lock=True, keyable=False)
-    adjLoc.ry.set(lock=True, keyable=False)
-    adjLoc.rz.set(lock=True, keyable=False)
-    adjLoc.sy.set(lock=True, keyable=False)
-    adjLoc.sz.set(lock=True, keyable=False)
+    adj_locator.tz.set(lock=True, keyable=False)
+    adj_locator.rx.set(lock=True, keyable=False)
+    adj_locator.ry.set(lock=True, keyable=False)
+    adj_locator.rz.set(lock=True, keyable=False)
+    adj_locator.sy.set(lock=True, keyable=False)
+    adj_locator.sz.set(lock=True, keyable=False)
 
 
 def camera_focus_plane_tool():
