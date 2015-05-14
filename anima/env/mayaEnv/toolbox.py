@@ -951,6 +951,19 @@ def UI():
                           "node if necessary",
                       bgc=color.color)
 
+            color.change()
+            pm.button('to_bbox_button',
+                      l="aiStandIn To BBox",
+                      c=RepeatedCallback(Render.standin_to_bbox),
+                      ann="Convert selected stand ins to bbox",
+                      bgc=color.color)
+
+            pm.button('to_polywire_button',
+                      l="aiStandIn To Polywire",
+                      c=RepeatedCallback(Render.standin_to_polywire),
+                      ann="Convert selected stand ins to polywire",
+                      bgc=color.color)
+
 
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
@@ -1103,6 +1116,14 @@ def UI():
                 ann='Creates a locator at the center of selected components '
                     'and moves it with the components along the current '
                     'frame range',
+                bgc=color.color
+            )
+
+            pm.button(
+                'create_follicle_button',
+                l='Attach Follicle',
+                c=RepeatedCallback(Animation.attach_follicle),
+                ann='Attaches a follicle in the selected components',
                 bgc=color.color
             )
 
@@ -2667,6 +2688,18 @@ class Render(object):
     """
 
     @classmethod
+    def standin_to_bbox(cls):
+        """convert the selected stand-in nodes to bbox
+        """
+        [node.mode.set(0) for node in pm.ls(sl=1) if isinstance(node.getShape(), pm.nt.AiStandIn)]
+
+    @classmethod
+    def standin_to_polywire(cls):
+        """convert the selected stand-in nodes to bbox
+        """
+        [node.mode.set(2) for node in pm.ls(sl=1) if isinstance(node.getShape(), pm.nt.AiStandIn)]
+
+    @classmethod
     def add_miLabel(cls):
         selection = pm.ls(sl=1)
 
@@ -3749,6 +3782,23 @@ class Animation(object):
             pm.setKeyframe(locator.tx)
             pm.setKeyframe(locator.ty)
             pm.setKeyframe(locator.tz)
+
+    @classmethod
+    def attach_follicle(cls):
+        """attaches a follicle on selected mesh vertices
+        """
+        pnts = pm.ls(sl=1)
+
+        for pnt in pnts:
+            mesh = pnt.node()
+            follicle = pm.createNode('follicle')
+            mesh.worldMesh[0] >> follicle.inputMesh
+            uv = pnts[0].getUV()
+            follicle.parameterU.set(uv[0])
+            follicle.parameterV.set(uv[1])
+            follicle_t = follicle.getParent()
+            follicle.outTranslate >> follicle_t.t
+            follicle.outRotate >> follicle_t.r
 
     @classmethod
     def set_range_from_shot(cls):
