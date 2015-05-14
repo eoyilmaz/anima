@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2014, Anima Istanbul
+# Copyright (c) 2012-2015, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -275,11 +275,15 @@ def do_db_setup():
 
     try:
         DBSession.connection()
-        print('already connected, not creating any new connections')
+        logger.debug('already connected, not creating any new connections')
     except UnboundExecutionError:
         # no connection do setup
-        print('doing a new connection')
-        db.setup()
+        logger.debug('doing a new connection with NullPool')
+        from stalker import defaults
+        from sqlalchemy.pool import NullPool
+        settings = defaults.database_engine_settings
+        settings['sqlalchemy.poolclass'] = NullPool
+        db.setup(settings)
 
 
 def utc_to_local(utc_dt):

@@ -3,7 +3,9 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-"""
-This package contains scripts to be used inside host environment to initialize
-the UI.
-"""
+
+
+def perf():
+    """This is a decorator that measures performance of the decorated function
+    """
+    pass
