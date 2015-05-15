@@ -7,10 +7,10 @@
 import hou
 
 from anima import logger
-from anima.ui import SET_PYQT4
+from anima.ui import SET_PYSIDE
 from anima.utils import do_db_setup
 
-SET_PYQT4()
+SET_PYSIDE()
 
 
 class Executor(object):
