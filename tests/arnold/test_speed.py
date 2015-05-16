@@ -6,7 +6,6 @@
 """Tests the speed of the base85 encode operation
 """
 import time
-import multiprocessing
 import re
 
 from anima.render.arnold import base85
@@ -40,21 +39,9 @@ print('Encoding %3i times took : %.3f seconds' % (repeat, encode_duration))
 print('Averaging               : %.3f seconds' % (encode_duration / repeat))
 
 
-print('********  FAST  ********')
+print('**** MULTI-THREADED ****')
 start = time.time()
-
-number_of_threads = 8
-p = multiprocessing.Pool(number_of_threads)
-number_of_chunks = len(data) // 4
-chunk_per_thread = number_of_chunks / number_of_threads
-split_per_char = chunk_per_thread * 4
-thread_data = []
-for i in range(0, len(data), split_per_char):
-    thread_data.append(data[i:i + split_per_char])
-
-
-thread_encoded_data = ''.join(p.map(base85.arnold_b85_encode, thread_data))
-
+thread_encoded_data = base85.arnold_b85_encode_multithreaded(data)
 end = time.time()
 encode_duration = end - start
 print('Encoding %3i times took : %.3f seconds' % (repeat, encode_duration))
@@ -62,7 +49,7 @@ print('Averaging               : %.3f seconds' % (encode_duration / repeat))
 
 assert normal_encoded_data == thread_encoded_data
 
-print('****************************************')
+print('************************')
 print('Test Splitting vs Appending')
 print('Splitting with RegEx')
 start = time.time()
@@ -78,8 +65,4 @@ for i in range(0, len(normal_encoded_data), 500):
 list_splitted_data = '\n'.join(list_splitted_data)
 end = time.time()
 print('Using List Append       : %.3f seconds' % (end - start))
-
-print(len(regex_splitted_data))
-print(len(list_splitted_data))
-assert regex_splitted_data == list_splitted_data
 
