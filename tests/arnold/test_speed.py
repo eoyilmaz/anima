@@ -50,7 +50,7 @@ print('Averaging               : %.3f seconds' % (encode_duration / repeat))
 assert normal_encoded_data == thread_encoded_data
 
 print('************************')
-print('Test Splitting vs Appending')
+print('Test Regex vs List Append')
 print('Splitting with RegEx')
 start = time.time()
 regex_splitted_data = re.sub("(.{500})", "\\1\n", normal_encoded_data, 0)
