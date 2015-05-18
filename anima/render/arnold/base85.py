@@ -128,15 +128,21 @@ def __b85_encode(data, lut, byte_order, special_values=None):
     return return_val
 
 
-def b85_encode(data):
-    """Encodes the given string data in to Base85 using the standard LUT
+def __encode_multithreaded(f, data):
+    import multiprocessing
+    number_of_threads = multiprocessing.cpu_count()
 
-    :param str data: A string which contains a string to be encoded in Base85
-    :returns: str
-    """
-    lut = LUTS['standard']['int_to_char']
-    byte_order = LUTS['standard']['byte_order']
-    return __b85_encode(data, lut, byte_order)
+    p = multiprocessing.Pool(number_of_threads)
+
+    number_of_chunks = len(data) // 4
+    chunk_per_thread = number_of_chunks / number_of_threads
+    split_per_char = chunk_per_thread * 4
+
+    thread_data = []
+    for i in range(0, len(data), split_per_char):
+        thread_data.append(data[i:i + split_per_char])
+
+    return ''.join(p.map(f, thread_data))
 
 
 def rfc1924_b85_encode(data):
@@ -149,10 +155,20 @@ def rfc1924_b85_encode(data):
     byte_order = LUTS['rfc1924']['byte_order']
     return __b85_encode(data, lut, byte_order)
 
+
+def rfc1924_b85_encode_multithreaded(data):
+    """Encodes the given string data in to Base85 using the RFC1924 LUT
+
+    :param str data: A string which contains a string to be encoded in Base85
+    :returns: str
+    """
+    return __encode_multithreaded(rfc1924_b85_encode, data)
+
+
 def arnold_b85_encode(data):
     """Encodes the given string data in to Base85 using the arnold LUT
 
-    :param str data: A string which contains a string to be encoded in Base85
+    :param str data: String to be encoded in Base85
     :returns: str
     """
     lut = LUTS['arnold']['int_to_char']
@@ -160,6 +176,16 @@ def arnold_b85_encode(data):
     special_values = LUTS['arnold']['special_values']
     #return __b85_encode(data, lut, byte_order, special_values)
     return __b85_encode(data, lut, byte_order)
+
+
+def arnold_b85_encode_multithreaded(data):
+    """Encodes the given string data in to Base85 using arnold LUT.
+
+    :param str data: String to be encoded in Base85
+    :return: str
+    """
+    return __encode_multithreaded(arnold_b85_encode, data)
+
 
 def __b85_decode(data, lut, byte_order, special_values=None):
     """Decodes the given string data by using the given LUT and byte order
@@ -183,13 +209,13 @@ def __b85_decode(data, lut, byte_order, special_values=None):
     parts = []
     parts_append = parts.append
     pack = struct.pack
-    byte_format = '%sI' % byte_order 
+    byte_format = '%sI' % byte_order
     for i in xrange(0, len(data), 5):
         int_sum = 52200625 * lut[data[i]] + \
-               614125 * lut[data[i + 1]] + \
-               7225 * lut[data[i + 2]] + \
-               85 * lut[data[i + 3]] + \
-               lut[data[i + 4]]
+            614125 * lut[data[i + 1]] + \
+            7225 * lut[data[i + 2]] + \
+            85 * lut[data[i + 3]] + \
+            lut[data[i + 4]]
         parts_append(pack(byte_format, int_sum))
     return ''.join(parts)
 

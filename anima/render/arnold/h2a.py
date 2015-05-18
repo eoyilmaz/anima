@@ -163,34 +163,6 @@ polymesh
  opaque on
  id 683108022
 }"""
-    #    """
-    #polymesh
-    #{
-    # name %(name)s
-    # nsides %(primitive_count)i %(sample_count)s UINT
-    #  %(number_of_points_per_primitive)s
-    # vidxs %(vertex_count) %(sample_count)s b85UINT
-    #%(vertex_ids)s
-    # uvidxs %(vertex_count)s %(sample_count)s b85UINT
-    #%(uv_ids)s
-    # vlist %(point_count) %(sample_count)s b85POINT
-    #%(point_positions)s
-    # nlist %(normal_count)s %(sample_count)s VECTOR
-    #%(vertex_normals)s
-    # uvlist %(vertex_count)s %(sample_count)s b85POINT2
-    #%(uv_positions)s
-    # smoothing on
-    # visibility 65535
-    # sidedness 65535
-    # receive_shadows on
-    # self_shadows on
-    # matrix
-    #%(matrix)s
-    # opaque on
-    # id 683108022
-    #}
-    #"""
-    # skip attributes
     skip_normals = False
     skip_uvs = False
 
@@ -285,19 +257,18 @@ polymesh
     split_end = time.time()
     print('Splitting Number of Points : %3.3f' % (split_end - split_start))
 
-
     #
     # Point Positions
     #
     encode_start = time.time()
-    encoded_point_positions = base85.arnold_b85_encode(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encode_end = time.time()
     print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
+    splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
-    print('Splitting Point Poisitions : %3.3f' % (split_end - split_start))
+    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
 
     # #
     # # Vertex Normals
@@ -499,23 +470,23 @@ curves
     zip_end = time.time()
     print('Zipping Point Position     : %3.3f' % (zip_end - zip_start))
 
-    encoded_point_positions = base85.arnold_b85_encode(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encode_end = time.time()
     print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    splitted_point_positions = re.sub("(.{500})", "\\1\n", encoded_point_positions, 0)
+    splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
     print('Splitting Point Positions  : %3.3f' % (split_end - split_start))
 
     # radius
     encode_start = time.time()
-    encoded_radius = base85.arnold_b85_encode(radius)
+    encoded_radius = base85.arnold_b85_encode_multithreaded(radius)
     encode_end = time.time()
     print('Radius encode              : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    splitted_radius = re.sub("(.{500})", "\\1\n", encoded_radius, 0)
+    splitted_radius = split_data(encoded_radius, 500)
     # extend for motion blur
     if export_motion:
         splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
@@ -531,24 +502,24 @@ curves
           (getting_uv_end - getting_uv_start))
 
     encode_start = time.time()
-    encoded_u = base85.arnold_b85_encode(u)
+    encoded_u = base85.arnold_b85_encode_multithreaded(u)
     encode_end = time.time()
     print('Encoding UParamcoord       : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    splitted_u = re.sub("(.{500})", "\\1\n", encoded_u, 0)
+    splitted_u = split_data(encoded_u, 500)
     if export_motion:
         splitted_u = '%(data)s%(data)s' % {'data': splitted_u}
     split_end = time.time()
     print('Splitting UParamCoord      : %3.3f' % (split_end - split_start))
 
     encode_start = time.time()
-    encoded_v = base85.arnold_b85_encode(v)
+    encoded_v = base85.arnold_b85_encode_multithreaded(v)
     encode_end = time.time()
     print('Encoding VParamcoord       : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    splitted_v = re.sub("(.{500})", "\\1\n", encoded_v, 0)
+    splitted_v = split_data(encoded_v, 500)
     if export_motion:
         splitted_v = '%(data)s%(data)s' % {'data': splitted_v}
     split_end = time.time()
@@ -592,3 +563,16 @@ curves
     rendered_curve_data = base_template % template_vars
 
     return rendered_curve_data
+
+
+def split_data(data, chunk_size):
+    """Splits the given data in to evenly sized chunks
+
+    :param str data: A string of data
+    :param int chunk_size: An integer showing from which element to split
+    :return:
+    """
+    list_splitted_data = []
+    for i in range(0, len(data), chunk_size):
+        list_splitted_data.append(data[i:i + chunk_size])
+    return '\n'.join(list_splitted_data)
