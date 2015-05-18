@@ -24,9 +24,7 @@ class Executor(object):
 
     def exec_(self, app, dialog):
         self.application = app
-
         hou.ui.addEventLoopCallback(self.processEvents)
-
         dialog.exec_()
 
     def processEvents(self):
