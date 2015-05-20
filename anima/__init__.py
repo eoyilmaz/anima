@@ -58,9 +58,9 @@ logger.addHandler(log_file_handler)
 # set stalker to use the same logger
 
 # create initial log
-logger.debug('***************************************************************')
-logger.debug('started new anima instance on %s' % datetime.datetime.now())
-logger.debug('***************************************************************')
+#logger.debug('***************************************************************')
+#logger.debug('started new anima instance on %s' % datetime.datetime.now())
+#logger.debug('***************************************************************')
 
 # fix file mod for log file
 os.chmod(

@@ -131,10 +131,11 @@ def __b85_encode(data, lut, byte_order, special_values=None):
 def __encode_multithreaded(f, data):
     import multiprocessing
     import platform
-    number_of_threads = multiprocessing.cpu_count()
+    import sys
+    number_of_threads = multiprocessing.cpu_count() / 2
 
     if platform.system() == 'Windows':
-        multiprocessing.set_executable('C:/Python27/python.exe')
+        multiprocessing.set_executable('C:/Python27/pythonw.exe')
     elif platform.system() == 'Linux':
         multiprocessing.set_executable('/usr/bin/python')
 
@@ -148,7 +149,9 @@ def __encode_multithreaded(f, data):
     for i in range(0, len(data), split_per_char):
         thread_data.append(data[i:i + split_per_char])
 
-    return ''.join(p.map(f, thread_data))
+    data = ''.join(p.map(f, thread_data))
+    p.close()
+    return data
 
 
 def rfc1924_b85_encode(data):

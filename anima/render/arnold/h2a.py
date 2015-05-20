@@ -87,7 +87,6 @@ def geometry2ass(**kwargs):
 
     node = hou.pwd()
 
-    write_start = time.time()
     file_handler = open
     if use_gzip:
         file_handler = gzip.open
@@ -105,12 +104,13 @@ def geometry2ass(**kwargs):
     elif export_type == 1:
         data = polygon2ass(node, name, export_motion)
 
+    write_start = time.time()
     ass_file = file_handler(ass_path, 'w')
     ass_file.write(data)
     ass_file.close()
     write_end = time.time()
 
-    print('Writing to file            : %3.3f' % (write_end - write_start))
+    print('Writing to file              : %3.3f' % (write_end - write_start))
 
     node_inputs = node.inputs()
     try:
@@ -133,7 +133,7 @@ def geometry2ass(**kwargs):
         asstoc_file.write(bounding_box_info)
 
     end_time = time.time()
-    print('All Conversion took       : %3.3f sec' % (end_time - start_time))
+    print('All Conversion took          : %3.3f sec' % (end_time - start_time))
     print('******************************************************************')
 
 
@@ -438,7 +438,7 @@ curves
         radius_file_str_write(''.join(radius_str_buffer))
         radius = radius_file_str.getvalue()
     getting_radius_end = time.time()
-    print('Getting Radius Info        : %3.3f' %
+    print('Getting Radius Info          : %3.3f' %
           (getting_radius_end - getting_radius_start))
 
     # point positions
@@ -453,7 +453,7 @@ curves
         point_positions = '%s%s' % (point_positions, point_prime_positions)
 
     getting_point_positions_end = time.time()
-    print('Getting Point Position     : %3.3f' %
+    print('Getting Point Position       : %3.3f' %
           (getting_point_positions_end - getting_point_positions_start))
 
     # repeat every first and last point coordinates
@@ -468,22 +468,22 @@ curves
         )
     )
     zip_end = time.time()
-    print('Zipping Point Position     : %3.3f' % (zip_end - zip_start))
+    print('Zipping Point Position       : %3.3f' % (zip_end - zip_start))
 
     encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
     encode_end = time.time()
-    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
+    print('Encoding Point Position      : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_point_positions = split_data(encoded_point_positions, 500)
     split_end = time.time()
-    print('Splitting Point Positions  : %3.3f' % (split_end - split_start))
+    print('Splitting Point Positions    : %3.3f' % (split_end - split_start))
 
     # radius
     encode_start = time.time()
-    encoded_radius = base85.arnold_b85_encode_multithreaded(radius)
+    encoded_radius = base85.arnold_b85_encode(radius)
     encode_end = time.time()
-    print('Radius encode              : %3.3f' % (encode_end - encode_start))
+    print('Radius encode                : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_radius = split_data(encoded_radius, 500)
@@ -491,39 +491,39 @@ curves
     if export_motion:
         splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
     split_end = time.time()
-    print('Splitting Radius           : %3.3f' % (split_end - split_start))
+    print('Splitting Radius             : %3.3f' % (split_end - split_start))
 
     # uv
     getting_uv_start = time.time()
     u = geo.primFloatAttribValuesAsString('uv_u')
     v = geo.primFloatAttribValuesAsString('uv_v')
     getting_uv_end = time.time()
-    print('Getting uv                 : %3.3f' %
+    print('Getting uv                   : %3.3f' %
           (getting_uv_end - getting_uv_start))
 
     encode_start = time.time()
-    encoded_u = base85.arnold_b85_encode_multithreaded(u)
+    encoded_u = base85.arnold_b85_encode(u)
     encode_end = time.time()
-    print('Encoding UParamcoord       : %3.3f' % (encode_end - encode_start))
+    print('Encoding UParamcoord         : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_u = split_data(encoded_u, 500)
     if export_motion:
         splitted_u = '%(data)s%(data)s' % {'data': splitted_u}
     split_end = time.time()
-    print('Splitting UParamCoord      : %3.3f' % (split_end - split_start))
+    print('Splitting UParamCoord        : %3.3f' % (split_end - split_start))
 
     encode_start = time.time()
-    encoded_v = base85.arnold_b85_encode_multithreaded(v)
+    encoded_v = base85.arnold_b85_encode(v)
     encode_end = time.time()
-    print('Encoding VParamcoord       : %3.3f' % (encode_end - encode_start))
+    print('Encoding VParamcoord         : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
     splitted_v = split_data(encoded_v, 500)
     if export_motion:
         splitted_v = '%(data)s%(data)s' % {'data': splitted_v}
     split_end = time.time()
-    print('Splitting VParamCoord      : %3.3f' % (split_end - split_start))
+    print('Splitting VParamCoord        : %3.3f' % (split_end - split_start))
 
     print('len(encoded_point_positions) : %s' % len(encoded_point_positions))
     print('(p + 2 * c) * 5 * 3          : %s' % (point_count * 5 * 3))
@@ -561,6 +561,8 @@ curves
     })
 
     rendered_curve_data = base_template % template_vars
+
+    del geo
 
     return rendered_curve_data
 
