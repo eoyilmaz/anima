@@ -40,7 +40,6 @@ if __name__ == '__main__':
     print('Encoding %3i times took : %.3f seconds' % (repeat, encode_duration))
     print('Averaging               : %.3f seconds' % (encode_duration / repeat))
 
-
     print('**** MULTI-THREADED ****')
     start = time.time()
     thread_encoded_data = base85.arnold_b85_encode_multithreaded(data)

@@ -129,9 +129,15 @@ def __b85_encode(data, lut, byte_order, special_values=None):
 
 
 def __encode_multithreaded(f, data):
+    """The base function that runs the given function f in multithreaded
+    fashion.
+
+    :param f: The function
+    :param data: The data
+    :return:
+    """
     import multiprocessing
     import platform
-    import sys
     number_of_threads = multiprocessing.cpu_count() / 2
 
     if platform.system() == 'Windows':
