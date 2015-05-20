@@ -907,7 +907,7 @@ def perform_playblast(action):
         outputs = sp.playblast(
             options={
                 'viewer': 1,
-                'offScreen': 0,
+                'offScreen': 1,
                 'compression': 'MPEG-4 Video',
                 'quality': 85,
                 'sequenceTime': 0
@@ -1223,64 +1223,71 @@ class ShotPlayblaster(object):
         global_start, global_end = self.get_frame_range()
         use_global_start_end = False
         if global_end - global_start > 1:
-            use_global_start_end = 1
+            use_global_start_end = True
 
         audio_node = self.get_audio_node()
 
         playblast_outputs = []
 
-        for shot in shots:
-            video_temp_output = tempfile.mktemp(suffix='.mov')
+        try:
+            for shot in shots:
+                video_temp_output = tempfile.mktemp(suffix='.mov')
 
-            shot_start_frame = int(pm.shot(shot, q=1, st=1))
-            shot_end_frame = int(pm.shot(shot, q=1, et=1))
+                shot_start_frame = int(pm.shot(shot, q=1, st=1))
+                shot_end_frame = int(pm.shot(shot, q=1, et=1))
 
-            output_file_name = '%s_%s%s' % (
-                os.path.splitext(self.version.filename)[0],
-                shot.name().split(':')[-1] if shot else 'None',
-                '.mov'
-            )
-
-            if use_global_start_end:
-                if not global_start >= shot_start_frame \
-                   or not global_end <= shot_end_frame:
-                    continue
-                shot_start_frame = global_start
-                shot_end_frame = global_end
-
-                output_file_name = '%s_%s_%s_%s%s' % (
+                output_file_name = '%s_%s%s' % (
                     os.path.splitext(self.version.filename)[0],
                     shot.name().split(':')[-1] if shot else 'None',
-                    shot_start_frame,
-                    shot_end_frame,
                     '.mov'
                 )
 
-            self.create_hud('kksCameraHUD')
-            # create video playblast
-            per_shot_options = {
-                'startTime': shot_start_frame,
-                'endTime': shot_end_frame + extra_frame,
-                'filename': video_temp_output,
-                'wh': (width, height),
-                'sound': audio_node,
-                'sequenceTime': is_published
-            }
-            default_options.update(per_shot_options)
-            pm.playblast(**default_options)
+                set_shot_output = False
 
-            # upload output to server
-            output_path = self.set_as_output(
-                output_file_name=output_file_name,
-                version=self.version,
-                output_file_full_path=video_temp_output,
-            )
+                if use_global_start_end:
+                    if not global_start >= shot_start_frame \
+                       or not global_end <= shot_end_frame:
+                        continue
+                    shot_start_frame = global_start
+                    shot_end_frame = global_end
 
-            playblast_outputs.append(output_path)
+                    set_shot_output = True
 
-            caller.step()
+                    output_file_name = '%s_%s_%s_%s%s' % (
+                        os.path.splitext(self.version.filename)[0],
+                        shot.name().split(':')[-1] if shot else 'None',
+                        shot_start_frame,
+                        shot_end_frame,
+                        '.mov'
+                    )
 
-        self.restore_user_options()
+                self.create_hud('kksCameraHUD')
+                # create video playblast
+                per_shot_options = {
+                    'startTime': shot_start_frame,
+                    'endTime': shot_end_frame + extra_frame,
+                    'filename': video_temp_output,
+                    'wh': (width, height),
+                    'sound': audio_node,
+                    'sequenceTime': is_published
+                }
+                default_options.update(per_shot_options)
+                pm.playblast(**default_options)
+
+                # upload output to server
+                if set_shot_output:
+                    output_path = self.set_as_output(
+                        output_file_name=output_file_name,
+                        version=self.version,
+                        output_file_full_path=video_temp_output,
+                    )
+
+                    playblast_outputs.append(output_path)
+
+                caller.step()
+
+        finally:
+            self.restore_user_options()
 
         return playblast_outputs
 

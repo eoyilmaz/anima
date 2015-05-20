@@ -130,7 +130,13 @@ def __b85_encode(data, lut, byte_order, special_values=None):
 
 def __encode_multithreaded(f, data):
     import multiprocessing
+    import platform
     number_of_threads = multiprocessing.cpu_count()
+
+    if platform.system() == 'Windows':
+        multiprocessing.set_executable('C:/Python27/python.exe')
+    elif platform.system() == 'Linux':
+        multiprocessing.set_executable('/usr/bin/python')
 
     p = multiprocessing.Pool(number_of_threads)
 
