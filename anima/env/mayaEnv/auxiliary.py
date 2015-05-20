@@ -1171,7 +1171,7 @@ class ShotPlayblaster(object):
             'forceOverwrite': 1,
             'clearCache': 1,
             'showOrnaments': 1,
-            'percent': 100,
+            'percent': 50,
             'offScreen': 1,
             'viewer': 0,
             'compression': 'MPEG-4 Video',
@@ -1201,14 +1201,14 @@ class ShotPlayblaster(object):
         is_published = False
 
         # use half HD by default
-        width = 960
-        height = 540
+        width = 1920
+        height = 1080
         if self.version:
             project = self.version.task.project
             # get the resolution
             imf = project.image_format
-            width = int(imf.width * 0.5)
-            height = int(imf.height * 0.5)
+            width = int(imf.width)
+            height = int(imf.height)
             is_published = self.version.is_published
 
         extra_frame = 0
@@ -1242,16 +1242,12 @@ class ShotPlayblaster(object):
                     '.mov'
                 )
 
-                set_shot_output = False
-
                 if use_global_start_end:
                     if not global_start >= shot_start_frame \
                        or not global_end <= shot_end_frame:
                         continue
                     shot_start_frame = global_start
                     shot_end_frame = global_end
-
-                    set_shot_output = True
 
                     output_file_name = '%s_%s_%s_%s%s' % (
                         os.path.splitext(self.version.filename)[0],
@@ -1275,7 +1271,7 @@ class ShotPlayblaster(object):
                 pm.playblast(**default_options)
 
                 # upload output to server
-                if set_shot_output:
+                if not use_global_start_end:
                     output_path = self.set_as_output(
                         output_file_name=output_file_name,
                         version=self.version,
