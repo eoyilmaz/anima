@@ -110,8 +110,6 @@ def geometry2ass(**kwargs):
     ass_file.close()
     write_end = time.time()
 
-
-
     print('Writing to file              : %3.3f' % (write_end - write_start))
 
     node_inputs = node.inputs()
