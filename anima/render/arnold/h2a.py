@@ -8,7 +8,7 @@ import os
 import gzip
 import struct
 import time
-import re
+
 
 from anima.render.arnold import base85
 reload(base85)
