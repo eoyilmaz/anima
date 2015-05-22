@@ -129,12 +129,12 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     """
 
 
-    bounding_min = node.geometry().findGlobalAttrib("bound_min")
-    bounding_max = node.geometry().findGlobalAttrib("bound_max")
+    bounding_min = node.geometry().attribValue("bound_min")
+    bounding_max = node.geometry().attribValue("bound_max")
 
     bounding_box_info = 'bounds %s %s %s %s %s %s' % (
-        bounding_min[0], bounding_min[2], bounding_min[4],
-        bounding_max[1], bounding_max[3], bounding_max[5]
+        bounding_min[0], bounding_min[1], bounding_min[2],
+        bounding_max[0], bounding_max[1], bounding_max[2]
     )
 
     with open(asstoc_path, 'w') as asstoc_file:
