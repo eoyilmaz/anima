@@ -977,7 +977,6 @@ class ShotPlayblaster(object):
         if sequencer.getAttr('sequence_name') != '':
             shot_info = sequencer.getAttr('sequence_name')
         else:
-
             shot_info = 'INVALID'
 
         cf = pm.currentTime(q=1) + 1
@@ -1299,7 +1298,6 @@ class ShotPlayblaster(object):
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
-        # TODO: we shouldn't need a "shot" parameter, just ask the desired output name
         hires_output_file_name = '%s%s' % (
             os.path.splitext(output_file_name)[0],
             hires_extension

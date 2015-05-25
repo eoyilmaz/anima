@@ -920,6 +920,7 @@ def check_multiple_connections_for_textures():
         'surfaceLuminance',
         'imagePlane',
         'layeredTexture',
+        'projection',
 
         'aiImage',
         'aiNoise',
