@@ -76,7 +76,7 @@ class Avid2Resolve(object):
                 seqs = pyseq.get_sequences(exr_path)
                 # png_path = '%s/png/*' % latest_version_path
 
-                return seqs[0].format('')
+                return 'file://localhost/%s' % seqs[0].format('%h|05B%03s-%03e|5D%t').replace('|', '%')
 
         return None
 
