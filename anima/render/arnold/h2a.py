@@ -62,15 +62,15 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def geometry2ass(**kwargs):
+def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, **kwargs):
     """exports geometry to ass format
     """
-    ass_path = kwargs['path']
-    name = kwargs['name']
-    min_pixel_width = kwargs['min_pixel_width']
-    mode = kwargs['mode']
-    export_type = kwargs['export_type']
-    export_motion = kwargs['export_motion']
+    ass_path = path
+    name = name
+    min_pixel_width = min_pixel_width
+    mode = mode
+    export_type = export_type
+    export_motion = export_motion
 
     start_time = time.time()
 
@@ -112,21 +112,12 @@ def geometry2ass(**kwargs):
 
     print('Writing to file              : %3.3f' % (write_end - write_start))
 
-    node_inputs = node.inputs()
-    try:
-        second_input_geo = node_inputs[1].geometry()
-    except IndexError:
-        second_input_geo = None
-
-    # use second input for bounding box if connected
-    if export_motion and second_input_geo:
-        bounding_box = second_input_geo.intrinsicValue('bounds')
-    else:
-        bounding_box = node.geometry().intrinsicValue('bounds')
+    bounding_min = node.geometry().attribValue("bound_min")
+    bounding_max = node.geometry().attribValue("bound_max")
 
     bounding_box_info = 'bounds %s %s %s %s %s %s' % (
-        bounding_box[0], bounding_box[2], bounding_box[4],
-        bounding_box[1], bounding_box[3], bounding_box[5]
+        bounding_min[0], bounding_min[1], bounding_min[2],
+        bounding_max[0], bounding_max[1], bounding_max[2]
     )
 
     with open(asstoc_path, 'w') as asstoc_file:
