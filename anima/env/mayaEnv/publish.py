@@ -761,7 +761,9 @@ def set_pixel_error():
                 node.setAttr('aiSubdivPixelError', 0.001)
 
         pixel_error = node.getAttr('aiSubdivPixelError')
-        node.setAttr('aiSubdivPixelError', min(1, pixel_error))
+
+        if pixel_error > 1:
+            node.setAttr('aiSubdivPixelError', 1)
 
 
 @publisher(LOOK_DEV_TYPES)
@@ -920,6 +922,7 @@ def check_multiple_connections_for_textures():
         'surfaceLuminance',
         'imagePlane',
         'layeredTexture',
+        'projection',
 
         'aiImage',
         'aiNoise',
@@ -1078,6 +1081,18 @@ def set_frame_range():
         min=start_frame-handle_count,
         max=end_frame+handle_count
     )
+
+
+@publisher('animation')
+def freezing_last_frame():
+    """checks if the last frame of the shot is freezing
+    """
+    # get cacheable nodes
+    # check the last 2 frames
+    # if the character is in move in the last 2 frames
+    # then there should be movement in the first frame after the current
+    # playback range
+    pass
 
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)

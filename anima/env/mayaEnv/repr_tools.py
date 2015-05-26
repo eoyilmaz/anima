@@ -85,6 +85,7 @@ RENDER_RELATED_NODE_TYPES = [
     'rgbToHsv',
     'surfaceLuminance',
     'imagePlane',
+    'projection',
 
     'aiImage',
     'aiNoise',
