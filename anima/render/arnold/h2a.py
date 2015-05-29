@@ -252,7 +252,8 @@ polymesh
     # Point Positions
     #
     encode_start = time.time()
-    encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
     print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
 
@@ -461,7 +462,8 @@ curves
     zip_end = time.time()
     print('Zipping Point Position       : %3.3f' % (zip_end - zip_start))
 
-    encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
     encode_end = time.time()
     print('Encoding Point Position      : %3.3f' % (encode_end - encode_start))
 
