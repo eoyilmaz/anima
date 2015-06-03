@@ -3051,6 +3051,7 @@ class Render(object):
             # do a direct assignment from source to target
             shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
             pm.sets(shading_engines[0], fe=target)
+            pm.select(selection)
             return
 
         lut = auxiliary.match_hierarchy(source, target)
