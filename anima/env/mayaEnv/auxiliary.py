@@ -468,32 +468,11 @@ def transfer_shaders(source, target):
     else:
         source_shape = source
 
-    if isinstance(target, pm.nt.Transform):
-        target_shape = target.getShape()
-    else:
-        target_shape = target
-
     # get the shadingEngines
     shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
 
-    data_storage = []
-
-    # get the assigned faces
-    for shading_engine in shading_engines:
-        faces = pm.sets(shading_engine, q=1)
-        for faceGroup in faces:
-            str_face = str(faceGroup)
-            # replace the objectName
-            new_face = \
-                str_face.replace(source_shape.name(), target_shape.name())
-            data_storage.append((shading_engine.name(), new_face))
-
-    for data in data_storage:
-        shading_engine = data[0]
-        new_face = data[1]
-        pm.select(new_face)
-        # now assign the newFaces to the set
-        pm.sets(shading_engine, fe=1)
+    if len(shading_engines):
+        pm.sets(shading_engines[0], fe=target)
 
 
 def benchmark(iter_cnt):
