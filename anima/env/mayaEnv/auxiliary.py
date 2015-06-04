@@ -972,8 +972,11 @@ class ShotPlayblaster(object):
             return ''
 
         shot_name = pm.getAttr('%s.shotName' % current_shot)
-        current_cam = pm.shot(current_shot, q=1, cc=1)
-        focal_length = pm.PyNode(current_cam).getShape().getAttr('focalLength')
+        current_cam_name = pm.shot(current_shot, q=1, cc=1)
+        current_cam = pm.PyNode(current_cam_name)
+        if isinstance(current_cam, pm.nt.Transform):
+            current_cam = current_cam.getShape()
+        focal_length = current_cam.getAttr('focalLength')
         sequencer = pm.ls(type='sequencer')[0]
         if sequencer.getAttr('sequence_name') != '':
             shot_info = sequencer.getAttr('sequence_name')
