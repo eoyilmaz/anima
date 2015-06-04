@@ -191,8 +191,10 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             'ntsc': str(self.ntsc).upper(),
             'timebase': self.timebase,
             'timecode': self.timecode,
-            'media': self.media.to_xml(indentation=indentation,
-                                       pre_indent=indentation + pre_indent),
+            'media': self.media.to_xml(
+                indentation=indentation,
+                pre_indent=indentation + pre_indent
+            ),
             'indentation': ' ' * indentation,
             'pre_indent': ' ' * pre_indent
         }

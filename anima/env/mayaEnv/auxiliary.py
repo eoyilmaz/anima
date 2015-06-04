@@ -468,32 +468,11 @@ def transfer_shaders(source, target):
     else:
         source_shape = source
 
-    if isinstance(target, pm.nt.Transform):
-        target_shape = target.getShape()
-    else:
-        target_shape = target
-
     # get the shadingEngines
     shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
 
-    data_storage = []
-
-    # get the assigned faces
-    for shading_engine in shading_engines:
-        faces = pm.sets(shading_engine, q=1)
-        for faceGroup in faces:
-            str_face = str(faceGroup)
-            # replace the objectName
-            new_face = \
-                str_face.replace(source_shape.name(), target_shape.name())
-            data_storage.append((shading_engine.name(), new_face))
-
-    for data in data_storage:
-        shading_engine = data[0]
-        new_face = data[1]
-        pm.select(new_face)
-        # now assign the newFaces to the set
-        pm.sets(shading_engine, fe=1)
+    if len(shading_engines):
+        pm.sets(shading_engines[0], fe=target)
 
 
 def benchmark(iter_cnt):
@@ -962,6 +941,28 @@ class ShotPlayblaster(object):
         self.user_view_options = {}
         self.reset_user_view_options_storage()
 
+    def check_sequence_name(self):
+        """checks sequence name and asks the user to set one if maya is in UI
+        mode and there is no sequence name set
+        """
+        sequencer = pm.ls(type='sequencer')[0]
+        sequence_name = sequencer.getAttr('sequence_name')
+        if sequence_name == '' and not pm.general.about(batch=1):
+            result = pm.promptDialog(
+                title='Please enter a Sequence Name',
+                message='Sequence Name:',
+                button=['OK', 'Cancel'],
+                defaultButton='OK',
+                cancelButton='Cancel',
+                dismissString='Cancel'
+            )
+
+            if result == 'OK':
+                sequencer.setAttr(
+                    'sequence_name',
+                    pm.promptDialog(query=True, text=True)
+                )
+
     def get_hud_data(self):
         """
         """
@@ -971,13 +972,15 @@ class ShotPlayblaster(object):
             return ''
 
         shot_name = pm.getAttr('%s.shotName' % current_shot)
-        current_cam = pm.shot(current_shot, q=1, cc=1)
-        focal_length = pm.PyNode(current_cam).getShape().getAttr('focalLength')
+        current_cam_name = pm.shot(current_shot, q=1, cc=1)
+        current_cam = pm.PyNode(current_cam_name)
+        if isinstance(current_cam, pm.nt.Transform):
+            current_cam = current_cam.getShape()
+        focal_length = current_cam.getAttr('focalLength')
         sequencer = pm.ls(type='sequencer')[0]
         if sequencer.getAttr('sequence_name') != '':
             shot_info = sequencer.getAttr('sequence_name')
         else:
-
             shot_info = 'INVALID'
 
         cf = pm.currentTime(q=1) + 1
@@ -1229,6 +1232,8 @@ class ShotPlayblaster(object):
 
         playblast_outputs = []
 
+        self.check_sequence_name()
+
         try:
             for shot in shots:
                 video_temp_output = tempfile.mktemp(suffix='.mov')
@@ -1299,7 +1304,6 @@ class ShotPlayblaster(object):
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
-        # TODO: we shouldn't need a "shot" parameter, just ask the desired output name
         hires_output_file_name = '%s%s' % (
             os.path.splitext(output_file_name)[0],
             hires_extension
