@@ -957,6 +957,18 @@ class ShotPlayblaster(object):
             shot_info = sequencer.getAttr('sequence_name')
         else:
             shot_info = 'INVALID'
+            if not pm.general.about(batch=1):
+                result = pm.promptDialog(
+                    title='Please enter a Sequence Name',
+                    message='Sequence Name:',
+                    button=['OK', 'Cancel'],
+                    defaultButton='OK',
+                    cancelButton='Cancel',
+                    dismissString='Cancel'
+                )
+
+                if result == 'OK':
+                    shot_info = pm.promptDialog(query=True, text=True)
 
         cf = pm.currentTime(q=1) + 1
 
