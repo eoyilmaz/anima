@@ -941,6 +941,28 @@ class ShotPlayblaster(object):
         self.user_view_options = {}
         self.reset_user_view_options_storage()
 
+    def check_sequence_name(self):
+        """checks sequence name and asks the user to set one if maya is in UI
+        mode and there is no sequence name set
+        """
+        sequencer = pm.ls(type='sequencer')[0]
+        sequence_name = sequencer.getAttr('sequence_name')
+        if sequence_name == '' and not pm.general.about(batch=1):
+            result = pm.promptDialog(
+                title='Please enter a Sequence Name',
+                message='Sequence Name:',
+                button=['OK', 'Cancel'],
+                defaultButton='OK',
+                cancelButton='Cancel',
+                dismissString='Cancel'
+            )
+
+            if result == 'OK':
+                sequencer.setAttr(
+                    'sequence_name',
+                    pm.promptDialog(query=True, text=True)
+                )
+
     def get_hud_data(self):
         """
         """
@@ -957,18 +979,6 @@ class ShotPlayblaster(object):
             shot_info = sequencer.getAttr('sequence_name')
         else:
             shot_info = 'INVALID'
-            if not pm.general.about(batch=1):
-                result = pm.promptDialog(
-                    title='Please enter a Sequence Name',
-                    message='Sequence Name:',
-                    button=['OK', 'Cancel'],
-                    defaultButton='OK',
-                    cancelButton='Cancel',
-                    dismissString='Cancel'
-                )
-
-                if result == 'OK':
-                    shot_info = pm.promptDialog(query=True, text=True)
 
         cf = pm.currentTime(q=1) + 1
 
@@ -1218,6 +1228,8 @@ class ShotPlayblaster(object):
         audio_node = self.get_audio_node()
 
         playblast_outputs = []
+
+        self.check_sequence_name()
 
         try:
             for shot in shots:
