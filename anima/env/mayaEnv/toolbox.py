@@ -3043,6 +3043,17 @@ class Render(object):
         # auxiliary.transfer_shaders(source, target)
         # pm.select(selection)
 
+        # check if they are direct parents of mesh or nurbs shapes
+        source_shape = source.getShape()
+        target_shape = target.getShape()
+
+        if source_shape and target_shape:
+            # do a direct assignment from source to target
+            shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
+            pm.sets(shading_engines[0], fe=target)
+            pm.select(selection)
+            return
+
         lut = auxiliary.match_hierarchy(source, target)
 
         attr_names = [
