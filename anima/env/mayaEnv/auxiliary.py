@@ -1120,6 +1120,7 @@ class ShotPlayblaster(object):
         pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
+        pm.modelEditor(active_panel, e=1, dynamics=True)
         pm.modelEditor(active_panel, e=1, planes=True)
 
         # turn all hud displays off
