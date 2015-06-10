@@ -390,7 +390,7 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'colorSet1': splitted_vertex_colors,
+        'colorSet1': splitted_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
