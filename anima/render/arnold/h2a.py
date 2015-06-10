@@ -135,27 +135,29 @@ def polygon2ass(node, name, export_motion=False):
 
     geo = node.geometry()
     base_template = """
-polymesh
-{
- name %(name)s
- nsides %(primitive_count)i 1 UINT
-%(number_of_points_per_primitive)s
- vidxs %(vertex_count)s 1 UINT
-%(vertex_ids)s
- vlist %(point_count)s %(sample_count)s b85POINT
-%(point_positions)s
- smoothing on
- visibility 65535
- sidedness 65535
- receive_shadows on
- self_shadows on
- matrix
-%(matrix)s
- opaque on
- id 683108022
-}"""
+    polymesh
+    {
+     name %(name)s
+     nsides %(primitive_count)i 1 UINT
+    %(number_of_points_per_primitive)s
+     vidxs %(vertex_count)s 1 UINT
+    %(vertex_ids)s
+     vlist %(point_count)s %(sample_count)s b85POINT
+    %(point_positions)s
+     smoothing on
+     visibility 65535
+     sidedness 65535
+     receive_shadows on
+     self_shadows on
+     matrix
+    %(matrix)s
+     opaque on
+     id 683108022
+    }"""
     skip_normals = False
     skip_uvs = False
+    skip_colors = False
+
 
     intrinsic_values = geo.intrinsicValueDict()
 
@@ -166,6 +168,8 @@ polymesh
     number_of_points_per_primitive = []
     vertex_ids = []
     # vertex_normals = []
+    vertex_colors = []
+
 
     # just for the first vertex try to read the uv to determine if we should
     # skip the uvs or not
@@ -175,7 +179,9 @@ polymesh
     j = 0
     combined_vertex_ids = []
     # combined_vertex_normals = []
+    combined_vertex_colors = []
     combined_number_of_points_per_primitive = []
+
 
     for prim in geo.iterPrims():
         number_of_points_per_primitive.append(`prim.numVertices()`)
@@ -189,13 +195,16 @@ polymesh
             point_id = point.number()
             vertex_ids.append(`point_id`)
             # vertex_normals.extend(point.floatListAttribValue('N'))
+            vertex_colors.extend(point.floatListAttribValue('Cd'))
             j += 1
             if j > 500:
                 j = 0
                 combined_vertex_ids.append(' '.join(vertex_ids))
                 vertex_ids = []
                 # combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
+                combined_vertex_colors.append(' '.join(map(str, vertex_colors)))
                 # vertex_normals = []
+                vertex_colors = []
 
     # join for a last time
     if number_of_points_per_primitive:
@@ -207,11 +216,27 @@ polymesh
     # if vertex_normals:
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
 
+    if vertex_colors:
+        combined_vertex_colors.append(' '.join(map(str, vertex_colors)))
+
     point_positions = geo.pointFloatAttribValuesAsString('P')
 
     if export_motion:
         point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
         point_positions = '%s%s' % (point_positions, point_prime_positions)
+
+
+
+    try:
+        point_colors = geo.pointFloatAttribValuesAsString('Cd')
+    except hou.OperationFailed:
+       # no color attribute skip it
+        skip_colors = True
+        point_colors = ''
+
+
+
+
 
     # try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
@@ -286,6 +311,41 @@ polymesh
     # split_end = time.time()
     # print('Splitting Vertex Normals    : %3.3f' % (split_end - split_start))
 
+
+
+    # #
+    # # Vertex Colors
+    # #
+
+    encode_start = time.time()
+    encoded_vertex_colors = '\n'.join(combined_vertex_colors)
+    encode_end = time.time()
+    print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+
+    split_start = time.time()
+    # splitted_vertex_colors = re.sub("(.{500})", "\\1\n", encoded_vertex_colors, 0)
+    splitted_vertex_colors = encoded_vertex_colors
+    # # # split every n-th data
+    n = 100
+    splitted_point_colors = []
+    for i in range(len(point_colors) / n):
+        start_index = n * i
+        end_index = n * (i+1)
+        splitted_point_colors.extend(point_colors[start_index:end_index])
+        splitted_point_colors.append('\n')
+
+    splitted_point_colors = ' '.join(map(str, splitted_point_colors))
+    split_end = time.time()
+    print('Splitting Vertex Colors    : %3.3f' % (split_end - split_start))
+
+
+
+
+
+
+
+
+
     #
     # Vertex Ids
     #
@@ -330,6 +390,7 @@ polymesh
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
+        'colorSet1': splitted_vertex_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
