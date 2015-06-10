@@ -46,9 +46,9 @@ VALID_MATERIALS = [
 ]
 
 
-#*********#
-# GENERIC #
-#*********#
+# ********* #
+# GENERIC   #
+# ********* #
 # @publisher
 # def delete_turtle_nodes():
 #     """deletes the Turtle related nodes
@@ -318,9 +318,18 @@ def check_only_published_versions_are_used():
         )
 
 
-#*******#
-# MODEL #
-#*******#
+@publisher
+def disable_all_performance_options():
+    """disables any performance degradation settings
+    """
+    pm.performanceOptions(
+        ds=0, dt=0, pbf=0, pbs=0, pc=0, pf=0, pl=0, pp=0, ps=0, pw=0
+    )
+
+
+# ******* #
+# MODEL   #
+# ******* #
 @publisher('model')
 def check_no_references():
     """there should be no references
@@ -657,7 +666,7 @@ def check_uv_border_crossing():
             us = sorted(uvs_per_shell[shell_id][0])
             vs = sorted(uvs_per_shell[shell_id][1])
 
-            #check first and last u and v values
+            # check first and last u and v values
             if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
                 # they are not equal it is crossing spaces
                 nodes_with_uvs_crossing_borders.append(node)
@@ -720,7 +729,7 @@ def check_uvs():
             for i in range(node.numFaces()):
                 uvs = []
                 for j in range(node.numPolygonVertices(i)):
-                    #uvs.append(node.getPolygonUV(i, j))
+                    # uvs.append(node.getPolygonUV(i, j))
                     uv_id = node.getPolygonUVid(i, j)
                     uvs.append((all_uvs[0][uv_id], all_uvs[1][uv_id]))
                 if area(uvs) == 0.0:
@@ -743,9 +752,9 @@ def check_uvs():
         )
 
 
-#******************#
-# LOOK DEVELOPMENT #
-#******************#
+# ****************** #
+# LOOK DEVELOPMENT   #
+# ****************** #
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
