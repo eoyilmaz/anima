@@ -1070,6 +1070,24 @@ def check_shot_nodes():
 
 
 @publisher('animation')
+def check_frame_range_selection():
+    """checks if there is any range selected in the time slider
+
+    Because it breaks shots to be playblasted as a whole the user should not
+    have selected a range in the time slider
+    """
+    start, end = pm.timeControl(
+        pm.melGlobals['$gPlayBackSlider'],
+        q=1,
+        rangeArray=True
+    )
+    if end - start > 1:
+        raise PublishError(
+            'Please deselect the playback range in <b>TimeSlider</b>!!!'
+        )
+
+
+@publisher('animation')
 def set_frame_range():
     """sets the frame range from the shot node
     """
@@ -1190,5 +1208,5 @@ def generate_playblast():
     reload(utils)
     reload(auxiliary)
 
-    sp = auxiliary.ShotPlayblaster()
+    sp = auxiliary.Playblaster()
     sp.playblast()
