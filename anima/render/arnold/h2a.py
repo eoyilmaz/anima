@@ -182,7 +182,6 @@ def polygon2ass(node, name, export_motion=False):
     j = 0
     combined_vertex_ids = []
     # combined_vertex_normals = []
-    combined_vertex_colors = []
     combined_number_of_points_per_primitive = []
 
 
@@ -198,14 +197,12 @@ def polygon2ass(node, name, export_motion=False):
             point_id = point.number()
             vertex_ids.append(`point_id`)
             # vertex_normals.extend(point.floatListAttribValue('N'))
-            vertex_colors.extend(point.floatListAttribValue('Cd'))
             j += 1
             if j > 500:
                 j = 0
                 combined_vertex_ids.append(' '.join(vertex_ids))
                 vertex_ids = []
                 # combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
-                combined_vertex_colors.append(' '.join(map(str, vertex_colors)))
                 # vertex_normals = []
                 vertex_colors = []
 
@@ -218,9 +215,6 @@ def polygon2ass(node, name, export_motion=False):
 
     # if vertex_normals:
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
-
-    if vertex_colors:
-        combined_vertex_colors.append(' '.join(map(str, vertex_colors)))
 
     point_positions = geo.pointFloatAttribValuesAsString('P')
 
@@ -375,7 +369,7 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'point_colors': encoded_point_colors,
+        'point_colors': splitted_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
