@@ -62,7 +62,7 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, **kwargs):
+def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, export_color,**kwargs):
     """exports geometry to ass format
     """
     ass_path = path
@@ -71,7 +71,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     mode = mode
     export_type = export_type
     export_motion = export_motion
-
+    export_color = export_color
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
@@ -102,7 +102,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     if export_type == 0:
         data = curves2ass(node, name, min_pixel_width, mode, export_motion)
     elif export_type == 1:
-        data = polygon2ass(node, name, export_motion)
+        data = polygon2ass(node, name, export_motion, export_color)
 
     write_start = time.time()
     ass_file = file_handler(ass_path, 'w')
@@ -128,7 +128,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     print('******************************************************************')
 
 
-def polygon2ass(node, name, export_motion=False):
+def polygon2ass(node, name, export_motion=False, export_color=False):
     """exports polygon geometry to ass format
     """
     sample_count = 2 if export_motion else 1
@@ -153,9 +153,7 @@ def polygon2ass(node, name, export_motion=False):
     %(matrix)s
      opaque on
      id 683108022
-     declare colorSet1 varying RGBA
-     colorSet1 %(point_count)s 1 b85RGBA
-     %(point_colors)s
+     %(color_template)s
     }"""
     skip_normals = False
     skip_uvs = False
@@ -359,6 +357,12 @@ def polygon2ass(node, name, export_motion=False):
     if export_motion:
         matrix += matrix
 
+    color_template = """
+        declare colorSet1 varying RGBA
+        colorSet1 %(point_count)s 1 b85RGBA
+        %(splitted_point_colors)s
+    """
+
     data = base_template % {
         'name': name,
         'point_count': point_count,
@@ -369,7 +373,8 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'point_colors': splitted_point_colors,
+        'color_template': color_template,
+        'splitted_point_colors': splitted_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
