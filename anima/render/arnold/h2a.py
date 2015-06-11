@@ -318,32 +318,14 @@ def polygon2ass(node, name, export_motion=False):
     # #
 
     encode_start = time.time()
-    encoded_vertex_colors = '\n'.join(combined_vertex_colors)
+    encoded_point_colors = base85.arnold_b85_encode(point_colors)
     encode_end = time.time()
     print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    # splitted_vertex_colors = re.sub("(.{500})", "\\1\n", encoded_vertex_colors, 0)
-    splitted_vertex_colors = encoded_vertex_colors
-    # # # split every n-th data
-    n = 100
-    splitted_point_colors = []
-    for i in range(len(point_colors) / n):
-        start_index = n * i
-        end_index = n * (i+1)
-        splitted_point_colors.extend(point_colors[start_index:end_index])
-        splitted_point_colors.append('\n')
-
-    splitted_point_colors = ' '.join(map(str, splitted_point_colors))
+    splitted_point_colors = split_data(encoded_point_colors, 100)
     split_end = time.time()
     print('Splitting Vertex Colors    : %3.3f' % (split_end - split_start))
-
-
-
-
-
-
-
 
 
     #
@@ -390,7 +372,7 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'Cd': splitted_point_colors,
+        'colorSet1': splitted_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
