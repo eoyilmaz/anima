@@ -321,7 +321,7 @@ def polygon2ass(node, name, export_motion=False):
     # #
 
     encode_start = time.time()
-    encoded_point_colors = base85.rfc1924_b85_encode(point_colors)
+    encoded_point_colors = base85.arnold_b85_encode(point_colors)
     encode_end = time.time()
     print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
 
@@ -375,7 +375,7 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'point_colors': splitted_point_colors,
+        'point_colors': encoded_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
