@@ -153,8 +153,8 @@ def polygon2ass(node, name, export_motion=False):
     %(matrix)s
      opaque on
      id 683108022
-     declare colorSet1 varying RGB
-     colorSet1 %(point_count)s 1 b85RGB
+     declare colorSet1 varying RGBA
+     colorSet1 %(point_count)s 1 b85RGBA
      %(point_colors)s
     }"""
     skip_normals = False
@@ -225,7 +225,7 @@ def polygon2ass(node, name, export_motion=False):
 
 
     try:
-        point_colors = geo.pointFloatAttribValuesAsString('Cd')
+        point_colors = geo.pointFloatAttribValuesAsString('color')
     except hou.OperationFailed:
        # no color attribute skip it
         skip_colors = True
