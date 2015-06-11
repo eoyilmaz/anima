@@ -1057,14 +1057,166 @@ def check_cacheable_attr():
         )
 
 
-@publisher('animation')
+@publisher('previs')
+def check_sequencer():
+    """checks if there is a sequencer node in the scene
+    """
+    sequencers = pm.ls(type='sequencer')
+    if len(sequencers) == 0:
+        raise PublishError('There is no Sequencer node in the scene!!!')
+
+
+@publisher('previs')
+def check_sequence_name():
+    """checks if the sequence name attribute is properly set
+    """
+    sequencer = pm.ls(type='sequencer')[0]
+    sequence_name = sequencer.sequence_name.get()
+
+    if sequence_name == '' or sequence_name is None:
+        raise PublishError('Please enter a sequence name!!!')
+
+
+@publisher('previs')
+def check_sequence_name_format():
+    """checks if the sequence name format is correct
+    """
+    sequencer = pm.ls(type='sequencer')[0]
+    sequence_name = sequencer.sequence_name.get()
+
+    # SEQ001_003_TNGI
+    # SEQ001_003A_TNGI
+
+    parts = sequence_name.split('_')
+
+    if len(parts) != 3:
+        raise PublishError('Sequence name format is not correct!!!')
+
+    sequence_code = parts[0]
+    scene_number = parts[1]
+    scene_code = parts[2]
+
+    # sequence_code should start with SEQ
+    if not sequence_code.startswith('SEQ'):
+        raise PublishError(
+            'Sequence name should start with "SEQ"!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' % sequence_code
+        )
+
+    # scene number should start with a number
+    import re
+    if not re.match(r'^[\d]+', scene_number):
+        raise PublishError(
+            'Scene number in sequence name should start with a number!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' % scene_number
+        )
+
+    # scene number should a 3 digit and an optional letter
+    if not len(scene_number) in [3, 4]:
+        raise PublishError(
+            'Scene number in sequence name should be a number with 3 digits '
+            'and an optional uppercase letter!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' %
+            scene_number
+        )
+
+    # scene code should be all upper case letters
+    if scene_code != scene_code.upper():
+        raise PublishError(
+            'Scene code in sequence name should be all upper case letters!!!'
+            '<br><br>'
+            'Not:'
+            '<br>'
+            '%s' % scene_code
+        )
+
+
+@publisher(['animation', 'previs'])
 def check_shot_nodes():
-    """checks if there is a shot node
+    """checks if there is at least one shot node
     """
     shot_nodes = pm.ls(type='shot')
     if len(shot_nodes) == 0:
         raise PublishError('There is no <b>Shot</b> node in the scene')
 
+
+@publisher('previs')
+def check_shot_name_format():
+    """check shot name format
+    """
+    import re
+    regex = r'^[\d]+$'
+    shot_nodes = pm.ls(type='shot')
+    shots_with_wrong_shot_name_format = []
+    for shot in shot_nodes:
+        shot_name = shot.shotName.get()
+
+        # check if all digits
+        if not re.match(regex, shot_name):
+            shots_with_wrong_shot_name_format.append(shot)
+            continue
+
+        # check if 4 digits used only
+        if len(shot_name) != 4:
+            shots_with_wrong_shot_name_format.append(shot)
+            continue
+
+    if len(shots_with_wrong_shot_name_format) > 0:
+        raise PublishError(
+            'The following shots have wrongly formatted shot names:<br>'
+            '<br>'
+            '%s' % (
+                ', '.join(
+                    map(
+                        lambda x: x.shotName.get(),
+                        shots_with_wrong_shot_name_format
+                    )
+                )
+            )
+        )
+
+
+@publisher('previs')
+def check_unique_shot_names():
+    """check if the shot names are unique
+    """
+    shot_nodes = pm.ls(type='shot')
+
+    shot_names = []
+    shots_with_non_unique_shot_names = []
+    for shot in shot_nodes:
+        shot_name = shot.shotName.get()
+        if shot_name in shot_names:
+            shots_with_non_unique_shot_names.append(shot)
+        else:
+            shot_names.append(shot_name)
+
+    if len(shots_with_non_unique_shot_names) > 0:
+        raise PublishError(
+            'The following shots have non-unique shot names:<br>'
+            '<br>'
+            '%s' % (
+                ', '.join(
+                    map(
+                        lambda x: x.shotName.get(),
+                        shots_with_non_unique_shot_names
+                    )
+                )
+            )
+        )
+
+
+@publisher('animation')
+def check_multiple_shot_nodes():
+    """checks if there are multiple shot nodes
+    """
+    shot_nodes = pm.ls(type='shot')
     if len(shot_nodes) > 1:
         raise PublishError('There is multiple <b>Shot</b> nodes in the scene')
 
