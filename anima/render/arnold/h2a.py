@@ -153,6 +153,9 @@ def polygon2ass(node, name, export_motion=False):
     %(matrix)s
      opaque on
      id 683108022
+     declare colorSet1 varying RGBA
+     colorSet1 %(point_count)s 1 b85RGBA
+     %(point_colors)s
     }"""
     skip_normals = False
     skip_uvs = False
@@ -372,7 +375,7 @@ def polygon2ass(node, name, export_motion=False):
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
-        'colorSet1': splitted_point_colors,
+        'point_colors': splitted_point_colors,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
