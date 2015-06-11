@@ -321,7 +321,7 @@ def polygon2ass(node, name, export_motion=False):
     # #
 
     encode_start = time.time()
-    encoded_point_colors = base85.arnold_b85_encode(point_colors)
+    encoded_point_colors = base85.rfc1924_b85_encode(point_colors)
     encode_end = time.time()
     print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
 
