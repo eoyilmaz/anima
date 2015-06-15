@@ -859,7 +859,14 @@ class ShotExtension(object):
         """includes the handle values to the shot range, primarily done for
         taking playblasts with handles
         """
-        handle = self.handle.get()
+        try:
+            handle = self.handle.get()
+        except AttributeError:
+            # no handle is created probably the shot setup has not been done
+            # correctly
+            self.set_handle()
+            handle = self.handle.get()
+
         track = self.track.get()
         self.startFrame.set(
             self.startFrame.get() - handle
@@ -891,7 +898,14 @@ class ShotExtension(object):
         # template vars
         sequence = self.sequence
 
-        handle = self.handle.get()
+        try:
+            handle = self.handle.get()
+        except AttributeError:
+            # no handle is created probably the shot setup has not been done
+            # correctly
+            self.set_handle()
+            handle = self.handle.get()
+
         start_frame = self.sequenceStartFrame.get() - handle
         end_frame = self.sequenceEndFrame.get() + handle
         width = self.wResolution.get()
