@@ -1350,7 +1350,7 @@ def cache_animations():
     auxiliary.export_alembic_from_cache_node(handles=1)
 
 
-@publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'previs'], publisher_type=POST_PUBLISHER_TYPE)
 def generate_playblast():
     """generates a playblast for the current scene
     """
@@ -1361,4 +1361,6 @@ def generate_playblast():
     reload(auxiliary)
 
     sp = auxiliary.Playblaster()
-    sp.playblast()
+    sp.batch_mode = True
+    video_files = sp.playblast()
+    sp.upload_outputs(sp.version, video_files)

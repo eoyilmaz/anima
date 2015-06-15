@@ -527,7 +527,6 @@ def delete_shelf_tab(shelf_name, confirm=True):
         return
 
     if confirm:
-
         # before doing anything ask it
         response = pm.confirmDialog(
             title='Delete Shelf?',
@@ -1022,6 +1021,8 @@ class Playblaster(object):
         self.user_view_options = {}
         self.reset_user_view_options_storage()
 
+        self.batch_mode = False
+
     @classmethod
     def check_sequence_name(self):
         """checks sequence name and asks the user to set one if maya is in UI
@@ -1029,7 +1030,8 @@ class Playblaster(object):
         """
         sequencer = pm.ls(type='sequencer')[0]
         sequence_name = sequencer.getAttr('sequence_name')
-        if sequence_name == '' and not pm.general.about(batch=1):
+        if sequence_name == '' and not pm.general.about(batch=1) \
+           and not self.batch_mode:
             result = pm.promptDialog(
                 title='Please enter a Sequence Name',
                 message='Sequence Name:',
@@ -1278,14 +1280,18 @@ class Playblaster(object):
             extra_playblast_options = {}
 
         if len(shots):
-            response = pm.confirmDialog(
-                title='Which Camera?',
-                message='Which Camera?',
-                button=['Current', 'Shot Camera', 'Cancel'],
-                defaultButton='Shot Camera',
-                cancelButton='Cancel',
-                dismissString='Cancel'
-            )
+            if not self.batch_mode:
+                response = pm.confirmDialog(
+                    title='Which Camera?',
+                    message='Which Camera?',
+                    button=['Current', 'Shot Camera', 'Cancel'],
+                    defaultButton='Shot Camera',
+                    cancelButton='Cancel',
+                    dismissString='Cancel'
+                )
+            else:
+                response = 'Shot Camera'
+
             if response == 'Current':
                 extra_playblast_options['sequenceTime'] = 0
             elif response == 'Shot Camera':
