@@ -722,7 +722,10 @@ class SequencerExtension(object):
         movie_files = []
         for shot in self.shots.get():
             movie_files.append(
-                shot.playblast(output_path, show_ornaments=show_ornaments)
+                shot.playblast(
+                    output_path,
+                    options={'showOrnaments': show_ornaments}
+                )
             )
         return movie_files
 
