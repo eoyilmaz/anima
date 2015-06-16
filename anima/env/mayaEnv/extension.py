@@ -7,6 +7,7 @@
 import os
 import subprocess
 import tempfile
+import platform
 from contextlib import contextmanager
 
 import pymel.core as pm
@@ -721,7 +722,10 @@ class SequencerExtension(object):
         movie_files = []
         for shot in self.shots.get():
             movie_files.append(
-                shot.playblast(output_path, show_ornaments=show_ornaments)
+                shot.playblast(
+                    output_path,
+                    options={'showOrnaments': show_ornaments}
+                )
             )
         return movie_files
 
@@ -858,7 +862,14 @@ class ShotExtension(object):
         """includes the handle values to the shot range, primarily done for
         taking playblasts with handles
         """
-        handle = self.handle.get()
+        try:
+            handle = self.handle.get()
+        except AttributeError:
+            # no handle is created probably the shot setup has not been done
+            # correctly
+            self.set_handle()
+            handle = self.handle.get()
+
         track = self.track.get()
         self.startFrame.set(
             self.startFrame.get() - handle
@@ -884,31 +895,38 @@ class ShotExtension(object):
             self.track.set(track)
 
     @extends(pm.nodetypes.Shot)
-    def playblast(self, output_path, show_ornaments=True):
+    def playblast(self, options=None):
         """creates the selected shot playblasts
         """
-        # TODO: create test for this (how??? no OpenGL)
-        # get current version and then the output folder
-        path_template = os.path.join(output_path).replace('\\', '/')
-
         # template vars
         sequence = self.sequence
 
-        handle = self.handle.get()
+        try:
+            handle = self.handle.get()
+        except AttributeError:
+            # no handle is created probably the shot setup has not been done
+            # correctly
+            self.set_handle()
+            handle = self.handle.get()
+
         start_frame = self.sequenceStartFrame.get() - handle
         end_frame = self.sequenceEndFrame.get() + handle
         width = self.wResolution.get()
         height = self.hResolution.get()
 
+        extra_frame = 0
+
+        if platform.system() == 'Windows':
+            # windows Maya version drops 1 frame from end where as Linux
+            # doesn't do that
+            extra_frame = 1
+
         # store track
         track = self.track.get()
 
-        rendered_path = path_template % {}
-        rendered_filename = '%s.mov' % self.full_shot_name
-
         movie_full_path = os.path.join(
-            rendered_path,
-            rendered_filename
+            tempfile.gettempdir(),
+            '%s.mov' % self.full_shot_name
         ).replace('\\', '/')
 
         # set the output of this shot
@@ -918,27 +936,36 @@ class ShotExtension(object):
         sequence.mute_shots()
         self.unmute()
 
+        default_options = {
+            'fmt': 'qt',
+            'sequenceTime': 1,
+            'forceOverwrite': 1,
+            'clearCache': 1,
+            'showOrnaments': 1,
+            'percent': 50,
+            'offScreen': 1,
+            'viewer': 0,
+            'compression': 'MPEG-4 Video',
+            'quality': 85,
+            'startTime': start_frame,
+            'endTime': end_frame + extra_frame,
+            'filename': movie_full_path,
+            'wh': [width, height],
+            'useTraxSounds': True,
+        }
+
+        if options:
+            # offset end time by one frame if t his is windows
+            if 'endTime' in options:
+                options['endTime'] += extra_frame
+            default_options.update(options)
+
         # include handles
         with self.include_handles:
             pm.system.dgdirty(a=True)
 
-            result = pm.playblast(
-                fmt="qt",
-                startTime=start_frame,
-                endTime=end_frame,
-                sequenceTime=1,
-                forceOverwrite=1,
-                filename=movie_full_path,
-                clearCache=True,
-                showOrnaments=show_ornaments,
-                percent=100,
-                wh=[width, height],
-                offScreen=True,
-                viewer=0,
-                useTraxSounds=True,
-                compression='MPEG-4 Video',
-                quality=85
-            )
+            # if a sound node is specified remove useTraxSounds flag
+            result = pm.playblast(**default_options)
             sequence.unmute_shots()
 
         # restore track

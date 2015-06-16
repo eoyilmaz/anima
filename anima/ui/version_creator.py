@@ -662,6 +662,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # add Browse Outputs
         menu.addAction("Browse Path...")
+        menu.addAction("Browse Outputs...")
+        menu.addAction("Upload Output...")
         menu.addAction("Copy Path")
         menu.addSeparator()
 
@@ -760,6 +762,31 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         "Error",
                         "Path doesn't exists:\n%s" % path
                     )
+            if choice == 'Browse Outputs...':
+                path = os.path.join(
+                    os.path.expandvars(version.absolute_path),
+                    "Outputs"
+                )
+                try:
+                    utils.open_browser_in_location(path)
+                except IOError:
+                    QtGui.QMessageBox.critical(
+                        self,
+                        "Error",
+                        "Path doesn't exists:\n%s" % path
+                    )
+            elif choice == "Upload Output...":
+                # upload output to the given version
+                # show a file browser
+                dialog = QtGui.QFileDialog(self, "Choose file")
+                result = dialog.getOpenFileName()
+                file_path = result[0]
+                if file_path:
+                    from anima.utils import MediaManager
+                    with open(file_path) as f:
+                        MediaManager.upload_version_output(
+                            version, f, os.path.basename(file_path)
+                        )
             elif choice == 'Change Description...':
                 if version:
                     # change the description

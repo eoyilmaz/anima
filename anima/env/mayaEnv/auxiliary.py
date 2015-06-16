@@ -4,11 +4,12 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
-import tempfile
 import shutil
+import copy
 
 import pymel.core as pm
 import maya.mel as mel
+import tempfile
 
 
 __version__ = "v10.1.13"
@@ -880,26 +881,87 @@ def perform_playblast(action):
     v = m.get_current_version()
 
     if v:
-        # do shot playblaster
-        sp = ShotPlayblaster()
-        # TODO: make the viewer=1 and offScreen=0 options user selectable
-        outputs = sp.playblast(
-            options={
+        # do playblaster
+        pb = Playblaster()
+        outputs = pb.playblast(
+            extra_playblast_options={
                 'viewer': 1,
-                'offScreen': 1,
-                'compression': 'MPEG-4 Video',
-                'quality': 85,
-                'sequenceTime': 0
             }
         )
+
+        response = pm.confirmDialog(
+            title='Upload To Server?',
+            message='Upload To Server?',
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+        if response == 'Yes':
+            for output in outputs:
+                pb.upload_output(pb.version, output)
+
     else:
-        # call the original playblast
+        # call the original playblasoutputst
         return pm.mel.eval('performPlayblast_orig(%s);' % action)
 
 
-class ShotPlayblaster(object):
-    """Generates playblasts for each shot in the scene and uploads it to the
-    server
+def set_range_from_shot(shot):
+    """sets the playback range from a shot node in the scene
+
+    :param shot: Maya Shot
+    """
+    min_frame = shot.getAttr('startFrame')
+    max_frame = shot.getAttr('endFrame')
+
+    pm.playbackOptions(
+        ast=min_frame,
+        aet=max_frame,
+        min=min_frame,
+        max=max_frame
+    )
+
+
+def perform_playblast_shot(shot_name):
+    """Performs shot playblast, this is written to replace the menu action in
+    Camera Sequencer.
+
+    :param shot_name: Shot name
+    :return:
+    """
+
+    response = pm.confirmDialog(
+        title='Perform Playblast?',
+        message='Perform Playblast?',
+        button=['Yes', 'No'],
+        defaultButton='No',
+        cancelButton='No',
+        dismissString='No'
+    )
+    if response == 'No':
+        return
+
+    shot = pm.PyNode(shot_name)
+
+    pb = Playblaster()
+    video_file_output = pb.playblast_shot(shot)
+
+    response = pm.confirmDialog(
+        title='Upload To Server?',
+        message='Upload To Server?',
+        button=['Yes', 'No'],
+        defaultButton='No',
+        cancelButton='No',
+        dismissString='No'
+    )
+    if response == 'Yes':
+        pb.upload_output(pb.version, video_file_output)
+
+
+class Playblaster(object):
+    """Generates playblasts.
+    If there are shots in the current scene then it generates playblasts for
+    each of them and uploads it to the server
     """
 
     display_flags = [
@@ -925,6 +987,21 @@ class ShotPlayblaster(object):
         'displayFilmOrigin'
     ]
 
+    global_playblast_options = {
+        'fmt': 'qt',
+        'forceOverwrite': 1,
+        'clearCache': 1,
+        'showOrnaments': 1,
+        'percent': 100,
+        'offScreen': 1,
+        'viewer': 0,
+        'compression': 'MPEG-4 Video',
+        'quality': 85,
+        'sequenceTime': 1
+    }
+
+    hud_name = 'PlayblasterHUD'
+
     def __init__(self):
         from stalker import LocalSession
         local_session = LocalSession()
@@ -938,16 +1015,23 @@ class ShotPlayblaster(object):
         self.m_env = Maya()
         self.version = self.m_env.get_current_version()
 
+        self.ui_window_name = 'playblaster_window'
+        self.ui_window = None
+
         self.user_view_options = {}
         self.reset_user_view_options_storage()
 
+        self.batch_mode = False
+
+    @classmethod
     def check_sequence_name(self):
         """checks sequence name and asks the user to set one if maya is in UI
         mode and there is no sequence name set
         """
         sequencer = pm.ls(type='sequencer')[0]
         sequence_name = sequencer.getAttr('sequence_name')
-        if sequence_name == '' and not pm.general.about(batch=1):
+        if sequence_name == '' and not pm.general.about(batch=1) \
+           and not self.batch_mode:
             result = pm.promptDialog(
                 title='Please enter a Sequence Name',
                 message='Sequence Name:',
@@ -1015,21 +1099,31 @@ class ShotPlayblaster(object):
     def create_hud(self, hud_name):
         """creates HUD
         """
-        if pm.headsUpDisplay(hud_name, q=1, ex=1):
-            #pm.warning('HUD already exists.')
-            pm.headsUpDisplay(hud_name, rem=1)
+        self.remove_hud(hud_name)
 
-        pm.headsUpDisplay(
-            hud_name,
-            section=7,
-            block=1,
-            ao=1,
-            blockSize="medium",
-            labelFontSize="large",
-            dfs="large",
-            command=self.get_hud_data,
-            atr=1
-        )
+        try:
+            # create our HUD
+            pm.headsUpDisplay(
+                hud_name,
+                section=7,
+                block=1,
+                ao=1,
+                blockSize="medium",
+                labelFontSize="large",
+                dfs="large",
+                command=self.get_hud_data,
+                atr=1
+            )
+        except RuntimeError:
+            # there is another HUD in that position remove it
+            pm.headsUpDisplay(removePosition=(7, 1))
+            self.create_hud(hud_name)
+
+    def remove_hud(self, hud_name=None):
+        """removes the HUD
+        """
+        if hud_name and pm.headsUpDisplay(hud_name, q=1, ex=1):
+            pm.headsUpDisplay(hud_name, rem=1)
 
     @classmethod
     def get_shot_cameras(cls):
@@ -1043,7 +1137,8 @@ class ShotPlayblaster(object):
             cameras.append(camera)
         return cameras
 
-    def get_frame_range(self):
+    @classmethod
+    def get_frame_range(cls):
         """returns the playback range
         """
         return map(
@@ -1051,11 +1146,12 @@ class ShotPlayblaster(object):
             pm.timeControl(
                 pm.melGlobals['$gPlayBackSlider'],
                 q=1,
-                range=1
-            )[1:-1].split(':')
+                rangeArray=True
+            )
         )
 
-    def get_audio_node(self):
+    @classmethod
+    def get_audio_node(cls):
         """returns the audio node from the time slider
         """
         audio_node_name = pm.timeControl(
@@ -1074,7 +1170,7 @@ class ShotPlayblaster(object):
         """
         self.user_view_options = {
             'display_flags': {},
-            'hud_flags': {},
+            'huds': {},
             'camera_flags': {}
         }
 
@@ -1092,10 +1188,10 @@ class ShotPlayblaster(object):
             self.user_view_options['display_flags'][flag] = val
 
         # store hud display options
-        hud_flags = pm.headsUpDisplay(lh=1)
-        for flag in hud_flags:
-            val = pm.headsUpDisplay(flag, q=1, vis=1)
-            self.user_view_options['hud_flags'][flag] = val
+        hud_names = pm.headsUpDisplay(lh=1)
+        for hud_name in hud_names:
+            val = pm.headsUpDisplay(hud_name, q=1, vis=1)
+            self.user_view_options['huds'][hud_name] = val
 
         for camera in pm.ls(type='camera'):
             camera_name = camera.name()
@@ -1120,6 +1216,7 @@ class ShotPlayblaster(object):
         pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
+        pm.modelEditor(active_panel, e=1, dynamics=True)
         pm.modelEditor(active_panel, e=1, planes=True)
 
         # turn all hud displays off
@@ -1142,8 +1239,9 @@ class ShotPlayblaster(object):
             pm.modelEditor(active_panel, **{'e': 1, flag: value})
 
         # reassign original hud display options
-        for flag, value in self.user_view_options['hud_flags'].items():
-            pm.headsUpDisplay(flag, e=1, vis=value)
+        for hud, value in self.user_view_options['huds'].items():
+            if pm.headsUpDisplay(hud, q=1, ex=1):
+                pm.headsUpDisplay(hud, e=1, vis=value)
 
         # reassign original camera options
         for camera in pm.ls(type='camera'):
@@ -1151,6 +1249,8 @@ class ShotPlayblaster(object):
             camera_flags = self.user_view_options['camera_flags'][camera_name]
             for attr, value in camera_flags.items():
                 camera.setAttr(attr, value)
+
+        self.remove_hud(self.hud_name)
 
     @classmethod
     def get_active_panel(cls):
@@ -1165,144 +1265,263 @@ class ShotPlayblaster(object):
 
         return active_panel
 
-    def playblast(self, options=None):
+    def playblast(self, extra_playblast_options=None):
+        """does a scene playblast
+
+        Decides what kind of playblast it needs to do.
+
+        :param extra_playblast_options: A dictionary for extra playblast
+          options.
+        :return: The resultant movie file or files
+        """
+        # if there is a shot in the scene do a shot playblast
+        shots = pm.ls(type='shot')
+        if not extra_playblast_options:
+            extra_playblast_options = {}
+
+        if len(shots):
+            if not self.batch_mode:
+                response = pm.confirmDialog(
+                    title='Which Camera?',
+                    message='Which Camera?',
+                    button=['Current', 'Shot Camera', 'Cancel'],
+                    defaultButton='Shot Camera',
+                    cancelButton='Cancel',
+                    dismissString='Cancel'
+                )
+            else:
+                response = 'Shot Camera'
+
+            if response == 'Current':
+                extra_playblast_options['sequenceTime'] = 0
+            elif response == 'Shot Camera':
+                extra_playblast_options['sequenceTime'] = 1
+            else:
+                return []
+            return self.playblast_all_shots(extra_playblast_options)
+        else:
+            return self.playblast_simple(extra_playblast_options)
+
+    def playblast_simple(self, extra_playblast_options=None):
+        """Does a simple playblast
+
+        :param extra_playblast_options: A dictionary for extra playblast
+          options.
+        :return: A string showing the path of the resultant movie file
+        """
+        playblast_options = copy.copy(self.global_playblast_options)
+        playblast_options['sequenceTime'] = False
+        playblast_options['percent'] = 50
+
+        if extra_playblast_options:
+            playblast_options.update(extra_playblast_options)
+
+        # find some audio
+        audio_node = self.get_audio_node()
+        if audio_node:
+            playblast_options['sound'] = audio_node
+            playblast_options['useTraxSounds'] = False
+        else:
+            playblast_options['useTraxSounds'] = True
+
+        # width height
+        if 'wh' not in playblast_options:
+            # get project resolution
+            # use half HD by default
+            width = 1920
+            height = 1080
+            if self.version:
+                project = self.version.task.project
+                # get the resolution
+                imf = project.image_format
+                width = int(imf.width)
+                height = int(imf.height)
+
+            playblast_options['wh'] = (width, height)
+
+        # output path
+        if 'filename' not in playblast_options:
+            if self.version:
+                # use version.base_name
+                filename = os.path.splitext(self.version.filename)[0]
+            else:
+                # use the current scene name
+                filename = os.path.splitext(
+                    os.path.basename(
+                        pm.sceneName()
+                    )
+                )[0]
+            # also render to temp
+            playblast_options['filename'] = \
+                os.path.join(tempfile.gettempdir(), filename)
+
+        result = []
+        try:
+            self.store_user_options()
+            self.set_view_options()
+            self.create_hud(self.hud_name)
+            import pprint
+            pprint.pprint(playblast_options)
+            result = [pm.playblast(**playblast_options)]
+        finally:
+            self.restore_user_options()
+
+        return result
+
+    def playblast_shot(self, shot, extra_playblast_options=None):
         """does the real thing
         """
-        default_options = {
-            'fmt': 'qt',
+        shot_playblast_options = copy.copy(self.global_playblast_options)
+
+        shot_playblast_options.update({
             'sequenceTime': 1,
-            'forceOverwrite': 1,
-            'clearCache': 1,
-            'showOrnaments': 1,
             'percent': 50,
-            'offScreen': 1,
-            'viewer': 0,
-            'compression': 'MPEG-4 Video',
-            'quality': 85
-        }
-        if options:
-            default_options.update(options)
-
-        shots = pm.ls(type='shot')
-        if len(shots) <= 0:
-            raise RuntimeError('There are no Shots in your Camera Sequencer.')
-
-        self.store_user_options()
-        self.set_view_options()
+        })
+        if extra_playblast_options:
+            shot_playblast_options.update(extra_playblast_options)
 
         # deselect all
         pm.select(cl=1)
+
+        self.check_sequence_name()
+
+        if 'wh' not in shot_playblast_options:
+            # get project resolution
+            # use half HD by default
+            width = 1920
+            height = 1080
+            if self.version:
+                project = self.version.task.project
+                # get the resolution
+                imf = project.image_format
+                width = int(imf.width)
+                height = int(imf.height)
+
+            shot_playblast_options['wh'] = (width, height)
+
+        try:
+            self.store_user_options()
+            self.set_view_options()
+            self.create_hud(self.hud_name)
+
+            # create video playblast
+            temp_video_file_full_path = \
+                shot.playblast(options=shot_playblast_options)
+        finally:
+            self.restore_user_options()
+
+        return temp_video_file_full_path
+
+    def playblast_all_shots(self, extra_playblast_options=None):
+        """Playblasts all shots
+
+        :return:
+        """
+        shots = pm.ls(type='shot')
+        if len(shots) <= 0:
+            raise RuntimeError('There are no Shots in your Camera Sequencer.')
 
         from anima.ui.progress_dialog import ProgressDialogManager
         pdm = ProgressDialogManager()
         pdm.close()
 
-        caller = pdm.register(len(shots), 'Exporting Playblast...')
+        caller = pdm.register(len(shots), 'Generating Playblasts...')
 
-        # playblast
-        # get project resolution
-        is_published = False
-
-        # use half HD by default
-        width = 1920
-        height = 1080
-        if self.version:
-            project = self.version.task.project
-            # get the resolution
-            imf = project.image_format
-            width = int(imf.width)
-            height = int(imf.height)
-            is_published = self.version.is_published
-
-        extra_frame = 0
-        import platform
-        if platform.system() == 'Windows':
-            # windows Maya version drops 1 frame from end where as Linux
-            # doesn't do that
-            extra_frame = 1
+        generic_playblast_options = {}
+        if extra_playblast_options:
+            generic_playblast_options.update(extra_playblast_options)
 
         # if the time range is selected from the time line
         # just use this range
-        global_start, global_end = self.get_frame_range()
-        use_global_start_end = False
-        if global_end - global_start > 1:
-            use_global_start_end = True
+        range_start, range_end = self.get_frame_range()
+        range_selected = False
+        if range_end - range_start > 1:
+            # means that there is a range selected in the time slider
+            range_selected = True
+            generic_playblast_options['startTime'] = range_start
+            generic_playblast_options['endTime'] = range_end
 
+        # check audio
         audio_node = self.get_audio_node()
+        if audio_node:
+            generic_playblast_options.update({
+                'useTraxSounds': False,
+                'sound': audio_node
+            })
+        else:
+            generic_playblast_options['useTraxSounds'] = True
 
-        playblast_outputs = []
+        temp_video_file_full_paths = []
+        for shot in shots:
+            per_shot_playblast_options = copy.copy(generic_playblast_options)
 
-        self.check_sequence_name()
+            if range_selected:
+                # skip this shot if the selected playback range do not
+                # coincide with this shot range
 
-        try:
-            for shot in shots:
-                video_temp_output = tempfile.mktemp(suffix='.mov')
+                shot_start_frame = shot.startFrame.get()
+                shot_end_frame = shot.endFrame.get()
 
-                shot_start_frame = int(pm.shot(shot, q=1, st=1))
-                shot_end_frame = int(pm.shot(shot, q=1, et=1))
+                if (range_start > shot_start_frame and range_start > shot_end_frame) or \
+                   (range_end < shot_start_frame and range_end < shot_end_frame):
+                    caller.step()
+                    continue
 
-                output_file_name = '%s_%s%s' % (
-                    os.path.splitext(self.version.filename)[0],
-                    shot.name().split(':')[-1] if shot else 'None',
-                    '.mov'
-                )
+            temp_video_file_full_path = \
+                self.playblast_shot(shot, per_shot_playblast_options)
+            temp_video_file_full_paths.append(temp_video_file_full_path)
 
-                if use_global_start_end:
-                    if not global_start >= shot_start_frame \
-                       or not global_end <= shot_end_frame:
-                        continue
-                    shot_start_frame = global_start
-                    shot_end_frame = global_end
+            caller.step()
 
-                    output_file_name = '%s_%s_%s_%s%s' % (
-                        os.path.splitext(self.version.filename)[0],
-                        shot.name().split(':')[-1] if shot else 'None',
-                        shot_start_frame,
-                        shot_end_frame,
-                        '.mov'
-                    )
+        return temp_video_file_full_paths
 
-                self.create_hud('kksCameraHUD')
-                # create video playblast
-                per_shot_options = {
-                    'startTime': shot_start_frame,
-                    'endTime': shot_end_frame + extra_frame,
-                    'filename': video_temp_output,
-                    'wh': (width, height),
-                    'sound': audio_node,
-                    'sequenceTime': is_published
-                }
-                default_options.update(per_shot_options)
-                pm.playblast(**default_options)
+    @classmethod
+    def upload_outputs(cls, version, video_file_full_paths):
+        """Bulk upload outputs to given version
 
-                # upload output to server
-                if not use_global_start_end:
-                    output_path = self.set_as_output(
-                        output_file_name=output_file_name,
-                        version=self.version,
-                        output_file_full_path=video_temp_output,
-                    )
+        :param version: Stalker Version instance
+        :param list video_file_full_paths: List of file paths
+        :return:
+        """
+        from anima.ui.progress_dialog import ProgressDialogManager
+        pdm = ProgressDialogManager()
+        pdm.close()
 
-                    playblast_outputs.append(output_path)
+        outputs = []
+        # register a new caller
+        caller = pdm.register(
+            len(video_file_full_paths),
+            'Uploading Playblasts...'
+        )
+        for output_file_full_path in video_file_full_paths:
+            # upload output to server
+            output_path = cls.upload_output(
+                version=version,
+                output_file_full_path=output_file_full_path,
+            )
 
-                caller.step()
+            outputs.append(output_path)
+            caller.step()
 
-        finally:
-            self.restore_user_options()
+        return outputs
 
-        return playblast_outputs
-
-    def set_as_output(self, output_file_name='', version=None, output_file_full_path=''):
+    @classmethod
+    def upload_output(cls, version, output_file_full_path):
         """sets the given file as the output of the given version, also
         generates a thumbnail and a web version if it is a movie file
 
-        :param output_file_name: The output file name
         :param version: The stalker version instance
         :param output_file_full_path: the path of the media file
         """
+        from stalker import Version
+        if not isinstance(version, Version):
+            raise RuntimeError('version should be a stalker version instance!')
+
         hires_extension = '.mov'
         webres_extension = '.webm'
         thumbnail_extension = '.png'
+
+        output_file_name = os.path.basename(output_file_full_path)
 
         hires_output_file_name = '%s%s' % (
             os.path.splitext(output_file_name)[0],
