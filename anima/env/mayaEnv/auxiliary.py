@@ -1023,7 +1023,6 @@ class Playblaster(object):
 
         self.batch_mode = False
 
-    @classmethod
     def check_sequence_name(self):
         """checks sequence name and asks the user to set one if maya is in UI
         mode and there is no sequence name set
