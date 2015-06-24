@@ -1360,57 +1360,67 @@ class MediaManager(object):
         ############################################################
         # WEB VERSION
         ############################################################
-        web_version_temp_full_path = \
-            self.generate_media_for_web(version_output_file_full_path)
-        web_version_extension = \
-            os.path.splitext(web_version_temp_full_path)[-1]
-        web_version_full_path = \
-            os.path.join(
-                os.path.dirname(version_output_file_full_path),
-                'ForWeb',
-                version_output_base_name + web_version_extension
-            )
-        web_version_repo_relative_full_path = \
-            repo.make_relative(str(web_version_full_path))
-        web_version_link = Link(
-            full_path=web_version_repo_relative_full_path,
-            original_filename=filename
-        )
-
-        # move it to repository
+        web_version_link = None
         try:
-            os.makedirs(os.path.dirname(web_version_full_path))
-        except OSError:  # path exists
+            web_version_temp_full_path = \
+                self.generate_media_for_web(version_output_file_full_path)
+            web_version_extension = \
+                os.path.splitext(web_version_temp_full_path)[-1]
+            web_version_full_path = \
+                os.path.join(
+                    os.path.dirname(version_output_file_full_path),
+                    'ForWeb',
+                    version_output_base_name + web_version_extension
+                )
+            web_version_repo_relative_full_path = \
+                repo.make_relative(str(web_version_full_path))
+            web_version_link = Link(
+                full_path=web_version_repo_relative_full_path,
+                original_filename=filename
+            )
+
+            # move it to repository
+            try:
+                os.makedirs(os.path.dirname(web_version_full_path))
+            except OSError:  # path exists
+                pass
+            shutil.move(web_version_temp_full_path, web_version_full_path)
+        except RuntimeError:
+            # not an image or video so skip it
             pass
-        shutil.move(web_version_temp_full_path, web_version_full_path)
 
         ############################################################
         # THUMBNAIL
         ############################################################
         # finally generate a Thumbnail
-        thumbnail_temp_full_path = \
-            self.generate_thumbnail(version_output_file_full_path)
-        thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
-
-        thumbnail_full_path = \
-            os.path.join(
-                os.path.dirname(version_output_file_full_path),
-                'Thumbnail',
-                version_output_base_name + thumbnail_extension
-            )
-        thumbnail_repo_relative_full_path = \
-            repo.make_relative(thumbnail_full_path)
-        thumbnail_link = Link(
-            full_path=thumbnail_repo_relative_full_path,
-            original_filename=filename
-        )
-
-        # move it to repository
+        thumbnail_link = None
         try:
-            os.makedirs(os.path.dirname(thumbnail_full_path))
-        except OSError:  # path exists
+            thumbnail_temp_full_path = \
+                self.generate_thumbnail(version_output_file_full_path)
+            thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
+
+            thumbnail_full_path = \
+                os.path.join(
+                    os.path.dirname(version_output_file_full_path),
+                    'Thumbnail',
+                    version_output_base_name + thumbnail_extension
+                )
+            thumbnail_repo_relative_full_path = \
+                repo.make_relative(thumbnail_full_path)
+            thumbnail_link = Link(
+                full_path=thumbnail_repo_relative_full_path,
+                original_filename=filename
+            )
+
+            # move it to repository
+            try:
+                os.makedirs(os.path.dirname(thumbnail_full_path))
+            except OSError:  # path exists
+                pass
+            shutil.move(thumbnail_temp_full_path, thumbnail_full_path)
+        except RuntimeError:
+            # not an image or video so skip it
             pass
-        shutil.move(thumbnail_temp_full_path, thumbnail_full_path)
 
         ############################################################
         # LINK Objects
@@ -1418,7 +1428,9 @@ class MediaManager(object):
         # link them
         # assign it as an output to the given version
         version.outputs.append(link)
-        link.thumbnail = web_version_link
-        web_version_link.thumbnail = thumbnail_link
+        if web_version_link:
+            link.thumbnail = web_version_link
+            if thumbnail_link:
+                web_version_link.thumbnail = thumbnail_link
 
         return link

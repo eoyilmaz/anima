@@ -765,7 +765,7 @@ class SequencerExtension(object):
 
             # remove the temp file
             #os.remove(temp_file_path)
-            print 'xml path: %s' % temp_file_path
+            #print 'xml path: %s' % temp_file_path
 
         #if return_code:
         #    # there is an error

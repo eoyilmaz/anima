@@ -9,6 +9,7 @@ import datetime
 
 import pymel.core as pm
 import maya.cmds as mc
+import tempfile
 
 from anima import stalker_server_internal_address
 from anima.publish import (clear_publishers, publisher, staging,
@@ -1364,3 +1365,75 @@ def generate_playblast():
     sp.batch_mode = True
     video_files = sp.playblast()
     sp.upload_outputs(sp.version, video_files)
+
+
+@publisher(['animation'], publisher_type=POST_PUBLISHER_TYPE)
+def export_edl():
+    """exports edl of animation scenes
+    """
+    from anima.env.mayaEnv import Maya
+    m = Maya()
+    current_version = m.get_current_version()
+
+    if not current_version:
+        return
+
+    # get sequenceManager1
+    sm = pm.PyNode('sequenceManager1')
+    seqs = sm.sequences.get()
+    if not len(seqs):
+        return
+
+    seq1 = seqs[0]
+
+    edl_path = tempfile.gettempdir()
+    edl_file_name = '%s_v%03i.edl' % (
+        current_version.nice_name,
+        current_version.version_number
+    )
+
+    edl_file_full_path = os.path.join(edl_path, edl_file_name)
+
+    # convert to MXF
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    shots = seq1.shots.get()
+    shot_count = len(shots)
+
+    caller = pdm.register(shot_count, title='Converting To MXF')
+
+    # update shot outputs to the correct place first
+    # there should be only one shot in the current animation scene
+    # if there is more than one shot, the other publisher will already warn the
+    # user so the code path will not reach to this point
+
+    # we also should already have a video output created by another publisher
+    playblast_file = None
+    for output in current_version.outputs:
+        extension = os.path.splitext(output.full_path)[-1]
+        if extension in ['.mov', '.avi', '.mp4']:
+            playblast_file = output
+            break
+
+    if not playblast_file:
+        return
+    shot = shots[0]
+    shot.output.set(playblast_file.full_path)
+
+    for i in seq1.metafuze():
+        caller.step()
+
+    # create EDL file
+    from anima import utils
+    mm = utils.MediaManager()
+    l = sm.to_edl()
+    with open(edl_file_full_path, 'w') as f:
+        f.write(l.to_string())
+
+    with open(edl_file_full_path, 'r') as f:
+        link = mm.upload_version_output(current_version, f, edl_file_name)
+
+    # add the link to database
+    from stalker import db
+    db.DBSession.commit()
