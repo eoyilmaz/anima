@@ -397,8 +397,12 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                     )
 
                     kwargs = {
-                        'file_pathurl': os.path.normpath(raw_file_path),
-                        'mxf_pathurl': os.path.normpath(raw_mxf_path),
+                        'file_pathurl': os.path.normpath(
+                            os.path.expandvars(raw_file_path)
+                        ),
+                        'mxf_pathurl': os.path.normpath(
+                            os.path.expandvars(raw_mxf_path)
+                        ),
                         'sequence_name': self.name,
                         'sequence_timecode': self.timecode,
                         'clip_id': clip.id,
