@@ -1496,6 +1496,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             except UnicodeEncodeError:
                 error_message = unicode(e)
             QtGui.QMessageBox.critical(self, "Error", error_message)
+            DBSession.rollback()
             return None
 
         if not new_version:
@@ -1508,6 +1509,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
             )
+            DBSession.rollback()
             return
 
         # call the environments save_as method
@@ -1524,6 +1526,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
+                DBSession.rollback()
                 return
             logger.debug('env: %s' % environment.name)
 
@@ -1542,6 +1545,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 error_message
             )
 
+            DBSession.rollback()
             return
 
         if is_external_env:
