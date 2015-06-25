@@ -1058,7 +1058,7 @@ def check_cacheable_attr():
         )
 
 
-@publisher('previs')
+@publisher(['previs', 'shot previs'])
 def check_sequencer():
     """checks if there is a sequencer node in the scene
     """
@@ -1067,7 +1067,7 @@ def check_sequencer():
         raise PublishError('There is no Sequencer node in the scene!!!')
 
 
-@publisher('previs')
+@publisher(['previs', 'shot previs'])
 def check_sequence_name():
     """checks if the sequence name attribute is properly set
     """
@@ -1078,7 +1078,7 @@ def check_sequence_name():
         raise PublishError('Please enter a sequence name!!!')
 
 
-@publisher('previs')
+@publisher(['previs', 'shot previs'])
 def check_sequence_name_format():
     """checks if the sequence name format is correct
     """
@@ -1138,7 +1138,7 @@ def check_sequence_name_format():
         )
 
 
-@publisher(['animation', 'previs'])
+@publisher(['animation', 'previs', 'shot previs'])
 def check_shot_nodes():
     """checks if there is at least one shot node
     """
@@ -1147,7 +1147,7 @@ def check_shot_nodes():
         raise PublishError('There is no <b>Shot</b> node in the scene')
 
 
-@publisher('previs')
+@publisher(['previs', 'shot previs'])
 def check_shot_name_format():
     """check shot name format
     """
@@ -1213,7 +1213,7 @@ def check_unique_shot_names():
         )
 
 
-@publisher('animation')
+@publisher(['animation', 'shot previs'])
 def check_multiple_shot_nodes():
     """checks if there are multiple shot nodes
     """
@@ -1222,7 +1222,7 @@ def check_multiple_shot_nodes():
         raise PublishError('There is multiple <b>Shot</b> nodes in the scene')
 
 
-@publisher('animation')
+@publisher(['animation', 'previs', 'shot previs'])
 def check_frame_range_selection():
     """checks if there is any range selected in the time slider
 
@@ -1240,7 +1240,7 @@ def check_frame_range_selection():
         )
 
 
-@publisher('animation')
+@publisher(['animation', 'shot previs'])
 def set_frame_range():
     """sets the frame range from the shot node
     """
@@ -1351,7 +1351,7 @@ def cache_animations():
     auxiliary.export_alembic_from_cache_node(handles=1)
 
 
-@publisher(['animation', 'previs'], publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'previs', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def generate_playblast():
     """generates a playblast for the current scene
     """
@@ -1367,7 +1367,7 @@ def generate_playblast():
     sp.upload_outputs(sp.version, video_files)
 
 
-@publisher(['animation'], publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def export_edl():
     """exports edl of animation scenes
     """
