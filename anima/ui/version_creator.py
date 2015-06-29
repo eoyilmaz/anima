@@ -471,12 +471,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView_auto_fit_column
         )
 
-        # takes_listWidget
-        QtCore.QObject.connect(
-            self.takes_listWidget,
-            QtCore.SIGNAL("currentTextChanged(QString)"),
-            self.takes_listWidget_changed
-        )
+        # # takes_listWidget
+        # QtCore.QObject.connect(
+        #     self.takes_listWidget,
+        #     QtCore.SIGNAL("currentTextChanged(QString)"),
+        #     self.takes_listWidget_changed
+        # )
 
         # repr_as_separate_takes_checkBox
         QtCore.QObject.connect(
@@ -1013,7 +1013,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the versions of the entity
         takes = []
 
-        if task:
+        if task and task.is_leaf:
             # clear the takes_listWidget and fill with new data
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
@@ -1340,6 +1340,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         task = self.get_task()
         if not task or not isinstance(task, Task):
+            return
+
+        # do not display any version for a container task
+        if task.is_container:
             return
 
         # take name
