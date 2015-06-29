@@ -471,7 +471,6 @@ class RepresentationGenerator(object):
 
                 for node in pfx_polygons_node.getChildren():
                     for child_node in node.getChildren():
-                        #print('processing %s' % child_node.name())
                         child_node_name = child_node.name().split('___')[-1]
                         child_node_shape = child_node.getShape()
                         child_node_shape_name = None
@@ -481,7 +480,7 @@ class RepresentationGenerator(object):
 
                         pm.select(child_node)
                         output_filename =\
-                            '%s_%s.abc' % (
+                            '%s_%s' % (
                                 self.version.nice_name,
                                 child_node_name.split(':')[-1]
                                 .replace(':', '_')
@@ -513,10 +512,10 @@ class RepresentationGenerator(object):
                         pm.delete(child_node)
                         cache_file_full_path = \
                             os.path\
-                            .join(output_path, output_filename)\
+                            .join(output_path, output_filename + '.abc')\
                             .replace('\\', '/')
 
-                        # check if file exists
+                        # check if file exists and create nodes
                         if os.path.exists(cache_file_full_path):
                             gpu_node = pm.createNode('gpuCache')
                             gpu_node_tra = gpu_node.getParent()
@@ -535,6 +534,8 @@ class RepresentationGenerator(object):
                                 cache_file_full_path,
                                 type="string"
                             )
+                        else:
+                            print('File not found!: %s' % cache_file_full_path)
 
                 # clean up other nodes
                 pm.delete('kks___vegetation_pfxStrokes')
