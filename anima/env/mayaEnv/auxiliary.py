@@ -1644,6 +1644,10 @@ def export_alembic_from_cache_node(handles=0):
     pdm = ProgressDialogManager()
     pdm.close()
 
+    # load Abc plugin first
+    if not pm.pluginInfo('AbcExport', q=1, l=1):
+        pm.loadPlugin('AbcExport')
+
     # list all cacheable nodes
     cacheable_nodes = []
     tr_list = pm.ls(tr=1, type='transform')
