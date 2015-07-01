@@ -1091,7 +1091,13 @@ def check_sequence_name_format():
     parts = sequence_name.split('_')
 
     if len(parts) != 3:
-        raise PublishError('Sequence name format is not correct!!!')
+        raise PublishError(
+            'Sequence name format is not correct!!!<br>'
+            '<br>'
+            'It should be in the following format:<br>'
+            '<br>'
+            'SEQXXX_XXX_XXXX'
+        )
 
     sequence_code = parts[0]
     scene_number = parts[1]
