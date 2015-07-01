@@ -1058,7 +1058,7 @@ def check_cacheable_attr():
         )
 
 
-@publisher(['previs', 'shot previs'])
+@publisher(['animation', 'previs', 'shot previs'])
 def check_sequencer():
     """checks if there is a sequencer node in the scene
     """
@@ -1067,7 +1067,7 @@ def check_sequencer():
         raise PublishError('There is no Sequencer node in the scene!!!')
 
 
-@publisher(['previs', 'shot previs'])
+@publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name():
     """checks if the sequence name attribute is properly set
     """
@@ -1078,7 +1078,7 @@ def check_sequence_name():
         raise PublishError('Please enter a sequence name!!!')
 
 
-@publisher(['previs', 'shot previs'])
+@publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name_format():
     """checks if the sequence name format is correct
     """
@@ -1147,7 +1147,7 @@ def check_shot_nodes():
         raise PublishError('There is no <b>Shot</b> node in the scene')
 
 
-@publisher(['previs', 'shot previs'])
+@publisher(['animation', 'previs', 'shot previs'])
 def check_shot_name_format():
     """check shot name format
     """
