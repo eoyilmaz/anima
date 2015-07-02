@@ -1349,6 +1349,25 @@ def create_representations():
         m_env.open(v, force=True, skip_update_check=True)
 
 
+@publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
+def update_shot_range():
+    """update shot range
+    """
+    from stalker import db, Shot
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+
+    shot = v.task.parent
+    if shot and isinstance(shot, Shot):
+        shot_node = pm.ls(type='shot')[0]
+        start_frame = shot_node.startFrame.get()
+        end_frame = shot_node.endFrame.get()
+        shot.cut_in = int(start_frame)
+        shot.cut_out = int(end_frame)
+        db.DBSession.commit()
+
+
 @publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations():
     """cache animations
