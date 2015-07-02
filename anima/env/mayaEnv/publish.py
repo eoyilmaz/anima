@@ -1386,10 +1386,20 @@ def generate_playblast():
     reload(utils)
     reload(auxiliary)
 
+    # before doing a playblast set all shot handles to 48
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(48)
+
     sp = auxiliary.Playblaster()
     sp.batch_mode = True
     video_files = sp.playblast()
     sp.upload_outputs(sp.version, video_files)
+
+    # revert the handles to 0
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(0)
 
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
@@ -1425,6 +1435,11 @@ def export_edl():
 
     shots = seq1.shots.get()
     shot_count = len(shots)
+
+    # before doing a playblast set all shot handles to 48
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(48)
 
     caller = pdm.register(shot_count, title='Converting To MXF')
 
@@ -1462,3 +1477,8 @@ def export_edl():
     # add the link to database
     from stalker import db
     db.DBSession.commit()
+
+    # revert the handles to 0
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(0)
