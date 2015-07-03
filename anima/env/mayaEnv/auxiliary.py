@@ -944,7 +944,10 @@ def perform_playblast_shot(shot_name):
     shot = pm.PyNode(shot_name)
 
     pb = Playblaster()
-    video_file_output = pb.playblast_shot(shot)
+    video_file_output = pb.playblast_shot(
+        shot,
+        extra_playblast_options={'viewer': 1}
+    )
 
     response = pm.confirmDialog(
         title='Upload To Server?',
