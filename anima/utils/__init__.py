@@ -1342,14 +1342,11 @@ class MediaManager(object):
         # use a Repository relative path
         repo = version.task.project.repository
 
-        from stalker import Repository, Link
-        assert isinstance(repo, Repository)
-        relative_full_path = str(repo.make_relative(
-            str(version_output_file_full_path)
-        ))
+        from stalker import Link
+        full_path = str(version_output_file_full_path)
 
         link = Link(
-            full_path=relative_full_path,
+            full_path=repo.to_os_independent_path(full_path),
             original_filename=str(filename)
         )
 
@@ -1372,10 +1369,9 @@ class MediaManager(object):
                     'ForWeb',
                     version_output_base_name + web_version_extension
                 )
-            web_version_repo_relative_full_path = \
-                repo.make_relative(str(web_version_full_path))
+
             web_version_link = Link(
-                full_path=web_version_repo_relative_full_path,
+                full_path=repo.to_os_independent_path(web_version_full_path),
                 original_filename=filename
             )
 
@@ -1405,10 +1401,9 @@ class MediaManager(object):
                     'Thumbnail',
                     version_output_base_name + thumbnail_extension
                 )
-            thumbnail_repo_relative_full_path = \
-                repo.make_relative(thumbnail_full_path)
+
             thumbnail_link = Link(
-                full_path=thumbnail_repo_relative_full_path,
+                full_path=repo.to_os_independent_path(thumbnail_full_path),
                 original_filename=filename
             )
 
