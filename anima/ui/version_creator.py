@@ -41,6 +41,15 @@ ref_depth_res = [
 ]
 
 
+class RecentFilesComboBox(QtGui.QComboBox):
+    """A Fixed with popup box comboBox alternative
+    """
+
+    def showPopup(self, *args, **kwargs):
+        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
+        super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
+
+
 class VersionsTableWidget(QtGui.QTableWidget):
     """A QTableWidget derivative specialized to hold version data
     """
@@ -391,6 +400,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # create the project attribute in projects_comboBox
         self.current_dialog = None
+
+        # remove recent files comboBox and create a new one
+        layout = self.horizontalLayout_8
+        self.recent_files_comboBox.deleteLater()
+        self.recent_files_comboBox = RecentFilesComboBox()
+        self.recent_files_comboBox.setObjectName('recent_files_comboBox')
+        layout.insertWidget(1, self.recent_files_comboBox)
 
         # setup signals
         self._setup_signals()
@@ -935,6 +951,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def update_recent_files_combo_box(self):
         """
         """
+        self.recent_files_comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContentsOnFirstShow)
+        self.recent_files_comboBox.setFixedWidth(250)
+
         self.recent_files_comboBox.clear()
         # update recent files list
         if self.environment:
