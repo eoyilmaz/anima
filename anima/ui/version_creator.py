@@ -6,7 +6,7 @@
 
 import logging
 import datetime
-import tempfile
+
 import os
 
 from sqlalchemy import distinct

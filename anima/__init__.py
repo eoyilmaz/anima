@@ -98,3 +98,15 @@ ffmpeg_command_path = 'ffmpeg'
 ffprobe_command_path = 'ffprobe'
 
 max_recent_files = 50
+
+status_colors = {
+    'wfd': [171, 186, 195],
+    'rts': [209, 91, 71],
+    'wip': [255, 198, 87],
+    'prev': [111, 179, 224],
+    'hrev': [126, 110, 176],
+    'drev': [126, 110, 176],
+    'cmpl': [130, 175, 111],
+    'oh': [213, 63, 64],
+    'stop': [78, 89, 98],
+}

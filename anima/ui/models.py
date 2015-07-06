@@ -6,7 +6,7 @@
 
 from stalker import defaults, Task, Project
 
-from anima import logger
+from anima import logger, status_colors
 from anima.ui.lib import QtGui, QtCore
 
 
@@ -408,6 +408,19 @@ class TaskItem(QtGui.QStandardItem):
                     my_font = task_item.font()
                     my_font.setBold(True)
                     task_item.setFont(my_font)
+
+                # color with task status
+                task_item.setData(
+                    QtGui.QColor(
+                        *status_colors[task_item.task.status.code.lower()]
+                    ),
+                    QtCore.Qt.BackgroundRole
+                )
+
+                # use black text
+                task_item.setForeground(
+                    QtGui.QBrush(QtGui.QColor(0, 0, 0))
+                )
 
                 self.appendRow(task_item)
 
