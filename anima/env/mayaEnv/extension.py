@@ -613,7 +613,7 @@ class SequencerExtension(object):
     def all_shots(self):
         """return all the shots connected to this sequencer
         """
-        return self.shots.get()
+        return pm.ls(self.shots.get(), typ='shot')
 
     # @extends(pm.nodetypes.Sequencer)
     # @all_shots.setter
@@ -720,7 +720,7 @@ class SequencerExtension(object):
         """creates the selected shot playblasts
         """
         movie_files = []
-        for shot in self.shots.get():
+        for shot in self.all_shots:
             movie_files.append(
                 shot.playblast(
                     options={'showOrnaments': show_ornaments}
