@@ -941,6 +941,13 @@ def UI():
                 ann=Render.setup_outer_eye_render_attributes.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'setup_window_glass_render_attributes_button',
+                l='Setup **Window Glass** Render Attributes',
+                c=RepeatedCallback(Render.setup_window_glass_render_attributes),
+                ann=Render.setup_window_glass_render_attributes.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button('convert_to_ai_image_button',
@@ -3529,6 +3536,35 @@ class Render(object):
             shape.setAttr('aiOpaque', 0)
             shape.setAttr('aiVisibleInDiffuse', 0)
             shape.setAttr('aiVisibleInGlossy', 0)
+
+    @classmethod
+    def setup_window_glass_render_attributes(cls):
+        """sets window glass render attributes for environments, select window
+        glass objects and run this
+        """
+        for node in pm.ls(sl=1):
+            shape = node.getShape()
+            shape.setAttr('castsShadows', 0)
+            shape.setAttr('visibleInReflections', 0)
+            shape.setAttr('visibleInRefractions', 0)
+            shape.setAttr('aiSelfShadows', 0)
+            shape.setAttr('aiOpaque', 1)
+            shape.setAttr('aiVisibleInDiffuse', 0)
+            shape.setAttr('aiVisibleInGlossy', 0)
+
+            # set material attributes
+            shading_engines = shape.outputs(type=pm.nt.ShadingEngine)
+            # get the material
+            for engine in shading_engines:
+                materials = pm.ls(engine.inputs(), mat=1)
+                for mat in materials:
+                    if isinstance(mat, pm.nt.AiStandard):
+                        mat.setAttr('Ks', 1)
+                        mat.setAttr('specularRoughness', 0)
+                        mat.setAttr('Kr', 0)
+                        mat.setAttr('enableInternalReflections', 0)
+                        mat.setAttr('Kt', 0)
+                        mat.setAttr('KtColor', (0, 0, 0))
 
     @classmethod
     def convert_file_node_to_ai_image_node(cls):
