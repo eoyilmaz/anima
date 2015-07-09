@@ -888,6 +888,7 @@ def check_multiple_connections_for_textures():
     nodes_to_ignore = pm.ls(type='hyperLayout')
     nodes_to_ignore += pm.ls(type='shadingEngine')
     nodes_to_ignore += pm.ls(type='materialInfo')
+    nodes_to_ignore += pm.ls(type='time')
 
     # by name
     nodes_to_ignore += pm.ls('lambert1')
