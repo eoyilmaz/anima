@@ -951,7 +951,9 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def update_recent_files_combo_box(self):
         """
         """
-        self.recent_files_comboBox.setSizeAdjustPolicy(QtGui.QComboBox.AdjustToContentsOnFirstShow)
+        self.recent_files_comboBox.setSizeAdjustPolicy(
+            QtGui.QComboBox.AdjustToContentsOnFirstShow
+        )
         self.recent_files_comboBox.setFixedWidth(250)
 
         self.recent_files_comboBox.clear()
@@ -962,14 +964,27 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 recent_files = rfm[self.environment.name]
                 recent_files.insert(0, '')
                 # append them to the comboBox
-                self.recent_files_comboBox.addItems(recent_files[:50])
 
-                try:
-                    self.recent_files_comboBox.setStyleSheet(
-                        "qproperty-textElideMode: ElideNone"
+                for i, full_path in enumerate(recent_files[:50]):
+                    parts = os.path.split(full_path)
+                    filename = parts[-1]
+                    self.recent_files_comboBox.addItem(
+                        filename,
+                        full_path,
                     )
-                except:
-                    pass
+
+                    self.recent_files_comboBox.setItemData(
+                        i,
+                        full_path,
+                        QtCore.Qt.ToolTipRole
+                    )
+
+                # try:
+                #     self.recent_files_comboBox.setStyleSheet(
+                #         "qproperty-textElideMode: ElideNone"
+                #     )
+                # except:
+                #     pass
 
                 self.recent_files_comboBox.setSizePolicy(
                     QtGui.QSizePolicy.MinimumExpanding,
@@ -1916,6 +1931,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         :param path: 
         :return:
         """
-        path = self.recent_files_comboBox.currentText()
+        current_index = self.recent_files_comboBox.currentIndex()
+        path = self.recent_files_comboBox.itemData(current_index)
         self.find_from_path_lineEdit.setText(path)
         self.find_from_path_pushButton_clicked()
