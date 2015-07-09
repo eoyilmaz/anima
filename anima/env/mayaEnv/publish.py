@@ -878,75 +878,35 @@ def check_multiple_connections_for_textures():
                 return
 
     # get all the texture nodes
-    texture_nodes = [
-        'bulge',
-        'checker',
-        'cloth',
-        'file',
-        'fluidTexture2D',
-        'fractal',
-        'grid',
-        'mandelbrot',
-        'mountain',
-        'movie',
-        'noise',
-        'ocean',
-        'psdFileTex',
-        'ramp',
-        'water',
-
-        'brownian',
-        'cloud',
-        'crater',
-        'fluidTexture3D',
-        'granite',
-        'leather',
-        'mandelbrot3D',
-        'marble',
-        'rock',
-        'snow',
-        'solidFractal',
-        'stucco',
-        'volumeNoise',
-        'wood',
-
-        'bump2d',
-        'bump3d',
-        'place2dTexture',
-        'place3dTexture',
-        'plusMinusAverage',
-        'samplerInfo',
-        'stencil',
-        'uvChooser',
-        'surfaceInfo',
-        'blendColors',
-        'clamp',
-        'contrast',
-        'gammaCorrect',
-        'hsvToRgb',
-        'luminance',
-        'remapColor',
-        'remapHsv',
-        'remapValue',
-        'rgbToHsv',
-        'surfaceLuminance',
-        'imagePlane',
-        'layeredTexture',
-        'projection',
-
-        'aiImage',
-        'aiNoise',
-    ]
+    from anima.env.mayaEnv import repr_tools
+    reload(repr_tools)
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
+
+    # by type
     nodes_to_ignore = pm.ls(type='hyperLayout')
+    nodes_to_ignore += pm.ls(type='shadingEngine')
+    nodes_to_ignore += pm.ls(type='materialInfo')
+
+    # by name
+    nodes_to_ignore += pm.ls('lambert1')
+    nodes_to_ignore += pm.ls('defaultShaderList*')
     nodes_to_ignore += pm.ls('defaultTextureList*')
     nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
 
-    for node in pm.ls(type=texture_nodes):
+    all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
+    for node in nodes_to_ignore:
+        if node in all_nodes:
+            all_nodes.remove(node)
+
+    for node in all_nodes:
         materials_connected_to_this_node = \
             pm.ls(node.listHistory(future=True), mat=True)
+
+        # remove self from all_nodes
+        if node in materials_connected_to_this_node:
+            materials_connected_to_this_node.remove(node)
 
         if len(materials_connected_to_this_node) > 1:
             nodes_with_multiple_materials.append(node)

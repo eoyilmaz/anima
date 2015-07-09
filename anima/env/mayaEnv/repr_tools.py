@@ -16,10 +16,17 @@ from anima.env.mayaEnv import auxiliary
 from anima import logger
 
 
+#
+# Stores shading nodes that is commonly used
+# This is used in publish scripts and in representation generation
+#
 RENDER_RELATED_NODE_TYPES = [
+
+    # generic
     'shadingEngine',
     'displacementShader',
 
+    # materials
     'anisotropic',
     'blinn',
     'lambert',
@@ -32,63 +39,137 @@ RENDER_RELATED_NODE_TYPES = [
     'surfaceShader',
     'useBackground',
 
-    'bulge',
-    'checker',
-    'cloth',
-    'file',
-    'fluidTexture2D',
-    'fractal',
-    'grid',
-    'mandelbrot',
-    'mountain',
-    'movie',
-    'noise',
-    'ocean',
-    'psdFileTex',
-    'ramp',
-    'water',
-    'layeredTexture',
+    # volumetricMaterials
+    'envFog',
+    'fluidShape',
+    'lightFog',
+    'particleCloud',
+    'volumeFog',
+    'volumeShader',
 
-    'brownian',
-    'cloud',
-    'crater',
-    'fluidTexture3D',
-    'granite',
-    'leather',
-    'mandelbrot3D',
-    'marble',
-    'rock',
-    'snow',
-    'solidFractal',
-    'stucco',
-    'volumeNoise',
-    'wood',
+    # 2DTextures
+    'bulge',            # +
+    'checker',          # +
+    'cloth',            # +
+    'file',             # +
+    'fluidTexture2D',   # +
+    'fractal',          # +
+    'grid',             # +
+    'mandelbrot',       # +
+    'mountain',         # +
+    'movie',            # +
+    'noise',            # +
+    'ocean',            # +
+    'psdFileTex',       # +
+    'ramp',             # +
+    'water',            # +
+    'layeredTexture',   # + this is not a 2d texture but will be listed here
+    'imagePlane',       # +
 
-    'bump2d',
-    'bump3d',
-    'place2dTexture',
-    'place3dTexture',
-    'plusMinusAverage',
-    'samplerInfo',
-    'stencil',
-    'uvChooser',
-    'surfaceInfo',
-    'blendColors',
-    'clamp',
-    'contrast',
-    'gammaCorrect',
-    'hsvToRgb',
-    'luminance',
-    'remapColor',
-    'remapHsv',
-    'remapValue',
-    'rgbToHsv',
-    'surfaceLuminance',
-    'imagePlane',
-    'projection',
+    # 3DTextures
+    'brownian',         # +
+    'cloud',            # +
+    'crater',           # +
+    'fluidTexture3D',   # +
+    'granite',          # +
+    'leather',          # +
+    'mandelbrot3D',     # +
+    'marble',           # +
+    'rock',             # +
+    'snow',             # +
+    'solidFractal',     # +
+    'stucco',           # +
+    'volumeNoise',      # +
+    'wood',             # +
 
-    'aiImage',
-    'aiNoise',
+    # environmentTextures
+    'envBall',
+    'envChrome',
+    'envCube',
+    'envSky',
+    'envSphere',
+
+    # generalUtilities
+    'arrayMapper',
+    'bump2d',            # +
+    'bump3d',            # +
+    'composeMatrix',
+    'condition',
+    'decomposeMatrix',
+    'distanceBetween',
+    'eulerToQuat',
+    'heightField',
+    'inverseMatrix',
+    'lightInfo',
+    'multiplyDivide',
+    'place2dTexture',    # +
+    'place3dTexture',    # +
+    'plusMinusAverage',  # +
+    'projection',        # +
+    'quatAdd',
+    'quatConjugate',
+    'quatInvert',
+    'quatNegate',
+    'quatNormalize',
+    'quatProd',
+    'quatSub',
+    'quatToEuler',
+    'reverse',
+    'samplerInfo',       # +
+    'setRange',
+    'stencil',           # +
+    'transposeMatrix',
+    'uvChooser',         # +
+    'vectorProduct',
+
+    # scalarUtilities
+    'addDoubleLinear',
+    'addMatrix',
+    'angleBetween',
+    'blendTwoAttr',
+    'choice',
+    'chooser',
+    'curveInfo',
+    'fourByFourMatrix',
+    'frameCache',
+    'multDoubleLinear',
+    'multMatrix',
+    'surfaceInfo',       # +
+    'unitConversion',
+    'wtAddMatrix',
+
+    # switchUtilities
+    'doubleShadingSwitch',
+    'quadShadingSwitch',
+    'singleShadingSwitch',
+    'tripleShadingSwitch',
+
+    # colorUtilities
+    'blendColors',      # +
+    'clamp',            # +
+    'colorProfile',
+    'contrast',         # +
+    'gammaCorrect',     # +
+    'grade_tm',
+    'hsvToRgb',         # +
+    'luminance',        # +
+    'remapColor',       # +
+    'remapHsv',         # +
+    'remapValue',       # +
+    'rgbToHsv',         # +
+    'surfaceLuminance', # +
+
+    # particleUtilities
+    'particleSamplerInfo',
+
+    # glow
+    'opticalFX',
+
+    # arnoldTexture
+    'aiImage',       # +
+    'aiNoise',       # +
+
+    # arnoldShaderSurface
     'aiAmbientOcclusion',
     'aiHair',
     'aiRaySwitch',
@@ -97,8 +178,31 @@ RENDER_RELATED_NODE_TYPES = [
     'aiStandard',
     'aiUtility',
     'aiWireframe',
-]
 
+    # arnoldShaderUtility
+    'aiBump2d',
+    'aiBump3d',
+    'aiMotionVector',
+    'aiUserDataBool',
+    'aiUserDataColor',
+    'aiUserDataFloat',
+    'aiUserDataInt',
+    'aiUserDataPnt2',
+    'aiUserDataString',
+    'aiUserDataVector',
+    'aiVolumeCollector',
+    'aiWriteColor',
+    'aiWriteFloat',
+
+    # arnoldShaderVolume
+    'aiDensity',
+    'aiFog',
+    'aiVolumeScattering',
+
+    # arnoldTextureEnvironment
+    'aiPhysicalSky',
+    'aiSky',
+]
 
 READ_ONLY_NODE_NAMES = [
     'lambert1',
