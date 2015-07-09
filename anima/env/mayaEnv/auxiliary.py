@@ -1228,17 +1228,25 @@ class Playblaster(object):
 
         # set camera options for playblast
         for camera in pm.ls(type='camera'):
-            if not camera.attr('overscan').isLocked():
+            try:
                 camera.setAttr('overscan', 1)
+            except RuntimeError:
+                pass
 
-            if not camera.attr('filmFit').isLocked():
+            try:
                 camera.setAttr('filmFit', 1)
+            except RuntimeError:
+                pass
 
-            if not camera.attr('displayFilmGate').isLocked():
+            try:
                 camera.setAttr('displayFilmGate', 1)
+            except RuntimeError:
+                pass
 
-            if not camera.attr('displayResolution').isLocked():
+            try:
                 camera.setAttr('displayResolution', 0)
+            except RuntimeError:
+                pass
 
     def restore_user_options(self):
         """restores user options
