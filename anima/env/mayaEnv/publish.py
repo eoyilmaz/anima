@@ -867,6 +867,11 @@ def check_multiple_connections_for_textures():
     """check if textures are only used in one material (not liking it very much
     but it is breaking ASS files.
     """
+    # load necessary plugins
+    plugins = ['matrixNodes', 'quatNodes']
+    for plugin in plugins:
+        if not pm.pluginInfo(plugin, q=1, l=1):
+            pm.loadPlugin(plugin)
 
     v = staging.get('version')
 
