@@ -1250,7 +1250,10 @@ class Playblaster(object):
             camera_name = camera.name()
             camera_flags = self.user_view_options['camera_flags'][camera_name]
             for attr, value in camera_flags.items():
-                camera.setAttr(attr, value)
+                try:
+                    camera.setAttr(attr, value)
+                except RuntimeError:
+                    pass
 
         self.remove_hud(self.hud_name)
 
