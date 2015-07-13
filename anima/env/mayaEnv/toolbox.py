@@ -3542,6 +3542,22 @@ class Render(object):
         """sets window glass render attributes for environments, select window
         glass objects and run this
         """
+        shader_name = 'toolbox_glass_shader'
+        if len(pm.ls('%s*' % shader_name)) > 0:
+            shader = pm.ls('%s*' % shader_name)[0]
+        else:
+            shader = pm.shadingNode(
+                'aiStandard',
+                asShader=1,
+                name='%s#' % shader_name
+            )
+            shader.setAttr('Ks', 1)
+            shader.setAttr('specularRoughness', 0)
+            shader.setAttr('Kr', 0)
+            shader.setAttr('enableInternalReflections', 0)
+            shader.setAttr('Kt', 0)
+            shader.setAttr('KtColor', (0, 0, 0))
+
         for node in pm.ls(sl=1):
             shape = node.getShape()
             shape.setAttr('castsShadows', 0)
@@ -3552,19 +3568,13 @@ class Render(object):
             shape.setAttr('aiVisibleInDiffuse', 0)
             shape.setAttr('aiVisibleInGlossy', 0)
 
-            # set material attributes
-            shading_engines = shape.outputs(type=pm.nt.ShadingEngine)
-            # get the material
-            for engine in shading_engines:
-                materials = pm.ls(engine.inputs(), mat=1)
-                for mat in materials:
-                    if isinstance(mat, pm.nt.AiStandard):
-                        mat.setAttr('Ks', 1)
-                        mat.setAttr('specularRoughness', 0)
-                        mat.setAttr('Kr', 0)
-                        mat.setAttr('enableInternalReflections', 0)
-                        mat.setAttr('Kt', 0)
-                        mat.setAttr('KtColor', (0, 0, 0))
+            if isinstance(shape, pm.nt.AiStandIn):
+                # get the glass shader or create one
+                shape.overrideShaders.set(1)
+
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
 
     @classmethod
     def convert_file_node_to_ai_image_node(cls):

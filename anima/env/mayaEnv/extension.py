@@ -964,6 +964,9 @@ class ShotExtension(object):
             pm.system.dgdirty(a=True)
 
             # if a sound node is specified remove useTraxSounds flag
+            import pprint
+            pprint.pprint(default_options)
+
             result = pm.playblast(**default_options)
             sequence.unmute_shots()
 

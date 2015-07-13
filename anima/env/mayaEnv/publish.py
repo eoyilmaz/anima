@@ -985,7 +985,7 @@ def check_component_edits_on_references():
 
     caller = pdm.register(
         ref_count,
-        'Checking component edits on %i reference' % ref_count
+        'Checking component edits on %i reference nodes' % ref_count
     )
 
     for ref in all_refs:
@@ -1065,6 +1065,8 @@ def check_sequence_name_format():
             'It should be in the following format:<br>'
             '<br>'
             'SEQXXX_XXX_XXXX'
+            '<br>'
+            'ex: SEQ001_003_TNGI'
         )
 
     sequence_code = parts[0]
