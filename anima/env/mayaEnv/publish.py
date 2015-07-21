@@ -1093,7 +1093,7 @@ def check_sequence_name_format():
         )
 
     # scene number should a 3 digit and an optional letter
-    if not len(scene_number) in [3, 4]:
+    if not len(scene_number) in [3, 4, 5]:
         raise PublishError(
             'Scene number in sequence name should be a number with 3 digits '
             'and an optional uppercase letter!!!<br>'
