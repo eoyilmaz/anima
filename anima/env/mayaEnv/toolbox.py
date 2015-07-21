@@ -11,7 +11,6 @@ from anima.ui.progress_dialog import ProgressDialogManager
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
-__version__ = "0.1.11"
 
 import pymel.core as pm
 import maya.mel as mel
@@ -122,7 +121,7 @@ def UI():
     toolbox_window = pm.window(
         'toolbox_window',
         wh=(width, height),
-        title="Anima ToolBox v%s" % __version__
+        title="Anima ToolBox"
     )
 
     #the layout that holds the tabs
@@ -1374,7 +1373,7 @@ def UI():
 
     dock_control = pm.dockControl(
         "toolbox_dockControl",
-        l='toolbox v%s' % __version__,
+        l='toolbox',
         content=toolbox_window,
         area="left",
         allowedArea=["left", "right"],
@@ -3543,8 +3542,10 @@ class Render(object):
         glass objects and run this
         """
         shader_name = 'toolbox_glass_shader'
-        if len(pm.ls('%s*' % shader_name)) > 0:
-            shader = pm.ls('%s*' % shader_name)[0]
+        shaders = pm.ls('%s*' % shader_name)
+        selection = pm.ls(sl=1)
+        if len(shaders) > 0:
+            shader = shaders[0]
         else:
             shader = pm.shadingNode(
                 'aiStandard',
@@ -3558,15 +3559,19 @@ class Render(object):
             shader.setAttr('Kt', 0)
             shader.setAttr('KtColor', (0, 0, 0))
 
-        for node in pm.ls(sl=1):
+        shape_attributes = [
+            ('castsShadows', 0),
+            ('visibleInReflections', 0),
+            ('visibleInRefractions', 0),
+            ('aiSelfShadows', 0),
+            ('aiOpaque', 1),
+            ('aiVisibleInDiffuse', 0),
+            ('aiVisibleInGlossy', 0),
+        ]
+
+        for node in selection:
             shape = node.getShape()
-            shape.setAttr('castsShadows', 0)
-            shape.setAttr('visibleInReflections', 0)
-            shape.setAttr('visibleInRefractions', 0)
-            shape.setAttr('aiSelfShadows', 0)
-            shape.setAttr('aiOpaque', 1)
-            shape.setAttr('aiVisibleInDiffuse', 0)
-            shape.setAttr('aiVisibleInGlossy', 0)
+            map(lambda x: shape.setAttr(*x), shape_attributes)
 
             if isinstance(shape, pm.nt.AiStandIn):
                 # get the glass shader or create one
@@ -3575,6 +3580,21 @@ class Render(object):
             # assign it to the stand in
             pm.select(node)
             pm.hyperShade(assign=shader)
+
+    @classmethod
+    def setup_z_limiter(cls):
+        """creates z limiter setup
+        """
+        shader_name = 'z_limiter_shader#'
+        shaders = pm.ls('%s*' * shader_name)
+        if len(shaders) > 0:
+            shader = shaders[0]
+        else:
+            shader = pm.shadingNode(
+                'surfaceShader',
+                asShader=1,
+                name='%s#' % shader_name
+            )
 
     @classmethod
     def convert_file_node_to_ai_image_node(cls):

@@ -12,9 +12,6 @@ import maya.mel as mel
 import tempfile
 
 
-__version__ = "v10.1.13"
-
-
 def get_valid_dag_node(node):
     """returns a valid dag node even the input is string
     """
@@ -2108,3 +2105,52 @@ def match_hierarchy(source, target):
             lut['match'].append((source_nodes[index], target_nodes[i]))
 
     return lut
+
+
+class Cell(object):
+    """An implementation for a grid cell
+
+    Holds points in space. It is easy to find a corresponding point with using
+    a cell.
+    """
+
+    def __init__(self):
+        self.index = [0, 0, 0]
+        self.singular_index = None
+        self.points = []
+        self.bbox = None
+
+
+class Grid(object):
+    """A simple grid implementation for component search
+    """
+
+    def __init__(self):
+        self.divisions = [1, 1, 1]
+        self.bbox = None
+        self.tree = []
+
+    def add_point(self, point):
+        """Adds the given point to a cell.
+
+        :param point:
+        :return:
+        """
+        raise NotImplementedError()
+
+    def to_index(self, pos):
+        """converts the given position in space to a cell index
+
+        :param pos: A point position in space
+        """
+        raise NotImplementedError()
+
+    def to_cell(self, pos):
+        """returns a cell in the given position in space or none if no cell
+        contains that point.
+
+        :param pos: A point position in space
+        :return:
+        """
+        raise NotImplementedError()
+
