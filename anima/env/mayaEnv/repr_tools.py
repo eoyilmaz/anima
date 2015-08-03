@@ -405,6 +405,28 @@ class RepresentationGenerator(object):
                                skip_update_check=True,
                                reference_depth=3)
 
+    @classmethod
+    def make_unique(cls, filename):
+        """Generates a unique filename if the file already exists
+
+        :param filename:
+        :return:
+        """
+        import uuid
+
+        def generate_filename():
+            random_part = uuid.uuid4().hex[-4:]
+            data = os.path.splitext(filename)
+            return '%s_%s%s' % (data[0], random_part, data[1])
+
+        if os.path.exists(filename):
+            new_filename = generate_filename()
+            while os.path.exists(new_filename):
+                new_filename = generate_filename()
+            return new_filename
+        else:
+            return filename
+
     def generate_all(self):
         """generates all representations at once
         """
@@ -583,8 +605,7 @@ class RepresentationGenerator(object):
                             child_node_shape_name = child_node_shape.name()
 
                         pm.select(child_node)
-                        output_filename =\
-                            '%s_%s' % (
+                        output_filename = '%s_%s' % (
                                 self.version.nice_name,
                                 child_node_name.split(':')[-1]
                                 .replace(':', '_')
@@ -605,6 +626,18 @@ class RepresentationGenerator(object):
                             )
                         except pm.MelError as e:
                             # just pass it
+                            # the file exists and it can not be overwritten
+                            # generate a random name and re export
+                            output_filename = self.make_unique(output_filename)
+                            pm.mel.eval(
+                                gpu_command % {
+                                    'start_frame': start_frame,
+                                    'end_frame': end_frame,
+                                    'node': child_node.fullPath(),
+                                    'path': output_path,
+                                    'filename': output_filename
+                                }
+                            )
                             pass
 
                         # delete the child and add a GPU node instead
@@ -687,7 +720,19 @@ class RepresentationGenerator(object):
                                 )
                             except pm.MelError as e:
                                 # just pass it
-                                pass
+                                # the file exists and con not be overwritten
+                                # generate a unique file name and reexport
+                                output_filename = \
+                                    self.make_unique(output_filename)
+                                pm.mel.eval(
+                                    gpu_command % {
+                                        'start_frame': start_frame,
+                                        'end_frame': end_frame,
+                                        'node': child_node.fullPath(),
+                                        'path': output_path,
+                                        'filename': output_filename
+                                    }
+                                )
 
                             # set rotate and scale pivots
                             rp = pm.xform(child_node, q=1, ws=1, rp=1)
