@@ -406,7 +406,7 @@ class RepresentationGenerator(object):
                                reference_depth=3)
 
     @classmethod
-    def make_unique(cls, filename):
+    def make_unique(cls, filename, force=True):
         """Generates a unique filename if the file already exists
 
         :param filename:
@@ -419,13 +419,16 @@ class RepresentationGenerator(object):
             data = os.path.splitext(filename)
             return '%s_%s%s' % (data[0], random_part, data[1])
 
-        if os.path.exists(filename):
-            new_filename = generate_filename()
-            while os.path.exists(new_filename):
+        if not force:
+            if os.path.exists(filename):
                 new_filename = generate_filename()
-            return new_filename
+                while os.path.exists(new_filename):
+                    new_filename = generate_filename()
+                return new_filename
+            else:
+                return filename
         else:
-            return filename
+            return generate_filename()
 
     def generate_all(self):
         """generates all representations at once
@@ -628,17 +631,31 @@ class RepresentationGenerator(object):
                             # just pass it
                             # the file exists and it can not be overwritten
                             # generate a random name and re export
-                            output_filename = self.make_unique(output_filename)
-                            pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': output_path,
-                                    'filename': output_filename
-                                }
-                            )
-                            pass
+                            try:
+                                output_filename = self.make_unique(output_filename)
+                                pm.mel.eval(
+                                    gpu_command % {
+                                        'start_frame': start_frame,
+                                        'end_frame': end_frame,
+                                        'node': child_node.fullPath(),
+                                        'path': output_path,
+                                        'filename': output_filename
+                                    }
+                                )
+                            except pm.MelError as e:
+                                output_filename = self.make_unique(
+                                    output_filename,
+                                    force=True
+                                )
+                                pm.mel.eval(
+                                    gpu_command % {
+                                        'start_frame': start_frame,
+                                        'end_frame': end_frame,
+                                        'node': child_node.fullPath(),
+                                        'path': output_path,
+                                        'filename': output_filename
+                                    }
+                                )
 
                         # delete the child and add a GPU node instead
                         # set rotate and scale pivots
@@ -722,17 +739,33 @@ class RepresentationGenerator(object):
                                 # just pass it
                                 # the file exists and con not be overwritten
                                 # generate a unique file name and reexport
-                                output_filename = \
-                                    self.make_unique(output_filename)
-                                pm.mel.eval(
-                                    gpu_command % {
-                                        'start_frame': start_frame,
-                                        'end_frame': end_frame,
-                                        'node': child_node.fullPath(),
-                                        'path': output_path,
-                                        'filename': output_filename
-                                    }
-                                )
+                                try:
+                                    output_filename = \
+                                        self.make_unique(output_filename)
+                                    pm.mel.eval(
+                                        gpu_command % {
+                                            'start_frame': start_frame,
+                                            'end_frame': end_frame,
+                                            'node': child_node.fullPath(),
+                                            'path': output_path,
+                                            'filename': output_filename
+                                        }
+                                    )
+                                except pm.MelError as e:
+                                    output_filename = \
+                                        self.make_unique(
+                                            output_filename,
+                                            force=True
+                                        )
+                                    pm.mel.eval(
+                                        gpu_command % {
+                                            'start_frame': start_frame,
+                                            'end_frame': end_frame,
+                                            'node': child_node.fullPath(),
+                                            'path': output_path,
+                                            'filename': output_filename
+                                        }
+                                    )
 
                             # set rotate and scale pivots
                             rp = pm.xform(child_node, q=1, ws=1, rp=1)
