@@ -2114,7 +2114,6 @@ class Reference(object):
         # now open the source version again
         m_env.open(source_version, force=True, skip_update_check=True)
 
-
     @classmethod
     def generate_repr_of_all_references_caller(cls):
         """a helper method that calls
@@ -2147,6 +2146,7 @@ class Reference(object):
 
         paths_visited = []
         versions_to_visit = []
+        versions_cannot_be_published = []
 
         # generate a sorted version list
         # and visit each reference only once
@@ -2217,10 +2217,18 @@ class Reference(object):
             gen.version = v
             # generate representations
             if local_generate_gpu:
-                gen.generate_gpu()
+                try:
+                    gen.generate_gpu()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
 
             if local_generate_ass:
-                gen.generate_ass()
+                try:
+                    gen.generate_ass()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
 
             caller.step()
 
@@ -2231,10 +2239,33 @@ class Reference(object):
         gen.version = source_version
 
         # generate representations
-        if generate_gpu:
-            gen.generate_gpu()
-        if generate_ass:
-            gen.generate_ass()
+        if not versions_cannot_be_published:
+            if generate_gpu:
+                gen.generate_gpu()
+            if generate_ass:
+                gen.generate_ass()
+        else:
+            pm.confirmDialog(
+                title='Error',
+                message='The following versions can not be published '
+                        '(check script editor):\n\n%s' % (
+                            '\n'.join(
+                                map(lambda x: x.nice_name,
+                                    versions_cannot_be_published)
+                            )
+                        ),
+                button=['OK'],
+                defaultButton='OK',
+                cancelButton='OK',
+                dismissString='OK'
+            )
+
+            pm.error(
+                '\n'.join(
+                    map(lambda x: x.absolute_full_path,
+                        versions_cannot_be_published)
+                )
+            )
 
 
 class Modeling(object):
@@ -3659,7 +3690,6 @@ class Animation(object):
             ui_item, q=1, tx=1
         )
         pm.mel.eval('oySmoothComponentAnimation(%s)' % frame_range)
-
 
     @classmethod
     def vertigo_setup_look_at(cls):

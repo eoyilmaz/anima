@@ -609,11 +609,11 @@ class RepresentationGenerator(object):
 
                         pm.select(child_node)
                         output_filename = '%s_%s' % (
-                                self.version.nice_name,
-                                child_node_name.split(':')[-1]
-                                .replace(':', '_')
-                                .replace('|', '_')
-                            )
+                            self.version.nice_name,
+                            child_node_name.split(':')[-1]
+                            .replace(':', '_')
+                            .replace('|', '_')
+                        )
 
                         # run the mel command
                         # check if file exists
