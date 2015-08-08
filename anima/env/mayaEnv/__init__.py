@@ -1244,6 +1244,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           * references
           * texture files including arnold textures
           * arnold ass paths
+          * arnold aiVolume node path
           * image planes
 
         Absolute mode works best for now.
@@ -1288,6 +1289,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         types_and_attrs = {
             'aiImage': 'filename',
             'aiStandIn': 'dso',
+            'aiVolume': 'dso',
             'file': 'fileTextureName',
             'imagePlane': 'imageName',
             'audio': 'filename',
