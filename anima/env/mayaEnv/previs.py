@@ -32,7 +32,7 @@ class ShotExporter(object):
         """
         shots_with_no_task = []
         for shot in self.shot_list:
-            shot_name = shot.full_shot_name
+            shot_name = shot.full_shot_name()
 
     def export_all_shots(self):
         """exports all shots in the scene

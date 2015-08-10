@@ -1649,7 +1649,7 @@ class Playblaster(object):
         return hires_path
 
 
-def export_alembic_from_cache_node(handles=0):
+def export_alembic_from_cache_node(handles=0, step=1):
     """exports alembic caches by looking at the current scene and try to find
     transform nodes which has an attribute called "cacheable"
 
@@ -1738,14 +1738,15 @@ def export_alembic_from_cache_node(handles=0):
         if not os.path.exists(os.path.dirname(output_full_path)):
             os.makedirs(os.path.dirname(output_full_path))
 
-        command = 'AbcExport -j "-frameRange %s %s -ro -stripNamespaces ' \
-                  '-uvWrite -wholeFrameGeo -worldSpace -eulerFilter ' \
+        command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
+                  '-stripNamespaces -uvWrite -worldSpace -eulerFilter ' \
                   '-root %s -file %s";'
 
         pm.mel.eval(
             command % (
                 int(start_frame - handles),
                 int(end_frame + handles),
+                step,
                 cacheable_node.fullPath(),
                 output_full_path
             )
