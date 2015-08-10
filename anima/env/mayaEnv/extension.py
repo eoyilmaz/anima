@@ -339,7 +339,7 @@ class SequenceManagerExtension(object):
             for clip in all_clips:
                 #is_deleted = True
                 for shot in shots:
-                    if clip.id.lower() == shot.full_shot_name().lower():
+                    if clip.id.lower() == shot.full_shot_name.lower():
 
                         # update with the given clip info
                         # anchor = shot.startFrame.get()
@@ -525,8 +525,8 @@ class SequenceManagerExtension(object):
 
         for shot in sequencer.shots.get():
             clip = Clip()
-            clip.id = str(shot.full_shot_name())
-            clip.name = str(shot.full_shot_name())
+            clip.id = str(shot.full_shot_name)
+            clip.name = str(shot.full_shot_name)
             clip.duration = shot.duration + 2 * shot.handle.get()
             clip.enabled = True
             clip.start = shot.sequenceStartFrame.get()
@@ -586,7 +586,7 @@ class SequencerExtension(object):
         """returns the SequenceManager instance that this sequence is connected
         to
         """
-        return self.message.get()
+        return pm.ls(self.connections(), type='sequenceManager')[0]
 
     @extends(pm.nodetypes.Sequencer)
     def get_sequence_name(self):
@@ -925,7 +925,7 @@ class ShotExtension(object):
 
         movie_full_path = os.path.join(
             tempfile.gettempdir(),
-            '%s.mov' % self.full_shot_name()
+            '%s.mov' % self.full_shot_name
         ).replace('\\', '/')
 
         # set the output of this shot
@@ -1066,6 +1066,7 @@ class ShotExtension(object):
         pass
 
     @extends(pm.nodetypes.Shot)
+    @property
     def full_shot_name(self):
         """returns the full shot name
         """
