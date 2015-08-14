@@ -880,10 +880,15 @@ def perform_playblast(action):
     if v:
         # do playblaster
         pb = Playblaster()
+
+        # ask resolution
+        extra_playblast_options = {
+            'viewer': 1,
+            'percent': ask_playblast_resolution()
+        }
+
         outputs = pb.playblast(
-            extra_playblast_options={
-                'viewer': 1,
-            }
+            extra_playblast_options=extra_playblast_options
         )
 
         response = pm.confirmDialog(
@@ -919,6 +924,30 @@ def set_range_from_shot(shot):
     )
 
 
+def ask_playblast_resolution():
+    """Asks the user the playblast resolution
+    """
+    # ask resolution
+    response = pm.confirmDialog(
+        title='Resolution?',
+        message='Resolution?',
+        button=['Default', 'Full', 'Half', 'Quarter'],
+        defaultButton='Default',
+        cancelButton='Default',
+        dismissString='Default'
+    )
+    if response == 'Default':
+        return 50
+    elif response == 'Full':
+        return 100
+    elif response == 'Half':
+        return 50
+    elif response == 'Quarter':
+        return 25
+
+    return 50
+
+
 def perform_playblast_shot(shot_name):
     """Performs shot playblast, this is written to replace the menu action in
     Camera Sequencer.
@@ -938,12 +967,18 @@ def perform_playblast_shot(shot_name):
     if response == 'No':
         return
 
+    # ask resolution
+    extra_playblast_options = {
+        'viewer': 1,
+        'percent': ask_playblast_resolution()
+    }
+
     shot = pm.PyNode(shot_name)
 
     pb = Playblaster()
     video_file_output = pb.playblast_shot(
         shot,
-        extra_playblast_options={'viewer': 1}
+        extra_playblast_options=extra_playblast_options
     )
 
     response = pm.confirmDialog(
