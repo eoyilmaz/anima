@@ -893,7 +893,7 @@ def check_multiple_connections_for_textures():
     nodes_to_ignore = pm.ls(
         type=[
             'hyperLayout', 'shadingEngine', 'materialInfo', 'time',
-            'unitConversion'
+            'unitConversion', 'hyperView'
         ]
     )
 
