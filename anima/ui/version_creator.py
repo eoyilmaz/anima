@@ -855,6 +855,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # create the menu
         menu = QtGui.QMenu()  # Open in browser
         menu.addAction('Open In Web Browser...')
+        menu.addAction('Copy ID to clipboard')
         menu.addSeparator()
 
         # Add Depends To menu
@@ -891,6 +892,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         task.id
                     )
                 )
+            elif choice == 'Copy ID to clipboard':
+                clipboard = QtGui.QApplication.clipboard()
+                clipboard.setText('%s' % task.id)
+
+                # and warn the user about a new version is created and the
+                # clipboard is set to the new version full path
+                QtGui.QMessageBox.warning(
+                    self,
+                    "ID Copied To Clipboard",
+                    "ID %s is copied to clipboard!" % task.id,
+                    QtGui.QMessageBox.Ok
+                )
+
             else:
                 task = selected_item.task
                 self.find_and_select_entity_item_in_treeView(
