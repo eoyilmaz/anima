@@ -224,6 +224,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # do not forget to clean up the staging area
                 staging.clear()
                 raise e
+        else:
+            # run some of the publishers
+            publish_scripts.check_node_names_with_bad_characters()
 
         # get the current version, and store it as the parent of the new
         # version

@@ -742,6 +742,20 @@ def run_pre_publishers():
         run_publishers(type_name)
         # do not forget to clean up the staging area
         staging.clear()
+    else:
+        # run some of the publishers
+        from anima.env.mayaEnv.publish import PublishError
+        from anima.env.mayaEnv import publish as publish_scripts
+        try:
+            publish_scripts.check_node_names_with_bad_characters()
+        except PublishError as e:
+            # pop up a message box with the error
+            pm.confirmDialog(
+                title='SaveError',
+                message=str(''.join([i for i in unicode(e) if ord(i) < 128 ])),
+                button=['Ok']
+            )
+            raise e
 
 
 def run_post_publishers():
