@@ -1067,7 +1067,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 from anima.repr import Representation
                 takes = [take for take in takes
                          if Representation.repr_separator not in take]
-            takes.sort()
+            takes = sorted(takes, key=lambda x: x.lower())
 
         logger.debug("len(takes) from db: %s" % len(takes))
 
