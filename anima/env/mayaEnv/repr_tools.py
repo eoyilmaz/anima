@@ -150,7 +150,7 @@ RENDER_RELATED_NODE_TYPES = [
     'colorProfile',
     'contrast',         # +
     'gammaCorrect',     # +
-    'grade_tm',
+    #'grade_tm',
     'hsvToRgb',         # +
     'luminance',        # +
     'remapColor',       # +

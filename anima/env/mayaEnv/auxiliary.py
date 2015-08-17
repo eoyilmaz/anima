@@ -752,7 +752,7 @@ def run_pre_publishers():
             # pop up a message box with the error
             pm.confirmDialog(
                 title='SaveError',
-                message=str(''.join([i for i in unicode(e) if ord(i) < 128 ])),
+                message=str(''.join([i for i in unicode(e) if ord(i) < 128])),
                 button=['Ok']
             )
             raise e
