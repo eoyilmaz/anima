@@ -157,6 +157,14 @@ class VersionItem(QtGui.QStandardItem):
         action_item.action = action
         set_item_color(action_item, font_color)
 
+        # Updated By
+        updated_by_item = QtGui.QStandardItem()
+        updated_by_item.setEditable(False)
+        updated_by_item.setText(latest_published_version.updated_by.name)
+        updated_by_item.version = version
+        updated_by_item.action = action
+        set_item_color(updated_by_item, font_color)
+
         # Description
         description_item = QtGui.QStandardItem()
         if latest_published_version:
@@ -175,7 +183,7 @@ class VersionItem(QtGui.QStandardItem):
 
         return [version_item, thumbnail_item, nice_name_item, take_item,
                 current_version_item, latest_published_version_item,
-                action_item, description_item]
+                action_item, updated_by_item, description_item]
 
     def fetchMore(self):
         logger.debug(
@@ -228,10 +236,10 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         """populates tree with root versions
         """
         logger.debug('VersionTreeModel.populateTree() is started')
-        self.setColumnCount(6)
+        self.setColumnCount(7)
         self.setHorizontalHeaderLabels(
             ['Do Update?', 'Thumbnail', 'Task', 'Take', 'Current', 'Latest',
-             'Action', 'Notes']
+             'Action', 'Updated By', 'Notes']
         )
 
         self.root_versions = versions
