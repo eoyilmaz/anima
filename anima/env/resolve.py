@@ -36,6 +36,11 @@ class Avid2Resolve(object):
         # replace "__" with "_"
         s = s.replace('__', '_')
 
+        # filter shot names
+        # KKS_SEQ002_013_CZRI_0030_COMP_MA
+        if s.startswith('KKS_'):
+            s = s.replace('KKS_', '')
+
         parts = s.split('_')
         seq_name = parts[0].title()
 
@@ -70,25 +75,28 @@ class Avid2Resolve(object):
             output_path = '%s/Outputs/Main' % task.absolute_path
 
             # check the folder and get the latest output folder
-            all_files = sorted(
-                glob.glob(
-                    os.path.join(output_path, '*')
+            version_folders = reversed(
+                sorted(
+                    glob.glob(
+                        os.path.join(output_path, '*')
+                    )
                 )
             )
-            if all_files:
-                latest_version_path = all_files[-1]
-
-                exr_path = ('%s/exr/*.exr' % latest_version_path).replace('\\', '/')
+            for version_folder in version_folders:
+                # check if the current version folder has exr files
+                exr_path = ('%s/exr/*.exr' % version_folder).replace('\\', '/')
                 seqs = pyseq.getSequences(exr_path)
                 # png_path = '%s/png/*' % latest_version_path
 
+                # and if not go to a previous version
+                # until you check all the version paths
                 if seqs:
                     return 'localhost/%s/%s' % (
                         os.path.normpath(os.path.split(seqs[0].path())[0]).replace('\\', '/'),
                         seqs[0].format('%h|5B%03s-%03e|5D%t').replace('|', '%')
                     )
-                else:
-                    return ''
+
+            return ''
 
         return None
 
