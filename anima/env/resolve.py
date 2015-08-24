@@ -7,7 +7,8 @@ import glob
 import os
 from edl import Parser
 import re
-import pyseq
+from pyseq import pyseq
+import timecode
 
 
 class Avid2Resolve(object):
@@ -18,10 +19,12 @@ class Avid2Resolve(object):
     def __init__(self):
         self.avid_edl_path = ''
         self.events = []
+        self.fps = ''
 
     def read_avid_edl(self, avid_eld_path, fps='24'):
         """
         """
+        self.fps = fps
         p = Parser(fps)
         with open(avid_eld_path) as f:
             self.events = p.parse(f)
@@ -29,6 +32,9 @@ class Avid2Resolve(object):
     def get_shot_name(self, s):
         """returns the shot code from the given string
         """
+        # fix some issues with shot name
+        # replace "__" with "_"
+        s = s.replace('__', '_')
 
         parts = s.split('_')
         seq_name = parts[0].title()
@@ -72,11 +78,17 @@ class Avid2Resolve(object):
             if all_files:
                 latest_version_path = all_files[-1]
 
-                exr_path = '%s/exr/*' % latest_version_path
-                seqs = pyseq.get_sequences(exr_path)
+                exr_path = ('%s/exr/*.exr' % latest_version_path).replace('\\', '/')
+                seqs = pyseq.getSequences(exr_path)
                 # png_path = '%s/png/*' % latest_version_path
 
-                return 'file://localhost/%s' % seqs[0].format('%h|05B%03s-%03e|5D%t').replace('|', '%')
+                if seqs:
+                    return 'localhost/%s/%s' % (
+                        os.path.normpath(os.path.split(seqs[0].path())[0]).replace('\\', '/'),
+                        seqs[0].format('%h|5B%03s-%03e|5D%t').replace('|', '%')
+                    )
+                else:
+                    return ''
 
         return None
 
@@ -99,6 +111,12 @@ class Avid2Resolve(object):
                     e.source_file = str(latest_output)
                 else:
                     e.source_file = ''
+
+            # set the in and out points correctly
+            # check if it has handles of 2 seconds
+            if e.src_start_tc.frames > 48:
+                e.src_end_tc -= e.src_start_tc
+                e.src_start_tc = timecode.Timecode(self.fps)
 
     def to_xml(self):
         """return an eml version of this edl
