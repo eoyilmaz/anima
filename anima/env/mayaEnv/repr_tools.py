@@ -5,7 +5,9 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 import uuid
 
 import pymel.core as pm
@@ -608,6 +610,10 @@ class RepresentationGenerator(object):
                             child_node_shape_name = child_node_shape.name()
 
                         pm.select(child_node)
+                        temp_output_fullpath = tempfile.mktemp()
+                        temp_output_path, temp_output_filename = \
+                            os.path.split(temp_output_fullpath)
+
                         output_filename = '%s_%s' % (
                             self.version.nice_name,
                             child_node_name.split(':')[-1]
@@ -617,57 +623,34 @@ class RepresentationGenerator(object):
 
                         # run the mel command
                         # check if file exists
-                        try:
-                            pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': output_path,
-                                    'filename': output_filename
-                                }
-                            )
-                        except pm.MelError as e:
-                            # just pass it
-                            # the file exists and it can not be overwritten
-                            # generate a random name and re export
-                            try:
-                                output_filename = self.make_unique(output_filename)
-                                pm.mel.eval(
-                                    gpu_command % {
-                                        'start_frame': start_frame,
-                                        'end_frame': end_frame,
-                                        'node': child_node.fullPath(),
-                                        'path': output_path,
-                                        'filename': output_filename
-                                    }
-                                )
-                            except pm.MelError as e:
-                                output_filename = self.make_unique(
-                                    output_filename,
-                                    force=True
-                                )
-                                pm.mel.eval(
-                                    gpu_command % {
-                                        'start_frame': start_frame,
-                                        'end_frame': end_frame,
-                                        'node': child_node.fullPath(),
-                                        'path': output_path,
-                                        'filename': output_filename
-                                    }
-                                )
+                        pm.mel.eval(
+                            gpu_command % {
+                                'start_frame': start_frame,
+                                'end_frame': end_frame,
+                                'node': child_node.fullPath(),
+                                'path': temp_output_path,
+                                'filename': temp_output_filename
+                            }
+                        )
 
-                        # delete the child and add a GPU node instead
-                        # set rotate and scale pivots
-                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
-                        #child_node.setRotatePivotTranslation([0, 0, 0])
-
-                        pm.delete(child_node)
                         cache_file_full_path = \
                             os.path\
                             .join(output_path, output_filename + '.abc')\
                             .replace('\\', '/')
+
+                        # now move in to its place
+                        shutil.move(
+                            temp_output_fullpath + '.abc',
+                            cache_file_full_path
+                        )
+
+                        # delete the child and add a GPU node instead
+                        pm.delete(child_node)
+
+                        # set rotate and scale pivots
+                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                        #child_node.setRotatePivotTranslation([0, 0, 0])
 
                         # check if file exists and create nodes
                         if os.path.exists(cache_file_full_path):
@@ -717,63 +700,30 @@ class RepresentationGenerator(object):
 
                             child_full_path = \
                                 child_node.fullPath()[1:].replace('|', '_')
-                            print('child_full_path: %s' % child_full_path)
+
+                            temp_output_fullpath = \
+                                tempfile.mktemp().replace('\\', '/')
+                            temp_output_path, temp_output_filename = \
+                                os.path.split(temp_output_fullpath)
+
                             output_filename =\
                                 '%s_%s' % (
                                     self.version.nice_name,
                                     child_full_path
                                 )
 
+                            # run the mel command
                             # check if file exists
-                            try:
-                                pm.mel.eval(
-                                    gpu_command % {
-                                        'start_frame': start_frame,
-                                        'end_frame': end_frame,
-                                        'node': child_node.fullPath(),
-                                        'path': output_path,
-                                        'filename': output_filename
-                                    }
-                                )
-                            except pm.MelError as e:
-                                # just pass it
-                                # the file exists and con not be overwritten
-                                # generate a unique file name and reexport
-                                try:
-                                    output_filename = \
-                                        self.make_unique(output_filename)
-                                    pm.mel.eval(
-                                        gpu_command % {
-                                            'start_frame': start_frame,
-                                            'end_frame': end_frame,
-                                            'node': child_node.fullPath(),
-                                            'path': output_path,
-                                            'filename': output_filename
-                                        }
-                                    )
-                                except pm.MelError as e:
-                                    output_filename = \
-                                        self.make_unique(
-                                            output_filename,
-                                            force=True
-                                        )
-                                    pm.mel.eval(
-                                        gpu_command % {
-                                            'start_frame': start_frame,
-                                            'end_frame': end_frame,
-                                            'node': child_node.fullPath(),
-                                            'path': output_path,
-                                            'filename': output_filename
-                                        }
-                                    )
+                            pm.mel.eval(
+                                gpu_command % {
+                                    'start_frame': start_frame,
+                                    'end_frame': end_frame,
+                                    'node': child_node.fullPath(),
+                                    'path': temp_output_path,
+                                    'filename': temp_output_filename
+                                }
+                            )
 
-                            # set rotate and scale pivots
-                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
-                            # rpt = child_node.getRotatePivotTranslation()
-
-                            # delete the child and add a GPU node instead
-                            pm.delete(child_node)
                             cache_file_full_path = \
                                 os.path\
                                 .join(
@@ -783,6 +733,20 @@ class RepresentationGenerator(object):
                                     )
                                 )\
                                 .replace('\\', '/')
+
+                            # now move in to its place
+                            shutil.move(
+                                temp_output_fullpath + '.abc',
+                                cache_file_full_path
+                            )
+
+                            # set rotate and scale pivots
+                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                            # rpt = child_node.getRotatePivotTranslation()
+
+                            # delete the child and add a GPU node instead
+                            pm.delete(child_node)
 
                             # check if file exists
                             if os.path.exists(cache_file_full_path):
