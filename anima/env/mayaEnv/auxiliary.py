@@ -2110,6 +2110,65 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
         )
 
 
+def create_shader(shader_tree, name=None):
+    """Creates a shader tree from the given shader tree.
+
+    The shader_tree is a Python dictionary showing node types and attribute
+    values.
+
+    Each shader_tree can create only one shading network. The format of the
+    dictionary should be as follows.
+
+    shader_tree: {
+        'type': <- The maya node type of the toppest shader
+        'class': <- The type of the shading node, one of
+            "asLight", "asPostProcess", "asRendering", "asShader", "asTexture"
+             "asUtility"
+        'attr': {
+            <- A dictionary that contains attribute names and values.
+            'attr1': {
+                'type': --- type name of the connected node
+                'attr': {
+                    <- attribute values ->
+                }
+            }
+        }
+    }
+
+    :param dict shader_tree: A dictionary showing the shader tree attributes.
+    :return:
+    """
+    shader_type = shader_tree['type']
+
+    if 'class' in shader_tree:
+        class_ = shader_tree['class']
+    else:
+        class_ = 'asShader'
+
+    shader = pm.shadingNode(
+        shader_type,
+        **{
+            class_: 1,
+        }
+    )
+
+    if name:
+        shader.rename(name)
+
+    attributes = shader_tree['attr']
+
+    for key in attributes:
+        value = attributes[key]
+        if isinstance(value, dict):
+            node = create_shader(value)
+            output_attr = value['output']
+            node.attr(output_attr) >> shader.attr(key)
+        else:
+            shader.setAttr(key, value)
+
+    return shader
+
+
 def match_hierarchy(source, target):
     """Matches the objects in two different hierarchy by looking at their
     names.

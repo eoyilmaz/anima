@@ -949,6 +949,22 @@ def UI():
             )
 
             color.change()
+            pm.button(
+                'create_generic_tooth_shader_button',
+                l='Create Generic TOOTH Shader',
+                c=RepeatedCallback(Render.create_generic_tooth_shader),
+                ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'create_generic_gum_shader_button',
+                l='Create Generic GUM Shader',
+                c=RepeatedCallback(Render.create_generic_gum_shader),
+                ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button('convert_to_ai_image_button',
                       l="To aiImage",
                       c=RepeatedCallback(Render.convert_file_node_to_ai_image_node),
@@ -3675,6 +3691,104 @@ class Render(object):
             pm.delete(node)
             # rename the aiImage node
             ai_image.rename(node_name)
+
+    @classmethod
+    def create_generic_tooth_shader(cls):
+        """creates generic tooth shader for selected objects
+        """
+        shader_name = 'toolbox_generic_tooth_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [1, 0.909, 0.815],
+                'Kd': 0.2,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.5,
+                'specularRoughness': 0.10,
+                'specularFresnel': 1,
+                'Ksn': 0.05,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 1, 1],
+                'Ksss': 1,
+                'sssRadius': [1, 0.853, 0.68],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.05,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 0.250,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_generic_gum_shader(self):
+        """set ups generic gum shader for selected objects
+        """
+        shader_name = 'toolbox_generic_gum_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [0.993, 0.596, 0.612],
+                'Kd': 0.35,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.010,
+                'specularRoughness': 0.2,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 0.6, 0.6],
+                'Ksss': 0.5,
+                'sssRadius': [0.5, 0.5, 0.5],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.1,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 1,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
 
 
 class Animation(object):
