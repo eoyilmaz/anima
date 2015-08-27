@@ -42,6 +42,9 @@ class Avid2Resolve(object):
             s = s.replace('KKS_', '')
 
         parts = s.split('_')
+        if not len(parts) >= 4:
+            return ''
+
         seq_name = parts[0].title()
 
         if self.scene_number_regex.match(parts[1]):

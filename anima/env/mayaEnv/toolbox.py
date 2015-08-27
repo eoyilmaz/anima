@@ -878,6 +878,13 @@ def UI():
                     bgc=color.color
                 )
 
+            pm.button(
+                l='Setup EA Matte',
+                c=RepeatedCallback(Render.create_ea_matte),
+                ann=Render.create_ea_matte.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
@@ -985,7 +992,6 @@ def UI():
                       c=RepeatedCallback(Render.standin_to_polywire),
                       ann="Convert selected stand ins to polywire",
                       bgc=color.color)
-
 
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
@@ -3789,6 +3795,72 @@ class Render(object):
             # assign it to the stand in
             pm.select(node)
             pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_ea_matte(cls):
+        """creates "ebesinin ami" matte shader with opacity for selected
+        objects.
+
+        It is called "EA Matte" for one reason, this matte is not necessary in
+        normal working conditions. That is you change the color and look of
+        some 3D element in 3D application and do an artistic grading at post to
+        the whole plate, not to individual elements in the render.
+
+        And because we are forced to create this matte layer, we thought that
+        we should give it a proper name.
+        """
+        # get the selected objects
+        # for each object create a new surface shader with the opacity
+        # channel having the opacity of the original shader
+
+        # create a lut for objects that have the same material not to cause
+        # multiple materials to be created
+        daro = pm.PyNode('defaultArnoldRenderOptions')
+
+        attrs = {
+            'AASamples': 4,
+            'GIDiffuseSamples': 0,
+            'GIGlossySamples': 0,
+            'GIRefractionSamples': 0,
+            'sssBssrdfSamples': 0,
+            'volumeIndirectSamples': 0,
+
+            'GITotalDepth': 0,
+            'GIDiffuseDepth': 0,
+            'GIGlossyDepth': 0,
+            'GIReflectionDepth': 0,
+            'GIRefractionDepth': 0,
+            'GIVolumeDepth': 0,
+
+            'ignoreTextures': 1,
+            'ignoreAtmosphere': 1,
+            'ignoreLights': 1,
+            'ignoreShadows': 1,
+            'ignoreBump': 1,
+            'ignoreSss': 1,
+        }
+
+        for attr in attrs:
+            pm.editRenderLayerAdjustment(daro.attr(attr))
+            daro.setAttr(attr, attrs[attr])
+
+        try:
+            aov_z = pm.PyNode('aiAOV_Z')
+            pm.editRenderLayerAdjustment(aov_z.attr('enabled'))
+            aov_z.setAttr('enabled', 0)
+        except pm.MayaNodeError:
+            pass
+
+        try:
+            aov_mv = pm.PyNode('aiAOV_motionvector')
+            pm.editRenderLayerAdjustment(aov_mv.attr('enabled'))
+            aov_mv.setAttr('enabled', 0)
+        except pm.MayaNodeError:
+            pass
+
+        dad = pm.PyNode('defaultArnoldDriver')
+        pm.editRenderLayerAdjustment(dad.attr('autocrop'))
+        dad.setAttr('autocrop', 0)
 
 
 class Animation(object):

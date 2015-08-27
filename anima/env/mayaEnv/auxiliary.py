@@ -2145,12 +2145,7 @@ def create_shader(shader_tree, name=None):
     else:
         class_ = 'asShader'
 
-    shader = pm.shadingNode(
-        shader_type,
-        **{
-            class_: 1,
-        }
-    )
+    shader = pm.shadingNode(shader_type, **{class_: 1})
 
     if name:
         shader.rename(name)
