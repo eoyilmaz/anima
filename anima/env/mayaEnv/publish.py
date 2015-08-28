@@ -1403,7 +1403,8 @@ def export_edl():
     from anima.ui.progress_dialog import ProgressDialogManager
     pdm = ProgressDialogManager()
 
-    shots = seq1.shots.get()
+    #shots = seq1.shots.get()
+    shots = pm.ls(type='shot')
     shot_count = len(shots)
 
     # before doing a playblast set all shot handles to 48
