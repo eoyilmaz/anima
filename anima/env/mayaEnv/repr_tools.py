@@ -610,7 +610,8 @@ class RepresentationGenerator(object):
                             child_node_shape_name = child_node_shape.name()
 
                         pm.select(child_node)
-                        temp_output_fullpath = tempfile.mktemp()
+                        temp_output_fullpath = \
+                            tempfile.mktemp().replace('\\', '/')
                         temp_output_path, temp_output_filename = \
                             os.path.split(temp_output_fullpath)
 
@@ -644,13 +645,13 @@ class RepresentationGenerator(object):
                             cache_file_full_path
                         )
 
-                        # delete the child and add a GPU node instead
-                        pm.delete(child_node)
-
                         # set rotate and scale pivots
                         rp = pm.xform(child_node, q=1, ws=1, rp=1)
                         sp = pm.xform(child_node, q=1, ws=1, sp=1)
                         #child_node.setRotatePivotTranslation([0, 0, 0])
+
+                        # delete the child and add a GPU node instead
+                        pm.delete(child_node)
 
                         # check if file exists and create nodes
                         if os.path.exists(cache_file_full_path):
