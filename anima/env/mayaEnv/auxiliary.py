@@ -1766,7 +1766,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
         # hide any child node that has "rig" or "proxy" or "low" in its name
         wrong_node_names = ['rig', 'proxy', 'low']
         hidden_nodes = []
-        for child in pm.ls(cacheable_node.getChildren(), type='transform'):
+        for child in cacheable_node.getChildren(ad=1, type='transform'):
             if any([n in child.name() for n in wrong_node_names]):
                 if child.v.get() is True:
                     child.v.set(False)
