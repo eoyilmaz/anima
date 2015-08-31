@@ -639,6 +639,15 @@ class RepresentationGenerator(object):
                             .join(output_path, output_filename + '.abc')\
                             .replace('\\', '/')
 
+                        # create the intermediate directories
+                        try:
+                            os.makedirs(
+                                os.path.dirname(cache_file_full_path)
+                            )
+                        except OSError:
+                            # directory exists
+                            pass
+
                         # now move in to its place
                         shutil.move(
                             temp_output_fullpath + '.abc',
@@ -734,6 +743,15 @@ class RepresentationGenerator(object):
                                     )
                                 )\
                                 .replace('\\', '/')
+
+                            # create the intermediate directories
+                            try:
+                                os.makedirs(
+                                    os.path.dirname(cache_file_full_path)
+                                )
+                            except OSError:
+                                # directory exists
+                                pass
 
                             # now move in to its place
                             shutil.move(
