@@ -1768,7 +1768,8 @@ def export_alembic_from_cache_node(handles=0, step=1):
         hidden_nodes = []
         for child in cacheable_node.getChildren(ad=1, type='transform'):
             if any([n in child.name() for n in wrong_node_names]):
-                if child.v.get() is True and child.v.get(keyable=1):
+                if child.v.get() is True and child.v.get(keyable=1) \
+                   and not child.v.get(lock=1):
                     child.v.set(False)
                     hidden_nodes.append(child)
 
