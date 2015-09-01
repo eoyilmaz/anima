@@ -1770,24 +1770,11 @@ def export_alembic_from_cache_node(handles=0, step=1):
         # hide any child node that has "rig" or "proxy" or "low" in its name
         wrong_node_names = ['rig', 'proxy', 'low']
         hidden_nodes = []
-
-        # get nodes and their first children
-        # because sometimes riggers group the geometry twice
-        node_list = []
-        node_list += cacheable_node.getChildren(type='transform')
-        travers_list = copy.copy(node_list)
-        for node in travers_list:
-            node_list += node.getChildren(type='transform')
-
-        for child in node_list:
+        for child in pm.ls(cacheable_node.getChildren(), type='transform'):
             if any([n in child.name() for n in wrong_node_names]):
                 if child.v.get() is True:
-                    try:
-                        child.v.set(False)
-                        hidden_nodes.append(child)
-                    except RuntimeError:
-                        # attribute locked or connected to something
-                        pass
+                    child.v.set(False)
+                    hidden_nodes.append(child)
 
         output_path = os.path.join(
             current_file_path,
