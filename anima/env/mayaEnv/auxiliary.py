@@ -1766,7 +1766,16 @@ def export_alembic_from_cache_node(handles=0, step=1):
         # hide any child node that has "rig" or "proxy" or "low" in its name
         wrong_node_names = ['rig', 'proxy', 'low']
         hidden_nodes = []
-        for child in cacheable_node.getChildren(ad=1, type='transform'):
+
+        # get nodes and their first children
+        # because sometimes riggers group the geometry twice
+        node_list = []
+        node_list += cacheable_node.getChildren(type='transform')
+        travers_list = copy.copy(node_list)
+        for node in travers_list:
+            node_list += node.getChildren(type='transform')
+
+        for child in node_list:
             if any([n in child.name() for n in wrong_node_names]):
                 if child.v.get() is True:
                     try:
@@ -1788,12 +1797,19 @@ def export_alembic_from_cache_node(handles=0, step=1):
 
         output_full_path = \
             os.path.join(output_path, output_filename).replace('\\', '/')
-        if not os.path.exists(os.path.dirname(output_full_path)):
+        try:
             os.makedirs(os.path.dirname(output_full_path))
+        except OSError:
+            pass
 
         command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                   '-stripNamespaces -uvWrite -worldSpace -eulerFilter ' \
                   '-root %s -file %s";'
+
+        # use a temp file to export the cache
+        # and then move it in to place
+        temp_cache_file_path = \
+            tempfile.mktemp(suffix='.abc').replace('\\', '/')
 
         pm.mel.eval(
             command % (
@@ -1801,9 +1817,12 @@ def export_alembic_from_cache_node(handles=0, step=1):
                 int(end_frame + handles),
                 step,
                 cacheable_node.fullPath(),
-                output_full_path
+                temp_cache_file_path
             )
         )
+        # move in to place
+        shutil.move(temp_cache_file_path, output_full_path)
+
         previous_cacheable_attr_value = cacheable_attr_value
 
         # reveal any previously hidden nodes
