@@ -224,6 +224,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
                 # do not forget to clean up the staging area
                 staging.clear()
                 raise e
+        else:
+            # run some of the publishers
+            publish_scripts.check_node_names_with_bad_characters()
 
         # get the current version, and store it as the parent of the new
         # version
@@ -1244,6 +1247,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
           * references
           * texture files including arnold textures
           * arnold ass paths
+          * arnold aiVolume node path
           * image planes
 
         Absolute mode works best for now.
@@ -1288,6 +1292,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         types_and_attrs = {
             'aiImage': 'filename',
             'aiStandIn': 'dso',
+            'aiVolume': 'dso',
             'file': 'fileTextureName',
             'imagePlane': 'imageName',
             'audio': 'filename',

@@ -11,7 +11,6 @@ from anima.ui.progress_dialog import ProgressDialogManager
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from anima.utils import do_db_setup
 
-__version__ = "0.1.11"
 
 import pymel.core as pm
 import maya.mel as mel
@@ -122,7 +121,7 @@ def UI():
     toolbox_window = pm.window(
         'toolbox_window',
         wh=(width, height),
-        title="Anima ToolBox v%s" % __version__
+        title="Anima ToolBox"
     )
 
     #the layout that holds the tabs
@@ -879,6 +878,13 @@ def UI():
                     bgc=color.color
                 )
 
+            pm.button(
+                l='Setup EA Matte',
+                c=RepeatedCallback(Render.create_ea_matte),
+                ann=Render.create_ea_matte.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
@@ -941,6 +947,29 @@ def UI():
                 ann=Render.setup_outer_eye_render_attributes.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'setup_window_glass_render_attributes_button',
+                l='Setup **Window Glass** Render Attributes',
+                c=RepeatedCallback(Render.setup_window_glass_render_attributes),
+                ann=Render.setup_window_glass_render_attributes.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'create_generic_tooth_shader_button',
+                l='Create Generic TOOTH Shader',
+                c=RepeatedCallback(Render.create_generic_tooth_shader),
+                ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'create_generic_gum_shader_button',
+                l='Create Generic GUM Shader',
+                c=RepeatedCallback(Render.create_generic_gum_shader),
+                ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button('convert_to_ai_image_button',
@@ -963,7 +992,6 @@ def UI():
                       c=RepeatedCallback(Render.standin_to_polywire),
                       ann="Convert selected stand ins to polywire",
                       bgc=color.color)
-
 
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
@@ -1367,7 +1395,7 @@ def UI():
 
     dock_control = pm.dockControl(
         "toolbox_dockControl",
-        l='toolbox v%s' % __version__,
+        l='toolbox',
         content=toolbox_window,
         area="left",
         allowedArea=["left", "right"],
@@ -2108,7 +2136,6 @@ class Reference(object):
         # now open the source version again
         m_env.open(source_version, force=True, skip_update_check=True)
 
-
     @classmethod
     def generate_repr_of_all_references_caller(cls):
         """a helper method that calls
@@ -2141,6 +2168,7 @@ class Reference(object):
 
         paths_visited = []
         versions_to_visit = []
+        versions_cannot_be_published = []
 
         # generate a sorted version list
         # and visit each reference only once
@@ -2211,10 +2239,18 @@ class Reference(object):
             gen.version = v
             # generate representations
             if local_generate_gpu:
-                gen.generate_gpu()
+                try:
+                    gen.generate_gpu()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
 
             if local_generate_ass:
-                gen.generate_ass()
+                try:
+                    gen.generate_ass()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
 
             caller.step()
 
@@ -2225,10 +2261,33 @@ class Reference(object):
         gen.version = source_version
 
         # generate representations
-        if generate_gpu:
-            gen.generate_gpu()
-        if generate_ass:
-            gen.generate_ass()
+        if not versions_cannot_be_published:
+            if generate_gpu:
+                gen.generate_gpu()
+            if generate_ass:
+                gen.generate_ass()
+        else:
+            pm.confirmDialog(
+                title='Error',
+                message='The following versions can not be published '
+                        '(check script editor):\n\n%s' % (
+                            '\n'.join(
+                                map(lambda x: x.nice_name,
+                                    versions_cannot_be_published)
+                            )
+                        ),
+                button=['OK'],
+                defaultButton='OK',
+                cancelButton='OK',
+                dismissString='OK'
+            )
+
+            pm.error(
+                '\n'.join(
+                    map(lambda x: x.absolute_full_path,
+                        versions_cannot_be_published)
+                )
+            )
 
 
 class Modeling(object):
@@ -3531,6 +3590,66 @@ class Render(object):
             shape.setAttr('aiVisibleInGlossy', 0)
 
     @classmethod
+    def setup_window_glass_render_attributes(cls):
+        """sets window glass render attributes for environments, select window
+        glass objects and run this
+        """
+        shader_name = 'toolbox_glass_shader'
+        shaders = pm.ls('%s*' % shader_name)
+        selection = pm.ls(sl=1)
+        if len(shaders) > 0:
+            shader = shaders[0]
+        else:
+            shader = pm.shadingNode(
+                'aiStandard',
+                asShader=1,
+                name='%s#' % shader_name
+            )
+            shader.setAttr('Ks', 1)
+            shader.setAttr('specularRoughness', 0)
+            shader.setAttr('Kr', 0)
+            shader.setAttr('enableInternalReflections', 0)
+            shader.setAttr('Kt', 0)
+            shader.setAttr('KtColor', (0, 0, 0))
+
+        shape_attributes = [
+            ('castsShadows', 0),
+            ('visibleInReflections', 0),
+            ('visibleInRefractions', 0),
+            ('aiSelfShadows', 0),
+            ('aiOpaque', 1),
+            ('aiVisibleInDiffuse', 0),
+            ('aiVisibleInGlossy', 0),
+        ]
+
+        for node in selection:
+            shape = node.getShape()
+            map(lambda x: shape.setAttr(*x), shape_attributes)
+
+            if isinstance(shape, pm.nt.AiStandIn):
+                # get the glass shader or create one
+                shape.overrideShaders.set(1)
+
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def setup_z_limiter(cls):
+        """creates z limiter setup
+        """
+        shader_name = 'z_limiter_shader#'
+        shaders = pm.ls('%s*' * shader_name)
+        if len(shaders) > 0:
+            shader = shaders[0]
+        else:
+            shader = pm.shadingNode(
+                'surfaceShader',
+                asShader=1,
+                name='%s#' % shader_name
+            )
+
+    @classmethod
     def convert_file_node_to_ai_image_node(cls):
         """converts the file node to aiImage node
         """
@@ -3579,6 +3698,170 @@ class Render(object):
             # rename the aiImage node
             ai_image.rename(node_name)
 
+    @classmethod
+    def create_generic_tooth_shader(cls):
+        """creates generic tooth shader for selected objects
+        """
+        shader_name = 'toolbox_generic_tooth_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [1, 0.909, 0.815],
+                'Kd': 0.2,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.5,
+                'specularRoughness': 0.10,
+                'specularFresnel': 1,
+                'Ksn': 0.05,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 1, 1],
+                'Ksss': 1,
+                'sssRadius': [1, 0.853, 0.68],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.05,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 0.250,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_generic_gum_shader(self):
+        """set ups generic gum shader for selected objects
+        """
+        shader_name = 'toolbox_generic_gum_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [0.993, 0.596, 0.612],
+                'Kd': 0.35,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.010,
+                'specularRoughness': 0.2,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 0.6, 0.6],
+                'Ksss': 0.5,
+                'sssRadius': [0.5, 0.5, 0.5],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.1,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 1,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_ea_matte(cls):
+        """creates "ebesinin ami" matte shader with opacity for selected
+        objects.
+
+        It is called "EA Matte" for one reason, this matte is not necessary in
+        normal working conditions. That is you change the color and look of
+        some 3D element in 3D application and do an artistic grading at post to
+        the whole plate, not to individual elements in the render.
+
+        And because we are forced to create this matte layer, we thought that
+        we should give it a proper name.
+        """
+        # get the selected objects
+        # for each object create a new surface shader with the opacity
+        # channel having the opacity of the original shader
+
+        # create a lut for objects that have the same material not to cause
+        # multiple materials to be created
+        daro = pm.PyNode('defaultArnoldRenderOptions')
+
+        attrs = {
+            'AASamples': 4,
+            'GIDiffuseSamples': 0,
+            'GIGlossySamples': 0,
+            'GIRefractionSamples': 0,
+            'sssBssrdfSamples': 0,
+            'volumeIndirectSamples': 0,
+
+            'GITotalDepth': 0,
+            'GIDiffuseDepth': 0,
+            'GIGlossyDepth': 0,
+            'GIReflectionDepth': 0,
+            'GIRefractionDepth': 0,
+            'GIVolumeDepth': 0,
+
+            'ignoreTextures': 1,
+            'ignoreAtmosphere': 1,
+            'ignoreLights': 1,
+            'ignoreShadows': 1,
+            'ignoreBump': 1,
+            'ignoreSss': 1,
+        }
+
+        for attr in attrs:
+            pm.editRenderLayerAdjustment(daro.attr(attr))
+            daro.setAttr(attr, attrs[attr])
+
+        try:
+            aov_z = pm.PyNode('aiAOV_Z')
+            pm.editRenderLayerAdjustment(aov_z.attr('enabled'))
+            aov_z.setAttr('enabled', 0)
+        except pm.MayaNodeError:
+            pass
+
+        try:
+            aov_mv = pm.PyNode('aiAOV_motionvector')
+            pm.editRenderLayerAdjustment(aov_mv.attr('enabled'))
+            aov_mv.setAttr('enabled', 0)
+        except pm.MayaNodeError:
+            pass
+
+        dad = pm.PyNode('defaultArnoldDriver')
+        pm.editRenderLayerAdjustment(dad.attr('autocrop'))
+        dad.setAttr('autocrop', 0)
+
 
 class Animation(object):
     """animation tools
@@ -3593,7 +3876,6 @@ class Animation(object):
             ui_item, q=1, tx=1
         )
         pm.mel.eval('oySmoothComponentAnimation(%s)' % frame_range)
-
 
     @classmethod
     def vertigo_setup_look_at(cls):

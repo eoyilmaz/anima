@@ -7,7 +7,8 @@ import glob
 import os
 from edl import Parser
 import re
-import pyseq
+from pyseq import pyseq
+import timecode
 
 
 class Avid2Resolve(object):
@@ -18,10 +19,12 @@ class Avid2Resolve(object):
     def __init__(self):
         self.avid_edl_path = ''
         self.events = []
+        self.fps = ''
 
     def read_avid_edl(self, avid_eld_path, fps='24'):
         """
         """
+        self.fps = fps
         p = Parser(fps)
         with open(avid_eld_path) as f:
             self.events = p.parse(f)
@@ -29,8 +32,19 @@ class Avid2Resolve(object):
     def get_shot_name(self, s):
         """returns the shot code from the given string
         """
+        # fix some issues with shot name
+        # replace "__" with "_"
+        s = s.replace('__', '_')
+
+        # filter shot names
+        # KKS_SEQ002_013_CZRI_0030_COMP_MA
+        if s.startswith('KKS_'):
+            s = s.replace('KKS_', '')
 
         parts = s.split('_')
+        if not len(parts) >= 4:
+            return ''
+
         seq_name = parts[0].title()
 
         if self.scene_number_regex.match(parts[1]):
@@ -64,19 +78,28 @@ class Avid2Resolve(object):
             output_path = '%s/Outputs/Main' % task.absolute_path
 
             # check the folder and get the latest output folder
-            all_files = sorted(
-                glob.glob(
-                    os.path.join(output_path, '*')
+            version_folders = reversed(
+                sorted(
+                    glob.glob(
+                        os.path.join(output_path, '*')
+                    )
                 )
             )
-            if all_files:
-                latest_version_path = all_files[-1]
-
-                exr_path = '%s/exr/*' % latest_version_path
-                seqs = pyseq.get_sequences(exr_path)
+            for version_folder in version_folders:
+                # check if the current version folder has exr files
+                exr_path = ('%s/exr/*.exr' % version_folder).replace('\\', '/')
+                seqs = pyseq.getSequences(exr_path)
                 # png_path = '%s/png/*' % latest_version_path
 
-                return 'file://localhost/%s' % seqs[0].format('%h|05B%03s-%03e|5D%t').replace('|', '%')
+                # and if not go to a previous version
+                # until you check all the version paths
+                if seqs:
+                    return 'localhost/%s/%s' % (
+                        os.path.normpath(os.path.split(seqs[0].path())[0]).replace('\\', '/'),
+                        seqs[0].format('%h|5B%03s-%03e|5D%t').replace('|', '%')
+                    )
+
+            return ''
 
         return None
 
@@ -99,6 +122,12 @@ class Avid2Resolve(object):
                     e.source_file = str(latest_output)
                 else:
                     e.source_file = ''
+
+            # set the in and out points correctly
+            # check if it has handles of 2 seconds
+            if e.src_start_tc.frames > 48:
+                e.src_end_tc -= e.src_start_tc
+                e.src_start_tc = timecode.Timecode(self.fps)
 
     def to_xml(self):
         """return an eml version of this edl

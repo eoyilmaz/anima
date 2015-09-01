@@ -5,6 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
+import platform
 import re
 import itertools
 import calendar
@@ -16,33 +17,6 @@ import copy
 import subprocess
 
 from anima import logger
-
-
-# tr_chars = {
-#     # lower letters
-#     u'\xc3\xa7': 'c',
-#     u'\xc4\x9f': 'g',
-#     u'\xc4\xb1': 'i',
-#     u'\xc3\xb6': 'o',
-#     u'\xc5\x9f': 's',
-#     u'\xc3\xbc': 'u',
-#
-#     # upper letters
-#     u'\xc3\x87': 'C',
-#     u'\xc4\x9e': 'G',
-#     u'\xc4\xb0': 'I',
-#     u'\xc3\x96': 'O',
-#     u'\xc5\x9e': 'S',
-#     u'\xc3\x9c': 'U',
-# }
-
-validFileNameChars = r' abcdefghijklmnoprqstuvwxyzABCDEFGHIJKLMNOPRQSTUVWXYZ' \
-                     r'0123456789._-'
-validTextChars = validFileNameChars + r'!^+%&(){}[]:;?,|@`\'"/=*~$#'
-
-validFileNameCharsPattern = re.compile(r'[\w\.\- ]+')
-validTextCharsPattern = re.compile(
-    r'[\w\.\- !\^+%&\(\)\{\}\[\]:;?,|\\@`\'"/=*~$#]+')
 
 
 def all_equal(elements):
@@ -542,24 +516,24 @@ class MediaManager(object):
         mid_frame = int(nb_frames * 0.5)
         end_frame = int(nb_frames * 0.90) - 1
 
-        #start_frame
+        # start_frame
         self.ffmpeg(**{
             'i': file_full_path,
-            'vf': "select='eq(n, 0)'",
+            'vf': "select='eq(n,0)'",
             'vframes': start_frame,
             'o': start_thumb_path
         })
-        #mid_frame
+        # mid_frame
         self.ffmpeg(**{
             'i': file_full_path,
-            'vf': "select='eq(n, %s)'" % mid_frame,
+            'vf': "select='eq(n,%s)'" % mid_frame,
             'vframes': 1,
             'o': mid_thumb_path
         })
-        #end_frame
+        # end_frame
         self.ffmpeg(**{
             'i': file_full_path,
-            'vf': "select='eq(n, %s)'" % end_frame,
+            'vf': "select='eq(n,%s)'" % end_frame,
             'vframes': 1,
             'o': end_thumb_path
         })
@@ -591,11 +565,11 @@ class MediaManager(object):
         self.ffmpeg(**{
             'i': [start_thumb_path, mid_thumb_path, end_thumb_path],
             'filter_complex':
-                "[0:0] scale=3*%(tw)s/4:-1, pad=%(tw)s:%(th)s [s]; "
-                "[1:0] scale=3*%(tw)s/4:-1, fade=out:300:30:alpha=1 [m]; "
-                "[2:0] scale=3*%(tw)s/4:-1, fade=out:300:30:alpha=1 [e]; "
-                "[s][e] overlay=%(tw)s/4:%(th)s-h [x]; "
-                "[x][m] overlay=%(tw)s/8:%(th)s/2-h/2" %
+                '[0:0]scale=3*%(tw)s/4:-1,pad=%(tw)s:%(th)s[s];'
+                '[1:0]scale=3*%(tw)s/4:-1,fade=out:300:30:alpha=1[m];'
+                '[2:0]scale=3*%(tw)s/4:-1,fade=out:300:30:alpha=1[e];'
+                '[s][e]overlay=%(tw)s/4:%(th)s-h[x];'
+                '[x][m]overlay=%(tw)s/8:%(th)s/2-h/2' %
                 {
                     'tw': self.thumbnail_width,
                     'th': self.thumbnail_height
@@ -791,11 +765,13 @@ class MediaManager(object):
 
             # overwrite output
 
-        # use all cpus
-        import multiprocessing
-        num_of_threads = multiprocessing.cpu_count()
-        args.append('-threads')
-        args.append('%s' % num_of_threads)
+        # if output format is not a jpg or png
+        if output.split('.')[-1] not in ['jpg', 'jpeg', 'png', 'tga']:
+            # use all cpus
+            import multiprocessing
+            num_of_threads = multiprocessing.cpu_count()
+            args.append('-threads')
+            args.append('%s' % num_of_threads)
 
         # overwrite any file
         args.append('-y')
@@ -1366,14 +1342,11 @@ class MediaManager(object):
         # use a Repository relative path
         repo = version.task.project.repository
 
-        from stalker import Repository, Link
-        assert isinstance(repo, Repository)
-        relative_full_path = str(repo.make_relative(
-            str(version_output_file_full_path)
-        ))
+        from stalker import Link
+        full_path = str(version_output_file_full_path)
 
         link = Link(
-            full_path=relative_full_path,
+            full_path=repo.to_os_independent_path(full_path),
             original_filename=str(filename)
         )
 
@@ -1384,57 +1357,65 @@ class MediaManager(object):
         ############################################################
         # WEB VERSION
         ############################################################
-        web_version_temp_full_path = \
-            self.generate_media_for_web(version_output_file_full_path)
-        web_version_extension = \
-            os.path.splitext(web_version_temp_full_path)[-1]
-        web_version_full_path = \
-            os.path.join(
-                os.path.dirname(version_output_file_full_path),
-                'ForWeb',
-                version_output_base_name + web_version_extension
-            )
-        web_version_repo_relative_full_path = \
-            repo.make_relative(str(web_version_full_path))
-        web_version_link = Link(
-            full_path=web_version_repo_relative_full_path,
-            original_filename=filename
-        )
-
-        # move it to repository
+        web_version_link = None
         try:
-            os.makedirs(os.path.dirname(web_version_full_path))
-        except OSError:  # path exists
+            web_version_temp_full_path = \
+                self.generate_media_for_web(version_output_file_full_path)
+            web_version_extension = \
+                os.path.splitext(web_version_temp_full_path)[-1]
+            web_version_full_path = \
+                os.path.join(
+                    os.path.dirname(version_output_file_full_path),
+                    'ForWeb',
+                    version_output_base_name + web_version_extension
+                )
+
+            web_version_link = Link(
+                full_path=repo.to_os_independent_path(web_version_full_path),
+                original_filename=filename
+            )
+
+            # move it to repository
+            try:
+                os.makedirs(os.path.dirname(web_version_full_path))
+            except OSError:  # path exists
+                pass
+            shutil.move(web_version_temp_full_path, web_version_full_path)
+        except RuntimeError:
+            # not an image or video so skip it
             pass
-        shutil.move(web_version_temp_full_path, web_version_full_path)
 
         ############################################################
         # THUMBNAIL
         ############################################################
         # finally generate a Thumbnail
-        thumbnail_temp_full_path = \
-            self.generate_thumbnail(version_output_file_full_path)
-        thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
-
-        thumbnail_full_path = \
-            os.path.join(
-                os.path.dirname(version_output_file_full_path),
-                'Thumbnail',
-                version_output_base_name + thumbnail_extension
-            )
-        thumbnail_repo_relative_full_path = \
-            repo.make_relative(thumbnail_full_path)
-        thumbnail_link = Link(
-            full_path=thumbnail_repo_relative_full_path,
-            original_filename=filename
-        )
-
-        # move it to repository
+        thumbnail_link = None
         try:
-            os.makedirs(os.path.dirname(thumbnail_full_path))
-        except OSError:  # path exists
+            thumbnail_temp_full_path = \
+                self.generate_thumbnail(version_output_file_full_path)
+            thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
+
+            thumbnail_full_path = \
+                os.path.join(
+                    os.path.dirname(version_output_file_full_path),
+                    'Thumbnail',
+                    version_output_base_name + thumbnail_extension
+                )
+
+            thumbnail_link = Link(
+                full_path=repo.to_os_independent_path(thumbnail_full_path),
+                original_filename=filename
+            )
+
+            # move it to repository
+            try:
+                os.makedirs(os.path.dirname(thumbnail_full_path))
+            except OSError:  # path exists
+                pass
+            shutil.move(thumbnail_temp_full_path, thumbnail_full_path)
+        except RuntimeError:
+            # not an image or video so skip it
             pass
-        shutil.move(thumbnail_temp_full_path, thumbnail_full_path)
 
         ############################################################
         # LINK Objects
@@ -1442,7 +1423,9 @@ class MediaManager(object):
         # link them
         # assign it as an output to the given version
         version.outputs.append(link)
-        link.thumbnail = web_version_link
-        web_version_link.thumbnail = thumbnail_link
+        if web_version_link:
+            link.thumbnail = web_version_link
+            if thumbnail_link:
+                web_version_link.thumbnail = thumbnail_link
 
         return link

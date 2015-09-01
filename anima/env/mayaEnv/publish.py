@@ -9,6 +9,7 @@ import datetime
 
 import pymel.core as pm
 import maya.cmds as mc
+import tempfile
 
 from anima import stalker_server_internal_address
 from anima.publish import (clear_publishers, publisher, staging,
@@ -46,9 +47,9 @@ VALID_MATERIALS = [
 ]
 
 
-#*********#
-# GENERIC #
-#*********#
+# ********* #
+# GENERIC   #
+# ********* #
 # @publisher
 # def delete_turtle_nodes():
 #     """deletes the Turtle related nodes
@@ -318,9 +319,18 @@ def check_only_published_versions_are_used():
         )
 
 
-#*******#
-# MODEL #
-#*******#
+@publisher
+def disable_all_performance_options():
+    """disables any performance degradation settings
+    """
+    pm.performanceOptions(
+        ds=0, dt=0, pbf=0, pbs=0, pc=0, pf=0, pl=0, pp=0, ps=0, pw=0
+    )
+
+
+# ******* #
+# MODEL   #
+# ******* #
 @publisher('model')
 def check_no_references():
     """there should be no references
@@ -657,7 +667,7 @@ def check_uv_border_crossing():
             us = sorted(uvs_per_shell[shell_id][0])
             vs = sorted(uvs_per_shell[shell_id][1])
 
-            #check first and last u and v values
+            # check first and last u and v values
             if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
                 # they are not equal it is crossing spaces
                 nodes_with_uvs_crossing_borders.append(node)
@@ -720,7 +730,7 @@ def check_uvs():
             for i in range(node.numFaces()):
                 uvs = []
                 for j in range(node.numPolygonVertices(i)):
-                    #uvs.append(node.getPolygonUV(i, j))
+                    # uvs.append(node.getPolygonUV(i, j))
                     uv_id = node.getPolygonUVid(i, j)
                     uvs.append((all_uvs[0][uv_id], all_uvs[1][uv_id]))
                 if area(uvs) == 0.0:
@@ -743,9 +753,9 @@ def check_uvs():
         )
 
 
-#******************#
-# LOOK DEVELOPMENT #
-#******************#
+# ****************** #
+# LOOK DEVELOPMENT   #
+# ****************** #
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
@@ -857,6 +867,11 @@ def check_multiple_connections_for_textures():
     """check if textures are only used in one material (not liking it very much
     but it is breaking ASS files.
     """
+    # load necessary plugins
+    plugins = ['matrixNodes', 'quatNodes']
+    for plugin in plugins:
+        if not pm.pluginInfo(plugin, q=1, l=1):
+            pm.loadPlugin(plugin)
 
     v = staging.get('version')
 
@@ -868,75 +883,38 @@ def check_multiple_connections_for_textures():
                 return
 
     # get all the texture nodes
-    texture_nodes = [
-        'bulge',
-        'checker',
-        'cloth',
-        'file',
-        'fluidTexture2D',
-        'fractal',
-        'grid',
-        'mandelbrot',
-        'mountain',
-        'movie',
-        'noise',
-        'ocean',
-        'psdFileTex',
-        'ramp',
-        'water',
-
-        'brownian',
-        'cloud',
-        'crater',
-        'fluidTexture3D',
-        'granite',
-        'leather',
-        'mandelbrot3D',
-        'marble',
-        'rock',
-        'snow',
-        'solidFractal',
-        'stucco',
-        'volumeNoise',
-        'wood',
-
-        'bump2d',
-        'bump3d',
-        'place2dTexture',
-        'place3dTexture',
-        'plusMinusAverage',
-        'samplerInfo',
-        'stencil',
-        'uvChooser',
-        'surfaceInfo',
-        'blendColors',
-        'clamp',
-        'contrast',
-        'gammaCorrect',
-        'hsvToRgb',
-        'luminance',
-        'remapColor',
-        'remapHsv',
-        'remapValue',
-        'rgbToHsv',
-        'surfaceLuminance',
-        'imagePlane',
-        'layeredTexture',
-        'projection',
-
-        'aiImage',
-        'aiNoise',
-    ]
+    from anima.env.mayaEnv import repr_tools
+    reload(repr_tools)
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
-    nodes_to_ignore = pm.ls(type='hyperLayout')
+
+    # by type
+    nodes_to_ignore = pm.ls(
+        type=[
+            'hyperLayout', 'shadingEngine', 'materialInfo', 'time',
+            'unitConversion', 'hyperView'
+        ]
+    )
+
+    # by name
+    nodes_to_ignore += pm.ls('lambert1')
+    nodes_to_ignore += pm.ls('defaultShaderList*')
     nodes_to_ignore += pm.ls('defaultTextureList*')
     nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
 
-    for node in pm.ls(type=texture_nodes):
+    all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
+    for node in nodes_to_ignore:
+        if node in all_nodes:
+            all_nodes.remove(node)
+
+    for node in all_nodes:
         materials_connected_to_this_node = \
             pm.ls(node.listHistory(future=True), mat=True)
+
+        # remove self from all_nodes
+        if node in materials_connected_to_this_node:
+            materials_connected_to_this_node.remove(node)
 
         if len(materials_connected_to_this_node) > 1:
             nodes_with_multiple_materials.append(node)
@@ -1007,7 +985,7 @@ def check_component_edits_on_references():
 
     caller = pdm.register(
         ref_count,
-        'Checking component edits on %i reference' % ref_count
+        'Checking component edits on %i reference nodes' % ref_count
     )
 
     for ref in all_refs:
@@ -1048,19 +1026,197 @@ def check_cacheable_attr():
         )
 
 
-@publisher('animation')
+@publisher(['animation', 'previs', 'shot previs'])
+def check_sequencer():
+    """checks if there is a sequencer node in the scene
+    """
+    sequencers = pm.ls(type='sequencer')
+    if len(sequencers) == 0:
+        raise PublishError('There is no Sequencer node in the scene!!!')
+
+
+@publisher(['animation', 'previs', 'shot previs'])
+def check_sequence_name():
+    """checks if the sequence name attribute is properly set
+    """
+    sequencer = pm.ls(type='sequencer')[0]
+    sequence_name = sequencer.sequence_name.get()
+
+    if sequence_name == '' or sequence_name is None:
+        raise PublishError('Please enter a sequence name!!!')
+
+
+@publisher(['animation', 'previs', 'shot previs'])
+def check_sequence_name_format():
+    """checks if the sequence name format is correct
+    """
+    sequencer = pm.ls(type='sequencer')[0]
+    sequence_name = sequencer.sequence_name.get()
+
+    # SEQ001_003_TNGI
+    # SEQ001_003A_TNGI
+
+    parts = sequence_name.split('_')
+
+    if len(parts) != 3:
+        raise PublishError(
+            'Sequence name format is not correct!!!<br>'
+            '<br>'
+            'It should be in the following format:<br>'
+            '<br>'
+            'SEQXXX_XXX_XXXX'
+            '<br>'
+            'ex: SEQ001_003_TNGI'
+        )
+
+    sequence_code = parts[0]
+    scene_number = parts[1]
+    scene_code = parts[2]
+
+    # sequence_code should start with SEQ
+    if not sequence_code.startswith('SEQ'):
+        raise PublishError(
+            'Sequence name should start with "SEQ"!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' % sequence_code
+        )
+
+    # scene number should start with a number
+    import re
+    if not re.match(r'^[\d]+', scene_number):
+        raise PublishError(
+            'Scene number in sequence name should start with a number!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' % scene_number
+        )
+
+    # scene number should a 3 digit and an optional letter
+    if not len(scene_number) in [3, 4, 5]:
+        raise PublishError(
+            'Scene number in sequence name should be a number with 3 digits '
+            'and an optional uppercase letter!!!<br>'
+            '<br>'
+            'Not:<br>'
+            '%s' %
+            scene_number
+        )
+
+    # scene code should be all upper case letters
+    if scene_code != scene_code.upper():
+        raise PublishError(
+            'Scene code in sequence name should be all upper case letters!!!'
+            '<br><br>'
+            'Not:'
+            '<br>'
+            '%s' % scene_code
+        )
+
+
+@publisher(['animation', 'previs', 'shot previs'])
 def check_shot_nodes():
-    """checks if there is a shot node
+    """checks if there is at least one shot node
     """
     shot_nodes = pm.ls(type='shot')
     if len(shot_nodes) == 0:
         raise PublishError('There is no <b>Shot</b> node in the scene')
 
+
+@publisher(['animation', 'previs', 'shot previs'])
+def check_shot_name_format():
+    """check shot name format
+    """
+    import re
+    regex = r'^[\d]+$'
+    shot_nodes = pm.ls(type='shot')
+    shots_with_wrong_shot_name_format = []
+    for shot in shot_nodes:
+        shot_name = shot.shotName.get()
+
+        # check if all digits
+        if not re.match(regex, shot_name):
+            shots_with_wrong_shot_name_format.append(shot)
+            continue
+
+        # check if 4 digits used only
+        if len(shot_name) != 4:
+            shots_with_wrong_shot_name_format.append(shot)
+            continue
+
+    if len(shots_with_wrong_shot_name_format) > 0:
+        raise PublishError(
+            'The following shots have wrongly formatted shot names:<br>'
+            '<br>'
+            '%s' % (
+                ', '.join(
+                    map(
+                        lambda x: x.shotName.get(),
+                        shots_with_wrong_shot_name_format
+                    )
+                )
+            )
+        )
+
+
+@publisher('previs')
+def check_unique_shot_names():
+    """check if the shot names are unique
+    """
+    shot_nodes = pm.ls(type='shot')
+
+    shot_names = []
+    shots_with_non_unique_shot_names = []
+    for shot in shot_nodes:
+        shot_name = shot.shotName.get()
+        if shot_name in shot_names:
+            shots_with_non_unique_shot_names.append(shot)
+        else:
+            shot_names.append(shot_name)
+
+    if len(shots_with_non_unique_shot_names) > 0:
+        raise PublishError(
+            'The following shots have non-unique shot names:<br>'
+            '<br>'
+            '%s' % (
+                ', '.join(
+                    map(
+                        lambda x: x.shotName.get(),
+                        shots_with_non_unique_shot_names
+                    )
+                )
+            )
+        )
+
+
+@publisher(['animation', 'shot previs'])
+def check_multiple_shot_nodes():
+    """checks if there are multiple shot nodes
+    """
+    shot_nodes = pm.ls(type='shot')
     if len(shot_nodes) > 1:
         raise PublishError('There is multiple <b>Shot</b> nodes in the scene')
 
 
-@publisher('animation')
+@publisher(['animation', 'previs', 'shot previs'])
+def check_frame_range_selection():
+    """checks if there is any range selected in the time slider
+
+    Because it breaks shots to be playblasted as a whole the user should not
+    have selected a range in the time slider
+    """
+    start, end = pm.timeControl(
+        pm.melGlobals['$gPlayBackSlider'],
+        q=1,
+        rangeArray=True
+    )
+    if end - start > 1:
+        raise PublishError(
+            'Please deselect the playback range in <b>TimeSlider</b>!!!'
+        )
+
+
+@publisher(['animation', 'shot previs'])
 def set_frame_range():
     """sets the frame range from the shot node
     """
@@ -1163,6 +1319,25 @@ def create_representations():
         m_env.open(v, force=True, skip_update_check=True)
 
 
+@publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
+def update_shot_range():
+    """update shot range
+    """
+    from stalker import db, Shot
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+
+    shot = v.task.parent
+    if shot and isinstance(shot, Shot):
+        shot_node = pm.ls(type='shot')[0]
+        start_frame = shot_node.startFrame.get()
+        end_frame = shot_node.endFrame.get()
+        shot.cut_in = int(start_frame)
+        shot.cut_out = int(end_frame)
+        db.DBSession.commit()
+
+
 @publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations():
     """cache animations
@@ -1171,7 +1346,7 @@ def cache_animations():
     auxiliary.export_alembic_from_cache_node(handles=1)
 
 
-@publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'previs', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def generate_playblast():
     """generates a playblast for the current scene
     """
@@ -1181,5 +1356,100 @@ def generate_playblast():
     reload(utils)
     reload(auxiliary)
 
-    sp = auxiliary.ShotPlayblaster()
-    sp.playblast()
+    # before doing a playblast set all shot handles to 48
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(48)
+
+    sp = auxiliary.Playblaster()
+    sp.batch_mode = True
+    video_files = sp.playblast()
+    sp.upload_outputs(sp.version, video_files)
+
+    # revert the handles to 0
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(0)
+
+
+@publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
+def export_edl():
+    """exports edl of animation scenes
+    """
+    from anima.env.mayaEnv import Maya
+    m = Maya()
+    current_version = m.get_current_version()
+
+    if not current_version:
+        return
+
+    # get sequenceManager1
+    sm = pm.PyNode('sequenceManager1')
+    seqs = sm.sequences.get()
+    if not len(seqs):
+        return
+
+    seq1 = seqs[0]
+
+    edl_path = tempfile.gettempdir()
+    edl_file_name = '%s_v%03i.edl' % (
+        current_version.nice_name,
+        current_version.version_number
+    )
+
+    edl_file_full_path = os.path.join(edl_path, edl_file_name)
+
+    # convert to MXF
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
+
+    #shots = seq1.shots.get()
+    shots = pm.ls(type='shot')
+    shot_count = len(shots)
+
+    # before doing a playblast set all shot handles to 48
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(48)
+
+    caller = pdm.register(shot_count, title='Converting To MXF')
+
+    # update shot outputs to the correct place first
+    # there should be only one shot in the current animation scene
+    # if there is more than one shot, the other publisher will already warn the
+    # user so the code path will not reach to this point
+
+    # we also should already have a video output created by another publisher
+    playblast_file = None
+    for output in current_version.outputs:
+        extension = os.path.splitext(output.full_path)[-1]
+        if extension in ['.mov', '.avi', '.mp4']:
+            playblast_file = output
+            break
+
+    if not playblast_file:
+        return
+    shot = shots[0]
+    shot.output.set(playblast_file.full_path)
+
+    for i in seq1.metafuze():
+        caller.step()
+
+    # create EDL file
+    from anima import utils
+    mm = utils.MediaManager()
+    l = sm.to_edl()
+    with open(edl_file_full_path, 'w') as f:
+        f.write(l.to_string())
+
+    with open(edl_file_full_path, 'r') as f:
+        link = mm.upload_version_output(current_version, f, edl_file_name)
+
+    # add the link to database
+    from stalker import db
+    db.DBSession.commit()
+
+    # revert the handles to 0
+    for shot in pm.ls(type='shot'):
+        if shot.hasAttr('handle'):
+            shot.handle.set(0)

@@ -6,7 +6,7 @@
 
 import logging
 import datetime
-import tempfile
+
 import os
 
 from sqlalchemy import distinct
@@ -39,6 +39,15 @@ ref_depth_res = [
     'Top Level Only',
     'None'
 ]
+
+
+class RecentFilesComboBox(QtGui.QComboBox):
+    """A Fixed with popup box comboBox alternative
+    """
+
+    def showPopup(self, *args, **kwargs):
+        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
+        super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
 
 
 class VersionsTableWidget(QtGui.QTableWidget):
@@ -392,6 +401,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # create the project attribute in projects_comboBox
         self.current_dialog = None
 
+        # remove recent files comboBox and create a new one
+        layout = self.horizontalLayout_8
+        self.recent_files_comboBox.deleteLater()
+        self.recent_files_comboBox = RecentFilesComboBox()
+        self.recent_files_comboBox.setObjectName('recent_files_comboBox')
+        layout.insertWidget(1, self.recent_files_comboBox)
+
         # setup signals
         self._setup_signals()
 
@@ -471,12 +487,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView_auto_fit_column
         )
 
-        # takes_listWidget
-        QtCore.QObject.connect(
-            self.takes_listWidget,
-            QtCore.SIGNAL("currentTextChanged(QString)"),
-            self.takes_listWidget_changed
-        )
+        # # takes_listWidget
+        # QtCore.QObject.connect(
+        #     self.takes_listWidget,
+        #     QtCore.SIGNAL("currentTextChanged(QString)"),
+        #     self.takes_listWidget_changed
+        # )
 
         # repr_as_separate_takes_checkBox
         QtCore.QObject.connect(
@@ -662,6 +678,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # add Browse Outputs
         menu.addAction("Browse Path...")
+        menu.addAction("Browse Outputs...")
+        menu.addAction("Upload Output...")
         menu.addAction("Copy Path")
         menu.addSeparator()
 
@@ -760,6 +778,31 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         "Error",
                         "Path doesn't exists:\n%s" % path
                     )
+            if choice == 'Browse Outputs...':
+                path = os.path.join(
+                    os.path.expandvars(version.absolute_path),
+                    "Outputs"
+                )
+                try:
+                    utils.open_browser_in_location(path)
+                except IOError:
+                    QtGui.QMessageBox.critical(
+                        self,
+                        "Error",
+                        "Path doesn't exists:\n%s" % path
+                    )
+            elif choice == "Upload Output...":
+                # upload output to the given version
+                # show a file browser
+                dialog = QtGui.QFileDialog(self, "Choose file")
+                result = dialog.getOpenFileName()
+                file_path = result[0]
+                if file_path:
+                    from anima.utils import MediaManager
+                    with open(file_path) as f:
+                        MediaManager.upload_version_output(
+                            version, f, os.path.basename(file_path)
+                        )
             elif choice == 'Change Description...':
                 if version:
                     # change the description
@@ -812,6 +855,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # create the menu
         menu = QtGui.QMenu()  # Open in browser
         menu.addAction('Open In Web Browser...')
+        menu.addAction('Copy ID to clipboard')
         menu.addSeparator()
 
         # Add Depends To menu
@@ -848,6 +892,19 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         task.id
                     )
                 )
+            elif choice == 'Copy ID to clipboard':
+                clipboard = QtGui.QApplication.clipboard()
+                clipboard.setText('%s' % task.id)
+
+                # and warn the user about a new version is created and the
+                # clipboard is set to the new version full path
+                QtGui.QMessageBox.warning(
+                    self,
+                    "ID Copied To Clipboard",
+                    "ID %s is copied to clipboard!" % task.id,
+                    QtGui.QMessageBox.Ok
+                )
+
             else:
                 task = selected_item.task
                 self.find_and_select_entity_item_in_treeView(
@@ -908,6 +965,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     def update_recent_files_combo_box(self):
         """
         """
+        self.recent_files_comboBox.setSizeAdjustPolicy(
+            QtGui.QComboBox.AdjustToContentsOnFirstShow
+        )
+        self.recent_files_comboBox.setFixedWidth(250)
+
         self.recent_files_comboBox.clear()
         # update recent files list
         if self.environment:
@@ -916,14 +978,27 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 recent_files = rfm[self.environment.name]
                 recent_files.insert(0, '')
                 # append them to the comboBox
-                self.recent_files_comboBox.addItems(recent_files[:50])
 
-                try:
-                    self.recent_files_comboBox.setStyleSheet(
-                        "qproperty-textElideMode: ElideNone"
+                for i, full_path in enumerate(recent_files[:50]):
+                    parts = os.path.split(full_path)
+                    filename = parts[-1]
+                    self.recent_files_comboBox.addItem(
+                        filename,
+                        full_path,
                     )
-                except:
-                    pass
+
+                    self.recent_files_comboBox.setItemData(
+                        i,
+                        full_path,
+                        QtCore.Qt.ToolTipRole
+                    )
+
+                # try:
+                #     self.recent_files_comboBox.setStyleSheet(
+                #         "qproperty-textElideMode: ElideNone"
+                #     )
+                # except:
+                #     pass
 
                 self.recent_files_comboBox.setSizePolicy(
                     QtGui.QSizePolicy.MinimumExpanding,
@@ -986,7 +1061,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the versions of the entity
         takes = []
 
-        if task:
+        if task and task.is_leaf:
             # clear the takes_listWidget and fill with new data
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
@@ -1006,7 +1081,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 from anima.repr import Representation
                 takes = [take for take in takes
                          if Representation.repr_separator not in take]
-            takes.sort()
+            takes = sorted(takes, key=lambda x: x.lower())
 
         logger.debug("len(takes) from db: %s" % len(takes))
 
@@ -1315,6 +1390,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if not task or not isinstance(task, Task):
             return
 
+        # do not display any version for a container task
+        if task.is_container:
+            return
+
         # take name
         take_name = self.takes_listWidget.current_take_name
 
@@ -1469,6 +1548,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             except UnicodeEncodeError:
                 error_message = unicode(e)
             QtGui.QMessageBox.critical(self, "Error", error_message)
+            DBSession.rollback()
             return None
 
         if not new_version:
@@ -1481,6 +1561,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
             )
+            DBSession.rollback()
             return
 
         # call the environments save_as method
@@ -1497,6 +1578,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
+                DBSession.rollback()
                 return
             logger.debug('env: %s' % environment.name)
 
@@ -1515,6 +1597,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 error_message
             )
 
+            DBSession.rollback()
             return
 
         if is_external_env:
@@ -1862,6 +1945,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         :param path: 
         :return:
         """
-        path = self.recent_files_comboBox.currentText()
+        current_index = self.recent_files_comboBox.currentIndex()
+        path = self.recent_files_comboBox.itemData(current_index)
         self.find_from_path_lineEdit.setText(path)
         self.find_from_path_pushButton_clicked()

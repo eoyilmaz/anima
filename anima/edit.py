@@ -170,7 +170,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
         """
         template = """<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE xmeml>
-<xmeml version="5.0">
+<xmeml version="5">
 %(pre_indent)s<sequence>
 %(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
@@ -233,9 +233,10 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             clip.in_ = e.src_start_tc.frame_number
             clip.out = e.src_end_tc.frame_number
 
-            clip.duration = clip.out  # including the handle at start,
-                                      # but we can not have any idea about the
-                                      # handle at end
+            clip.duration = clip.out - clip.in_
+                            # including the handle at start,
+                            # but we can not have any idea about the
+                            # handle at end
 
             clip.start = e.rec_start_tc.frame_number
             clip.end = e.rec_end_tc.frame_number
@@ -397,8 +398,12 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                     )
 
                     kwargs = {
-                        'file_pathurl': os.path.normpath(raw_file_path),
-                        'mxf_pathurl': os.path.normpath(raw_mxf_path),
+                        'file_pathurl': os.path.normpath(
+                            os.path.expandvars(raw_file_path)
+                        ),
+                        'mxf_pathurl': os.path.normpath(
+                            os.path.expandvars(raw_mxf_path)
+                        ),
                         'sequence_name': self.name,
                         'sequence_timecode': self.timecode,
                         'clip_id': clip.id,
@@ -629,13 +634,13 @@ class Clip(EditBase, NameMixin, DurationMixin):
         """returns an xml version of this Clip object
         """
         template = """%(pre_indent)s<clipitem id="%(id)s">
-%(pre_indent)s%(indentation)s<end>%(end)1.1f</end>
+%(pre_indent)s%(indentation)s<end>%(end)i</end>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
 %(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
-%(pre_indent)s%(indentation)s<start>%(start)1.1f</start>
-%(pre_indent)s%(indentation)s<in>%(in)1.1f</in>
-%(pre_indent)s%(indentation)s<duration>%(duration)1.1f</duration>
-%(pre_indent)s%(indentation)s<out>%(out)1.1f</out>
+%(pre_indent)s%(indentation)s<start>%(start)i</start>
+%(pre_indent)s%(indentation)s<in>%(in)i</in>
+%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>
+%(pre_indent)s%(indentation)s<out>%(out)i</out>
 %(file)s
 %(pre_indent)s</clipitem>"""
 
@@ -711,7 +716,7 @@ class File(EditBase, NameMixin, DurationMixin):
         """returns an xml version of this File object
         """
         template = """%(pre_indent)s<file>
-%(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
+%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
 %(pre_indent)s%(indentation)s<pathurl>%(pathurl)s</pathurl>
 %(pre_indent)s</file>"""

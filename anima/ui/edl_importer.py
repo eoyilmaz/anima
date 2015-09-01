@@ -6,7 +6,8 @@
 import shutil
 import subprocess
 import os
-import time
+from anima.utils import do_db_setup
+
 import anima
 from anima.ui import IS_PYSIDE, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
@@ -105,6 +106,9 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         self.setup_signals()
         self.restore_media_file_path()
 
+        # connect to database
+        do_db_setup()
+
     def setup_signals(self):
         """setting up signals
         """
@@ -192,10 +196,14 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
         for event in l:
             # assert isinstance(event, edl.Event)
             mov_full_path = event.source_file
-            mxf_full_path = os.path.splitext(mov_full_path)[0] + '.mxf'
-            target_mxf_path = os.path.join(
-                media_path,
-                os.path.basename(mxf_full_path)
+            mxf_full_path = os.path.expandvars(
+                os.path.splitext(mov_full_path)[0] + '.mxf'
+            )
+            target_mxf_path = os.path.expandvars(
+                os.path.join(
+                    media_path,
+                    os.path.basename(mxf_full_path)
+                )
             )
 
             shutil.copy(

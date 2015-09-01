@@ -94,6 +94,11 @@ sound
 sourceimages
 sourceimages/3dPaintTextures"""
 
+    def __init__(self, exclude_mask=None):
+        if exclude_mask is None:
+            exclude_mask = []
+        self.exclude_mask = exclude_mask
+
     @classmethod
     def create_default_project(cls, path, name='DefaultProject'):
         """Creates default maya project structure along with a suitable
@@ -121,8 +126,7 @@ sourceimages/3dPaintTextures"""
 
         return project_path
 
-    @classmethod
-    def flatten(cls, path, project_name='DefaultProject'):
+    def flatten(self, path, project_name='DefaultProject'):
         """Flattens the given maya scene in to a new default project externally
         that is without opening it and returns the project path.
 
@@ -138,24 +142,30 @@ sourceimages/3dPaintTextures"""
         all_repos = Repository.query.all()
 
         default_project_path = \
-            cls.create_default_project(path=tempdir, name=project_name)
+            self.create_default_project(path=tempdir, name=project_name)
 
         logger.debug(
             'creating new default project at: %s' % default_project_path
         )
 
         ref_paths = \
-            cls._move_file_and_fix_references(path, default_project_path)
+            self._move_file_and_fix_references(path, default_project_path)
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
+
+            if self.exclude_mask \
+               and os.path.splitext(ref_path)[1] in self.exclude_mask:
+                    logger.debug('skipping: %s' % ref_path)
+                    continue
+
             # fix different OS paths
             for repo in all_repos:
                 if repo.is_in_repo(ref_path):
                     ref_path = repo.to_native_path(ref_path)
 
             new_ref_paths = \
-                cls._move_file_and_fix_references(
+                self._move_file_and_fix_references(
                     ref_path,
                     default_project_path,
                     scenes_folder='scenes/refs'
@@ -168,8 +178,7 @@ sourceimages/3dPaintTextures"""
 
         return default_project_path
 
-    @classmethod
-    def _move_file_and_fix_references(cls, path, project_path,
+    def _move_file_and_fix_references(self, path, project_path,
                                       scenes_folder='scenes',
                                       refs_folder='scenes/refs'):
         """Moves the given maya file to the given project path and moves any
@@ -200,7 +209,7 @@ sourceimages/3dPaintTextures"""
             with open(path) as f:
                 data = f.read()
 
-            ref_paths = cls._extract_references(data)
+            ref_paths = self._extract_references(data)
             # fix all reference paths
             for ref_path in ref_paths:
                 data = data.replace(
@@ -220,8 +229,7 @@ sourceimages/3dPaintTextures"""
 
         return ref_paths
 
-    @classmethod
-    def _extract_references(cls, data):
+    def _extract_references(self, data):
         """returns the list of references in the given maya file
 
         :param str data: The content of the maya scene file
@@ -232,6 +240,12 @@ sourceimages/3dPaintTextures"""
         # so we have all the data
         # extract references
         ref_paths = re.findall(path_regex, data)
+
+        new_ref_paths = []
+        for ref_path in ref_paths:
+            if os.path.splitext(ref_path)[1] not in self.exclude_mask:
+                new_ref_paths.append(ref_path)
+        ref_paths = new_ref_paths
 
         return ref_paths
 
@@ -289,6 +303,8 @@ sourceimages/3dPaintTextures"""
 
         :return:
         """
+        # TODO: This will not fix the sound or texture files, that is anything
+        #       other than a maya scene file.
         # get all reference paths
         with open(path) as f:
             data = f.read()

@@ -5,7 +5,9 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 import re
+import shutil
 import subprocess
+import tempfile
 import uuid
 
 import pymel.core as pm
@@ -16,10 +18,17 @@ from anima.env.mayaEnv import auxiliary
 from anima import logger
 
 
+#
+# Stores shading nodes that is commonly used
+# This is used in publish scripts and in representation generation
+#
 RENDER_RELATED_NODE_TYPES = [
+
+    # generic
     'shadingEngine',
     'displacementShader',
 
+    # materials
     'anisotropic',
     'blinn',
     'lambert',
@@ -32,63 +41,137 @@ RENDER_RELATED_NODE_TYPES = [
     'surfaceShader',
     'useBackground',
 
-    'bulge',
-    'checker',
-    'cloth',
-    'file',
-    'fluidTexture2D',
-    'fractal',
-    'grid',
-    'mandelbrot',
-    'mountain',
-    'movie',
-    'noise',
-    'ocean',
-    'psdFileTex',
-    'ramp',
-    'water',
-    'layeredTexture',
+    # volumetricMaterials
+    'envFog',
+    'fluidShape',
+    'lightFog',
+    'particleCloud',
+    'volumeFog',
+    'volumeShader',
 
-    'brownian',
-    'cloud',
-    'crater',
-    'fluidTexture3D',
-    'granite',
-    'leather',
-    'mandelbrot3D',
-    'marble',
-    'rock',
-    'snow',
-    'solidFractal',
-    'stucco',
-    'volumeNoise',
-    'wood',
+    # 2DTextures
+    'bulge',            # +
+    'checker',          # +
+    'cloth',            # +
+    'file',             # +
+    'fluidTexture2D',   # +
+    'fractal',          # +
+    'grid',             # +
+    'mandelbrot',       # +
+    'mountain',         # +
+    'movie',            # +
+    'noise',            # +
+    'ocean',            # +
+    'psdFileTex',       # +
+    'ramp',             # +
+    'water',            # +
+    'layeredTexture',   # + this is not a 2d texture but will be listed here
+    'imagePlane',       # +
 
-    'bump2d',
-    'bump3d',
-    'place2dTexture',
-    'place3dTexture',
-    'plusMinusAverage',
-    'samplerInfo',
-    'stencil',
-    'uvChooser',
-    'surfaceInfo',
-    'blendColors',
-    'clamp',
-    'contrast',
-    'gammaCorrect',
-    'hsvToRgb',
-    'luminance',
-    'remapColor',
-    'remapHsv',
-    'remapValue',
-    'rgbToHsv',
-    'surfaceLuminance',
-    'imagePlane',
-    'projection',
+    # 3DTextures
+    'brownian',         # +
+    'cloud',            # +
+    'crater',           # +
+    'fluidTexture3D',   # +
+    'granite',          # +
+    'leather',          # +
+    'mandelbrot3D',     # +
+    'marble',           # +
+    'rock',             # +
+    'snow',             # +
+    'solidFractal',     # +
+    'stucco',           # +
+    'volumeNoise',      # +
+    'wood',             # +
 
-    'aiImage',
-    'aiNoise',
+    # environmentTextures
+    'envBall',
+    'envChrome',
+    'envCube',
+    'envSky',
+    'envSphere',
+
+    # generalUtilities
+    'arrayMapper',
+    'bump2d',            # +
+    'bump3d',            # +
+    'composeMatrix',
+    'condition',
+    'decomposeMatrix',
+    'distanceBetween',
+    'eulerToQuat',
+    'heightField',
+    'inverseMatrix',
+    'lightInfo',
+    'multiplyDivide',
+    'place2dTexture',    # +
+    'place3dTexture',    # +
+    'plusMinusAverage',  # +
+    'projection',        # +
+    'quatAdd',
+    'quatConjugate',
+    'quatInvert',
+    'quatNegate',
+    'quatNormalize',
+    'quatProd',
+    'quatSub',
+    'quatToEuler',
+    'reverse',
+    'samplerInfo',       # +
+    'setRange',
+    'stencil',           # +
+    'transposeMatrix',
+    'uvChooser',         # +
+    'vectorProduct',
+
+    # scalarUtilities
+    'addDoubleLinear',
+    'addMatrix',
+    'angleBetween',
+    'blendTwoAttr',
+    'choice',
+    'chooser',
+    'curveInfo',
+    'fourByFourMatrix',
+    'frameCache',
+    'multDoubleLinear',
+    'multMatrix',
+    'surfaceInfo',       # +
+    'unitConversion',
+    'wtAddMatrix',
+
+    # switchUtilities
+    'doubleShadingSwitch',
+    'quadShadingSwitch',
+    'singleShadingSwitch',
+    'tripleShadingSwitch',
+
+    # colorUtilities
+    'blendColors',      # +
+    'clamp',            # +
+    'colorProfile',
+    'contrast',         # +
+    'gammaCorrect',     # +
+    #'grade_tm',
+    'hsvToRgb',         # +
+    'luminance',        # +
+    'remapColor',       # +
+    'remapHsv',         # +
+    'remapValue',       # +
+    'rgbToHsv',         # +
+    'surfaceLuminance', # +
+
+    # particleUtilities
+    'particleSamplerInfo',
+
+    # glow
+    'opticalFX',
+
+    # arnoldTexture
+    'aiImage',       # +
+    'aiNoise',       # +
+
+    # arnoldShaderSurface
     'aiAmbientOcclusion',
     'aiHair',
     'aiRaySwitch',
@@ -97,8 +180,31 @@ RENDER_RELATED_NODE_TYPES = [
     'aiStandard',
     'aiUtility',
     'aiWireframe',
-]
 
+    # arnoldShaderUtility
+    'aiBump2d',
+    'aiBump3d',
+    'aiMotionVector',
+    'aiUserDataBool',
+    'aiUserDataColor',
+    'aiUserDataFloat',
+    'aiUserDataInt',
+    'aiUserDataPnt2',
+    'aiUserDataString',
+    'aiUserDataVector',
+    'aiVolumeCollector',
+    'aiWriteColor',
+    'aiWriteFloat',
+
+    # arnoldShaderVolume
+    'aiDensity',
+    'aiFog',
+    'aiVolumeScattering',
+
+    # arnoldTextureEnvironment
+    'aiPhysicalSky',
+    'aiSky',
+]
 
 READ_ONLY_NODE_NAMES = [
     'lambert1',
@@ -301,6 +407,31 @@ class RepresentationGenerator(object):
                                skip_update_check=True,
                                reference_depth=3)
 
+    @classmethod
+    def make_unique(cls, filename, force=True):
+        """Generates a unique filename if the file already exists
+
+        :param filename:
+        :return:
+        """
+        import uuid
+
+        def generate_filename():
+            random_part = uuid.uuid4().hex[-4:]
+            data = os.path.splitext(filename)
+            return '%s_%s%s' % (data[0], random_part, data[1])
+
+        if not force:
+            if os.path.exists(filename):
+                new_filename = generate_filename()
+                while os.path.exists(new_filename):
+                    new_filename = generate_filename()
+                return new_filename
+            else:
+                return filename
+        else:
+            return generate_filename()
+
     def generate_all(self):
         """generates all representations at once
         """
@@ -471,7 +602,6 @@ class RepresentationGenerator(object):
 
                 for node in pfx_polygons_node.getChildren():
                     for child_node in node.getChildren():
-                        #print('processing %s' % child_node.name())
                         child_node_name = child_node.name().split('___')[-1]
                         child_node_shape = child_node.getShape()
                         child_node_shape_name = None
@@ -480,43 +610,59 @@ class RepresentationGenerator(object):
                             child_node_shape_name = child_node_shape.name()
 
                         pm.select(child_node)
-                        output_filename =\
-                            '%s_%s.abc' % (
-                                self.version.nice_name,
-                                child_node_name.split(':')[-1]
-                                .replace(':', '_')
-                                .replace('|', '_')
-                            )
+                        temp_output_fullpath = \
+                            tempfile.mktemp().replace('\\', '/')
+                        temp_output_path, temp_output_filename = \
+                            os.path.split(temp_output_fullpath)
+
+                        output_filename = '%s_%s' % (
+                            self.version.nice_name,
+                            child_node_name.split(':')[-1]
+                            .replace(':', '_')
+                            .replace('|', '_')
+                        )
 
                         # run the mel command
                         # check if file exists
+                        pm.mel.eval(
+                            gpu_command % {
+                                'start_frame': start_frame,
+                                'end_frame': end_frame,
+                                'node': child_node.fullPath(),
+                                'path': temp_output_path,
+                                'filename': temp_output_filename
+                            }
+                        )
+
+                        cache_file_full_path = \
+                            os.path\
+                            .join(output_path, output_filename + '.abc')\
+                            .replace('\\', '/')
+
+                        # create the intermediate directories
                         try:
-                            pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': output_path,
-                                    'filename': output_filename
-                                }
+                            os.makedirs(
+                                os.path.dirname(cache_file_full_path)
                             )
-                        except pm.MelError as e:
-                            # just pass it
+                        except OSError:
+                            # directory exists
                             pass
 
-                        # delete the child and add a GPU node instead
+                        # now move in to its place
+                        shutil.move(
+                            temp_output_fullpath + '.abc',
+                            cache_file_full_path
+                        )
+
                         # set rotate and scale pivots
                         rp = pm.xform(child_node, q=1, ws=1, rp=1)
                         sp = pm.xform(child_node, q=1, ws=1, sp=1)
                         #child_node.setRotatePivotTranslation([0, 0, 0])
 
+                        # delete the child and add a GPU node instead
                         pm.delete(child_node)
-                        cache_file_full_path = \
-                            os.path\
-                            .join(output_path, output_filename)\
-                            .replace('\\', '/')
 
-                        # check if file exists
+                        # check if file exists and create nodes
                         if os.path.exists(cache_file_full_path):
                             gpu_node = pm.createNode('gpuCache')
                             gpu_node_tra = gpu_node.getParent()
@@ -535,6 +681,8 @@ class RepresentationGenerator(object):
                                 cache_file_full_path,
                                 type="string"
                             )
+                        else:
+                            print('File not found!: %s' % cache_file_full_path)
 
                 # clean up other nodes
                 pm.delete('kks___vegetation_pfxStrokes')
@@ -562,35 +710,30 @@ class RepresentationGenerator(object):
 
                             child_full_path = \
                                 child_node.fullPath()[1:].replace('|', '_')
-                            print('child_full_path: %s' % child_full_path)
+
+                            temp_output_fullpath = \
+                                tempfile.mktemp().replace('\\', '/')
+                            temp_output_path, temp_output_filename = \
+                                os.path.split(temp_output_fullpath)
+
                             output_filename =\
                                 '%s_%s' % (
                                     self.version.nice_name,
                                     child_full_path
                                 )
 
+                            # run the mel command
                             # check if file exists
-                            try:
-                                pm.mel.eval(
-                                    gpu_command % {
-                                        'start_frame': start_frame,
-                                        'end_frame': end_frame,
-                                        'node': child_node.fullPath(),
-                                        'path': output_path,
-                                        'filename': output_filename
-                                    }
-                                )
-                            except pm.MelError as e:
-                                # just pass it
-                                pass
+                            pm.mel.eval(
+                                gpu_command % {
+                                    'start_frame': start_frame,
+                                    'end_frame': end_frame,
+                                    'node': child_node.fullPath(),
+                                    'path': temp_output_path,
+                                    'filename': temp_output_filename
+                                }
+                            )
 
-                            # set rotate and scale pivots
-                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
-                            # rpt = child_node.getRotatePivotTranslation()
-
-                            # delete the child and add a GPU node instead
-                            pm.delete(child_node)
                             cache_file_full_path = \
                                 os.path\
                                 .join(
@@ -600,6 +743,29 @@ class RepresentationGenerator(object):
                                     )
                                 )\
                                 .replace('\\', '/')
+
+                            # create the intermediate directories
+                            try:
+                                os.makedirs(
+                                    os.path.dirname(cache_file_full_path)
+                                )
+                            except OSError:
+                                # directory exists
+                                pass
+
+                            # now move in to its place
+                            shutil.move(
+                                temp_output_fullpath + '.abc',
+                                cache_file_full_path
+                            )
+
+                            # set rotate and scale pivots
+                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                            # rpt = child_node.getRotatePivotTranslation()
+
+                            # delete the child and add a GPU node instead
+                            pm.delete(child_node)
 
                             # check if file exists
                             if os.path.exists(cache_file_full_path):
@@ -729,7 +895,7 @@ class RepresentationGenerator(object):
         pm.loadPlugin('mtoa')
 
         # disable "show plugin shapes"
-        active_panel = auxiliary.ShotPlayblaster.get_active_panel()
+        active_panel = auxiliary.Playblaster.get_active_panel()
         show_plugin_shapes = pm.modelEditor(active_panel, q=1, pluginShapes=1)
         pm.modelEditor(active_panel, e=1, pluginShapes=False)
 
@@ -1092,5 +1258,5 @@ class RepresentationGenerator(object):
         pm.newFile(force=True)
 
         # reset show plugin shapes option
-        active_panel = auxiliary.ShotPlayblaster.get_active_panel()
+        active_panel = auxiliary.Playblaster.get_active_panel()
         pm.modelEditor(active_panel, e=1, pluginShapes=show_plugin_shapes)

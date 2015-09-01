@@ -1,0 +1,1664 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+//  Creation Date:  Nov 1999
+//
+//  Description:
+//		This script builds the pulldown and popup menus for the Sequence Editor
+//		editor.
+//
+//  Input Arguments:
+//		None.
+//
+//  Return Value:
+//		None.
+//
+//  Note:
+//		None.
+// 
+
+
+source "sequencerUtils.mel";
+
+global proc int doImportSequencerScene( string $filename, string $fileType )
+{
+	if ( getApplicationVersionAsFloat() == 2010 )
+	{
+	    sequenceManager -importSceneSegment $filename;
+	}
+
+	return 1;
+}
+
+global proc int doImportShotAudio( string $filename, string $fileType )
+{
+	if ($fileType != "audio")
+		return 0;
+		
+	// Get the selected shots and set the audio file for each one.
+	string $sel[] = getSelectedShots();
+	string $s;
+	for ($s in $sel)
+	{
+		shot -e -audio $filename $s;
+	}
+	
+    return 1;
+}
+
+global proc int doImportSequencerAudio( string $filename, string $fileType )
+{
+ 	if ($fileType != "audio")
+		return 0;
+		
+	sequenceManager -addSequencerAudio $filename;
+	
+    return 1;
+}
+
+global proc int doExportSequencerScene( string $filename, string $fileType )
+{
+	if ( getApplicationVersionAsFloat() > 2010 )
+	{
+		// For 2010 only
+		return 1;
+	}
+
+	string $fname = $filename;
+	string $buf[];
+	tokenize $filename "." $buf;
+	if ($fileType == "mayaAscii")
+	{
+		if ($buf[size($buf)-1] != "ma")
+			$fname = $fname + ".ma";
+	}
+	else if ($fileType == "mayaBinary")
+	{
+		if ($buf[size($buf)-1] != "mb")
+			$fname = $fname + ".mb";
+	}
+
+	sequenceManager -exportSceneSegment $fname;
+	return 1;
+}
+
+global proc buildSceneSegmentMenu( string $parent )
+{
+	if ( getApplicationVersionAsFloat() > 2010 )
+	{
+		// For 2010 only
+		return;
+	}
+
+    string $segments[] = `sequenceManager -listSceneSegments`;
+
+    // Rebuild menu
+    //
+
+    setParent -m $parent;
+
+    menu -e -deleteAllItems $parent;
+
+    for ($seg in $segments) {
+        menuItem -l $seg -command
+            ("sequenceManager -e -currentSceneSegment " + $seg);
+    }
+}
+
+global proc buildSequenceEditorFileMenu (string $editor, string $parent)
+{	
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0) return;
+
+	
+	if ( getApplicationVersionAsFloat() == 2010 )
+	{
+		// 2010 only
+		menuItem -label (uiRes("m_SequenceEdMenu.kNewScene"))
+			-annotation (uiRes("m_SequenceEdMenu.kNewSceneAnnot"))
+			-command ("performCreateSceneSegment 0") newSequencerSceneItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_SequenceEdMenu.kNewSceneOptAnnot"))
+			-command ("performCreateSceneSegment 1") newSequencerSceneOptions;
+	}
+
+	string $seqEdImport = (uiRes("m_SequenceEdMenu.kFileBroswerImport"));
+	string $seqEdExport = (uiRes("m_SequenceEdMenu.kFileBroswerExport"));
+	string $cmd = "fileBrowser \"doImportShotAudio\" \"" + $seqEdImport +"\" \"audio\" 0";
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kImportShotAudio"))
+		-annotation (uiRes("m_SequenceEdMenu.kImportShotAudioAnnot"))
+		-command $cmd 
+		importShotAudioFileItem;
+
+	string $cmd = "fileBrowser \"doImportSequencerAudio\" \"" + $seqEdImport +"\" \"audio\" 0";
+	menuItem -label (uiRes("m_SequenceEdMenu.kImportSequencerAudio"))
+		-annotation (uiRes("m_SequenceEdMenu.kImportSequencerAudioAnnot"))
+		-command  $cmd 
+		importSequencerAudioFileItem;
+
+	if ( getApplicationVersionAsFloat() == 2010 )
+	{
+			// 2010 only
+		string $cmd = "fileBrowser \"doImportSequencerScene\" \"" + $seqEdImport +"\" \"mayaAscii\" 0";
+		menuItem -label (uiRes("m_SequenceEdMenu.kImportScene"))
+			-annotation (uiRes("m_SequenceEdMenu.kImportSceneAnnot"))
+			-command $cmd
+			importSequencerSceneFileItem;
+
+		string $cmd = "fileBrowser \"doExportSequencerScene\" \"" + $seqEdExport +"\" \"mayaAscii\" 0";
+		menuItem -label (uiRes("m_SequenceEdMenu.kExportScene"))
+			-annotation (uiRes("m_SequenceEdMenu.kExportSceneAnnot"))
+			-command $cmd
+			 exportSequencerSceneFileItem;
+
+		string $menu = `menuItem -label (uiRes("m_SequenceEdMenu.kCurrentSegment")) -subMenu true`;
+		menuItem -e -postMenuCommand
+			("buildSceneSegmentMenu " + $menu) $menu;
+	}
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kImportEDL"))
+		-annotation (uiRes("m_SequenceEdMenu.kImportEDLAnnot"))
+		-command ("performImportEDL 0")
+		importEDLFileItem;
+	menuItem -optionBox true
+		-annotation (uiRes("m_SequenceEdMenu.kImportEDLOptions"))
+		-command ("performImportEDL 1")
+		importEDLOptionsItem;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kExportEDL"))
+		-annotation (uiRes("m_SequenceEdMenu.kExportEDLAnnot"))
+		-command ("performExportEDL 0")
+		exportEDLFileItem;
+	menuItem -optionBox true
+		-annotation (uiRes("m_SequenceEdMenu.kExportEDLOptions"))
+		-command ("performExportEDL 1")
+		exportEDLOptionsItem;
+
+    setParent -m ..;
+
+}
+
+global proc buildSequenceEditorCreateMenu (string $editor, string $parent)
+{	
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0) return;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kCreateShot"))
+		-annotation (uiRes("m_SequenceEdMenu.kCreateShotAnnot"))
+		-command ("CreateShot; doReload " + $editor)
+		-dragMenuCommand("performCreateShot 2")
+		createShotItem;
+	
+	menuItem -optionBox true
+		-annotation (uiRes("m_SequenceEdMenu.kCreateShotOptAnnot"))
+		-command "CreateShotOptions"
+		createShotDialogItem;
+	
+	menuItem -label (uiRes("m_SequenceEdMenu.kCreateUbercam"))
+		-annotation (uiRes("m_SequenceEdMenu.kCreateUbercamAnnot"))
+		-command ("ubercam;")
+		createUbercamItem;
+
+}
+
+global proc buildSequenceEditorGroupMenu (string $editor, string $parent)
+{	
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0) return;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kGroupCreate"))
+                -annotation (uiRes("m_SequenceEdMenu.kGroupCreateAnnot"))
+                -command ("seqCreateGroup") createGroup1Item;
+
+        string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kSetActiveShot1"))
+                -subMenu true
+                -annotation (uiRes("m_SequenceEdMenu.kSetActiveShot1Annot"))
+                setActiveShot1Item`;
+        menuItem -edit
+                -postMenuCommand ("buildSetActiveShotSubMenu \"\" " + $menuItem)
+                $menuItem;
+                setParent -menu ..;
+
+        $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kSelectShot1"))
+                -subMenu true
+                -annotation (uiRes("m_SequenceEdMenu.kSelectShot1Annot"))
+                selectShot1Item`;
+        menuItem -edit
+                -postMenuCommand ("buildSelectShotSubMenu \"\" " + $menuItem)
+                $menuItem;
+                setParent -menu ..;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kAddShot1"))
+                -annotation (uiRes("m_SequenceEdMenu.kAddShot1Annot"))
+                -command ("addShot") addShot1Item;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kRemoveShot1"))
+                -annotation (uiRes("m_SequenceEdMenu.kRemoveShot1Annot"))
+                -command ("removeShot") removeShot1Item;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kUngroup1"))
+                -annotation (uiRes("m_SequenceEdMenu.kUngroupp1Annot"))
+                -command ("seqUngroup \"\"") ungroup1Item;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kDeleteAndContentsGroup1"))
+                -annotation (uiRes("m_SequenceEdMenu.kDeleteGroupAndContents1Annot"))
+                -command ("seqDeleteGroupAndContents \"\"") deleteGroupAndContents1Item;
+        setParent -menu ..;
+}
+
+global proc buildSequenceEditorPlayblastMenu (string $editor, string $parent)
+{
+        setParent -menu $parent;
+        if (`menu -query -numberOfItems $parent` != 0) return;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kPlayblastSelectedShots"))
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastSelectedShotsAnnot"))
+                -command ("playblastSelectedShots 0")
+                -dragMenuCommand("playblastSelectedShots 2")
+                playblastSelectedShotsItem;
+        menuItem -optionBox true
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastSelectedShotsOptAnnot"))
+                -command ("playblastSelectedShots 1" )
+                playblastSelectedShotsOBItem;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kPlayblastAllShots"))
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastAllShotsAnnot"))
+                -command ("playblastAllShots 0")
+                -dragMenuCommand("playblastAllShots 2")
+                playblastAllShotsItem;
+        menuItem -optionBox true
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastAllShotsOptAnnot"))
+                -command ("playblastAllShots 1" )
+                playblastAllShotsOBItem;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kPlayblastSequence"))
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastSequenceAnnot"))
+                -command ("performPlayblastSequence 0")
+                PlayblastSequenceItem;
+                
+		menuItem -optionBox true
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastSequenceOptAnnot"))
+                -command ("performPlayblastSequence 1" )
+                playblastSequenceOBItem;
+                
+        menuItem -label (uiRes("m_SequenceEdMenu.kReplayblastSelectedShot"))
+                -annotation (uiRes("m_SequenceEdMenu.kReplayblastSelectedShotAnnot"))
+                -command ("replayblastSelectedShot 0")
+                -dragMenuCommand("replayblastSelectedShot 2")
+                replayblastSelectedShotItem;
+        menuItem -optionBox true
+                -annotation (uiRes("m_SequenceEdMenu.kReplayblastSelectedShotOptAnnot"))
+                -command ("replayblastSelectedShot 1" )
+                replayblastSelectedShotOBItem;
+}
+
+global proc sequenceEditorToggleRippleMode( string $editor )
+{
+	optionVar -iv rippleEditModeEnabled `menuItem -q -checkBox rippleEditModeItem`;
+	updateSequenceEditorPanelBar( $editor );
+}
+
+global proc buildSequenceEditorEditMenu (string $editor, string $parent)
+{	
+	int $dimWhenNoSelect = 0;
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0)
+	{
+		// Update the enabled state of any existing menu items.
+		menuItem -e -enable `copyShotsAvailable`  ($parent+"|copyShotsItem");
+		menuItem -e -enable `pasteShotsAvailable` ($parent+"|pasteShotsItem");
+		menuItem -e -checkBox `optionVar -q "rippleEditModeEnabled"` rippleEditModeItem;
+		return;
+	}
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kUndo"))
+		-enableCommandRepeat false
+		-annotation (uiRes("m_SequenceEdMenu.kUndoAnnot"))
+		-command ("Undo") undoItem;
+	if( $dimWhenNoSelect )
+		dimWhen -false "UndoAvailable" ($parent+"|undoItem");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kRedo"))
+		-enableCommandRepeat false
+		-annotation (uiRes("m_SequenceEdMenu.kRedoAnnot"))
+		-command ("Redo") redoItem;
+	if( $dimWhenNoSelect )
+		dimWhen -false "RedoAvailable" ($parent+"|redoItem");
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kCopyShots"))
+		-annotation (uiRes("m_SequenceEdMenu.kCopyShotsAnnot"))
+		-enable `copyShotsAvailable`
+		-command ("copyShots") copyShotsItem;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kPasteShots"))
+		-annotation (uiRes("m_SequenceEdMenu.kPasteShotsAnnot"))
+		-enable `pasteShotsAvailable`
+		-command ("pasteShots") pasteShotsItem;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kRippleEdit"))
+		-annotation (uiRes("m_SequenceEdMenu.kRippleEditAnnot"))
+		-checkBox `optionVar -q "rippleEditModeEnabled"`
+		-command ( "sequenceEditorToggleRippleMode " + $editor ) 
+		rippleEditModeItem;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditTrimBefore"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditTrimShotBeforeAnnot"))
+		-command ("shotTrim 0 {}");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditTrimAfter"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditTrimShotAfterAnnot"))
+		-command ("shotTrim 1 {}");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditShowAllIP"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditShowAllIPAnnot"))
+		-command ("showHideAllImagePlanes 1");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditHideAllIP"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditHideAllIPAnnot"))
+		-command ("showHideAllImagePlanes 0");
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditSnapPrev"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditSnapToPreviousAnnot"))
+		-command ("shotSnap 0 0");
+		
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditSnapNext"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditSnapToNexAnnot"))
+		-command ("shotSnap 0 1");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditSnapPrevOnTrack"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditSnapToPreviousOnTrackAnnot"))
+		-command ("shotSnap 1 0");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditSnapNextOnTrack"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditSnapToNextOnTrackAnnot"))
+		-command ("shotSnap 1 1");
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditRemoveGaps"))
+			-subMenu 1;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditCompressSelected"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditCompressSelectedAnnot"))
+			-command ("shotCompress 2 -1");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditCompressAll"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditCompressAllAnnot"))
+			-command ("shotCompress 3 -1");
+	setParent -menu ..;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditRemoveOverlaps"))
+		-subMenu 1;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditExpandSelected"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditExpandSelectedAnnot"))
+			-command ("shotExpand 2 -1");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditExpandAll"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditExpandAllAnnot"))
+			-command ("shotExpand 3 -1");
+	setParent -menu ..;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditRemGapsAndOverlap"))
+			-subMenu 1;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditExpandAndCompressSelected"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditExpandAndCompressSelectedAnnot"))
+			-command ("shotExpandAndCompress 2 -1");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditExpandAndCompressAll"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditExpandAndCompressAllAnnot"))
+			-command ("shotExpandAndCompress 3 -1");
+	setParent -menu ..;
+
+	menuItem -divider true;	
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditSplit"))
+		-annotation (uiRes("m_SequenceEdMenu.kEditSplitAnnot"))
+		-command ("splitShots 0")
+		-dragMenuCommand("splitShots 2")
+		splitShotItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_SequenceEdMenu.kEditSplitShotOptAnnot"))
+			-command ("splitShots 1" )
+			splitShotDialogItem;
+}
+
+global proc buildSequenceEditorViewMenu (string $editor, string $parent)
+{	
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0) return;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kFrameAll")) 
+		-enable 1
+		-annotation (uiRes("m_SequenceEdMenu.kFrameAllAnnot")) 
+		-command ("FrameAll");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kFrameSelection")) 
+		-annotation (uiRes("m_SequenceEdMenu.kFrameSelectionAnnot")) 			
+		-command ("FrameSelected");
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kFramePlayback"))  
+		-enable 1
+		-annotation (uiRes("m_SequenceEdMenu.kFramePlaybackAnnot")) 
+		-command ("frameTimelineRange " + $editor);
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kCenterCurrentTime")) 
+		-annotation (uiRes("m_SequenceEdMenu.kCenterCurrentTimeAnnot")) 
+	-command ("clipEditor -edit -lookAt currentTime " + $editor);
+}
+
+
+global proc buildSequenceEditorShotMenu (string $editor, string $parent)
+{	
+	setParent -menu $parent;
+        if (`menu -query -numberOfItems $parent` != 0) return;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kShotAttrEd"))
+                -annotation (uiRes("m_SequenceEdMenu.kShotAttrEdAnnot"))
+                -command ("openAEWindow")
+                -dragMenuCommand ("openAEWindow")
+                shotPropItem;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kShotIPAttrEd"))
+                -annotation (uiRes("m_SequenceEdMenu.kShotIPAttrEdAnnot"))
+                -command ("openAEWindow")
+                -dragMenuCommand ("openAEWindow")
+                shotIPPropItem;
+}
+
+global proc buildSequenceTimePopupMenuItems(string $editor, string $menuName, string $collectionName) 
+{
+	setParent -menu $menuName;
+	
+	if (`menu -query -numberOfItems $menuName` != 0) return;
+
+	int $enableSet = size(getSelectedShots()) > 0;
+	int $enableClear = `getAttr ( getSequenceManager() + ".rangeEnabled")` == 1;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kSetPlaybackRangeToSelected"))
+		-command ( "setPlaybackRange 1 " + $editor )
+		-enable $enableSet;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kSetPlaybackRangeToCurrent"))
+		-command ( "setPlaybackRange 2 " + $editor );
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kClearPlaybackRange"))
+		-command ( "setPlaybackRange 0 " + $editor )
+		-enable $enableClear;
+}
+
+global proc buildSequenceMainPopupMenuItems(string $editor, string $menuName, string $collectionName) 
+{
+	setParent -menu $menuName;
+	
+	if (`menu -query -numberOfItems $menuName` != 0) return;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kFile"))  
+		-subMenu true
+		-allowOptionBoxes true
+		FileCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorFileMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kEdit"))  
+		-subMenu true
+		-allowOptionBoxes true
+		EditCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorEditMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kView"))  
+		-subMenu true 
+		-allowOptionBoxes true
+		ViewCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorViewMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kModify"))  
+		-subMenu true
+		-allowOptionBoxes true
+		ModifyCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorShotMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kCreate"))  
+		-subMenu true 
+		-allowOptionBoxes true
+		CreateCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorCreateMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kGroup"))  
+		-subMenu true 
+		-allowOptionBoxes true
+		GroupCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorGroupMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kPlayblast"))
+                -subMenu true 
+                -allowOptionBoxes true
+                PlayblastCascade`;
+
+        menuItem -edit -postMenuCommand 
+                ("buildSequenceEditorPlayblastMenu " + $editor + " " + $menuItem) $menuItem;
+
+}
+
+global proc buildSequenceEditorMenu(string $editor, string $parent, string $collectionName)
+{
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kFileMenu"))  -tearOff true
+		-familyImage "menuIconEdit.png"
+		-allowOptionBoxes true`;
+
+	menu -edit -postMenuCommand 
+		("buildSequenceEditorFileMenu " + $editor + " " + $menu) $menu;
+	setParent -menu ..;
+
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kEditMenu"))   -tearOff true
+		-familyImage "menuIconEdit.png"
+		-allowOptionBoxes true`;
+
+	menu -edit -postMenuCommand 
+		("buildSequenceEditorEditMenu " + $editor + " " + $menu) $menu;
+	setParent -menu ..;
+
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kViewMenu"))   -tearOff true
+		-allowOptionBoxes true
+		-familyImage "menuIconEdit.png"`;
+
+	menu -edit -postMenuCommand 
+		("buildSequenceEditorViewMenu " + $editor + " " + $menu) $menu;
+	setParent -menu ..;
+
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kModifyMenu"))  
+		-subMenu true
+		-allowOptionBoxes true
+		ModifyCascade`;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorShotMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	if (!`optionVar -exists "sequenceSoundsEnabled"`)
+		optionVar -iv "sequenceSoundsEnabled" 1;
+		
+	menuItem -label (uiRes("m_SequenceEdMenu.kEnableSoundsItem"))  
+		-checkBox `optionVar -q "sequenceSoundsEnabled"`
+		-command "optionVar -iv sequenceSoundsEnabled `menuItem -q -checkBox EnableSequenceSoundsItem`"
+		EnableSequenceSoundsItem;
+	setParent -menu ..;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kPlaylistItem"))  
+		-command "ShotPlaylistEditor"
+		PlaylistItem;
+	setParent -menu ..;
+
+	menuItem -edit -postMenuCommand 
+		("buildSequenceEditorShotMenu " + $editor + " " + $menuItem) $menuItem;
+	setParent -menu ..;
+
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kCreateMenu"))   -tearOff true
+		-allowOptionBoxes true
+		-familyImage "menuIconEdit.png"`;
+
+	menu -edit -postMenuCommand 
+		("buildSequenceEditorCreateMenu " + $editor + " " + $menu) $menu;
+	setParent -menu ..;
+
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kGroupMenu"))   -tearOff true
+		-allowOptionBoxes true
+		-familyImage "menuIconEdit.png"`;
+
+	menu -edit -postMenuCommand 
+		("buildSequenceEditorGroupMenu " + $editor + " " + $menu) $menu;
+	setParent -menu ..;
+
+	string $menu = `menu -label (uiRes("m_SequenceEdMenu.kPlayblastMenu"))   -tearOff true
+                -allowOptionBoxes true
+                -familyImage "menuIconEdit.png"`;
+
+        menu -edit -postMenuCommand
+                ("buildSequenceEditorPlayblastMenu " + $editor + " " + $menu) $menu;
+}
+
+global proc selectShotsCam(string $shot)
+{
+	string $camera = `shot -q -currentCamera $shot`;
+	select -r $camera;
+}
+
+// This is the menu that pops up on top of shotButtons via RMB
+global proc buildSequenceShotMenuItems(string $editor, string $menu, string $shot)
+{
+	setParent -menu $menu;
+
+	string $group = getShotsGroup( $shot );
+
+	// Are we are over a Shot or a Group
+	if ( ($group == "") || (!isShotActive($shot))) 
+	{
+		string $title = (uiRes("m_SequenceEdMenu.kShotMenuTitle")) + $shot;
+		menuItem -label $title titleItem;
+	}
+	else
+	{
+		string $title = (uiRes("m_SequenceEdMenu.kGroupMenuTitle")) + $shot;
+		menuItem -label $title titleItem;
+	}
+
+	menuItem -divider true;
+	menuItem -divider true;
+
+	// Don't split shots if they are part of a group.
+	if ( $group == "" ) 
+	{
+		menuItem -label (uiRes("m_SequenceEdMenu.kSplitShot"))
+			-annotation (uiRes("m_SequenceEdMenu.kSplitShotAnnot")) 
+			-command ("performSplitShot 0 \"" + $shot + "\"" )
+			-dragMenuCommand ("performSplitShot 2 \"" + $shot + "\"" )
+			splitShotItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_SequenceEdMenu.kSplitShotOptAnnot")) 
+			-command ("performSplitShot 1 \"" + $shot + "\"" )
+			splitShotOBItem;
+	}
+
+	string $sel[] = `ls -sl -type shot`;
+	string $myself[] = `ls -sl $shot`;
+	if (`shot -q -mute $shot`)
+	{
+		if ($group == "")
+		{
+			string $unmuteCmd = "unmuteSelectedShots";
+			string $label = (uiRes("m_SequenceEdMenu.kUnmuteShot"));
+			string $annot = (uiRes("m_SequenceEdMenu.kUnmuteShotAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$unmuteCmd = ("shot -e -mute false " + $shot);
+				$label = (uiRes("m_SequenceEdMenu.kUnmuteShot2"));
+				$annot = (uiRes("m_SequenceEdMenu.kUnmuteShotAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $unmuteCmd;
+		}
+		else
+		{
+			string $unmuteCmd = "seqUnmuteGroup " + $group;
+			menuItem -label (uiRes("m_SequenceEdMenu.kUnmuteGroup")) 
+				-annotation (uiRes("m_SequenceEdMenu.kUnmuteGroupAnnot")) 
+				-command $unmuteCmd;
+		}
+	}
+	else
+	{
+		if ($group == "")
+		{
+			string $unmuteCmd = "muteSelectedShots";
+			string $label = (uiRes("m_SequenceEdMenu.kMuteShot"));
+			string $annot = (uiRes("m_SequenceEdMenu.kMuteShotAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$unmuteCmd = ("shot -e -mute true " + $shot);
+				$label = (uiRes("m_SequenceEdMenu.kMuteShot2"));
+				$annot = (uiRes("m_SequenceEdMenu.kMuteShotAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $unmuteCmd;
+		}
+		else
+		{
+			string $muteCmd = "seqMuteGroup " + $group;
+			menuItem -label (uiRes("m_SequenceEdMenu.kMuteGroup")) 
+				-annotation (uiRes("m_SequenceEdMenu.kMuteGroupAnnot")) 
+				-command $muteCmd;
+		}
+	}
+
+	if (`shot -q -lock $shot`)
+	{
+		if ($group == "")
+		{
+			string $unlockCmd = "unlockSelectedShots";
+			string $label = (uiRes("m_SequenceEdMenu.kUnlockShot"));
+			string $annot = (uiRes("m_SequenceEdMenu.kUnlockShotAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$unlockCmd = ("shot -e -lock false " + $shot);
+				$label = (uiRes("m_SequenceEdMenu.kUnlockShot2"));
+				$annot = (uiRes("m_SequenceEdMenu.kUnlockShotAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $unlockCmd;
+		}
+		else
+		{
+			string $unlockCmd = "seqUnlockGroup " + $group;
+			menuItem -label (uiRes("m_SequenceEdMenu.kUnlockGroup")) 
+				-annotation (uiRes("m_SequenceEdMenu.kUnlockGroupAnnot")) 
+				-command $unlockCmd;
+		}
+	}
+	else
+	{
+		if ($group == "")
+		{
+			string $lockCmd = "lockSelectedShots";
+			string $label = (uiRes("m_SequenceEdMenu.kLockShot"));
+			string $annot = (uiRes("m_SequenceEdMenu.kLockShotAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$lockCmd = ("shot -e -lock true " + $shot);
+				$label = (uiRes("m_SequenceEdMenu.kLockShot2"));
+				$annot = (uiRes("m_SequenceEdMenu.kLockShotAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $lockCmd;
+		}
+		else
+		{
+			string $lockCmd = "seqLockGroup " + $group;
+			menuItem -label (uiRes("m_SequenceEdMenu.kLockGroup")) 
+				-annotation (uiRes("m_SequenceEdMenu.kLockGroupAnnot")) 
+				-command $lockCmd;
+		}
+	}
+
+	if (`shot -q -favorite $shot`)
+	{
+		string $unfavorCmd = "unfavorSelectedShots";
+		string $label = (uiRes("m_SequenceEdMenu.kUnfavorShot"));
+		string $annot = 
+			(uiRes("m_SequenceEdMenu.kUnfavorShotAnnot"));
+		if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+		{
+			$unfavorCmd = ("shot -e -favorite false " + $shot);
+			$label = (uiRes("m_SequenceEdMenu.kUnfavorShot2"));
+			$annot = (uiRes("m_SequenceEdMenu.kUnfavorShotAnnot2"));
+		}
+		menuItem -label $label -annotation $annot -command $unfavorCmd;
+	}
+	else
+	{
+		string $favorCmd = "favorSelectedShots";
+		string $label = (uiRes("m_SequenceEdMenu.kFavorShot"));
+		string $annot = (uiRes("m_SequenceEdMenu.kFavorShotAnnot"));
+		if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+		{
+			$favorCmd = ("shot -e -favorite true " + $shot);
+			$label = (uiRes("m_SequenceEdMenu.kFavorShot2"));
+			$annot = (uiRes("m_SequenceEdMenu.kFavorShotAnnot2"));
+		}
+		menuItem -label $label -annotation $annot -command $favorCmd;
+	}
+
+	menuItem -divider true;
+
+	// BUG 347507: Adding a menu item to select the camera the shot refers to --RJ
+	string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kSelectCamera")) -command ("selectShotsCam " + $shot)`;
+
+	$menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kChangeCamera"))
+		-subMenu true
+		ChangeCameraCascade`;
+
+	menuItem -edit -to true -postMenuCommand
+		("buildSequenceEditorCameraMenu " + $editor + " " + $menuItem + " " + $shot + " 0") $menuItem;
+	setParent -menu ..;
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kShotAttrEd" ))
+		-annotation (uiRes("m_SequenceEdMenu.kShotAttrEdAnnot" ))
+		-command ("showEditor " + $shot)
+		-dragMenuCommand ("showEditor " + $shot)
+		shotPropItem;
+
+	// Create an IP, or access the existing one.
+	string $ip = getShotsClip( $shot );
+	if( $ip != "" )
+	{
+		menuItem -label (uiRes("m_SequenceEdMenu.kShotIPAttrEd" ))
+			-annotation (uiRes("m_SequenceEdMenu.kShotIPAttrEdAnnot" ))
+			-command ("showEditor " + $ip)
+			-dragMenuCommand ("showEditor " + $ip)
+			shotIPPropItem;
+
+		float $ipAlpha = `getAttr ( $ip + ".alphaGain" )`;
+		if( $ipAlpha != 0 )
+		{ 
+			string $hideCmd = "showHideSelectedImagePlanes 0";
+			string $label = (uiRes("m_SequenceEdMenu.kHideImagePlanes"));
+			string $annot = 
+				(uiRes("m_SequenceEdMenu.kHideImagePlanesAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$hideCmd = ("showHideImagePlane " + $shot + " 0" );
+				$label = (uiRes("m_SequenceEdMenu.kHideImagePlanes2"));
+				$annot = (uiRes("m_SequenceEdMenu.kHideImagePlanesAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $hideCmd;
+		}
+		else
+		{
+			string $showCmd = "showHideSelectedImagePlanes 1";
+			string $label = (uiRes("m_SequenceEdMenu.kShowImagePlanes"));
+			string $annot = 
+				(uiRes("m_SequenceEdMenu.kShowImagePlanesAnnot"));
+			if ((size($myself) == 0) || ((size($myself) == 1) && (size($sel) == 1)))
+			{
+				$showCmd = ("showHideImagePlane " + $shot + " 1" );
+				$label = (uiRes("m_SequenceEdMenu.kShowImagePlanes2"));
+				$annot = (uiRes("m_SequenceEdMenu.kShowImagePlanesAnnot2"));
+			}
+			menuItem -label $label -annotation $annot -command $showCmd;
+		}	
+
+		// If there's an IP, provide a way to remove it
+		menuItem -label (uiRes("m_SequenceEdMenu.kRemoveImagePlane"))
+			-annotation (uiRes("m_SequenceEdMenu.kRemoveImagePlaneAnnot"))
+			-command ("removeImageplane " + $shot )
+			removeIPItem;
+
+		// Snap the shot to the full extents of any clip
+		menuItem -label (uiRes("m_SequenceEdMenu.kResetShotToMovie"))
+			-annotation (uiRes("m_SequenceEdMenu.kResetShotToMovieAnot"))
+			-command ("snapToMovie " + $shot )
+			snapMovieItem;
+	}
+	else
+	{
+		menuItem -label (uiRes("m_SequenceEdMenu.kImportImage"))
+				 -c ("shotImagePlane " + $shot ) shotIPCreateMenuItem;
+	}
+
+	//menuItem -label (uiRes("m_SequenceEdMenu.kPlayblastOutShot"))
+	//	-annotation (uiRes("m_SequenceEdMenu.kSequencerPlayblastShotAnnot"))
+	//	-command ("performPlayblastShot 0 \"" + $shot + "\"" )
+	//	-dragMenuCommand ("performPlayblastShot 2 \"" + $shot + "\"" )
+	//	playblastShotItem;
+	//menuItem -optionBox true
+	//	-annotation (uiRes("m_SequenceEdMenu.kSequencerPlayblastShotOptAnnot"))
+	//	-command ("performPlayblastShot 1 \"" + $shot + "\"" )
+	//	playblastShotOBItem;
+
+    // Anima Additions
+    menuItem -label "Playblast Shot..."
+        -command ("performPlayblastShot 0 \"" + $shot + "\"" )
+        playblastShotItem;
+
+    menuItem -label "Set Range From Shot"
+        -command ("set_range_from_shot \"" + $shot + "\"")
+        set_range_from_shot_item;
+
+	// Add group specific menu items.
+	if ($group != "")
+	{
+		menuItem -divider true;
+
+		string $menuItem;
+
+		if (isShotActive($shot))
+		{
+			string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kSetActiveShot2"))
+				-subMenu true
+				-annotation (uiRes("m_SequenceEdMenu.kSetActiveShot2Annot"))
+				setActiveShot2Item`;
+
+			menuItem -edit
+				-postMenuCommand ("buildSetActiveShotSubMenu " + $shot + " " + $menuItem)
+				$menuItem;
+				setParent -menu ..;
+		}
+		else
+		{
+			menuItem -label (uiRes("m_SequenceEdMenu.kSetActiveShot3")) 
+				-annotation (uiRes("m_SequenceEdMenu.kSetActiveShot3Annot")) 
+				-command ("setShotActive " + $shot);
+		}
+	}
+}
+
+// This is the menu that pops up on top of audio buttons via RMB
+global proc buildSequenceAudioMenuItems(string $editor, string $menu, string $audio)
+{
+	setParent -menu $menu;
+
+	string $title = (uiRes("m_SequenceEdMenu.kAudioMenuTitle")) + $audio;
+        menuItem -label $title titleItem;
+
+        menuItem -divider true;
+        menuItem -divider true;
+
+	if (`sound -q -mute $audio`)
+	{
+		string $unmuteCmd = "sound -e -mute false " + $audio;
+		menuItem -label (uiRes("m_SequenceEdMenu.kUnmuteAudio")) 
+			-annotation (uiRes("m_SequenceEdMenu.kUnmuteAudioAnnot")) 
+			-command $unmuteCmd;
+	}
+	else
+	{
+		string $muteCmd = "sound -e -mute true " + $audio;
+		menuItem -label (uiRes("m_SequenceEdMenu.kMuteAudio")) 
+			-annotation (uiRes("m_SequenceEdMenu.kMuteAudioAnnot")) 
+			-command $muteCmd;
+	}
+
+	string $shotNode = getLinkedShot($audio);
+	int $modifyable = 0;
+	if ($shotNode != "")
+	{
+		string $unlinkCmd = "shot -e -unlinkAudio " + $shotNode;
+		menuItem -label (uiRes("m_SequenceEdMenu.kUnlinkAudio")) 
+			-annotation (uiRes("m_SequenceEdMenu.kUnlinkAudioAnnot")) 
+			-command $unlinkCmd;
+	}
+	else
+	{
+		string $sel[] = `ls -sl -type "shot"`;
+		string $linkCmd = "";
+		if (size($sel) > 0)
+		{
+			$modifyable = 1;
+			$linkCmd = "shot -e -linkAudio " + $audio + " " + $sel[0];
+		}
+		menuItem -label (uiRes("m_SequenceEdMenu.kLinkAudio")) 
+			-annotation (uiRes("m_SequenceEdMenu.kLinkAudioAnnot")) 
+			-enable ($modifyable)
+			-command $linkCmd;
+	}
+
+	string $selCmd = "";
+	if ($shotNode != "")
+	{
+		$modifyable = 1;
+		$selCmd = "select -add " + $shotNode;
+	}
+	else
+		$modifyable = 0;
+	menuItem -label (uiRes("m_SequenceEdMenu.kSelectAudio")) 
+		-annotation (uiRes("m_SequenceEdMenu.kSelectAudioAnnot")) 
+		-enable ($modifyable)
+		-command $selCmd;
+}
+
+// This is the menu that pops up on top of tracks via RMB
+global proc buildSequenceTrackMenuItems(string $editor, string $menu, string $track)
+{
+	setParent -menu $menu;
+
+	string $title = (uiRes("m_SequenceEdMenu.kTrackMenuTitle")) + $track;
+	menuItem -label $title titleItem;
+
+	menuItem -divider true;
+	menuItem -divider true;
+
+        menuItem -label (uiRes("m_SequenceEdMenu.kPlayblastTrackShots"))
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastTrackShotsAnnot"))
+                -command ("playblastShotsOnTrack 0 " + $track)
+                -dragMenuCommand("playblastShotsOnTrack 2 " + $track)
+                playblastTrackShotsItem;
+        menuItem -optionBox true
+                -annotation (uiRes("m_SequenceEdMenu.kPlayblastTrackShotsOptAnnot"))
+                -command ("playblastShotsOnTrack 1 " + $track )
+                playblastTrackShotsOBItem;
+
+	menuItem -divider true;
+
+	string $trackShots[] = getShotsOnTrack( $track );
+	int $removeEnabled = size( $trackShots) == 0;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kInsertTrack"))
+		-command ("shotTrack -it " + $track )
+                insertTrackItem;
+	menuItem -label (uiRes("m_SequenceEdMenu.kRemoveTrack"))
+		-command ("shotTrack -rt " + $track )
+		-enable $removeEnabled
+                removeTracktem;
+
+	menuItem -divider true;
+
+	int $thisTrack = $track;
+	int $nextTrack = $thisTrack + 1;
+	int $prevTrack = $thisTrack - 1;
+	int $upEnabled = $thisTrack > 1;
+	int $numTracks = `shotTrack -q -numTracks`;
+	int $downEnabled = $thisTrack < $numTracks;
+	menuItem -label (uiRes("m_SequenceEdMenu.kMoveTrackUp"))
+		-command ("shotTrack -st " + $track + " " + $prevTrack )
+		-enable $upEnabled
+                moveTrackUpItem;
+	menuItem -label (uiRes("m_SequenceEdMenu.kMoveTrackDown"))
+		-command ("shotTrack -st " + $track + " " + $nextTrack )
+		-enable $downEnabled
+                moveTrackDownItem;
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_SequenceEdMenu.kEditCompressTrack"))
+			-annotation (uiRes("m_SequenceEdMenu.kEditCompressTrackAnnot"))
+			-command ("shotCompress 1 " + $track);
+}
+
+global proc splitShots( int $mode )
+{
+        string $shotsArray[] = `ls -sl -type "shot"`;
+
+	if ( size( $shotsArray ) == 0 )
+	{
+		error( (uiRes("m_SequenceEdMenu.kSplitNoShots")));
+		return;
+	}
+
+        string $shots = stringArrayToString( $shotsArray, " ");
+        performSplitShot $mode ("\"" + $shots + "\"");
+}
+
+global proc playblastAllShots( int $mode )
+{
+        string $shotsArray[] = `ls -type shot`;
+
+	if ( size( $shotsArray ) == 0 )
+	{
+		error( (uiRes("m_SequenceEdMenu.kPlayblastAllNoShots")));
+		return;
+	}
+
+        string $shots = stringArrayToString( $shotsArray, " ");
+        performPlayblastShot $mode ("\"" + $shots + "\"");
+}
+
+global proc string [] getShotsOnTrack( int $track )
+{
+        string $shotsArray[] = `ls -type shot`;
+        string $trackShots[];
+        // Accumulate the valid shots
+        for( $shot in $shotsArray) {
+                int $shotTrack = `getAttr ($shot + ".track")`;
+                if( $shotTrack == $track )
+                {
+                        $trackShots[size($trackShots)] = $shot;
+                }
+        }
+
+	return $trackShots;
+}
+
+global proc playblastShotsOnTrack( int $mode, int $track )
+{
+        string $trackShots[] = getShotsOnTrack( $track );
+
+	if ( size( $trackShots ) == 0 )
+	{
+		error( (uiRes("m_SequenceEdMenu.kPlayblastTrackNoShots")));
+		return;
+	}
+
+        // Playblast those shots
+        string $shots = stringArrayToString( $trackShots, " ");
+        performPlayblastShot $mode ("\"" + $shots + "\"");
+}
+
+global proc playblastSelectedShots( int $mode )
+{
+        string $shotsArray[] = `ls -sl -type "shot"`;
+	if ( size( $shotsArray ) == 0 )
+	{
+		error( (uiRes("m_SequenceEdMenu.kPlayblastSelectedNoShots")));
+		return;
+	}
+
+        // Playblast those shots
+        string $shots = stringArrayToString( $shotsArray, " ");
+        performPlayblastShot $mode ("\"" + $shots + "\"");
+}
+
+global proc replayblastSelectedShot( int $mode )
+{
+	string $shotsArray[] = `ls -sl -type "shot"`;
+	if ( size( $shotsArray ) == 0 )
+	{
+		error( (uiRes("m_SequenceEdMenu.kReplayblastSelectedNoShot")));
+		return;
+	}
+
+	// Replayblast the shot.
+	performReplayblastShot $mode ("\"" + $shotsArray[0] + "\"");
+}
+
+
+//
+//  Procedure Name:
+//      shotImagePlaneCB
+//
+//  Description:
+//      Callback, from the filebrowser, for importing an image file as an image plane for a shot/camera
+//
+
+global proc int shotImagePlaneCB( string $shot,
+                                 string $filename,
+                                 string $fileType )
+{
+	shot -e -cl $filename $shot;
+
+	return true;
+}
+
+//
+//  Procedure Name:
+//      shotImagePlane
+//
+//  Description:
+//      Imports an image file as an image plane for a shot/camera
+//
+
+global proc shotImagePlane( string $shot )
+{
+	// Set the current working directory to the project's
+	// sourceimage directory
+
+	string $workspace = `workspace -q -fullName`; 	
+
+	setWorkingDirectory $workspace "image" "movie";
+
+	string $cmd = ("shotImagePlaneCB " + $shot );
+
+	string $open = (uiRes("m_SequenceEdMenu.kOpen"));
+	fileBrowser ($cmd, $open, "movie", 0);        
+}
+
+//
+// Disconnect the image plane, and reset the shot's info. Do not remove the movie
+// file from disk
+global proc removeImageplane( string $shot )
+{
+	// First delete the expressions that were built, then the IP itself
+	string $ip = getShotsClip( $shot );
+	if ($ip == "")
+		return;
+
+	// Turn off the opacity, which will trigger the 3d to be drawn.
+	// Sequencer has the feature where alpha=1 turns off the 3d,
+	// and that could result in playblasting an empty scene.
+	setAttr ($ip + ".alphaGain") 0;
+
+	string $fe[] = `listConnections  ( $ip + ".frameExtension")`;
+	if ( size($fe) > 0 )
+	{
+		delete $fe[0];
+	}	
+
+	string $de[] = `listConnections  ( $ip + ".depth")`;
+	if ( size($de) > 0 )
+	{
+		delete $de[0];
+	}	
+
+	// Remove all of the connections from the image plane to any shots and cameras.
+	// There should be only one connection to a shot and camera, but older or
+	// corrupt files may contain more than one.
+	string $c, $msgs[] = `listConnections -plugs true ($ip + ".message")`;
+	for ($c in $msgs)
+	{
+		disconnectAttr ($ip + ".message") $c;
+	}
+
+	string $parent[] = `listRelatives -p $ip`;	
+	if ( size($parent) )
+		delete $parent[0];
+
+	setAttr ( $shot + ".clipScale" ) 1;
+	setAttr ( $shot + ".clipDuration" ) 0;
+	setAttr ( $shot + ".clipZeroOffset") 0;
+	setAttr ( $shot + ".clipPreHold") 0;
+	setAttr ( $shot + ".clipPostHold") 0;
+}
+
+
+//
+//  Snap the shot's extents to match the movie
+// 
+global proc snapToMovie( string $shot )
+{
+	$offset = `getAttr ( $shot + ".czo" )`;
+	$start = `getAttr ( $shot + ".sf")`;
+	$scale = `getAttr ( $shot + ".scale")`;
+	$newStart= $start-($offset/$scale);
+	$seqStart= `getAttr ($shot + ".ssf")`;
+	$newSeqStart = $seqStart - $offset;
+	$duration = `getAttr ( $shot + ".clipDuration")`;
+	$clipScale = `getAttr ( $shot + ".clipScale")`;
+	$frames = $duration / $clipScale;
+	$end = $newStart + $frames;
+
+	// Adjust the start
+	setAttr ( $shot + ".sf") $newStart;
+	setAttr ( $shot + ".ssf") $newSeqStart;
+	setAttr ( $shot + ".czo") 0;
+
+	// Adjust the end
+	setAttr ( $shot + ".ef" ) $end;
+}
+
+global proc showHideImagePlane( string $shot, int $state )
+{
+	string $ip = getShotsClip( $shot );
+	if ($ip == "")
+		return;
+
+	if ( $state == 1 )
+	{
+		// show
+		setAttr ($ip + ".alphaGain") 1; 	
+	}
+	else
+	{
+		// hide
+		setAttr ($ip + ".alphaGain") 0; 
+	}
+}
+
+global proc showHideSelectedImagePlanes( int $state )
+{
+	string $sel[] = `ls -sl -type "shot"`;
+	string $shot;
+	for ($shot in $sel)
+		showHideImagePlane($shot, $state);
+}
+
+global proc showHideAllImagePlanes( int $state )
+{
+	string $sh, $shots[] = `ls -type shot`;
+	for ($sh in $shots)
+		showHideImagePlane($sh, $state);
+}
+
+global proc switchShotCamera (string $shot, string $camera)
+{
+	shot -e -currentCamera $camera $shot;
+}
+
+
+global proc buildSequenceEditorCameraMenu (string $editor, string $parent,
+										   string $shot, int $startItem)
+{
+	setParent -menu $parent;
+	if (`menu -query -numberOfItems $parent` != 0) return;
+
+	string $otherCameras[] = getCameraChoicesForShotsExceptCurrent( $shot );
+
+	int $i, $itemNum = 0;
+	for ($i=$startItem; $i<size($otherCameras); $i++)
+	{
+		menuItem -label $otherCameras[$i] -command ("switchShotCamera " + $shot + " " + $otherCameras[$i]);
+		$itemNum++;
+		if ($itemNum == 40)
+			break;
+	}
+	
+	if ($i < size($otherCameras))
+	{
+    	menuItem -divider true;
+		string $menuItem = `menuItem -label (uiRes("m_SequenceEdMenu.kChangeCameraMore"))
+							-subMenu true`;
+		menuItem -e -pmc ("buildSequenceEditorCameraMenu " + $editor + " " + $menuItem + 
+				  " " + $shot + " " + ($startItem + 40)) $menuItem;
+		setParent -menu ..;
+	}
+}
+
+global proc buildSequenceEditorMenuItems(string $editor, string $menu, string $collectionName)
+{
+	if (`popupMenu -edit -exists $menu`) 
+	{
+		// check if  mouse over a context-sensitive object
+		//
+		string $menuContext[] = `clipEditor -query -menuContext $editor`;	
+
+		// yes, it is. check what type of object it is
+		//
+		popupMenu -edit -deleteAllItems $menu;
+
+		switch ($menuContext[0]) {
+		case "timeSlider":
+			buildSequenceTimePopupMenuItems ($editor, $menu, $collectionName);
+			break;
+		case "nothing":
+			buildSequenceMainPopupMenuItems ($editor, $menu, $collectionName);
+			break;
+		case "clip":
+			buildSequenceShotMenuItems ($editor, $menu, $menuContext[1]);
+			break;
+		case "audio":
+			buildSequenceAudioMenuItems ($editor, $menu, $menuContext[1]);
+			break;
+		case "track":
+			buildSequenceTrackMenuItems ($editor, $menu, $menuContext[1]);
+			break;
+		}
+	}
+}
+
+global proc SequenceEdMenu(string $editor) 
+{
+	// Find the name of the control that the menu will be attached to
+	//
+	string $parent = `clipEditor -query -control $editor`;
+	string $popupMenuName = ($editor + "PopupMenu");
+	string $collectionNameMenu = "Menu";
+	string $collectionNamePopup = "Popup";
+
+	// Create the popup menu
+	//	
+	if (!`popupMenu -exists $popupMenuName`)
+	{
+		string $fullMenuName = `popupMenu -parent $parent -allowOptionBoxes true $popupMenuName`;
+		popupMenu -edit
+			-parent $parent 
+			-postMenuCommand ("buildSequenceEditorMenuItems " + $editor + " " + $fullMenuName + " " + 
+				  $collectionNamePopup)
+			$popupMenuName;	
+	}
+	
+	buildSequenceEditorMenu $editor "SequenceEditorMenu" $collectionNameMenu;
+
+
+	// Set up some example hotkeys
+	//$cmd = `nameCommand -annotation _L10N(kTrimKey,"sequencerTrimShotByOne") -command "sequencerTrimShotByOne"`;
+	//hotkey -k "/" -name $cmd;
+	//hotkeyCheck -k "/";
+
+	//$cmd = `nameCommand  -annotation _L10N(kShiftRightKey,"sequencerShiftShotByOneRight") -command "sequencerShiftShotByOne 1"`;
+	//hotkey -k "+" -name $cmd;
+	//hotkeyCheck -k "+";
+
+	//$cmd = `nameCommand -annotation _L10N(kShiftLeftKey,"sequencerShiftShotByOneLeft") -command "sequencerShiftShotByOne -1"`;
+	//hotkey -k "-" -name $cmd;
+	//hotkeyCheck -k "-";
+
+	//$cmd = `nameCommand -annotation _L10N( kTrimAfterKey, "Trim After") -command "sequencerTrim 0"`;
+	//hotkey -k "]"   -name  $cmd;
+	//hotkeyCheck -k "]";
+
+	//$cmd = `nameCommand -annotation _L10N( kTrimBeforeKey, "Trim Before") -command "sequencerTrim 1"`;
+	//hotkey -k "[" -name $cmd;
+	//hotkeyCheck -k "[";
+
+	//$cmd = `nameCommand -annotation _L10N( kSnapKey, "Snap") -command "sequencerSnap"`;
+	//hotkey -k "F12" -name $cmd;
+	//hotkeyCheck -k "F12";
+}
+
+global proc shotTrim (int $which, string $selected[])
+//
+// Trim the selected clips in the editor.
+// If $which == 0, trim before. Else, trim after.
+//
+{
+	int $nclips = size($selected);
+
+	string $selShots[];
+	if ($nclips == 0) {
+                $selShots = getSelectedShots();
+                if (0 == size($selShots)) {
+                        error (uiRes("m_SequenceEdMenu.kSelShotToTrim"));
+                }
+        } 
+	else 
+	{
+		for ($shot in $selected) {
+			if (nodeType($shot) == "shot") {
+				$selShots[size($selShots)] = $shot;
+			}
+		}
+	}
+
+	float $time = getSequenceTime();
+	for( $shot in $selShots) {
+		if ($which == 0) {
+			shotTrimBefore($shot,$time);
+		} else {
+			shotTrimAfter($shot,$time);			
+		}
+	}	
+}
+
+//
+//  0: Clear range
+//  1: Set range to selected
+//  2: Set range to current view
+//
+global proc setPlaybackRange( int $mode, string $editor )
+{
+	if( $mode == 0 )
+	{
+		setAttr ( getSequenceManager() + ".rangeEnabled") 0;
+		setAttr ( getSequenceManager() + ".rangeMin") 0;
+		setAttr ( getSequenceManager() + ".rangeMax") 0;
+	}
+	else if( $mode == 1 )
+	{
+		string $smin = getSelectedShotMin();
+		string $smax = getSelectedShotMax();
+
+		if( $smin == "" || $smax == "" )
+		{
+			error( (uiRes("m_SequenceEdMenu.kSetRangeNoShots")));
+			return;
+		}
+	
+		float $min = `getAttr ( $smin + ".sequenceStartFrame" )`;
+		float $max = `getAttr ( $smax + ".sequenceEndFrame" )`;
+
+		setAttr ( getSequenceManager() + ".rangeEnabled") 1;
+		setAttr ( getSequenceManager() + ".rangeMin") $min;
+		setAttr ( getSequenceManager() + ".rangeMax") $max;
+	}
+	else if( $mode == 2 )
+	{
+		float $limits[2] = `clipEditor -q -fr $editor`;
+	
+		// Use whole frames, it's neater	
+		float $min = trunc($limits[0]);
+		float $max = trunc($limits[1]);
+
+		setAttr ( getSequenceManager() + ".rangeEnabled") 1;
+		setAttr ( getSequenceManager() + ".rangeMin") $min;
+		setAttr ( getSequenceManager() + ".rangeMax") $max;
+	}
+}
+
+global proc copyShots()
+{
+	shot -copy;
+}
+
+global proc pasteShots()
+{
+	shot -paste;
+}
+
+global proc int copyShotsAvailable()
+{
+	string $sel[] = `ls -sl -type "shot"`;
+	return (size($sel) > 0);
+}
+
+global proc int pasteShotsAvailable()
+{
+	string $sh[] = `shot -q -copy`;
+	return (size($sh) > 0);
+}
+
+global proc buildSetActiveShotSubMenu( string $shot, string $parent )
+// Description:
+//		Builds the pulldown menu for the Set Active Shot menu item.
+// This procedure is shared by both the Edit> as well as RMB> menus.
+//
+{
+	setParent -menu $parent;
+
+	// We rebuild the menu each time it's posted.
+	//
+	menu -e -deleteAllItems $parent;
+
+	// If called from the Edit> menu, get the selected group,
+	// otherwise get the group we RMB over.
+	//
+	string $shots[] = `ls -sl -type shot`;
+	string $group = "";
+	int	$i, $j;
+	if ( "" == $shot ) {
+		// Edit menu: If a set is active, assume it to be the group.
+		// Otherwise use the group containing the first shot selected.
+		//
+		string $sets[] = `ls -sl -type objectSet`;
+		if ( size( $sets ) > 0 ) {
+			$group = $sets[0];
+		} else {
+			if ( size( $shots ) > 0 ) {
+				$sets = `ls -type objectSet`;
+				for ( $i = 0; $i < size( $sets ); $i++ ) {
+					string $set = $sets[$i];
+					if ( `attributeExists "shotGroup" $set`
+							&& `sets -im $set $shots[0]` ) {
+						$group = $set;
+						break;
+					}
+				}
+			}
+		}
+	} else {
+		// RMB menu: Build the pulldown based on $shot. Find the group
+		// the shot belongs to.
+		//
+		string $sets[] = `ls -type objectSet`;
+		for ( $i = 0; $i < size( $sets ); $i++ ) {
+			string $set = $sets[$i];
+			if ( `attributeExists "shotGroup" $set`
+					&& `sets -im $set $shot` ) {
+				$group = $set;
+				break;
+			}
+		}
+	}
+
+	// If a group to use was found list the shots it contains in the menu.
+	// Setting the active shot involves setting the .shotGroup attribute
+	// on the group node, deselecting in case a shot that was selected now
+	// becomes invisible, then forcing a redraw.
+	//
+	if ( $group != "" ) {
+		string $members[] = `sets -q $group`;
+		$members = `sort $members`;	// The .shotGroup index always indexes alphabetically
+		string $activeShot = getActiveShot($group);
+		for ( $i = 0; $i < size( $members ); $i++ ) {
+			int $selected = false;
+			if ($members[$i] == $activeShot)
+				$selected = true;
+			string $lbl = `shot -q -shotName $members[$i]`;
+			menuItem -label $lbl -cb $selected
+					-command ("changeActiveShot(\""+$group+"\","+$i+");");
+		}
+	}
+}
+	
+global proc buildSelectShotSubMenu( string $shot, string $parent )
+// Description:
+//		Builds the pulldown menu for the Select Shot menu item.
+// This procedure is shared by both the Edit> as well as RMB> menus.
+//
+{
+	setParent -menu $parent;
+
+	// We rebuild the menu each time it's posted.
+	//
+	menu -e -deleteAllItems $parent;
+
+	// If called from the Edit> menu, get the selected group,
+	// otherwise get the group we RMB over.
+	//
+	string $shots[] = `ls -sl -type shot`;
+	string $group = "";
+	int	$i, $j;
+	if ( "" == $shot ) {
+		// Edit> menu: If a set is active, assume it to be the group.
+		// Otherwise use the group containing the first shot selected.
+		//
+		string $sets[] = `ls -sl -type objectSet`;
+		if ( size( $sets ) > 0 ) {
+			$group = $sets[0];
+		} else {
+			if ( size( $shots ) > 0 ) {
+				$sets = `ls -type objectSet`;
+				for ( $i = 0; $i < size( $sets ); $i++ ) {
+					string $set = $sets[$i];
+					if ( `attributeExists "shotGroup" $set`
+							&& `sets -im $set $shots[0]` ) {
+						$group = $set;
+						break;
+					}
+				}
+			}
+		}
+	} else {
+		// RMB menu: Build the pulldown based on $shot. Find the group
+		// the shot belongs to.
+		//
+		$group = getShotsGroup( $shot );
+	}
+
+	// If a group to use was found list the shots it contains in the menu.
+	// A checkbox next to each entry is checked if the shot is currently
+	// selected.
+	//
+	if ( $group != "" ) {
+		string $members[] = `sets -q $group`;
+		$members = `sort $members`;	// Keep it alphabetical to match the Set Active Shot menu
+		for ( $i = 0; $i < size( $members ); $i++ ) {
+			int $selected = false;
+			for ( $j = 0; $j < size( $shots ); $j++ ) {
+				if ( $members[$i] == $shots[$j] ) {
+					$selected = true;
+					break;
+				}
+			}
+			string $lbl = `shot -q -shotName $members[$i]`;
+			menuItem -label $lbl -cb $selected
+					-command ("select -tgl " + $lbl + ";redrawSequencer;");
+		}
+	}
+}
