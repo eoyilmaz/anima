@@ -1265,6 +1265,10 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
         pm.modelEditor(active_panel, e=1, dynamics=True)
+        pm.modelEditor(active_panel, e=1, nParticles=True)
+        pm.modelEditor(active_panel, e=1, nCloths=True)
+        pm.modelEditor(active_panel, e=1, fluids=True)
+        pm.modelEditor(active_panel, e=1, nParticles=True)
         pm.modelEditor(active_panel, e=1, planes=True)
 
         # turn all hud displays off
