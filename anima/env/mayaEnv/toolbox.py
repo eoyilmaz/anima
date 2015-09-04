@@ -1000,6 +1000,73 @@ def UI():
                       ann="Convert selected stand ins to polywire",
                       bgc=color.color)
 
+            color.change()
+            with pm.rowLayout(nc=3, adj=3, bgc=color.color):
+                min_range_field = pm.floatField(
+                    minValue=1000,
+                    maxValue=50000,
+                    step=1,
+                    pre=0,
+                    value=3500,
+                    w=50,
+                    bgc=color.color,
+                    ann='Min Value'
+                )
+                max_range_field = pm.floatField(
+                    minValue=1000,
+                    maxValue=50000,
+                    step=1,
+                    pre=0,
+                    value=6500,
+                    w=50,
+                    bgc=color.color,
+                    ann='Max Value'
+                )
+                pm.button(
+                    ann="Randomize Color Temperature",
+                    l="Randomize Color Temp.",
+                    w=70,
+                    c=RepeatedCallback(
+                        Render.randomize_light_color_temp,
+                        min_range_field,
+                        max_range_field
+                    ),
+                    bgc=color.color
+                )
+
+            with pm.rowLayout(nc=3, adj=3, bgc=color.color):
+                min_range_field = pm.floatField(
+                    minValue=0,
+                    maxValue=200,
+                    step=0.1,
+                    pre=1,
+                    value=10,
+                    w=50,
+                    bgc=color.color,
+                    ann='Min Value'
+                )
+                max_range_field = pm.floatField(
+                    minValue=0,
+                    maxValue=200,
+                    step=0.1,
+                    pre=1,
+                    value=20,
+                    w=50,
+                    bgc=color.color,
+                    ann='Max Value'
+                )
+                pm.button(
+                    ann="Randomize Exposure",
+                    l="Randomize Exposure",
+                    w=70,
+                    c=RepeatedCallback(
+                        Render.randomize_light_intensity,
+                        min_range_field,
+                        max_range_field
+                    ),
+                    bgc=color.color
+                )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -1120,9 +1187,11 @@ def UI():
                 )
                 pm.button(ann="Exports maya camera to nuke",
                           l="cam2chan", w=70,
-                          c=RepeatedCallback(Animation.cam_2_chan,
-                                             startButtonField,
-                                             endButtonField),
+                          c=RepeatedCallback(
+                              Animation.cam_2_chan,
+                              startButtonField,
+                              endButtonField
+                          ),
                           bgc=color.color)
 
             pm.text(l='===== Component Animation =====')
@@ -3719,6 +3788,61 @@ class Render(object):
             shader.attr('sssRadius').set([1, 1, 1])
 
         pm.select(eyes)
+
+    @classmethod
+    def randomize_attr(cls, nodes, attr, min, max, pre=0.1):
+        """Randomizes the given attributes of the given nodes
+
+        :param list nodes:
+        :param str attr:
+        :param float, int min:
+        :param float, int max:
+        :return:
+        """
+        import random
+        import math
+        rand = random.random
+        floor = math.floor
+        for node in nodes:
+            r = rand() * float(max - min) + float(min)
+            r = floor(r / pre) * pre
+            node.setAttr(attr, r)
+
+    @classmethod
+    def randomize_light_color_temp(cls, min_field, max_field):
+        """Randomizes the color temperature of selected lights
+
+        :param min:
+        :param max:
+        :return:
+        """
+        min = pm.floatField(min_field, q=1, v=1)
+        max = pm.floatField(max_field, q=1, v=1)
+        cls.randomize_attr(
+            [node.getShape() for node in pm.ls(sl=1)],
+            'aiColorTemperature',
+            min,
+            max,
+            1
+        )
+
+    @classmethod
+    def randomize_light_intensity(cls, min_field, max_field):
+        """Randomizes the intensities of selected lights
+
+        :param min:
+        :param max:
+        :return:
+        """
+        min = pm.floatField(min_field, q=1, v=1)
+        max = pm.floatField(max_field, q=1, v=1)
+        cls.randomize_attr(
+            [node.getShape() for node in pm.ls(sl=1)],
+            'aiExposure',
+            min,
+            max,
+            0.1
+        )
 
     @classmethod
     def setup_outer_eye_render_attributes(cls):
