@@ -287,6 +287,91 @@ def local_to_utc(local_dt):
     return local_dt - (utc_to_local(local_dt) - local_dt)
 
 
+def kelvin_to_rgb(kelvin):
+    """converts the given kelvin to rgb color
+
+    :param float kelvin:
+    :return:
+    """
+    if kelvin < 1000:
+        kelvin = 1000
+    elif kelvin > 29800:
+        kelvin = 29800
+
+    # LUT data coming from http://www.vendian.org/mncharity/dir3/blackbody
+    lut = {
+        1000: 0xff3800, 1200: 0xff5300, 1400: 0xff6500, 1600: 0xff7300,
+        1800: 0xff7e00, 2000: 0xff8912, 2200: 0xff932c, 2400: 0xff9d3f,
+        2600: 0xffa54f, 2800: 0xffad5e, 3000: 0xffb46b, 3200: 0xffbb78,
+        3400: 0xffc184, 3600: 0xffc78f, 3800: 0xffcc99, 4000: 0xffd1a3,
+        4200: 0xffd5ad, 4400: 0xffd9b6, 4600: 0xffddbe, 4800: 0xffe1c6,
+        5000: 0xffe4ce, 5200: 0xffe8d5, 5400: 0xffebdc, 5600: 0xffeee3,
+        5800: 0xfff0e9, 6000: 0xfff3ef, 6200: 0xfff5f5, 6400: 0xfff8fb,
+        6600: 0xfef9ff, 6800: 0xf9f6ff, 7000: 0xf5f3ff, 7200: 0xf0f1ff,
+        7400: 0xedefff, 7600: 0xe9edff, 7800: 0xe6ebff, 8000: 0xe3e9ff,
+        8200: 0xe0e7ff, 8400: 0xdde6ff, 8600: 0xdae4ff, 8800: 0xd8e3ff,
+        9000: 0xd6e1ff, 9200: 0xd3e0ff, 9400: 0xd1dfff, 9600: 0xcfddff,
+        9800: 0xcedcff, 10000: 0xccdbff, 10200: 0xcadaff, 10400: 0xc9d9ff,
+        10600: 0xc7d8ff, 10800: 0xc6d8ff, 11000: 0xc4d7ff, 11200: 0xc3d6ff,
+        11400: 0xc2d5ff, 11600: 0xc1d4ff, 11800: 0xc0d4ff, 12000: 0xbfd3ff,
+        12200: 0xbed2ff, 12400: 0xbdd2ff, 12600: 0xbcd1ff, 12800: 0xbbd1ff,
+        13000: 0xbad0ff, 13200: 0xb9d0ff, 13400: 0xb8cfff, 13600: 0xb7cfff,
+        13800: 0xb7ceff, 14000: 0xb6ceff, 14200: 0xb5cdff, 14400: 0xb5cdff,
+        14600: 0xb4ccff, 14800: 0xb3ccff, 15000: 0xb3ccff, 15200: 0xb2cbff,
+        15400: 0xb2cbff, 15600: 0xb1caff, 15800: 0xb1caff, 16000: 0xb0caff,
+        16200: 0xafc9ff, 16400: 0xafc9ff, 16600: 0xafc9ff, 16800: 0xaec9ff,
+        17000: 0xaec8ff, 17200: 0xadc8ff, 17400: 0xadc8ff, 17600: 0xacc7ff,
+        17800: 0xacc7ff, 18000: 0xacc7ff, 18200: 0xabc7ff, 18400: 0xabc6ff,
+        18600: 0xaac6ff, 18800: 0xaac6ff, 19000: 0xaac6ff, 19200: 0xa9c6ff,
+        19400: 0xa9c5ff, 19600: 0xa9c5ff, 19800: 0xa9c5ff, 20000: 0xa8c5ff,
+        20200: 0xa8c5ff, 20400: 0xa8c4ff, 20600: 0xa7c4ff, 20800: 0xa7c4ff,
+        21000: 0xa7c4ff, 21200: 0xa7c4ff, 21400: 0xa6c3ff, 21600: 0xa6c3ff,
+        21800: 0xa6c3ff, 22000: 0xa6c3ff, 22200: 0xa5c3ff, 22400: 0xa5c3ff,
+        22600: 0xa5c3ff, 22800: 0xa5c2ff, 23000: 0xa4c2ff, 23200: 0xa4c2ff,
+        23400: 0xa4c2ff, 23600: 0xa4c2ff, 23800: 0xa4c2ff, 24000: 0xa3c2ff,
+        24200: 0xa3c1ff, 24400: 0xa3c1ff, 24600: 0xa3c1ff, 24800: 0xa3c1ff,
+        25000: 0xa3c1ff, 25200: 0xa2c1ff, 25400: 0xa2c1ff, 25600: 0xa2c1ff,
+        25800: 0xa2c1ff, 26000: 0xa2c0ff, 26200: 0xa2c0ff, 26400: 0xa1c0ff,
+        26600: 0xa1c0ff, 26800: 0xa1c0ff, 27000: 0xa1c0ff, 27200: 0xa1c0ff,
+        27400: 0xa1c0ff, 27600: 0xa1c0ff, 27800: 0xa0c0ff, 28000: 0xa0bfff,
+        28200: 0xa0bfff, 28400: 0xa0bfff, 28600: 0xa0bfff, 28800: 0xa0bfff,
+        29000: 0xa0bfff, 29200: 0xa0bfff, 29400: 0x9fbfff, 29600: 0x9fbfff,
+        29800: 0x9fbfff,
+    }
+    import math
+
+    # get the lower and upper kelvin values
+    fmin = int(math.floor(float(kelvin) / 200.0) * 200)
+    fmax = fmin + 200
+
+    # get the RGB values from the lut
+    hex_min = lut[fmin]
+    hex_max = lut[fmax]
+
+    rgb_min = [
+        float(int(bin(hex_min)[2:10], 2)) / 255.0,
+        float(int(bin(hex_min)[10:18], 2)) / 255.0,
+        float(int(bin(hex_min)[18:26], 2)) / 255.0,
+    ]
+    rgb_max = [
+        float(int(bin(hex_max)[2:10], 2)) / 255.0,
+        float(int(bin(hex_max)[10:18], 2)) / 255.0,
+        float(int(bin(hex_max)[18:26], 2)) / 255.0,
+    ]
+
+    # interpolate the RGB values from the list
+    residual = kelvin - fmin
+    ratio = residual / 200.0
+
+    rgb = [
+        (rgb_max[0] - rgb_min[0]) * ratio + rgb_min[0],
+        (rgb_max[1] - rgb_min[1]) * ratio + rgb_min[1],
+        (rgb_max[2] - rgb_min[2]) * ratio + rgb_min[2],
+    ]
+
+    return rgb
+
+
 class MediaManager(object):
     """Manages media files.
 
