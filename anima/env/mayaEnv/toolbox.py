@@ -1639,6 +1639,7 @@ class General(object):
         [
             obj.rename(obj.name().split('|')[-1].replace(rmv_str, ''))
             for obj in pm.ls(sl=1)
+            if rmv_str in obj.name()
         ]
 
     @classmethod
