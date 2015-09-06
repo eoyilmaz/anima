@@ -1637,7 +1637,7 @@ class General(object):
         """
         rmv_str = "pasted__"
         [
-            obj.rename(obj.name()[len(rmv_str):])
+            obj.rename(obj.name().replace(rmv_str, ''))
             for obj in pm.ls(sl=1)
             if obj.name().startswith(rmv_str)
         ]
