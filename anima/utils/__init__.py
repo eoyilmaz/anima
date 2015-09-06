@@ -287,7 +287,7 @@ def local_to_utc(local_dt):
     return local_dt - (utc_to_local(local_dt) - local_dt)
 
 
-def kelvin_to_rgb(kelvin):
+def kelvin_to_rgb2(kelvin):
     """converts the given kelvin to rgb color
 
     :param float kelvin:
@@ -370,6 +370,46 @@ def kelvin_to_rgb(kelvin):
     ]
 
     return rgb
+
+
+def kelvin_to_rgb(kelvin):
+    """converts the given kelvin to rgb color
+
+    :param kelvin:
+    :return:
+    """
+    # algorithm from:
+    # http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
+
+    import math
+    kelvin /= 100.0
+
+    # red and green
+    if kelvin <= 66:
+        red = 255
+        green = kelvin
+        green = 99.4708025861 * math.log(green, math.e) - 161.1195681661
+        if kelvin <= 19:
+            blue = 0
+        else:
+            blue = kelvin - 10
+            blue = 138.5177312231 * math.log(blue, math.e) - 305.0447927307
+    else:
+        blue = 255
+        red = kelvin - 60
+        red = 329.698727446 * (math.pow(red, -0.1332047592))
+        green = kelvin - 60
+        green = 288.1221695283 * (math.pow(green, -0.0755148492))
+
+    red = min(max(red, 0), 255)
+    green = min(max(green, 0), 255)
+    blue = min(max(blue, 0), 255)
+
+    return [
+        float(red) / 255.0,
+        float(green) / 255.0,
+        float(blue) / 255.0
+    ]
 
 
 class MediaManager(object):
