@@ -403,7 +403,6 @@ def UI():
                 bgc=color.color
             )
 
-
         # ----- MODELING ------
         modeling_columnLayout = pm.columnLayout(
             'modeling_columnLayout',
@@ -476,6 +475,73 @@ def UI():
                 ann="Selects faces with zero uv area",
                 bgc=color.color
             )
+
+            color.change()
+            with pm.rowLayout(nc=8, rat=(1, "both", 0), adj=1):
+                pm.text('set_pivot_text', l='Set Pivot', bgc=color.color)
+                pm.button(
+                    'center_button',
+                    l="C",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        0
+                    ),
+                    bgc=(0.8, 0.8, 0.8)
+                )
+                pm.button(
+                    'minus_X_button',
+                    l="-X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        1
+                    ),
+                    bgc=(1.000, 0.500, 0.666)
+                )
+                pm.button(
+                    'plus_X_button',
+                    l="+X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        2
+                    ),
+                    bgc=(1.000, 0.500, 0.666)
+                )
+                pm.button(
+                    'minus_Y_button',
+                    l="-Y",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        3
+                    ),
+                    bgc=(0.666, 1.000, 0.500)
+                )
+                pm.button(
+                    'plus_Y_button',
+                    l="+Y",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        4
+                    ),
+                    bgc=(0.666, 1.000, 0.500)
+                )
+                pm.button(
+                    'minus_Z_button',
+                    l="-X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        5
+                    ),
+                    bgc=(0.500, 0.666, 1.000)
+                )
+                pm.button(
+                    'plus_Z_button',
+                    l="+X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        6
+                    ),
+                    bgc=(0.500, 0.666, 1.000)
+                )
 
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
@@ -1237,6 +1303,15 @@ def UI():
                 l='Range From Shot',
                 c=RepeatedCallback(Animation.set_range_from_shot),
                 ann='Sets the playback range from the shot node in the scene',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'delete_base_anim_layer_button',
+                l='Delete Base Anim Layer',
+                c=RepeatedCallback(Animation.delete_base_anim_layer),
+                ann=Animation.delete_base_anim_layer.__doc__,
                 bgc=color.color
             )
 
@@ -2621,6 +2696,68 @@ class Modeling(object):
             pm.warning('No Zero UV area polys found!!!')
         else:
             pm.select(faces_with_zero_uv_area)
+
+    @classmethod
+    def set_pivot(cls, axis=0):
+        """moves the object pivot to desired axis
+
+        There are 7 options to move the pivot point to:
+            c, -x, +x, -y, +y, -z, +z
+            0,  1,  2,  3,  4,  5,  6
+
+        :param int axis: One of [0-6] showing the desired axis to get the
+          pivot point to
+        """
+        from maya.OpenMaya import MBoundingBox, MPoint
+        if not 0 <= axis <= 6:
+            return
+
+        for node in pm.ls(sl=1):
+            # check if the node has children
+            children = pm.ls(sl=1)[0].getChildren(ad=1, type='transform')
+            # get the bounding box points
+            # bbox = node.boundingBox()
+            bbox = pm.xform(node, q=1, ws=1, boundingBox=1)
+            bbox = MBoundingBox(
+                MPoint(bbox[0], bbox[1], bbox[2]),
+                MPoint(bbox[3], bbox[4], bbox[5])
+            )
+
+            if len(children):
+                # get all the bounding boxes
+                for child in children:
+                    if child.getShape() is not None:
+                        # child_bbox = child.boundingBox()
+                        child_bbox = pm.xform(child, q=1, ws=1, boundingBox=1)
+                        child_bbox = MBoundingBox(
+                            MPoint(child_bbox[0], child_bbox[1], child_bbox[2]),
+                            MPoint(child_bbox[3], child_bbox[4], child_bbox[5])
+                        )
+                        bbox.expand(child_bbox.min())
+                        bbox.expand(child_bbox.max())
+
+            piv = bbox.center()
+            if axis == 1:
+                # -x
+                piv.x = bbox.min().x
+            elif axis == 2:
+                # +x
+                piv.x = bbox.max().x
+            elif axis == 3:
+                # -y
+                piv.y = bbox.min().y
+            elif axis == 4:
+                # +y
+                piv.y = bbox.max().y
+            elif axis == 5:
+                # -z
+                piv.z = bbox.min().z
+            elif axis == 6:
+                # +z
+                piv.z = bbox.max().z
+
+            pm.xform(node, ws=1, rp=piv)
+            pm.xform(node, ws=1, sp=piv)
 
 
 class Rigging(object):
@@ -4136,6 +4273,14 @@ class Render(object):
 class Animation(object):
     """animation tools
     """
+
+    @classmethod
+    def delete_base_anim_layer(cls):
+        """deletes the base anim layer
+        """
+        base_layer = pm.PyNode('BaseAnimation')
+        base_layer.unlock()
+        pm.delete(base_layer)
 
     @classmethod
     def oySmoothComponentAnimation(cls, ui_item):

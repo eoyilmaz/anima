@@ -154,6 +154,11 @@ polymesh
  opaque on
  id 683108022
 }"""
+    #  uvidxs %(vertex_count)s 1 UINT
+    #%(uv_ids)s
+    # uvlist %(vertex_count)s 1 b85POINT2
+    #%(vertex_uvs)s
+
     skip_normals = False
     skip_uvs = False
 
@@ -166,10 +171,28 @@ polymesh
     number_of_points_per_primitive = []
     vertex_ids = []
     # vertex_normals = []
+    # vertex_uvs = []
+    # uv_ids = []
+    # combined_uv_ids = []
+    ## uv_ids = split_data(' '.join(map(str, range(vertex_count))), 500)
+    # j = 0
+    # for i in range(vertex_count):
+    #     uv_ids.append(str(i))
+    #     j += 1
+    #     if j > 500:
+    #         j = 0
+    #         combined_uv_ids.append(' '.join(uv_ids))
+    #         uv_ids = []
+
+    ## join for a last time
+    # if uv_ids:
+    #     combined_uv_ids.append(' '.join(uv_ids))
+    #
+    # uv_ids = combined_uv_ids
 
     # just for the first vertex try to read the uv to determine if we should
     # skip the uvs or not
-    skip_uvs = True
+    # skip_uvs = True
 
     i = 0
     j = 0
@@ -189,6 +212,9 @@ polymesh
             point_id = point.number()
             vertex_ids.append(`point_id`)
             # vertex_normals.extend(point.floatListAttribValue('N'))
+            # vertex_uv = vertex.floatListAttribValue('uv')
+            # vertex_uvs.append(vertex_uv[0])
+            # vertex_uvs.append(vertex_uv[1])
             j += 1
             if j > 500:
                 j = 0
@@ -206,6 +232,15 @@ polymesh
 
     # if vertex_normals:
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
+
+    ## encode uvs
+    # encoded_vertex_uvs = '%s' % base85.arnold_b85_encode(
+    #     struct.pack(
+    #         '<%sd' % len(vertex_uvs),
+    #         *vertex_uvs
+    #     )
+    # )
+    # splitted_vertex_uvs = split_data(encoded_vertex_uvs, 500)
 
     point_positions = geo.pointFloatAttribValuesAsString('P')
 
@@ -330,10 +365,10 @@ polymesh
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
+        # 'uv_ids': uv_ids,
+        # 'vertex_uvs': splitted_vertex_uvs,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
-        #'uv_ids': uv_ids,
-        #'uv_positions': uv_positions
     }
 
     return data
