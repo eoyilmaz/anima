@@ -1396,7 +1396,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         start = time.time()
         for key in pm.workspace.fileRules:
-            rule_path = pm.workspace.fileRules[key]
+            try:
+                rule_path = pm.workspace.fileRules[key]
+            except KeyError:
+                continue
             full_path = os.path.join(path, rule_path).replace('\\', '/')
             # logger.debug(full_path)
             try:
