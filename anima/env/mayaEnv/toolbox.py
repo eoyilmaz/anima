@@ -1133,6 +1133,16 @@ def UI():
                     bgc=color.color
                 )
 
+            color.change()
+            pm.button(
+                ann="Create Reflection Curve",
+                l="Reflection Curve",
+                c=RepeatedCallback(
+                    Render.generate_reflection_curve
+                ),
+                bgc=color.color
+            )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -4268,6 +4278,30 @@ class Render(object):
         dad = pm.PyNode('defaultArnoldDriver')
         pm.editRenderLayerAdjustment(dad.attr('autocrop'))
         dad.setAttr('autocrop', 0)
+
+    @classmethod
+    def generate_reflection_curve(self):
+        """Generates a curve which helps creating specular at the desired point
+        """
+        from maya.OpenMaya import MVector, MPoint
+        from anima.env.mayaEnv import auxiliary
+
+        vtx = pm.ls(sl=1)[0]
+        normal = vtx.getNormal()
+        panel = auxiliary.Playblaster.get_active_panel()
+        camera = pm.PyNode(pm.modelPanel(panel, q=1, cam=1))
+        camera_axis = MVector(0, 0, -1) * camera.worldMatrix.get()
+
+        refl = camera_axis - 2 * normal.dot(camera_axis) * normal
+
+        # create a new curve
+        p1 = vtx.getPosition(space='world')
+        p2 = p1 + refl
+
+        curve = pm.curve(d=1, p=[p1, p2])
+
+        # move pivot to the first point
+        pm.xform(curve, rp=p1, sp=p1)
 
 
 class Animation(object):
