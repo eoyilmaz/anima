@@ -4287,7 +4287,7 @@ class Render(object):
         from anima.env.mayaEnv import auxiliary
 
         vtx = pm.ls(sl=1)[0]
-        normal = vtx.getNormal()
+        normal = vtx.getNormal(space='world')
         panel = auxiliary.Playblaster.get_active_panel()
         camera = pm.PyNode(pm.modelPanel(panel, q=1, cam=1))
         camera_axis = MVector(0, 0, -1) * camera.worldMatrix.get()
