@@ -1036,12 +1036,21 @@ def check_sequencer():
 
 
 @publisher(['animation', 'previs', 'shot previs'])
+def check_shot_nodes():
+    """checks if there is at least one shot node
+    """
+    shot_nodes = pm.ls(type='shot')
+    if len(shot_nodes) == 0:
+        raise PublishError('There is no <b>Shot</b> node in the scene')
+
+
+@publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name():
     """checks if the sequence name attribute is properly set
     """
-    sequencer = pm.ls(type='sequencer')[0]
+    shot = pm.ls(type='shot')[0]
+    sequencer = shot.outputs(type='sequencer')[0]
     sequence_name = sequencer.sequence_name.get()
-
     if sequence_name == '' or sequence_name is None:
         raise PublishError('Please enter a sequence name!!!')
 
@@ -1112,15 +1121,6 @@ def check_sequence_name_format():
             '<br>'
             '%s' % scene_code
         )
-
-
-@publisher(['animation', 'previs', 'shot previs'])
-def check_shot_nodes():
-    """checks if there is at least one shot node
-    """
-    shot_nodes = pm.ls(type='shot')
-    if len(shot_nodes) == 0:
-        raise PublishError('There is no <b>Shot</b> node in the scene')
 
 
 @publisher(['animation', 'previs', 'shot previs'])
@@ -1301,7 +1301,7 @@ def create_representations():
         return
 
     # skip if it is a Character
-    skip_types = ['character', 'animation', 'previs']
+    skip_types = ['character', 'animation', 'previs', 'vehicle']
     for t in v.naming_parents:
         for st in skip_types:
             if t.type and t.type.name.lower().startswith(st):

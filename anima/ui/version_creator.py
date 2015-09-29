@@ -1061,7 +1061,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # get the versions of the entity
         takes = []
 
-        if task and task.is_leaf:
+        if task:
             # clear the takes_listWidget and fill with new data
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
@@ -1069,24 +1069,25 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if isinstance(task, Project):
                 return
 
-            takes = map(
-                lambda x: x[0],
-                DBSession.query(distinct(Version.take_name))
-                .filter(Version.task == task)
-                .all()
-            )
+            if task.is_leaf:
+                takes = map(
+                    lambda x: x[0],
+                    DBSession.query(distinct(Version.take_name))
+                    .filter(Version.task == task)
+                    .all()
+                )
 
-            if not self.repr_as_separate_takes_checkBox.isChecked():
-                # filter representations
-                from anima.repr import Representation
-                takes = [take for take in takes
-                         if Representation.repr_separator not in take]
-            takes = sorted(takes, key=lambda x: x.lower())
+                if not self.repr_as_separate_takes_checkBox.isChecked():
+                    # filter representations
+                    from anima.repr import Representation
+                    takes = [take for take in takes
+                             if Representation.repr_separator not in take]
+                takes = sorted(takes, key=lambda x: x.lower())
 
-        logger.debug("len(takes) from db: %s" % len(takes))
+            logger.debug("len(takes) from db: %s" % len(takes))
 
-        logger.debug("adding the takes from db")
-        self.takes_listWidget.take_names = takes
+            logger.debug("adding the takes from db")
+            self.takes_listWidget.take_names = takes
 
     def _set_defaults(self):
         """sets up the defaults for the interface

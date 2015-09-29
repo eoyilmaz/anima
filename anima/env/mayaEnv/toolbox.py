@@ -403,7 +403,6 @@ def UI():
                 bgc=color.color
             )
 
-
         # ----- MODELING ------
         modeling_columnLayout = pm.columnLayout(
             'modeling_columnLayout',
@@ -476,6 +475,73 @@ def UI():
                 ann="Selects faces with zero uv area",
                 bgc=color.color
             )
+
+            color.change()
+            with pm.rowLayout(nc=8, rat=(1, "both", 0), adj=1):
+                pm.text('set_pivot_text', l='Set Pivot', bgc=color.color)
+                pm.button(
+                    'center_button',
+                    l="C",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        0
+                    ),
+                    bgc=(0.8, 0.8, 0.8)
+                )
+                pm.button(
+                    'minus_X_button',
+                    l="-X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        1
+                    ),
+                    bgc=(1.000, 0.500, 0.666)
+                )
+                pm.button(
+                    'plus_X_button',
+                    l="+X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        2
+                    ),
+                    bgc=(1.000, 0.500, 0.666)
+                )
+                pm.button(
+                    'minus_Y_button',
+                    l="-Y",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        3
+                    ),
+                    bgc=(0.666, 1.000, 0.500)
+                )
+                pm.button(
+                    'plus_Y_button',
+                    l="+Y",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        4
+                    ),
+                    bgc=(0.666, 1.000, 0.500)
+                )
+                pm.button(
+                    'minus_Z_button',
+                    l="-X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        5
+                    ),
+                    bgc=(0.500, 0.666, 1.000)
+                )
+                pm.button(
+                    'plus_Z_button',
+                    l="+X",
+                    c=RepeatedCallback(
+                        Modeling.set_pivot,
+                        6
+                    ),
+                    bgc=(0.500, 0.666, 1.000)
+                )
 
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
@@ -931,6 +997,13 @@ def UI():
                 ann=Render.convert_aiSkinSSS_to_aiSkin.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'normalize_sss_weights_button',
+                l='Normalize SSS Weights',
+                c=RepeatedCallback(Render.normalize_sss_weights),
+                ann=Render.normalize_sss_weights.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button(
@@ -992,6 +1065,83 @@ def UI():
                       c=RepeatedCallback(Render.standin_to_polywire),
                       ann="Convert selected stand ins to polywire",
                       bgc=color.color)
+
+            color.change()
+            with pm.rowLayout(nc=3, adj=3, bgc=color.color):
+                min_range_field = pm.floatField(
+                    minValue=1000,
+                    maxValue=50000,
+                    step=1,
+                    pre=0,
+                    value=3500,
+                    w=50,
+                    bgc=color.color,
+                    ann='Min Value'
+                )
+                max_range_field = pm.floatField(
+                    minValue=1000,
+                    maxValue=50000,
+                    step=1,
+                    pre=0,
+                    value=6500,
+                    w=50,
+                    bgc=color.color,
+                    ann='Max Value'
+                )
+                pm.button(
+                    ann="Randomize Color Temperature",
+                    l="Randomize Color Temp.",
+                    w=70,
+                    c=RepeatedCallback(
+                        Render.randomize_light_color_temp,
+                        min_range_field,
+                        max_range_field
+                    ),
+                    bgc=color.color
+                )
+
+            with pm.rowLayout(nc=3, adj=3, bgc=color.color):
+                min_range_field = pm.floatField(
+                    minValue=0,
+                    maxValue=200,
+                    step=0.1,
+                    pre=1,
+                    value=10,
+                    w=50,
+                    bgc=color.color,
+                    ann='Min Value'
+                )
+                max_range_field = pm.floatField(
+                    minValue=0,
+                    maxValue=200,
+                    step=0.1,
+                    pre=1,
+                    value=20,
+                    w=50,
+                    bgc=color.color,
+                    ann='Max Value'
+                )
+                pm.button(
+                    ann="Randomize Exposure",
+                    l="Randomize Exposure",
+                    w=70,
+                    c=RepeatedCallback(
+                        Render.randomize_light_intensity,
+                        min_range_field,
+                        max_range_field
+                    ),
+                    bgc=color.color
+                )
+
+            color.change()
+            pm.button(
+                ann="Create Reflection Curve",
+                l="Reflection Curve",
+                c=RepeatedCallback(
+                    Render.generate_reflection_curve
+                ),
+                bgc=color.color
+            )
 
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
@@ -1113,9 +1263,11 @@ def UI():
                 )
                 pm.button(ann="Exports maya camera to nuke",
                           l="cam2chan", w=70,
-                          c=RepeatedCallback(Animation.cam_2_chan,
-                                             startButtonField,
-                                             endButtonField),
+                          c=RepeatedCallback(
+                              Animation.cam_2_chan,
+                              startButtonField,
+                              endButtonField
+                          ),
                           bgc=color.color)
 
             pm.text(l='===== Component Animation =====')
@@ -1161,6 +1313,15 @@ def UI():
                 l='Range From Shot',
                 c=RepeatedCallback(Animation.set_range_from_shot),
                 ann='Sets the playback range from the shot node in the scene',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'delete_base_anim_layer_button',
+                l='Delete Base Anim Layer',
+                c=RepeatedCallback(Animation.delete_base_anim_layer),
+                ann=Animation.delete_base_anim_layer.__doc__,
                 bgc=color.color
             )
 
@@ -1561,9 +1722,9 @@ class General(object):
         """
         rmv_str = "pasted__"
         [
-            obj.rename(obj.name()[len(rmv_str):])
+            obj.rename(obj.name().split('|')[-1].replace(rmv_str, ''))
             for obj in pm.ls(sl=1)
-            if obj.name().startswith(rmv_str)
+            if rmv_str in obj.name()
         ]
 
     @classmethod
@@ -2545,6 +2706,68 @@ class Modeling(object):
             pm.warning('No Zero UV area polys found!!!')
         else:
             pm.select(faces_with_zero_uv_area)
+
+    @classmethod
+    def set_pivot(cls, axis=0):
+        """moves the object pivot to desired axis
+
+        There are 7 options to move the pivot point to:
+            c, -x, +x, -y, +y, -z, +z
+            0,  1,  2,  3,  4,  5,  6
+
+        :param int axis: One of [0-6] showing the desired axis to get the
+          pivot point to
+        """
+        from maya.OpenMaya import MBoundingBox, MPoint
+        if not 0 <= axis <= 6:
+            return
+
+        for node in pm.ls(sl=1):
+            # check if the node has children
+            children = pm.ls(sl=1)[0].getChildren(ad=1, type='transform')
+            # get the bounding box points
+            # bbox = node.boundingBox()
+            bbox = pm.xform(node, q=1, ws=1, boundingBox=1)
+            bbox = MBoundingBox(
+                MPoint(bbox[0], bbox[1], bbox[2]),
+                MPoint(bbox[3], bbox[4], bbox[5])
+            )
+
+            if len(children):
+                # get all the bounding boxes
+                for child in children:
+                    if child.getShape() is not None:
+                        # child_bbox = child.boundingBox()
+                        child_bbox = pm.xform(child, q=1, ws=1, boundingBox=1)
+                        child_bbox = MBoundingBox(
+                            MPoint(child_bbox[0], child_bbox[1], child_bbox[2]),
+                            MPoint(child_bbox[3], child_bbox[4], child_bbox[5])
+                        )
+                        bbox.expand(child_bbox.min())
+                        bbox.expand(child_bbox.max())
+
+            piv = bbox.center()
+            if axis == 1:
+                # -x
+                piv.x = bbox.min().x
+            elif axis == 2:
+                # +x
+                piv.x = bbox.max().x
+            elif axis == 3:
+                # -y
+                piv.y = bbox.min().y
+            elif axis == 4:
+                # +y
+                piv.y = bbox.max().y
+            elif axis == 5:
+                # -z
+                piv.z = bbox.min().z
+            elif axis == 6:
+                # +z
+                piv.z = bbox.max().z
+
+            pm.xform(node, ws=1, rp=piv)
+            pm.xform(node, ws=1, sp=piv)
 
 
 class Rigging(object):
@@ -3533,6 +3756,85 @@ class Render(object):
             print('updated %s' % skin_name)
 
     @classmethod
+    def normalize_sss_weights(cls):
+        """normalizes the sss weights so their total weight is 1.0
+
+        if a aiStandard is assigned to the selected object it searches for an
+        aiSkin in the emission channel.
+
+        the script considers 0.7 as the highest diffuse value for aiStandard
+        """
+        # get the shader of the selected object
+        assigned_shader = pm.ls(
+            pm.ls(sl=1)[0].getShape().outputs(type='shadingEngine')[0].inputs(),
+            mat=1
+        )[0]
+
+        if assigned_shader.type() == 'aiStandard':
+            sss_shader = assigned_shader.attr('emissionColor').inputs()[0]
+            diffuse_weight = assigned_shader.attr('Kd').get()
+        else:
+            sss_shader = assigned_shader
+            diffuse_weight = 0
+
+        def get_attr_or_texture(attr):
+            if attr.inputs():
+                # we probably have a texture assigned
+                # so use its multiply attribute
+                texture = attr.inputs()[0]
+                attr = texture.attr('multiply')
+                if isinstance(texture, pm.nt.AiImage):
+                    attr = texture.attr('multiply')
+                elif isinstance(texture, pm.nt.File):
+                    attr = texture.attr('colorGain')
+            return attr
+
+        shallow_attr = get_attr_or_texture(
+            sss_shader.attr('shallowScatterWeight')
+        )
+        mid_attr = get_attr_or_texture(sss_shader.attr('midScatterWeight'))
+        deep_attr = get_attr_or_texture(sss_shader.attr('deepScatterWeight'))
+
+        shallow_weight = shallow_attr.get()
+        if isinstance(shallow_weight, tuple):
+            shallow_weight = (
+                shallow_weight[0] + shallow_weight[1] + shallow_weight[2]
+            ) / 3.0
+
+        mid_weight = mid_attr.get()
+        if isinstance(mid_weight, tuple):
+            mid_weight = (
+                mid_weight[0] + mid_weight[1] + mid_weight[2]
+            ) / 3.0
+
+        deep_weight = deep_attr.get()
+        if isinstance(deep_weight, tuple):
+            deep_weight = (
+                deep_weight[0] + deep_weight[1] + deep_weight[2]
+            ) / 3.0
+
+        total_sss_weight = shallow_weight + mid_weight + deep_weight
+
+        mult = (1 - diffuse_weight / 0.7) / total_sss_weight
+        try:
+            shallow_attr.set(shallow_weight * mult)
+        except RuntimeError:
+            w = shallow_weight * mult
+            shallow_attr.set(w, w, w)
+
+        try:
+            mid_attr.set(mid_weight * mult)
+        except RuntimeError:
+            w = mid_weight * mult
+            mid_attr.set(w, w, w)
+
+        try:
+            deep_attr.set(deep_weight * mult)
+        except RuntimeError:
+            w = deep_weight * mult
+            deep_attr.set(w, w, w)
+
+    @classmethod
     def create_eye_shader_and_controls(cls):
         """This is pretty much specific to the way we are creating eye shaders
         for characters in KKS project, but it is a useful trick, select the
@@ -3544,35 +3846,150 @@ class Render(object):
 
         char = eyes[0].getAllParents()[-1]
         place = pm.shadingNode('place2dTexture', asUtility=1)
-        image = pm.shadingNode('aiImage', asTexture=1)
+        emission_image = pm.shadingNode('aiImage', asTexture=1)
+        ks_image = pm.shadingNode('aiImage', asTexture=1)
 
-        texture_path = '$REPO1977/KKS/Assets/Characters/Body_Parts/Textures/' \
-                       'char_eyeInner_light_v001.png'
+        texture_paths = {
+            'emission': '$REPO1977/KKS/Assets/Characters/Body_Parts/Textures/'
+                'char_eyeInner_light_v001.png',
+            'Ks': '$REPO1977/KKS/Assets/Characters/Body_Parts/Textures/'
+                'char_eyeInner_spec_v002.png',
+        }
 
-        image.setAttr('filename', texture_path)
+        emission_image.setAttr('filename', texture_paths['emission'])
+        ks_image.setAttr('filename', texture_paths['Ks'])
 
-        place.outUV >> image.attr('uvcoords')
+        place.outUV >> emission_image.attr('uvcoords')
 
         if not char.hasAttr('eyeLightStrength'):
-            char.addAttr("eyeLightStrength", at='double', min=0, dv=0.5, k=1)
+            char.addAttr('eyeLightStrength', at='double', min=0, dv=0.0, k=1)
+        else:
+            # set the default
+            char.attr('eyeLightStrength').set(0)
 
         if not char.hasAttr('eyeLightAngle'):
             char.addAttr("eyeLightAngle", at='double', dv=0, k=1)
 
-        char.eyeLightStrength >> image.attr('multiplyR')
-        char.eyeLightStrength >> image.attr('multiplyG')
-        char.eyeLightStrength >> image.attr('multiplyB')
+        if not char.hasAttr('eyeDiffuseWeight'):
+            char.addAttr(
+                "eyeDiffuseWeight", at='double', dv=0.15, k=1, min=0, max=1
+            )
 
+        if not char.hasAttr('eyeSpecularWeight'):
+            char.addAttr(
+                'eyeSpecularWeight', at='double', dv=1.0, k=1, min=0, max=1
+            )
+
+        if not char.hasAttr('eyeSSSWeight'):
+            char.addAttr(
+                'eyeSSSWeight', at='double', dv=0.5, k=1, min=0, max=1
+            )
+
+        # connect eye light strength
+        char.eyeLightStrength >> emission_image.attr('multiplyR')
+        char.eyeLightStrength >> emission_image.attr('multiplyG')
+        char.eyeLightStrength >> emission_image.attr('multiplyB')
+
+        # connect eye light angle
         char.eyeLightAngle >> place.attr('rotateFrame')
 
+        # connect specular weight
+        char.eyeSpecularWeight >> ks_image.attr('multiplyR')
+        char.eyeSpecularWeight >> ks_image.attr('multiplyG')
+        char.eyeSpecularWeight >> ks_image.attr('multiplyB')
+
         for eye in eyes:
-            shadingEngine = eye.getShape().outputs()[0]
-            shader = pm.ls(shadingEngine.inputs(), mat=1)[0]
+            shading_engine = eye.getShape().outputs()[0]
+            shader = pm.ls(shading_engine.inputs(), mat=1)[0]
 
             # connect the diffuse shader input to the emissionColor
             diffuse_texture = shader.attr('color').inputs(p=1, s=1)[0]
             diffuse_texture >> shader.attr('emissionColor')
-            image.outColorR >> shader.emission
+            emission_image.outColorR >> shader.attr('emission')
+
+            # also connect it to specular color
+            diffuse_texture >> shader.attr('KsColor')
+            # connect the Ks image to the specular weight
+            ks_image.outColorR >> shader.attr('Ks')
+
+            # also connect it to sss color
+            diffuse_texture >> shader.attr('KsssColor')
+
+            char.eyeDiffuseWeight >> shader.attr('Kd')
+            char.eyeSSSWeight >> shader.attr('Ksss')
+
+            # set some default values
+            shader.attr('diffuseRoughness').set(0)
+            shader.attr('Kb').set(0)
+            shader.attr('directDiffuse').set(1)
+            shader.attr('indirectDiffuse').set(1)
+            shader.attr('specularRoughness').set(0.4)
+            shader.attr('specularAnisotropy').set(0.5)
+            shader.attr('specularRotation').set(0)
+            shader.attr('specularFresnel').set(0)
+            shader.attr('Kr').set(0)
+            shader.attr('enableInternalReflections').set(0)
+            shader.attr('Kt').set(0)
+            shader.attr('transmittance').set([1, 1, 1])
+            shader.attr('opacity').set([1, 1, 1])
+            shader.attr('sssRadius').set([1, 1, 1])
+
+        pm.select(eyes)
+
+    @classmethod
+    def randomize_attr(cls, nodes, attr, min, max, pre=0.1):
+        """Randomizes the given attributes of the given nodes
+
+        :param list nodes:
+        :param str attr:
+        :param float, int min:
+        :param float, int max:
+        :return:
+        """
+        import random
+        import math
+        rand = random.random
+        floor = math.floor
+        for node in nodes:
+            r = rand() * float(max - min) + float(min)
+            r = floor(r / pre) * pre
+            node.setAttr(attr, r)
+
+    @classmethod
+    def randomize_light_color_temp(cls, min_field, max_field):
+        """Randomizes the color temperature of selected lights
+
+        :param min:
+        :param max:
+        :return:
+        """
+        min = pm.floatField(min_field, q=1, v=1)
+        max = pm.floatField(max_field, q=1, v=1)
+        cls.randomize_attr(
+            [node.getShape() for node in pm.ls(sl=1)],
+            'aiColorTemperature',
+            min,
+            max,
+            1
+        )
+
+    @classmethod
+    def randomize_light_intensity(cls, min_field, max_field):
+        """Randomizes the intensities of selected lights
+
+        :param min:
+        :param max:
+        :return:
+        """
+        min = pm.floatField(min_field, q=1, v=1)
+        max = pm.floatField(max_field, q=1, v=1)
+        cls.randomize_attr(
+            [node.getShape() for node in pm.ls(sl=1)],
+            'aiExposure',
+            min,
+            max,
+            0.1
+        )
 
     @classmethod
     def setup_outer_eye_render_attributes(cls):
@@ -3862,10 +4279,42 @@ class Render(object):
         pm.editRenderLayerAdjustment(dad.attr('autocrop'))
         dad.setAttr('autocrop', 0)
 
+    @classmethod
+    def generate_reflection_curve(self):
+        """Generates a curve which helps creating specular at the desired point
+        """
+        from maya.OpenMaya import MVector, MPoint
+        from anima.env.mayaEnv import auxiliary
+
+        vtx = pm.ls(sl=1)[0]
+        normal = vtx.getNormal(space='world')
+        panel = auxiliary.Playblaster.get_active_panel()
+        camera = pm.PyNode(pm.modelPanel(panel, q=1, cam=1))
+        camera_axis = MVector(0, 0, -1) * camera.worldMatrix.get()
+
+        refl = camera_axis - 2 * normal.dot(camera_axis) * normal
+
+        # create a new curve
+        p1 = vtx.getPosition(space='world')
+        p2 = p1 + refl
+
+        curve = pm.curve(d=1, p=[p1, p2])
+
+        # move pivot to the first point
+        pm.xform(curve, rp=p1, sp=p1)
+
 
 class Animation(object):
     """animation tools
     """
+
+    @classmethod
+    def delete_base_anim_layer(cls):
+        """deletes the base anim layer
+        """
+        base_layer = pm.PyNode('BaseAnimation')
+        base_layer.unlock()
+        pm.delete(base_layer)
 
     @classmethod
     def oySmoothComponentAnimation(cls, ui_item):
