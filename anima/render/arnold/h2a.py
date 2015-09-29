@@ -358,7 +358,7 @@ def polygon2ass(node, name, export_motion=False, export_color=False):
         matrix += matrix
 
     color_template = ''
-    if export_color
+    if export_color:
         color_template = """
             declare colorSet1 varying RGBA
             colorSet1 %(point_count)s 1 b85RGBA
@@ -369,7 +369,7 @@ def polygon2ass(node, name, export_motion=False, export_color=False):
             'point_count': point_count,
             'splitted_point_colors':splitted_point_colors
         }
-                
+
     data = base_template % {
         'name': name,
         'point_count': point_count,
@@ -379,8 +379,7 @@ def polygon2ass(node, name, export_motion=False, export_color=False):
         'number_of_points_per_primitive': splitted_number_of_points_per_primitive,
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
-        'matrix': matrix,
-        'color_template': color_template,
+        'matrix': matrix,'color_template': color_template,
         # 'normal_count': vertex_count,
         # 'vertex_normals': splitted_vertex_normals,
         #'uv_ids': uv_ids,
