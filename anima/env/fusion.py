@@ -453,7 +453,55 @@ class Fusion(EnvironmentBase):
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
-        file_formats = ['exr', 'png']
+        # stores format data and attribute values
+        file_formats = {
+            'exr': {
+                'attr': {
+                    'ProcessRed': 1,
+                    'ProcessGreen': 1,
+                    'ProcessBlue': 1,
+                    'ProcessAlpha': 0,
+                    'OutputFormat': 'OpenEXRFormat',
+                    'OpenEXRFormat.Depth': 1,  # 16-bit float
+                    'OpenEXRFormat.RedEnable': 1,
+                    'OpenEXRFormat.GreenEnable': 1,
+                    'OpenEXRFormat.BlueEnable': 1,
+                    'OpenEXRFormat.AlphaEnable': 0,
+                    'OpenEXRFormat.ZEnable': 0,
+                    'OpenEXRFormat.CovEnable': 0,
+                    'OpenEXRFormat.ObjIDEnable': 0,
+                    'OpenEXRFormat.MatIDEnable': 0,
+                    'OpenEXRFormat.UEnable': 0,
+                    'OpenEXRFormat.VEnable': 0,
+                    'OpenEXRFormat.XNormEnable': 0,
+                    'OpenEXRFormat.YNormEnable': 0,
+                    'OpenEXRFormat.ZNormEnable': 0,
+                    'OpenEXRFormat.XVelEnable': 0,
+                    'OpenEXRFormat.YVelEnable': 0,
+                    'OpenEXRFormat.XRevVelEnable': 0,
+                    'OpenEXRFormat.YRevVelEnable': 0,
+                    'OpenEXRFormat.XPosEnable': 0,
+                    'OpenEXRFormat.YPosEnable': 0,
+                    'OpenEXRFormat.ZPosEnable': 0,
+                    'OpenEXRFormat.XDispEnable': 0,
+                    'OpenEXRFormat.YDispEnable': 0,
+                }
+            },
+            'png': {
+                'gamut': 'SimplifiedsRGB',
+                'attr': {
+                    'ProcessRed': 1,
+                    'ProcessGreen': 1,
+                    'ProcessBlue': 1,
+                    'ProcessAlpha': 0,
+                    'OutputFormat': 'PNGFormat',
+                    'PNGFormat.SaveAlpha': 0,
+                    'PNGFormat.Depth': 1,
+                    'PNGFormat.CompressionLevel': 9,
+                    'PNGFormat.GammaMode': 0,
+                }
+            }
+        }
 
         # list all the save nodes in the current file
         saver_nodes = self.get_main_saver_node()
@@ -461,8 +509,10 @@ class Fusion(EnvironmentBase):
         for file_format in file_formats:
             # check if we have a saver node for this format
             format_saver = None
-            format_node_name = '%s_%s' % (self._main_output_node_name,
-                                          file_format)
+            format_node_name = '%s_%s' % (
+                self._main_output_node_name,
+                file_format
+            )
             for node in saver_nodes:
                 node_name = node.GetAttrs('TOOLS_Name')
                 if node_name.startswith(format_node_name):
@@ -474,7 +524,9 @@ class Fusion(EnvironmentBase):
                 # lock the comp to prevent the file dialog
                 self.comp.Lock()
 
-                format_saver = self.comp.Saver
+                format_saver = self.comp.Saver(
+                    file_formats[file_format]['attr']
+                )
 
                 # unlock the comp
                 self.comp.Unlock()
@@ -482,6 +534,23 @@ class Fusion(EnvironmentBase):
                 format_saver.SetAttrs(
                     {'TOOLS_Name': format_node_name}
                 )
+
+                # add gamut node if required
+                try:
+                    output_space = file_formats[file_format]['gamut']
+                    # create a gamut node if it doesn't already have one
+                    gamut = self.comp.GamutConvert({
+                        'OutputSpace': output_space,
+                    })
+                    # connect it
+                    format_saver.Input = gamut
+
+                    # position the gamut node just over the saver node
+                    flow = self.comp.CurrentFrame.FlowView
+                    pos = flow.GetPosTable(format_saver)
+                    flow.SetPos(gamut, pos[1], pos[2] - 1)
+                except KeyError:
+                    pass
 
             # set the output path
             file_name_buffer = []
@@ -511,13 +580,24 @@ class Fusion(EnvironmentBase):
                 output_file_name
             ).replace('\\', '/')
 
-            # set the path
-            #format_saver.Clip[0] = 'Comp: %s' % os.path.normpath(
+            # set the output path
             format_saver.Clip[0] = '%s' % os.path.normpath(
-                    output_file_full_path
+                output_file_full_path
             ).encode()
 
-            # create the path
+            # set default attributes
+            inputs = format_saver.GetInputList()
+            number_of_inputs = len(inputs)
+            for i in range(number_of_inputs):
+                n = i + 1
+                input_id = inputs[n].GetAttrs()['INPS_ID']
+                try:
+                    value = file_formats[file_format]['attr'][input_id]
+                    inputs[n][0] = value
+                except KeyError:
+                    pass
+
+            # create the folders
             try:
                 os.makedirs(os.path.dirname(output_file_full_path))
             except OSError:
