@@ -1747,9 +1747,10 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             use_namespace = self.useNameSpace_checkBox.isChecked()
 
             # check if it has any representations
+            # .filter(Version.parent == previous_version)\  
             all_reprs = Version.query\
-                .filter(Version.parent == previous_version)\
-                .filter(Version.take_name.ilike('%@%'))\
+                .filter(Version.task == previous_version.task)\
+                .filter(Version.take_name.ilike(previous_version.take_name + '@%'))\
                 .all()
 
             if len(all_reprs):
@@ -1771,7 +1772,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         repr_separator=Representation.repr_separator
                     )
                     repr_version = Version.query\
-                        .filter(Version.parent == previous_version)\
+                        .filter(Version.task == previous_version.task)\
                         .filter(Version.take_name.ilike(repr_str))\
                         .order_by(Version.version_number.desc())\
                         .first()
