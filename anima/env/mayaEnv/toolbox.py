@@ -3471,7 +3471,7 @@ class Render(object):
     def open_node_in_browser(cls):
         # get selected nodes
         node_attrs = {
-            'File': 'fileTextureName',
+            'file': 'fileTextureName',
             'aiImage': 'filename',
             'aiStandIn': 'dso',
         }
