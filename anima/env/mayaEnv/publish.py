@@ -1071,7 +1071,7 @@ def check_smartass_animator():
             # by not allowing to publish the file
             raise PublishError(
                 "You're not allowed to publish for this task:<br><br>"
-                "Please request a REVISION!!!!<br>"
+                "Please <b>Request a REVISION</b>!!!!<br>"
             )
 
 

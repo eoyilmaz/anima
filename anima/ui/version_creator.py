@@ -1765,7 +1765,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 setattr(base_button, 'repr_version', previous_version)
 
                 for repr_name in self.environment.representations:
-                    repr_str = '%{repr_separator}{repr_name}%'.format(
+                    repr_str = '%{take}{repr_separator}{repr_name}%'.format(
+                        take=previous_version.take_name,
                         repr_name=repr_name,
                         repr_separator=Representation.repr_separator
                     )
