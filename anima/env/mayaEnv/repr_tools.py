@@ -1215,6 +1215,10 @@ class RepresentationGenerator(object):
             [node.setAttr('overrideLightLinking', False)
              for node in pm.ls(type='aiStandIn')]
 
+            # make sure motion blur is disabled
+            [node.setAttr('motionBlur', False)
+             for node in pm.ls(type='aiStandIn')]
+
             # clean up
             self.clean_up()
 
