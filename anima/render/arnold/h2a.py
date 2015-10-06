@@ -8,7 +8,7 @@ import os
 import gzip
 import struct
 import time
-import re
+
 
 from anima.render.arnold import base85
 reload(base85)
@@ -62,7 +62,7 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, **kwargs):
+def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, export_color, **kwargs):
     """exports geometry to ass format
     """
     ass_path = path
@@ -71,7 +71,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     mode = mode
     export_type = export_type
     export_motion = export_motion
-
+    export_color = export_color
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
@@ -102,7 +102,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     if export_type == 0:
         data = curves2ass(node, name, min_pixel_width, mode, export_motion)
     elif export_type == 1:
-        data = polygon2ass(node, name, export_motion)
+        data = polygon2ass(node, name, export_motion, export_color)
 
     write_start = time.time()
     ass_file = file_handler(ass_path, 'w')
@@ -128,7 +128,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     print('******************************************************************')
 
 
-def polygon2ass(node, name, export_motion=False):
+def polygon2ass(node, name, export_motion=False, export_color=False):
     """exports polygon geometry to ass format
     """
     sample_count = 2 if export_motion else 1
@@ -153,6 +153,7 @@ polymesh
 %(matrix)s
  opaque on
  id 683108022
+%(color_template)s
 }"""
     #  uvidxs %(vertex_count)s 1 UINT
     #%(uv_ids)s
@@ -161,6 +162,7 @@ polymesh
 
     skip_normals = False
     skip_uvs = False
+    skip_colors = False
 
     intrinsic_values = geo.intrinsicValueDict()
 
@@ -183,6 +185,7 @@ polymesh
     #         j = 0
     #         combined_uv_ids.append(' '.join(uv_ids))
     #         uv_ids = []
+    vertex_colors = []
 
     ## join for a last time
     # if uv_ids:
@@ -222,6 +225,7 @@ polymesh
                 vertex_ids = []
                 # combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
                 # vertex_normals = []
+                vertex_colors = []
 
     # join for a last time
     if number_of_points_per_primitive:
@@ -247,6 +251,19 @@ polymesh
     if export_motion:
         point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
         point_positions = '%s%s' % (point_positions, point_prime_positions)
+
+
+
+    try:
+        point_colors = geo.pointFloatAttribValuesAsString('color')
+    except hou.OperationFailed:
+       # no color attribute skip it
+        skip_colors = True
+        point_colors = ''
+
+
+
+
 
     # try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
@@ -321,6 +338,23 @@ polymesh
     # split_end = time.time()
     # print('Splitting Vertex Normals    : %3.3f' % (split_end - split_start))
 
+
+
+    # #
+    # # Vertex Colors
+    # #
+
+    encode_start = time.time()
+    encoded_point_colors = base85.arnold_b85_encode(point_colors)
+    encode_end = time.time()
+    print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+
+    split_start = time.time()
+    splitted_point_colors = split_data(encoded_point_colors, 100)
+    split_end = time.time()
+    print('Splitting Vertex Colors    : %3.3f' % (split_end - split_start))
+
+
     #
     # Vertex Ids
     #
@@ -355,6 +389,19 @@ polymesh
     if export_motion:
         matrix += matrix
 
+    color_template = ''
+    if export_color:
+        color_template = """
+            declare colorSet1 varying RGBA
+            colorSet1 %(point_count)s 1 b85RGBA
+            %(splitted_point_colors)s
+        """
+
+        color_template = color_template % {
+            'point_count': point_count,
+            'splitted_point_colors':splitted_point_colors
+        }
+
     data = base_template % {
         'name': name,
         'point_count': point_count,
@@ -365,6 +412,7 @@ polymesh
         'vertex_ids': splitted_vertex_ids,
         'point_positions': splitted_point_positions,
         'matrix': matrix,
+        'color_template': color_template,
         # 'uv_ids': uv_ids,
         # 'vertex_uvs': splitted_vertex_uvs,
         # 'normal_count': vertex_count,
