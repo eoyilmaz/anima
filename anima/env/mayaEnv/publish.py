@@ -1026,6 +1026,55 @@ def check_cacheable_attr():
         )
 
 
+@publisher('animation')
+def check_smartass_animator():
+    """checks if the smartass animator is tyring to create a new version for a
+    completed animation scene silently
+    """
+    from stalker.models import walk_hierarchy
+    # check the status of this task
+    v = staging.get('version')
+    t = v.task
+
+    if t.status.code in ['CMPL']:
+        # get the dependent tasks
+        dependent_tasks = t.dependent_of
+
+        # generate a white list for the resources
+        # so anybody in the white list can publish it
+        white_list_resources = []
+        dependent_tasks_all_hierarchy = []
+
+        for dt in dependent_tasks:
+            for task in walk_hierarchy(dt, 'dependent_of'):
+                white_list_resources.extend(task.resources)
+                white_list_resources.extend(task.responsible)
+                dependent_tasks_all_hierarchy.append(task)
+
+        white_list_resources = list(set(white_list_resources))
+
+        # get the logged in user
+        from stalker import LocalSession
+        local_session = LocalSession()
+        logged_in_user = local_session.logged_in_user
+
+        # if any of the dependent task has been started so the status is not
+        # WFD or RTS in any of then
+        #
+        # also check if the logged in user is one of the resources of the
+        # dependent tasks
+        if any([t.status.code not in ['WFD', 'RTS']
+                for t in dependent_tasks_all_hierarchy]) \
+           and logged_in_user not in white_list_resources:
+            # so the animator is trying to stab behind us
+            # simply fuck him/her
+            # by not allowing to publish the file
+            raise PublishError(
+                "You're not allowed to publish for this task:<br><br>"
+                "Please request a REVISION!!!!<br>"
+            )
+
+
 @publisher(['animation', 'previs', 'shot previs'])
 def check_sequencer():
     """checks if there is a sequencer node in the scene

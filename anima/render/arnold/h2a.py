@@ -252,18 +252,12 @@ polymesh
         point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
         point_positions = '%s%s' % (point_positions, point_prime_positions)
 
-
-
     try:
         point_colors = geo.pointFloatAttribValuesAsString('color')
     except hou.OperationFailed:
        # no color attribute skip it
         skip_colors = True
         point_colors = ''
-
-
-
-
 
     # try:
     #    point_normals = geo.pointFloatAttribValuesAsString('N')
@@ -338,8 +332,6 @@ polymesh
     # split_end = time.time()
     # print('Splitting Vertex Normals    : %3.3f' % (split_end - split_start))
 
-
-
     # #
     # # Vertex Colors
     # #
@@ -353,7 +345,6 @@ polymesh
     splitted_point_colors = split_data(encoded_point_colors, 100)
     split_end = time.time()
     print('Splitting Vertex Colors    : %3.3f' % (split_end - split_start))
-
 
     #
     # Vertex Ids
