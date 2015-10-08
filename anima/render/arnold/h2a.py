@@ -62,7 +62,7 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, export_color, **kwargs):
+def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, export_color, render_type, **kwargs):
     """exports geometry to ass format
     """
     ass_path = path
@@ -72,6 +72,7 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     export_type = export_type
     export_motion = export_motion
     export_color = export_color
+    render_type = render_type
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
@@ -103,6 +104,8 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
         data = curves2ass(node, name, min_pixel_width, mode, export_motion)
     elif export_type == 1:
         data = polygon2ass(node, name, export_motion, export_color)
+    elif export_type == 2:
+        data = particle2ass(node, name, export_motion, export_color, render_type)
 
     write_start = time.time()
     ass_file = file_handler(ass_path, 'w')
@@ -410,6 +413,145 @@ polymesh
         # 'vertex_normals': splitted_vertex_normals,
     }
 
+    return data
+
+def particle2ass(node, name, export_motion=False, export_color=False, render_type=0):
+    """exports polygon geometry to ass format
+    """
+    sample_count = 2 if export_motion else 1
+
+    geo = node.geometry()
+    base_template = """
+points
+{
+ name %(name)s
+ points %(point_count)s %(sample_count)s b85POINT
+%(point_positions)s
+ radius %(point_count)s 1 b85FLOAT
+%(point_radius)s
+ mode %(render_as)s
+ min_pixel_width 0
+ step_size 0
+ visibility 243
+ receive_shadows on
+ self_shadows on
+ shader "initialParticleSE"
+ opaque on
+ matte off
+ id -838484804
+%(color_template)s
+}"""
+    #  uvidxs %(vertex_count)s 1 UINT
+    #%(uv_ids)s
+    # uvlist %(vertex_count)s 1 b85POINT2
+    #%(vertex_uvs)s
+
+    skip_normals = False
+    skip_uvs = False
+    skip_colors = False
+    skip_radius = False
+
+    intrinsic_values = geo.intrinsicValueDict()
+
+    point_count = intrinsic_values['pointcount']
+
+    i = 0
+    j = 0
+    combined_vertex_ids = []
+    # combined_vertex_normals = []
+    combined_number_of_points_per_primitive = []
+
+    point_positions = geo.pointFloatAttribValuesAsString('P')
+
+    if export_motion:
+        point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
+        point_positions = '%s%s' % (point_positions, point_prime_positions)
+
+    try:
+        point_colors = geo.pointFloatAttribValuesAsString('particle_color')
+    except hou.OperationFailed:
+       # no color attribute skip it
+        skip_colors = True
+        point_colors = ''
+
+    try:
+        point_radius = geo.pointFloatAttribValuesAsString('pscale')
+    except hou.OperationFailed:
+       # no radius attribute skip it
+        skip_radius = True
+        point_radius = ''
+
+    #
+    # Point Positions
+    #
+    encode_start = time.time()
+    # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
+    encode_end = time.time()
+    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
+
+    split_start = time.time()
+    splitted_point_positions = split_data(encoded_point_positions, 500)
+    split_end = time.time()
+    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
+
+
+
+    #
+    # Point Radius
+    #
+    encode_start = time.time()
+    encoded_point_radius = base85.arnold_b85_encode(point_radius)
+    encode_end = time.time()
+    print('Encoding Point Radius    : %3.3f' % (encode_end - encode_start))
+
+    split_start = time.time()
+    splitted_point_radius = split_data(encoded_point_radius, 500)
+    split_end = time.time()
+    print('Splitting Point Radius : %3.3f' % (split_end - split_start))
+
+
+    render_type = render_type
+    render_as = "disk"
+
+    if render_type == 1: render_as = "sphere"
+    elif render_type == 2: render_as = "quad"
+
+    # #
+    # # Vertex Colors
+    # #
+
+    encode_start = time.time()
+    encoded_point_colors = base85.arnold_b85_encode(point_colors)
+    encode_end = time.time()
+    print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+
+    split_start = time.time()
+    splitted_point_colors = split_data(encoded_point_colors, 100)
+    split_end = time.time()
+
+    color_template = ''
+    if export_color:
+        color_template = """
+            declare rgbPP uniform RGB
+            rgbPP %(point_count)s 1 b85RGB
+            %(splitted_point_colors)s
+        """
+
+        color_template = color_template % {
+            'point_count': point_count,
+            'splitted_point_colors':splitted_point_colors
+        }
+
+    data = base_template % {
+        'name': name,
+        'point_count': point_count,
+        'sample_count': sample_count,
+        'render_as': render_as,
+        'point_radius': splitted_point_radius,
+        'point_positions': splitted_point_positions,
+        'color_template': color_template,
+    }
     return data
 
 
