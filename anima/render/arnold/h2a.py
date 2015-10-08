@@ -415,6 +415,7 @@ polymesh
 
     return data
 
+
 def particle2ass(node, name, export_motion=False, export_color=False, render_type=0):
     """exports polygon geometry to ass format
     """
