@@ -521,15 +521,15 @@ points
     # #
     # # Vertex Colors
     # #
+    if export_color:
+        encode_start = time.time()
+        encoded_point_colors = base85.arnold_b85_encode(point_colors)
+        encode_end = time.time()
+        print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
 
-    encode_start = time.time()
-    encoded_point_colors = base85.arnold_b85_encode(point_colors)
-    encode_end = time.time()
-    print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
-
-    split_start = time.time()
-    splitted_point_colors = split_data(encoded_point_colors, 100)
-    split_end = time.time()
+        split_start = time.time()
+        splitted_point_colors = split_data(encoded_point_colors, 100)
+        split_end = time.time()
 
     color_template = ''
     if export_color:
