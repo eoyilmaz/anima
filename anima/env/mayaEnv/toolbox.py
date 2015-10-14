@@ -3561,7 +3561,7 @@ class Render(object):
         """removes the barndoor simulator
         """
         bs = auxiliary.BarnDoorSimulator()
-        for light in pm.ls(sl=1)[0]:
+        for light in pm.ls(sl=1):
             bs.light = light
             bs.unsetup()
 
