@@ -1754,7 +1754,6 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 .all()
 
             if len(all_reprs):
-
                 # ask which one to reference
                 repr_message_box = QtGui.QMessageBox()
                 repr_message_box.setText('Which Repr.?')
