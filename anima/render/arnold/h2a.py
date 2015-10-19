@@ -62,17 +62,13 @@ class Buffer(object):
         return self.file_str.getvalue()
 
 
-def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, export_color, render_type, **kwargs):
+def geometry2ass(
+        path, name, min_pixel_width, mode, export_type, export_motion,
+        export_color, render_type, double_sided=True, invert_normals=False, **kwargs
+):
     """exports geometry to ass format
     """
     ass_path = path
-    name = name
-    min_pixel_width = min_pixel_width
-    mode = mode
-    export_type = export_type
-    export_motion = export_motion
-    export_color = export_color
-    render_type = render_type
     start_time = time.time()
 
     parts = os.path.splitext(ass_path)
@@ -103,7 +99,14 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     if export_type == 0:
         data = curves2ass(node, name, min_pixel_width, mode, export_motion)
     elif export_type == 1:
-        data = polygon2ass(node, name, export_motion, export_color)
+        data = polygon2ass(
+            node,
+            name,
+            export_motion,
+            export_color,
+            double_sided,
+            invert_normals,
+        )
     elif export_type == 2:
         data = particle2ass(node, name, export_motion, export_color, render_type)
 
@@ -131,10 +134,26 @@ def geometry2ass(path, name, min_pixel_width, mode, export_type, export_motion, 
     print('******************************************************************')
 
 
-def polygon2ass(node, name, export_motion=False, export_color=False):
+def polygon2ass(
+        node, name, export_motion=False, export_color=False, double_sided=True,
+        invert_normals=False
+):
     """exports polygon geometry to ass format
     """
     sample_count = 2 if export_motion else 1
+
+    # visibility flags
+    # a binary value of
+    # 00000000
+    # ||||||||
+    # |||||||+-> primary_visibility
+    # ||||||+--> cast_shadows
+    # |||||+---> visible_in_reflections
+    # ||||+----> visible_in_refractions
+    # |||+-----> (unknown)
+    # ||+------> visible_in_diffuse
+    # |+-------> visible_in_glossy
+    # +--------> (unknown)
 
     geo = node.geometry()
     base_template = """
@@ -148,13 +167,14 @@ polymesh
  vlist %(point_count)s %(sample_count)s b85POINT
 %(point_positions)s
  smoothing on
- visibility 65535
- sidedness 65535
+ visibility 255
+ sidedness %(sidedness)s
+ invert_normals %(invert_normals)s
  receive_shadows on
  self_shadows on
+ opaque on
  matrix
 %(matrix)s
- opaque on
  id 683108022
 %(color_template)s
 }"""
@@ -407,6 +427,8 @@ polymesh
         'point_positions': splitted_point_positions,
         'matrix': matrix,
         'color_template': color_template,
+        'sidedness': 255 if double_sided else 0,
+        'invert_normals': 'on' if invert_normals else 'off',
         # 'uv_ids': uv_ids,
         # 'vertex_uvs': splitted_vertex_uvs,
         # 'normal_count': vertex_count,
