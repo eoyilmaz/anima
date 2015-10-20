@@ -595,7 +595,7 @@ curves
  points %(point_count)s %(sample_count)s b85POINT
  %(point_positions)s
 
- radius %(radius_count)s %(sample_count)s b85FLOAT
+ radius %(radius_count)s 1 b85FLOAT
  %(radius)s
  basis "catmull-rom"
  mode "%(mode)s"
@@ -719,8 +719,8 @@ curves
     split_start = time.time()
     splitted_radius = split_data(encoded_radius, 500)
     # extend for motion blur
-    if export_motion:
-        splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
+    # if export_motion:
+    #     splitted_radius = '%(data)s%(data)s' % {'data': splitted_radius}
     split_end = time.time()
     print('Splitting Radius             : %3.3f' % (split_end - split_start))
 
