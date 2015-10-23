@@ -826,7 +826,7 @@ def check_all_tx_textures():
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 
-@publisher(LOOK_DEV_TYPES)
+@publisher(LOOK_DEV_TYPES + ['layout'])
 def check_lights():
     """checks if there are lights in the scene
     """
