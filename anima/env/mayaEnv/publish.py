@@ -1387,7 +1387,7 @@ def update_shot_range():
         db.DBSession.commit()
 
 
-@publisher('animation', publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'pose'], publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations():
     """cache animations
     """
