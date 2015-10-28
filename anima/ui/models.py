@@ -160,7 +160,10 @@ class VersionItem(QtGui.QStandardItem):
         # Updated By
         updated_by_item = QtGui.QStandardItem()
         updated_by_item.setEditable(False)
-        updated_by_item.setText(latest_published_version.updated_by.name)
+        updated_by_text = ''
+        if latest_published_version.updated_by:
+            updated_by_text = latest_published_version.updated_by.name
+        updated_by_item.setText(updated_by_text)
         updated_by_item.version = version
         updated_by_item.action = action
         set_item_color(updated_by_item, font_color)
