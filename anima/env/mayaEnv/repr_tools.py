@@ -1089,6 +1089,12 @@ class RepresentationGenerator(object):
                     else:
                         node.setAttr(attr_name, tx_path)
 
+            # import shaders that are referenced to this scene
+            # there is only one reference in the vegetation task and this is
+            # the shader scene
+            for ref in pm.listReferences():
+                ref.importContents()
+
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
             for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
