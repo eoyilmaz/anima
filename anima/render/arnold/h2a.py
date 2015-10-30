@@ -599,6 +599,7 @@ curves
  %(radius)s
  basis "catmull-rom"
  mode "%(mode)s"
+ min_pixel_width %(min_pixel_width)s
  visibility 65535
  receive_shadows on
  self_shadows on
@@ -785,6 +786,7 @@ curves
         'curve_ids': curve_ids,
         'uparamcoord': splitted_u,
         'vparamcoord': splitted_v,
+        'min_pixel_width': min_pixel_width,
         'mode': mode,
         'sample_count': sample_count,
         'matrix': matrix
