@@ -923,26 +923,33 @@ def UI():
                     l='R',
                     c=RepeatedCallback(Render.enable_matte, 1),
                     ann='Enables Arnold Matte on selected objects with <b>Red</b>',
-                    bgc=color.color
+                    bgc=[1, 0, 0]
                 )
                 pm.button(
                     l='G',
                     c=RepeatedCallback(Render.enable_matte, 2),
                     ann='Enables Arnold Matte on selected objects with <b>Green</b>',
-                    bgc=color.color
+                    bgc=[0, 1, 0]
                 )
                 pm.button(
                     l='B',
                     c=RepeatedCallback(Render.enable_matte, 3),
                     ann='Enables Arnold Matte on selected objects with <b>Blue</b>',
-                    bgc=color.color
+                    bgc=[0, 0, 1]
                 )
                 pm.button(
                     l='A',
                     c=RepeatedCallback(Render.enable_matte, 4),
                     ann='Enables Arnold Matte on selected objects with <b>Alpha</b>',
-                    bgc=color.color
+                    bgc=[0.5, 0.5, 0.5]
                 )
+
+            pm.button(
+                l='Setup Z-Layer',
+                c=RepeatedCallback(Render.create_z_layer),
+                ann=Render.create_z_layer.__doc__,
+                bgc=color.color
+            )
 
             pm.button(
                 l='Setup EA Matte',
@@ -4280,6 +4287,59 @@ class Render(object):
         dad = pm.PyNode('defaultArnoldDriver')
         pm.editRenderLayerAdjustment(dad.attr('autocrop'))
         dad.setAttr('autocrop', 0)
+
+    @classmethod
+    def create_z_layer(cls):
+        """creates z layer with arnold render settings
+        """
+        daro = pm.PyNode('defaultArnoldRenderOptions')
+
+        attrs = {
+            'AASamples': 4,
+            'GIDiffuseSamples': 0,
+            'GIGlossySamples': 0,
+            'GIRefractionSamples': 0,
+            'sssBssrdfSamples': 0,
+            'volumeIndirectSamples': 0,
+
+            'GITotalDepth': 0,
+            'GIDiffuseDepth': 0,
+            'GIGlossyDepth': 0,
+            'GIReflectionDepth': 0,
+            'GIRefractionDepth': 0,
+            'GIVolumeDepth': 0,
+
+            'ignoreShaders': 1,
+            'ignoreAtmosphere': 1,
+            'ignoreLights': 1,
+            'ignoreShadows': 1,
+            'ignoreBump': 1,
+            'ignoreNormalSmoothing': 1,
+            'ignoreDof': 1,
+            'ignoreSss': 1,
+        }
+
+        for attr in attrs:
+            pm.editRenderLayerAdjustment(daro.attr(attr))
+            daro.setAttr(attr, attrs[attr])
+
+        try:
+            aov_z = pm.PyNode('aiAOV_Z')
+            pm.editRenderLayerAdjustment(aov_z.attr('enabled'))
+            aov_z.setAttr('enabled', 1)
+        except pm.MayaNodeError:
+            pass
+
+        try:
+            aov_mv = pm.PyNode('aiAOV_motionvector')
+            pm.editRenderLayerAdjustment(aov_mv.attr('enabled'))
+            aov_mv.setAttr('enabled', 1)
+        except pm.MayaNodeError:
+            pass
+
+        dad = pm.PyNode('defaultArnoldDriver')
+        pm.editRenderLayerAdjustment(dad.attr('autocrop'))
+        dad.setAttr('autocrop', 1)
 
     @classmethod
     def generate_reflection_curve(self):
