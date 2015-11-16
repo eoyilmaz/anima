@@ -274,8 +274,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create workspace folders
         self.create_workspace_folders(workspace_path)
 
-        # set scene fps
-        self.set_fps(project.fps)
+        # set scene fps only if this scene is published or it is the first
+        # version
+        if version.is_published or version.version_number == 1:
+            self.set_fps(project.fps)
 
         # set render resolution
         # if this is a shot related task set it to shots resolution
