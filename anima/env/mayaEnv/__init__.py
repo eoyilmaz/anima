@@ -853,7 +853,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         pm.workspace.open(version.absolute_path)
         # set the current timeUnit to match with the environments
-        cls.set_fps(version.task.project.fps)
+
+        # set scene fps only if this scene is published or it is the first
+        # version
+        if version.is_published or version.version_number == 1:
+            cls.set_fps(version.task.project.fps)
 
     @classmethod
     def is_in_repo(cls, path):
