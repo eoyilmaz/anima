@@ -478,11 +478,11 @@ class Video(EditBase):
         )
 
         # create tracks
-        track_tag = xml_node.find('track')
-        track = Track()
-        track.from_xml(track_tag)
+        for track_tag in xml_node.findall('track'):
+            track = Track()
+            track.from_xml(track_tag)
 
-        self.tracks.append(track)
+            self.tracks.append(track)
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Video object
