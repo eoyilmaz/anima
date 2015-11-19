@@ -1150,6 +1150,16 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                ann="Import GPU Content",
+                l="Import GPU Content",
+                c=RepeatedCallback(
+                    Render.import_gpu_content
+                ),
+                bgc=color.color
+            )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -4365,6 +4375,44 @@ class Render(object):
         # move pivot to the first point
         pm.xform(curve, rp=p1, sp=p1)
 
+    @classmethod
+    def import_gpu_content(self):
+        """imports the selected GPU content
+        """
+        import os
+
+        imported_nodes = []
+
+        for node in pm.ls(sl=1):
+            gpu_node = node.getShape()
+            gpu_path = gpu_node.getAttr('cacheFileName')
+
+            new_nodes = pm.mel.eval(
+                'AbcImport -mode import -reparent "%s" "%s";' % (node.fullPath(), os.path.expandvars(gpu_path))
+            )
+
+            # get imported nodes
+            new_nodes = node.getChildren()
+            new_nodes.remove(gpu_node)
+
+            imported_node = None
+
+            # filter material node
+            for n in new_nodes:
+                if n.name() != 'materials':
+                    imported_node = n
+                else:
+                    pm.delete(n)
+
+            if imported_node:
+                imported_node.t.set(0, 0, 0)
+                imported_node.r.set(0, 0, 0)
+                imported_node.s.set(1, 1, 1)
+                pm.parent(imported_node, world=1)
+
+                imported_nodes.append(imported_node)
+
+        pm.select(imported_nodes)
 
 class Animation(object):
     """animation tools
