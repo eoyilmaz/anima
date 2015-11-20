@@ -1160,6 +1160,32 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            with pm.rowLayout(nc=3, adj=3, bgc=color.color):
+                source_driver_field = pm.textField(
+                    text='S:',
+                    w=50,
+                    bgc=color.color,
+                    ann='Source Driver'
+                )
+                target_driver_field = pm.textField(
+                    text='L:',
+                    w=50,
+                    bgc=color.color,
+                    ann='Target Driver'
+                )
+                pm.button(
+                    ann="Move Cache Files to Another Location",
+                    l="Move Cache Files",
+                    w=70,
+                    c=RepeatedCallback(
+                        Render.move_cache_files_to_another_location_wrapper,
+                        source_driver_field,
+                        target_driver_field
+                    ),
+                    bgc=color.color
+                )
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -4413,6 +4439,103 @@ class Render(object):
                 imported_nodes.append(imported_node)
 
         pm.select(imported_nodes)
+
+    @classmethod
+    def render_slicer(self):
+        """A tool for slicing big render scenes
+        :return:
+        """
+        from anima.env.mayaEnv import render_slicer
+        rs_UI = render_slicer.UI()
+
+    @classmethod
+    def move_cache_files_to_another_location_wrapper(cls, source_driver_field, target_driver_field):
+        """Wrapper for move_cache_files_to_another_location() command
+
+        :param source_driver_field: Text field for source driver
+        :param target_driver_field: Text field for target driver
+        :return:
+        """
+        source_driver = source_driver_field.text()
+        target_driver = target_driver_field.text()
+
+        Render.move_cache_files_to_another_location(
+            source_driver,
+            target_driver
+        )
+
+    @classmethod
+    def move_cache_files_to_another_location(cls, source_driver, target_driver):
+        """moves the selected cache files to another location
+
+        :param source_driver:
+        :param target_driver:
+        :return:
+        """
+        #
+        # Move fur caches to new server
+        #
+        import os
+        import shutil
+        import glob
+
+        pdm = ProgressDialogManager()
+
+        selected_nodes = pm.ls(sl=1)
+        caller = pdm.register(len(selected_nodes), title='Moving Cache Files')
+
+        for node in selected_nodes:
+            ass_node = node.getShape()
+
+            if not isinstance(ass_node, pm.nt.AiStandIn):
+                continue
+
+            ass_path = ass_node.dso.get()
+
+            ass_path = os.path.normpath(
+                os.path.expandvars(ass_path)
+            )
+
+            # give info to user
+            caller.title = 'Moving: %s' % ass_path
+
+            # check if it is in the source location
+            if source_driver not in ass_path:
+                continue
+
+            # get the dirname
+            ass_source_dir = os.path.dirname(ass_path)
+            ass_target_dir = ass_source_dir.replace(source_driver, target_driver)
+
+            # create the intermediate folders at destination
+            try:
+                os.makedirs(
+                    ass_target_dir
+                )
+            except OSError:
+                # dir already exists
+                pass
+
+            # get all files list
+            all_cache_files = glob.glob(
+                ass_path.replace('#', '*').replace('.ass', '.ass*')
+            )
+            inner_caller = pdm.register(len(all_cache_files))
+            for source_f in all_cache_files:
+                target_f = source_f.replace(source_driver, target_driver)
+                # move files to new location
+                shutil.move(source_f, target_f)
+                inner_caller.step(message='Moving: %s' % source_f)
+            inner_caller.end_progress()
+
+            # finally update DSO path
+            ass_node.dso.set(ass_path.replace(source_driver, target_driver))
+
+            caller.step()
+        caller.end_progress()
+
+
+
 
 class Animation(object):
     """animation tools
