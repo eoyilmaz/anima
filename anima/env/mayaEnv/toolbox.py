@@ -1179,7 +1179,7 @@ def UI():
                     l="Move Cache Files",
                     w=70,
                     c=RepeatedCallback(
-                        Render.move_cache_files_to_another_location_wrapper,
+                        Render.move_cache_files_wrapper,
                         source_driver_field,
                         target_driver_field
                     ),
@@ -4449,8 +4449,8 @@ class Render(object):
         rs_UI = render_slicer.UI()
 
     @classmethod
-    def move_cache_files_to_another_location_wrapper(cls, source_driver_field, target_driver_field):
-        """Wrapper for move_cache_files_to_another_location() command
+    def move_cache_files_wrapper(cls, source_driver_field, target_driver_field):
+        """Wrapper for move_cache_files() command
 
         :param source_driver_field: Text field for source driver
         :param target_driver_field: Text field for target driver
@@ -4459,13 +4459,13 @@ class Render(object):
         source_driver = source_driver_field.text()
         target_driver = target_driver_field.text()
 
-        Render.move_cache_files_to_another_location(
+        Render.move_cache_files(
             source_driver,
             target_driver
         )
 
     @classmethod
-    def move_cache_files_to_another_location(cls, source_driver, target_driver):
+    def move_cache_files(cls, source_driver, target_driver):
         """moves the selected cache files to another location
 
         :param source_driver:
@@ -4533,8 +4533,6 @@ class Render(object):
 
             caller.step()
         caller.end_progress()
-
-
 
 
 class Animation(object):
