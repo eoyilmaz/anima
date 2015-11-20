@@ -1853,39 +1853,45 @@ class Reference(object):
     def duplicate_selected_reference(cls):
         """duplicates the selected referenced object as reference
         """
-        ref = pm.ls(sl=1)[0].referenceFile()
-        # get the highest parent ref
-        if ref.parent():
-            while ref.parent():
-                ref = ref.parent()
+        all_selected_refs = []
+        for sel_node in pm.ls(sl=1):
+            ref = sel_node.referenceFile()
+            if ref not in all_selected_refs:
+                all_selected_refs.append(ref)
 
-        namespace = ref.namespace
-        dup_ref = pm.createReference(
-            ref.path,
-            gl=True,
-            namespace=namespace,
-            options='v=0'
-        )
+        for ref in all_selected_refs:
+            # get the highest parent ref
+            if ref.parent():
+                while ref.parent():
+                    ref = ref.parent()
 
-        top_parent = cls.get_no_parent_transform(ref)
-        if top_parent:
-            node = top_parent
-            tra = pm.xform(node, q=1, ws=1, t=1)
-            rot = pm.xform(node, q=1, ws=1, ro=1)
-            sca = pm.xform(node, q=1, ws=1, s=1)
+            namespace = ref.namespace
+            dup_ref = pm.createReference(
+                ref.path,
+                gl=True,
+                namespace=namespace,
+                options='v=0'
+            )
 
-            new_top_parent_node = cls.get_no_parent_transform(dup_ref)
-            pm.xform(new_top_parent_node, ws=1, t=tra)
-            pm.xform(new_top_parent_node, ws=1, ro=rot)
-            pm.xform(new_top_parent_node, ws=1, s=sca)
+            top_parent = cls.get_no_parent_transform(ref)
+            if top_parent:
+                node = top_parent
+                tra = pm.xform(node, q=1, ws=1, t=1)
+                rot = pm.xform(node, q=1, ws=1, ro=1)
+                sca = pm.xform(node, q=1, ws=1, s=1)
 
-            # parent to the same group
-            group = node.getParent()
-            if group:
-                pm.parent(new_top_parent_node, group)
+                new_top_parent_node = cls.get_no_parent_transform(dup_ref)
+                pm.xform(new_top_parent_node, ws=1, t=tra)
+                pm.xform(new_top_parent_node, ws=1, ro=rot)
+                pm.xform(new_top_parent_node, ws=1, s=sca)
 
-            # select the top node
-            pm.select(new_top_parent_node)
+                # parent to the same group
+                group = node.getParent()
+                if group:
+                    pm.parent(new_top_parent_node, group)
+
+                # select the top node
+                pm.select(new_top_parent_node)
 
     @classmethod
     def publish_model_as_look_dev(cls):

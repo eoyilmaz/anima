@@ -617,7 +617,7 @@ class Fusion(EnvironmentBase):
         project_dir = None
         maps = self.comp_prefs['Paths'].get('Map', None)
         if maps:
-            project_dir = maps.get('Project', None)
+            project_dir = maps.get('Project:', None)
 
         #if not project_dir:
         #    # set the map for the project dir
