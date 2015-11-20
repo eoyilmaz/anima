@@ -106,7 +106,7 @@ class ProgressDialogManager(object):
                 # update the maximum
                 self.dialog.setRange(0, self.max_steps)
                 self.dialog.setValue(self.current_step)
-            self.center_window()
+            # self. center_window()
 
         # also store this
         self.callers.append(caller)
@@ -141,7 +141,7 @@ class ProgressDialogManager(object):
         if self.dialog:
             self.dialog.setValue(self.current_step)
             self.dialog.setLabelText('%s : %s' % (caller.title, message))
-            self.center_window()
+            # self.center_window()
 
         if caller.current_step >= caller.max_steps:
             # kill the caller
