@@ -4517,9 +4517,9 @@ class Render(object):
                 pass
 
             # get all files list
-            all_cache_files = glob.glob(
-                ass_path.replace('#', '*').replace('.ass', '.ass*')
-            )
+            pattern = ass_path.replace('#', '*').replace('.ass.gz', '.ass*')
+            all_cache_files = glob.glob(pattern)
+
             inner_caller = pdm.register(len(all_cache_files))
             for source_f in all_cache_files:
                 target_f = source_f.replace(source_driver, target_driver)
