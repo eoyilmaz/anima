@@ -1437,7 +1437,7 @@ class Playblaster(object):
             for cam in pm.ls(type='camera'):
                 try:
                     cam.verticalFilmAperture.set(
-                        cam.horizontalFilmAperture *
+                        cam.horizontalFilmAperture.get() *
                         float(playblast_options['wh'][1]) /
                         float(playblast_options['wh'][0])
                     )
