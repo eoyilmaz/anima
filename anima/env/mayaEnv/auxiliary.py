@@ -1432,6 +1432,18 @@ class Playblaster(object):
             self.create_hud(self.hud_name)
             import pprint
             pprint.pprint(playblast_options)
+
+            # update all cameras in the scene to have correct film back
+            for cam in pm.ls(type='camera'):
+                try:
+                    cam.verticalFilmAperture.set(
+                        cam.horizontalFilmAperture *
+                        float(playblast_options['wh'][1]) /
+                        float(playblast_options['wh'][0])
+                    )
+                except AttributeError:
+                    pass
+
             result = [pm.playblast(**playblast_options)]
         finally:
             self.restore_user_options()
