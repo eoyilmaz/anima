@@ -3111,7 +3111,8 @@ class Render(object):
                 # if there is an accompanying override attribute like it is
                 # found in aiStandIn node
                 # then also set override{Attr} to True
-                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
+                if override_attr_name \
+                   and cmds.attributeQuery(override_attr_name, n=item.name(), ex=1):
                     if not is_default_layer:
                         pm.editRenderLayerAdjustment(
                             override_attr_full_name
@@ -3130,7 +3131,8 @@ class Render(object):
                         remove=1
                     )
 
-                if cmds.attributeQuery(override_attr_name, n=item.name(), ex=1) \
+                if override_attr_name \
+                   and cmds.attributeQuery(override_attr_name, n=item.name(), ex=1) \
                    and not is_default_layer:
                     pm.editRenderLayerAdjustment(
                         override_attr_full_name,
