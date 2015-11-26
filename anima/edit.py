@@ -47,9 +47,9 @@ class NameMixin(object):
     def _validate_name(cls, name):
         """validates the given name value
         """
-        if not isinstance(name, str):
+        if not isinstance(name, (str, unicode)):
             raise TypeError(
-                '%(class)s.name should be a string, not %(name_class)s' % {
+                '%(class)s.name should be a string or unicode, not %(name_class)s' % {
                     'class': cls.__name__,
                     'name_class': name.__class__.__name__
                 }
@@ -587,9 +587,9 @@ class Clip(EditBase, NameMixin, DurationMixin):
         if id_ is None:
             id_ = ''
 
-        if not isinstance(id_, str):
+        if not isinstance(id_, (str, unicode)):
             raise TypeError(
-                '%(class)s.id should be a string, not %(id_class)s' %
+                '%(class)s.id should be a string or unicode, not %(id_class)s' %
                 {
                     'class': cls.__name__,
                     'id_class': id_.__class__.__name__
