@@ -229,6 +229,23 @@ def UI():
 
             color.change()
             pm.button(
+                'export_component_transform_info_button',
+                l='Export Component Transform Info',
+                c=RepeatedCallback(General.export_component_transform_info),
+                ann='exports component transform info',
+                bgc=color.color
+            )
+
+            pm.button(
+                'import_component_transform_info_button',
+                l='Import Component Transform Info',
+                c=RepeatedCallback(General.import_component_transform_info),
+                ann='imports component transform info',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'generate_thumbnail_button',
                 l='Generate Thumbnail',
                 c=RepeatedCallback(General.generate_thumbnail),
@@ -1682,6 +1699,32 @@ class General(object):
             # pm.xform(node, ws=1, t=(float(data[j]), float(data[j + 1]), float(data[j + 2])))
             # pm.xform(node, ws=1, ro=(float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
             # pm.xform(node, ws=1, s=(float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+
+    @classmethod
+    def export_component_transform_info(cls):
+        """exports the transformation data in to a temp file
+        """
+        data = []
+        for node in pm.ls(sl=1, fl=1):
+            tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
+
+            data.append('%s' % tra[0])
+            data.append('%s' % tra[1])
+            data.append('%s' % tra[2])
+
+        with open(cls.transform_info_temp_file_path, 'w') as f:
+            f.write('\n'.join(data))
+
+    @classmethod
+    def import_component_transform_info(cls):
+        """imports the transform info from the temp file
+        """
+        with open(cls.transform_info_temp_file_path) as f:
+            data = f.readlines()
+
+        for i, node in enumerate(pm.ls(sl=1, fl=1)):
+            j = i * 3
+            pm.xform(node, ws=1, t=(float(data[j]), float(data[j + 1]), float(data[j + 2])))
 
     @classmethod
     def toggle_attributes(cls, attribute_name):
