@@ -4554,6 +4554,10 @@ class Render(object):
             if source_driver not in ass_path:
                 continue
 
+            # check if it contains .ass.gz in its path
+            if '.ass.gz' not in ass_path:
+                continue
+
             # get the dirname
             ass_source_dir = os.path.dirname(ass_path)
             ass_target_dir = ass_source_dir.replace(source_driver, target_driver)
