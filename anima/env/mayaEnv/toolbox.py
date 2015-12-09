@@ -5,6 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import functools
 import os
+import re
 import tempfile
 from anima.ui.progress_dialog import ProgressDialogManager
 
@@ -4572,7 +4573,7 @@ class Render(object):
                 pass
 
             # get all files list
-            pattern = ass_path.replace('#', '*').replace('.ass.gz', '.ass*')
+            pattern = re.subn(r'[#]+', '*', ass_path)[0].replace('.ass.gz', '.ass*')
             all_cache_files = glob.glob(pattern)
 
             inner_caller = pdm.register(len(all_cache_files))
