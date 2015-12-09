@@ -124,10 +124,15 @@ class Avid2Resolve(object):
                     e.source_file = ''
 
             # set the in and out points correctly
-            # check if it has handles of 2 seconds
-            if e.src_start_tc.frames > 48:
-                e.src_end_tc -= e.src_start_tc
-                e.src_start_tc = timecode.Timecode(self.fps)
+            # stupid AVID places the source clips to either 8th or 1st hour
+            first_hour = timecode.Timecode(self.fps, start_timecode='01:00:00:00')
+            eigth_hour = timecode.Timecode(self.fps, start_timecode='07:59:00:00')
+            if e.src_start_tc.frames >= eigth_hour.frames:
+                e.src_start_tc -= eigth_hour - 1
+                e.src_end_tc -= eigth_hour - 1
+            elif e.src_start_tc.frames >= first_hour.frames:
+                e.src_start_tc -= first_hour - 1
+                e.src_end_tc -= first_hour - 1
 
     def to_xml(self):
         """return an eml version of this edl
