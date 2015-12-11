@@ -127,7 +127,11 @@ class Avid2Resolve(object):
             # stupid AVID places the source clips to either 8th or 1st hour
             first_hour = timecode.Timecode(self.fps, start_timecode='01:00:00:00')
             eigth_hour = timecode.Timecode(self.fps, start_timecode='07:59:00:00')
-            if e.src_start_tc.frames >= eigth_hour.frames:
+            eleventh_hour = timecode.Timecode(self.fps, start_timecode='10:59:00:00')
+            if e.src_start_tc.frames >= eleventh_hour.frames:
+                e.src_start_tc -= eleventh_hour - 1
+                e.src_end_tc -= eleventh_hour - 1
+            elif e.src_start_tc.frames >= eigth_hour.frames:
                 e.src_start_tc -= eigth_hour - 1
                 e.src_end_tc -= eigth_hour - 1
             elif e.src_start_tc.frames >= first_hour.frames:
