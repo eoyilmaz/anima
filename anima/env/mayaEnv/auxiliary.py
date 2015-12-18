@@ -1270,7 +1270,7 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1, fluids=True)
         pm.modelEditor(active_panel, e=1, nParticles=True)
         pm.modelEditor(active_panel, e=1, planes=True)
-        pm.modelEditor(active_panel, e=1, imagePlanes=True)
+        pm.modelEditor(active_panel, e=1, imagePlane=True)
 
         # turn all hud displays off
         hud_flags = pm.headsUpDisplay(lh=1)
