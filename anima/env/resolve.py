@@ -88,8 +88,8 @@ class Avid2Resolve(object):
             for version_folder in version_folders:
                 # check if the current version folder has exr files
                 exr_path = ('%s/exr/*.exr' % version_folder).replace('\\', '/')
+                png_path = ('%s/png/*.png' % version_folder).replace('\\', '/')
                 seqs = pyseq.getSequences(exr_path)
-                # png_path = '%s/png/*' % latest_version_path
 
                 # and if not go to a previous version
                 # until you check all the version paths
@@ -98,6 +98,14 @@ class Avid2Resolve(object):
                         os.path.normpath(os.path.split(seqs[0].path())[0]).replace('\\', '/'),
                         seqs[0].format('%h|5B%03s-%03e|5D%t').replace('|', '%')
                     )
+                else:
+                    # also check png sequences
+                    png_seqs = pyseq.getSequences(png_path)
+                    if png_seqs:
+                        print(
+                            "%s %s has PNG but not EXR" %
+                            (shot.name, version_folder.split('/')[-1])
+                        )
 
             return ''
 
