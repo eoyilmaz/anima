@@ -4539,10 +4539,13 @@ class Render(object):
         for node in selected_nodes:
             ass_node = node.getShape()
 
-            if not isinstance(ass_node, pm.nt.AiStandIn):
+            if not isinstance(ass_node, (pm.nt.AiStandIn, pm.nt.AiVolume)):
                 continue
 
-            ass_path = ass_node.dso.get()
+            if isinstance(ass_node, pm.nt.AiStandIn):
+                ass_path = ass_node.dso.get()
+            elif isinstance(ass_node, pm.nt.AiVolume):
+                ass_path = ass_node.filename.get()
 
             ass_path = os.path.normpath(
                 os.path.expandvars(ass_path)
@@ -4556,8 +4559,12 @@ class Render(object):
                 continue
 
             # check if it contains .ass.gz in its path
-            if '.ass.gz' not in ass_path:
-                continue
+            if isinstance(ass_node, pm.nt.AiStandIn):
+                if '.ass.gz' not in ass_path:
+                    continue
+            elif isinstance(ass_node, pm.nt.AiVolume):
+                if '.vdb' not in ass_path:
+                    continue
 
             # get the dirname
             ass_source_dir = os.path.dirname(ass_path)
@@ -4585,7 +4592,12 @@ class Render(object):
             inner_caller.end_progress()
 
             # finally update DSO path
-            ass_node.dso.set(ass_path.replace(source_driver, target_driver))
+            if isinstance(ass_node, pm.nt.AiStandIn):
+                ass_node.dso.set(ass_path.replace(source_driver, target_driver))
+            elif isinstance(ass_node, pm.nt.AiVolume):
+                ass_node.filename.set(
+                    ass_path.replace(source_driver, target_driver)
+                )
 
             caller.step()
         caller.end_progress()
