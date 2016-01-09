@@ -135,10 +135,10 @@ class Avid2Resolve(object):
             # stupid AVID places the source clips to either 8th or 1st hour
             first_hour = timecode.Timecode(self.fps, start_timecode='01:00:00:00')
             eigth_hour = timecode.Timecode(self.fps, start_timecode='07:59:00:00')
-            eleventh_hour = timecode.Timecode(self.fps, start_timecode='10:59:00:00')
-            if e.src_start_tc.frames >= eleventh_hour.frames:
-                e.src_start_tc -= eleventh_hour - 1
-                e.src_end_tc -= eleventh_hour - 1
+            twelfth_hour = timecode.Timecode(self.fps, start_timecode='11:59:00:00')
+            if e.src_start_tc.frames >= twelfth_hour.frames:
+                e.src_start_tc -= twelfth_hour - 1
+                e.src_end_tc -= twelfth_hour - 1
             elif e.src_start_tc.frames >= eigth_hour.frames:
                 e.src_start_tc -= eigth_hour - 1
                 e.src_end_tc -= eigth_hour - 1
@@ -152,5 +152,10 @@ class Avid2Resolve(object):
         from anima.edit import Sequence
         s = Sequence(timebase='24')
         s.from_edl(self.events)
+
+        # optimize clips
+        for track in s.media.video.tracks:
+            track.optimize_clips()
+
         xml_data = s.to_xml()
         return xml_data

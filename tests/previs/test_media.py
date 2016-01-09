@@ -97,43 +97,43 @@ class MediaTestCase(unittest.TestCase):
       <locked>FALSE</locked>
       <enabled>TRUE</enabled>
       <clipitem id="shot2">
-        <end>35.0</end>
+        <end>35</end>
         <name>shot2</name>
         <enabled>True</enabled>
-        <start>1.0</start>
-        <in>0.0</in>
-        <duration>34.0</duration>
-        <out>34.0</out>
+        <start>1</start>
+        <in>0</in>
+        <duration>34</duration>
+        <out>34</out>
         <file>
-          <duration>34.0</duration>
+          <duration>34</duration>
           <name>shot2</name>
           <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
         </file>
       </clipitem>
       <clipitem id="shot">
-        <end>65.0</end>
+        <end>65</end>
         <name>shot</name>
         <enabled>True</enabled>
-        <start>35.0</start>
-        <in>0.0</in>
-        <duration>30.0</duration>
-        <out>30.0</out>
+        <start>35</start>
+        <in>0</in>
+        <duration>30</duration>
+        <out>30</out>
         <file>
-          <duration>30.0</duration>
+          <duration>30</duration>
           <name>shot</name>
           <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
         </file>
       </clipitem>
       <clipitem id="shot1">
-        <end>110.0</end>
+        <end>110</end>
         <name>shot1</name>
         <enabled>True</enabled>
-        <start>65.0</start>
-        <in>0.0</in>
-        <duration>45.0</duration>
-        <out>45.0</out>
+        <start>65</start>
+        <in>0</in>
+        <duration>45</duration>
+        <out>45</out>
         <file>
-          <duration>45.0</duration>
+          <duration>45</duration>
           <name>shot1</name>
           <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
         </file>

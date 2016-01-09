@@ -523,6 +523,35 @@ class Track(EditBase):
         self.enabled = True
         self.clips = []
 
+    def optimize_clips(self):
+        """optimizes files across all clips to use the same file node if two or
+        more clips are using the same files
+        """
+        # check all clip files and set to the same file node if the path is
+        # the same
+        for i in range(len(self.clips)):
+            clip = self.clips[i]
+            # go over the rest of the clips
+            for j in range(i + 1, len(self.clips)):
+                compare_clip = self.clips[j]
+                if clip.file.pathurl == compare_clip.file.pathurl:
+                    compare_clip.file = clip.file
+
+                # also check the ids
+                if clip.id == compare_clip.id:
+                    # get the id randomized part
+                    random_part = clip.id.split(' ')[-1]
+                    if random_part != clip.id:
+                        random_id = int(random_part) + 1
+                        compare_clip.id = '%s %s' % (
+                            clip.id.split(' ')[0],
+                            random_id
+                        )
+                    else:
+                        random_id = 2
+                        compare_clip.id = '%s %s' % (clip.id, random_id)
+
+
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
 
