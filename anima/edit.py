@@ -668,6 +668,26 @@ class File(EditBase, NameMixin, DurationMixin):
         NameMixin.__init__(self, name=name)
         DurationMixin.__init__(self, duration=duration)
         self._pathurl = self._validate_pathurl(pathurl)
+        self._id = None
+        self.id = self._pathurl
+        self.exported_once = False
+
+    @property
+    def id(self):
+        """the getter for the _id attribute
+        """
+        return self._id
+
+    @id.setter
+    def id(self, id_):
+        """the setter for the _id attribute
+        """
+        self._id = self._validate_id(id_)
+
+    @classmethod
+    def _validate_id(cls, id_):
+        part = id_.split('/')[-1]
+        return part.replace('%5B', '[').replace('%5D', ']')
 
     @classmethod
     def _validate_pathurl(cls, pathurl):
@@ -694,6 +714,8 @@ class File(EditBase, NameMixin, DurationMixin):
         """setter for the pathurl property
         """
         self._pathurl = self._validate_pathurl(pathurl)
+        # also set the id attribute
+        self.id = self._pathurl
 
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
@@ -715,12 +737,18 @@ class File(EditBase, NameMixin, DurationMixin):
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this File object
         """
-        template = """%(pre_indent)s<file>
+        if self.exported_once:
+            template = """%(pre_indent)s<file id="%(id)s"/>"""
+        else:
+            template = """%(pre_indent)s<file id="%(id)s">
 %(pre_indent)s%(indentation)s<duration>%(duration)i</duration>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
 %(pre_indent)s%(indentation)s<pathurl>%(pathurl)s</pathurl>
 %(pre_indent)s</file>"""
+            self.exported_once = True
+
         return template % {
+            'id': self.id,
             'duration': self.duration,
             'name': self.name,
             'pathurl': self.pathurl,
