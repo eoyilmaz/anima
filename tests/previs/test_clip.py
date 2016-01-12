@@ -145,6 +145,37 @@ class ClipTestCase(unittest.TestCase):
         self.assertEqual('shot', f.name)
         self.assertEqual(pathurl, f.pathurl)
 
+    def test_from_xml_method_is_working_properly_with_no_file(self):
+        """testing if the from_xml method will fill object attributes from the
+        given xml node even there is no file node inside
+        """
+        from xml.etree import ElementTree
+        clip_node = ElementTree.Element('clipitem', attrib={'id': 'shot'})
+        end_node = ElementTree.SubElement(clip_node, 'end')
+        end_node.text = '65.0'
+        name_node = ElementTree.SubElement(clip_node, 'name')
+        name_node.text = 'shot'
+        enabled_node = ElementTree.SubElement(clip_node, 'enabled')
+        enabled_node.text = 'True'
+        start_node = ElementTree.SubElement(clip_node, 'start')
+        start_node.text = '35.0'
+        in_node = ElementTree.SubElement(clip_node, 'in')
+        in_node.text = '0.0'
+        duration_node = ElementTree.SubElement(clip_node, 'duration')
+        duration_node.text = '30.0'
+        out_node = ElementTree.SubElement(clip_node, 'out')
+        out_node.text = '30.0'
+
+        c = Clip()
+        c.from_xml(clip_node)
+        self.assertEqual(65.0, c.end)
+        self.assertEqual('shot', c.name)
+        self.assertEqual(True, c.enabled)
+        self.assertEqual(35.0, c.start)
+        self.assertEqual(0.0, c.in_)
+        self.assertEqual(30.0, c.duration)
+        self.assertEqual(30.0, c.out)
+
     # def test_in_is_bigger_than_out_will_be_converted_to_negative_values(self):
     #     """testing if setting the in smaller than out will convert the in to
     #     a negative value

@@ -653,11 +653,12 @@ class Clip(EditBase, NameMixin, DurationMixin):
         self.in_ = float(xml_node.find('in').text)
         self.out = float(xml_node.find('out').text)
 
-        f = File()
         file_tag = xml_node.find('file')
-        f.from_xml(file_tag)
+        if file_tag:
+            f = File()
+            f.from_xml(file_tag)
 
-        self.file = f
+            self.file = f
 
     def to_xml(self, indentation=2, pre_indent=0):
         """returns an xml version of this Clip object
