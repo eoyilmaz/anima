@@ -50,7 +50,7 @@ class ProgressDialogManager(object):
 
     __metaclass__ = Singleton
 
-    def __init__(self):
+    def __init__(self, parent=None):
         self.in_progress = False
         self.dialog = None
         self.callers = []
@@ -58,6 +58,8 @@ class ProgressDialogManager(object):
         if not hasattr(self, 'use_ui'):
             # prevent resetting the use_ui to True
             self.use_ui = True
+
+        self.parent = parent
 
         self.title = ''
         self.max_steps = 0
@@ -69,7 +71,7 @@ class ProgressDialogManager(object):
         if self.use_ui:
             if self.dialog is None:
                 self.dialog = \
-                    QtGui.QProgressDialog(None)
+                    QtGui.QProgressDialog(self.parent)
                     # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
                 # self.dialog.setMinimumDuration(2000)
                 self.dialog.setRange(0, self.max_steps)

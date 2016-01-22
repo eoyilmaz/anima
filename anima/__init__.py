@@ -23,7 +23,6 @@ Place the following variables in to the config.py file::
   stalker_server_internal_address = 'http://a.b.c.d:xxxx'
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
-import platform
 
 __version__ = "0.1.13.dev"
 
@@ -33,6 +32,7 @@ import os
 import stat
 import datetime
 import tempfile
+import platform
 import logging
 
 # create logger

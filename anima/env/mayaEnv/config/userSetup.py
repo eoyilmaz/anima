@@ -37,10 +37,10 @@ for path in env_paths:
 # now we can import pymel and others
 import pymel
 import pymel.core as pm
+from pymel import mayautils
 import maya.cmds as cmds
 
 from stalker import db
-from anima.env.mayaEnv import auxiliary
 
 try:
     pm.Mel.source("HKLocalTools")
@@ -58,15 +58,20 @@ def __pluginUnloader(pluginName):
         pm.unloadPlugin(pluginName)
 
 
-__pluginUnloader('Mayatomr')
-__pluginLoader('objExport')
-__pluginLoader('closestPointOnCurve.py')
-__pluginLoader('fbxmaya')
-__pluginLoader('OpenEXRLoader')
-__pluginLoader('tiffFloatReader')
+if 'ANIMA_TEST_SETUP' not in os.environ.keys():
+    #
+    __pluginUnloader('Mayatomr')
+    __pluginLoader('objExport')
+    __pluginLoader('closestPointOnCurve.py')
+    __pluginLoader('fbxmaya')
+    __pluginLoader('OpenEXRLoader')
+    __pluginLoader('tiffFloatReader')
+    __pluginLoader('tiffFloatReader')
 
-from pymel import mayautils
-mayautils.executeDeferred(__pluginLoader, 'mtoa')
+    mayautils.executeDeferred(__pluginLoader, 'mtoa')
+    mayautils.executeDeferred(__pluginLoader, 'AbcExport')
+    mayautils.executeDeferred(__pluginLoader, 'AbcImport')
+    mayautils.executeDeferred(__pluginLoader, 'gpuCache')
 
 
 # set the optionVar that enables hidden mentalray shaders
@@ -90,6 +95,8 @@ db.setup()
 
 if not pm.general.about(batch=1):
     # load shelves
+    from anima.env.mayaEnv import auxiliary
+
     shelves_path = '../../../../shelves'
     shelf_names = ['kks_Tools', 'kks_Animation']
 

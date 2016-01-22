@@ -4531,7 +4531,17 @@ class Render(object):
         import shutil
         import glob
 
-        pdm = ProgressDialogManager()
+        from maya import OpenMayaUI
+        from shiboken import wrapInstance
+
+        from anima.ui import progress_dialog
+
+        maya_main_window = wrapInstance(
+            long(OpenMayaUI.MQtUtil.mainWindow()),
+            progress_dialog.QtGui.QWidget
+        )
+
+        pdm = ProgressDialogManager(parent=maya_main_window)
 
         selected_nodes = pm.ls(sl=1)
         caller = pdm.register(len(selected_nodes), title='Moving Cache Files')
