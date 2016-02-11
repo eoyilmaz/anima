@@ -12,31 +12,21 @@ class RenderSlicer(object):
     will help it to be rendered in small parts in a render farm.
     """
 
-    def __init__(self, camera=None, slices_in_x=5, slices_in_y=5):
+    def __init__(self, camera=None):
         self._camera = None
-        self._slices_in_x = None
-        self._slices_in_y = None
-        self._is_sliced = False
-        self._original_resolution = [None, None]
-
-        # call the properties to initialize values
         self.camera = camera
-        self.slices_in_x = slices_in_x
-        self.slices_in_y = slices_in_y
-        self.is_sliced = False
-        self.original_resolution = [None, None]
 
     @property
     def slices_in_x(self):
         """getter for _slices_in_x attribute
         """
-        return self._slices_in_x
+        return self.camera.slicesInX.get()
 
     @slices_in_x.setter
     def slices_in_x(self, slices_in_x):
         """setter for _slices_in_x attribute
         """
-        self._slices_in_x = self._validate_slices_in_x(slices_in_x)
+        self.camera.slicesInX.set(self._validate_slices_in_x(slices_in_x))
 
     @classmethod
     def _validate_slices_in_x(cls, slices_in_x):
@@ -60,13 +50,13 @@ class RenderSlicer(object):
     def slices_in_y(self):
         """getter for _slices_in_y attribute
         """
-        return self._slices_in_y
+        return self.camera.slicesInY.get()
 
     @slices_in_y.setter
     def slices_in_y(self, slices_in_y):
         """setter for _slices_in_y attribute
         """
-        self._slices_in_y = self._validate_slices_in_y(slices_in_y)
+        self.camera.slicesInY.set(self._validate_slices_in_y(slices_in_y))
 
     @classmethod
     def _validate_slices_in_y(cls, slices_in_y):
@@ -99,7 +89,9 @@ class RenderSlicer(object):
         :param camera: A Maya camera
         :return: None
         """
-        self._camera = self._validate_camera(camera)
+        camera = self._validate_camera(camera)
+        self._create_data_attributes(camera)
+        self._camera = camera
 
     @classmethod
     def _validate_camera(cls, camera):
@@ -118,8 +110,11 @@ class RenderSlicer(object):
 
         return camera
 
-    def _create_data_attributes(self):
+    @classmethod
+    def _create_data_attributes(cls, camera):
         """creates slicer data attributes inside the camera
+
+        :param pm.nt.Camera camera: A maya camera
         """
         # store the original resolution
         # slices in x
@@ -131,25 +126,25 @@ class RenderSlicer(object):
         # slices_in_x
         # slices_in_y
 
-        if not self.camera.hasAttr('isSliced'):
-            self.camera.addAttr('isSliced', at='bool')
+        if not camera.hasAttr('isSliced'):
+            camera.addAttr('isSliced', at='bool')
 
-        if not self.camera.hasAttr('nonSlicedResolutionX'):
-            self.camera.addAttr('nonSlicedResolutionX', at='short')
+        if not camera.hasAttr('nonSlicedResolutionX'):
+            camera.addAttr('nonSlicedResolutionX', at='short')
 
-        if not self.camera.hasAttr('nonSlicedResolutionY'):
-            self.camera.addAttr('nonSlicedResolutionY', at='short')
+        if not camera.hasAttr('nonSlicedResolutionY'):
+            camera.addAttr('nonSlicedResolutionY', at='short')
 
-        if not self.camera.hasAttr('slicesInX'):
-            self.camera.addAttr('slicesInX', at='short')
+        if not camera.hasAttr('slicesInX'):
+            camera.addAttr('slicesInX', at='short')
 
-        if not self.camera.hasAttr('slicesInY'):
-            self.camera.addAttr('slicesInY', at='short')
+        if not camera.hasAttr('slicesInY'):
+            camera.addAttr('slicesInY', at='short')
 
     def _store_data(self):
         """stores slicer data inside the camera
         """
-        self._create_data_attributes()
+        self._create_data_attributes(self.camera)
         self.camera.isSliced.set(self.is_sliced)
 
         # get the current render resolution
@@ -162,34 +157,68 @@ class RenderSlicer(object):
         self.camera.slicesInX.set(self.slices_in_x)
         self.camera.slicesInY.set(self.slices_in_y)
 
-    def _unslice(self):
-        """resets the camera to original non-sliced state
-        """
-        raise NotImplementedError()
-
-    def do_slice(self):
-        """slices all renderable cameras
+    @property
+    def is_sliced(self):
+        """A shortcut for the camera.isSliced attribute
         """
         if self.camera.hasAttr('isSliced'):
-            if self.camera.isSliced.get():
-                # un-slice the camera first
-                self._unslice()
+            return self.camera.isSliced.get()
+        return False
 
+    @is_sliced.setter
+    def is_sliced(self, is_sliced):
+        """A shortcut for the camera.isSliced attribute
+        """
+        if not self.camera.hasAttr('isSliced'):
+            self._create_data_attributes(self.camera)
+
+        self.camera.isSliced.set(is_sliced)
+
+    def unslice(self):
+        """resets the camera to original non-sliced state
+        """
+        # unslice the camera
+        dres = pm.PyNode('defaultResolution')
+
+        # set the resolution to original
+        dres.width.set(self.camera.getAttr('nonSlicedResolutionX'))
+        dres.height.set(self.camera.getAttr('nonSlicedResolutionY'))
+        dres.pixelAspect.set(1)
+
+        self.camera.isSliced.set(False)
+
+    def unslice_scene(self):
+        """scans the scene cameras and unslice the scene
+        """
+        dres = pm.PyNode('defaultResolution')
+        for cam in pm.ls(type=pm.nt.Camera):
+            if cam.hasAttr('isSliced') and cam.isSliced.get():
+                dres.width.set(cam.nonSlicedResolutionX.get())
+                dres.height.set(cam.nonSlicedResolutionY.get())
+                dres.pixelAspect.set(1)
+                cam.isSliced.set(False)
+                break
+
+    def slice(self, slices_in_x, slices_in_y):
+        """slices all renderable cameras
+        """
+        self.unslice_scene()
         self.is_sliced = True
-
         self._store_data()
 
-        sx = self.slices_in_x
-        sy = self.slices_in_y
+        sx = self.slices_in_x = slices_in_x
+        sy = self.slices_in_y = slices_in_y
 
         # set render resolution
         d_res = pm.PyNode("defaultResolution")
         h_res = d_res.width.get()
         v_res = d_res.height.get()
-        self.original_resolution = [h_res, v_res]
 
+        # this system only works when the
         d_res.width.set(h_res / float(sx))
+        d_res.pixelAspect.set(1)
         d_res.height.set(v_res / float(sy))
+        d_res.pixelAspect.set(1)
 
         # use h_aperture to calculate v_aperture
         h_aperture = self.camera.getAttr('horizontalFilmAperture')
@@ -213,6 +242,8 @@ class RenderSlicer(object):
 
         self.camera.panZoomEnabled.set(1)
         self.camera.renderPanZoom.set(1)
+
+        d_res.pixelAspect.set(1)
 
     def ui(self):
         """The UI for the slicer
