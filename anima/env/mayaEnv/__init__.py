@@ -177,14 +177,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         from stalker import Repository
 
         # try to get a version from current scene
-        v = self.get_current_version()
+        # v = self.get_current_version()
 
-        if v:
-            # just append the project repo
-            all_repos = [v.task.project.repository]
-        else:
-            # no version append all repositories
-            all_repos = Repository.query.all()
+        # if v:
+        #     # just append the project repo
+        #     all_repos = [v.task.project.repository]
+        # else:
+        #    # no version append all repositories
+        all_repos = Repository.query.all()
 
         try:
             # add all repo paths to Arnold Texture search path
