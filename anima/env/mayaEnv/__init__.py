@@ -408,7 +408,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # export the file
         pm.exportSelected(version.absolute_full_path, type='mayaAscii')
 
-        # save the version to database
+        # save the version to database
         from stalker import db
         db.DBSession.add(version)
         db.DBSession.commit()

@@ -1502,3 +1502,48 @@ def export_edl():
     for shot in pm.ls(type='shot'):
         if shot.hasAttr('handle'):
             shot.handle.set(0)
+
+
+@publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
+def export_camera():
+    """exports camera and the related shot node
+    """
+    from stalker import db, Task, Version
+    from anima.env import mayaEnv
+
+    m = mayaEnv.Maya()
+
+    v = m.get_current_version()
+
+    shot = pm.ls(type='shot')[0]
+    try:
+        sequencer = pm.ls(shot.message.connections(), type='sequencer')[0]
+    except IndexError:
+        sequencer = None
+
+    camera = None
+    if shot:
+        camera = shot.currentCamera.get()
+
+    camera_task = \
+        Task.query\
+            .filter(Task.parent == v.task.parent)\
+            .filter(Task.name == 'Camera').first()
+
+    if camera_task:
+        from stalker import LocalSession
+        local_session = LocalSession()
+        logged_in_user = local_session.logged_in_user
+
+        cam_v = Version(
+            task=camera_task,
+            description='Exported from %s task on Publish' % v.task.name
+        )
+        cam_v.update_paths()
+        cam_v.extension = '.ma'
+        cam_v.is_published = True
+        cam_v.created_by = cam_v.updated_by = logged_in_user
+
+        pm.select([shot, camera, sequencer])
+
+        m.export_as(cam_v)

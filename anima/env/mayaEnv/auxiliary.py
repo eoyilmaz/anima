@@ -1808,7 +1808,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
 
         command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                   '-stripNamespaces -uvWrite -worldSpace -eulerFilter ' \
-                  '-root %s -file %s";'
+                  '-writeVisibility -root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
