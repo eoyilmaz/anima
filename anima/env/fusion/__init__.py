@@ -449,6 +449,95 @@ class Fusion(EnvironmentBase):
 
         return saver_nodes
 
+    def create_node_tree(self, node_tree):
+        """Creates a node tree from the given node tree.
+
+        The node_tree is a Python dictionary showing node types and attribute
+        values. Also it can be a list of dictionaries to create more complex
+        trees.
+
+        Each node_tree can create only one shading network. The format of the
+        dictionary should be as follows.
+
+        node_tree: {
+            'type': <- The fusion node type of the toppest shader
+            'attr': {
+                <- A dictionary that contains attribute names and values.
+                'Input': {
+                    'type': --- type name of the connected node
+                    'attr': {
+                        <- attribute values ->
+                    }
+                }
+            },
+        }
+
+        :param [dict, list] node_tree: A dictionary showing the node tree
+          attributes.
+
+        :return:
+        """
+        # allow it to accept both a list or dict
+        if isinstance(node_tree, list):
+            for item in node_tree:
+                self.create_node_tree(item)
+            return
+
+        node_type = node_tree['type']
+
+        self.comp.Lock()
+        node = self.comp.AddTool(node_type)
+        self.comp.Unlock()
+
+        # attributes
+        if 'attr' in node_tree:
+            attributes = node_tree['attr']
+            for key in attributes:
+                value = attributes[key]
+                if isinstance(value, dict):
+                    new_node = self.create_node_tree(value)
+                    node.Input = new_node
+                else:
+                    node.SetAttrs({key: value})
+
+        # input lists
+        if 'input_list' in node_tree:
+            input_list = node_tree['input_list']
+            for key in input_list:
+                node_input_list = node.GetInputList()
+                for input_entry_key in node_input_list.keys():
+                    input_entry = node_input_list[input_entry_key]
+                    input_id = input_entry.GetAttrs()['INPS_ID']
+                    if input_id == key:
+                        value = input_list[key]
+                        input_entry[0] = value
+                        break
+
+        # ref_id
+        if 'ref_id' in node_tree:
+            node.SetData('ref_id', node_tree['ref_id'])
+
+        # connected to
+        if 'connected_to' in node_tree:
+            connected_to = node_tree['connected_to']
+            if 'Input' in connected_to:
+                input_node = self.create_node_tree(connected_to['Input'])
+                node.Input = input_node
+            elif 'ref_id' in node_tree['connected_to']:
+                ref_id = node_tree['connected_to']['ref_id']
+                print('ref_id: %s' % ref_id)
+                # find a node with ref_id equals to ref_id that is given in the
+                # node tree
+                all_nodes = self.comp.GetToolList().values()
+                for r_node in all_nodes:
+                    node_ref_id = r_node.GetData('ref_id')
+                    print('node_ref_id: %s' % node_ref_id)
+                    if node_ref_id == ref_id:
+                        node.Input = r_node
+                        break
+
+        return node
+
     def create_main_saver_node(self, version):
         """creates the default saver node if there is no one created before.
         """
