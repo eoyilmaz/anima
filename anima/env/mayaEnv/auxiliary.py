@@ -1784,7 +1784,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
         wrong_node_names = ['rig', 'proxy', 'low']
         hidden_nodes = []
         for child in pm.ls(cacheable_node.getChildren(), type='transform'):
-            if any([n in child.name() for n in wrong_node_names]):
+            if any([n in child.name().lower() for n in wrong_node_names]):
                 if child.v.get() is True:
                     child.v.set(False)
                     hidden_nodes.append(child)
