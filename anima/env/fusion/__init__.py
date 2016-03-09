@@ -6,6 +6,7 @@
 
 import os
 import PeyeonScript
+import uuid
 
 from anima import logger
 from anima.env import empty_reference_resolution
@@ -479,9 +480,12 @@ class Fusion(EnvironmentBase):
         """
         # allow it to accept both a list or dict
         if isinstance(node_tree, list):
+            created_root_nodes = []
             for item in node_tree:
-                self.create_node_tree(item)
-            return
+                created_root_nodes.append(
+                    self.create_node_tree(item)
+                )
+            return created_root_nodes
 
         node_type = node_tree['type']
 
@@ -539,108 +543,20 @@ class Fusion(EnvironmentBase):
         return node
 
     def create_main_saver_node(self, version):
-        """creates the default saver node if there is no one created before.
+        """Creates the default saver node if there is no created before.
+
+        Creates the default saver nodes if there isn't any existing outputs,
+        and updates the ones that is already created
         """
-        # stores format data and attribute values
-        file_formats = {
-            'exr': {
-                'attr': {
-                    'ProcessRed': 1,
-                    'ProcessGreen': 1,
-                    'ProcessBlue': 1,
-                    'ProcessAlpha': 0,
-                    'OutputFormat': 'OpenEXRFormat',
-                    'OpenEXRFormat.Depth': 1,  # 16-bit float
-                    'OpenEXRFormat.RedEnable': 1,
-                    'OpenEXRFormat.GreenEnable': 1,
-                    'OpenEXRFormat.BlueEnable': 1,
-                    'OpenEXRFormat.AlphaEnable': 0,
-                    'OpenEXRFormat.ZEnable': 0,
-                    'OpenEXRFormat.CovEnable': 0,
-                    'OpenEXRFormat.ObjIDEnable': 0,
-                    'OpenEXRFormat.MatIDEnable': 0,
-                    'OpenEXRFormat.UEnable': 0,
-                    'OpenEXRFormat.VEnable': 0,
-                    'OpenEXRFormat.XNormEnable': 0,
-                    'OpenEXRFormat.YNormEnable': 0,
-                    'OpenEXRFormat.ZNormEnable': 0,
-                    'OpenEXRFormat.XVelEnable': 0,
-                    'OpenEXRFormat.YVelEnable': 0,
-                    'OpenEXRFormat.XRevVelEnable': 0,
-                    'OpenEXRFormat.YRevVelEnable': 0,
-                    'OpenEXRFormat.XPosEnable': 0,
-                    'OpenEXRFormat.YPosEnable': 0,
-                    'OpenEXRFormat.ZPosEnable': 0,
-                    'OpenEXRFormat.XDispEnable': 0,
-                    'OpenEXRFormat.YDispEnable': 0,
-                }
-            },
-            'png': {
-                'gamut': 'SimplifiedsRGB',
-                'attr': {
-                    'ProcessRed': 1,
-                    'ProcessGreen': 1,
-                    'ProcessBlue': 1,
-                    'ProcessAlpha': 0,
-                    'OutputFormat': 'PNGFormat',
-                    'PNGFormat.SaveAlpha': 0,
-                    'PNGFormat.Depth': 1,
-                    'PNGFormat.CompressionLevel': 9,
-                    'PNGFormat.GammaMode': 0,
-                }
-            }
-        }
 
-        # list all the save nodes in the current file
-        saver_nodes = self.get_main_saver_node()
+        def output_path_generator(file_format):
+            """helper function to generate the output path
 
-        for file_format in file_formats:
-            # check if we have a saver node for this format
-            format_saver = None
-            format_node_name = '%s_%s' % (
-                self._main_output_node_name,
-                file_format
-            )
-            for node in saver_nodes:
-                node_name = node.GetAttrs('TOOLS_Name')
-                if node_name.startswith(format_node_name):
-                    format_saver = node
-                    break
-
-            # create the saver node for this format if missing
-            if not format_saver:
-                # lock the comp to prevent the file dialog
-                self.comp.Lock()
-
-                format_saver = self.comp.Saver(
-                    file_formats[file_format]['attr']
-                )
-
-                # unlock the comp
-                self.comp.Unlock()
-
-                format_saver.SetAttrs(
-                    {'TOOLS_Name': format_node_name}
-                )
-
-                # add gamut node if required
-                try:
-                    output_space = file_formats[file_format]['gamut']
-                    # create a gamut node if it doesn't already have one
-                    gamut = self.comp.GamutConvert({
-                        'OutputSpace': output_space,
-                    })
-                    # connect it
-                    format_saver.Input = gamut
-
-                    # position the gamut node just over the saver node
-                    flow = self.comp.CurrentFrame.FlowView
-                    pos = flow.GetPosTable(format_saver)
-                    flow.SetPos(gamut, pos[1], pos[2] - 1)
-                except KeyError:
-                    pass
-
-            # set the output path
+            :param file_format:
+            :return:
+            """
+            # generate the data needed
+            # the output path
             file_name_buffer = []
             template_kwargs = {}
 
@@ -669,25 +585,149 @@ class Fusion(EnvironmentBase):
             ).replace('\\', '/')
 
             # set the output path
-            format_saver.Clip[0] = '%s' % os.path.normpath(
+            return '%s' % os.path.normpath(
                 output_file_full_path
             ).encode()
 
-            # set default attributes
-            inputs = format_saver.GetInputList()
-            number_of_inputs = len(inputs)
-            for i in range(number_of_inputs):
-                n = i + 1
-                input_id = inputs[n].GetAttrs()['INPS_ID']
-                try:
-                    value = file_formats[file_format]['attr'][input_id]
-                    inputs[n][0] = value
-                except KeyError:
-                    pass
+        def output_node_name_generator(file_format):
+            return '%s_%s' % (self._main_output_node_name, file_format)
 
-            # create the folders
+        random_ref_id = uuid.uuid4().hex
+
+        output_format_data = [
+            {
+                'name': 'png',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': output_node_name_generator('png'),
+                    },
+                    'input_list': {
+                        'Clip': output_path_generator('png'),
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'PNGFormat',
+                        'PNGFormat.SaveAlpha': 0,
+                        'PNGFormat.Depth': 1,
+                        'PNGFormat.CompressionLevel': 9,
+                        'PNGFormat.GammaMode': 0,
+                    },
+                    'connected_to': {
+                        'Input': {
+                            'type': 'ColorCurves',
+                            'input_list': {
+                                'EditAlpha': 0.0,
+                            },
+                            'connected_to': {
+                                'Input': {
+                                    'type': 'CineonLog',
+                                    'input_list': {
+                                        'Mode': 1,
+                                        'RedBlackLevel': 0.0,
+                                        'RedWhiteLevel': 1023.0,
+                                        'RedFilmStockGamma': 1.0
+                                    },
+                                    'connected_to': {
+                                        'Input': {
+                                            'type': 'TimeSpeed',
+                                            'ref_id': random_ref_id,
+                                            'input_list': {
+                                                'Speed': 12.0/25.0
+                                            },
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                'name': 'exr',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': output_node_name_generator('exr'),
+                    },
+                    'input_list': {
+                        'Clip': output_path_generator('exr'),
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'OpenEXRFormat',
+                        'OpenEXRFormat.Depth': 1,  # 16-bit float
+                        'OpenEXRFormat.RedEnable': 1,
+                        'OpenEXRFormat.GreenEnable': 1,
+                        'OpenEXRFormat.BlueEnable': 1,
+                        'OpenEXRFormat.AlphaEnable': 0,
+                        'OpenEXRFormat.ZEnable': 0,
+                        'OpenEXRFormat.CovEnable': 0,
+                        'OpenEXRFormat.ObjIDEnable': 0,
+                        'OpenEXRFormat.MatIDEnable': 0,
+                        'OpenEXRFormat.UEnable': 0,
+                        'OpenEXRFormat.VEnable': 0,
+                        'OpenEXRFormat.XNormEnable': 0,
+                        'OpenEXRFormat.YNormEnable': 0,
+                        'OpenEXRFormat.ZNormEnable': 0,
+                        'OpenEXRFormat.XVelEnable': 0,
+                        'OpenEXRFormat.YVelEnable': 0,
+                        'OpenEXRFormat.XRevVelEnable': 0,
+                        'OpenEXRFormat.YRevVelEnable': 0,
+                        'OpenEXRFormat.XPosEnable': 0,
+                        'OpenEXRFormat.YPosEnable': 0,
+                        'OpenEXRFormat.ZPosEnable': 0,
+                        'OpenEXRFormat.XDispEnable': 0,
+                        'OpenEXRFormat.YDispEnable': 0,
+                    },
+                    'connected_to': {
+                        'ref_id': random_ref_id
+                    }
+                }
+            }
+        ]
+
+        # selectively generate output format
+        saver_nodes = self.get_main_saver_node()
+
+        for data in output_format_data:
+            format_name = data['name']
+            node_tree = data['node_tree']
+
+            # now check if a node with the same name exists
+            format_node = None
+            format_node_name = output_node_name_generator(format_name)
+            for node in saver_nodes:
+                node_name = node.GetAttrs('TOOLS_Name')
+                if node_name.startswith(format_node_name):
+                    format_node = node
+                    break
+
+            # create the saver node for this format if missing
+            if not format_node:
+                self.create_node_tree(node_tree)
+            else:
+                # just update the input_lists
+                if 'input_list' in node_tree:
+                    input_list = node_tree['input_list']
+                    for key in input_list:
+                        node_input_list = format_node.GetInputList()
+                        for input_entry_key in node_input_list.keys():
+                            input_entry = node_input_list[input_entry_key]
+                            input_id = input_entry.GetAttrs()['INPS_ID']
+                            if input_id == key:
+                                value = input_list[key]
+                                input_entry[0] = value
+                                break
+
             try:
-                os.makedirs(os.path.dirname(output_file_full_path))
+                os.makedirs(
+                    os.path.dirname(
+                        output_path_generator(format_name)
+                    )
+                )
             except OSError:
                 # path already exists
                 pass
