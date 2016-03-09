@@ -634,7 +634,8 @@ class Fusion(EnvironmentBase):
                                             'type': 'TimeSpeed',
                                             'ref_id': random_ref_id,
                                             'input_list': {
-                                                'Speed': 12.0/25.0
+                                                'Speed': 12.0/25.0,
+                                                'InterpolateBetweenFrames': 0
                                             },
                                         }
                                     }
