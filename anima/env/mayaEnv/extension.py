@@ -1012,7 +1012,7 @@ class ShotExtension(object):
 
         # create "handle" attribute in each shot and set the value
         try:
-            self.addAttr('handle', at='short', k=True, min=0)
+            self.addAttr('handle', at='short', k=False, min=0)
         except RuntimeError:
             # attribute is already there
             pass
