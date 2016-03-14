@@ -246,6 +246,17 @@ def check_old_object_smoothing():
 
 
 @publisher
+def check_local_references():
+    """check if all of the references are legit
+    """
+    for ref in pm.listReferences():
+        if ref.version is None:
+            raise PublishError(
+                'Please remove any <b>non-legit</b> references!!!'
+            )
+
+
+@publisher
 def check_if_previous_version_references():
     """check if a previous version of the same task is referenced to the scene
     """
@@ -1028,7 +1039,7 @@ def check_cacheable_attr():
 
 @publisher('animation')
 def check_smartass_animator():
-    """checks if the smartass animator is tyring to create a new version for a
+    """checks if the smartass animator is trying to create a new version for a
     completed animation scene silently
     """
     from stalker.models import walk_hierarchy
@@ -1132,9 +1143,9 @@ def check_sequence_name_format():
     scene_code = parts[2]
 
     # sequence_code should start with SEQ
-    if not sequence_code.startswith('SEQ'):
+    if not (sequence_code.startswith('SEQ') or sequence_code.startswith('EP')):
         raise PublishError(
-            'Sequence name should start with "SEQ"!!!<br>'
+            'Sequence name should start with "SEQ" or "EP"!!!<br>'
             '<br>'
             'Not:<br>'
             '%s' % sequence_code
