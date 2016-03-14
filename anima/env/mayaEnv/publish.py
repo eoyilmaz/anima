@@ -1408,7 +1408,7 @@ def generate_playblast():
     # before doing a playblast set all shot handles to 48
     for shot in pm.ls(type='shot'):
         if shot.hasAttr('handle'):
-            shot.handle.set(48)
+            shot.handle.set(0)
 
     sp = auxiliary.Playblaster()
     sp.batch_mode = True
@@ -1416,9 +1416,9 @@ def generate_playblast():
     sp.upload_outputs(sp.version, video_files)
 
     # revert the handles to 0
-    for shot in pm.ls(type='shot'):
-        if shot.hasAttr('handle'):
-            shot.handle.set(0)
+    # for shot in pm.ls(type='shot'):
+    #     if shot.hasAttr('handle'):
+    #         shot.handle.set(0)
 
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
