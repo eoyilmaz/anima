@@ -1119,7 +1119,8 @@ def check_sequence_name():
 def check_sequence_name_format():
     """checks if the sequence name format is correct
     """
-    sequencer = pm.ls(type='sequencer')[0]
+    shot = pm.ls(type='shot')[0]
+    sequencer = shot.outputs(type='sequencer')[0]
     sequence_name = sequencer.sequence_name.get()
 
     # SEQ001_003_TNGI
