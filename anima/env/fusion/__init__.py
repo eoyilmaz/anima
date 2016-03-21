@@ -617,6 +617,7 @@ class Fusion(EnvironmentBase):
                     'connected_to': {
                         'Input': {
                             'type': 'ColorCurves',
+                            'ref_id': random_ref_id,
                             'input_list': {
                                 'EditAlpha': 0.0,
                             },
@@ -632,7 +633,6 @@ class Fusion(EnvironmentBase):
                                     'connected_to': {
                                         'Input': {
                                             'type': 'TimeSpeed',
-                                            'ref_id': random_ref_id,
                                             'input_list': {
                                                 'Speed': 12.0/25.0,
                                                 'InterpolateBetweenFrames': 0
