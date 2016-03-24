@@ -1434,8 +1434,8 @@ def generate_playblast():
 
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
-def export_edl():
-    """exports edl of animation scenes
+def export_edl_and_xml():
+    """exports edl and xml representations of animation scenes
     """
     from anima.env.mayaEnv import Maya
     m = Maya()
@@ -1452,26 +1452,34 @@ def export_edl():
 
     seq1 = seqs[0]
 
+    # EDL
     edl_path = tempfile.gettempdir()
     edl_file_name = '%s_v%03i.edl' % (
         current_version.nice_name,
         current_version.version_number
     )
-
     edl_file_full_path = os.path.join(edl_path, edl_file_name)
+
+    # XML
+    xml_path = tempfile.gettempdir()
+    xml_file_name = '%s_v%03i.xml' % (
+        current_version.nice_name,
+        current_version.version_number
+    )
+    xml_file_full_path = os.path.join(xml_path, xml_file_name)
 
     # convert to MXF
     from anima.ui.progress_dialog import ProgressDialogManager
     pdm = ProgressDialogManager()
 
-    #shots = seq1.shots.get()
+    # shots = seq1.shots.get()
     shots = pm.ls(type='shot')
     shot_count = len(shots)
 
-    # before doing a playblast set all shot handles to 48
+    # before doing a playblast set all shot handles to 0
     for shot in pm.ls(type='shot'):
         if shot.hasAttr('handle'):
-            shot.handle.set(48)
+            shot.handle.set(0)
 
     caller = pdm.register(shot_count, title='Converting To MXF')
 
@@ -1496,18 +1504,30 @@ def export_edl():
     for i in seq1.metafuze():
         caller.step()
 
-    # create EDL file
+    # create EDL and XML files
+    from stalker import db
     from anima import utils
     mm = utils.MediaManager()
+
+    # EDL
     l = sm.to_edl()
     with open(edl_file_full_path, 'w') as f:
         f.write(l.to_string())
 
     with open(edl_file_full_path, 'r') as f:
         link = mm.upload_version_output(current_version, f, edl_file_name)
+        db.DBSession.add(link)
+
+    # XML
+    x = sm.to_xml()
+    with open(xml_file_full_path, 'w') as f:
+        f.write(x)
+
+    with open(xml_file_full_path, 'r') as f:
+        link = mm.upload_version_output(current_version, f, xml_file_name)
+        db.DBSession.add(link)
 
     # add the link to database
-    from stalker import db
     db.DBSession.commit()
 
     # revert the handles to 0
@@ -1520,7 +1540,7 @@ def export_edl():
 def export_camera():
     """exports camera and the related shot node
     """
-    from stalker import db, Task, Version
+    from stalker import Task, Version
     from anima.env import mayaEnv
 
     m = mayaEnv.Maya()

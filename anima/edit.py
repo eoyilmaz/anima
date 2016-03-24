@@ -92,7 +92,7 @@ class DurationMixin(object):
                 }
             )
 
-        duration = float(duration)
+        duration = int(duration)
 
         if duration < 0:
             raise ValueError(
@@ -125,7 +125,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
 
     :param str name: The name of this sequence.
     :param float duration: The duration of this sequence.
-    :param str timebase: The frame rate setting for this sequence. Default
+    :param Rate rate: The frame rate setting for this sequence. Default
       value is '25', can be anything in ['23.98', '24', '25', '29.97', '30',
       '50', '59.94', '60']. Without setting this converting to EDL will result
       wrong timecode values in EDL.
@@ -135,14 +135,18 @@ class Sequence(EditBase, NameMixin, DurationMixin):
       to a timecode by using this parameter as the base.
     """
 
-    def __init__(self, name='', duration=0.0, timebase='25',
+    def __init__(self, name='', duration=0.0, rate=None,
                  timecode='00:00:00:00'):
         NameMixin.__init__(self, name=name)
         DurationMixin.__init__(self, duration=duration)
         self.ntsc = False
         # replace this with pytimecode.PyTimeCode instance
         self.timecode = timecode
-        self.timebase = timebase
+
+        if rate is None:
+            rate = Rate(timebase='25', ntsc=False)
+        self.rate = rate
+
         self.media = None
 
     def from_xml(self, xml_node):
@@ -150,12 +154,13 @@ class Sequence(EditBase, NameMixin, DurationMixin):
 
         :param xml_node: an xml.etree.ElementTree.Element instance
         """
-        self.duration = float(xml_node.find('duration').text)
+        self.duration = int(xml_node.find('duration').text)
         self.name = xml_node.find('name').text
         rate_tag = xml_node.find('rate')
         if rate_tag is not None:
-            self.ntsc = rate_tag.find('ntsc').text.title() == 'True'
-            self.timebase = rate_tag.find('timebase').text
+            rate = Rate()
+            rate.from_xml(rate_tag)
+            self.rate = rate
 
         self.timecode = xml_node.find('timecode').find('string').text
 
@@ -174,10 +179,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
 %(pre_indent)s<sequence>
 %(pre_indent)s%(indentation)s<duration>%(duration)s</duration>
 %(pre_indent)s%(indentation)s<name>%(name)s</name>
-%(pre_indent)s%(indentation)s<rate>
-%(pre_indent)s%(indentation)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
-%(pre_indent)s%(indentation)s%(indentation)s<timebase>%(timebase)s</timebase>
-%(pre_indent)s%(indentation)s</rate>
+%(rate)s
 %(pre_indent)s%(indentation)s<timecode>
 %(pre_indent)s%(indentation)s%(indentation)s<string>%(timecode)s</string>
 %(pre_indent)s%(indentation)s</timecode>
@@ -189,7 +191,10 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             'duration': self.duration,
             'name': self.name,
             'ntsc': str(self.ntsc).upper(),
-            'timebase': self.timebase,
+            'rate': self.rate.to_xml(
+                indentation=indentation,
+                pre_indent=indentation + pre_indent
+            ),
             'timecode': self.timecode,
             'media': self.media.to_xml(
                 indentation=indentation,
@@ -234,9 +239,6 @@ class Sequence(EditBase, NameMixin, DurationMixin):
             clip.out = e.src_end_tc.frame_number
 
             clip.duration = clip.out - clip.in_
-                            # including the handle at start,
-                            # but we can not have any idea about the
-                            # handle at end
 
             clip.start = e.rec_start_tc.frame_number
             clip.end = e.rec_end_tc.frame_number
@@ -250,7 +252,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                     edl_list.fps,
                     '23:59:59:%s' % edl_list.fps
                 )
-                clip.start -= tc_24_hours.frame_number  #+ 1
+                clip.start -= tc_24_hours.frame_number  # + 1
 
             if clip.start < sequence_start:
                 sequence_start = clip.start
@@ -259,7 +261,15 @@ class Sequence(EditBase, NameMixin, DurationMixin):
 
             f = File()
             f.name = clip.name
-            f.duration = clip.duration
+
+            # include the handle at start,
+            # but we can not have any idea about the
+            # handle at end
+            #
+            # a possible solution is to look to the original media
+            # but we may not be able to reach the media itself
+            f.duration = e.src_end_tc.frame_number
+
             f.pathurl = 'file://%s' % e.source_file
 
             clip.file = f
@@ -268,7 +278,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                 video_track.clips.append(clip)
 
         self.duration = sequence_end - sequence_start
-        # TODO: fix this latest, timecode always 00:00:00:00 for now
+        # TODO: fix this later, timecode always 00:00:00:00 for now
         self.timecode = '00:00:00:00'
         # TODO: can not read sequence.timebase from edl
 
@@ -278,7 +288,7 @@ class Sequence(EditBase, NameMixin, DurationMixin):
         from edl import List, Event
         from timecode import Timecode
 
-        l = List(self.timebase)
+        l = List(self.rate.timebase)
         l.title = self.name
 
         # convert clips to events
@@ -304,24 +314,30 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                     e.tr_code = 'C'  # TODO: for now use C (Cut) later on
                     # expand it to add other transition codes
 
-                    src_start_tc = Timecode(self.timebase,
-                                              frames=clip.in_ + 1)
+                    src_start_tc = Timecode(self.rate.timebase,
+                                            frames=clip.in_ + 1)
                     # 1 frame after last frame shown
-                    src_end_tc = Timecode(self.timebase,
-                                            frames=clip.out + 1)
+                    src_end_tc = Timecode(self.rate.timebase,
+                                          frames=clip.out + 1)
 
                     e.src_start_tc = str(src_start_tc)
                     e.src_end_tc = str(src_end_tc)
 
-                    rec_start_tc = Timecode(self.timebase,
-                                              frames=clip.start + 1)
+                    rec_start_tc = Timecode(self.rate.timebase,
+                                            frames=clip.start + 1)
                     # 1 frame after last frame shown
-                    rec_end_tc = Timecode(self.timebase, frames=clip.end + 1)
+                    rec_end_tc = Timecode(self.rate.timebase,
+                                          frames=clip.end + 1)
 
                     e.rec_start_tc = str(rec_start_tc)
                     e.rec_end_tc = str(rec_end_tc)
 
-                    source_file = clip.file.pathurl.replace('file://', '')
+                    source_file = \
+                        clip.file.pathurl.replace('file://localhost', '')
+                    if ':' in source_file and source_file.startswith('/'):
+                        # remove the leading '/'
+                        source_file = source_file[1:]
+
                     e.source_file = source_file
 
                     e.comments.extend([
@@ -391,7 +407,8 @@ class Sequence(EditBase, NameMixin, DurationMixin):
         if video is not None:
             for track in video.tracks:
                 for clip in track.clips:
-                    raw_file_path = clip.file.pathurl.replace('file://', '')
+                    raw_file_path = \
+                        clip.file.pathurl.replace('file://localhost', '')
                     raw_mxf_path = '%s%s' % (
                         os.path.splitext(raw_file_path)[0],
                         '.mxf'
@@ -408,7 +425,8 @@ class Sequence(EditBase, NameMixin, DurationMixin):
                         'sequence_timecode': self.timecode,
                         'clip_id': clip.id,
                         'clip_name': clip.name,
-                        'clip_duration': clip.duration - 1,  # metafuze likes frame number
+                        # metafuze likes frame number
+                        'clip_duration': clip.duration - 1,
                         'width': video.width,
                         'height': video.height
                     }
@@ -551,7 +569,6 @@ class Track(EditBase):
                         random_id = 2
                         compare_clip.id = '%s %s' % (clip.id, random_id)
 
-
     def from_xml(self, xml_node):
         """Fills attributes with the given XML node
 
@@ -593,11 +610,11 @@ class Track(EditBase):
 
 
 class Clip(EditBase, NameMixin, DurationMixin):
-    """XML compatibility class for Sequencer
+    """XML compatibility class for Clip
     """
 
     def __init__(self, id=None, name='', start=0.0, end=0.0, duration=0.0,
-                 enabled=True, in_=0, out=0, type_='Video'):
+                 enabled=True, in_=0, out=0, type_='Video', rate=None):
         NameMixin.__init__(self, name=name)
         DurationMixin.__init__(self, duration=duration)
         self._id = self._validate_id(id)
@@ -608,6 +625,26 @@ class Clip(EditBase, NameMixin, DurationMixin):
         self.out = out
         self.file = None
         self.type = type_
+        self._rate = None
+        self.rate = rate
+
+    @classmethod
+    def _validate_rate(cls, rate):
+        """validates the rate value
+        """
+        return rate
+
+    @property
+    def rate(self):
+        """getter for the _rate attribute
+        """
+        return self._rate
+
+    @rate.setter
+    def rate(self, rate):
+        """setter for the _rate attribute
+        """
+        self._rate = self._validate_rate(rate)
 
     @classmethod
     def _validate_id(cls, id_):
@@ -645,13 +682,13 @@ class Clip(EditBase, NameMixin, DurationMixin):
         :param xml_node: an xml.etree.ElementTree.Element instance
         """
         self.id = xml_node.attrib['id']
-        self.start = float(xml_node.find('start').text)
-        self.end = float(xml_node.find('end').text)
+        self.start = int(xml_node.find('start').text)
+        self.end = int(xml_node.find('end').text)
         self.name = xml_node.find('name').text
         self.enabled = xml_node.find('enabled').text == 'True'
-        self.duration = float(xml_node.find('duration').text)
-        self.in_ = float(xml_node.find('in').text)
-        self.out = float(xml_node.find('out').text)
+        self.duration = int(xml_node.find('duration').text)
+        self.in_ = int(xml_node.find('in').text)
+        self.out = int(xml_node.find('out').text)
 
         file_tag = xml_node.find('file')
         if file_tag:
@@ -669,10 +706,17 @@ class Clip(EditBase, NameMixin, DurationMixin):
 %(pre_indent)s%(indentation)s<enabled>%(enabled)s</enabled>
 %(pre_indent)s%(indentation)s<start>%(start)i</start>
 %(pre_indent)s%(indentation)s<in>%(in)i</in>
-%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>
+%(pre_indent)s%(indentation)s<duration>%(duration)i</duration>%(rate)s
 %(pre_indent)s%(indentation)s<out>%(out)i</out>
 %(file)s
 %(pre_indent)s</clipitem>"""
+
+        rate_xml = ''
+        if self.rate:
+            rate_xml = '\n%s' % self.rate.to_xml(
+                indentation=indentation,
+                pre_indent=pre_indent + indentation
+            )
 
         return template % {
             'id': self.id,
@@ -686,7 +730,8 @@ class Clip(EditBase, NameMixin, DurationMixin):
             'file': self.file.to_xml(indentation=indentation,
                                      pre_indent=pre_indent + indentation),
             'pre_indent': ' ' * pre_indent,
-            'indentation': ' ' * indentation
+            'indentation': ' ' * indentation,
+            'rate': rate_xml
         }
 
 
@@ -731,6 +776,25 @@ class File(EditBase, NameMixin, DurationMixin):
                     'pathurl_class': pathurl.__class__.__name__
                 }
             )
+
+        # expand any environment vars
+        if pathurl:
+            if 'file://localhost/' in pathurl:
+                split_from = 'file://localhost/'
+            else:
+                split_from = 'file://'
+
+            pathurl = 'file://localhost/%s' % os.path.normpath(
+                os.path.expandvars(
+                    pathurl.split(split_from)[-1]
+                )
+            ).replace('\\', '/')
+
+            # remove double slashes after "localhost"
+            # (happens in Linux and OSX only)
+            pathurl = \
+                pathurl.replace('file://localhost//', 'file://localhost/')
+
         return pathurl
 
     @property
@@ -754,7 +818,7 @@ class File(EditBase, NameMixin, DurationMixin):
         """
         duration_node = xml_node.find('duration')
         if duration_node is not None:
-            self.duration = float(duration_node.text)
+            self.duration = int(duration_node.text)
 
         name_node = xml_node.find('name')
         if name_node is not None:
@@ -782,6 +846,106 @@ class File(EditBase, NameMixin, DurationMixin):
             'duration': self.duration,
             'name': self.name,
             'pathurl': self.pathurl,
+            'pre_indent': ' ' * pre_indent,
+            'indentation': ' ' * indentation
+        }
+
+
+class Rate(EditBase):
+    """XML compatibility class for Rate
+
+    :param str timebase: The frame rate setting for this sequence.
+      Default value is '25', can be anything in ['12', '23.98', '24', '25',
+      '29.97', '30', '50', '59.94', '60']. Without setting this converting to
+      EDL will result wrong timecode values in EDL.
+
+    :param bool ntsc: A bool value showing if this is a dropframe rate. Default
+      value is False.
+    """
+    __timebase_default_value = '25'
+
+    def __init__(self, timebase=None, ntsc=False):
+        self._timebase = None
+        self._ntsc = None
+        self.timebase = self._validate_timebase(timebase)
+        self.ntsc = self._validate_ntsc(ntsc)
+
+    @classmethod
+    def _validate_timebase(cls, timebase):
+        """validates the given timebase value
+        """
+        if timebase is None:
+            timebase = cls.__timebase_default_value
+
+        if not isinstance(timebase, str):
+            raise TypeError(
+                '%(class)s.timebase should be a str, not '
+                '%(timebase_class)s' % {
+                    'class': cls.__name__,
+                    'timebase_class': timebase.__class__.__name__
+                }
+            )
+
+        return timebase
+
+    @property
+    def timebase(self):
+        """returns the _timebase attribute value
+        """
+        return self._timebase
+
+    @timebase.setter
+    def timebase(self, timebase):
+        self._timebase = self._validate_timebase(timebase)
+
+    @classmethod
+    def _validate_ntsc(cls, ntsc):
+        """validates the given ntsc value
+        """
+        if ntsc is None:
+            ntsc = False
+
+        if not isinstance(ntsc, bool):
+            raise TypeError(
+                '%(class)s.ntsc should be a bool value, not '
+                '%(ntsc_class)s' % {
+                    'class': cls.__name__,
+                    'ntsc_class': ntsc.__class__.__name__
+                }
+            )
+
+        return bool(ntsc)
+
+    @property
+    def ntsc(self):
+        """returns the _ntsc attribute value
+        """
+        return self._ntsc
+
+    @ntsc.setter
+    def ntsc(self, ntsc):
+        self._ntsc = self._validate_ntsc(ntsc)
+
+    def from_xml(self, xml_node):
+        """Fills attributes with the given XML node
+
+        :param xml_node: an xml.etree.ElementTree.Element instance
+        """
+        rate_tag = xml_node
+        if rate_tag is not None:
+            self.timebase = rate_tag.find('timebase').text
+            self.ntsc = rate_tag.find('ntsc').text.title() == 'True'
+
+    def to_xml(self, indentation=2, pre_indent=0):
+        """returns an xml version of this Media object
+        """
+        template = """%(pre_indent)s<rate>
+%(pre_indent)s%(indentation)s<timebase>%(timebase)s</timebase>
+%(pre_indent)s%(indentation)s<ntsc>%(ntsc)s</ntsc>
+%(pre_indent)s</rate>"""
+        return template % {
+            'timebase': self.timebase,
+            'ntsc': 'TRUE' if self.ntsc else 'FALSE',
             'pre_indent': ' ' * pre_indent,
             'indentation': ' ' * indentation
         }

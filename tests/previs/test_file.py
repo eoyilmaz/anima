@@ -49,7 +49,7 @@ class FileTestCase(unittest.TestCase):
         attribute
         """
         f = File(pathurl='shot2')
-        self.assertEqual('shot2', f.pathurl)
+        self.assertEqual('file://localhost/shot2', f.pathurl)
 
     def test_pathurl_will_set_the_id_attribute(self):
         """testing if setting the pathurl attribute will also set the id
@@ -65,24 +65,25 @@ class FileTestCase(unittest.TestCase):
         """
         f = File(pathurl='shot1')
         test_value = 'shot2'
+        expected_value = 'file://localhost/shot2'
         self.assertNotEqual(test_value, f.pathurl)
         f.pathurl = test_value
-        self.assertEqual(test_value, f.pathurl)
+        self.assertEqual(expected_value, f.pathurl)
 
     def test_to_xml_method_is_working_properly(self):
         """testing if the to xml method is working properly
         """
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/' \
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/' \
                     'shot2.mov'
 
         expected_xml = \
             """<file id="shot2.mov">
   <duration>34</duration>
   <name>shot2</name>
-  <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+  <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
 </file>"""
 
         self.assertEqual(
@@ -94,16 +95,16 @@ class FileTestCase(unittest.TestCase):
         """testing if the to xml method is working properly
         """
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/' \
-                    'shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/' \
+                    'data/shot2.mov'
 
         expected_xml = \
             """  <file id="shot2.mov">
     <duration>34</duration>
     <name>shot2</name>
-    <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+    <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
   </file>"""
 
         self.assertEqual(
@@ -118,22 +119,23 @@ class FileTestCase(unittest.TestCase):
         from xml.etree import ElementTree
         file_node = ElementTree.Element('file')
         duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         name_node = ElementTree.SubElement(file_node, 'name')
         name_node.text = 'shot'
         pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
 
-        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl = 'file://localhost/' \
+                  'home/eoyilmaz/maya/projects/default/data/shot.mov'
         pathurl_node.text = pathurl
 
         f = File()
         # test starting condition
-        self.assertEqual(0.0, f.duration)
+        self.assertEqual(0, f.duration)
         self.assertEqual('', f.name)
         self.assertEqual('', f.pathurl)
 
         f.from_xml(file_node)
-        self.assertEqual(30.0, f.duration)
+        self.assertEqual(30, f.duration)
         self.assertEqual('shot', f.name)
         self.assertEqual(pathurl, f.pathurl)
 

@@ -10,6 +10,10 @@ import shutil
 import tempfile
 
 import unittest
+
+# prepare for test
+os.environ['ANIMA_TEST_SETUP'] = ""
+
 import pymel.core as pm
 
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,

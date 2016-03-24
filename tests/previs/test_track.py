@@ -20,57 +20,57 @@ class TrackTestCase(unittest.TestCase):
 
         # clip 1
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot2'
-        c.start = 1.0
-        c.end = 35.0
+        c.start = 1
+        c.end = 35
         c.name = 'shot2'
         c.enabled = True
-        c.duration = 34.0
-        c.in_ = 0.0
-        c.out = 34.0
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
         c.file = f
 
         t.clips.append(c)
 
         # clip 2
         f = File()
-        f.duration = 30.0
+        f.duration = 30
         f.name = 'shot'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov'
 
         c = Clip()
         c.id = 'shot'
-        c.start = 35.0
-        c.end = 65.0
+        c.start = 35
+        c.end = 65
         c.name = 'shot'
         c.enabled = True
-        c.duration = 30.0
-        c.in_ = 0.0
-        c.out = 30.0
+        c.duration = 30
+        c.in_ = 0
+        c.out = 30
         c.file = f
 
         t.clips.append(c)
 
         # clip 3
         f = File()
-        f.duration = 45.0
+        f.duration = 45
         f.name = 'shot1'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
 
         c = Clip()
         c.id = 'shot1'
-        c.start = 65.0
-        c.end = 110.0
+        c.start = 65
+        c.end = 110
         c.name = 'shot1'
         c.enabled = True
-        c.duration = 45.0
-        c.in_ = 0.0
-        c.out = 45.0
+        c.duration = 45
+        c.in_ = 0
+        c.out = 45
         c.file = f
 
         t.clips.append(c)
@@ -90,7 +90,7 @@ class TrackTestCase(unittest.TestCase):
     <file id="shot2.mov">
       <duration>34</duration>
       <name>shot2</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+      <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
     </file>
   </clipitem>
   <clipitem id="shot">
@@ -104,7 +104,7 @@ class TrackTestCase(unittest.TestCase):
     <file id="shot.mov">
       <duration>30</duration>
       <name>shot</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
+      <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov</pathurl>
     </file>
   </clipitem>
   <clipitem id="shot1">
@@ -118,7 +118,7 @@ class TrackTestCase(unittest.TestCase):
     <file id="shot1.mov">
       <duration>45</duration>
       <name>shot1</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
+      <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
     </file>
   </clipitem>
 </track>"""
@@ -143,84 +143,84 @@ class TrackTestCase(unittest.TestCase):
         clip_node = ElementTree.SubElement(track_node, 'clipitem',
                                            attrib={'id': 'shot2'})
         end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '35.0'
+        end_node.text = '35'
         name_node = ElementTree.SubElement(clip_node, 'name')
         name_node.text = 'shot2'
         enabled_node = ElementTree.SubElement(clip_node, 'enabled')
         enabled_node.text = 'True'
         start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '1.0'
+        start_node.text = '1'
         in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0.0'
+        in_node.text = '0'
         duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '34.0'
+        duration_node.text = '34'
         out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '34.0'
+        out_node.text = '34'
 
         file_node = ElementTree.SubElement(clip_node, 'file')
         duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '34.0'
+        duration_node.text = '34'
         name_node = ElementTree.SubElement(file_node, 'name')
         name_node.text = 'shot2'
         pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
 
-        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
         pathurl_node.text = pathurl
 
         # clip2
         clip_node = ElementTree.SubElement(track_node, 'clipitem',
                                            attrib={'id': 'shot'})
         end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '65.0'
+        end_node.text = '65'
         name_node = ElementTree.SubElement(clip_node, 'name')
         name_node.text = 'shot'
         enabled_node = ElementTree.SubElement(clip_node, 'enabled')
         enabled_node.text = 'True'
         start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '35.0'
+        start_node.text = '35'
         in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0.0'
+        in_node.text = '0'
         duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '30.0'
+        out_node.text = '30'
 
         file_node = ElementTree.SubElement(clip_node, 'file')
         duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         name_node = ElementTree.SubElement(file_node, 'name')
         name_node.text = 'shot'
         pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
 
-        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov'
         pathurl_node.text = pathurl
 
         # clip3
         clip_node = ElementTree.SubElement(track_node, 'clipitem',
                                            attrib={'id': 'shot1'})
         end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '110.0'
+        end_node.text = '110'
         name_node = ElementTree.SubElement(clip_node, 'name')
         name_node.text = 'shot1'
         enabled_node = ElementTree.SubElement(clip_node, 'enabled')
         enabled_node.text = 'True'
         start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '65.0'
+        start_node.text = '65'
         in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0.0'
+        in_node.text = '0'
         duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '45.0'
+        duration_node.text = '45'
         out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '45.0'
+        out_node.text = '45'
 
         file_node = ElementTree.SubElement(clip_node, 'file')
         duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '45.0'
+        duration_node.text = '45'
         name_node = ElementTree.SubElement(file_node, 'name')
         name_node.text = 'shot1'
         pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
 
-        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
         pathurl_node.text = pathurl
 
         t = Track()
@@ -231,55 +231,55 @@ class TrackTestCase(unittest.TestCase):
 
         # clip1
         c = t.clips[0]
-        self.assertEqual(35.0, c.end)
+        self.assertEqual(35, c.end)
         self.assertEqual('shot2', c.name)
         self.assertEqual(True, c.enabled)
-        self.assertEqual(1.0, c.start)
-        self.assertEqual(0.0, c.in_)
-        self.assertEqual(34.0, c.duration)
-        self.assertEqual(34.0, c.out)
+        self.assertEqual(1, c.start)
+        self.assertEqual(0, c.in_)
+        self.assertEqual(34, c.duration)
+        self.assertEqual(34, c.out)
 
         f = c.file
-        self.assertEqual(34.0, f.duration)
+        self.assertEqual(34, f.duration)
         self.assertEqual('shot2', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov',
+            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov',
             f.pathurl
         )
 
         # clip2
         c = t.clips[1]
-        self.assertEqual(65.0, c.end)
+        self.assertEqual(65, c.end)
         self.assertEqual('shot', c.name)
         self.assertEqual(True, c.enabled)
-        self.assertEqual(35.0, c.start)
-        self.assertEqual(0.0, c.in_)
-        self.assertEqual(30.0, c.duration)
-        self.assertEqual(30.0, c.out)
+        self.assertEqual(35, c.start)
+        self.assertEqual(0, c.in_)
+        self.assertEqual(30, c.duration)
+        self.assertEqual(30, c.out)
 
         f = c.file
-        self.assertEqual(30.0, f.duration)
+        self.assertEqual(30, f.duration)
         self.assertEqual('shot', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot.mov',
+            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov',
             f.pathurl
         )
 
         # clip3
         c = t.clips[2]
-        self.assertEqual(110.0, c.end)
+        self.assertEqual(110, c.end)
         self.assertEqual('shot1', c.name)
         self.assertEqual(True, c.enabled)
-        self.assertEqual(65.0, c.start)
-        self.assertEqual(0.0, c.in_)
-        self.assertEqual(45.0, c.duration)
-        self.assertEqual(45.0, c.out)
+        self.assertEqual(65, c.start)
+        self.assertEqual(0, c.in_)
+        self.assertEqual(45, c.duration)
+        self.assertEqual(45, c.out)
 
         f = c.file
-        self.assertEqual(45.0, f.duration)
+        self.assertEqual(45, f.duration)
         self.assertEqual('shot1', f.name)
         self.assertEqual(
-            'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov',
+            'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov',
             f.pathurl
         )
 
@@ -293,57 +293,57 @@ class TrackTestCase(unittest.TestCase):
 
         # clip 1
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot2'
-        c.start = 1.0
-        c.end = 35.0
+        c.start = 1
+        c.end = 35
         c.name = 'shot2'
         c.enabled = True
-        c.duration = 34.0
-        c.in_ = 0.0
-        c.out = 34.0
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
         c.file = f
 
         t.clips.append(c)
 
         # clip 2
         f = File()
-        f.duration = 30.0
+        f.duration = 30
         f.name = 'shot'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot'
-        c.start = 35.0
-        c.end = 65.0
+        c.start = 35
+        c.end = 65
         c.name = 'shot'
         c.enabled = True
-        c.duration = 30.0
-        c.in_ = 0.0
-        c.out = 30.0
+        c.duration = 30
+        c.in_ = 0
+        c.out = 30
         c.file = f
 
         t.clips.append(c)
 
         # clip 3
         f = File()
-        f.duration = 45.0
+        f.duration = 45
         f.name = 'shot1'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
 
         c = Clip()
         c.id = 'shot1'
-        c.start = 65.0
-        c.end = 110.0
+        c.start = 65
+        c.end = 110
         c.name = 'shot1'
         c.enabled = True
-        c.duration = 45.0
-        c.in_ = 0.0
-        c.out = 45.0
+        c.duration = 45
+        c.in_ = 0
+        c.out = 45
         c.file = f
 
         t.clips.append(c)
@@ -372,57 +372,57 @@ class TrackTestCase(unittest.TestCase):
 
         # clip 1
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot2'
-        c.start = 1.0
-        c.end = 35.0
+        c.start = 1
+        c.end = 35
         c.name = 'shot2'
         c.enabled = True
-        c.duration = 34.0
-        c.in_ = 0.0
-        c.out = 34.0
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
         c.file = f
 
         t.clips.append(c)
 
         # clip 2
         f = File()
-        f.duration = 30.0
+        f.duration = 30
         f.name = 'shot'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot2'
-        c.start = 35.0
-        c.end = 65.0
+        c.start = 35
+        c.end = 65
         c.name = 'shot2'
         c.enabled = True
-        c.duration = 30.0
-        c.in_ = 0.0
-        c.out = 30.0
+        c.duration = 30
+        c.in_ = 0
+        c.out = 30
         c.file = f
 
         t.clips.append(c)
 
         # clip 3
         f = File()
-        f.duration = 45.0
+        f.duration = 45
         f.name = 'shot1'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot1.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov'
 
         c = Clip()
         c.id = 'shot1'
-        c.start = 65.0
-        c.end = 110.0
+        c.start = 65
+        c.end = 110
         c.name = 'shot1'
         c.enabled = True
-        c.duration = 45.0
-        c.in_ = 0.0
-        c.out = 45.0
+        c.duration = 45
+        c.in_ = 0
+        c.out = 45
         c.file = f
 
         t.clips.append(c)
@@ -442,7 +442,7 @@ class TrackTestCase(unittest.TestCase):
     <file id="shot2.mov">
       <duration>34</duration>
       <name>shot2</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+      <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
     </file>
   </clipitem>
   <clipitem id="shot2 2">
@@ -466,7 +466,7 @@ class TrackTestCase(unittest.TestCase):
     <file id="shot1.mov">
       <duration>45</duration>
       <name>shot1</name>
-      <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
+      <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot1.mov</pathurl>
     </file>
   </clipitem>
 </track>"""

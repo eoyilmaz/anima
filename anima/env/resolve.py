@@ -103,7 +103,7 @@ class Avid2Resolve(object):
                     png_seqs = pyseq.getSequences(png_path)
                     if png_seqs:
                         print(
-                            "%s %s has PNG but not EXR" %
+                            "%s %s has PNG but no EXR" %
                             (shot.name, version_folder.split('/')[-1])
                         )
 
@@ -149,8 +149,8 @@ class Avid2Resolve(object):
     def to_xml(self):
         """return an eml version of this edl
         """
-        from anima.edit import Sequence
-        s = Sequence(timebase='24')
+        from anima.edit import Sequence, Rate
+        s = Sequence(rate=Rate(timebase='24'))
         s.from_edl(self.events)
 
         # optimize clips

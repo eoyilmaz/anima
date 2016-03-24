@@ -4,9 +4,15 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+import os
 import unittest
+
+# prepare for test
+os.environ['ANIMA_TEST_SETUP'] = ""
+
+from anima.env import mayaEnv  # to setup maya extensions
+
 import pymel.core
-from anima.env.mayaEnv import extension
 
 
 class SequencerExtensionTestCase(unittest.TestCase):

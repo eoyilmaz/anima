@@ -15,8 +15,7 @@ from pymel.core.uitypes import CheckBox, TextField
 from pymel.core.general import Attribute
 from pymel.core.system import FileReference
 
-from anima.edit import Sequence, Media, \
-    Video, Track, Clip, File
+from anima.edit import Sequence, Media, Video, Track, Clip, File, Rate
 from anima.extension import extends
 from anima.repr import Representation
 
@@ -412,7 +411,11 @@ class SequenceManagerExtension(object):
                     shot.handle.set(0)
                     if clip.file:
                         f = clip.file
-                        shot.output.set(f.pathurl.replace('file://', ''))
+                        pathurl = f.pathurl.replace('file://localhost/', '')
+                        if ':' not in pathurl:  # not windows, keep '/'
+                            pathurl = '/%s' % pathurl
+                        shot.output.set(pathurl)
+
                     shot.track.set(i + 1)
 
     @extends(pm.nodetypes.SequenceManager)
@@ -512,9 +515,9 @@ class SequenceManagerExtension(object):
         seq.name = str(sequencer.get_sequence_name())
         seq.ntsc = False  # always false
 
-        seq.timebase = str(fps)
+        seq.rate = Rate(timebase=str(fps))
         seq.timecode = str(timecode.Timecode(
-            framerate=seq.timebase,
+            framerate=seq.rate.timebase,
             frames=time.timecodeProductionStart.get() + 1
         ))
         seq.duration = sequencer.duration
@@ -543,7 +546,7 @@ class SequenceManagerExtension(object):
 
             f.duration = shot.duration + 2 * shot.handle.get()
 
-            f.pathurl = str('file://%s' % shot.output.get())
+            f.pathurl = str('file://localhost/%s' % shot.output.get())
 
             clip.file = f
 

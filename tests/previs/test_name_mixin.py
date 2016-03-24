@@ -24,7 +24,7 @@ class NameAttrMixinTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'NameMixin.name should be a string, not int'
+            'NameMixin.name should be a string or unicode, not int'
         )
 
     def test_name_attribute_is_not_a_string(self):
@@ -37,7 +37,7 @@ class NameAttrMixinTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'NameMixin.name should be a string, not int'
+            'NameMixin.name should be a string or unicode, not int'
         )
 
     def test_name_argument_is_working_properly(self):

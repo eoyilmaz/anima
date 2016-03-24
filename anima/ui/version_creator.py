@@ -453,7 +453,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.close
         )
 
-        #logout button
+        # logout button
         QtCore.QObject.connect(
             self.logout_pushButton,
             QtCore.SIGNAL("clicked()"),
@@ -1582,6 +1582,33 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 DBSession.rollback()
                 return
             logger.debug('env: %s' % environment.name)
+        else:
+            # check if the version the user is trying to create and the version
+            # that is currently open in the current environment belongs to the
+            # same task
+            current_version = environment.get_current_version()
+            if current_version:
+                if current_version.task != new_version.task:
+                    # ask to the user if he/she is sure about that
+                    answer = QtGui.QMessageBox.question(
+                        self,
+                        'Possible Mistake?',
+                        "Saving under different Task<br>"
+                        "<br>"
+                        "current version: <b>%s</b><br>"
+                        "new version    : <b>%s</b><br>"
+                        "<br>"
+                        "Are you sure?" % (
+                            current_version.nice_name,
+                            new_version.nice_name
+                        ),
+                        QtGui.QMessageBox.Yes,
+                        QtGui.QMessageBox.No
+                    )
+
+                    if answer == QtGui.QMessageBox.None:
+                        # no, just return
+                        return
 
         try:
             environment.save_as(new_version)

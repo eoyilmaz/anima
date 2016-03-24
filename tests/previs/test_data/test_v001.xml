@@ -1,10 +1,12 @@
-<xmeml version="1.0">
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xmeml>
+<xmeml version="5">
   <sequence>
-    <duration>111.0</duration>
+    <duration>111</duration>
     <name>SEQ001_HSNI_003</name>
     <rate>
-      <ntsc>FALSE</ntsc>
       <timebase>24</timebase>
+      <ntsc>FALSE</ntsc>
     </rate>
     <timecode>
       <string>00:00:00:00</string>
@@ -21,45 +23,45 @@
           <locked>FALSE</locked>
           <enabled>TRUE</enabled>
           <clipitem id="SEQ001_HSNI_003_0010_v001">
-            <end>35.0</end>
+            <end>35</end>
             <name>SEQ001_HSNI_003_0010_v001</name>
             <enabled>True</enabled>
-            <start>1.0</start>
-            <in>10.0</in>
-            <duration>54.0</duration>
-            <out>44.0</out>
-            <file>
-              <duration>54.0</duration>
+            <start>1</start>
+            <in>10</in>
+            <duration>54</duration>
+            <out>44</out>
+            <file id="SEQ001_HSNI_003_0010_v001.mov">
+              <duration>54</duration>
               <name>SEQ001_HSNI_003_0010_v001</name>
-              <pathurl>file:///tmp/SEQ001_HSNI_003_0010_v001.mov</pathurl>
+              <pathurl>file://localhost/tmp/SEQ001_HSNI_003_0010_v001.mov</pathurl>
             </file>
           </clipitem>
           <clipitem id="SEQ001_HSNI_003_0020_v001">
-            <end>66.0</end>
+            <end>66</end>
             <name>SEQ001_HSNI_003_0020_v001</name>
             <enabled>True</enabled>
-            <start>35.0</start>
-            <in>10.0</in>
-            <duration>51.0</duration>
-            <out>41.0</out>
-            <file>
-              <duration>51.0</duration>
+            <start>35</start>
+            <in>10</in>
+            <duration>51</duration>
+            <out>41</out>
+            <file id="SEQ001_HSNI_003_0020_v001.mov">
+              <duration>51</duration>
               <name>SEQ001_HSNI_003_0020_v001</name>
-              <pathurl>file:///tmp/SEQ001_HSNI_003_0020_v001.mov</pathurl>
+              <pathurl>file://localhost/tmp/SEQ001_HSNI_003_0020_v001.mov</pathurl>
             </file>
           </clipitem>
           <clipitem id="SEQ001_HSNI_003_0030_v001">
-            <end>112.0</end>
+            <end>112</end>
             <name>SEQ001_HSNI_003_0030_v001</name>
             <enabled>True</enabled>
-            <start>66.0</start>
-            <in>10.0</in>
-            <duration>66.0</duration>
-            <out>56.0</out>
-            <file>
-              <duration>66.0</duration>
+            <start>66</start>
+            <in>10</in>
+            <duration>66</duration>
+            <out>56</out>
+            <file id="SEQ001_HSNI_003_0030_v001.mov">
+              <duration>66</duration>
               <name>SEQ001_HSNI_003_0030_v001</name>
-              <pathurl>file:///tmp/SEQ001_HSNI_003_0030_v001.mov</pathurl>
+              <pathurl>file://localhost/tmp/SEQ001_HSNI_003_0030_v001.mov</pathurl>
             </file>
           </clipitem>
         </track>

@@ -6,6 +6,11 @@
 
 import unittest
 import os
+
+# prepare for test
+os.environ['ANIMA_TEST_SETUP'] = ""
+from anima.env import mayaEnv  # to setup maya extensions
+
 import pymel.core
 from anima.edit import Sequence, Media, Video, Track, Clip, File
 
@@ -661,6 +666,9 @@ class SequenceManagerTestCase(unittest.TestCase):
         """testing if generate_sequence_structure() method is working properly
         """
         sm = pymel.core.PyNode('sequenceManager1')
+        from anima.env import mayaEnv
+        mayaEnv.Maya.set_fps(fps=24)
+
         sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')
         sm.set_version('v001')
         seq1 = sm.create_sequence('SEQ001_HSNI_003')
@@ -692,7 +700,10 @@ class SequenceManagerTestCase(unittest.TestCase):
         seq = sm.generate_sequence_structure()
         self.assertIsInstance(seq, Sequence)
 
-        self.assertEqual('24', seq.timebase)
+        rate = seq.rate
+        self.assertEqual('24', rate.timebase)
+        self.assertEqual(False, rate.ntsc)
+
         self.assertEqual('00:00:00:00', seq.timecode)
         self.assertEqual(False, seq.ntsc)
 
@@ -748,21 +759,21 @@ class SequenceManagerTestCase(unittest.TestCase):
         file1 = clip1.file
         self.assertIsInstance(file1, File)
         self.assertEqual('SEQ001_HSNI_003_0010_v001', file1.name)
-        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0010_v001.mov',
+        self.assertEqual('file://localhost/tmp/SEQ001_HSNI_003_0010_v001.mov',
                          file1.pathurl)
         self.assertEqual(45, file1.duration)  # including handles
 
         file2 = clip2.file
         self.assertIsInstance(file2, File)
         self.assertEqual('SEQ001_HSNI_003_0020_v001', file2.name)
-        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0020_v001.mov',
+        self.assertEqual('file://localhost/tmp/SEQ001_HSNI_003_0020_v001.mov',
                          file2.pathurl)
         self.assertEqual(56, file2.duration)  # including handles
 
         file3 = clip3.file
         self.assertIsInstance(file3, File)
         self.assertEqual('SEQ001_HSNI_003_0030_v001', file3.name)
-        self.assertEqual('file:///tmp/SEQ001_HSNI_003_0030_v001.mov',
+        self.assertEqual('file://localhost/tmp/SEQ001_HSNI_003_0030_v001.mov',
                          file3.pathurl)
         self.assertEqual(66, file3.duration)  # including handles
 

@@ -4,7 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import unittest
-from anima.edit import Clip, File
+from anima.edit import Clip, File, Rate
 
 
 class ClipTestCase(unittest.TestCase):
@@ -27,7 +27,7 @@ class ClipTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'Clip.id should be a string, not int'
+            'Clip.id should be a string or unicode, not int'
         )
 
     def test_id_attribute_is_not_a_string(self):
@@ -40,7 +40,7 @@ class ClipTestCase(unittest.TestCase):
 
         self.assertEqual(
             cm.exception.message,
-            'Clip.id should be a string, not int'
+            'Clip.id should be a string or unicode, not int'
         )
 
     def test_id_argument_is_working_properly(self):
@@ -63,34 +63,34 @@ class ClipTestCase(unittest.TestCase):
         """testing if the to xml method is working properly
         """
         f = File()
-        f.duration = 34.0
+        f.duration = 34
         f.name = 'shot2'
-        f.pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot2.mov'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
 
         c = Clip()
         c.id = 'shot2'
-        c.start = 1.0
-        c.end = 35.0
+        c.start = 1
+        c.end = 35
         c.name = 'shot2'
         c.enabled = True
-        c.duration = 34.0
-        c.in_ = 0.0
-        c.out = 34.0
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
         c.file = f
 
         expected_xml = \
             """<clipitem id="shot2">
-  <end>35.0</end>
+  <end>35</end>
   <name>shot2</name>
   <enabled>True</enabled>
-  <start>1.0</start>
-  <in>0.0</in>
-  <duration>34.0</duration>
-  <out>34.0</out>
-  <file>
-    <duration>34.0</duration>
+  <start>1</start>
+  <in>0</in>
+  <duration>34</duration>
+  <out>34</out>
+  <file id="shot2.mov">
+    <duration>34</duration>
     <name>shot2</name>
-    <pathurl>file:///home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+    <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
   </file>
 </clipitem>"""
 
@@ -106,42 +106,42 @@ class ClipTestCase(unittest.TestCase):
         from xml.etree import ElementTree
         clip_node = ElementTree.Element('clipitem', attrib={'id': 'shot'})
         end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '65.0'
+        end_node.text = '65'
         name_node = ElementTree.SubElement(clip_node, 'name')
         name_node.text = 'shot'
         enabled_node = ElementTree.SubElement(clip_node, 'enabled')
         enabled_node.text = 'True'
         start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '35.0'
+        start_node.text = '35'
         in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0.0'
+        in_node.text = '0'
         duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '30.0'
+        out_node.text = '30'
 
         file_node = ElementTree.SubElement(clip_node, 'file')
         duration_node = ElementTree.SubElement(file_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         name_node = ElementTree.SubElement(file_node, 'name')
         name_node.text = 'shot'
         pathurl_node = ElementTree.SubElement(file_node, 'pathurl')
 
-        pathurl = 'file:///home/eoyilmaz/maya/projects/default/data/shot.mov'
+        pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot.mov'
         pathurl_node.text = pathurl
 
         c = Clip()
         c.from_xml(clip_node)
-        self.assertEqual(65.0, c.end)
+        self.assertEqual(65, c.end)
         self.assertEqual('shot', c.name)
         self.assertEqual(True, c.enabled)
-        self.assertEqual(35.0, c.start)
-        self.assertEqual(0.0, c.in_)
-        self.assertEqual(30.0, c.duration)
-        self.assertEqual(30.0, c.out)
+        self.assertEqual(35, c.start)
+        self.assertEqual(0, c.in_)
+        self.assertEqual(30, c.duration)
+        self.assertEqual(30, c.out)
 
         f = c.file
-        self.assertEqual(30.0, f.duration)
+        self.assertEqual(30, f.duration)
         self.assertEqual('shot', f.name)
         self.assertEqual(pathurl, f.pathurl)
 
@@ -152,36 +152,152 @@ class ClipTestCase(unittest.TestCase):
         from xml.etree import ElementTree
         clip_node = ElementTree.Element('clipitem', attrib={'id': 'shot'})
         end_node = ElementTree.SubElement(clip_node, 'end')
-        end_node.text = '65.0'
+        end_node.text = '65'
         name_node = ElementTree.SubElement(clip_node, 'name')
         name_node.text = 'shot'
         enabled_node = ElementTree.SubElement(clip_node, 'enabled')
         enabled_node.text = 'True'
         start_node = ElementTree.SubElement(clip_node, 'start')
-        start_node.text = '35.0'
+        start_node.text = '35'
         in_node = ElementTree.SubElement(clip_node, 'in')
-        in_node.text = '0.0'
+        in_node.text = '0'
         duration_node = ElementTree.SubElement(clip_node, 'duration')
-        duration_node.text = '30.0'
+        duration_node.text = '30'
         out_node = ElementTree.SubElement(clip_node, 'out')
-        out_node.text = '30.0'
+        out_node.text = '30'
 
         c = Clip()
         c.from_xml(clip_node)
-        self.assertEqual(65.0, c.end)
+        self.assertEqual(65, c.end)
         self.assertEqual('shot', c.name)
         self.assertEqual(True, c.enabled)
-        self.assertEqual(35.0, c.start)
-        self.assertEqual(0.0, c.in_)
-        self.assertEqual(30.0, c.duration)
-        self.assertEqual(30.0, c.out)
+        self.assertEqual(35, c.start)
+        self.assertEqual(0, c.in_)
+        self.assertEqual(30, c.duration)
+        self.assertEqual(30, c.out)
 
-    # def test_in_is_bigger_than_out_will_be_converted_to_negative_values(self):
+    def test_rate_argument_is_skipped(self):
+        """testing if the rate attribute value will be a Rate instance with
+        default timebase value if the rate argument is skipped
+        """
+        c = Clip()
+        self.assertIsNone(c.rate)
+
+    def test_rate_argument_is_None(self):
+        """testing if the rate attribute will be None if the rate argument is
+        None
+        """
+        c = Clip(rate=None)
+        rate = c.rate
+        self.assertIsNone(rate)
+
+    def tst_rate_attribute_is_None(self):
+        """testing if the rate attribute can be set to None
+        """
+        from anima.edit import Rate
+        r = Rate(timebase='24', ntsc=False)
+        c = Clip(rate=r)
+        self.assertIsNotNone(c.rate)
+        c.rate = None
+        self.assertIsNone(c.rate)
+
+    def test_rate_attribute_is_None_to_xml_is_working_properly(self):
+        """testing if the rate attribute will not be included int the xml
+        output if it is None
+        """
+        f = File()
+        f.duration = 34
+        f.name = 'shot2'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+
+        c = Clip()
+        c.id = 'shot2'
+        c.start = 1
+        c.end = 35
+        c.name = 'shot2'
+        c.enabled = True
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
+        c.file = f
+        c.rate = None
+
+        expected_xml = \
+            """<clipitem id="shot2">
+  <end>35</end>
+  <name>shot2</name>
+  <enabled>True</enabled>
+  <start>1</start>
+  <in>0</in>
+  <duration>34</duration>
+  <out>34</out>
+  <file id="shot2.mov">
+    <duration>34</duration>
+    <name>shot2</name>
+    <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+  </file>
+</clipitem>"""
+
+        self.maxDiff = None
+        self.assertEqual(
+            expected_xml,
+            c.to_xml()
+        )
+
+    def test_rate_attribute_is_valid_to_xml_is_working_properly(self):
+        """testing if the rate attribute will be included int the xml output if
+        it is not None
+        """
+        f = File()
+        f.duration = 34
+        f.name = 'shot2'
+        f.pathurl = 'file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov'
+
+        c = Clip()
+        c.id = 'shot2'
+        c.start = 1
+        c.end = 35
+        c.name = 'shot2'
+        c.enabled = True
+        c.duration = 34
+        c.in_ = 0
+        c.out = 34
+        c.file = f
+        c.rate = Rate(timebase='25')
+
+        expected_xml = \
+            """<clipitem id="shot2">
+  <end>35</end>
+  <name>shot2</name>
+  <enabled>True</enabled>
+  <start>1</start>
+  <in>0</in>
+  <duration>34</duration>
+  <rate>
+    <timebase>25</timebase>
+    <ntsc>FALSE</ntsc>
+  </rate>
+  <out>34</out>
+  <file id="shot2.mov">
+    <duration>34</duration>
+    <name>shot2</name>
+    <pathurl>file://localhost/home/eoyilmaz/maya/projects/default/data/shot2.mov</pathurl>
+  </file>
+</clipitem>"""
+
+        self.maxDiff = None
+        self.assertEqual(
+            expected_xml,
+            c.to_xml()
+        )
+
+
+        # def test_in_is_bigger_than_out_will_be_converted_to_negative_values(self):
     #     """testing if setting the in smaller than out will convert the in to
     #     a negative value
     #     """
     #     c = Clip()
-    #     c.in_ = 2073577.0
-    #     c.out = 191.0
+    #     c.in_ = 2073577
+    #     c.out = 191
     # 
     #     self.assertEqual(c.in_, -23)
