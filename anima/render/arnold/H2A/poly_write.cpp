@@ -51,12 +51,11 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 	UT_Vector3F v_val(0,0,0);
 
 	UT_OFStream ass_file(fname);
+	const GA_Primitive *prim;
+	GA_Offset prim_off;
 
 	ass_file<<"polymesh\n{\n name "<<name;
 	ass_file<<"\n nsides "<<gdp->getNumPrimitives()<<" 1 UINT\n";
-
-	const GA_Primitive *prim;
-	GA_Offset prim_off;
 
 	for(GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd();++p_it){
 		prim = gdp->getPrimitive(*p_it);
@@ -106,23 +105,27 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 	ass_file<<"id 683108022";
 
 
-	ass_file<<"\n declare uparamcoord uniform FLOAT\n uparamcoord "<<gdp->getNumPrimitives()<<" 1 FLOAT\n";
+	ass_file<<"\n uvidxs "<<gdp->getNumVertices()<<" 1 UINT\n";
+	for(GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd();++p_it){
+		prim_off = p_it.getOffset();
+		prim = gdp->getPrimitive(prim_off);
+		for(GA_Iterator v_it(prim->getVertexRange()); !v_it.atEnd(); ++v_it){
+			ass_file<<gdp->vertexPoint(v_it.getOffset())<<" ";	
+		}
+		if((prim_off+1) % 300 == 0) ass_file<<"\n"; 
+	}
+
+
+	ass_file<<"\n uvlist "<<gdp->getNumPoints()<<" 1 POINT2\n";
+
 	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			ass_file<<uv_val.x()<<" ";
+			ass_file<<uv_val.x()<<" "<<uv_val.y()<<" ";
 			if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
 		}
 	}
 
-	ass_file<<"\n declare vparamcoord uniform FLOAT\n vparamcoord "<<gdp->getNumPrimitives()<<" 1 FLOAT\n";
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			ass_file<<uv_val.y()<<" ";
-			if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
-		}
-	}
 
 
 	if(color){
@@ -224,25 +227,27 @@ bool poly_write_gz_file(const GU_Detail *gdp,
 	if(motionb) gzprintf(ass_file,"1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n");
 	gzprintf(ass_file,"id 683108022\n");
 
-	gzprintf(ass_file,"\n declare uparamcoord uniform FLOAT\n uparamcoord %d 1 b85FLOAT\n", gdp->getNumPrimitives());
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			gzprintf(ass_file,"%s",encode(uv_val.x()));
-			if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
-		}
-	}
 
-	gzprintf(ass_file,"\n declare vparamcoord uniform FLOAT\n vparamcoord %d 1 b85FLOAT\n", gdp->getNumPrimitives());
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			gzprintf(ass_file,"%s",encode(uv_val.y()));
-			if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
+	gzprintf(ass_file,"\n uvidxs %d 1 UINT\n",gdp->getNumVertices());
+	for(GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd();++p_it){
+		prim_off = p_it.getOffset();
+		prim = gdp->getPrimitive(prim_off);
+		for(GA_Iterator v_it(prim->getVertexRange()); !v_it.atEnd(); ++v_it){
+			gzprintf(ass_file,"%d ",gdp->vertexPoint(v_it.getOffset()));
 		}
+		if((prim_off+1) % 300 == 0) gzprintf(ass_file,"\n");
 	}
 
 
+	gzprintf(ass_file,"\n uvlist %d 1 b85POINT2\n",gdp->getNumPoints());
+
+	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
+		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
+			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
+			gzprintf(ass_file,"%s%s",encode(uv_val.x()), encode(uv_val.y()));
+			if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n"); 
+		}
+	}
 
 	if(color){
 		gzprintf(ass_file," declare Cd varying RGBA\n Cd %d 1 b85RGBA\n", gdp->getNumPoints() );
