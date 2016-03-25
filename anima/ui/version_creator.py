@@ -1606,7 +1606,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         QtGui.QMessageBox.No
                     )
 
-                    if answer == QtGui.QMessageBox.None:
+                    if answer == QtGui.QMessageBox.No:
                         # no, just return
                         return
 
