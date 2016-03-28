@@ -77,7 +77,7 @@ class Houdini(EnvironmentBase):
 
         # houdini accepts only strings as file name, no unicode support as I
         # see
-	hou.hipFile.save(file_name=str(version.absolute_full_path))
+        hou.hipFile.save(file_name=str(version.absolute_full_path))
 
         # set the environment variables again
         self.set_environment_variables(version)
@@ -215,25 +215,25 @@ class Houdini(EnvironmentBase):
         """returns the recent HIP files list from the houdini
         """
         # use a FileHistory object
-        fHist = FileHistory()
+        file_history = FileHistory()
 
         # get the hip files list
-        return fHist.get_recent_files('HIP')
+        return file_history.get_recent_files('HIP')
 
     def get_frame_range(self):
         """returns the frame range of the
         """
         # use the hscript commands to get the frame range
-        timeInfo = hou.hscript('tset')[0].split('\n')
+        time_info = hou.hscript('tset')[0].split('\n')
 
         pattern = r'[-0-9\.]+'
 
         start_frame = int(
             hou.timeToFrame(
-                float(re.search(pattern, timeInfo[2]).group(0))
+                float(re.search(pattern, time_info[2]).group(0))
             )
         )
-        duration = int(re.search(pattern, timeInfo[0]).group(0))
+        duration = int(re.search(pattern, time_info[0]).group(0))
         end_frame = start_frame + duration - 1
 
         return start_frame, end_frame
@@ -268,17 +268,17 @@ class Houdini(EnvironmentBase):
     def get_output_nodes(self):
         """returns the rop nodes in the scene
         """
-        ropContext = hou.node('/out')
+        rop_context = hou.node('/out')
 
         # get the children
-        outNodes = ropContext.children()
+        out_nodes = rop_context.children()
 
         exclude_node_types = [
             hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge")
         ]
 
         # remove nodes in type in exclude_node_types list
-        new_out_nodes = [node for node in outNodes
+        new_out_nodes = [node for node in out_nodes
                          if node.type() not in exclude_node_types]
 
         return new_out_nodes
@@ -291,20 +291,13 @@ class Houdini(EnvironmentBase):
     def set_render_filename(self, version):
         """sets the render file name
         """
-        render_output_folder = os.path.join(
-            version.absolute_path,
-            'Outputs'
-        ).replace("\\", "/")
-        version_string = 'v%03d' % version.version_number
+        output_filename = \
+            '{version.absolute_path}/Outputs/`$OS`/' \
+            '{version.task.project.code}_{version.nice_name}_' \
+            'v{version.version_number:03d}.$F4.exr'
 
-        output_filename = render_output_folder + '/`$OS`/' + \
-                          version.task.project.code + '_' + \
-                          version.task.entity_type + '_' + \
-                          str(version.task.id) + '_'  + \
-                          version.take_name + '_`$OS`_' + \
-                          version_string + '.$F4.exr'
-
-        output_filename = output_filename.replace('\\', '/')
+        output_filename = \
+            output_filename.format(version=version).replace('\\', '/')
 
         # compute a $JOB relative file path
         # which is much safer if the file is going to be render in multiple OSes
@@ -317,9 +310,8 @@ class Houdini(EnvironmentBase):
         while "$" in job:
             job = os.path.expandvars(job)
 
-        job_relative_output_file_path = "$JOB/" + utils.relpath(
-            job, output_filename, "/", ".."
-        )
+        job_relative_output_file_path = \
+            "$JOB/%s" % utils.relpath(job, output_filename, "/", "..")
 
         output_nodes = self.get_output_nodes()
         for output_node in output_nodes:
