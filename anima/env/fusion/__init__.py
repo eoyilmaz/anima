@@ -633,6 +633,9 @@ class Fusion(EnvironmentBase):
                                     'connected_to': {
                                         'Input': {
                                             'type': 'TimeSpeed',
+                                            'attr': {
+                                                'TOOLB_PassThrough': True,
+                                            },
                                             'input_list': {
                                                 'Speed': 12.0/25.0,
                                                 'InterpolateBetweenFrames': 0
