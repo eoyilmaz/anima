@@ -73,7 +73,7 @@ static PRM_ChoiceList	sopTypeMenu(PRM_MENU_CHOICES,	sopTypeMenuNames);
 static PRM_ChoiceList	pRenderTypeMenu(PRM_MENU_CHOICES,	pRenderTypeMenuNames);
 
 PRM_Template H2A_Rop::myTemplateList[] = {
-	PRM_Template(PRM_FILE,	1, &names[0], &theFileDefault , 0, 0 , 0 ,  &PRM_SpareData::fileChooserModeWrite),	// file Output
+	PRM_Template(PRM_FILE_E, 1, &names[0], &theFileDefault , 0, 0 , 0 ,  &PRM_SpareData::fileChooserModeWrite),	// file Output
 	PRM_Template(PRM_STRING, PRM_TYPE_DYNAMIC_PATH, 1, &names[1], 0, 0, 0, 0, &PRM_SpareData::sopPath ),		// sop path
 	PRM_Template(PRM_STRING,	1, &names[2], &theNameDefault),													// Name
 	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[3], PRMpointFiveDefaults),					// min pixel width
