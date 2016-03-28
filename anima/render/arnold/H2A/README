@@ -1,4 +1,4 @@
-Anima
+H2A
 =====
 
 H2A_ROP is the rop node for houdini 15 to export houdini geometry in arnold ass format. 
