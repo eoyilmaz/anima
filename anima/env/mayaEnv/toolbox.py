@@ -3492,7 +3492,13 @@ class Render(object):
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes
             for attr_name in attr_names:
-                target_node.setAttr(attr_name, source_node.getAttr(attr_name))
+                try:
+                    target_node.setAttr(
+                        attr_name,
+                        source_node.getAttr(attr_name)
+                    )
+                except pm.MayaAttributeError:
+                    pass
 
         if len(lut['no_match']):
             pm.select(lut['no_match'])
