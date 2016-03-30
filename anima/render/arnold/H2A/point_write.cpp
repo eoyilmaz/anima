@@ -35,7 +35,7 @@ bool point_write_normal_file(const GU_Detail *gdp,
 							 int p_type,
 							 fpreal radius)
 {
-	int sample_count = motionb? 2:1;
+
 	UT_String render_type("disk"); 
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
 
@@ -70,6 +70,8 @@ bool point_write_normal_file(const GU_Detail *gdp,
 
 	UT_OFStream ass_file(fname);
 
+	int sample_count = motionb&&v_h.isValid()? 2:1;
+
 	ass_file<<"points\n{\n name "<<name;
 	ass_file<<"\n points "<<gdp->getNumPoints()<<" "<<sample_count<<" POINT\n";
 
@@ -83,7 +85,7 @@ bool point_write_normal_file(const GU_Detail *gdp,
 		}
 	}
 
-	if(motionb){
+	if(motionb  && v_h.isValid() ){
 		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 				pos_val = pos_h.get(ptoff);
@@ -134,7 +136,7 @@ bool point_write_gz_file(const GU_Detail *gdp,
 							 int p_type,
 							 fpreal radius)
 {
-	int sample_count = motionb? 2:1;
+
 	UT_String render_type("disk"); 
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
 
@@ -167,6 +169,8 @@ bool point_write_gz_file(const GU_Detail *gdp,
 	GA_ROHandleF rad_h(gdp, GA_ATTRIB_POINT,"pscale");
 	fpreal32 rad_val(1);
 
+	int sample_count = motionb&&v_h.isValid()? 2:1;
+
 	gzFile ass_file;
 	ass_file = gzopen(fname,"wb");
 
@@ -183,7 +187,7 @@ bool point_write_gz_file(const GU_Detail *gdp,
 		}
 	}
 
-	if(motionb){
+	if(motionb  && v_h.isValid() ){
 		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 				pos_val = pos_h.get(ptoff);
