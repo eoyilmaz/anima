@@ -35,7 +35,7 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 							 bool motionb,
 							 bool color)
 {
-	int sample_count = motionb? 2:1;
+
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
 
 
@@ -62,6 +62,8 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 
 	GA_ROHandleV3 v_h(gdp,GA_ATTRIB_POINT,"v");
 	UT_Vector3F v_val(0,0,0);
+
+	int sample_count = motionb&&v_h.isValid()? 2:1;
 
 	UT_OFStream ass_file(fname);
 
@@ -90,7 +92,7 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 		}
 	}
 
-	if(motionb){
+	if(motionb  && v_h.isValid() ){
 		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 				pos_val = pos_h.get(ptoff);
@@ -122,23 +124,27 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 	if(motionb) ass_file<<"1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n";
 	ass_file<<"opaque on";
 
-	ass_file<<"\n declare uparamcoord uniform FLOAT\n uparamcoord "<<number_of_curves<<" 1 FLOAT\n";
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			ass_file<<uv_val.x()<<" ";
-			if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
+
+	if(uv_h.isValid()){
+		ass_file<<"\n declare uparamcoord uniform FLOAT\n uparamcoord "<<number_of_curves<<" 1 FLOAT\n";
+		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
+			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
+				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
+				ass_file<<uv_val.x()<<" ";
+				if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
+			}
+		}
+
+		ass_file<<"\n declare vparamcoord uniform FLOAT\n vparamcoord "<<number_of_curves<<" 1 FLOAT\n";
+		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
+			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
+				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
+				ass_file<<uv_val.y()<<" ";
+				if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
+			}
 		}
 	}
 
-	ass_file<<"\n declare vparamcoord uniform FLOAT\n vparamcoord "<<number_of_curves<<" 1 FLOAT\n";
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			ass_file<<uv_val.y()<<" ";
-			if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
-		}
-	}
 
 
 	ass_file<<"\n declare curve_id uniform UINT\n curve_id "<<number_of_curves<<" 1 UINT\n";
@@ -158,7 +164,7 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 			}
 		}
 	}
-	
+
 	ass_file<<"\n}";
 	ass_file.close();
 
@@ -167,15 +173,15 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 
 
 bool curve_write_gz_file(const GU_Detail *gdp,
-							 UT_String fname,
-							 const char * name,
-							 fpreal pwidth,
-							 fpreal shutter,
-							 int mode,
-							 bool motionb,
-							 bool color)
+						 UT_String fname,
+						 const char * name,
+						 fpreal pwidth,
+						 fpreal shutter,
+						 int mode,
+						 bool motionb,
+						 bool color)
 {
-	int sample_count = motionb? 2:1;
+
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
 
 
@@ -202,6 +208,8 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 
 	GA_ROHandleV3 v_h(gdp,GA_ATTRIB_POINT,"v");
 	UT_Vector3F v_val(0,0,0);
+
+	int sample_count = motionb&&v_h.isValid()? 2:1;
 
 	gzFile ass_file;
 	ass_file = gzopen(fname,"wb");
@@ -231,7 +239,7 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 		}
 	}
 
-	if(motionb){
+	if(motionb  && v_h.isValid() ){
 		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 				pos_val = pos_h.get(ptoff);
@@ -263,23 +271,27 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 	if(motionb) gzprintf(ass_file,"1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n");
 	gzprintf(ass_file,"opaque on");
 
-	gzprintf(ass_file,"\n declare uparamcoord uniform FLOAT\n uparamcoord %d 1 b85FLOAT\n",number_of_curves);
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			gzprintf(ass_file,"%s",encode(uv_val.x()));
-			if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
+
+	if(uv_h.isValid()){
+		gzprintf(ass_file,"\n declare uparamcoord uniform FLOAT\n uparamcoord %d 1 b85FLOAT\n",number_of_curves);
+		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
+			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
+				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
+				gzprintf(ass_file,"%s",encode(uv_val.x()));
+				if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
+			}
+		}
+
+		gzprintf(ass_file,"\n declare vparamcoord uniform FLOAT\n vparamcoord %d 1 b85FLOAT\n",number_of_curves);
+		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
+			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
+				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
+				gzprintf(ass_file,"%s",encode(uv_val.y()));
+				if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
+			}
 		}
 	}
 
-	gzprintf(ass_file,"\n declare vparamcoord uniform FLOAT\n vparamcoord %d 1 b85FLOAT\n",number_of_curves);
-	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-			if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-			gzprintf(ass_file,"%s",encode(uv_val.y()));
-			if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
-		}
-	}
 
 
 	gzprintf(ass_file,"\n declare curve_id uniform UINT\n curve_id %d 1 UINT\n",number_of_curves);
@@ -299,7 +311,7 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 			}
 		}
 	}
-	
+
 	gzprintf(ass_file,"\n}"); 
 	gzclose_w(ass_file);
 
