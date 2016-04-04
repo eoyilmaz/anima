@@ -3646,7 +3646,7 @@ class Render(object):
             try:
                 shape.aiSubdivIterations.set(2)
                 shape.aiSubdivType.set(1)
-                shape.aiSubdivPixelError.set(1)
+                shape.aiSubdivPixelError.set(0)
             except AttributeError:
                 pass
 

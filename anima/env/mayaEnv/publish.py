@@ -775,16 +775,16 @@ def set_pixel_error():
     """sets the pixel error on objects which have a linear subdiv
     """
     for node in pm.ls(type='mesh'):
-        subdiv_type = node.getAttr('aiSubdivType')
+        # subdiv_type = node.getAttr('aiSubdivType')
         pixel_error = node.getAttr('aiSubdivPixelError')
-        if subdiv_type == 2:  # linear
-            if pixel_error == 0:
-                node.setAttr('aiSubdivPixelError', 0.001)
+        # if subdiv_type == 2:  # linear
+        #     if pixel_error == 0:
+        #         node.setAttr('aiSubdivPixelError', 0.001)
 
-        pixel_error = node.getAttr('aiSubdivPixelError')
+        # pixel_error = node.getAttr('aiSubdivPixelError')
 
-        if pixel_error > 1:
-            node.setAttr('aiSubdivPixelError', 1)
+        if pixel_error > 0:
+            node.setAttr('aiSubdivPixelError', 0)
 
 
 @publisher(LOOK_DEV_TYPES)
