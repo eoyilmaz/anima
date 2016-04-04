@@ -276,7 +276,10 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         # set scene fps only if this scene is published or it is the first
         # version
-        if version.is_published or version.version_number == 1:
+        # if version.is_published or version.version_number == 1:
+        #     self.set_fps(project.fps)
+        # TODO: This is a shitty patch, please update it later on
+        if version.version_number == 1:
             self.set_fps(project.fps)
 
         # set render resolution
