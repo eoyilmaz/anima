@@ -282,6 +282,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         if version.version_number == 1:
             self.set_fps(project.fps)
 
+        # set linear and angular units
+        pm.currentUnit(l='cm', a='deg')
+
         # set render resolution
         # if this is a shot related task set it to shots resolution
         is_shot_related_task = False
@@ -509,6 +512,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # raise the RuntimeError again
             # for the interface
             raise e
+
+        # set linear and angular units
+        pm.currentUnit(l='cm', a='deg')
 
         # set the playblast folder
 
