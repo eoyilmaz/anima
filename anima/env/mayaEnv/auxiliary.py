@@ -1715,29 +1715,19 @@ class Playblaster(object):
         return hires_path
 
 
-def export_alembic_from_cache_node(handles=0, step=1):
-    """exports alembic caches by looking at the current scene and try to find
-    transform nodes which has an attribute called "cacheable"
+def get_cacheable_nodes():
+    """returns the cacheable nodes from the current scene
 
-    :param int handles: An integer that shows the desired handles from start
-      and end.
+    :return:
     """
     from anima.ui.progress_dialog import ProgressDialogManager
-    import os
-
     pdm = ProgressDialogManager()
     pdm.close()
-
-    # load Abc plugin first
-    if not pm.pluginInfo('AbcExport', q=1, l=1):
-        pm.loadPlugin('AbcExport')
 
     # list all cacheable nodes
     cacheable_nodes = []
     tr_list = pm.ls(tr=1, type='transform')
-
     caller = pdm.register(len(tr_list), 'Searching for Cacheable Nodes')
-
     for tr in tr_list:
         if tr.hasAttr('cacheable') and tr.getAttr('cacheable'):
             # check if any of its parents has a cacheable attribute
@@ -1751,13 +1741,40 @@ def export_alembic_from_cache_node(handles=0, step=1):
                 # only include direct references
                 ref = tr.referenceFile()
                 if ref is not None and ref.parent() is None:
+                    # skip cacheable nodes coming from layout
+                    if ref.version and ref.version.task.type \
+                            and ref.version.task.type.name.lower() == 'layout':
+                        caller.step()
+                        continue
                     cacheable_nodes.append(tr)
 
         caller.step()
 
+    return cacheable_nodes
+
+
+def export_alembic_from_cache_node(handles=0, step=1):
+    """exports alembic caches by looking at the current scene and try to find
+    transform nodes which has an attribute called "cacheable"
+
+    :param int handles: An integer that shows the desired handles from start
+      and end.
+    """
+    import os
+
+    # get cacheable nodes in the current scene
+    cacheable_nodes = get_cacheable_nodes()
+
     # stop if there are no cacheable nodes in the scene
     if not cacheable_nodes:
         return
+
+    # load Abc plugin first
+    if not pm.pluginInfo('AbcExport', q=1, l=1):
+        pm.loadPlugin('AbcExport')
+
+    from anima.ui.progress_dialog import ProgressDialogManager
+    pdm = ProgressDialogManager()
 
     cacheable_nodes.sort(key=lambda x: x.getAttr('cacheable'))
 
