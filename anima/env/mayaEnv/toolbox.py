@@ -254,6 +254,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'cleanup_light_cameras_button',
+                l='Cleanup Light Cameras',
+                c=RepeatedCallback(General.cleanup_light_cameras),
+                ann=General.cleanup_light_cameras.__doc__,
+                bgc=color.color
+            )
+
         # ----- REFERENCE ------
         reference_columnLayout = pm.columnLayout(
             'reference_columnLayout',
@@ -1768,6 +1777,7 @@ class General(object):
                     if not in_layer:
                         if not item.overrideDisplayType.get(l=True):
                             item.overrideDisplayType.set(0)
+
     @classmethod
     def selection_manager(cls):
         from anima.env.mayaEnv import selection_manager
@@ -1866,6 +1876,19 @@ class General(object):
             pm.informBox('Done!', 'Thumbnail generated successfully!')
         else:
             pm.informBox('Fail!', 'Thumbnail generation was unsuccessful!')
+
+    @classmethod
+    def cleanup_light_cameras(cls):
+        """Deletes all the light cameras in the current scene
+        """
+        cameras_to_delete = []
+        for node in pm.ls(type='light'):
+            parent = node.getParent()
+            cameras = parent.listRelatives(ad=1, type='camera')
+            if cameras:
+                cameras_to_delete.extend(cameras)
+
+        pm.delete(cameras_to_delete)
 
 
 class Reference(object):
@@ -3664,7 +3687,9 @@ class Render(object):
         """
         bs = auxiliary.BarnDoorSimulator()
         for light in pm.ls(sl=1):
-            bs.light = light
+            light_shape = light.getShape()
+            if isinstance(light_shape, pm.nt.Light):
+                bs.light = light
             bs.unsetup()
 
     @classmethod
