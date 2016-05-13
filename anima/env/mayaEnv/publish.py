@@ -1300,6 +1300,40 @@ def set_frame_range():
     )
 
 
+@publisher('layout')
+def check_reference_types():
+    """It is not allowed to publish a layout that contains:
+
+    Active Prop
+    """
+    allowed_types = \
+        ['bg-building', 'building', 'building part', 'layout', 'prop',
+         'interior', 'exterior']
+    wrong_refs = []
+    for ref in pm.listReferences(recursive=True):
+        v = ref.version
+        if not v:
+            continue
+        t = v.task
+        t_parent = t.parent
+        if not t_parent:
+            continue
+
+        task_type = t_parent.type
+        if not task_type or task_type.name.lower() not in allowed_types:
+            wrong_refs.append(ref)
+
+    if wrong_refs:
+        ref_paths = '<br>'.join(map(lambda x: x.path, wrong_refs))
+        raise PublishError(
+            'There are <b>Wrong Reference Types</b> in the current scene!!!<br>'
+            '<br>'
+            '%s'
+            '<br>'
+            'Please <b>REMOVE</b> them!' % ref_paths
+        )
+
+
 @publisher('animation')
 def freezing_last_frame():
     """checks if the last frame of the shot is freezing

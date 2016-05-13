@@ -2144,14 +2144,36 @@ $frame_scale = tan(deg_to_rad($cone_angle * 0.5));
     def unsetup(self):
         """deletes the barn door setup
         """
-        try:
-            pm.delete(self.light.attr(self.message_storage_attr_name).inputs())
-        except AttributeError:
-            pass
+        if self.light:
+            try:
+                pm.delete(
+                    self.light.attr(self.message_storage_attr_name).inputs()
+                )
+            except AttributeError:
+                pass
+            pm.scriptJob(
+                k=int(self.light.getAttr(self.custom_data_storage_attr_name))
+            )
+        else:
+            # try to delete the by using the barndoor group
+            found_light = False
+            for node in pm.ls(sl=1, type='transform'):
+                # list all lights and try to find the light that has this group
+                for light in pm.ls(type=pm.nt.Light):
+                    light_parent = light.getParent()
+                    if light_parent.hasAttr(self.message_storage_attr_name):
+                        if node in light_parent.attr(
+                                self.message_storage_attr_name).inputs():
+                            self.light = light_parent
+                            found_light = True
+                            self.unsetup()
 
-        pm.scriptJob(
-            k=int(self.light.getAttr(self.custom_data_storage_attr_name))
-        )
+                # if the code comes here than this node is not listed in any
+                # lights, so delete it if it contains the string
+                # "barndoor_preview_curves" in its name
+                if not found_light \
+                        and "barndoor_preview_curves" in node.name():
+                    pm.delete(node)
 
 
 def create_shader(shader_tree, name=None):
