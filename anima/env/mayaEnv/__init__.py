@@ -352,6 +352,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # update the reference list
         # IMPORTANT: without this, the update workflow is not able to do
         # updates correctly, so do not disable this
+        from stalker import db
+        db.DBSession.add(version)
+
         self.update_version_inputs()
 
         # append it to the recent file list
@@ -359,8 +362,6 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             version.absolute_full_path
         )
 
-        from stalker import db
-        db.DBSession.add(version)
         db.DBSession.commit()
 
         # run post publishers here
@@ -1116,6 +1117,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # update the reference list
             referenced_versions = self.get_referenced_versions(parent_ref)
             version.inputs = referenced_versions
+
+            # commit data to the database
+            from stalker import db
+            db.DBSession.add(version)
+            db.DBSession.commit()
 
         end = time.time()
         logger.debug('update_version_inputs() took %f seconds' % (end - start))
