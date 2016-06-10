@@ -630,18 +630,6 @@ class Fusion(EnvironmentBase):
                                         'RedWhiteLevel': 1023.0,
                                         'RedFilmStockGamma': 1.0
                                     },
-                                    'connected_to': {
-                                        'Input': {
-                                            'type': 'TimeSpeed',
-                                            'attr': {
-                                                'TOOLB_PassThrough': True,
-                                            },
-                                            'input_list': {
-                                                'Speed': 12.0/25.0,
-                                                'InterpolateBetweenFrames': 0
-                                            },
-                                        }
-                                    }
                                 }
                             }
                         }
