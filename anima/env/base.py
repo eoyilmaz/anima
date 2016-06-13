@@ -213,7 +213,8 @@ class EnvironmentBase(object):
 
         return versions
 
-    def get_version_from_full_path(self, full_path):
+    @classmethod
+    def get_version_from_full_path(cls, full_path):
         """Finds the Version instance from the given full_path value.
 
         Finds and returns a :class:`~stalker.models.version.Version` instance
@@ -448,6 +449,55 @@ class EnvironmentBase(object):
            sig_name = '%s_v%03d' % (sig_name, version.version_number)
 
         return sig_name
+
+    @classmethod
+    def local_backup_path(cls):
+        """returns the local backup path
+
+        :return:
+        """
+        # use the user home directory .stalker_local_backup
+        from anima import local_cache_folder
+        return os.path.normpath(
+            os.path.expanduser('%s/projects_backup' % local_cache_folder)
+        ).replace('\\', '/')
+
+    @classmethod
+    def create_local_copy(cls, version):
+        """Creates a local copy of the given version
+
+        :param version:
+        :return:
+        """
+        output_path = os.path.join(
+            cls.local_backup_path(),
+            version.absolute_path.replace(':', '')
+        ).replace('\\', '/')
+
+        output_full_path = os.path.join(
+            cls.local_backup_path(),
+            version.absolute_full_path.replace(':', '')
+        ).replace('\\', '/')
+
+        # create intermediate folders
+        try:
+            os.makedirs(output_path)
+        except OSError:
+            # already exists
+            pass
+
+        import shutil
+
+        try:
+            shutil.copy(
+                version.absolute_full_path,
+                output_full_path
+            )
+        except IOError:
+            # no space left
+            pass
+
+        logger.debug('created copy to: %s' % output_full_path)
 
 
 class Filter(object):

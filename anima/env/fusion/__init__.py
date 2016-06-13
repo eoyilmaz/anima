@@ -273,6 +273,9 @@ class Fusion(EnvironmentBase):
         self.comp.Save(version_full_path.encode())
         self.comp.Unlock()
 
+        # create a local copy
+        self.create_local_copy(version)
+
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
 
@@ -286,10 +289,13 @@ class Fusion(EnvironmentBase):
         # set the extension to '.comp'
         version.extension = '.comp'
         version.created_with = self.name
-        #        nuke.nodeCopy(version.fullPath)
+
         raise NotImplementedError(
             'export_as() is not implemented yet for Fusion'
         )
+
+        # create a local copy
+        self.create_local_copy(version)
 
     def open(self, version, force=False, representation=None,
              reference_depth=0, skip_update_check=False):

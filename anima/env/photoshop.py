@@ -71,6 +71,10 @@ class Photoshop(EnvironmentBase):
             version_full_path.encode(),
             psd_options
         )
+
+        # create a local copy
+        self.create_local_copy(version)
+
         return True
 
     def export_as(self, version):
@@ -118,6 +122,10 @@ class Photoshop(EnvironmentBase):
             version_full_path.encode(),
             psd_options
         )
+
+        # create a local copy
+        self.create_local_copy(version)
+
         return True
 
     def open(self, version, force=False, representation=None,

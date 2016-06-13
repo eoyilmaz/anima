@@ -364,6 +364,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         db.DBSession.commit()
 
+        # create a local copy
+        self.create_local_copy(version)
+
         # run post publishers here
         if version.is_published:
             # before doing anything run all publishers
@@ -419,6 +422,9 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         from stalker import db
         db.DBSession.add(version)
         db.DBSession.commit()
+
+        # create a local copy
+        self.create_local_copy(version)
 
         return True
 

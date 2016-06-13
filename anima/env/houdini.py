@@ -94,6 +94,9 @@ class Houdini(EnvironmentBase):
             # update database with new version info
             DBSession.commit()
 
+        # create a local copy
+        self.create_local_copy(version)
+
         return True
 
     def open(self, version, force=False, representation=None,
