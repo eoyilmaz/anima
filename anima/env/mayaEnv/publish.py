@@ -801,7 +801,7 @@ def check_all_tx_textures():
     """checks if tx textures are created for all of the texture nodes in the
     current scene
     """
-    pass
+    return
     v = staging.get('version')
     if v and Representation.repr_separator in v.take_name:
         return
