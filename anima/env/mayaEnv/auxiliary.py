@@ -471,6 +471,11 @@ def transfer_shaders(source, target):
 
     if len(shading_engines):
         pm.sets(shading_engines[0], fe=target)
+        # also assign instances to the same shader
+        if target.instanceCount() > 1:
+            for i in range(1, target.instanceCount()):
+                target.attr('instObjGroups[%s]' % i).disconnect()
+                target.attr('instObjGroups[%s]' % i) >> shading_engines[0].attr('dagSetMembers').next_available
 
 
 def benchmark(iter_cnt):

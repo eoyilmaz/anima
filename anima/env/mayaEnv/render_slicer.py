@@ -191,17 +191,20 @@ class RenderSlicer(object):
         """scans the scene cameras and unslice the scene
         """
         dres = pm.PyNode('defaultResolution')
+        dres.aspectLock.set(0)
+
+        # TODO: check multi sliced camera
         for cam in pm.ls(type=pm.nt.Camera):
             if cam.hasAttr('isSliced') and cam.isSliced.get():
                 dres.width.set(cam.nonSlicedResolutionX.get())
                 dres.height.set(cam.nonSlicedResolutionY.get())
                 dres.pixelAspect.set(1)
                 cam.isSliced.set(False)
-                break
 
     def slice(self, slices_in_x, slices_in_y):
         """slices all renderable cameras
         """
+        # set render resolution
         self.unslice_scene()
         self.is_sliced = True
         self._store_data()
@@ -215,6 +218,8 @@ class RenderSlicer(object):
         v_res = d_res.height.get()
 
         # this system only works when the
+        d_res.aspectLock.set(0)
+        d_res.pixelAspect.set(1)
         d_res.width.set(h_res / float(sx))
         d_res.pixelAspect.set(1)
         d_res.height.set(v_res / float(sy))
@@ -224,7 +229,8 @@ class RenderSlicer(object):
         h_aperture = self.camera.getAttr('horizontalFilmAperture')
 
         # recalculate the other aperture
-        self.camera.setAttr('verticalFilmAperture', h_aperture * v_res / h_res)
+        v_aperture = h_aperture * v_res / h_res
+        self.camera.setAttr('verticalFilmAperture', v_aperture)
 
         v_aperture = self.camera.getAttr('verticalFilmAperture')
 
