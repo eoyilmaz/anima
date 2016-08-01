@@ -1795,6 +1795,12 @@ def export_alembic_from_cache_node(handles=0, step=1):
     # export alembic caches
     previous_cacheable_attr_value = ''
     i = 1
+
+    # isolate none to speed things up
+    pm.select(None)
+    current_panel = Playblaster.get_active_panel()
+    pm.isolateSelect(current_panel, state=1)
+
     for cacheable_node in cacheable_nodes:
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         if cacheable_attr_value == previous_cacheable_attr_value:
@@ -1856,6 +1862,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
             node.v.set(True)
 
         caller.step()
+
+    # restore isolation
+    pm.isolateSelect(current_panel, state=0)
 
 
 # noinspection PyStatementEffect
