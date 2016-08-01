@@ -353,6 +353,16 @@ def check_no_references():
 
 
 @publisher('model')
+def check_no_namespace():
+    """there should be no namespaces in a model file
+    """
+    if len(pm.listNamespaces()):
+        raise PublishError(
+            'There should be no <b>Namespaces</b> in a <b>Model</b> scene.'
+        )
+
+
+@publisher('model')
 def check_history():
     """there should be no history on the objects
     """
