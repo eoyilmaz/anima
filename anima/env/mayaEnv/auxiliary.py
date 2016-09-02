@@ -11,6 +11,40 @@ import pymel.core as pm
 import maya.mel as mel
 import tempfile
 
+import re
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
+
+
+def kill_all_torn_off_panels():
+    """deletes all torn off panels
+    """
+    panel_list = pm.getPanel(type='modelPanel')
+
+    # remove all torn off panels
+    for panel in panel_list:
+        if panel.getTearOff():
+            panel.delete(pnl=1)
+
+
+def maximize_first_model_panel():
+    """maximizes the first model panel it can find
+
+    :return:
+    """
+    panel_list = pm.getPanel(type='modelPanel')
+    if len(panel_list) == 0:
+        return
+
+    # maximize one panel in default layout
+    g_main_pane = pm.melGlobals['gMainPane']
+
+    pane_config = pm.paneLayout(g_main_pane, q=1, configuration=1)
+    if pane_config != 'single':
+        # call mel here
+        pm.mel.eval('doSwitchPanes(1, { "single", "%s"})' % panel_list[0])
+        pm.mel.eval('updateToolbox();')
+
 
 def get_valid_dag_node(node):
     """returns a valid dag node even the input is string
@@ -1799,10 +1833,13 @@ def export_alembic_from_cache_node(handles=0, step=1):
     # isolate none to speed things up
     pm.select(None)
 
-    # isolate in all panels
-    panel_list = pm.getPanel(type='modelPanel')
-    for panel in panel_list:
-        pm.isolateSelect(panel, state=1)
+    wrong_node_names = ['_rig', '_proxy']
+
+    default_playback_option = pm.playbackOptions(q=1, v=True)
+
+    # leave off only one panel in the viewport
+    kill_all_torn_off_panels()
+    maximize_first_model_panel()
 
     for cacheable_node in cacheable_nodes:
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
@@ -1811,15 +1848,29 @@ def export_alembic_from_cache_node(handles=0, step=1):
         else:
             i = 1
 
-        # hide any child node that has "rig" or "proxy" or "low" in its name
-        # wrong_node_names = ['rig', 'proxy', 'low']
-        wrong_node_names = ['rig', 'proxy',]
+        # isolate in all panels
+        panel_list = pm.getPanel(type='modelPanel')
+        for panel in panel_list:
+            pm.isolateSelect(panel, state=1)
+            pm.isolateSelect(panel, ado=cacheable_node)
+
         hidden_nodes = []
-        for child in pm.ls(cacheable_node.getChildren(), type='transform'):
-            if any([n in child.name().split(':')[-1].lower() for n in wrong_node_names]):
-                if child.v.get() is True and not child.v.isLocked():
-                    child.v.set(False)
-                    hidden_nodes.append(child)
+        nodes_to_consider = cacheable_node.getChildren(type='transform')
+        while len(nodes_to_consider):
+            current_node = nodes_to_consider.pop(0)
+            underscored_name = \
+                camel_case_to_underscore(current_node.name().split(':')[-1])
+
+            if any([n in underscored_name
+                    for n in wrong_node_names]):
+                    if current_node.v.get() is True \
+                       and not current_node.v.isLocked():
+                        current_node.v.set(False)
+                        hidden_nodes.append(current_node)
+            else:
+                nodes_to_consider.extend(
+                    current_node.getChildren(type='transform')
+                )
 
         output_path = os.path.join(
             current_file_path,
@@ -1839,8 +1890,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
             pass
 
         command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
-                  '-stripNamespaces -uvWrite -worldSpace -eulerFilter ' \
-                  '-writeVisibility -root %s -file %s";'
+                  '-stripNamespaces -uvWrite -worldSpace ' \
+                  '-writeVisibility -eulerFilter ' \
+                  '-root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
@@ -1865,12 +1917,15 @@ def export_alembic_from_cache_node(handles=0, step=1):
         for node in hidden_nodes:
             node.v.set(True)
 
+        # restore isolation in all panels
+        panel_list = pm.getPanel(type='modelPanel')
+        for panel in panel_list:
+            pm.isolateSelect(panel, state=0)
+
         caller.step()
 
-    # restore isolation in all panels
-    panel_list = pm.getPanel(type='modelPanel')
-    for panel in panel_list:
-        pm.isolateSelect(panel, state=0)
+    # restore playback option
+    pm.playbackOptions(v=default_playback_option)
 
 
 # noinspection PyStatementEffect
@@ -2298,6 +2353,17 @@ def match_hierarchy(source, target):
     return lut
 
 
+def camel_case_to_underscore(name):
+    """Converts the given CamelCase formatted string to underscore formatted
+    one
+
+    :param name:
+    :return:
+    """
+    name = FIRST_CAP_RE.sub(r'\1_\2', name)
+    return ALL_CAP_RE.sub(r'\1_\2', name).lower()
+
+
 class Cell(object):
     """An implementation for a grid cell
 
@@ -2344,4 +2410,3 @@ class Grid(object):
         :return:
         """
         raise NotImplementedError()
-
