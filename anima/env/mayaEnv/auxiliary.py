@@ -1778,13 +1778,13 @@ def get_cacheable_nodes():
 
             if not has_cacheable_parent:
                 # only include direct references
-                # ref = tr.referenceFile()
-                # if ref is not None and ref.parent() is None:
-                #     # skip cacheable nodes coming from layout
-                #     if ref.version and ref.version.task.type \
-                #             and ref.version.task.type.name.lower() == 'layout':
-                #         caller.step()
-                #         continue
+                ref = tr.referenceFile()
+                if ref is not None and ref.parent() is None:
+                    # skip cacheable nodes coming from layout
+                    if ref.version and ref.version.task.type \
+                            and ref.version.task.type.name.lower() == 'layout':
+                        caller.step()
+                        continue
                 cacheable_nodes.append(tr)
 
         caller.step()

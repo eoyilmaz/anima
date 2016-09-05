@@ -1077,6 +1077,13 @@ def UI():
                 ann=Render.create_generic_gum_shader.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'create_generic_tongue_shader_button',
+                l='Create Generic TONGUE Shader',
+                c=RepeatedCallback(Render.create_generic_tongue_shader),
+                ann=Render.create_generic_tongue_shader.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button('convert_to_ai_image_button',
@@ -4311,6 +4318,54 @@ class Render(object):
                 'specularRoughness': 0.2,
                 'enableInternalReflections': 0,
                 'KsssColor': [1, 0.6, 0.6],
+                'Ksss': 0.5,
+                'sssRadius': [0.5, 0.5, 0.5],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.1,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 1,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_generic_tongue_shader(self):
+        """set ups generic tongue shader for selected objects
+        """
+        shader_name = 'toolbox_generic_tongue_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [0.675, 0.174, 0.194],
+                'Kd': 0.35,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.010,
+                'specularRoughness': 0.2,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 0.3, 0.3],
                 'Ksss': 0.5,
                 'sssRadius': [0.5, 0.5, 0.5],
                 'normalCamera': {
