@@ -570,6 +570,58 @@ def UI():
                     bgc=(0.500, 0.666, 1.000)
                 )
 
+            color.change()
+            with pm.rowLayout(nc=7, rat=(1, "both", 0), adj=1):
+                pm.text(l='Text. Res', bgc=color.color)
+                pm.button(
+                    l="128",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        128
+                    ),
+                    bgc=Color.colors[0]
+                )
+                pm.button(
+                    l="256",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        256
+                    ),
+                    bgc=Color.colors[1]
+                )
+                pm.button(
+                    l="512",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        512
+                    ),
+                    bgc=Color.colors[2]
+                )
+                pm.button(
+                    l="1024",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        1024
+                    ),
+                    bgc=Color.colors[3]
+                )
+                pm.button(
+                    l='2048',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        2048
+                    ),
+                    bgc=Color.colors[4]
+                )
+                pm.button(
+                    l='4096',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        4096
+                    ),
+                    bgc=Color.colors[5]
+                )
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -2891,6 +2943,45 @@ class Modeling(object):
 
             pm.xform(node, ws=1, rp=piv)
             pm.xform(node, ws=1, sp=piv)
+
+    @classmethod
+    def set_texture_res(cls, res):
+        """sets the texture resolution
+        :param res:
+        :return:
+        """
+        selection_list = pm.ls(sl=1)
+
+        if not len(selection_list):
+            return
+
+        node = selection_list[0]
+
+        # if the selection is a material
+        try:
+            node.resolution.set(res)
+        except AttributeError:
+            # not a material
+            # try it as a DAG object
+            try:
+                shape = node.getShape()
+            except RuntimeError:
+                # not a DAG object with shape
+                return
+
+            shading_engines = shape.outputs(type='shadingEngine')
+            if not len(shading_engines):
+                # not an object either
+                # so what the fuck are you amk
+                return
+
+            # consider the first material
+            conn = shading_engines[0].surfaceShader.listConnections()
+
+            if len(conn):
+                material = conn[0]
+                # now we can set the resolution
+                material.resolution.set(res)
 
 
 class Rigging(object):
