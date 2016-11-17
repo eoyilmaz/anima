@@ -9,7 +9,7 @@ import pymel.core as pm
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 
 class UI(object):
@@ -350,7 +350,8 @@ class UI(object):
             pm.renderSettings(fullPath=1, firstImageName=1, lastImageName=1)
         )
 
-        job_name = os.path.basename(scene_name)
+        # job_name = os.path.basename(scene_name)
+        job_name = self.generate_job_name()
 
         logger.debug('%ss %se %sr' % (start_frame, end_frame, by_frame))
         logger.debug('scene        = %s' % scene_name)
@@ -377,8 +378,6 @@ class UI(object):
             '-deletescene',
             '-exec "%(exec)s"',
         ]
-
-        print('mayarender%s' % os.environ['MAYA_VERSION'])
 
         kwargs = {
             'filename': filename,
