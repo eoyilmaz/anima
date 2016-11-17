@@ -18,7 +18,9 @@ class UI(object):
 
     def __init__(self):
         self.windows_name = 'cgru_afanasy_wnd'
+        self.window = None
 
+    def show(self):
         if pm.window(self.windows_name, exists=True):
             pm.deleteUI(self.windows_name)
 
@@ -154,7 +156,7 @@ class UI(object):
         control.setValue(v)
 
     @classmethod
-    def generate_job_name(self):
+    def generate_job_name(cls):
         """generates a job name according to the current scene
         """
         # first check if it is a Stalker Project
