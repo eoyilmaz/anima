@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import os
+import shutil
 import time
 import logging
 import functools
@@ -433,9 +434,17 @@ class UI(object):
             layers = [layer for layer in rlm.connections()
                       if layer.renderable.get()]
 
+            filename = kwargs['filename']
             for layer in layers:
                 layer_name = layer.name()
                 kwargs['name'] = '%s:%s' % (job_name, layer_name)
+
+                # for multiple render layers duplicate the file
+                basename, ext = os.path.splitext(filename)
+                kwargs['filename'] = '%s.%s%s' % (basename, layer_name, ext)
+
+                # duplicate the file
+                shutil.copy2(filename, kwargs['filename'])
 
                 tmp_cmd_buffer = copy.copy(cmd_buffer)
                 tmp_cmd_buffer.append(
@@ -449,6 +458,9 @@ class UI(object):
                     '%s' % ' '.join(tmp_cmd_buffer) % kwargs
                 ])
                 cmds.append(afjob_cmd)
+
+            # delete the original file
+            os.remove(filename)
 
         else:
             # create one big command
