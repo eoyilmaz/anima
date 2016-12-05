@@ -1066,8 +1066,8 @@ def check_cacheable_attr():
 
 @publisher('animation')
 def check_smartass_animator():
-    """checks if the smartass animator is trying to create a new version for a
-    completed animation scene silently
+    """checks if the smartass animator is silently trying to create a new
+    version for a completed animation scene
     """
     from stalker.models import walk_hierarchy
     # check the status of this task
