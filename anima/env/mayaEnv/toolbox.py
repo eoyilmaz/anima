@@ -1113,6 +1113,13 @@ def UI():
                 ann=Render.setup_window_glass_render_attributes.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'setup_dummy_window_light_button',
+                l='Setup/Update **Dummy Window** Light Plane',
+                c=RepeatedCallback(Render.dummy_window_light_plane),
+                ann=Render.dummy_window_light_plane.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button(
@@ -4278,6 +4285,18 @@ class Render(object):
             pm.hyperShade(assign=shader)
 
     @classmethod
+    def dummy_window_light_plane(cls):
+        """creates or updates the dummy window plane for the given area light
+        """
+        area_light_list = pm.selected()
+        from anima.env.mayaEnv import auxiliary
+        reload(auxiliary)
+        for light in area_light_list:
+            dwl = auxiliary.DummyWindowLight()
+            dwl.light = light
+            dwl.update()
+
+    @classmethod
     def setup_z_limiter(cls):
         """creates z limiter setup
         """
@@ -4709,13 +4728,17 @@ class Render(object):
         import glob
 
         from maya import OpenMayaUI
-        from shiboken import wrapInstance
+
+        try:
+            from shiboken import wrapInstance
+        except ImportError:
+            from shiboken2 import wrapInstance
 
         from anima.ui import progress_dialog
 
         maya_main_window = wrapInstance(
             long(OpenMayaUI.MQtUtil.mainWindow()),
-            progress_dialog.QtGui.QWidget
+            progress_dialog.QtWidgets.QWidget
         )
 
         pdm = ProgressDialogManager(parent=maya_main_window)

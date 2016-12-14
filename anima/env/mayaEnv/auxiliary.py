@@ -2410,3 +2410,188 @@ class Grid(object):
         :return:
         """
         raise NotImplementedError()
+
+
+class DummyWindowLight(object):
+    """generates dummy plane for given lights
+    """
+
+    shader_name = 'oyToolbox_dummy_window_light_shader'
+    shading_engine_name = 'oyToolbox_dummy_window_light_shaderSG'
+
+    kelvin_min = 1000
+    kelvin_max = 30000
+
+    def __init__(self, light=None):
+        self.light = light
+        self._shader = None
+        self._shading_engine = None
+        self._plane = None
+
+    def update(self):
+        """updates the node
+        """
+        plane = self.plane
+        self._update_plane_color()
+        self._set_light_attributes()
+
+    def _set_light_attributes(self):
+        """sets the default light attributes
+        """
+        light_shape = self.light.getShape()
+        light_shape.aiIndirect.set(0)
+        light_shape.aiSamples.set(1)
+
+    @property
+    def shader(self):
+        """returns the shader
+        """
+        if self._shader:
+            return self._shader
+        else:
+            shader = pm.ls(self.shader_name)
+            if not shader:
+                self._create_shader()
+                return self._shader
+            else:
+                self._shader = shader[0]
+                shading_engine = self._shader.outColor.outputs(
+                    type=pm.nt.ShadingEngine
+                )
+                if shading_engine:
+                    self._shading_engine = shading_engine[0]
+                else:
+                    self._create_shading_engine()
+                return shader[0]
+
+    @property
+    def shading_engine(self):
+        """returns the shading engine
+        """
+        if self._shading_engine:
+            return self._shading_engine
+        else:
+            self._shading_engine = self._create_shading_engine()
+            return self._shading_engine
+
+    @property
+    def plane(self):
+        """returns the plane
+        """
+        self._validate_light(self.light)
+
+        # get the first polygon object under the light
+        children_shapes = [
+            n.getShape()
+            for n in self.light.getChildren(type=pm.nt.Transform)
+        ]
+
+        if children_shapes:
+            plane_shape = children_shapes[0]
+            self._plane = plane_shape.getParent()
+            return self._plane
+        else:
+            # create the plane
+            return self._create_plane()
+
+    def _create_shading_engine(self):
+        """creates the shading engine
+        """
+        if self.shader:
+            # get the shading engine from shader
+            shading_engines = self.shader.outputs(type=pm.nt.ShadingEngine)
+            if shading_engines:
+                self._shading_engine = shading_engines[0]
+
+        if not self._shading_engine:
+            self._shading_engine = pm.sets(
+                renderable=True,
+                noSurfaceShader=True,
+                empty=True,
+                name=self.shading_engine_name
+            )
+
+        return self._shading_engine
+
+    def _create_shader(self):
+        self._shader = pm.shadingNode('surfaceShader', asShader=1)
+        self._shader.rename(self.shader_name)
+
+        self._shader.outColor >> self.shading_engine.surfaceShader
+
+        # create the ramp
+        import maya.cmds as cmds
+
+        ramp = pm.shadingNode('ramp', asTexture=1)
+
+        # set the colors of the ramp
+        kelvin_range = range(self.kelvin_min, self.kelvin_max, 1000)
+        total_colors = len(kelvin_range)
+        for i, kelvin in enumerate(kelvin_range):
+            color = cmds.arnoldTemperatureToColor(kelvin)
+            ramp.colorEntryList[i].color.set(color)
+            ramp.colorEntryList[i].position.set(float(i) / float(total_colors))
+
+        # connect ramp to the surfaceShaders.outColor
+        ramp.outColor >> self.shader.outColor
+
+    def _validate_light(self, light):
+        if light is None:
+            raise RuntimeError('No Light specified')
+
+        return light
+
+    def _create_plane(self):
+        """there should be a light
+        """
+        self._validate_light(self.light)
+
+        trans, pplane = pm.polyPlane()
+        shape = trans.getShape()
+        self._plane = trans
+
+        # parent it under the light
+        pm.parent(self._plane, self.light, r=1)
+        self._plane.t.set(0, 0, 0.05)
+        self._plane.r.set(90, 0, 0)
+        self._plane.s.set(2, 2, 2)
+
+        # close any indirect rays
+        shape.aiVisibleInDiffuse.set(0)
+        shape.aiVisibleInGlossy.set(0)
+
+        # ask the shader to create it
+        a = self.shader
+
+        # assign the shader
+        pm.sets(self.shading_engine, fe=[self._plane])
+        self._update_plane_color()
+
+    def _update_plane_color(self):
+        """updates the plane uv according to the light color
+        """
+        self._validate_light(self.light)
+
+        # assign the shader
+        pm.sets(self.shading_engine, fe=[self._plane])
+
+        # set the uv's of the plane according to the light color
+        kelvin = self.light.getShape().aiColorTemperature.get()
+        v = float(min(max(kelvin - self.kelvin_min, 0), self.kelvin_max)) / \
+            float((self.kelvin_max - self.kelvin_min))
+
+        shape = self.plane.getShape()
+        # close any indirect rays
+        shape.aiVisibleInDiffuse.set(0)
+        shape.aiVisibleInGlossy.set(0)
+
+        pm.polyEditUV(
+            '%s.map[0:10000]' % shape.name(),
+            u=v, v=v, r=False
+        )
+
+        # update the texture
+        try:
+            self.shader.resolution.set(1024)
+        except AttributeError:
+            pass
