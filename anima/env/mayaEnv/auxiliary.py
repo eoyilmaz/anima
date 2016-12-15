@@ -2530,18 +2530,30 @@ class DummyWindowLight(object):
         # create the ramp
         import maya.cmds as cmds
 
-        ramp = pm.shadingNode('ramp', asTexture=1)
+        kelvin_ramp = pm.shadingNode('ramp', asTexture=1)
+        intensity_ramp = pm.shadingNode('ramp', asTexture=1)
+        intensity_ramp.attr('type').set(1)
+        intensity_ramp.interpolation.set(2)
+
+        intensity_ramp.colorEntryList[0].color.set(0, 0, 0)
+        intensity_ramp.colorEntryList[0].position.set(0)
+
+        kelvin_ramp.outColor >> intensity_ramp.colorEntryList[1].color
+        intensity_ramp.colorEntryList[1].position.set(0.707)
+
+        intensity_ramp.colorEntryList[2].color.set(1, 1, 1)
+        intensity_ramp.colorEntryList[2].position.set(1)
 
         # set the colors of the ramp
         kelvin_range = range(self.kelvin_min, self.kelvin_max, 1000)
         total_colors = len(kelvin_range)
         for i, kelvin in enumerate(kelvin_range):
             color = cmds.arnoldTemperatureToColor(kelvin)
-            ramp.colorEntryList[i].color.set(color)
-            ramp.colorEntryList[i].position.set(float(i) / float(total_colors))
+            kelvin_ramp.colorEntryList[i].color.set(color)
+            kelvin_ramp.colorEntryList[i].position.set(float(i) / float(total_colors))
 
         # connect ramp to the surfaceShaders.outColor
-        ramp.outColor >> self.shader.outColor
+        intensity_ramp.outColor >> self.shader.outColor
 
     def _validate_light(self, light):
         if light is None:
@@ -2585,6 +2597,12 @@ class DummyWindowLight(object):
 
         # set the uv's of the plane according to the light color
         kelvin = self.light.getShape().aiColorTemperature.get()
+
+        min_exp = 0
+        max_exp = 20
+
+        u = (min(max_exp, self.light.aiExposure.get()) - min_exp) / \
+            (max_exp - min_exp)
         v = float(min(max(kelvin - self.kelvin_min, 0), self.kelvin_max)) / \
             float((self.kelvin_max - self.kelvin_min))
 
@@ -2595,7 +2613,7 @@ class DummyWindowLight(object):
 
         pm.polyEditUV(
             '%s.map[0:10000]' % shape.name(),
-            u=v, v=v, r=False
+            u=u, v=v, r=False
         )
 
         # update the texture
