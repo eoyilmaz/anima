@@ -2484,12 +2484,20 @@ class DummyWindowLight(object):
         children_shapes = [
             n.getShape()
             for n in self.light.getChildren(type=pm.nt.Transform)
+            if n is not None
         ]
 
         if children_shapes:
-            plane_shape = children_shapes[0]
-            self._plane = plane_shape.getParent()
-            return self._plane
+            while children_shapes:
+                plane_shape = children_shapes.pop(0)
+                if plane_shape is not None:
+                    break
+
+            if plane_shape:
+                self._plane = plane_shape.getParent()
+                return self._plane
+            else:
+                return self._create_plane()
         else:
             # create the plane
             return self._create_plane()
