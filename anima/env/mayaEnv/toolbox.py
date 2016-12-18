@@ -4132,7 +4132,7 @@ class Render(object):
         char.eyeSpecularWeight >> ks_image.attr('multiplyB')
 
         for eye in eyes:
-            shading_engine = eye.getShape().outputs()[0]
+            shading_engine = eye.getShape().outputs(type='shadingEngine')[0]
             shader = pm.ls(shading_engine.inputs(), mat=1)[0]
 
             # connect the diffuse shader input to the emissionColor
