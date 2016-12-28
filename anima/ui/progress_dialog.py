@@ -4,7 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from anima.base import Singleton
-from anima.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class ProgressCaller(object):
@@ -71,7 +71,7 @@ class ProgressDialogManager(object):
         if self.use_ui:
             if self.dialog is None:
                 self.dialog = \
-                    QtGui.QProgressDialog(self.parent)
+                    QtWidgets.QProgressDialog(self.parent)
                     # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
                 # self.dialog.setMinimumDuration(2000)
                 self.dialog.setRange(0, self.max_steps)
@@ -119,7 +119,7 @@ class ProgressDialogManager(object):
         """recenters the dialog window to the screen
         """
         if self.dialog is not None:
-            desktop = QtGui.QApplication.desktop()
+            desktop = QtWidgets.QApplication.desktop()
             cursor_pos = QtGui.QCursor.pos()
             desktop_number = desktop.screenNumber(cursor_pos)
             desktop_rect = desktop.screenGeometry(desktop_number)
@@ -149,7 +149,7 @@ class ProgressDialogManager(object):
             # kill the caller
             self.end_progress(caller)
 
-        QtGui.qApp.processEvents()
+        QtWidgets.qApp.processEvents()
 
     def end_progress(self, caller):
         """Ends the progress for the given caller

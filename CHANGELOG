@@ -2,6 +2,14 @@
 Changes
 =======
 
+0.2.0
+=====
+
+* **Update:** Added support for Maya 2017.
+* **Update:** Updated the system to work with Qt5 and PySide2.
+* **New:** ``LoginDialog`` now creates a ``AuthenticationLog`` instance upon
+  user login.
+
 0.1.13.dev
 ==========
 

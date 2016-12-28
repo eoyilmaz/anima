@@ -9,13 +9,15 @@ import os
 from anima.utils import do_db_setup
 
 import anima
-from anima.ui import IS_PYSIDE, IS_PYQT4
+from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtGui, QtCore
+from anima.ui.lib import QtGui, QtCore, QtWidgets
 
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import edl_importer_UI_pyside as edl_importer_UI
+if IS_PYSIDE2():
+    from anima.ui.ui_compiled import edl_importer_UI_pyside2 as edl_importer_UI
 elif IS_PYQT4():
     from anima.ui.ui_compiled import edl_importer_UI_pyqt4 as edl_importer_UI
 
@@ -40,7 +42,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class LineEdit(QtGui.QLineEdit):
+class LineEdit(QtWidgets.QLineEdit):
     """Custom Plain text edit that handles drag and drop
     """
 
@@ -68,7 +70,7 @@ class LineEdit(QtGui.QLineEdit):
         self.setText(path)
 
 
-class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
+class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
                  AnimaDialogBase):
     """The Main Window for EDL Importer.
 
@@ -99,7 +101,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
 
         self.formLayout.setWidget(
             1,
-            QtGui.QFormLayout.FieldRole,
+            QtWidgets.QFormLayout.FieldRole,
             self.edl_path_lineEdit
         )
 
@@ -161,7 +163,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
 
         # error if media_path does not exist
         if not os.path.exists(media_path):
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
                 "Media path doesn't exists"
@@ -185,7 +187,7 @@ class MainDialog(QtGui.QDialog, edl_importer_UI.Ui_Dialog,
 
         total_item_count = len(l) + 1
 
-        progress_dialog = QtGui.QProgressDialog(self)
+        progress_dialog = QtWidgets.QProgressDialog(self)
         progress_dialog.setRange(0, total_item_count)
         progress_dialog.setLabelText('Copying MXF files...')
         progress_dialog.show()

@@ -9,6 +9,19 @@ from anima import logger
 from anima.env.mayaEnv import Maya
 from anima.utils import do_db_setup
 
+def set_qt_lib():
+    """sets the Qt lib according to the maya version
+    """
+    import pymel
+    try:
+        from anima import ui
+        if pymel.versions.current() <= 201404:
+            ui.SET_PYSIDE()
+        else:
+            ui.SET_PYSIDE2()
+    except AttributeError:
+        pass
+
 
 def version_creator(logging_level=logging.WARNING):
     """Helper function for version_creator UI for Maya
@@ -17,13 +30,7 @@ def version_creator(logging_level=logging.WARNING):
     do_db_setup()
 
     # use PySide for Maya 2014
-    import pymel
-    try:
-        if pymel.versions.current() >= pymel.versions.v2014:
-            from anima import ui
-            ui.SET_PYSIDE()
-    except AttributeError:
-        pass
+    set_qt_lib()
 
     from anima.ui import version_creator, models
     from anima.env import mayaEnv
@@ -31,6 +38,8 @@ def version_creator(logging_level=logging.WARNING):
     reload(models)
     reload(mayaEnv)
     m = Maya()
+
+    import pymel
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     logger.setLevel(logging_level)
@@ -44,14 +53,8 @@ def version_updater(logging_level=logging.WARNING):
     # connect to db
     do_db_setup()
 
-    # use PySide for Maya 2014
-    import pymel
-    try:
-        if pymel.versions.current() >= pymel.versions.v2014:
-            from anima import ui
-            ui.SET_PYSIDE()
-    except AttributeError:
-        pass
+    # set Qt lib
+    set_qt_lib()
 
     from anima.ui import version_updater, models
     from anima.env import mayaEnv
@@ -59,6 +62,7 @@ def version_updater(logging_level=logging.WARNING):
     reload(version_updater)
     reload(models)
     m = Maya()
+    import pymel
     m.name = "Maya" + str(pymel.versions.current())[0:4]
 
     logger.setLevel(logging_level)
