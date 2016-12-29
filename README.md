@@ -18,16 +18,16 @@ How To Install
 --------------
 
 First of all, Anima uses Stalker. So you need to have a running
-PostgreSQL database. Stalker can work with other databases too but I
-prefer Postgresql and I develop and test against a PostgreSQL database,
-and in future the only database option will probably be Postgresql.
+PostgreSQL database. Stalker can work with other databases too but
+the preferred database is Postgresql and it is developed and tested
+against a PostgreSQL database, and in future the only database optio
+will probably be Postgresql.
 
 To manage your database settings from one place, you need to create a
-"config.py" file in a location that all of workstations and farm
+`config.py` file in a location that all of workstations and farm
 computers are able to read from. The bad side of it is that it exposes
 your database user and password. But because it is going to be seen only
-by the studio workers (and only by the tech savvy ones) I don't care
-about that.
+by the studio workers (and only by the tech savvy ones).
 
 In this `config.py` file you need to enter the following configuration
 variables:
@@ -47,7 +47,7 @@ every computer that you want to use stalker and then set it to the path
 It is a good idea to install Python 2.7.x in to the all of the
 computers, and then install `psycopg`, `PySide` and `PyQt4`. Then copy
 the installed `pyscopg` files (under python/Lib/site-packages) to your
-Maya installation (if you are using maya I don't know).
+Maya installation.
 
 With these 5 steps you will be able to use:
 
@@ -64,8 +64,8 @@ db.setup({"sqlalchemy.url": ".....", ...})
 ```
 
 So all of your computers will now be able to reach the database without
-having too much information about the database. After that to setup
-Anima it should be pretty straight forward:
+having too much information about the database. After that, setting up
+Anima should be pretty straight forward:
 
 Clone `anima` to a network share so everyone can see it.
 Setup the `PYTHONPATH` environment variable to include the path that
@@ -84,9 +84,9 @@ from anima.ui.scripts import maya
 maya.version_creator()
 ```
 
-It is a good idea to create a "Studio" instance in your database, with
+It is a good idea to create a `Studio` instance in your database, with
 all the details needed (ex. working hours, the studio name), you can run
-it in Maya for example or in anywhere:
+it in Maya for example or in anywhere that has a Python consoles:
 
 ```python
 import datetime
