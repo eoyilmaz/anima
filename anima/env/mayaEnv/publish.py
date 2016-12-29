@@ -353,6 +353,16 @@ def check_no_references():
 
 
 @publisher('model')
+def check_no_namespace():
+    """there should be no namespaces in a model file
+    """
+    if len(pm.listNamespaces()):
+        raise PublishError(
+            'There should be no <b>Namespaces</b> in a <b>Model</b> scene.'
+        )
+
+
+@publisher('model')
 def check_history():
     """there should be no history on the objects
     """
@@ -801,7 +811,6 @@ def check_all_tx_textures():
     """checks if tx textures are created for all of the texture nodes in the
     current scene
     """
-    return
     v = staging.get('version')
     if v and Representation.repr_separator in v.take_name:
         return
@@ -1028,14 +1037,31 @@ def check_component_edits_on_references():
 def check_cacheable_attr():
     """checks if there is at least one cacheable attr
     """
-    if not any([root_node.hasAttr('cacheable')
-                and root_node.getAttr('cacheable') != '' and
-                root_node.getAttr('cacheable') is not None
-                for root_node in auxiliary.get_root_nodes()]):
-        raise PublishError(
-            'Please add <b>cacheable</b> attribute and set it to a '
-            '<b>proper name</b>!'
-        )
+    root_nodes = auxiliary.get_root_nodes()
+    root_node_has_cacheable_attr = any(
+        [
+            root_node.hasAttr('cacheable')
+            and root_node.getAttr('cacheable') != '' and
+            root_node.getAttr('cacheable') is not None
+            for root_node in root_nodes]
+    )
+
+    if not root_node_has_cacheable_attr:
+        # check children nodes
+        for root_node in root_nodes:
+            child_has_cacheable = False
+            for child_node in root_node.listRelatives(c=1):
+                if child_node.hasAttr('cacheable') \
+                   and child_node.getAttr('cacheable') != '' \
+                   and child_node.getAttr('cacheable') is not None:
+                    child_has_cacheable = True
+                    break
+
+        if not child_has_cacheable:
+            raise PublishError(
+                'Please add <b>cacheable</b> attribute and set it to a '
+                '<b>proper name</b>!'
+            )
 
 
 @publisher('animation')

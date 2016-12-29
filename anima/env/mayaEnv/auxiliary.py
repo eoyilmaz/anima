@@ -1744,14 +1744,14 @@ def get_cacheable_nodes():
 
             if not has_cacheable_parent:
                 # only include direct references
-                ref = tr.referenceFile()
-                if ref is not None and ref.parent() is None:
-                    # skip cacheable nodes coming from layout
-                    if ref.version and ref.version.task.type \
-                            and ref.version.task.type.name.lower() == 'layout':
-                        caller.step()
-                        continue
-                    cacheable_nodes.append(tr)
+                # ref = tr.referenceFile()
+                # if ref is not None and ref.parent() is None:
+                #     # skip cacheable nodes coming from layout
+                #     if ref.version and ref.version.task.type \
+                #             and ref.version.task.type.name.lower() == 'layout':
+                #         caller.step()
+                #         continue
+                cacheable_nodes.append(tr)
 
         caller.step()
 
@@ -1795,6 +1795,15 @@ def export_alembic_from_cache_node(handles=0, step=1):
     # export alembic caches
     previous_cacheable_attr_value = ''
     i = 1
+
+    # isolate none to speed things up
+    pm.select(None)
+
+    # isolate in all panels
+    panel_list = pm.getPanel(type='modelPanel')
+    for panel in panel_list:
+        pm.isolateSelect(panel, state=1)
+
     for cacheable_node in cacheable_nodes:
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         if cacheable_attr_value == previous_cacheable_attr_value:
@@ -1803,7 +1812,8 @@ def export_alembic_from_cache_node(handles=0, step=1):
             i = 1
 
         # hide any child node that has "rig" or "proxy" or "low" in its name
-        wrong_node_names = ['rig', 'proxy', 'low']
+        # wrong_node_names = ['rig', 'proxy', 'low']
+        wrong_node_names = ['rig', 'proxy',]
         hidden_nodes = []
         for child in pm.ls(cacheable_node.getChildren(), type='transform'):
             if any([n in child.name().split(':')[-1].lower() for n in wrong_node_names]):
@@ -1856,6 +1866,11 @@ def export_alembic_from_cache_node(handles=0, step=1):
             node.v.set(True)
 
         caller.step()
+
+    # restore isolation in all panels
+    panel_list = pm.getPanel(type='modelPanel')
+    for panel in panel_list:
+        pm.isolateSelect(panel, state=0)
 
 
 # noinspection PyStatementEffect
