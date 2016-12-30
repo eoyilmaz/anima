@@ -1,0 +1,52 @@
+#type: node
+#context: rop
+#internal: h2a
+#largeicon: /nodes/out/h2a.png
+
+#tags: render,arnold
+
+= H2A =
+
+""" Exports the geometry in ass format """
+
+@parameters
+
+SOP Path:
+    SOP node containing the geometry to export
+
+Output File:
+    Ass file to export (Use the filename extension .gz for gzip compression and base85 encoding)
+
+Name:
+    Name of stand-in file
+
+Min Pixel Width:
+    (See arnold user guide)
+
+Shutter:
+    Used for motion blur calculation
+
+Export Motion Blur:
+	 Write the ass file with motion blur (Can increase render time)
+
+Export Color:
+	Writes the color information in ass file (Cd attribute must 	always be a point attribute!!)
+
+Export Type:
+	Curves: 
+		Exports curves (the point attributes "width" and "uv" 			must be present and point attribute "v" must be 				present if motion blur is exported). Exported color 			channel name is "Cd". 
+
+		Mode: 
+			Arnold curve render type
+	Polygon:
+		Exports primitives in ass format (all attributes must 			be point attributes). Exported color channel name is 			"Cd"
+	Point:
+		Exports points in ass format. All attributes must be 			point attributes. Exported color channel name is 				"Cd"
+
+		
+		Particle Render Type:
+			Arnold particle render type
+		Radius Multiplier:
+			Global multiplier to pscale attribute
+
+

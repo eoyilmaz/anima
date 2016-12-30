@@ -1,0 +1,14 @@
+# git ignore file
+/Debug
+/Release
+*.vcxproj
+*.filters
+H2A.vcxproj
+H2A.vcxproj.filters
+H2A.exp
+H2A.lib
+H2A.o
+H2A.exp
+H2A.lib
+H2A.o
+/support_files
