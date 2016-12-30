@@ -31,11 +31,10 @@ In this `config.py` file you need to enter the following configuration
 variables:
 
 ```python
-
-    database_engine_settings={
-        "sqlalchemy.url": "postgresql://user:password@address/db_name",
-        "sqlalchemy.echo": False
-    }
+database_engine_settings={
+    "sqlalchemy.url": "postgresql://user:password@address/db_name",
+    "sqlalchemy.echo": False
+}
 ```
 
 Then you need to create an environment variable called "STALKER_PATH" in every
@@ -57,7 +56,7 @@ instead of:
 
 ```python
 from stalker import db
-db.setup({"sqlalchemy.url": ".....", ...})
+db.setup({"sqlalchemy.url": "....."})
 ```
 
 So all of your computers will now be able to reach the database without having
