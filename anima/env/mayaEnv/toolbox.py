@@ -570,6 +570,58 @@ def UI():
                     bgc=(0.500, 0.666, 1.000)
                 )
 
+            color.change()
+            with pm.rowLayout(nc=7, rat=(1, "both", 0), adj=1):
+                pm.text(l='Text. Res', bgc=color.color)
+                pm.button(
+                    l="128",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        128
+                    ),
+                    bgc=Color.colors[0]
+                )
+                pm.button(
+                    l="256",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        256
+                    ),
+                    bgc=Color.colors[1]
+                )
+                pm.button(
+                    l="512",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        512
+                    ),
+                    bgc=Color.colors[2]
+                )
+                pm.button(
+                    l="1024",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        1024
+                    ),
+                    bgc=Color.colors[3]
+                )
+                pm.button(
+                    l='2048',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        2048
+                    ),
+                    bgc=Color.colors[4]
+                )
+                pm.button(
+                    l='4096',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        4096
+                    ),
+                    bgc=Color.colors[5]
+                )
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -1061,6 +1113,13 @@ def UI():
                 ann=Render.setup_window_glass_render_attributes.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'setup_dummy_window_light_button',
+                l='Setup/Update **Dummy Window** Light Plane',
+                c=RepeatedCallback(Render.dummy_window_light_plane),
+                ann=Render.dummy_window_light_plane.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button(
@@ -1075,6 +1134,13 @@ def UI():
                 l='Create Generic GUM Shader',
                 c=RepeatedCallback(Render.create_generic_gum_shader),
                 ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'create_generic_tongue_shader_button',
+                l='Create Generic TONGUE Shader',
+                c=RepeatedCallback(Render.create_generic_tongue_shader),
+                ann=Render.create_generic_tongue_shader.__doc__,
                 bgc=color.color
             )
 
@@ -2885,6 +2951,45 @@ class Modeling(object):
             pm.xform(node, ws=1, rp=piv)
             pm.xform(node, ws=1, sp=piv)
 
+    @classmethod
+    def set_texture_res(cls, res):
+        """sets the texture resolution
+        :param res:
+        :return:
+        """
+        selection_list = pm.ls(sl=1)
+
+        if not len(selection_list):
+            return
+
+        node = selection_list[0]
+
+        # if the selection is a material
+        try:
+            node.resolution.set(res)
+        except AttributeError:
+            # not a material
+            # try it as a DAG object
+            try:
+                shape = node.getShape()
+            except RuntimeError:
+                # not a DAG object with shape
+                return
+
+            shading_engines = shape.outputs(type='shadingEngine')
+            if not len(shading_engines):
+                # not an object either
+                # so what the fuck are you amk
+                return
+
+            # consider the first material
+            conn = shading_engines[0].surfaceShader.listConnections()
+
+            if len(conn):
+                material = conn[0]
+                # now we can set the resolution
+                material.resolution.set(res)
+
 
 class Rigging(object):
     """Rigging tools
@@ -4027,7 +4132,7 @@ class Render(object):
         char.eyeSpecularWeight >> ks_image.attr('multiplyB')
 
         for eye in eyes:
-            shading_engine = eye.getShape().outputs()[0]
+            shading_engine = eye.getShape().outputs(type='shadingEngine')[0]
             shader = pm.ls(shading_engine.inputs(), mat=1)[0]
 
             # connect the diffuse shader input to the emissionColor
@@ -4180,6 +4285,18 @@ class Render(object):
             pm.hyperShade(assign=shader)
 
     @classmethod
+    def dummy_window_light_plane(cls):
+        """creates or updates the dummy window plane for the given area light
+        """
+        area_light_list = pm.selected()
+        from anima.env.mayaEnv import auxiliary
+        reload(auxiliary)
+        for light in area_light_list:
+            dwl = auxiliary.DummyWindowLight()
+            dwl.light = light
+            dwl.update()
+
+    @classmethod
     def setup_z_limiter(cls):
         """creates z limiter setup
         """
@@ -4311,6 +4428,54 @@ class Render(object):
                 'specularRoughness': 0.2,
                 'enableInternalReflections': 0,
                 'KsssColor': [1, 0.6, 0.6],
+                'Ksss': 0.5,
+                'sssRadius': [0.5, 0.5, 0.5],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.1,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 1,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_generic_tongue_shader(self):
+        """set ups generic tongue shader for selected objects
+        """
+        shader_name = 'toolbox_generic_tongue_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [0.675, 0.174, 0.194],
+                'Kd': 0.35,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.010,
+                'specularRoughness': 0.2,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 0.3, 0.3],
                 'Ksss': 0.5,
                 'sssRadius': [0.5, 0.5, 0.5],
                 'normalCamera': {
@@ -4563,13 +4728,17 @@ class Render(object):
         import glob
 
         from maya import OpenMayaUI
-        from shiboken import wrapInstance
+
+        try:
+            from shiboken import wrapInstance
+        except ImportError:
+            from shiboken2 import wrapInstance
 
         from anima.ui import progress_dialog
 
         maya_main_window = wrapInstance(
             long(OpenMayaUI.MQtUtil.mainWindow()),
-            progress_dialog.QtGui.QWidget
+            progress_dialog.QtWidgets.QWidget
         )
 
         pdm = ProgressDialogManager(parent=maya_main_window)

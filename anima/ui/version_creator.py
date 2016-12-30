@@ -22,13 +22,15 @@ from anima.recent import RecentFileManager
 from anima.repr import Representation
 from anima.ui import utils as ui_utils
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import (IS_PYSIDE, IS_PYQT4, version_updater)
-from anima.ui.lib import QtGui, QtCore
+from anima.ui import (IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, version_updater)
+from anima.ui.lib import QtGui, QtCore, QtWidgets
 from anima.ui.models import TaskTreeModel, TakesListWidget
 
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
+elif IS_PYSIDE2():
+    from anima.ui.ui_compiled import version_creator_UI_pyside2 as version_creator_UI
 elif IS_PYQT4():
     from anima.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
@@ -41,7 +43,7 @@ ref_depth_res = [
 ]
 
 
-class RecentFilesComboBox(QtGui.QComboBox):
+class RecentFilesComboBox(QtWidgets.QComboBox):
     """A Fixed with popup box comboBox alternative
     """
 
@@ -50,49 +52,69 @@ class RecentFilesComboBox(QtGui.QComboBox):
         super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
 
 
-class VersionsTableWidget(QtGui.QTableWidget):
+class VersionsTableWidget(QtWidgets.QTableWidget):
     """A QTableWidget derivative specialized to hold version data
     """
 
     def __init__(self, parent=None, *args, **kwargs):
-        QtGui.QTableWidget.__init__(self, parent, *args, **kwargs)
+        QtWidgets.QTableWidget.__init__(self, parent, *args, **kwargs)
 
-        self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtGui.QAbstractItemView.SingleSelection)
-        self.setSelectionBehavior(QtGui.QAbstractItemView.SelectRows)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setShowGrid(False)
         self.setColumnCount(5)
         self.setObjectName("previous_versions_tableWidget")
         self.setColumnCount(5)
         self.setRowCount(0)
-        self.setHorizontalHeaderItem(0, QtGui.QTableWidgetItem())
-        self.setHorizontalHeaderItem(1, QtGui.QTableWidgetItem())
-        self.setHorizontalHeaderItem(2, QtGui.QTableWidgetItem())
-        self.setHorizontalHeaderItem(3, QtGui.QTableWidgetItem())
-        self.setHorizontalHeaderItem(4, QtGui.QTableWidgetItem())
+        self.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
         self.horizontalHeader().setStretchLastSection(True)
         self.verticalHeader().setStretchLastSection(False)
 
-        self.setToolTip(
-            QtGui.QApplication.translate(
-                "Dialog",
-                "<html><head/><body><p>Right click to:</p><ul style=\""
-                "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
-                "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
-                "font-weight:600;\">Copy Path</span></li><li><span style=\" "
-                "font-weight:600;\">Browse Path</span></li><li><span style=\" "
-                "font-weight:600;\">Change Description</span></li></ul>"
-                "<p>Double click to:</p><ul style=\"margin-top: 0px; "
-                "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
-                "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
-                "margin-bottom:12px; margin-left:0px; margin-right:0px; "
-                "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
-                "font-weight:600;\">Open</span></li></ul></body></html>",
-                None,
-                QtGui.QApplication.UnicodeUTF8
+        try:
+            self.setToolTip(
+                QtWidgets.QApplication.translate(
+                    "Dialog",
+                    "<html><head/><body><p>Right click to:</p><ul style=\""
+                    "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
+                    "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
+                    "font-weight:600;\">Copy Path</span></li><li><span style=\" "
+                    "font-weight:600;\">Browse Path</span></li><li><span style=\" "
+                    "font-weight:600;\">Change Description</span></li></ul>"
+                    "<p>Double click to:</p><ul style=\"margin-top: 0px; "
+                    "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
+                    "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
+                    "margin-bottom:12px; margin-left:0px; margin-right:0px; "
+                    "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
+                    "font-weight:600;\">Open</span></li></ul></body></html>",
+                    None,
+                    QtWidgets.QApplication.UnicodeUTF8
+                )
             )
-        )
+        except AttributeError:
+            self.setToolTip(
+                QtWidgets.QApplication.translate(
+                    "Dialog",
+                    "<html><head/><body><p>Right click to:</p><ul style=\""
+                    "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
+                    "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
+                    "font-weight:600;\">Copy Path</span></li><li><span style=\" "
+                    "font-weight:600;\">Browse Path</span></li><li><span style=\" "
+                    "font-weight:600;\">Change Description</span></li></ul>"
+                    "<p>Double click to:</p><ul style=\"margin-top: 0px; "
+                    "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
+                    "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
+                    "margin-bottom:12px; margin-left:0px; margin-right:0px; "
+                    "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
+                    "font-weight:600;\">Open</span></li></ul></body></html>",
+                    None
+                )
+            )
 
         self.versions = []
         self.labels = [
@@ -109,7 +131,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
     def clear(self):
         """overridden clear method
         """
-        QtGui.QTableWidget.clear(self)
+        QtWidgets.QTableWidget.clear(self)
         self.versions = []
 
         # reset the labels
@@ -175,7 +197,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
 
             # ------------------------------------
             # version_number
-            item = QtGui.QTableWidgetItem(str(version.version_number))
+            item = QtWidgets.QTableWidgetItem(str(version.version_number))
             # align to center and vertical center
             item.setTextAlignment(0x0004 | 0x0080)
 
@@ -188,7 +210,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
 
             # ------------------------------------
             # created_with
-            item = QtGui.QTableWidgetItem()
+            item = QtWidgets.QTableWidgetItem()
             if version.created_with:
                 item.setIcon(ui_utils.get_icon(version.created_with.lower()))
 
@@ -203,7 +225,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
             created_by = ''
             if version.created_by:
                 created_by = version.created_by.name
-            item = QtGui.QTableWidgetItem(created_by)
+            item = QtWidgets.QTableWidgetItem(created_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -219,7 +241,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
             updated_by = ''
             if version.updated_by:
                 updated_by = version.updated_by.name
-            item = QtGui.QTableWidgetItem(updated_by)
+            item = QtWidgets.QTableWidgetItem(updated_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -240,7 +262,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
                 file_size = float(
                     os.path.getsize(version.absolute_full_path)) / 1048576
 
-            item = QtGui.QTableWidgetItem(
+            item = QtWidgets.QTableWidgetItem(
                 defaults.file_size_format % file_size)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -261,7 +283,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
                 file_date = datetime.datetime.fromtimestamp(
                     os.path.getmtime(version.absolute_full_path)
                 )
-            item = QtGui.QTableWidgetItem(
+            item = QtWidgets.QTableWidgetItem(
                 file_date.strftime(defaults.date_time_format)
             )
 
@@ -277,7 +299,7 @@ class VersionsTableWidget(QtGui.QTableWidget):
 
             # ------------------------------------
             # description
-            item = QtGui.QTableWidgetItem(version.description)
+            item = QtWidgets.QTableWidgetItem(version.description)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -330,7 +352,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
     """The main version creation dialog for the pipeline.
 
     This is the main interface that the users of the ``anima`` will use to
@@ -425,7 +447,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #DBSession.connection().close()
         #DBSession.remove()
         logger.debug('closing the ui')
-        QtGui.QDialog.close(self)
+        QtWidgets.QDialog.close(self)
 
     def show(self):
         """overridden show method
@@ -661,7 +683,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         version = self.previous_versions_tableWidget.versions[index]
 
         # create the menu
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
 
         #change_status_menu = menu.addMenu('Change Status')
         #menu.addSeparator()
@@ -697,7 +719,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     # check if the user is able to publish this
                     if not logged_in_user in version.task.responsible \
                        and not self.is_power_user(logged_in_user):
-                        QtGui.QMessageBox.critical(
+                        QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
                             'You are not a <b>Responsible</b> of this task<br>'
@@ -730,7 +752,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                             if v.task not in related_tasks:
                                 related_tasks.append(v.task)
 
-                        QtGui.QMessageBox.critical(
+                        QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
                             'This version is referenced by the following '
@@ -750,7 +772,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     if not logged_in_user in version.task.responsible \
                        and not logged_in_user in version.task.resources \
                        and not self.is_power_user(logged_in_user):
-                        QtGui.QMessageBox.critical(
+                        QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
                             'You are not a <b>Resource/Responsible</b> of '
@@ -773,7 +795,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
-                    QtGui.QMessageBox.critical(
+                    QtWidgets.QMessageBox.critical(
                         self,
                         "Error",
                         "Path doesn't exists:\n%s" % path
@@ -786,7 +808,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
-                    QtGui.QMessageBox.critical(
+                    QtWidgets.QMessageBox.critical(
                         self,
                         "Error",
                         "Path doesn't exists:\n%s" % path
@@ -794,7 +816,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             elif choice == "Upload Output...":
                 # upload output to the given version
                 # show a file browser
-                dialog = QtGui.QFileDialog(self, "Choose file")
+                dialog = QtWidgets.QFileDialog(self, "Choose file")
                 result = dialog.getOpenFileName()
                 file_path = result[0]
                 if file_path:
@@ -806,13 +828,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             elif choice == 'Change Description...':
                 if version:
                     # change the description
-                    self.current_dialog = QtGui.QInputDialog(parent=self)
+                    self.current_dialog = QtWidgets.QInputDialog(parent=self)
 
                     new_description, ok = self.current_dialog.getText(
                         self,
                         "Enter the new description",
                         "Please enter the new description:",
-                        QtGui.QLineEdit.Normal,
+                        QtWidgets.QLineEdit.Normal,
                         version.description
                     )
 
@@ -827,7 +849,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                         self.update_previous_versions_tableWidget()
             elif choice == 'Copy Path':
                 # just set the clipboard to the version.absolute_full_path
-                clipboard = QtGui.QApplication.clipboard()
+                clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText(os.path.normpath(version.absolute_full_path))
 
     def _show_tasks_treeView_context_menu(self, position):
@@ -853,7 +875,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         # create the menu
-        menu = QtGui.QMenu()  # Open in browser
+        menu = QtWidgets.QMenu()  # Open in browser
         menu.addAction('Open In Web Browser...')
         menu.addAction('Copy ID to clipboard')
         menu.addSeparator()
@@ -893,16 +915,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     )
                 )
             elif choice == 'Copy ID to clipboard':
-                clipboard = QtGui.QApplication.clipboard()
+                clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText('%s' % task.id)
 
                 # and warn the user about a new version is created and the
                 # clipboard is set to the new version full path
-                QtGui.QMessageBox.warning(
+                QtWidgets.QMessageBox.warning(
                     self,
                     "ID Copied To Clipboard",
                     "ID %s is copied to clipboard!" % task.id,
-                    QtGui.QMessageBox.Ok
+                    QtWidgets.QMessageBox.Ok
                 )
 
             else:
@@ -966,7 +988,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         """
         """
         self.recent_files_comboBox.setSizeAdjustPolicy(
-            QtGui.QComboBox.AdjustToContentsOnFirstShow
+            QtWidgets.QComboBox.AdjustToContentsOnFirstShow
         )
         self.recent_files_comboBox.setFixedWidth(250)
 
@@ -1001,8 +1023,8 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 #     pass
 
                 self.recent_files_comboBox.setSizePolicy(
-                    QtGui.QSizePolicy.MinimumExpanding,
-                    QtGui.QSizePolicy.Minimum
+                    QtWidgets.QSizePolicy.MinimumExpanding,
+                    QtWidgets.QSizePolicy.Minimum
                 )
             except KeyError:
                 pass
@@ -1101,7 +1123,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         #
         # and add it under horizontalLayout_14
 
-        splitter = QtGui.QSplitter()
+        splitter = QtWidgets.QSplitter()
         splitter.addWidget(self.tasks_groupBox)
         splitter.addWidget(self.new_version_groupBox)
         splitter.addWidget(self.previous_versions_groupBox)
@@ -1112,7 +1134,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug('finished creating splitter')
 
         # set icon for search_task_toolButton
-        # icon = QtGui.QApplication.style().standardIcon(QtGui.QStyle.SP_BrowserReload)
+        # icon = QtGui.QApplication.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload)
         # self.search_task_toolButton.setIcon(icon)
 
         # disable update_paths_checkBox
@@ -1365,11 +1387,17 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self.tasks_treeView.selectionModel().clearSelection()
             return None
 
-        self.tasks_treeView.selectionModel().select(
-            item.index(), QtGui.QItemSelectionModel.ClearAndSelect
-        )
+        try:
+            self.tasks_treeView.selectionModel().select(
+                item.index(), QtGui.QItemSelectionModel.ClearAndSelect
+            )
+        except AttributeError:  # Fix for Qt5
+            self.tasks_treeView.selectionModel().select(
+                item.index(), QtCore.QItemSelectionModel.ClearAndSelect
+            )
+
         self.tasks_treeView.scrollTo(
-            item.index(), QtGui.QAbstractItemView.PositionAtBottom
+            item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
         )
         return item
 
@@ -1454,7 +1482,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         # anything is acceptable
         # because the validation will occur in the Version instance
 
-        self.current_dialog = QtGui.QInputDialog(self)
+        self.current_dialog = QtWidgets.QInputDialog(self)
 
         current_take_name = self.takes_listWidget.current_take_name
 
@@ -1462,7 +1490,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             self,
             "Add Take Name",
             "New Take Name",
-            QtGui.QLineEdit.Normal,
+            QtWidgets.QLineEdit.Normal,
             current_take_name
         )
 
@@ -1514,7 +1542,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
@@ -1527,7 +1555,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
+                QtWidgets.QMessageBox.information(
                     self,
                     "Export",
                     "%s\n\n has been exported correctly!" %
@@ -1548,7 +1576,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 error_message = '%s' % e
             except UnicodeEncodeError:
                 error_message = unicode(e)
-            QtGui.QMessageBox.critical(self, "Error", error_message)
+            QtWidgets.QMessageBox.critical(self, "Error", error_message)
             DBSession.rollback()
             return None
 
@@ -1557,7 +1585,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # check if the task is a leaf task
         if not new_version.task.is_leaf:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
@@ -1590,7 +1618,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             if current_version:
                 if current_version.task != new_version.task:
                     # ask to the user if he/she is sure about that
-                    answer = QtGui.QMessageBox.question(
+                    answer = QtWidgets.QMessageBox.question(
                         self,
                         'Possible Mistake?',
                         "Saving under different Task<br>"
@@ -1602,11 +1630,11 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                             current_version.nice_name,
                             new_version.nice_name
                         ),
-                        QtGui.QMessageBox.Yes,
-                        QtGui.QMessageBox.No
+                        QtWidgets.QMessageBox.Yes,
+                        QtWidgets.QMessageBox.No
                     )
 
-                    if answer == QtGui.QMessageBox.No:
+                    if answer == QtWidgets.QMessageBox.No:
                         # no, just return
                         return
 
@@ -1619,7 +1647,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 error_message = unicode(e)
 
             print(error_message)
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 error_message
@@ -1630,7 +1658,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         if is_external_env:
             # set the clipboard to the new_version.absolute_full_path
-            clipboard = QtGui.QApplication.clipboard()
+            clipboard = QtWidgets.QApplication.clipboard()
 
             logger.debug('new_version.absolute_full_path: %s' %
                          new_version.absolute_full_path)
@@ -1640,12 +1668,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # and warn the user about a new version is created and the
             # clipboard is set to the new version full path
-            QtGui.QMessageBox.warning(
+            QtWidgets.QMessageBox.warning(
                 self,
                 "Path Generated",
                 "A new Version is created at:\n\n%s\n\n"
                 "And the path is copied to your clipboard!!!" % v_path,
-                QtGui.QMessageBox.Ok
+                QtWidgets.QMessageBox.Ok
             )
 
         # check if the new version is pointing to a valid file
@@ -1654,7 +1682,7 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
             DBSession.add(new_version)
         else:
             # raise an error
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Something went wrong with %s\n'
@@ -1710,16 +1738,16 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                 # pop a dialog and ask if the user really wants to open the
                 # file
 
-                answer = QtGui.QMessageBox.question(
+                answer = QtWidgets.QMessageBox.question(
                     self,
                     'RuntimeError',
                     "There are <b>unsaved changes</b> in the current "
                     "scene<br><br>Do you really want to open the file?",
-                    QtGui.QMessageBox.Yes,
-                    QtGui.QMessageBox.No
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.No
                 )
 
-                if answer == QtGui.QMessageBox.Yes:
+                if answer == QtWidgets.QMessageBox.Yes:
                     reference_resolution =\
                         self.environment.open(
                             old_version,
@@ -1756,13 +1784,13 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 "Critical Error",
                 "Referencing <b>un-published versions</b> are only "
                 "allowed for Power Users!\n"
                 "Please reference a published version of the same Asset/Shot",
-                QtGui.QMessageBox.Ok
+                QtWidgets.QMessageBox.Ok
             )
             return
 
@@ -1782,12 +1810,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             if len(all_reprs):
                 # ask which one to reference
-                repr_message_box = QtGui.QMessageBox()
+                repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText('Which Repr.?')
                 base_button = \
                     repr_message_box.addButton(
                         Representation.base_repr_name,
-                        QtGui.QMessageBox.ActionRole
+                        QtWidgets.QMessageBox.ActionRole
                     )
                 setattr(base_button, 'repr_version', previous_version)
 
@@ -1806,14 +1834,14 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
                     if repr_version:
                         repr_button = repr_message_box.addButton(
                             repr_name,
-                            QtGui.QMessageBox.ActionRole
+                            QtWidgets.QMessageBox.ActionRole
                         )
                         setattr(repr_button, 'repr_version', repr_version)
 
                 # add a cancel button
                 cancel_button = repr_message_box.addButton(
                     'Cancel',
-                    QtGui.QMessageBox.RejectRole
+                    QtWidgets.QMessageBox.RejectRole
                 )
 
                 repr_message_box.exec_()
@@ -1828,12 +1856,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
+                QtWidgets.QMessageBox.information(
                     self,
                     "Reference",
                     "%s\n\n has been referenced correctly!" %
                     previous_version.filename,
-                    QtGui.QMessageBox.Ok
+                    QtWidgets.QMessageBox.Ok
                 )
 
     def import_pushButton_clicked(self):
@@ -1854,12 +1882,12 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
-                QtGui.QMessageBox.information(
+                QtWidgets.QMessageBox.information(
                     self,
                     "Import",
                     "%s\n\n has been imported correctly!" %
                     previous_version.filename,
-                    QtGui.QMessageBox.Ok
+                    QtWidgets.QMessageBox.Ok
                 )
 
     def clear_thumbnail(self):
@@ -1907,15 +1935,15 @@ class MainDialog(QtGui.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
         if not t:
             return
 
-        answer = QtGui.QMessageBox.question(
+        answer = QtWidgets.QMessageBox.question(
             self,
             'Delete Thumbnail?',
             'Delete Thumbnail?',
-            QtGui.QMessageBox.Yes,
-            QtGui.QMessageBox.No
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
         )
 
-        if answer == QtGui.QMessageBox.Yes:
+        if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
             from stalker import db
             db.DBSession.delete(t)

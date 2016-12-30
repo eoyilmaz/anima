@@ -7,12 +7,14 @@ from anima import logger
 from anima.env import empty_reference_resolution
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models import VersionTreeModel
-from anima.ui.lib import QtGui, QtCore
-from anima.ui import IS_PYSIDE, IS_PYQT4
+from anima.ui.lib import QtGui, QtCore, QtWidgets
+from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
+elif IS_PYSIDE2():
+    from anima.ui.ui_compiled import version_updater_UI_pyside2 as version_updater_UI
 elif IS_PYQT4():
     from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
 
@@ -33,7 +35,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
     """The main dialog of the version updater system
 
     The version_tuple list consist of a Version instance and a reference
@@ -82,11 +84,11 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
                 # there is no version so warn the user
                 error_message = 'Please save the current scene with Version ' \
                                 'Creator first!!!'
-                QtGui.QMessageBox.critical(
+                QtWidgets.QMessageBox.critical(
                     self,
                     "Error",
                     error_message,
-                    QtGui.QMessageBox.Ok
+                    QtWidgets.QMessageBox.Ok
                 )
                 self.close()
                 raise RuntimeError(error_message)
@@ -247,7 +249,7 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             return
 
         # create the menu
-        menu = QtGui.QMenu()
+        menu = QtWidgets.QMenu()
 
         # Add "Open..." action
         # Always open the latest published version
@@ -310,12 +312,12 @@ class MainDialog(QtGui.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
             self.environment.update_versions(reference_resolution)
         except RuntimeError as e:
             # display as a Error message and return without doing anything
-            message_box = QtGui.QMessageBox(self)
+            message_box = QtWidgets.QMessageBox(self)
             message_box.critical(
                 self,
                 "Error",
                 str(e),
-                QtGui.QMessageBox.Ok
+                QtWidgets.QMessageBox.Ok
             )
             return
 

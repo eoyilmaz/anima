@@ -7,7 +7,7 @@
 from stalker import defaults, Task, Project
 
 from anima import logger, status_colors
-from anima.ui.lib import QtGui, QtCore
+from anima.ui.lib import QtGui, QtCore, QtWidgets
 
 
 def set_item_color(item, color):
@@ -301,7 +301,7 @@ class VersionTreeModel(QtGui.QStandardItemModel):
         return return_value
 
 
-class VersionTreeView(QtGui.QTreeView):
+class VersionTreeView(QtWidgets.QTreeView):
     """A custom tree view to display Version info
     """
 
@@ -311,7 +311,7 @@ class VersionTreeView(QtGui.QTreeView):
         # TODO: Implement this as a class with all its context menus etc.
 
 
-class TaskTreeView(QtGui.QTreeView):
+class TaskTreeView(QtWidgets.QTreeView):
     """A custom tree view to display Tasks info
     """
 
@@ -570,12 +570,12 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return return_value
 
 
-class TakesListWidget(QtGui.QListWidget):
+class TakesListWidget(QtWidgets.QListWidget):
     """A specialized QListWidget variant used in Take names.
     """
 
     def __init__(self, parent=None, *args, **kwargs):
-        QtGui.QListWidget.__init__(self, parent, *args, **kwargs)
+        QtWidgets.QListWidget.__init__(self, parent, *args, **kwargs)
         self._take_names = []
         self.take_names = []
 
@@ -653,12 +653,12 @@ class TakesListWidget(QtGui.QListWidget):
         """
         self._take_names = []
         # call the super
-        QtGui.QListWidget.clear(self)
+        QtWidgets.QListWidget.clear(self)
 
 
-class TaskNameCompleter(QtGui.QCompleter):
+class TaskNameCompleter(QtWidgets.QCompleter):
     def __init__(self, parent):
-        QtGui.QCompleter.__init__(self, [], parent)
+        QtWidgets.QCompleter.__init__(self, [], parent)
 
     def update(self, completion_prefix):
         tasks = Task.query \

@@ -1066,8 +1066,8 @@ def check_cacheable_attr():
 
 @publisher('animation')
 def check_smartass_animator():
-    """checks if the smartass animator is trying to create a new version for a
-    completed animation scene silently
+    """checks if the smartass animator is silently trying to create a new
+    version for a completed animation scene
     """
     from stalker.models import walk_hierarchy
     # check the status of this task
@@ -1135,7 +1135,14 @@ def check_shot_nodes():
 def check_sequence_name():
     """checks if the sequence name attribute is properly set
     """
-    shot = pm.ls(type='shot')[0]
+    # do not consider referenced shot nodes
+    shots = pm.ls(type='shot')
+    shot = None
+    for s in shots:
+        if s.referenceFile() is None:
+            shot = s
+            break
+
     sequencer = shot.outputs(type='sequencer')[0]
     sequence_name = sequencer.sequence_name.get()
     if sequence_name == '' or sequence_name is None:
@@ -1146,7 +1153,14 @@ def check_sequence_name():
 def check_sequence_name_format():
     """checks if the sequence name format is correct
     """
-    shot = pm.ls(type='shot')[0]
+    # do not consider referenced shot nodes
+    shots = pm.ls(type='shot')
+    shot = None
+    for s in shots:
+        if s.referenceFile() is None:
+            shot = s
+            break
+
     sequencer = shot.outputs(type='sequencer')[0]
     sequence_name = sequencer.sequence_name.get()
 
@@ -1282,8 +1296,16 @@ def check_multiple_shot_nodes():
     """checks if there are multiple shot nodes
     """
     shot_nodes = pm.ls(type='shot')
-    if len(shot_nodes) > 1:
-        raise PublishError('There is multiple <b>Shot</b> nodes in the scene')
+
+    local_shot_nodes = []
+    for shot in shot_nodes:
+        if shot.referenceFile() is None:
+            local_shot_nodes.append(shot)
+
+    if len(local_shot_nodes) > 1:
+        raise PublishError(
+            'There are multiple <b>Shot</b> nodes in the scene!'
+        )
 
 
 @publisher(['animation', 'previs', 'shot previs'])
@@ -1608,7 +1630,14 @@ def export_camera():
 
     v = m.get_current_version()
 
-    shot = pm.ls(type='shot')[0]
+    # do not consider referenced shot nodes
+    shots = pm.ls(type='shot')
+    shot = None
+    for s in shots:
+        if s.referenceFile() is None:
+            shot = s
+            break
+
     try:
         sequencer = pm.ls(shot.message.connections(), type='sequencer')[0]
     except IndexError:

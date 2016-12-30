@@ -9,7 +9,7 @@ import os
 import shutil
 
 from anima import logger
-from anima.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 def get_icon(icon_name):
@@ -33,7 +33,7 @@ def clear_thumbnail(gview):
     # clear the graphics scene in case there is no thumbnail
     scene = gview.scene()
     if not scene:
-        scene = QtGui.QGraphicsScene(gview)
+        scene = QtWidgets.QGraphicsScene(gview)
         gview.setScene(scene)
 
     scene.clear()
@@ -50,7 +50,7 @@ def update_gview_with_task_thumbnail(task, gview):
     from stalker import Task
 
     if not isinstance(task, Task) or \
-       not isinstance(gview, QtGui.QGraphicsView):
+       not isinstance(gview, QtWidgets.QGraphicsView):
         # do nothing
         logger.debug('task is not a stalker.models.task.Task instance')
         return
@@ -90,7 +90,7 @@ def update_gview_with_image_file(image_full_path, gview):
     """updates the QGraphicsView with the given image
     """
 
-    if not isinstance(gview, QtGui.QGraphicsView):
+    if not isinstance(gview, QtWidgets.QGraphicsView):
         return
 
     clear_thumbnail(gview)
@@ -177,7 +177,7 @@ def choose_thumbnail(parent):
     """shows a dialog for thumbnail upload
     """
     # get a file from a FileDialog
-    thumbnail_full_path = QtGui.QFileDialog.getOpenFileName(
+    thumbnail_full_path = QtWidgets.QFileDialog.getOpenFileName(
         parent, "Choose Thumbnail",
         os.path.expanduser("~"),
         "Image Files (*.png *.jpg *.bmp)"
@@ -192,7 +192,7 @@ def choose_thumbnail(parent):
 def render_image_from_gview(gview, image_full_path):
     """renders the gview scene to an image at the given full path
     """
-    assert isinstance(gview, QtGui.QGraphicsView)
+    assert isinstance(gview, QtWidgets.QGraphicsView)
     scene = gview.scene()
     # there should be only one item
     items = scene.items()

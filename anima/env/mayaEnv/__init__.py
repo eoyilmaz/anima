@@ -416,7 +416,11 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         self.create_workspace_folders(workspace_path)
 
         # export the file
-        pm.exportSelected(version.absolute_full_path, type='mayaAscii')
+        pm.exportSelected(
+            version.absolute_full_path,
+            preserveReferences=1,
+            type='mayaAscii'
+        )
 
         # save the version to database
         from stalker import db

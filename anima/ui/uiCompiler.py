@@ -9,11 +9,113 @@ the system python.
 """
 
 import os
-import sys
-import subprocess
 import glob
 
 from anima import utils, logger
+
+
+# PyQt4
+try:
+    from PyQt4 import uic
+    pyqt4_compiler = uic
+except ImportError:
+    pyqt4_compiler = None
+
+# PySide
+try:
+    from pysideuic import compileUi
+    pyside_compiler = compileUi
+except ImportError:
+    pyside_compiler = None
+
+# PySide2
+try:
+    from pyside2uic import compileUi as compileUi2
+    pyside2_compiler = compileUi2
+except ImportError:
+    pyside2_compiler = None
+
+
+compiler_config = {
+    'pyqt4': {
+        'compiler': pyqt4_compiler,
+        'postfix': '_UI_pyqt4.py'
+    },
+    'pyside': {
+        'compiler': pyside_compiler,
+        'postfix': '_UI_pyside.py',
+    },
+    'pyside2': {
+        'compiler': pyside2_compiler,
+        'postfix': '_UI_pyside2.py'
+    }
+}
+
+
+class Compiler(object):
+    """compiler
+    """
+
+    def __init__(self, name=None, compiler=None, postfix=None):
+        self.name = name
+        self.compiler = compiler
+        self.postfix = postfix
+
+    def get_py_file_name(self, ui_file_name):
+        """returns the corresponding py file name from ui_file_name
+        """
+        return '%s%s' % (
+            os.path.splitext(os.path.basename(ui_file_name))[0],
+            self.postfix
+        )
+
+    def get_py_file(self, ui_file, path):
+        """returns the corresponding py file
+        """
+        py_file_name = self.get_py_file_name(ui_file.full_path)
+        return PyFile(py_file_name, path)
+
+    def compile(self, ui_file, output_path):
+        if self.compiler:
+            pyfile_full_path = os.path.join(
+                output_path,
+                self.get_py_file_name(ui_file.full_path)
+            )
+
+            temp_uiFile = file(ui_file.full_path)
+            temp_pyside2_file = file(pyfile_full_path, 'w')
+            try:
+                self.compiler(temp_uiFile, temp_pyside2_file)
+            finally:
+                temp_uiFile.close()
+                temp_pyside2_file.close()
+        else:
+            raise RuntimeError('No Compiler!')
+
+
+class CompilerManager(object):
+    """
+    """
+
+    def __init__(self):
+        self.compilers = []
+        self._generate_compilers_()
+
+    def _generate_compilers_(self):
+        # generate compilers
+        for key, value in compiler_config.items():
+            name = key
+            compiler = value['compiler']
+            postfix = value['postfix']
+
+            self.compilers.append(
+                Compiler(name=name, compiler=compiler, postfix=postfix)
+            )
+
+    def find_compiler(self, name):
+        for c in self.compilers:
+            if c.name.lower() == name.lower():
+                return c
 
 
 class UIFile(object):
@@ -25,10 +127,7 @@ class UIFile(object):
         self.path = ''
         self.md5_filename = ''
         self.md5_file_full_path = ''
-        self.pyqt4_filename = ''
-        self.pyqt4_full_path = ''
-        self.pyside_filename = ''
-        self.pyside_full_path = ''
+
         self.full_path = self._validate_full_path(full_path)
         self.md5 = self.generate_md5()
 
@@ -73,59 +172,80 @@ class UIFile(object):
         self.md5_file_full_path = os.path.join(
             self.path, self.md5_filename
         )
-        self.pyqt4_filename = base_name + '_UI_pyqt4.py'
-        self.pyqt4_full_path = os.path.normpath(
-            os.path.join(self.path, '../ui_compiled', self.pyqt4_filename)
-        )
-        self.pyside_filename = base_name + '_UI_pyside.py'
-        self.pyside_full_path = os.path.normpath(
-            os.path.join(self.path, '../ui_compiled', self.pyside_filename)
-        )
+
         return full_path
 
-if __name__ == '__main__':
-    # scan for the ui_files directory *.ui files
-    uiFiles = []
 
-    args = sys.argv[1:]
+class PyFile(object):
+    """PyFile the compiled *.py file
+    """
+
+    def __init__(self, filename, path):
+        self.filename = filename
+        self.path = path
+
+    @property
+    def full_path(self):
+        """returns the full path
+        """
+        return os.path.join(self.path, self.filename)
+
+    def exists(self):
+        return os.path.exists(self.full_path)
+
+
+def main():
+    """the main procedure
+    """
+    # generate compilers
+    manager = CompilerManager()
+    compiler_pyqt4 = manager.find_compiler('PyQt4')
+    compiler_pyside = manager.find_compiler('PySide')
+    compiler_pyside2 = manager.find_compiler('PySide2')
+
+    # scan for the ui_files directory *.ui files
+    ui_files = []
 
     path = os.path.dirname(__file__)
     ui_path = os.path.join(path, "ui_files")
+    output_path = os.path.join(path, 'ui_compiled')
 
     for ui_file in glob.glob1(ui_path, '*.ui'):
         full_path = os.path.join(ui_path, ui_file)
-        uiFiles.append(
+        ui_files.append(
             UIFile(full_path)
         )
 
-    from PyQt4 import uic
-
-    for uiFile in uiFiles:
+    for ui_file in ui_files:
         # if there are already files compare the md5 checksum
         # and decide if it needs to be compiled again
-        assert isinstance(uiFile, UIFile)
-        if uiFile.isNew():
+        assert isinstance(ui_file, UIFile)
+        py_file_pyqt4 = compiler_pyqt4.get_py_file(ui_file, output_path)
+        py_file_pyside = compiler_pyside.get_py_file(ui_file, output_path)
+        py_file_pyside2 = compiler_pyside2.get_py_file(ui_file, output_path)
+
+        if ui_file.isNew() or not py_file_pyqt4.exists()\
+           or not py_file_pyside.exists()\
+           or not py_file_pyside2.exists():
             # just save the md5 and generate the modules
-            uiFile.update_md5_file()
+            ui_file.update_md5_file()
+            try:
+                compiler_pyqt4.compile(ui_file, output_path)
+            except RuntimeError:
+                pass
 
-            # with PySide
-            # call the external pyside-uic tool
-            print "compiling %s to %s for PySide" % (uiFile.filename,
-                                                     uiFile.pyside_filename)
-            subprocess.call(["pyside-uic", "-o", uiFile.pyside_full_path,
-                             uiFile.full_path])
+            try:
+                compiler_pyside.compile(ui_file, output_path)
+            except RuntimeError:
+                pass
 
-            # with PyQt4d
-            temp_uiFile = file(uiFile.full_path)
-            temp_pyqt4_file = file(uiFile.pyqt4_full_path, 'w')
+            try:
+                compiler_pyside2.compile(ui_file, output_path)
+            except RuntimeError:
+                pass
 
-            print "compiling %s to %s for PyQt4" % (uiFile.filename,
-                                                    uiFile.pyqt4_filename)
+    print "Finished compiling"
 
-            uic.compileUi(temp_uiFile, temp_pyqt4_file)
-            temp_uiFile.close()
-            temp_pyqt4_file.close()
-        #else:
-        #    #print '%s is not changed' % uiFile.full_path
 
-    print "finished compiling"
+if __name__ == '__main__':
+    main()

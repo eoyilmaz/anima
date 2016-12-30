@@ -9,6 +9,7 @@ from anima import logger
 
 # Choose between PyQt4 or PySide
 PYSIDE = 'PySide'
+PYSIDE2 = 'PySide2'
 PYQT4 = 'PyQt4'
 
 # set the default
@@ -24,6 +25,10 @@ def IS_PYSIDE():
     return qt_lib == PYSIDE
 
 
+def IS_PYSIDE2():
+    return qt_lib == PYSIDE2
+
+
 def IS_PYQT4():
     return qt_lib == PYQT4
 
@@ -32,6 +37,11 @@ def SET_PYSIDE():
     logger.debug('setting environment to PySide')
     global qt_lib
     qt_lib = PYSIDE
+
+def SET_PYSIDE2():
+    logger.debug('setting environment to PySide2')
+    global qt_lib
+    qt_lib = PYSIDE2
 
 
 def SET_PYQT4():
