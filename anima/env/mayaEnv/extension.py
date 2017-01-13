@@ -20,7 +20,7 @@ from anima.extension import extends
 from anima.repr import Representation
 
 
-default_handle_count = 15
+default_handle_count = 0
 
 
 class MayaExtension(object):
