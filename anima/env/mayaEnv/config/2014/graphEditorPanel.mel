@@ -1,0 +1,1860 @@
+// Copyright (C) 1997-2013 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized 
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE 
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+//
+//  Creation Date:  June 26, 1996
+//
+//  Description:
+//      This script a panel which has both an outliner and a graph editor
+//  within it.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+
+global string $gGraphEditorTanButtonNames[] = { "autoTanButton", "splineTanButton", "clampedTanButton",
+                                                "linearTanButton", "flatTanButton",
+                                                "stepTanButton",   "plateauTanButton",
+                                                "breakTanButton",  "unifyTanButton",
+                                                "freeTanButton",   "lockTanButton" };
+
+global proc graphEditorSetToolbarType( int $val, string $graphEd )
+{
+    optionVar -intValue graphEditorHasClassicToolbar $val;
+    if ( size( $graphEd ) )
+    {
+        int $i = `optionVar -q graphEditorHasClassicToolbar`;
+        animCurveEditor -e -classicMode $i $graphEd;
+    }
+}
+
+proc setOptionVars ()
+{
+    // autoFit
+    if (!`optionVar -exists graphEditorAutoFit`) {
+        optionVar -intValue graphEditorAutoFit 0;
+    }
+
+    // clipTime
+    if (!`optionVar -exists graphEditorClipTime`) {
+        optionVar -intValue graphEditorClipTime 1;
+    }
+    
+    if (!`optionVar -exists graphEditorHasClassicToolbar`) {
+        graphEditorSetToolbarType( true, "" );
+    }
+}
+
+// Various private helper functions
+proc string serialize( string $vals[] )
+{
+    string $retval = "{ \"";
+    $retval += stringArrayToString( $vals, "\", \"" );
+    $retval += "\" }";
+    return $retval;
+}
+
+proc int graphEditorIconSize()
+{
+    return 26;
+}
+
+proc string graphEditorGraphEdName( string $whichPanel )
+{
+    return ( $whichPanel + "GraphEd" );
+}
+
+proc string graphEditorOutlineEdName( string $whichPanel )
+{
+    return ( $whichPanel + "OutlineEd" );
+}
+
+// Given an array of ints representing booleans, determing if all 
+// elements are the same. Return 0 if all are 0, 1 if all are 1, 2 otherwise.
+proc int areSame( int $rhs[] )
+{
+    int $lhs = 0;
+    for ( $i=0; $i<size($rhs); $i++)
+    {
+        if ( $i == 0 )
+            $lhs = $rhs[$i];
+        
+        if ( $lhs != $rhs[$i] )
+            return 2;
+    }
+    return $lhs;
+}
+
+// *********************************************
+// Start of all menu creation procedures
+// *********************************************
+
+global proc buildGraphEdViewMenu ( string $whichPanel, string $parentMenu, string $widgetList[] )
+//
+//  Procedure Name:
+//      GraphEdViewMenu
+//
+//  Description:
+//		This creates submenu items for view
+//		functionality in the graph editor.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+{
+    string $graphEd = graphEditorGraphEdName( $whichPanel );
+    print("-----------------------------");
+    print($graphEd);
+
+    setParent -menu $parentMenu;
+    // Check to see if we have to build the menu items
+    //
+    if (`menu -query -numberOfItems $parentMenu` == 0) {
+        menuItem -label (uiRes("m_graphEditorPanel.kUndoViewChange"))
+            -command ("UndoViewChange");
+        menuItem -label (uiRes("m_graphEditorPanel.kRedoViewChange"))
+            -command ("RedoViewChange");
+
+        menuItem -label (uiRes("m_graphEditorPanel.kClipTime"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kClipTimeAnnot"))
+            -command (
+                "animCurveEditor -edit -clipTime #1 " + $graphEd + ";" +
+                "optionVar -intValue graphEditorClipTime #1;"
+            )
+            clipTimeItem;
+
+        menuItem -divider true;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kFrameTools"))
+            -subMenu true -tearOff true
+            -allowOptionBoxes true frameAnimItem;
+
+            menuItem -label (uiRes("m_graphEditorPanel.kFrameAll"))
+                -annotation (uiRes("m_graphEditorPanel.kFrameAllAnnot"))
+                -ke "a"
+                -command ("FrameAll");
+            menuItem -label (uiRes("m_graphEditorPanel.kFrameSelection"))
+                -annotation (uiRes("m_graphEditorPanel.kFrameSelectionAnnot"))
+                -ke "f"
+                -command ("FrameSelected");
+            menuItem -label (uiRes("m_graphEditorPanel.kFramePlaybackRange"))
+                -annotation (uiRes("m_graphEditorPanel.kFramePlaybackRangeAnnot"))
+                -command (
+                    "animView " +
+                    "-startTime (`playbackOptions -query -minTime` - 1) " +
+                    "-endTime (`playbackOptions -query -maxTime` + 1) " +
+                     $graphEd
+                );
+
+            setParent -m ..;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kCenterCurrentTime"))
+            -annotation (uiRes("m_graphEditorPanel.kCenterCurrentTimeAnnot"))
+            -command ("animCurveEditor -edit -lookAt currentTime " + $graphEd);
+
+        menuItem -divider true;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kAutoFrame"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kAutoFrameAnnot"))
+            -command (
+                "animCurveEditor -edit -autoFit #1 " + $graphEd + ";" +
+                "optionVar -intValue graphEditorAutoFit #1;"
+            )
+            displayAutoFitItem;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kShowResults"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kShowResultsAnnot"))
+            -command ("if (#1) performShowResults 0 " + $graphEd + "; else animCurveEditor -edit -showResults #1 " + $graphEd + ";")
+            showResultsItem;
+        menuItem -optionBox true
+            -annotation (uiRes("m_graphEditorPanel.kShowResultsOptionsAnnot"))
+            -command ("performShowResults 1 " + $graphEd)
+            showResultsOptionsItem;
+        menuItem -label (uiRes("m_graphEditorPanel.kShowBufferCurves"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kShowBufferCurvesAnnot"))
+            -command ("animCurveEditor -edit -showBufferCurves #1 " + $graphEd)
+            showBuffersItem;
+
+        menuItem -divider true;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kDisplayKeys"))  -subMenu true -tearOff true
+            displayKeyframeMenu;
+
+            radioMenuItemCollection;
+            menuItem -label (uiRes("m_graphEditorPanel.kAlways"))
+                -annotation (uiRes("m_graphEditorPanel.kAlwaysAnnot"))
+                -radioButton 1	displayKeyAlwaysItem;
+            menuItem -label (uiRes("m_graphEditorPanel.kNever"))
+                -annotation (uiRes("m_graphEditorPanel.kNeverAnnot"))
+                -radioButton 0 displayKeyNeverItem;
+            menuItem -label (uiRes("m_graphEditorPanel.kActiveOnly"))
+                -annotation (uiRes("m_graphEditorPanel.kActiveOnlyAnnot"))
+                -radioButton 0 displayKeyActiveItem;
+
+            setParent -m ..;
+
+        string $tangentMenu = `menuItem -label (uiRes("m_graphEditorPanel.kDisplayTangents"))  -subMenu true
+            -tearOff true displayTangentMenu`;
+
+            radioMenuItemCollection;
+            menuItem -label (uiRes("m_graphEditorPanel.kAlwaysTangents"))
+                -radioButton 1
+                -annotation (uiRes("m_graphEditorPanel.kAlwaysTangentsAnnot"))
+                -command ("animCurveEditor -edit -displayTangents true " +
+                          "-displayActiveKeyTangents false " + $graphEd)
+                displayTangentAlwaysItem;
+            menuItem -label (uiRes("m_graphEditorPanel.kNeverTangents"))
+                -radioButton 0
+                -annotation (uiRes("m_graphEditorPanel.kNeverTangentsAnnot"))
+                -command ("animCurveEditor -edit -displayTangents false " +
+                          "-displayActiveKeyTangents false " + $graphEd)
+                displayTangentNeverItem;
+            menuItem -label (uiRes("m_graphEditorPanel.kActiveKeysTangents"))
+                -radioButton 0
+                -annotation (uiRes("m_graphEditorPanel.kActiveKeysTangentsAnnot"))
+                -command ("animCurveEditor -edit -displayTangents false " +
+                          "-displayActiveKeyTangents true " + $graphEd)
+                displayTangentActiveItem;
+
+            setParent -m ..;
+
+        // Now that we know the name of the Tangent Menu, we can
+        // disable it when we're not showing keyframes
+        //
+        menuItem -e
+            -command ("menuItem -e -enable true " + $tangentMenu + "; " +
+                      "animCurveEditor -edit -displayKeys true " +
+                      "-displayActiveKeys false " + $graphEd)
+            displayKeyAlwaysItem;
+
+        menuItem -e
+            -command ("menuItem -e -enable false " + $tangentMenu + "; " +
+                      "animCurveEditor -edit -displayKeys false " +
+                      "-displayActiveKeys false " + $graphEd)
+            displayKeyNeverItem;
+
+        menuItem -e
+            -command ("menuItem -e -enable true " + $tangentMenu + "; " +
+                      "animCurveEditor -edit -displayKeys false " +
+                      "-displayActiveKeys true " + $graphEd)
+            displayKeyActiveItem;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kInfinity"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kInfinityAnnot"))
+            -command ("animCurveEditor -edit -displayInfinities #1 " + $graphEd)
+            displayInfinityItem;
+
+        menuItem -divider true;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kStackedCurves"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kStackedCurvesAnnot"))
+            -command ("if (#1) performStackedCurves 0 " + $graphEd +
+                "; else disableStackedCurves " + $graphEd + " ;")
+            stackedCurvesItem;
+        menuItem
+            -optionBox true
+            -annotation (uiRes("m_graphEditorPanel.kStackedCurvesOptionsAnnot"))
+            -command ("performStackedCurves 1 " + $graphEd)
+            stackedCurvesOptionsItem;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kDisplayNormalized"))
+            -checkBox false
+            -annotation (uiRes("m_graphEditorPanel.kDisplayNormalizedAnnot"))
+            -command ("animCurveEditor -edit -displayNormalized #1 " + $graphEd +
+                        "; optionVar -intValue graphEditorDisplayNormalized #1;")
+            displayNormalizedItem;
+
+        menuItem -label (uiRes("m_graphEditorPanel.kRenormalize"))
+            -annotation (uiRes("m_graphEditorPanel.kRenormalizeAnnot"))
+            -command ("animCurveEditor -edit -renormalizeCurves " + $graphEd
+            )
+            renormalizeCurvesCommandItem;
+
+        menuItem -divider true;
+
+        global string $gGraphEditorPopupMenuName;
+        menuItem
+            -checkBox `animCurveEditor -q -classicMode $graphEd`
+            -label (uiRes("m_graphEditorPanel.kAnimCurveEditorToobarMode")) 
+            -annotation (uiRes("m_graphEditorPanel.kAnimCurveEditorToolbarModeAnnot"))
+            -command( 
+                "graphEditorSetToolbarType #1 " + $graphEd +";\n" + 
+                "graphEditorCreateToolbar " + $whichPanel + " " + $widgetList[5] + " " + $widgetList[4] + ";\n" )
+            animCurveEditorViewModeItem;
+    }
+
+    int $clipTimeOptVar = `optionVar -q graphEditorClipTime`;
+    int $graphEdClipTimeState =
+        (`animCurveEditor -q -clipTime $graphEd` == "on" ? 1 : 0);
+
+    menuItem -edit
+        -checkBox $clipTimeOptVar
+        clipTimeItem;
+
+    if ($clipTimeOptVar != $graphEdClipTimeState) {
+        animCurveEditor -e -clipTime $clipTimeOptVar $graphEd;
+    }
+
+    menuItem -edit
+        -checkBox `animCurveEditor -q -stackedCurves $graphEd`
+        stackedCurvesItem;
+
+    menuItem -edit
+        -checkBox `animCurveEditor -q -displayNormalized $graphEd`
+        displayNormalizedItem;
+
+    // renormalize only makes sense when 'display normalized' is on
+    menuItem -edit
+        -enable  `animCurveEditor -q -displayNormalized $graphEd`
+        renormalizeCurvesCommandItem;
+
+    menuItem -edit
+        -checkBox `animCurveEditor -query -autoFit $graphEd`
+        displayAutoFitItem;
+
+    string $result = `animCurveEditor -query -showResults $graphEd`;
+    menuItem -edit
+        -checkBox ($result == "on" ? 1 : 0)
+        showResultsItem;
+
+    $result = `animCurveEditor -query -showBufferCurves $graphEd`;
+    menuItem -edit
+        -checkBox ($result == "on" ? 1 : 0)
+        showBuffersItem;
+
+    // Disable if can't show keyframes
+    //
+
+    menuItem -edit -enable (`animCurveEditor -q -displayKeys $graphEd` ||
+                            `animCurveEditor -q -displayActiveKeys $graphEd`)
+        displayTangentMenu;
+
+    // Make sure the right radio button is pressed: Keyframe menu
+    //
+    if( `animCurveEditor -query -displayActiveKeys $graphEd` == 1 ) {
+        menuItem -edit -radioButton off displayKeyAlwaysItem;
+        menuItem -edit -radioButton on  displayKeyActiveItem;
+        menuItem -edit -radioButton off displayKeyNeverItem;
+    } else if( `animCurveEditor -query -displayKeys $graphEd` == 1 ) {
+        menuItem -edit -radioButton on  displayKeyAlwaysItem;
+        menuItem -edit -radioButton off displayKeyActiveItem;
+        menuItem -edit -radioButton off displayKeyNeverItem;
+    } else {
+        menuItem -edit -radioButton off displayKeyAlwaysItem;
+        menuItem -edit -radioButton off displayKeyActiveItem;
+        menuItem -edit -radioButton on  displayKeyNeverItem;
+    }
+
+    // Make sure the right radio button is pressed: Tangent menu
+    //
+    if( `animCurveEditor -query -displayActiveKeyTangents $graphEd` == 1 ) {
+        menuItem -edit -radioButton off displayTangentAlwaysItem;
+        menuItem -edit -radioButton on  displayTangentActiveItem;
+        menuItem -edit -radioButton off displayTangentNeverItem;
+    } else if( `animCurveEditor -query -displayTangents $graphEd` == 1 ) {
+        menuItem -edit -radioButton on  displayTangentAlwaysItem;
+        menuItem -edit -radioButton off displayTangentActiveItem;
+        menuItem -edit -radioButton off displayTangentNeverItem;
+    } else {
+        menuItem -edit -radioButton off displayTangentAlwaysItem;
+        menuItem -edit -radioButton off displayTangentActiveItem;
+        menuItem -edit -radioButton on  displayTangentNeverItem;
+    }
+
+    menuItem -edit
+        -checkBox `animCurveEditor -query -displayInfinities $graphEd`
+        displayInfinityItem;
+}
+
+global proc graphSnap (string $state, string $graphEd)
+//
+// Sets the snapping state for the graph editor
+//
+{
+    switch ($state) {
+    case "none":
+        animCurveEditor -edit -snapTime "none" $graphEd;
+        animCurveEditor -edit -snapValue "none" $graphEd;
+        break;
+    case "time":
+        animCurveEditor -edit -snapTime "integer" $graphEd;
+        animCurveEditor -edit -snapValue "none" $graphEd;
+        break;
+    case "value":
+        animCurveEditor -edit -snapTime "none" $graphEd;
+        animCurveEditor -edit -snapValue "integer" $graphEd;
+        break;
+    case "both":
+        animCurveEditor -edit -snapTime "integer" $graphEd;
+        animCurveEditor -edit -snapValue "integer" $graphEd;
+        break;
+    }
+}
+
+global proc doBuffer (string $options)
+//
+//	Procedure Name:
+//		doBuffer
+//
+//	Description:
+//		This proc handles the buffer curve buttons.
+//
+//  Input Arguments:
+//		string $options			Options for this proc
+//			Current options:
+//				snapshot		Create a buffer curve
+//				swap			Swap buffer curves
+//
+//  Return Value:
+//      None.
+//
+{
+    int $keys = 0;
+    $keys = `keyframe -selected -query -keyframeCount`;
+    switch ($options) {
+    case "snapshot":
+        if ($keys == 0) {
+            warning ( (uiRes("m_graphEditorPanel.kNoKeysSelected")) );
+        }
+        else {
+            bufferCurve -animation keys -overwrite true;
+        }
+        break;
+    case "swap":
+        if ($keys == 0) {
+            warning ( (uiRes("m_graphEditorPanel.kNoKeysSelectedSwap")) );
+        }
+        else {
+            bufferCurve -animation keys -swap;
+        }
+        break;
+    }
+}
+
+global proc updateGraphEdSelectMenu( string $graphEd, string $parent ) 
+//
+// Description:
+//	Make sure all the check boxes are properly ticked
+//	
+{
+    setParent -m $parent;
+    menuItem -e -cb `selectType -q -animCurve` selCurveItem;
+    menuItem -e -cb `selectType -q -animKeyframe` selKeyframeItem;
+    menuItem -e -cb `selectType -q -animInTangent` selInTanItem;
+    menuItem -e -cb `selectType -q -animOutTangent`	selOutTanItem;
+
+    menuItem -e -cb `animCurveEditor -q -psh $graphEd` preSelectHighlightItem;
+}
+
+global proc buildGraphEdSelectMenu( string $graphEd )
+//
+//  Procedure Name:
+//      GraphEdOptionsMenu
+//
+//  Description:
+//		This proc creates menu entries
+//		that control certain editing operations
+//		in the graph editor.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+{
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionAll"))
+        -annotation (uiRes("m_graphEditorPanel.kSelectionAllAnnot"))
+        -c ("selectType -animCurve true -animKeyframe true -animBreakdown true " +
+            "-animInTangent true -animOutTangent true") selAnyItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionOnlyCurve"))
+        -annotation (uiRes("m_graphEditorPanel.kSelectionOnlyCurveAnnot"))
+        -c ("selectType -animCurve true -animKeyframe false -animBreakdown false " +
+            "-animInTangent false -animOutTangent false") selOnlyCurve;
+
+    menuItem -divider true;
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionCurve"))
+        -annotation (uiRes("m_graphEditorPanel.kSelectionCurveAnnot"))
+        -cb yes -c "selectType -animCurve #1"
+        selCurveItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionKey"))  -cb yes
+        -annotation (uiRes("m_graphEditorPanel.kSelectionKeyAnnot"))
+        -c "selectType -animKeyframe #1 -animBreakdown #1"
+        selKeyframeItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionInTangent"))
+        -annotation (uiRes("m_graphEditorPanel.kSelectionInTangentAnnot"))
+        -cb yes -c "selectType -animInTangent #1"
+        selInTanItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kSelectionOutTangent"))
+        -annotation (uiRes("m_graphEditorPanel.kSelectionOutTangentAnnot"))
+        -cb yes -c "selectType -animOutTangent #1"
+        selOutTanItem;
+
+    menuItem -divider true;
+    menuItem -label (uiRes("m_graphEditorPanel.kPreSelectHighlight"))
+        -annotation (uiRes("m_graphEditorPanel.kPreSelectHighlightAnnot"))
+        -cb yes -c ("animCurveEditor -e -psh #1 " + $graphEd + ";" +
+                    "optionVar -intValue graphEditorPreSelectHighlight #1;")
+        preSelectHighlightItem;
+}
+
+
+global proc buildGraphEdKeysMenu(string $outlineEd, string $graphEd, string $parentMenu )
+//
+//  Procedure Name:
+//      buildGraphEdKeysMenu
+//
+//  Description:
+//		This creates menu entries that control
+//		tangent weight locking, and tangent breaking
+//		and unifying
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+{
+    setParent -menu $parentMenu;
+    if (`menu -query -numberOfItems $parentMenu` != 0) {
+        return;
+    }
+
+    string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kInsertKeys"))
+        -annotation (uiRes("m_graphEditorPanel.kInsertKeysAnnot"))
+        -command ("InsertKeysTool")
+        insertKeysItem;
+        menuItem -optionBox true
+            -annotation (getRunTimeCommandAnnotation("InsertKeysToolOptions"))
+            -command "InsertKeysToolOptions"
+            insertKeysDialogItem;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kAddKeys"))
+        -annotation (uiRes("m_graphEditorPanel.kAddKeysAnnot"))
+        -command ("AddKeysTool")
+        addKeysItem;
+        menuItem -optionBox true
+            -annotation (getRunTimeCommandAnnotation("AddKeysToolOptions"))
+            -command "AddKeysToolOptions"
+            addKeysDialogItem;
+
+    menuItem -divider true;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kConvertToKey"))
+        -annotation (uiRes("m_graphEditorPanel.kConvertToKeyAnnot"))
+        -command ("doKeyEdit \"-breakdown false\" " + $selectionConnection + " noOptions")
+        makeKeysItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kConvertToBreakdown"))
+        -annotation (uiRes("m_graphEditorPanel.kConvertToBreakdownAnnot"))
+        -command ("doKeyEdit \"-breakdown true\" " + $selectionConnection + " noOptions")
+        makeBreakdownsItem;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kAddInbetween"))
+        -annotation (uiRes("m_graphEditorPanel.kAddInbetweenAnnot"))
+        -command ("doKeyEdit \"\" " + $graphEd + " \"bufferCurve addInbetween\"")
+        addInbetweenItem;
+    menuItem -label (uiRes("m_graphEditorPanel.kRemoveInbetween"))
+        -annotation (uiRes("m_graphEditorPanel.kRemoveInbetweenAnnot"))
+        -command ("doKeyEdit \"\" " + $graphEd + " \"bufferCurve removeInbetween\"")
+        removeInbetweenItem;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kMuteKey"))
+        -annotation (uiRes("m_graphEditorPanel.kMuteKeyAnnot"))
+        -command ("doMuteKey -true")
+        muteChannelItem;
+
+    menuItem -label (uiRes("m_graphEditorPanel.kUnmuteKey"))
+        -annotation (uiRes("m_graphEditorPanel.kUnmuteKeyAnnot"))
+        -command ("doMuteKey  -false")
+        unmuteChannelItem;
+
+}
+
+global proc buildGraphEditorPopupMenuGeneral ( string $whichPanel, string $widgetList[], string $popup )
+//
+//  Description:
+//      This script populates the popup menu for the graph editor.
+//
+//  Input Arguments:
+//      The panel the menu belongs to, the list of all widgets in the panel, the fullname of the popup menu
+//
+//  Return Value:
+//      None.
+//
+{
+    // make common elements accessible
+    loadAnimMenuLibrary;
+    
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+
+    popupMenu -e -dai $popup;
+    setParent -menu $popup;
+
+    string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kInsertKey"))
+        -command (
+            "string $curves[] = `keyframe -q -selected -name`; " +
+            "if ( size($curves) ) setKeyframe -insert $curves; " );
+
+    global string $gUnisolatedCurves[];
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kIsolateCurve"))
+        -command ("isolateAnimCurve #1 "+$selectionConnection+" "+$graphEd)
+        -cb (size($gUnisolatedCurves) > 0);
+
+    menuItem -divider true;
+
+    int $isClassic = `animCurveEditor -q -classicMode $graphEd`;
+    if ($isClassic) {
+        // Tangents Menu
+        string $tangentsItem = `menuItem -label (uiRes("m_graphEditorPanel.kPopupTangents"))
+            -subMenu true
+            -tearOff true`;
+        defineTangentsMenu $outlineEd $graphEd $tangentsItem "bufferCurve noBreakUnify" "";
+        setParent -menu ..;
+    } else {
+        menuItem
+            -label (uiRes( "m_loadAnimMenuLibrary.kAuto" ))
+            -command ( "doKeyTangent \"-e -itt auto -ott auto \"" + $selectionConnection + " noOptions" );
+
+        menuItem
+            -label (uiRes( "m_loadAnimMenuLibrary.kSpline" )) 
+            -command ( "doKeyTangent \"-e -itt spline -ott spline \"" + $selectionConnection + " noOptions" );
+
+        menuItem 
+            -label (uiRes( "m_loadAnimMenuLibrary.kLinear" ))
+            -command (  "doKeyTangent \"-e -itt linear -ott  linear \"" + $selectionConnection + " noOptions" );
+
+        menuItem 
+            -label (uiRes( "m_loadAnimMenuLibrary.kClamped" ))
+            -command ( "doKeyTangent \"-e -itt clamped -ott clamped \"" + $selectionConnection + " noOptions" );
+
+        menuItem 
+            -label (uiRes( "m_loadAnimMenuLibrary.kStepped" ))
+            -command (  "doKeyTangent \"-e -itt step -ott  step \"" + $selectionConnection + " noOptions" );
+
+        menuItem -label (uiRes("m_graphEditorPanel.kSteppedNext"))
+            -command ("doKeyTangent \"-e -ott stepnext\" " + $selectionConnection + " noOptions" );
+
+        menuItem
+            -label (uiRes( "m_loadAnimMenuLibrary.kFlat" ))
+            -command (  "doKeyTangent \"-e -itt flat -ott  flat \"" + $selectionConnection + " noOptions" );
+
+    menuItem -label (uiRes("m_graphEditorPanel.kFixed"))
+        -command ("doKeyTangent \"-e -itt fixed -ott fixed\" " + $selectionConnection + " noOptions" );
+    menuItem -label (uiRes("m_graphEditorPanel.kPlateau"))
+        -command ("doKeyTangent \"-e -itt plateau -ott plateau\" " + $selectionConnection + " noOptions" );
+
+        menuItem -divider true;
+
+        buildInOutTangentsMenu($selectionConnection,"noOptions");
+
+        menuItem -divider true;
+    }
+
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kBreakTangents"))
+        -command ("doKeyTangent \"-lock off\" " + $selectionConnection + " noOptions");
+
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kUnifyTangents"))
+        -command ("doKeyTangent \"-lock on\" " + $selectionConnection + " noOptions");
+
+    // Determine if selected curves are weighted.
+    // If all curves have the same weight-type, show this on the UI
+    // otherwise disable this option
+    int $isWeighted = areSame( `keyTangent -q -weightedTangents` );
+
+    menuItem -divider true;
+    menuItem
+        -label  ( uiRes( "m_loadAnimMenuLibrary.kNonWeightTangents" ))
+        -command( "doKeyTangent \"-e -weightedTangents false \"" + $selectionConnection + " noOptions" );
+
+    menuItem
+        -label  ( uiRes( "m_loadAnimMenuLibrary.kWeightTangents" ))
+        -command( "doKeyTangent \"-e -weightedTangents true \"" + $selectionConnection + " noOptions");
+
+    // If all curves are weighted add additional options
+    if ( $isWeighted == 1 )
+    {
+        menuItem -divider true;
+        menuItem
+            -label  (uiRes("m_graphEditorPanel.kLockTangentWeight"))
+            -command( "doKeyTangent \"-weightLock on \" " + $selectionConnection + " noOptions" );
+
+        menuItem
+            -label (uiRes("m_graphEditorPanel.kFreeTangentWeight"))
+            -command( "doKeyTangent \"-weightLock off\" " + $selectionConnection + " noOptions" );
+    }
+
+    menuItem -divider true;
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kSnapBuffer"))
+        -command "doBuffer snapshot" ;
+    menuItem
+        -label (uiRes("m_graphEditorPanel.kSwapBuffer"))
+        -command "doBuffer swap" ;
+}
+
+// Used by the Ctrl Left/Right arrow functionality to 
+// move left or right by one frame
+global proc retimeMoveByFrame( int $moveBy )
+{
+    string $ctx = `currentCtx`;
+    if ( $ctx == "retimeKeySuperContext" )
+    {
+        string $toolCmd = `superCtx -query $ctx`;
+        if ( size($toolCmd) > 0 )
+            retimeKeyCtx -edit -moveByFrame $moveBy $toolCmd;
+    }
+}
+
+// This proc is called by the retimer code to insert a keyframe at a 
+// framePosition
+global proc retimeInsertKeys( string $whichPanel, float $framePosition )
+{
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+
+    string $curves[] = findAnimCurves( $selectionConnection );
+    if ( size( $curves) < 1 )
+        return;
+
+    string $curve;
+    for ( $curve in $curves )
+    {
+        int $count = `setKeyframe -insert -time $framePosition $curve`;
+        if ( $count < 1 )
+        {
+            // A key may already be present at this location
+            warning ( (uiRes("m_graphEditorPanel.kRetimerNoKeyInserted")) + $curve );
+        }
+    }
+}
+
+global proc buildGraphEditorPopupMenu ( string $whichPanel, string $widgetList[], string $popup )
+{
+    // This proc checks to see which graphical element is being hit on the Graph Editor.
+    // If its the retimer, we put up special popup menus.  If not, the standard
+    // Graph Editor context menu is displayed.
+
+    // Returns: HitComponent, Index
+    // HitComponent is: kNone = 0, kBar = 1, kBarHandle = 2, kBarClose =3 , kBarBridge = 4
+    int $queryRetime[] = `retimeHelper -q -mouseOver`;
+
+    if ( size( $queryRetime ) < 2 )
+    {
+        buildGraphEditorPopupMenuGeneral( $whichPanel, $widgetList, $popup );
+        return;
+    }
+
+    int $part = $queryRetime[0];
+
+    if ( $part == 1 || $part == 2 ) // Bar or Bar Handle
+    {
+        int $index = $queryRetime[1];
+        float $framePositions[] = `retimeHelper -q -frame`;
+        if ( $index < size( $framePositions ) )
+        {
+            float $framePosition = $framePositions[$index];
+            popupMenu -e -deleteAllItems $popup;
+            setParent -menu $popup;
+            menuItem
+                -label (uiRes("m_graphEditorPanel.kBarInsertKey"))
+                -command ( "retimeInsertKeys " + $whichPanel + " " + $framePosition );
+        }
+    }
+    else
+    {
+        buildGraphEditorPopupMenuGeneral( $whichPanel, $widgetList, $popup );
+    }
+}
+
+global proc defineGraphEditorPopupMenu( string $whichPanel, string $widgetList[] )
+//
+//
+//  Creation Date:  June 14, 1996
+//
+//  Description:
+//      This script creates popup menu items for the graph editor.
+//
+//  Input Arguments:
+//      The panel the menu belongs to and the list of all widgets in the panel.
+//
+//  Return Value:
+//      None.
+//
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $popup     = $graphEd + "animCurveEditorMenu";
+    string $fullname  = $graphEd + "|" + $popup;
+    
+    popupMenu
+        -ctrlModifier false
+        -button 3
+        -allowOptionBoxes false
+        -parent $graphEd
+        -postMenuCommandOnce false
+        -postMenuCommand ( "buildGraphEditorPopupMenu " + 
+            $whichPanel + " " +
+            serialize( $widgetList ) + " " + 
+            $fullname )
+        $popup;
+}
+
+
+
+// *********************************************
+// End of menu creation procedures.
+// *********************************************
+
+
+global proc createGraphEditor (string $whichPanel)
+//
+//  Description:
+//		Define the editors that are used in this panel.  No
+//		controls (widgets) are created at this point.
+//
+{
+    //  create unique names for editors based on panel name
+    //
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $outlineConn = ($whichPanel + "FromOutliner");
+
+    loadAnimPanelLibrary;
+    setOptionVars;
+
+    selectionConnection $outlineConn ;
+
+    createSharedOutlinerEditor ($outlineEd);
+    outlinerEditor
+        -edit
+        -unParent
+        -mainListConnection graphEditorList
+        -selectionConnection $outlineConn
+        -highlightConnection keyframeList
+        -showShapes true
+        -showAttributes true
+        -showConnected true
+        -showAnimCurvesOnly true
+        -showDagOnly false
+        -autoExpand true
+        -expandConnections true
+        -showCompounds false
+        -showNumericAttrsOnly true
+        -autoSelectNewObjects true
+        -transmitFilters true
+        -showSetMembers false
+        -showContainedOnly false
+        -showContainerContents false
+        -showPinIcons true
+        -mapMotionTrails true
+        $outlineEd;
+
+    selectionConnection -edit -parent $outlineEd $outlineConn;
+
+    animCurveEditor
+        -unParent
+        -mainListConnection $outlineConn
+        -menu ""
+        -clipTime `optionVar -query graphEditorClipTime`
+        -autoFit `optionVar -query graphEditorAutoFit`
+        -displayInfinities false
+        $graphEd;
+
+    if ( `optionVar -q graphEditorStackedCurves` ) {
+        performStackedCurves 0 $graphEd;
+    }
+    if ( `optionVar -q graphEditorDisplayNormalized` ) {
+        animCurveEditor -edit -displayNormalized 1 $graphEd;
+    }
+    if ( `optionVar -q graphEditorPreSelectHighlight` ) {
+        animCurveEditor -edit -preSelectionHighlight 1 $graphEd;
+    }
+
+    registerEditor ($outlineEd, "graphEditorList");
+
+    if ( 0 != `optionVar -ex graphEditorShowUpstreamCurves` ) {
+        int $v = `optionVar -q graphEditorShowUpstreamCurves`;
+        outlinerEditor -e -suc $v $outlineEd;
+        animCurveEditor -e -suc $v $graphEd;
+    }
+}
+
+global proc buildGraphEditorContextHelpItems(string $nameRoot, string $menuParent)
+//
+//  Description:
+//		Build context sensitive menu items
+//		
+//  Input Arguments:
+//		$nameRoot - name to use as the root of all item names
+//		$menuParent - the name of the parent of this menu
+//
+//  Return Value:
+//      None
+//
+{
+    menuItem -label (uiRes("m_graphEditorPanel.kGraphEditorHelp"))
+        -annotation (uiRes("m_graphEditorPanel.kGraphEditorHelpAnnot"))
+        -enableCommandRepeat false
+        -command "showHelp GraphEditor";
+}
+
+global proc addGraphEditor (string $whichPanel)
+//
+//  Description:
+//		Add the panel to a layout.
+//		Parent the editors to that layout and create any other
+//		controls (widgets) required.
+//
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $outlineEdForm = ($whichPanel + "OutlineEdForm");
+
+    string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+
+//	Do not use the wait cursor, it causes a problem (crash) when used
+//	in combination with the table widget (key frame stats). (64944)
+// 
+//	waitCursor -state on;
+
+    // Make sure that there is no template active
+    setUITemplate -pushTemplate NONE;
+
+    // Define the standard animation editing panel
+    //
+    string $widgetList[] = `definePanelElements $whichPanel`;
+
+    //	menuBarLayout is turned on for this editor -
+    //	create the top level menus
+    //
+        
+        setParent $widgetList[2];
+
+        string $menuItem = `menu -label (uiRes("m_graphEditorPanel.kEdit"))
+                    -allowOptionBoxes true
+                    -tearOff true
+                    -postMenuCommandOnce true
+                    -familyImage "menuIconEdit.png"`;
+            defineEditMenu $outlineEd $graphEd $menuItem "bufferCurve regionTool retimeTool" "";
+        setParent -menu ..;
+
+        string $viewMenu = `menu -label (uiRes("m_graphEditorPanel.kView"))
+                    -allowOptionBoxes true
+                    -tearOff true
+                    -familyImage "menuIconView.png"`;
+        menu -edit
+            -postMenuCommand ("buildGraphEdViewMenu " +
+                $whichPanel + " " + 
+                $viewMenu   + " " + 
+                serialize( $widgetList ) )
+            $viewMenu;
+        setParent -menu ..;
+
+        string $selectMenu = `menu -label (uiRes("m_graphEditorPanel.kSelect"))
+                    -tearOff true
+                    -familyImage "menuIconSelect.png"`;
+        menu -edit -postMenuCommand ("updateGraphEdSelectMenu " + $graphEd + " " + $selectMenu )
+            $selectMenu;
+        buildGraphEdSelectMenu $graphEd;
+        setParent -menu ..;
+
+        string $curvesMenu = `menu -label (uiRes("m_graphEditorPanel.kCurves"))
+                        -allowOptionBoxes true
+                        -tearOff true
+                        -familyImage "menuIconAnimCurves.png"`;
+            defineCurvesMenu $outlineEd $graphEd $curvesMenu "bufferCurve useSmoothness usePin" "";
+        setParent -menu ..;
+
+        string $keysMenu = `menu -label (uiRes("m_graphEditorPanel.kKeys"))
+                    -tearOff true
+                    -postMenuCommandOnce true
+                    -familyImage "menuIconKeys.png"`;
+        menu -edit
+            -postMenuCommand ("buildGraphEdKeysMenu " + $outlineEd + " " + $graphEd + " " + $keysMenu)
+            $keysMenu;
+        setParent -menu ..;
+
+        string $tangentsMenu = `menu -label (uiRes("m_graphEditorPanel.kTangents"))
+                        -tearOff true
+                        -postMenuCommandOnce true
+                        -familyImage "menuIconTangents.png"`;
+            defineTangentsMenu $outlineEd $graphEd $tangentsMenu "bufferCurve" "";
+        setParent -menu ..;
+
+        $menuItem = `menu -label (uiRes("m_graphEditorPanel.kList"))
+                -tearOff true
+                -familyImage "menuIconOptions.png"`;
+            defineListMenu "useSUC" $outlineEd $graphEd $menuItem "";
+        setParent -m ..;
+
+        //	Attach the filter menu to the menu bar.
+        //
+        filterUICreateMenu($outlineEd, `setParent -query`);
+
+    //	Add support for the Context Sensitive Help Menu.
+    //
+    addContextHelpProc $whichPanel "buildGraphEditorContextHelpItems";
+
+    graphEditorCreateToolbar $whichPanel $widgetList[5] $widgetList[4];
+
+    // Add two buttons to $widgetList[6] formLayout to
+    // control the size of the formLayout that holds
+    // the outliner and the graph editor widget
+    //
+//	formLayout -p $widgetList[6] -width $gGraphEdOutlinerWidth $outlineEdForm;
+    formLayout -p $widgetList[6] $outlineEdForm;
+        string $outlineEdLayout = addSharedOutlinerEditor ($outlineEdForm, $outlineEd);
+    setParent ..;
+
+    //	Attach the filter menu to the popup menu
+    //	This has to be done after the outliner has been parented
+    //
+    filterUICreateMenu($outlineEd, ($outlineEd + "Popup"));
+
+    //	Create an edit field for regular expression filtering in the
+    //	outliner editor.
+    //
+    string $filterField = filterUICreateField($outlineEd, $outlineEdForm);
+
+    formLayout -e
+        -af $filterField top 0
+        -af $filterField left 0
+        -an $filterField bottom
+        -af $filterField right 0
+
+        -af $outlineEdLayout left 0
+        -af $outlineEdLayout right 0
+        -ac $outlineEdLayout top 0 $filterField
+        -af $outlineEdLayout bottom 0
+        $outlineEdForm;
+
+    // Parent the editors to the editor layout
+    //
+    animCurveEditor -edit -parent $widgetList[6] $graphEd;
+
+    // set initial clipTime state
+    //
+    int $clipTimeOptVar = `optionVar -q graphEditorClipTime`;
+    animCurveEditor -e -clipTime $clipTimeOptVar $graphEd;
+    //	Attach a procedure that will limit the kinds of filters displayed
+    //	in the Dope Sheet's filter menus.
+    //
+    filterUISetRelatedFiltersProcedure($outlineEd, "graphEditorFilterCategories");
+
+    // Set the outliner pane to the last saved size.
+    //
+    evalDeferred("setGraphEditorOutlinerPaneSize " + $widgetList[6]);
+
+    // Attach menus to the graph editor and the
+    // outliner editor.
+    //
+    defineGraphEditorPopupMenu $whichPanel $widgetList;
+
+    // Restore drag constraint information
+    //
+    int $stateNumber=`animCurveEditor -q -constrainDrag $graphEd`;
+    setConstrainedDragState($graphEd, $stateNumber);
+
+    setParent -top;
+
+    setUITemplate -popTemplate;
+
+//	Do not use the wait cursor, it causes a problem (crash) when used
+//	in combination with the table widget (key frame stats). (64944)
+// 
+//	waitCursor -state off;
+}
+
+global proc removeGraphEditor (string $whichPanel)
+//
+//  Description:
+//		Remove the panel from a layout.
+//		Delete controls.
+//
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $outlineEdForm = ($whichPanel + "OutlineEdForm");
+
+    // Save the outliner width to restore on the next open.
+    //
+    if (`formLayout -exists $outlineEdForm`) {
+        int $outlinerWidth = `formLayout -q -width $outlineEdForm`;
+        optionVar -iv graphEdOutlinerWidth $outlinerWidth;
+    }
+
+    if (`animCurveEditor -exists $graphEd`) {
+        animCurveEditor -edit -unParent $graphEd;
+    }
+    if (`outlinerEditor -exists $outlineEd`) {
+        removeSharedOutlinerEditor $outlineEd;
+    }
+
+    //	If the graph editor is deleted then we must let the filter ui
+    //	know that the filter menu(s) and filter field are no longer valid
+    //	for this editor.
+    //
+    filterUIRemoveView($outlineEd);
+}
+
+global proc deleteGraphEditor (string $whichPanel)
+//
+//  Description:
+//		This proc will delete the contents of the panel, but not
+//		the panel itself.
+//
+//  Note:
+//		We only need to delete editors here.  Other UI will be taken care of
+//		by the remove proc.
+//
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    string $outlineEdForm = ($whichPanel + "OutlineEdForm");
+
+    // Save the outliner width to restore on the next open.
+    //
+    if (`formLayout -exists $outlineEdForm`) {
+        int $outlinerWidth = `formLayout -q -width $outlineEdForm`;
+        optionVar -iv graphEdOutlinerWidth $outlinerWidth;
+    }
+
+    if (`animCurveEditor -exists $graphEd`) {
+        deleteUI -editor $graphEd;
+    }
+    if (`outlinerEditor -exists $outlineEd`) {
+        deleteUI -editor $outlineEd;
+    }
+}
+
+global proc string saveStateGraphEditor (string $whichPanel)
+//
+//  Description:
+//      This proc returns a string that when executed will restore the
+//      current state of the panel elements.
+//
+{
+    string $indent = "\n\t\t\t";
+    string $graphEd   = graphEditorGraphEdName( $whichPanel  );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    return (
+            $indent + "$editorName = ($panelName+\"OutlineEd\");\n" +
+            `outlinerEditor -query -stateString $outlineEd` + ";\n" +
+            $indent + "$editorName = ($panelName+\"GraphEd\");\n" +
+            `animCurveEditor -query -stateString $graphEd`
+    );
+}
+
+global proc graphEditorPanel (string $panelName)
+//
+//  Description:
+//      Create a new scripted graphEditor.  If the scripted
+//      panel hasn't yet been defined then define it.
+//
+{
+}
+
+global proc string [] graphEditorFilterCategories()
+//
+//  Description:
+//      Return the types of filters that the Graph Editor will display
+//      in its "Show->Objects" filter menu.
+//
+{
+    string $result[] = { "Modeling", "Camera", "Animating" };
+    return $result;
+}
+
+global proc switchConstrainedDragState(string $graphEd)
+//
+//  Description:
+//      Switches the state of the drag constrain icon in a cycle
+//      Cycle order is: unconstrained, constrained x, constrained y
+{
+    int $maxStates=3;
+    int $stateNumber=`animCurveEditor -q -constrainDrag $graphEd`;
+    $stateNumber=$stateNumber+1;
+
+    if ($stateNumber>=$maxStates)
+    {
+        $stateNumber=0;
+    }
+
+    setConstrainedDragState($graphEd, $stateNumber);
+}
+
+global proc setConstrainedDragState(string $graphEd, int $stateNumber)
+//
+//  Description:
+//      Updates the state of the drag constrain icon 
+//
+{
+    if ($stateNumber>=0 && $stateNumber<=2)
+    {
+        eval("animCurveEditor -e -constrainDrag " + $stateNumber + " " + $graphEd);
+    }
+
+    switch($stateNumber)
+    {
+        case 0:
+            iconTextButton -e -i1 "unconstrainedDrag.png"
+                -annotation (uiRes("m_graphEditorPanel.kUnconstrainedDragTwo"))
+                switchConstrainedDragStateButton;
+            break;
+        case 1:
+            iconTextButton -e -i1 "constrainDragX.png"
+                -annotation (uiRes("m_graphEditorPanel.kConstrainedDragX"))
+                switchConstrainedDragStateButton;
+            break;
+        case 2:
+            iconTextButton -e -i1 "constrainDragY.png"
+                -annotation (uiRes("m_graphEditorPanel.kConstrainedDragY"))
+                switchConstrainedDragStateButton;
+            break;
+        default:
+            break;
+    }
+}
+
+global proc setGraphEditorOutlinerPaneSize(string $graphEdPaneLayout)
+//
+//  Description:
+//      Set the outliner pane to the proper size (based on either
+//      saved or default values).
+//
+{
+    int $paneLayoutWidth = `paneLayout -q -width $graphEdPaneLayout`;
+    int $outlinerWidth = `optionVar -q graphEdOutlinerWidth`;
+    int $outlinerProportion;
+    if( !`optionVar -exists graphEdOutlinerWidth` || $outlinerWidth > $paneLayoutWidth) {
+        if($paneLayoutWidth < 190) {
+            // Set to the default proportion if the paneLayout
+            // width is less than the default width.
+            //
+            $outlinerProportion = 30;
+            $outlinerWidth = $outlinerProportion * $paneLayoutWidth / 100;
+        } else {
+            // Set to the default width if it is less than or
+            // equal to the paneLayout width.
+            //
+            $outlinerWidth = 190;
+            $outlinerProportion = $outlinerWidth * 100 / $paneLayoutWidth;
+        }
+        optionVar -iv graphEdOutlinerWidth $outlinerWidth;
+    } else {
+        // Set the proportion based on the saved width if it
+        // is less than or equal to the paneLayout width.
+        //
+        $outlinerProportion = $outlinerWidth * 100 / $paneLayoutWidth;
+    }
+
+    // Set the pane proportion for the outliner pane.
+    //
+    paneLayout -e -paneSize 1 $outlinerProportion 100 $graphEdPaneLayout;
+}
+
+global proc graphEditorCreateToolbar( string $whichPanel, string $flwLayout, string $frmLayout )
+{
+
+    string $widgets[] = `flowLayout -q -ca $flwLayout`;
+    for ( $w in $widgets )
+        deleteUI( $w );
+
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    int $isClassic = `optionVar -q graphEditorHasClassicToolbar`;
+    animCurveEditor -e -classicMode $isClassic $graphEd;
+
+    setParent $flwLayout;
+    if ( $isClassic )
+        graphEditorCreateClassicToolbar $whichPanel ;
+    else
+        graphEditorCreateSuitesToolbar  $whichPanel ;
+
+    // If the form layout only has 1 child, this means the editor
+    // buttons haven't yet been added ... add them.
+    int $nchildren = `formLayout -q -nch $frmLayout`;
+    if ( $nchildren < 2 )
+    {
+        setParent $frmLayout;
+            graphEditorCreateEditorsToolbarOptions( $whichPanel );
+
+        // Layout the toolbar
+        int $margin = 1;
+        formLayout -edit
+            -attachForm $flwLayout "left" $margin
+            -attachForm $flwLayout "top" $margin
+            -attachForm $flwLayout "bottom" $margin
+            -attachControl $flwLayout "right" 0 switchConstrainedDragStateButton
+
+            -attachNone switchConstrainedDragStateButton "left"
+            -attachForm switchConstrainedDragStateButton "top" $margin
+            -attachForm switchConstrainedDragStateButton "bottom" $margin
+            -attachControl switchConstrainedDragStateButton "right" 0 getDopeSheetButton
+
+            -attachNone getDopeSheetButton "left" 
+            -attachForm getDopeSheetButton "top" $margin
+            -attachForm getDopeSheetButton "bottom" $margin
+            -attachControl getDopeSheetButton "right" 0 getTraxButton
+
+            -attachNone getTraxButton "left" 
+            -attachForm getTraxButton "top" $margin
+            -attachForm getTraxButton "bottom" $margin
+            -attachForm getTraxButton "right" $margin
+            $frmLayout;
+    }
+
+    // Only display additional editors in 'classic mode'
+    iconTextButton -e -visible $isClassic switchConstrainedDragStateButton;
+    iconTextButton -e -visible $isClassic getDopeSheetButton;
+    iconTextButton -e -visible $isClassic getTraxButton;
+}
+
+global proc graphEditorCreateClassicToolbar( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    graphEditorCreateKeyToolbarOptions $whichPanel 1;
+
+    separator -height $iconSize -horizontal false -style single toolSeparator;
+    graphEditorCreateKeyframeStats $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single viewSeparator;
+    graphEditorCreateViewToolbarOptions $whichPanel 1;
+
+    separator -height $iconSize -horizontal false -style single interpSeparator;
+    graphEditorCreateTanTypeToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single bufferSeparator;
+    graphEditorCreateBufferToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single tangentSeparator;
+    graphEditorCreateTanOptsToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single loadSeparator;
+    graphEditorCreateLoadToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single snapSeparator;
+    graphEditorCreateSnapToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single normSeparator;
+    graphEditorCreateCurveToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single curvesPrePostInfinitySeparator;
+    graphEditorCreateInfinityToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single rightSeparator;
+}
+
+global proc graphEditorCreateSuitesToolbar( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    graphEditorCreateKeyToolbarOptions $whichPanel 0;
+
+    separator -height $iconSize -horizontal false -style single separator00;
+    graphEditorCreateViewToolbarOptions $whichPanel 0;
+
+    separator -height $iconSize -horizontal false -style single separator01;
+    graphEditorCreateTanTypeToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single separator02;
+    graphEditorCreateTanOptsToolbarOptions $whichPanel;
+
+    separator -height $iconSize -horizontal false -style single separator03;
+    graphEditorCreateKeyframeStats $whichPanel;
+}
+
+
+global proc graphEditorCreateKeyToolbarOptions( string $whichPanel, int $classicMode )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    toolButton 
+        -doubleClickCommand toolPropertyWindow
+        -collection toolCluster 
+        -tool directKeySuperContext 
+        -style "iconOnly"
+        -image1 "directKeySmall.png"
+        -width $iconSize -height $iconSize
+        directKeyTool;
+
+    toolButton 
+        -doubleClickCommand toolPropertyWindow
+        -collection toolCluster 
+        -tool insertKeySuperContext 
+        -style "iconOnly"
+        -image1 "setKeySmall.png"
+        -width $iconSize -height $iconSize
+        insertKeyTool;
+
+    if ($classicMode) {
+        toolButton
+            -doubleClickCommand toolPropertyWindow
+            -collection toolCluster
+            -tool latticeDeformKeySuperContext
+            -style "iconOnly"
+            -image1 "latticeDeformKeySmall.png"
+            -width $iconSize -height $iconSize
+            latticeDeformKeyTool;
+    }
+
+    toolButton
+        -collection toolCluster
+        -annotation (uiRes("m_graphEditorPanel.kRegionToolAnnot"))
+        -tool regionSelectKeySuperContext
+        -style "iconOnly"
+        -image1 "regionSelectKeySmall.png"
+        -width $iconSize -height $iconSize
+        regionSelectKeyTool;
+
+    toolButton
+        -doubleClickCommand toolPropertyWindow
+        -collection toolCluster
+        -annotation (uiRes("m_graphEditorPanel.kRetimeToolAnnot"))
+        -tool retimeKeySuperContext
+        -style "iconOnly"
+        -image1 "retimeKeySmall.png"
+        -width $iconSize -height $iconSize
+        retimeKeyTool;
+}
+
+global proc graphEditorCreateViewToolbarOptions( string $whichPanel, int $classicMode )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+    
+    iconTextButton
+        -i1 "traxFrameAll.png"
+        -width $iconSize -height $iconSize 
+        -annotation (uiRes("m_graphEditorPanel.kFrameAllIconAnnot")) 
+        -command ("FrameAll")
+        frameAllButton;
+
+    iconTextButton
+        -i1 "traxFrameRange.png"
+        -width $iconSize -height $iconSize 
+        -annotation (uiRes("m_graphEditorPanel.kFramePlaybackIconAnnot")) 
+        -command (
+            "animView " +
+            "-startTime (`playbackOptions -query -minTime` - 1) " +
+            "-endTime (`playbackOptions -query -maxTime` + 1) " +
+                $graphEd
+        )
+        frameRangeButton;
+
+    iconTextButton
+        -i1 "centerCurrentTime.png"
+        -width $iconSize -height $iconSize 
+        -annotation (uiRes("m_graphEditorPanel.kCenterCurrentTimeIconAnnot"))  
+        -command ("animCurveEditor -edit -lookAt currentTime " + $graphEd)
+        centerCurrentTimeButton;
+
+    if (! $classicMode) {
+        string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+        iconTextCheckBox
+            -i "isolateCurve.png"
+            -style "iconOnly"
+            -width $iconSize -height $iconSize
+            -annotation (uiRes("m_graphEditorPanel.kIsolateCurveAnnot"))
+            -onCommand ("isolateAnimCurve 1 "+$selectionConnection+" "+$graphEd)
+            -offCommand ("isolateAnimCurve 0 "+$selectionConnection+" "+$graphEd)
+            isolateCurveButton;
+    }
+}
+
+global proc graphEditorCreateTanTypeToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    global string $gGraphEditorTanButtonNames[];
+    
+    iconTextCheckBox 
+        -i "autoTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ( "doKeyTangent \"-itt auto -ott auto\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kAutoTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 0 ];
+
+    iconTextCheckBox 
+        -i "splineTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-itt spline -ott spline\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kSplineTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 1 ];
+
+    iconTextCheckBox 
+        -i "clampedTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-itt clamped -ott clamped\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kClampedTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 2 ];
+        
+    iconTextCheckBox 
+        -i "linearTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-itt linear -ott linear\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kLinearTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 3 ];
+        
+    iconTextCheckBox 
+        -i "flatTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-itt flat -ott flat\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kFlatTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 4 ];
+
+    iconTextCheckBox 
+        -i "stepTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-ott step\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kStepTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 5 ];
+
+    iconTextCheckBox 
+        -i "plateauTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ("doKeyTangent \"-itt plateau -ott plateau\" " + $graphEd + " bufferCurve")
+        -annotation (uiRes("m_graphEditorPanel.kPlateauTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 6 ];
+}
+
+global proc graphEditorCreateBufferToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    iconTextButton 
+        -i1 "bufferSnap.png"
+        -width $iconSize -height $iconSize 
+        -command "doBuffer snapshot"
+        -annotation (uiRes("m_graphEditorPanel.kBufferSnapIconAnnot")) 
+        bufferSnapButton;
+
+    iconTextButton 
+        -i1 "bufferSwap.png"
+        -width $iconSize -height $iconSize
+        -command "doBuffer swap"
+        -annotation (uiRes("m_graphEditorPanel.kSwapBufferIconAnnot")) 
+        bufferSwapButton;
+}
+
+global proc graphEditorCreateTanOptsToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    string $selectionConnection = `editor -query -selectionConnection $outlineEd`;
+
+    global string $gGraphEditorTanButtonNames[];
+
+    iconTextCheckBox 
+        -i "breakTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize 
+        -changeCommand ( "doKeyTangent \"-lock off\" " + $selectionConnection + " noOptions" )
+        -annotation (uiRes("m_graphEditorPanel.kBreakTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 7 ];
+
+    iconTextCheckBox
+        -i "unifyTangent.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize 
+        -changeCommand ( "doKeyTangent \"-lock on\" " + $selectionConnection + " noOptions" )
+        -annotation (uiRes("m_graphEditorPanel.kUnifyTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 8 ];
+
+    iconTextCheckBox
+        -i "freeTangentWeight.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize 
+        -changeCommand ( "doKeyTangent \"-weightLock off\" " + $selectionConnection + " noOptions" )
+        -annotation (uiRes("m_graphEditorPanel.kFreeTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 9 ];
+        
+    iconTextCheckBox 
+        -i "lockTangentWeight.png"
+        -style "iconOnly"
+        -width $iconSize -height $iconSize
+        -changeCommand ( "doKeyTangent \"-weightLock on \" " + $selectionConnection + " noOptions" )
+        -annotation (uiRes("m_graphEditorPanel.kLockTangentsIconAnnot")) 
+        $gGraphEditorTanButtonNames[ 10 ];
+}
+
+
+global proc graphEditorCreateLoadToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    // toggleAutoLoad needs to know the full path name of this button
+    // however it is difficult to pass it in (because toggleAutoLoad
+    // is called from several places, including c++ code), so instead
+    // the name is carefully constructed to be unique
+    //
+    string $loadToggleButton = ($outlineEd + "loadToggleButton");
+    iconTextCheckBox 
+        -i1 "autoload.png" 
+        -width $iconSize -height $iconSize 
+        -onCommand ( "toggleAutoLoad " + $outlineEd + " 1" )
+        -offCommand ( "toggleAutoLoad " + $outlineEd + " 0" )
+        -annotation (uiRes("m_graphEditorPanel.kAutoLoadIconAnnot")) 
+        -value `isAutoLoad $outlineEd`
+        $loadToggleButton;
+
+    string $reloadButton = ($outlineEd + "reloadButton");
+    iconTextButton 
+        -i1 "reload.png"
+        -width $iconSize -height $iconSize
+        -command ("doReload " + $outlineEd )
+        -annotation (uiRes("m_graphEditorPanel.kLoadSelIconAnnot")) 
+        -enable (!`isAutoLoad $outlineEd`)
+        $reloadButton;
+}
+
+global proc graphEditorCreateSnapToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    // Set initial snapping states
+    //
+    int $timeSnap = 0;
+    string $snap = `animCurveEditor -query -snapTime $graphEd`;
+    if( $snap != "none" ) {
+        $timeSnap = 1;
+    }
+
+    int $valueSnap = 0;
+    $snap = `animCurveEditor -query -snapValue $graphEd`;
+    if( $snap != "none" ) {
+        $valueSnap = 1;
+    }
+
+    iconTextCheckBox 
+        -i1 "snapTime.png" 
+        -width $iconSize -height $iconSize 
+        -onCommand ( "animCurveEditor -edit -snapTime \"integer\"" + $graphEd )
+        -offCommand ( "animCurveEditor -edit -snapTime \"none\"" + $graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kTimeSnapIconAnnot")) 
+        -value $timeSnap
+        timeSnapButton;
+
+    iconTextCheckBox 
+        -i1 "snapValue.png" 
+        -width $iconSize -height $iconSize 
+        -onCommand ( "animCurveEditor -edit -snapValue \"integer\"" + $graphEd )
+        -offCommand ( "animCurveEditor -edit -snapValue \"none\"" + $graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kValueSnapIconAnnot")) 
+        -value $valueSnap
+        valueSnapButton;
+}
+
+global proc graphEditorCreateCurveToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    iconTextButton
+        -i1 "normCurves.png" 
+        -width $iconSize -height $iconSize 
+        -command ("animCurveEditor -edit -displayNormalized 1 " + $graphEd +
+            "; optionVar -intValue graphEditorDisplayNormalized 1;")
+        -annotation (uiRes("m_graphEditorPanel.kNormIconAnnot")) 
+        normalizeCurvesButton;
+
+    iconTextButton
+        -i1 "denormCurves.png" 
+        -width $iconSize -height $iconSize 
+        -command ("animCurveEditor -edit -displayNormalized 0 " + $graphEd +
+            "; optionVar -intValue graphEditorDisplayNormalized 0;")
+        -annotation (uiRes("m_graphEditorPanel.kDenormIconAnnot")) 
+        denormalizeCurvesButton;
+
+    iconTextButton
+        -i1 "renormCurves.png" 
+        -width $iconSize -height $iconSize 
+        -command ("animCurveEditor -edit -renormalizeCurves " + $graphEd)
+        -annotation (uiRes("m_graphEditorPanel.kRenormIconAnnot")) 
+        renormalizeCurvesButton;
+
+    iconTextButton
+        -i1 "stackedCurves.png" 
+        -width $iconSize -height $iconSize 
+        -command ("performStackedCurves 0 " + $graphEd)
+        -annotation (uiRes("m_graphEditorPanel.kStackedIconAnnot")) 
+        stackedCurvesButton;
+
+    iconTextButton
+        -i1 "unstackedCurves.png" 
+        -width $iconSize -height $iconSize 
+        -command ("disableStackedCurves " + $graphEd)
+        -annotation (uiRes("m_graphEditorPanel.kUnstackedIconAnnot")) 
+        unstackedCurvesButton;
+}
+
+global proc graphEditorCreateInfinityToolbarOptions( string $whichPanel )
+// Curves -> Pre/Post-infinity -> Cycle/CycleOffset
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    iconTextButton
+        -i1 "preInfinityCycle.png"
+        -width $iconSize -height $iconSize
+        -command ( "doSetInfinity \"-pri cycle\" graphEditor1GraphEd \"bufferCurve useSmoothness\"; animCurveEditor -edit -displayInfinities 1 "+$graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kCycleBeforeAnnot")) 
+        curvesPreInfinityCycleButton;
+    
+    iconTextButton
+        -i1 "preInfinityCycleOffset.png"
+        -width $iconSize -height $iconSize
+        -command ( "doSetInfinity \"-pri cycleRelative\" graphEditor1GraphEd \"bufferCurve useSmoothness\"; animCurveEditor -edit -displayInfinities 1 "+$graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kCycleOffsetBeforeAnnot")) 
+        curvesPreInfinityCycleOffsetButton;
+    
+    iconTextButton
+        -i1 "postInfinityCycle.png"
+        -width $iconSize -height $iconSize
+        -command ( "doSetInfinity \"-poi cycle\" graphEditor1GraphEd \"bufferCurve useSmoothness\"; animCurveEditor -edit -displayInfinities 1 "+$graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kCycleAfterAnnot")) 
+        curvesPostInfinityCycleButton;
+    
+    iconTextButton
+        -i1 "postInfinityCycleOffset.png"
+        -width $iconSize -height $iconSize
+        -command ( "doSetInfinity \"-poi cycleRelative\" graphEditor1GraphEd \"bufferCurve useSmoothness\"; animCurveEditor -edit -displayInfinities 1 "+$graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kCycleOffsetAfterAnnot")) 
+        curvesPostInfinityCycleOffsetButton;
+}
+
+global proc graphEditorCreateKeyframeStats( string $whichPanel )
+{
+    string $timeAnnot  = (uiRes("m_graphEditorPanel.kSelectedKeyTime"));
+    string $valueAnnot = (uiRes("m_graphEditorPanel.kSelectedKeyValue"));
+    
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    int $isClassic =  `animCurveEditor -q -classicMode $graphEd`;
+    if ( $isClassic != 0 )
+    {
+        keyframeStats 
+            -height $iconSize 
+            -width 170 
+            -animEditor $graphEd 
+            -classicMode 1
+            -timeAnnotation  $timeAnnot
+            -valueAnnotation $valueAnnot
+            keyframeStats;
+    }
+    else
+    {
+        keyframeStats 
+            -height $iconSize 
+            -width 300
+            -columnWidth4 50 65 50 65
+            -animEditor $graphEd 
+            -classicMode 0
+            -timeAnnotation  $timeAnnot
+            -valueAnnotation $valueAnnot
+            -columnAttach 1 "both" 0
+            -columnAlign  1 right
+            -columnAttach 3 "both" 0
+            -columnAlign  3 right
+            keyframeStats;
+    }
+}
+
+global proc graphEditorCreateEditorsToolbarOptions( string $whichPanel )
+{
+    string $graphEd   = graphEditorGraphEdName( $whichPanel );
+    string $outlineEd = graphEditorOutlineEdName( $whichPanel );
+    int    $iconSize  = graphEditorIconSize();
+
+    iconTextButton
+        -i1 "unconstrainedDrag.png"
+        -width $iconSize -height $iconSize
+        -command ( "switchConstrainedDragState " + $graphEd )
+        -annotation (uiRes("m_graphEditorPanel.kUnconstrainedDrag"))
+        switchConstrainedDragStateButton;
+
+    // Get DopeSheet and Trax from Graph Editor
+    iconTextButton
+        -i1 "getDopeSheet.png"						// TODO: FIX
+        -width $iconSize -height $iconSize
+        -command ( "replaceEditor dopeSheetPanel1 DopeSheetEditor" )
+        -annotation (uiRes("m_graphEditorPanel.kGetDopeSheetIconAnnot")) 
+        getDopeSheetButton;
+    
+    iconTextButton
+        -i1 "getTrax.png"						// TODO: FIX
+        -width $iconSize -height $iconSize
+        -command ( "replaceEditor clipEditorPanel1 CharacterAnimationEditor" )
+        -annotation (uiRes("m_graphEditorPanel.kGetTraxIconAnnot")) 
+        getTraxButton;
+}

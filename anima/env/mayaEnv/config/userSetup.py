@@ -4,10 +4,10 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import os
 import sys
-import platform
+import os
 import traceback
+import maya.cmds as cmds
 
 __version__ = "1.0.0"
 
@@ -24,7 +24,7 @@ env_paths = [
     '../../../',
     '../../../mayaEnv',
     '../../../mayaEnv/config',
-    '../../../mayaEnv/config/2014',
+    '../../../mayaEnv/config/%s' % cmds.about(v=1),
     '../../../mayaEnv/plugins'
 ]
 
@@ -32,15 +32,15 @@ for path in env_paths:
     resolved_path = os.path.normpath(
         os.path.join(here, path)
     )
+
+    print('appending : %s' % resolved_path)
     sys.path.append(resolved_path)
 
 # now we can import pymel and others
 import pymel
 import pymel.core as pm
 from pymel import mayautils
-import maya.cmds as cmds
-
-from stalker import db
+# import maya.cmds as cmds
 
 try:
     pm.Mel.source("HKLocalTools")
@@ -91,21 +91,48 @@ except pm.MayaNodeError:
     pass
 
 # create environment variables for each Repository
+from stalker import db
 db.setup()
+
+# set ui to PySide2 for maya2017
+print('before setting QtLib inside userSetup.py')
+if pymel.versions.current() > 201500:
+    print('setting QtLib to PySide2 inside userSetup.py')
+    from anima import ui
+    ui.SET_PYSIDE2()
+else:
+    print('setting QtLib to PySide inside userSetup.py')
+    from anima import ui
+    ui.SET_PYSIDE()
+
 
 if not pm.general.about(batch=1):
     # load shelves
+    # DO NOT DELETE THE FOLLOWING LINE
     from anima.env.mayaEnv import auxiliary
 
-    shelves_path = '../../../../shelves'
-    shelf_names = ['kks_Tools', 'kks_Animation']
+    custom_shelves_env_var_name = 'ANIMA_MAYA_SHELVES_PATH'
+    if custom_shelves_env_var_name in os.environ:
+        print(
+            '**%s**: %s' % (
+                custom_shelves_env_var_name,
+                os.environ[custom_shelves_env_var_name]
+            )
+        )
+        shelves_paths = \
+            os.environ[custom_shelves_env_var_name].split(os.path.pathsep)
 
-    for shelf_name in shelf_names:
-        shelf_path = os.path.normpath(
-            os.path.join(here, shelves_path, 'shelf_%s.mel' % shelf_name)
-        ).replace('\\', '/')
+        for shelves_path in shelves_paths:
+            print('current shelves_path: %s' % shelves_path)
+            import glob
 
-        pm.evalDeferred('auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name)
-        pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
-
-        print('shelf_path: %s' % shelf_path)
+            shelf_paths = glob.glob('%s/shelf_*.mel' % shelves_path)
+            print('shelf_paths: %s' % shelf_paths)
+            for shelf_path in shelf_paths:
+                shelf_path = shelf_path.replace('\\', '/')
+                print('loading shelf: %s' % shelf_path)
+                shelf_name = os.path.splitext(os.path.basename(shelf_path))[0][6:]
+                pm.evalDeferred('auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name)
+                pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
+    else:
+        print('no **%s** env var for shelves' % custom_shelves_env_var_name)
