@@ -2443,7 +2443,9 @@ class Reference(object):
             return
 
         # register a new caller
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -2515,7 +2517,9 @@ class Reference(object):
 
         # generate a sorted version list
         # and visit each reference only once
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         use_progress_window = False
         if not pm.general.about(batch=1):
@@ -2853,8 +2857,10 @@ class Modeling(object):
 
         mesh_count = len(all_meshes)
 
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         if not pm.general.about(batch=1) and mesh_count:
             pdm.use_ui = True
@@ -3262,7 +3268,9 @@ class Render(object):
             override_attr_name = None
 
         # register a caller
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.use_ui = True if len(objects) > 3 else False
         caller = pdm.register(len(objects), 'Setting Shape Attribute')
 
@@ -4727,21 +4735,23 @@ class Render(object):
         import shutil
         import glob
 
-        from maya import OpenMayaUI
-
-        try:
-            from shiboken import wrapInstance
-        except ImportError:
-            from shiboken2 import wrapInstance
-
-        from anima.ui import progress_dialog
-
-        maya_main_window = wrapInstance(
-            long(OpenMayaUI.MQtUtil.mainWindow()),
-            progress_dialog.QtWidgets.QWidget
-        )
-
-        pdm = ProgressDialogManager(parent=maya_main_window)
+        # from maya import OpenMayaUI
+        #
+        # try:
+        #     from shiboken import wrapInstance
+        # except ImportError:
+        #     from shiboken2 import wrapInstance
+        #
+        # from anima.ui import progress_dialog
+        #
+        # maya_main_window = wrapInstance(
+        #     long(OpenMayaUI.MQtUtil.mainWindow()),
+        #     progress_dialog.QtWidgets.QWidget
+        # )
+        #
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         selected_nodes = pm.ls(sl=1)
         caller = pdm.register(len(selected_nodes), title='Moving Cache Files')

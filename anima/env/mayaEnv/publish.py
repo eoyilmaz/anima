@@ -612,7 +612,9 @@ def check_out_of_space_uvs():
     nodes_with_out_of_space_uvs = []
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     if not pm.general.about(batch=1) and mesh_count:
         pdm.use_ui = True
@@ -659,7 +661,9 @@ def check_uv_border_crossing():
     nodes_with_uvs_crossing_borders = []
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     if not pm.general.about(batch=1) and mesh_count:
         pdm.use_ui = True
@@ -737,7 +741,9 @@ def check_uvs():
     mesh_count = len(all_meshes)
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     if not pm.general.about(batch=1) and mesh_count:
         pdm.use_ui = True
@@ -996,7 +1002,9 @@ def check_component_edits_on_references():
     references_with_component_edits = []
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     all_refs = pm.listReferences(recursive=True)
     ref_count = len(all_refs)
@@ -1553,7 +1561,9 @@ def export_edl_and_xml():
 
     # convert to MXF
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     # shots = seq1.shots.get()
     shots = pm.ls(type='shot')

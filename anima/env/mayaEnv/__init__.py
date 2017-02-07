@@ -28,6 +28,36 @@ from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                            POST_PUBLISHER_TYPE)
 
 
+class MayaMainProgressBarWrapper(object):
+    """wraps main progress bar dialog to be ProgressDialogManager compliant
+    """
+
+    def __init__(self):
+        self.progress_bar = pm.windows.getMainProgressBar()
+        self.progress_bar.beginProgress()
+
+    def close(self):
+        self.progress_bar.endProgress()
+
+    def setRange(self, range_min, range_max):
+        self.progress_bar.setMinValue(0)
+        self.progress_bar.setMaxValue(range_max)
+
+    def setLabelText(self, label):
+        self.progress_bar.setStatus(label)
+
+    def show(self):
+        return
+
+    def geometry(self):
+        return
+
+    def setValue(self, value):
+        self.progress_bar.setProgress(value)
+        self.progress_bar.step()
+
+
+
 class Maya(EnvironmentBase):
     """The maya environment class
 
@@ -1060,7 +1090,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         caller = None
         if len(references):
             logger.debug('register a new caller')
-            pdm = ProgressDialogManager()
+            wrp = MayaMainProgressBarWrapper()
+            pdm = ProgressDialogManager(dialog=wrp)
             pdm.use_ui = self.use_progress_window
             caller = pdm.register(
                 ref_count,
@@ -1499,7 +1530,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         :return: dictionary
         """
-        pdm = ProgressDialogManager()
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.use_ui = self.use_progress_window
         caller = \
             pdm.register(3, 'Maya.check_referenced_versions() prepare data')
@@ -1654,7 +1686,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         prev_vers = None
 
         # use a progress window for that
-        pdm = ProgressDialogManager()
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.use_ui = self.use_progress_window
         caller = pdm.register(len(references_list), 'Maya.update_versions()')
 
@@ -1887,7 +1920,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # 7- fix edits with new namespace
             # 8- apply them
 
-            pdm = ProgressDialogManager()
+            wrp = MayaMainProgressBarWrapper()
+            pdm = ProgressDialogManager(dialog=wrp)
             pdm.use_ui = self.use_progress_window
             caller = pdm.register(len(to_update_paths),
                                  'Maya.fix_reference_namespaces()')

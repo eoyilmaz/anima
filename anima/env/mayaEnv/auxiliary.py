@@ -1544,7 +1544,9 @@ class Playblaster(object):
             raise RuntimeError('There are no Shots in your Camera Sequencer.')
 
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.close()
 
         caller = pdm.register(len(shots), 'Generating Playblasts...')
@@ -1606,7 +1608,9 @@ class Playblaster(object):
         :return:
         """
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.close()
 
         outputs = []
@@ -1760,7 +1764,9 @@ def get_cacheable_nodes():
     :return:
     """
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
     pdm.close()
 
     # list all cacheable nodes
@@ -1813,7 +1819,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
         pm.loadPlugin('AbcExport')
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     cacheable_nodes.sort(key=lambda x: x.getAttr('cacheable'))
 
