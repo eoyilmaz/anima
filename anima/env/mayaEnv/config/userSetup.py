@@ -36,6 +36,12 @@ for path in env_paths:
     print('appending : %s' % resolved_path)
     sys.path.append(resolved_path)
 
+# add path from os.environ['PYTHONPATH']
+for path in os.environ['PYTHONPATH'].split(os.path.pathsep):
+    path = os.path.normpath(path)
+    if path not in os.sys.path:
+        os.sys.path.append(path)
+
 # now we can import pymel and others
 import pymel
 import pymel.core as pm
