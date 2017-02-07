@@ -722,6 +722,16 @@ class RepresentationGenerator(object):
                                     child_full_path
                                 )
 
+                            # before doing anything smooth any polygon objects
+                            # under this node if aiSubdivType is not 0
+                            for node in child_node.listRelatives(ad=1, type='mesh'):
+                                if node.getAttr('aiSubdivType') != 0:
+                                    node.displaySmoothMesh.set(2)
+                                    # set it equal to aiSubdivIterations
+                                    node.smoothLevel.set(
+                                        node.aiSubdivIterations.get()
+                                    )
+
                             # run the mel command
                             # check if file exists
                             pm.mel.eval(
