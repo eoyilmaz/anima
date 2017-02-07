@@ -86,6 +86,8 @@ class Compiler(object):
             temp_pyside2_file = file(pyfile_full_path, 'w')
             try:
                 self.compiler(temp_uiFile, temp_pyside2_file)
+            except TypeError:
+                pass
             finally:
                 temp_uiFile.close()
                 temp_pyside2_file.close()
