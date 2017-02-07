@@ -50,9 +50,9 @@ class ProgressDialogManager(object):
 
     __metaclass__ = Singleton
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, dialog=None):
         self.in_progress = False
-        self.dialog = None
+        self.dialog = dialog
         self.callers = []
 
         if not hasattr(self, 'use_ui'):
@@ -91,7 +91,7 @@ class ProgressDialogManager(object):
             self.dialog.close()
 
         # re initialize self
-        self.__init__()
+        self.__init__(dialog=self.dialog)
 
     def register(self, max_iteration, title=''):
         """registers a new caller
@@ -126,10 +126,11 @@ class ProgressDialogManager(object):
 
             size = self.dialog.geometry()
 
-            self.dialog.move(
-                (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
-                (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
-            )
+            if size:
+                self.dialog.move(
+                    (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
+                    (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
+                )
 
     def step(self, caller, step=1, message=''):
         """Increments the progress by the given mount
