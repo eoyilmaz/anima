@@ -225,24 +225,16 @@ def cleanup_intermediate_objects():
 
 
 @publisher
-def check_old_object_smoothing():
-    """checking if there are objects with
+def convert_old_object_smoothing_to_renderer_smoothing():
+    """convert objects with old type display smoothing to renderer smoothing.
+
+    Currently supports Arnold only.
     """
-    meshes_with_smooth_mesh_preview = []
     for node in pm.ls(type='mesh'):
         if node.displaySmoothMesh.get() != 0:
-            meshes_with_smooth_mesh_preview.append(node.getParent())
-
-    if len(meshes_with_smooth_mesh_preview) > 0:
-        pm.select(meshes_with_smooth_mesh_preview)
-        raise PublishError(
-            'Please do not use <b>Smooth Mesh</b> on following nodes:<br><br>'
-            '%s' %
-            '<br>'.join(
-                map(lambda x: x.name(),
-                    meshes_with_smooth_mesh_preview[:MAX_NODE_DISPLAY])
-            )
-        )
+            node.displaySmoothMesh.set(0)
+            node.setAttr('aiSubdivType', 1)
+            node.setAttr('aiSubdivIterations', node.smoothLevel.get())
 
 
 @publisher
