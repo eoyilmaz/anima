@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 13:23:23 2017
+# Created: Wed Feb 08 14:14:41 2017
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -28,9 +28,9 @@ class Ui_Dialog(object):
         self.task_progressBar.setProperty("value", 24)
         self.task_progressBar.setObjectName("task_progressBar")
         self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.task_progressBar)
-        self.label_4 = QtGui.QLabel(Dialog)
-        self.label_4.setObjectName("label_4")
-        self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_4)
+        self.resources_label = QtGui.QLabel(Dialog)
+        self.resources_label.setObjectName("resources_label")
+        self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.resources_label)
         self.resource_comboBox = QtGui.QComboBox(Dialog)
         self.resource_comboBox.setObjectName("resource_comboBox")
         self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.resource_comboBox)
@@ -43,21 +43,9 @@ class Ui_Dialog(object):
         self.label = QtGui.QLabel(Dialog)
         self.label.setObjectName("label")
         self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.label)
-        self.start_timeEdit = QtGui.QTimeEdit(Dialog)
-        self.start_timeEdit.setTime(QtCore.QTime(10, 0, 0))
-        self.start_timeEdit.setCurrentSection(QtGui.QDateTimeEdit.MinuteSection)
-        self.start_timeEdit.setCalendarPopup(True)
-        self.start_timeEdit.setObjectName("start_timeEdit")
-        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.start_timeEdit)
         self.label_2 = QtGui.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(5, QtGui.QFormLayout.LabelRole, self.label_2)
-        self.end_timeEdit = QtGui.QTimeEdit(Dialog)
-        self.end_timeEdit.setTime(QtCore.QTime(19, 0, 0))
-        self.end_timeEdit.setCurrentSection(QtGui.QDateTimeEdit.MinuteSection)
-        self.end_timeEdit.setCalendarPopup(True)
-        self.end_timeEdit.setObjectName("end_timeEdit")
-        self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.end_timeEdit)
         self.info_area_label = QtGui.QLabel(Dialog)
         self.info_area_label.setObjectName("info_area_label")
         self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.info_area_label)
@@ -101,12 +89,10 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
         self.tasks_label.setText(QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_4.setText(QtGui.QApplication.translate("Dialog", "Resource", None, QtGui.QApplication.UnicodeUTF8))
+        self.resources_label.setText(QtGui.QApplication.translate("Dialog", "Resource", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("Dialog", "Date", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dialog", "Start", None, QtGui.QApplication.UnicodeUTF8))
-        self.start_timeEdit.setDisplayFormat(QtGui.QApplication.translate("Dialog", "HH:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "End", None, QtGui.QApplication.UnicodeUTF8))
-        self.end_timeEdit.setDisplayFormat(QtGui.QApplication.translate("Dialog", "HH:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.info_area_label.setText(QtGui.QApplication.translate("Dialog", "INFO", None, QtGui.QApplication.UnicodeUTF8))
         self.revision_label.setText(QtGui.QApplication.translate("Dialog", "<html><head/><body><p align=\"right\">Revision<br/>Type</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("Dialog", "Description", None, QtGui.QApplication.UnicodeUTF8))

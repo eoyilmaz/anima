@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 13:17:52 2017
+# Created: Wed Feb 08 14:11:13 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,9 +18,9 @@ class Ui_Dialog(object):
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setObjectName("formLayout")
-        self.label_3 = QtWidgets.QLabel(Dialog)
-        self.label_3.setObjectName("label_3")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_3)
+        self.tasks_label = QtWidgets.QLabel(Dialog)
+        self.tasks_label.setObjectName("tasks_label")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.tasks_label)
         self.tasks_comboBox = QtWidgets.QComboBox(Dialog)
         self.tasks_comboBox.setObjectName("tasks_comboBox")
         self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.tasks_comboBox)
@@ -28,9 +28,9 @@ class Ui_Dialog(object):
         self.task_progressBar.setProperty("value", 24)
         self.task_progressBar.setObjectName("task_progressBar")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.task_progressBar)
-        self.label_4 = QtWidgets.QLabel(Dialog)
-        self.label_4.setObjectName("label_4")
-        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_4)
+        self.resources_label = QtWidgets.QLabel(Dialog)
+        self.resources_label.setObjectName("resources_label")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.resources_label)
         self.resource_comboBox = QtWidgets.QComboBox(Dialog)
         self.resource_comboBox.setObjectName("resource_comboBox")
         self.formLayout.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.resource_comboBox)
@@ -43,21 +43,9 @@ class Ui_Dialog(object):
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setObjectName("label")
         self.formLayout.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.start_timeEdit = QtWidgets.QTimeEdit(Dialog)
-        self.start_timeEdit.setTime(QtCore.QTime(10, 0, 0))
-        self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
-        self.start_timeEdit.setCalendarPopup(True)
-        self.start_timeEdit.setObjectName("start_timeEdit")
-        self.formLayout.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.start_timeEdit)
         self.label_2 = QtWidgets.QLabel(Dialog)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_2)
-        self.end_timeEdit = QtWidgets.QTimeEdit(Dialog)
-        self.end_timeEdit.setTime(QtCore.QTime(19, 0, 0))
-        self.end_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
-        self.end_timeEdit.setCalendarPopup(True)
-        self.end_timeEdit.setObjectName("end_timeEdit")
-        self.formLayout.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.end_timeEdit)
         self.info_area_label = QtWidgets.QLabel(Dialog)
         self.info_area_label.setObjectName("info_area_label")
         self.formLayout.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.info_area_label)
@@ -100,13 +88,11 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "Dialog", None, -1))
-        self.label_3.setText(QtWidgets.QApplication.translate("Dialog", "Task", None, -1))
-        self.label_4.setText(QtWidgets.QApplication.translate("Dialog", "Resource", None, -1))
+        self.tasks_label.setText(QtWidgets.QApplication.translate("Dialog", "Task", None, -1))
+        self.resources_label.setText(QtWidgets.QApplication.translate("Dialog", "Resource", None, -1))
         self.label_5.setText(QtWidgets.QApplication.translate("Dialog", "Date", None, -1))
         self.label.setText(QtWidgets.QApplication.translate("Dialog", "Start", None, -1))
-        self.start_timeEdit.setDisplayFormat(QtWidgets.QApplication.translate("Dialog", "HH:mm", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("Dialog", "End", None, -1))
-        self.end_timeEdit.setDisplayFormat(QtWidgets.QApplication.translate("Dialog", "HH:mm", None, -1))
         self.info_area_label.setText(QtWidgets.QApplication.translate("Dialog", "INFO", None, -1))
         self.revision_label.setText(QtWidgets.QApplication.translate("Dialog", "<html><head/><body><p align=\"right\">Revision<br/>Type</p></body></html>", None, -1))
         self.label_7.setText(QtWidgets.QApplication.translate("Dialog", "Description", None, -1))

@@ -37,7 +37,7 @@
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="label_4">
+      <widget class="QLabel" name="resources_label">
        <property name="text">
         <string>Resource</string>
        </property>
@@ -63,50 +63,10 @@
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
-      <widget class="QTimeEdit" name="start_timeEdit">
-       <property name="time">
-        <time>
-         <hour>10</hour>
-         <minute>0</minute>
-         <second>0</second>
-        </time>
-       </property>
-       <property name="currentSection">
-        <enum>QDateTimeEdit::MinuteSection</enum>
-       </property>
-       <property name="displayFormat">
-        <string>HH:mm</string>
-       </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
      <item row="5" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
         <string>End</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1">
-      <widget class="QTimeEdit" name="end_timeEdit">
-       <property name="time">
-        <time>
-         <hour>19</hour>
-         <minute>0</minute>
-         <second>0</second>
-        </time>
-       </property>
-       <property name="currentSection">
-        <enum>QDateTimeEdit::MinuteSection</enum>
-       </property>
-       <property name="displayFormat">
-        <string>HH:mm</string>
-       </property>
-       <property name="calendarPopup">
-        <bool>true</bool>
        </property>
       </widget>
      </item>

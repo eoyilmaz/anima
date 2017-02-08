@@ -115,14 +115,14 @@ class UIFileTestCase(unittest.TestCase):
         os.remove(self.test_uicFile.md5_file_full_path)
 
     def test_isNew_method_is_working_correctly(self):
-        """testing if the isNew() method is working properly
+        """testing if the is_new() method is working properly
         """
         self.assertTrue(
-            self.test_uicFile.isNew()
+            self.test_uicFile.is_new()
         )
 
         # but not new if the md5 file is stored in the md5 file
         self.test_uicFile.update_md5_file()
         self.assertFalse(
-            self.test_uicFile.isNew()
+            self.test_uicFile.is_new()
         )

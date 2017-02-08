@@ -145,7 +145,7 @@ class UIFile(object):
         with open(self.md5_file_full_path, 'w+') as f:
             f.writelines([self.md5])
 
-    def isNew(self):
+    def is_new(self):
         """checks if the file is new or old by comparing it with the stored md5
         file
         """
@@ -226,7 +226,7 @@ def main():
         py_file_pyside = compiler_pyside.get_py_file(ui_file, output_path)
         py_file_pyside2 = compiler_pyside2.get_py_file(ui_file, output_path)
 
-        if ui_file.isNew() or not py_file_pyqt4.exists()\
+        if ui_file.is_new() or not py_file_pyqt4.exists()\
            or not py_file_pyside.exists()\
            or not py_file_pyside2.exists():
             # just save the md5 and generate the modules

@@ -874,6 +874,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         menu = QtWidgets.QMenu()  # Open in browser
         menu.addAction('Open In Web Browser...')
         menu.addAction('Copy ID to clipboard')
+
+        logged_in_user = self.get_logged_in_user()
+        from stalker import Status
+        status_wfd = Status.query.filter(Status.code == 'WFD').first()
+        status_prev = Status.query.filter(Status.code == 'PREV').first()
+        status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+        if logged_in_user in task.resources \
+           and task.status not in [status_wfd, status_prev, status_cmpl]:
+            menu.addAction('Create TimeLog...')
+
         menu.addSeparator()
 
         # Add Depends To menu
@@ -922,6 +932,14 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     "ID %s is copied to clipboard!" % task.id,
                     QtWidgets.QMessageBox.Ok
                 )
+
+            elif choice == 'Create TimeLog...':
+                from anima.ui import time_log_dialog
+                time_log_dialog_main_dialog = time_log_dialog.MainDialog(
+                    parent=self,
+                    task=task,
+                )
+                time_log_dialog_main_dialog.exec_()
 
             else:
                 task = selected_item.task

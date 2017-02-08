@@ -117,7 +117,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.setupUi(self)
 
         # customize the ui elements
-        self.start_timeEdit.deleteLater()
+        # self.start_timeEdit.deleteLater()
         self.start_timeEdit = TimeEdit(self, resolution=timing_resolution)
         self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
         self.start_timeEdit.setCalendarPopup(True)
@@ -126,7 +126,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.formLayout.insertRow(4, self.label, self.start_timeEdit)
         self.start_timeEdit.setDisplayFormat("HH:mm")
 
-        self.end_timeEdit.deleteLater()
+        # self.end_timeEdit.deleteLater()
         self.end_timeEdit = TimeEdit(self, resolution=timing_resolution)
         self.end_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
         self.end_timeEdit.setCalendarPopup(True)
