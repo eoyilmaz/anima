@@ -1,0 +1,322 @@
+// ===========================================================================
+// Copyright 2016 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+global proc manipScaleBuildOrientMenu(string $menu) {
+	menu -e -dai $menu;
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveSetOriToObject")` -p $menu -c "manipScaleOrient 5";
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveSetOriToComponent")` -p $menu -c "manipScaleOrient 4";
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveSetOriToVertex")` -p $menu -c "manipScaleOrient 1";
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveSetOriToEdge")` -p $menu -c "manipScaleOrient 2";
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveSetOriToFace")` -p $menu -c "manipScaleOrient 3";
+	menuItem -label `uiRes("m_manipMoveProperties.kMoveResetOri")` -p $menu -c "manipScaleOrient 0";
+}
+
+global proc manipScaleBuildAxisMenu(string $menu) {
+	menu -e -dai $menu;
+	menuItem -label `uiRes("m_manipMoveProperties.kObject")` -p $menu -c "manipScaleContext -e -mode 0 Scale";
+
+	//menuItem -label `uiRes("m_manipMoveProperties.kWorld")` -p $menu -c "manipScaleContext -e -mode 2 Scale";
+
+	menuItem -label `uiRes("m_manipMoveProperties.kAutoAlign")` -p $menu -c "manipScaleContext -e -mode 9 Scale";
+	menuItem -label `uiRes("m_manipMoveProperties.kLocal")` -p $menu -c "manipScaleContext -e -mode 1 Scale";
+	menuItem -label `uiRes("m_manipMoveProperties.kNormal")` -p $menu -c "manipScaleContext -e -mode 3 Scale";
+	menuItem -label `uiRes("m_manipMoveProperties.kAlongRotationAxis")` -p $menu -c "manipScaleContext -e -mode 4 Scale";
+	menuItem -label `uiRes("m_manipMoveProperties.kAlongLiveObjectAxis")` -p $menu -c "manipScaleContext -e -mode 5 Scale";
+	menuItem -label `uiRes("m_manipMoveProperties.kCustomAxisOrientation")` -p $menu -c "manipScaleContext -e -mode 6 Scale";
+}
+
+global proc int manipScaleGetSnapMode() {
+	int $enabled  = `manipScaleContext -q -snap Scale`;
+	int $relative = $enabled && `manipScaleContext -q -snapRelative Scale`;
+	return !$enabled ? /*off*/0 : $relative ? /*relative*/1 : /*absolute*/2;
+}
+
+global proc manipScaleSetSnapMode(int $mode) {
+	global int $manipScalePrevSnapMode;
+	if ($mode != 0) $manipScalePrevSnapMode = $mode;
+	switch ($mode) {
+	default: case 0: manipScaleContext -e -snap 0 Scale; break;
+	case 1: manipScaleContext -e -snap 1 -snapRelative 1 Scale; break;
+	case 2: manipScaleContext -e -snap 1 -snapRelative 0 Scale; break;
+	}
+}
+
+global proc manipScaleToggleSnapMode() {
+ 	int $mode = manipScaleGetSnapMode();
+	global int $manipScalePrevSnapMode;
+	manipScaleSetSnapMode($mode == 0 ? $manipScalePrevSnapMode : 0);
+}
+
+global proc manipScaleBuildSnapMenu(string $menu) {
+	menu -e -dai $menu;
+	menuItem -label (uiRes("m_manipMoveProperties.kOff")) -p $menu -c "manipScaleSetSnapMode 0";
+	menuItem -label (uiRes("m_manipMoveProperties.kRelative")) -p $menu -c "manipScaleSetSnapMode 1";
+	menuItem -label (uiRes("m_manipMoveProperties.kAbsolute")) -p $menu -c "manipScaleSetSnapMode 2";
+}
+
+global proc manipScaleSetXformConstraint(string $mode) {
+	global string $manipScalePrevXformConstraint;
+	if ($mode != "none") $manipScalePrevXformConstraint = $mode;
+	setXformConstraint $mode;
+}
+
+global proc manipScaleToggleXformConstraint() {
+	global string $manipScalePrevXformConstraint;
+	string $mode = `xformConstraint -q -type`;
+	manipScaleSetXformConstraint($mode == "none" ? $manipScalePrevXformConstraint : "none");
+}
+
+global proc manipScaleBuildXformConstraintMenu(string $menu) {
+	menu -e -dai $menu;
+	menuItem -label (uiRes("m_manipMoveProperties.kManipMoveXformConstraintNone")) -p $menu -c "manipScaleSetXformConstraint none";
+	menuItem -label (uiRes("m_manipMoveProperties.kManipMoveXformConstraintEdge")) -p $menu -c "manipScaleSetXformConstraint edge";
+	menuItem -label (uiRes("m_manipMoveProperties.kManipMoveXformConstraintSurf")) -p $menu -c "manipScaleSetXformConstraint surface";
+}
+
+global proc scaleOrientAxesChanged(int $i, float $value)
+{
+	float $ori[] = `manipScaleContext -q -orientAxes Scale`;
+	$ori[$i] = deg_to_rad($value);
+	manipScaleContext -e -mode 6 -orientAxes $ori[0] $ori[1] $ori[2] Scale;
+}
+
+global proc manipScaleProperties () 
+{
+	global int $manipScalePrevSnapMode = 1;
+	global string $manipScalePrevXformConstraint = "surface";
+
+	// Linux Motif2.1 shrinks the checkBox, if the string is ""
+    // NT would tab over the blank (" ") string label.
+    // So...
+	string $emptyLabel = "";
+    if (`about -linux`) {
+        $emptyLabel = " ";
+    }
+
+	string $parent = `toolPropertyWindow -q -location`;
+	setParent $parent;
+
+	setUITemplate -pushTemplate OptionsTemplate;
+
+	columnLayout -adj true manipScale;
+		frameLayout -collapsable true -collapse false
+			-label (uiRes("m_manipScaleProperties.kScaleSettings")) manipScaleFrame;
+			columnLayout manipScaleOptions;
+				separator -style "none";
+
+				rowLayout -nc 3 -cw3 132 20 190;
+				text -l `uiRes("m_manipMoveProperties.kMove")` -align right axisOrientationLabel;
+
+				string $axisButton = `iconTextButton
+					-w 17 -h 26
+					-image ("popupMenuIcon.png") 
+					axisOrientMenuButton`;
+					string $axisMenu = `popupMenu -b 1 -p $axisButton`;
+					menu -e -pmc ("manipScaleBuildAxisMenu " + $axisMenu) $axisMenu;
+					string $axisMenu2 = `popupMenu -b 2 -p $axisButton`;
+					menu -e -pmc "manipScaleContext -e -mode `manipScaleContext -q -lastMode Scale` Scale" $axisMenu2;
+
+				textField 
+					-ed false
+					-width 190
+					-height 25
+					-ann `uiRes("m_manipMoveProperties.kCustomAxisOrientationAnn")`
+					axisOrientField;
+				setParent ..;
+
+				rowLayout -nc 5 -cw5 132 20 62 62 62;
+
+				text -l $emptyLabel -align right moveOrientLabel;
+
+				string $orientButton = `iconTextButton
+					-w 17 -h 26
+					-image ("popupMenuIcon.png") 
+					scaleOrientMenuButton`;
+
+					string $menu = `popupMenu -b 1 -p $orientButton`;
+					menu -e -pmc ("manipScaleBuildOrientMenu " + $menu) $menu;
+					string $menu2 = `popupMenu -b 2 -p $orientButton`;
+					menu -e -pmc "manipScaleOrient -1" $menu2;
+
+				floatField -w 62
+					-ann  `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
+					-cc "scaleOrientAxesChanged 0 #1"	
+					manipScaleOrientFieldX;
+
+				floatField -w 62
+					-ann  `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
+					-cc "scaleOrientAxesChanged 1 #1"	
+					manipScaleOrientFieldY;
+
+				floatField -w 62
+					-ann `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
+					-cc "scaleOrientAxesChanged 2 #1"	
+					manipScaleOrientFieldZ;
+				setParent ..;
+
+				separator -style "none";
+
+				rowLayout -nc 3 -cw3 132 100 50;
+
+				text -l `uiRes("m_manipMoveProperties.kPivotLabel")` -align right editPivotLabel;
+
+				iconTextButton
+					-st "textOnly"
+					-l `uiRes("m_manipMoveProperties.kEditPivot")`
+					-ann `uiRes("m_manipMoveProperties.kEditPivotAnn")` 
+					-flat 0
+					-w 100
+					-h 23
+					editPivotButton;
+
+				iconTextButton
+					-st "textOnly"
+					-l `uiRes("m_manipMoveProperties.kResetPivot")`
+					-ann `uiRes("m_manipMoveProperties.kResetPivotAnn")`
+					-flat 0
+					-w 50
+					-h 23
+					resetPivotButton;
+				setParent ..;
+
+				checkBoxGrp -ncb 1
+					-label $emptyLabel 
+					-label1 `uiRes("m_manipMoveProperties.kSnapPivotPos")` 
+					-cc ("setTRSSnapPivotPos #1")
+					-ann `uiRes("m_manipMoveProperties.kSnapPivotPosAnn")`
+					snapPivotPosCheckBx;
+
+				checkBoxGrp -ncb 1
+					-label $emptyLabel 
+					-label1 `uiRes("m_manipMoveProperties.kSnapPivotOri")`
+					-cc1 ("setTRSSnapPivotOri #1")
+					-ann `uiRes("m_manipMoveProperties.kSnapPivotOriAnn")`
+					snapPivotOriCheckBx;
+
+				checkBoxGrp -ncb 1 
+					-label $emptyLabel
+					-label1 `uiRes("m_manipMoveProperties.kPinComponentPivot")`
+					-cc1 ("setTRSPinPivot #1")
+					-ann `uiRes("m_manipMoveProperties.kPinComponentPivotAnn")`
+					pinComponentPivotCheckBx;
+
+				checkBoxGrp -ncb 1 
+					-label $emptyLabel
+					-label1 `uiRes("m_manipMoveProperties.kPivotOriHandle")`
+					-cc1 ("setTRSPivotOriHandle #1")
+					-ann `uiRes("m_manipMoveProperties.kPivotOriHandleAnn")`
+					pivotOriHandleCheckBx;
+
+				radioButtonGrp -nrb 3 
+					-label (uiRes("m_manipScaleProperties.kScalePivot"))  
+					-label1 (uiRes("m_manipScaleProperties.kDefaultPivot")) 
+					-label2 (uiRes("m_manipScaleProperties.kObjectPivot")) 
+					-label3 (uiRes("m_manipScaleProperties.kManipPivot")) 
+					-ann (uiRes("m_manipScaleProperties.kScalePivotAnn"))
+					manipPivotRadio;
+
+				separator;
+
+				rowLayout -nc 3 -cw3 132 20 131;
+					text -align right 
+						-l (uiRes("m_manipMoveProperties.kManipMoveXformConstraint"))
+						-ann (uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn"))
+						manipScaleXformConstraintLabel;
+	
+					string $constraintButton = `iconTextButton
+						-w 17 -h 26
+						-image ("popupMenuIcon.png")
+						-ann (uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn"))
+						manipScaleXformConstraintButton`;
+	
+					string $constraintMenu = `popupMenu -b 1 -p $constraintButton`;
+					menu -e -pmc ("manipScaleBuildXformConstraintMenu " + $constraintMenu) $constraintMenu;
+					string $constraintToggle = `popupMenu -b 2 -p $constraintButton`;
+					menu -e -pmc "manipScaleToggleXformConstraint" $constraintToggle;
+	
+					textField 
+						-ed false
+						-width 131
+						-height 25
+						-ann `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn")`
+						manipScaleXformConstraintModeLabel;
+	
+					setParent ..;
+
+				radioButtonGrp -nrb 2 -label $emptyLabel 
+					-label1 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAlongNormals")`
+					-label2 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintClosestPoint")`
+				 	-an1 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAlongNormalsAnn")`
+				 	-an2 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintClosestPointAnn")`
+					-cc1 ("setXformConstraintAlongNormal 1")
+					-cc2 ("setXformConstraintAlongNormal 0")
+					manipScaleXformConstraintAlongNormalRadioBtn;
+
+				rowLayout -nc 4 -cw4 132 20 77 52;
+					text -align right 
+						-l (uiRes("m_manipMoveProperties.kStepSnap"))
+						-ann (uiRes("m_manipMoveProperties.kStepSnapAnn"))
+						manipScaleSnapLabel;
+	
+					string $snapButton = `iconTextButton
+						-w 17 -h 26
+						-image ("popupMenuIcon.png")
+						-ann (uiRes("m_manipMoveProperties.kStepSnapAnn"))
+						manipScaleSnapButton`;
+	
+					string $snapMenu = `popupMenu -b 1 -p $snapButton`;
+					menu -e -pmc ("manipScaleBuildSnapMenu " + $snapMenu) $snapMenu;
+					string $snapToggle = `popupMenu -b 2 -p $snapButton`;
+					menu -e -pmc "manipScaleToggleSnapMode" $snapToggle;
+	
+					textField 
+						-ed false
+						-width 77
+						-height 25
+						-ann `uiRes("m_manipMoveProperties.kStepSnapAnn")`
+						manipScaleSnapModeLabel;
+	
+					floatField -w 52 -pre 2 -v 1.0
+						-cc "manipScaleContext -e -snapValue #1 Scale"
+						manipScaleSnapValue;
+
+					setParent ..;
+
+				checkBoxGrp
+					-label `uiRes("m_manipMoveProperties.kPreserveChildPos")`
+					-ann `uiRes("m_manipMoveProperties.kPreserveChildPosAnn")`
+					scalePreserveChildCheckBx;
+
+				checkBoxGrp -ncb 1 
+					-label `uiRes("m_manipMoveProperties.kPreserveUVMove")`
+					-label1 $emptyLabel
+					-ann `uiRes("m_manipMoveProperties.kPreserveUVMoveAnn")`
+					scalePreserveUVCheckBx;
+
+				checkBoxGrp -ncb 1
+					-vis true
+					-label `uiRes("m_manipMoveProperties.kTweakMode")`  -label1 ""  
+					-ann `uiRes("m_manipMoveProperties.kTweakModeAnn")`
+					tweakModeCheckBox;
+
+				checkBoxGrp -ncb 1 
+					-label (uiRes("m_manipScaleProperties.kPreventNegativeScale")) 
+					-label1 $emptyLabel
+					-ann (uiRes("m_manipScaleProperties.kPreventNegativeScaleAnn"))
+					preventNegativeScale;
+
+			setParent ..;
+		setParent ..;
+
+		commonSelectProperties(/*collapsed*/true);
+		softSelectProperties(/*collapsed*/true, /*uvTool*/false);
+		reflectionProperties(/*collapsed*/true);
+
+	setParent ..;
+	
+	setUITemplate -popTemplate;
+}
