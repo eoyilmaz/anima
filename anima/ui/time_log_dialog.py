@@ -452,6 +452,19 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             end.hour(), end.minute()
         )
 
+        today_midnight = datetime.datetime.now().replace(
+            hour=23, minute=59, second=59, microsecond=999
+        )
+
+        # raise an error if the user is trying to enter a TimeLog to the future
+        if start_date > today_midnight or end_date > today_midnight:
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Gelecege TimeLog giremezsiniz!!!',
+            )
+            return
+
         # convert them to utc
         utc_start_date = self.local_to_utc(start_date)
         utc_end_date = self.local_to_utc(end_date)
