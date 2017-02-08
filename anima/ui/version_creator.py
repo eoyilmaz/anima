@@ -8,21 +8,10 @@ import logging
 import datetime
 
 import os
-
-from sqlalchemy import distinct
-from stalker.db import DBSession
-from stalker import (defaults, Version, Project, Task, LocalSession, Group)
-
 import anima
-from anima import utils, logger, power_users_group_names
-from anima.env.base import EnvironmentBase
-from anima.env.external import ExternalEnvFactory
-from anima.exc import PublishError
-from anima.recent import RecentFileManager
-from anima.repr import Representation
-from anima.ui import utils as ui_utils
+from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import (IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, version_updater)
+from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 from anima.ui.models import TaskTreeModel, TakesListWidget
 
@@ -212,6 +201,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # created_with
             item = QtWidgets.QTableWidgetItem()
             if version.created_with:
+                from anima.ui import utils as ui_utils
                 item.setIcon(ui_utils.get_icon(version.created_with.lower()))
 
             if is_published:
@@ -262,6 +252,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
                 file_size = float(
                     os.path.getsize(version.absolute_full_path)) / 1048576
 
+            from stalker import defaults
             item = QtWidgets.QTableWidgetItem(
                 defaults.file_size_format % file_size)
             # align to left and vertical center
@@ -442,10 +433,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         logger.debug("finished initializing the interface")
 
     def close(self):
-        #logger.debug('closing DBSession')
-        #DBSession.close()
-        #DBSession.connection().close()
-        #DBSession.remove()
         logger.debug('closing the ui')
         QtWidgets.QDialog.close(self)
 
@@ -652,6 +639,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def logout(self):
         """log the current user out
         """
+        from stalker import LocalSession
         lsession = LocalSession()
         lsession.delete()
         self.close()
@@ -659,6 +647,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def is_power_user(self, user):
         """A predicate that returns if the user is a power user
         """
+        from anima import power_users_group_names
+        from stalker import Group
         power_users_groups = Group.query\
             .filter(Group.name.in_(power_users_group_names))\
             .all()
@@ -733,14 +723,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     # publish it
                     version.is_published = True
                     version.updated_by = logged_in_user
-                    DBSession.add(version)
-                    DBSession.commit()
+                    from stalker import db
+                    db.DBSession.add(version)
+                    db.DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
                 elif choice == "Un-Publish":
                     # allow the user un-publish this version if it is not used
                     # by any other versions
+                    from stalker import Version
                     versions_using_this_versions = \
                         Version.query\
                                .filter(Version.inputs.contains(version))\
@@ -769,7 +761,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
                     # check if this user is one of the responsible or a power
                     # user
-                    if not logged_in_user in version.task.responsible \
+                    if logged_in_user not in version.task.responsible \
                        and not logged_in_user in version.task.resources \
                        and not self.is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
@@ -784,12 +776,14 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
                     version.is_published = False
                     version.updated_by = logged_in_user
-                    DBSession.add(version)
-                    DBSession.commit()
+                    from stalker import db
+                    db.DBSession.add(version)
+                    db.DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_tableWidget()
                     return
 
+            from anima import utils
             if choice == 'Browse Path...':
                 path = os.path.expandvars(version.absolute_full_path)
                 try:
@@ -842,8 +836,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                         # change the description of the version
                         version.description = new_description
 
-                        DBSession.add(version)
-                        DBSession.commit()
+                        from stalker import db
+                        db.DBSession.add(version)
+                        db.DBSession.commit()
 
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_tableWidget()
@@ -871,6 +866,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         task = item.task
+        from stalker import Task
         if not isinstance(task, Task):
             return
 
@@ -974,6 +970,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """clears the recent files
         """
         if self.environment:
+            from anima.recent import RecentFileManager
             rfm = RecentFileManager()
             rfm[self.environment.name] = []
             rfm.save()
@@ -995,6 +992,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.recent_files_comboBox.clear()
         # update recent files list
         if self.environment:
+            from anima.recent import RecentFileManager
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.environment.name]
@@ -1036,6 +1034,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         logged_in_user = self.get_logged_in_user()
 
         logger.debug('creating a new model')
+        from stalker import Project
         projects = Project.query.order_by(Project.name).all()
         logger.debug('projects: %s' % projects)
 
@@ -1088,13 +1087,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
 
+            from stalker import db, Project
             if isinstance(task, Project):
                 return
 
             if task.is_leaf:
+                from sqlalchemy import distinct
+                from stalker import Version
                 takes = map(
                     lambda x: x[0],
-                    DBSession.query(distinct(Version.take_name))
+                    db.DBSession.query(distinct(Version.take_name))
                     .filter(Version.task == task)
                     .all()
                 )
@@ -1225,6 +1227,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.search_task_lineEdit.setVisible(False)
 
         # fill programs list
+        from anima.env.external import ExternalEnvFactory
         env_factory = ExternalEnvFactory()
         env_names = env_factory.get_env_names(
             name_format=self.environment_name_format
@@ -1325,6 +1328,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         if not self.environment:
             # set the environment_comboBox
+            from anima.env.external import ExternalEnvFactory
             env_factory = ExternalEnvFactory()
             try:
                 env = env_factory.get_env(version.created_with)
@@ -1415,6 +1419,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         logger.debug('update_previous_versions_tableWidget is started')
         self.previous_versions_tableWidget.clear()
 
+        from stalker import Task
         task = self.get_task()
         if not task or not isinstance(task, Task):
             return
@@ -1432,6 +1437,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # query the Versions of this type and take
+        from stalker import Version
         query = Version.query \
             .filter(Version.task == task) \
             .filter(Version.take_name == take_name)
@@ -1507,6 +1513,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         :returns: :class:`~oyProjectManager.models.version.Version` instance
         """
         # create a new version
+        from stalker import Task
         task = self.get_task()
         if not task or not isinstance(task, Task):
             return None
@@ -1519,6 +1526,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         description = self.description_textEdit.toPlainText()
         published = self.publish_checkBox.isChecked()
 
+        from stalker import Version
         version = Version(
             task=task,
             created_by=user,
@@ -1568,6 +1576,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         logger.debug("saving the data as a new version")
 
         # get the new version
+        from stalker import db
         try:
             new_version = self.get_new_version()
         except (TypeError, ValueError) as e:
@@ -1577,7 +1586,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             except UnicodeEncodeError:
                 error_message = unicode(e)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
-            DBSession.rollback()
+
+            db.DBSession.rollback()
             return None
 
         if not new_version:
@@ -1590,7 +1600,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
             )
-            DBSession.rollback()
+            db.DBSession.rollback()
             return
 
         # call the environments save_as method
@@ -1599,6 +1609,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         if not environment:
             # get the environment
             env_name = self.environment_comboBox.currentText()
+            from anima.env.external import ExternalEnvFactory
             env_factory = ExternalEnvFactory()
             environment = env_factory.get_env(
                 env_name,
@@ -1607,7 +1618,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
-                DBSession.rollback()
+                db.DBSession.rollback()
                 return
             logger.debug('env: %s' % environment.name)
         else:
@@ -1638,6 +1649,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                         # no, just return
                         return
 
+        from anima.exc import PublishError
         try:
             environment.save_as(new_version)
         except (RuntimeError, PublishError) as e:
@@ -1653,7 +1665,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 error_message
             )
 
-            DBSession.rollback()
+            db.DBSession.rollback()
             return
 
         if is_external_env:
@@ -1679,7 +1691,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # check if the new version is pointing to a valid file
         if os.path.exists(new_version.absolute_full_path):
             # save the new version to the database
-            DBSession.add(new_version)
+            db.DBSession.add(new_version)
         else:
             # raise an error
             QtWidgets.QMessageBox.critical(
@@ -1689,9 +1701,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 'and the file is not created!\n\n'
                 'Please save again!' % environment.name
             )
-            DBSession.rollback()
+            db.DBSession.rollback()
 
-        DBSession.commit()
+        db.DBSession.commit()
 
         if is_external_env:
             # refresh the UI
@@ -1764,6 +1776,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             if reference_resolution['create'] \
                or reference_resolution['update']:
                 # invoke the version_updater for this scene
+                from anima.ui import version_updater
                 version_updater_main_dialog = \
                     version_updater.MainDialog(
                         environment=self.environment,
@@ -1802,7 +1815,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             use_namespace = self.useNameSpace_checkBox.isChecked()
 
             # check if it has any representations
-            # .filter(Version.parent == previous_version)\  
+            # .filter(Version.parent == previous_version)\
+            from stalker import Version
             all_reprs = Version.query\
                 .filter(Version.task == previous_version.task)\
                 .filter(Version.take_name.ilike(previous_version.take_name + '@%'))\
@@ -1812,6 +1826,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText('Which Repr.?')
+                from anima.repr import Representation
                 base_button = \
                     repr_message_box.addButton(
                         Representation.base_repr_name,
@@ -1893,6 +1908,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def clear_thumbnail(self):
         """clears the thumbnail_graphicsView
         """
+        from anima.ui import utils as ui_utils
         ui_utils.clear_thumbnail(self.thumbnail_graphicsView)
 
     def update_thumbnail(self):
@@ -1901,6 +1917,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # get the current task
         task = self.get_task()
         if task:
+            from anima.ui import utils as ui_utils
             ui_utils.update_gview_with_task_thumbnail(
                 task,
                 self.thumbnail_graphicsView
@@ -1909,6 +1926,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def upload_thumbnail_push_button_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
+        from anima.ui import utils as ui_utils
         thumbnail_full_path = ui_utils.choose_thumbnail(self)
 
         # if the thumbnail_full_path is empty do not do anything
@@ -1961,6 +1979,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """runs when find_from_path_pushButton is clicked
         """
         full_path = self.find_from_path_lineEdit.text()
+        from anima.env.base import EnvironmentBase
         env = EnvironmentBase()
         version = env.get_version_from_full_path(full_path)
         self.restore_ui(version)
