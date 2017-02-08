@@ -1418,6 +1418,11 @@ def update_audit_info():
 def generate_thumbnail():
     """generates thumbnail for the current scene
     """
+    # TODO: For now skip if this is Maya2017
+    import pymel
+    if pymel.versions.current() >= pymel.versions.v2017:
+        return
+
     # skip this if maya is running in batch mode
     if pm.general.about(batch=1):
         return
