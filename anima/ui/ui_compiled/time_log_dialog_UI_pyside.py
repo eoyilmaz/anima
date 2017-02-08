@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 01:02:02 2017
+# Created: Wed Feb 08 13:23:23 2017
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -18,11 +18,10 @@ class Ui_Dialog(object):
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setObjectName("formLayout")
-        self.label_3 = QtGui.QLabel(Dialog)
-        self.label_3.setObjectName("label_3")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label_3)
+        self.tasks_label = QtGui.QLabel(Dialog)
+        self.tasks_label.setObjectName("tasks_label")
+        self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.tasks_label)
         self.tasks_comboBox = QtGui.QComboBox(Dialog)
-        self.tasks_comboBox.setEditable(False)
         self.tasks_comboBox.setObjectName("tasks_comboBox")
         self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.tasks_comboBox)
         self.task_progressBar = QtGui.QProgressBar(Dialog)
@@ -62,9 +61,9 @@ class Ui_Dialog(object):
         self.info_area_label = QtGui.QLabel(Dialog)
         self.info_area_label.setObjectName("info_area_label")
         self.formLayout.setWidget(6, QtGui.QFormLayout.FieldRole, self.info_area_label)
-        self.label_8 = QtGui.QLabel(Dialog)
-        self.label_8.setObjectName("label_8")
-        self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.label_8)
+        self.revision_label = QtGui.QLabel(Dialog)
+        self.revision_label.setObjectName("revision_label")
+        self.formLayout.setWidget(7, QtGui.QFormLayout.LabelRole, self.revision_label)
         self.revision_type_comboBox = QtGui.QComboBox(Dialog)
         self.revision_type_comboBox.setObjectName("revision_type_comboBox")
         self.formLayout.setWidget(7, QtGui.QFormLayout.FieldRole, self.revision_type_comboBox)
@@ -101,7 +100,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_3.setText(QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
+        self.tasks_label.setText(QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
         self.label_4.setText(QtGui.QApplication.translate("Dialog", "Resource", None, QtGui.QApplication.UnicodeUTF8))
         self.label_5.setText(QtGui.QApplication.translate("Dialog", "Date", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("Dialog", "Start", None, QtGui.QApplication.UnicodeUTF8))
@@ -109,7 +108,7 @@ class Ui_Dialog(object):
         self.label_2.setText(QtGui.QApplication.translate("Dialog", "End", None, QtGui.QApplication.UnicodeUTF8))
         self.end_timeEdit.setDisplayFormat(QtGui.QApplication.translate("Dialog", "HH:mm", None, QtGui.QApplication.UnicodeUTF8))
         self.info_area_label.setText(QtGui.QApplication.translate("Dialog", "INFO", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_8.setText(QtGui.QApplication.translate("Dialog", "<html><head/><body><p align=\"right\">Revision<br/>Type</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.revision_label.setText(QtGui.QApplication.translate("Dialog", "<html><head/><body><p align=\"right\">Revision<br/>Type</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.label_7.setText(QtGui.QApplication.translate("Dialog", "Description", None, QtGui.QApplication.UnicodeUTF8))
         self.label_9.setText(QtGui.QApplication.translate("Dialog", "Status", None, QtGui.QApplication.UnicodeUTF8))
         self.not_finished_yet_radioButton.setText(QtGui.QApplication.translate("Dialog", "Not Finished Yet", None, QtGui.QApplication.UnicodeUTF8))

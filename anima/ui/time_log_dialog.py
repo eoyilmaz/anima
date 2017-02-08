@@ -42,10 +42,49 @@ class TimeEdit(QtWidgets.QTimeEdit):
         """
         if self.currentSectionIndex() == 1:
             if step < 0:
-                step = -self.resolution
+                # auto update the hour section to the next hour
+                minute = self.time().minute()
+                if minute == 0:
+                    # increment the hour section by one
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour() - 1,
+                            60 - self.resolution
+                        )
+                    )
+                else:
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour(),
+                            minute - self.resolution
+                        )
+                    )
+
             else:
-                step = self.resolution
-        super(TimeEdit, self).stepBy(step)
+                # auto update the hour section to the next hour
+                minute = self.time().minute()
+                if minute == (60 - self.resolution):
+                    # increment the hour section by one
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour()+1,
+                            0
+                        )
+                    )
+                else:
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour(),
+                            minute + self.resolution
+                        )
+                    )
+        else:
+            if step < 0:
+                if self.time().hour() != 0:
+                    super(TimeEdit, self).stepBy(step)
+            else:
+                if self.time().hour() != 23:
+                    super(TimeEdit, self).stepBy(step)
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -95,9 +134,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.end_timeEdit.setWrapping(True)
         self.formLayout.insertRow(5, self.label_2, self.end_timeEdit)
         self.end_timeEdit.setDisplayFormat("HH:mm")
-
-        # disable request revision for now
-        self.submit_for_final_review_radioButton.setEnabled(False)
 
         current_time = QtCore.QTime.currentTime()
         # round the minutes to the resolution
@@ -175,7 +211,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         revision_types = [
             'Ajans',
             'Yonetmen',
-            'Ic_Revizyon',
+            'Ic Revizyon',
             'Yetistiremedim'
         ]
 
@@ -188,11 +224,13 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         from stalker import Status, Task
         status_wfd = Status.query.filter(Status.code == 'WFD').first()
         status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+        status_prev = Status.query.filter(Status.code == 'PREV').first()
 
         all_tasks = Task.query\
             .filter(Task.resources.contains(self.logged_in_user))\
             .filter(Task.status != status_wfd)\
             .filter(Task.status != status_cmpl)\
+            .filter(Task.status != status_prev)\
             .all()
 
         # TODO: Please use a custom ComboBox that can hold tasks in it
@@ -297,8 +335,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         start_time = self.start_timeEdit.time()
         end_time = self.end_timeEdit.time()
         time_log_seconds = start_time.secsTo(end_time)
-        percentage = (logged_seconds + time_log_seconds) / \
-                     float(schedule_seconds) * 100
+        percentage = \
+            (logged_seconds + time_log_seconds) / float(schedule_seconds) * 100
         return percentage
 
     def update_percentage(self):
@@ -361,7 +399,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.revision_label.hide()
         self.revision_type_comboBox.hide()
 
-    def utc_to_local(self, utc_dt):
+    @classmethod
+    def utc_to_local(cls, utc_dt):
         """converts the given UTC time to local time
         """
         import calendar
@@ -371,10 +410,11 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         assert utc_dt.resolution >= datetime.timedelta(microseconds=1)
         return local_dt.replace(microsecond=utc_dt.microsecond)
 
-    def local_to_utc(self, local_dt):
+    @classmethod
+    def local_to_utc(cls, local_dt):
         """converts the given local time to UTC time
         """
-        return local_dt - (self.utc_to_local(local_dt) - local_dt)
+        return local_dt - (cls.utc_to_local(local_dt) - local_dt)
 
     def accept(self):
         """overridden accept method
@@ -383,9 +423,12 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         task = self.get_current_task()
         resource = self.get_current_resource()
         description = self.description_plainTextEdit.toPlainText()
-        revision_cause_text = self.revision_type_comboBox.currentText()
+        revision_cause_text = \
+            self.revision_type_comboBox.currentText().replace(' ', '_')
 
         is_complete = self.set_as_complete_radioButton.isChecked()
+        submit_to_final_review = \
+            self.submit_for_final_review_radioButton.isChecked()
 
         # get the revision Types
         from stalker import Type
@@ -422,15 +465,17 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         # now if we are not using extra time just create the TimeLog
         from stalker import db, TimeLog
         from stalker.exceptions import OverBookedError
+        utc_now = self.local_to_utc(datetime.datetime.now())
         try:
             new_time_log = TimeLog(
                 task=task,
                 resource=resource,
                 start=utc_start_date,
                 end=utc_end_date,
-                description=description
+                description=description,
+                date_created=utc_now
             )
-        except OverBookedError as e:
+        except OverBookedError:
             # inform the user that it can not do that
             QtWidgets.QMessageBox.critical(
                 self,
@@ -449,6 +494,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
                 self,
                 'Error',
                 'Database hatasi!!!'
+                '<br>'
+                '%s' % e
             )
             db.DBSession.rollback()
             return
@@ -472,12 +519,25 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
                     self.extended_hours,
                     self.extended_minutes
                 ),
-                type=revision_type
+                type=revision_type,
+                created_by=self.logged_in_user,
+                date_created=self.local_to_utc(datetime.datetime.now())
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
 
-            db.DBSession.commit()
+            try:
+                db.DBSession.commit()
+            except IntegrityError as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'Database hatasi!!!'
+                    '<br>'
+                    '%s' % e
+                )
+                db.DBSession.rollback()
+                return
 
         if is_complete:
             # set the status to complete
@@ -492,7 +552,9 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             new_note = Note(
                 content='%s has changed this task status to Completed' %
                         resource.name,
-                type=forced_status_type
+                type=forced_status_type,
+                created_by=self.logged_in_user,
+                date_created=self.local_to_utc(datetime.datetime.now())
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
@@ -501,6 +563,70 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
             task.update_parent_statuses()
             db.DBSession.commit()
+
+        elif submit_to_final_review:
+            # clip the Task timing to current time logs
+            from stalker import Task
+            schedule_timing, schedule_unit = \
+                task.least_meaningful_time_unit(
+                    task.total_logged_seconds
+                )
+
+            task.schedule_timing = schedule_timing
+            task.schedule_unit = schedule_unit
+            db.DBSession.add(task)
+
+            try:
+                db.DBSession.commit()
+            except IntegrityError as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'Database hatasi!!!'
+                    '<br>'
+                    '%s' % e
+                )
+                db.DBSession.rollback()
+                return
+
+            # request a review
+            reviews = task.request_review()
+            utc_now = self.local_to_utc(datetime.datetime.now())
+            for review in reviews:
+                review.created_by = review.updated_by = self.logged_in_user
+                review.date_created = utc_now
+                review.date_updated = utc_now
+            db.DBSession.add_all(reviews)
+
+            # and create a Note for the Task
+            request_review_note_type = \
+                Type.query\
+                    .filter(Type.target_entity_type == 'Note')\
+                    .filter(Type.name == 'Request Review')\
+                    .first()
+
+            from stalker import Note
+            request_review_note = Note(
+                type=request_review_note_type,
+                created_by=self.logged_in_user,
+                date_created=self.local_to_utc(datetime.datetime.now())
+            )
+            db.DBSession.add(request_review_note)
+            db.DBSession.add(task)
+            task.notes.append(request_review_note)
+
+            try:
+                db.DBSession.commit()
+            except IntegrityError as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'Database hatasi!!!'
+                    '<br>'
+                    '%s' % e
+                )
+                db.DBSession.rollback()
+                return
 
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()

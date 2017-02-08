@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 01:50:27 2017
+# Created: Wed Feb 08 13:17:52 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
