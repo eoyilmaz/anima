@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file './ui_files/version_updater.ui'
 #
-# Created: Tue May  6 17:38:32 2014
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Wed Feb 08 15:27:53 2017
+#      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
 

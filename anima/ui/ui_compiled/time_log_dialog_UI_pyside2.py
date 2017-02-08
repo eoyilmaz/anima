@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 14:11:13 2017
+# Created: Wed Feb 08 15:14:40 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,6 +38,7 @@ class Ui_Dialog(object):
         self.label_5.setObjectName("label_5")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_5)
         self.calendarWidget = QtWidgets.QCalendarWidget(Dialog)
+        self.calendarWidget.setFirstDayOfWeek(QtCore.Qt.Monday)
         self.calendarWidget.setObjectName("calendarWidget")
         self.formLayout.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.calendarWidget)
         self.label = QtWidgets.QLabel(Dialog)
