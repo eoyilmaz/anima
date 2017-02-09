@@ -38,6 +38,7 @@ VALID_MATERIALS = [
     u'displacementShader',
     u'lambert',
     u'blinn',
+    u'hairPhysicalShader',  # for Maya2017
     u'layeredShader',
     u'oceanShader',
     u'phong',
@@ -972,7 +973,11 @@ def check_objects_still_using_default_shader():
     if v and Representation.repr_separator in v.take_name:
         return
 
-    objects_with_default_material = mc.sets('initialShadingGroup', q=1)
+    objects_with_default_material = \
+        mc.ls(
+            mc.sets('initialShadingGroup', q=1),
+            type=['mesh', 'nurbsSurface']
+        )
     if objects_with_default_material and len(objects_with_default_material):
         mc.select(objects_with_default_material)
         raise PublishError(
