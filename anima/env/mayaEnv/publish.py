@@ -828,12 +828,12 @@ def check_all_tx_textures():
 
     for node in pm.ls(type='file'):
         file_path = node.fileTextureName.get()
-        if os.path.spliteext(file_path)[-1] not in excluded_extensions:
+        if os.path.splitext(file_path)[-1] not in excluded_extensions:
             add_path(file_path)
 
     for node in pm.ls(type='aiImage'):
         file_path = node.filename.get()
-        if os.path.spliteext(file_path)[-1] not in excluded_extensions:
+        if os.path.splitext(file_path)[-1] not in excluded_extensions:
             add_path(file_path)
 
     import glob
