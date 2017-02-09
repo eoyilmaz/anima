@@ -1420,7 +1420,7 @@ def generate_thumbnail():
     """
     # TODO: For now skip if this is Maya2017
     import pymel
-    if pymel.versions.current() >= pymel.versions.v2017:
+    if pymel.versions.current() >= 201700:
         return
 
     # skip this if maya is running in batch mode
