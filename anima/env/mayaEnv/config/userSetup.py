@@ -142,3 +142,9 @@ if not pm.general.about(batch=1):
                 pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
     else:
         print('no **%s** env var for shelves' % custom_shelves_env_var_name)
+
+    # patch auto-tx option in arnold
+    from anima.env.mayaEnv.config import arnold_patches
+    from mtoa.ui.globals import settings
+    settings.createArnoldTextureSettings = \
+        arnold_patches.createArnoldTextureSettings
