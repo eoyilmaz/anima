@@ -143,8 +143,9 @@ if not pm.general.about(batch=1):
     else:
         print('no **%s** env var for shelves' % custom_shelves_env_var_name)
 
-    # patch auto-tx option in arnold
-    from anima.env.mayaEnv.config import arnold_patches
-    from mtoa.ui.globals import settings
-    settings.createArnoldTextureSettings = \
-        arnold_patches.createArnoldTextureSettings
+    # patch auto-tx option in arnold for Maya 2017
+    if pymel.versions.current() > 201700:
+        from anima.env.mayaEnv.config import arnold_patches
+        from mtoa.ui.globals import settings
+        settings.createArnoldTextureSettings = \
+            arnold_patches.createArnoldTextureSettings
