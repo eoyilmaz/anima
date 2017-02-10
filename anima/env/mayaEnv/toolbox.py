@@ -5065,19 +5065,44 @@ class Animation(object):
     def set_range_from_shot(cls):
         """sets the playback range from a shot node in the scene
         """
-        shot = pm.ls(type='shot')[0]
-        if not shot:
-            return
+        shots = pm.ls(type='shot')
+        min_frame = None
+        max_frame = None
+        if shots:
+            # use the available shot node
+            shot = shots[0]
+            min_frame = shot.getAttr('startFrame')
+            max_frame = shot.getAttr('endFrame')
+        else:
+            # check if this is a shot related scene
+            from anima.env import mayaEnv
+            m = mayaEnv.Maya()
+            v = m.get_current_version()
+            if v:
+                t = v.task
+                from stalker import Shot
+                parents = t.parents
+                parents.reverse()
+                for p in parents:
+                    if isinstance(p, Shot):
+                        pm.warning(
+                            'No shot node in the scene, '
+                            'using the Shot task!!!'
+                        )
+                        min_frame = p.cut_in
+                        max_frame = p.cut_out
 
-        min_frame = shot.getAttr('startFrame')
-        max_frame = shot.getAttr('endFrame')
-
-        pm.playbackOptions(
-            ast=min_frame,
-            aet=max_frame,
-            min=min_frame,
-            max=max_frame
-        )
+        if min_frame and max_frame:
+            pm.playbackOptions(
+                ast=min_frame,
+                aet=max_frame,
+                min=min_frame,
+                max=max_frame
+            )
+        else:
+            pm.error(
+                'No shot node in the scene, nor the task is related to a Shot!'
+            )
 
 
 def fur_map_unlocker(furD, lock=False):
