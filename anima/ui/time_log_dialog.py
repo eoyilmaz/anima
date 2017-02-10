@@ -87,6 +87,53 @@ class TimeEdit(QtWidgets.QTimeEdit):
                     super(TimeEdit, self).stepBy(step)
 
 
+class TaskComboBox(QtWidgets.QComboBox):
+    """A customized combobox that holds Tasks
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TaskComboBox, self).__init__(*args, **kwargs)
+
+    def showPopup(self, *args, **kwargs):
+        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
+        super(TaskComboBox, self).showPopup(*args, **kwargs)
+
+    def addTasks(self, tasks):
+        """Overridden addItems method
+
+        :param tasks: A list of Tasks
+        :return:
+        """
+        # prepare task labels
+        task_labels = []
+        for task in tasks:
+            # this is dirty
+            task_label = '%s (%s)' % (
+                task.name,
+                '%s | %s' % (
+                    task.project.name,
+                    ' | '.join(map(lambda x: x.name, task.parents))
+                )
+            )
+            self.addItem(task_label, task)
+
+    def currentTask(self):
+        """returns the current task
+        """
+        return self.itemData(self.currentIndex())
+
+    def setCurrentTask(self, task):
+        """sets the current task to the given task
+        """
+        for i in range(self.count()):
+            t = self.itemData(i)
+            if t.id == task.id:
+                self.setCurrentIndex(i)
+                return
+
+        raise IndexError('Task not found!')
+
+
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param app_in: A Qt Application instance, which you can pass to let the UI
@@ -103,7 +150,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
     """The TimeLog Dialog
     """
 
-    def __init__(self, parent=None, task=None):
+    def __init__(self, parent=None, task=None, timelog=None):
         logger.debug("initializing the interface")
         # store the logged in user
         self.logged_in_user = None
@@ -111,12 +158,22 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.extended_hours = None
         self.extended_minutes = None
 
+        self.timelog = timelog
+        print('self.timelog: %s' % self.timelog)
         self.timelog_created = False
 
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
 
         # customize the ui elements
+        self.tasks_comboBox = TaskComboBox(self)
+        self.tasks_comboBox.setObjectName("tasks_comboBox")
+        self.formLayout.setWidget(
+            0,
+            QtWidgets.QFormLayout.FieldRole,
+            self.tasks_comboBox
+        )
+
         # self.start_timeEdit.deleteLater()
         self.start_timeEdit = TimeEdit(self, resolution=timing_resolution)
         self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
@@ -156,7 +213,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.center_window()
 
         # if given a task set it in to the view
-        self.set_current_task(task)
+        if not self.timelog:
+            self.set_current_task(task)
 
     def close(self):
         logger.debug('closing the ui')
@@ -232,31 +290,74 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             .filter(Task.status != status_cmpl)\
             .filter(Task.status != status_prev)\
             .all()
-
-        # TODO: Please use a custom ComboBox that can hold tasks in it
-        # prepare task labels
-        task_labels = []
-        for task in all_tasks:
-            # this is dirty
-            task_label = '%s (%s) - %s' % (
-                task.name,
-                '%s | %s' % (
-                    task.project.name,
-                    ' | '.join(map(lambda x: x.name, task.parents))
-                ),
-                task.id
-            )
-            task_labels.append(task_label)
-
         # sort the task labels
-        task_labels = sorted(task_labels, key=lambda x: x.split('(')[1])
+        all_tasks = sorted(
+            all_tasks,
+            key=lambda task:
+                '%s | %s' % (
+                    task.project.name.lower(),
+                    ' | '.join(map(lambda x: x.name.lower(), task.parents))
+                )
+        )
 
-        self.tasks_comboBox.addItems(task_labels)
+        self.tasks_comboBox.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToContentsOnFirstShow
+        )
+        self.tasks_comboBox.setFixedWidth(295)
+        self.tasks_comboBox.clear()
+        self.tasks_comboBox.addTasks(all_tasks)
+
+        self.tasks_comboBox.setSizePolicy(
+            QtWidgets.QSizePolicy.MinimumExpanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+
+        # if a time log is given set the fields from the given time log
+        if self.timelog:
+            # first update Task
+            try:
+                self.tasks_comboBox.setCurrentTask(self.timelog.task)
+            except IndexError as e:
+                return
+
+            # set the resource
+
+            # and disable the tasks_comboBox and resource_comboBox
+            self.tasks_comboBox.setEnabled(False)
+            self.resource_comboBox.setEnabled(False)
+
+            # set the start and end time
+            start_date = self.utc_to_local(self.timelog.start)
+            end_date = self.utc_to_local(self.timelog.end)
+
+            # set the date
+            self.calendarWidget.setSelectedDate(
+                QtCore.QDate(start_date.year, start_date.month, start_date.day)
+            )
+
+            # first reset the start and end time values
+            self.start_timeEdit.setTime(QtCore.QTime(0, 0))
+            self.end_timeEdit.setTime(QtCore.QTime(23, 50))
+
+            # now set the timelog time
+            self.start_timeEdit.setTime(
+                QtCore.QTime(
+                    start_date.hour,
+                    start_date.minute
+                )
+            )
+            self.end_timeEdit.setTime(
+                QtCore.QTime(
+                    end_date.hour,
+                    end_date.minute
+                )
+            )
 
     def tasks_combo_box_index_changed(self, task_label):
         """runs when another task has been selected
         """
-        task = self.get_current_task()
+        # task = self.get_current_task()
+        task = self.tasks_comboBox.currentTask()
         self.update_percentage()
         self.update_info_text()
 
@@ -268,17 +369,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         self.resource_comboBox.clear()
         self.resource_comboBox.addItems(resource_names)
-
-    def get_current_task(self):
-        """returns the current task
-        """
-        # try to get the task
-        task_label = self.tasks_comboBox.currentText()
-        task_id = task_label.split(' - ')[1]
-        # first update the completeness value
-        from stalker import Task
-        task = Task.query.get(task_id)
-        return task
 
     def set_current_task(self, task):
         """sets the current task
@@ -329,7 +419,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.update_info_text()
 
     def calculate_percentage(self):
-        task = self.get_current_task()
+        # task = self.get_current_task()
+        task = self.tasks_comboBox.currentTask()
         schedule_seconds = task.schedule_seconds
         logged_seconds = task.total_logged_seconds
         start_time = self.start_timeEdit.time()
@@ -350,7 +441,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
     def update_info_text(self):
         """updated the info text
         """
-        task = self.get_current_task()
+        # task = self.get_current_task()
+        task = self.tasks_comboBox.currentTask()
         schedule_seconds = task.schedule_seconds
         logged_seconds = task.total_logged_seconds
         start_time = self.start_timeEdit.time()
@@ -359,6 +451,10 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         remaining_seconds = \
             schedule_seconds - (logged_seconds + time_log_seconds)
+
+        # if a time log given add its seconds
+        if self.timelog:
+            remaining_seconds += self.timelog.total_seconds
 
         # calculate the remaining minutes and hours
         self.no_time_left = False
@@ -420,7 +516,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         """overridden accept method
         """
         # get the info
-        task = self.get_current_task()
+        task = self.tasks_comboBox.currentTask()
         resource = self.get_current_resource()
         description = self.description_plainTextEdit.toPlainText()
         revision_cause_text = \
@@ -479,41 +575,50 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         from stalker import db, TimeLog
         from stalker.exceptions import OverBookedError
         utc_now = self.local_to_utc(datetime.datetime.now())
-        try:
-            new_time_log = TimeLog(
-                task=task,
-                resource=resource,
-                start=utc_start_date,
-                end=utc_end_date,
-                description=description,
-                date_created=utc_now
-            )
-        except OverBookedError:
-            # inform the user that it can not do that
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'O saatte baska time log var!!!'
-            )
-            return
 
-        from sqlalchemy.exc import IntegrityError
-        try:
-            db.DBSession.add(new_time_log)
+        if not self.timelog:
+            try:
+                new_time_log = TimeLog(
+                    task=task,
+                    resource=resource,
+                    start=utc_start_date,
+                    end=utc_end_date,
+                    description=description,
+                    date_created=utc_now
+                )
+            except OverBookedError:
+                # inform the user that it can not do that
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'O saatte baska time log var!!!'
+                )
+                return
+
+            from sqlalchemy.exc import IntegrityError
+            try:
+                db.DBSession.add(new_time_log)
+                db.DBSession.commit()
+                self.timelog_created = True
+            except IntegrityError as e:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'Database hatasi!!!'
+                    '<br>'
+                    '%s' % e
+                )
+                db.DBSession.rollback()
+                return
+        else:
+            # just update the date values
+            self.timelog.start = utc_start_date
+            self.timelog.end = utc_end_date
+            self.timelog.date_updated = utc_now
+            db.DBSession.add(self.timelog)
             db.DBSession.commit()
-            self.timelog_created = True
-        except IntegrityError as e:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Database hatasi!!!'
-                '<br>'
-                '%s' % e
-            )
-            db.DBSession.rollback()
-            return
 
-        if not self.no_time_left:
+        if self.no_time_left:
             # we have no time left so automatically extend the task
             from stalker import Task
             schedule_timing, schedule_unit = \

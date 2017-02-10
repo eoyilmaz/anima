@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files\time_log_dialog.ui'
 #
-# Created: Wed Feb 08 15:27:53 2017
+# Created: Fri Feb 10 02:41:00 2017
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(343, 546)
+        Dialog.resize(447, 546)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtGui.QFormLayout()
@@ -21,9 +21,6 @@ class Ui_Dialog(object):
         self.tasks_label = QtGui.QLabel(Dialog)
         self.tasks_label.setObjectName("tasks_label")
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.tasks_label)
-        self.tasks_comboBox = QtGui.QComboBox(Dialog)
-        self.tasks_comboBox.setObjectName("tasks_comboBox")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.tasks_comboBox)
         self.task_progressBar = QtGui.QProgressBar(Dialog)
         self.task_progressBar.setProperty("value", 24)
         self.task_progressBar.setObjectName("task_progressBar")
