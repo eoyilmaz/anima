@@ -1429,3 +1429,40 @@ class MediaManager(object):
                 web_version_link.thumbnail = thumbnail_link
 
         return link
+
+
+class Exposure(object):
+    """A class for photo exposure calculation
+    """
+
+    def __init__(self, shutter=None, fstop=None, iso=None):
+        self.shutter = shutter
+        self.fstop = fstop
+        self.iso = iso
+
+    def to(self, other_exp):
+        """calculate the exposure to equalize this exposure to the the given
+        exposure
+
+        :param other_exp: An exposure instance
+        :return:
+        """
+        assert isinstance(other_exp, Exposure)
+
+        import math
+
+        shuter = math.log(other_exp.shutter / self.shutter, 2)
+        fstop = math.log(
+            (float(self.fstop) * float(self.fstop)) /
+            (float(other_exp.fstop) * float(other_exp.fstop)), 2)
+        iso = math.log(float(other_exp.iso) / float(self.iso), 2)
+        return shuter + fstop + iso
+
+    def from_(self, other_exp):
+        """calculate the exposure to equalize the other exposure to this
+        exposure
+
+        :param other_exp:
+        :return:
+        """
+        return -self.to(other_exp)
