@@ -159,7 +159,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.extended_minutes = None
 
         self.timelog = timelog
-        print('self.timelog: %s' % self.timelog)
         self.timelog_created = False
 
         super(MainDialog, self).__init__(parent)
@@ -213,8 +212,11 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.center_window()
 
         # if given a task set it in to the view
-        if not self.timelog:
-            self.set_current_task(task)
+        if not self.timelog and task:
+            try:
+                self.tasks_comboBox.setCurrentTask(task)
+            except IndexError:
+                pass
 
     def close(self):
         logger.debug('closing the ui')
@@ -303,7 +305,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.tasks_comboBox.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToContentsOnFirstShow
         )
-        self.tasks_comboBox.setFixedWidth(295)
+        self.tasks_comboBox.setFixedWidth(360)
         self.tasks_comboBox.clear()
         self.tasks_comboBox.addTasks(all_tasks)
 
@@ -369,22 +371,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         self.resource_comboBox.clear()
         self.resource_comboBox.addItems(resource_names)
-
-    def set_current_task(self, task):
-        """sets the current task
-        """
-        # print('setting current task to: %s' % task)
-        if not task:
-            return
-
-        task_id = task.id
-        index = self.tasks_comboBox.findText(
-            ' - %i' % task_id, QtCore.Qt.MatchEndsWith
-        )
-
-        # print ('index: %s' % index)
-        if index != -1:
-            self.tasks_comboBox.setCurrentIndex(index)
 
     def get_current_resource(self):
         """returns the current resource
