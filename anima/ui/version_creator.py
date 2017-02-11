@@ -9,11 +9,13 @@ import datetime
 
 import os
 import anima
-from anima import logger
+from anima import logger, user_names_lut
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 from anima.ui.models import TaskTreeModel, TakesListWidget
+
+from collections import namedtuple
 
 
 if IS_PYSIDE():
@@ -31,14 +33,32 @@ ref_depth_res = [
     'None'
 ]
 
+VersionNT = namedtuple(
+    # A named tuple for fast Version look-up
+    'VersionNT',
+    [
+        'id',
+        'version_number',
+        'is_published',
+        'created_with',
+        'created_by_id',
+        'updated_by_id',
+        'full_path',
+        'description'
+    ]
+)
+
 
 class RecentFilesComboBox(QtWidgets.QComboBox):
     """A Fixed with popup box comboBox alternative
     """
 
     def showPopup(self, *args, **kwargs):
-        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
+        view = self.view()
+        column_size_hint = view.sizeHintForColumn(0)
+        view.setMinimumWidth(column_size_hint + 20)
         super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
+
 
 
 class VersionsTableWidget(QtWidgets.QTableWidget):
@@ -213,8 +233,8 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # ------------------------------------
             # user.name
             created_by = ''
-            if version.created_by:
-                created_by = version.created_by.name
+            if version.created_by_id:
+                created_by = user_names_lut[version.created_by_id]
             item = QtWidgets.QTableWidgetItem(created_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -229,8 +249,8 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # ------------------------------------
             # user.name
             updated_by = ''
-            if version.updated_by:
-                updated_by = version.updated_by.name
+            if version.updated_by_id:
+                updated_by = user_names_lut[version.updated_by_id]
             item = QtWidgets.QTableWidgetItem(updated_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -248,13 +268,17 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # get the file size
             #file_size_format = "%.2f MB"
             file_size = -1
-            if os.path.exists(version.absolute_full_path):
+            absolute_full_path = os.path.normpath(
+                os.path.expandvars(version.full_path)
+            ).replace('\\', '/')
+            if os.path.exists(absolute_full_path):
                 file_size = float(
-                    os.path.getsize(version.absolute_full_path)) / 1048576
+                    os.path.getsize(absolute_full_path)) / 1048576
 
             from stalker import defaults
             item = QtWidgets.QTableWidgetItem(
-                defaults.file_size_format % file_size)
+                defaults.file_size_format % file_size
+            )
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -270,9 +294,9 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
             # get the file date
             file_date = datetime.datetime.today()
-            if os.path.exists(version.absolute_full_path):
+            if os.path.exists(absolute_full_path):
                 file_date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(version.absolute_full_path)
+                    os.path.getmtime(absolute_full_path)
                 )
             item = QtWidgets.QTableWidgetItem(
                 file_date.strftime(defaults.date_time_format)
@@ -862,14 +886,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         if not item:
             return
 
-        if not hasattr(item, 'task'):
+        if not hasattr(item, 'task_id'):
             return
 
-        task = item.task
+        task_id = item.task_id
+        if not task_id:
+            return
+
         from stalker import Task
-        if not isinstance(task, Task):
-            return
-
+        # TODO: Update this to use only task_id
+        task = Task.query.get(task_id)
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
         menu.addAction('Open In Web Browser...')
@@ -909,7 +935,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             no_deps_action.setEnabled(False)
 
         selected_item = menu.exec_(global_position)
-
         if selected_item:
             choice = selected_item.text()
             if choice == 'Open In Web Browser...':
@@ -942,9 +967,10 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 time_log_dialog_main_dialog.exec_()
 
             else:
-                task = selected_item.task
+                # go to the dependencies
+                dep_task = selected_item.task
                 self.find_and_select_entity_item_in_treeView(
-                    task,
+                    dep_task,
                     self.tasks_treeView
                 )
 
@@ -1089,8 +1115,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             logger.debug('tasks_treeView is updating, so returning early')
             return
 
-        task = self.get_task()
-        logger.debug('task : %s' % task)
+        task_id = self.get_task_id()
+        logger.debug('task_id : %s' % task_id)
 
         # update the thumbnail
         # TODO: do it in another thread
@@ -1100,24 +1126,38 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # get the versions of the entity
         takes = []
 
-        if task:
+        if task_id:
             # clear the takes_listWidget and fill with new data
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
 
-            from stalker import db, Project
-            if isinstance(task, Project):
+            from stalker import db, SimpleEntity
+            entity_type = db.DBSession\
+                .query(SimpleEntity.entity_type)\
+                .filter(SimpleEntity.id == task_id)\
+                .first()
+
+            if entity_type == "Project":
                 return
 
-            if task.is_leaf:
-                from sqlalchemy import distinct
-                from stalker import Version
-                takes = map(
-                    lambda x: x[0],
-                    db.DBSession.query(distinct(Version.take_name))
-                    .filter(Version.task == task)
-                    .all()
-                )
+            from stalker import db, Task
+            children_count = db.DBSession.query(Task.id)\
+                .filter(Task.parent_id == task_id)\
+                .count()
+
+            if children_count == 0:
+                from sqlalchemy import text
+                sql = """SELECT
+                    DISTINCT "Versions".take_name
+                FROM "Versions"
+                WHERE "Versions".task_id = :task_id
+                """
+                result = db.DBSession\
+                    .connection()\
+                    .execute(text(sql), task_id=task_id)\
+                    .fetchall()
+
+                takes = map(lambda x: x[0], result)
 
                 if not self.repr_as_separate_takes_checkBox.isChecked():
                     # filter representations
@@ -1438,12 +1478,19 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.previous_versions_tableWidget.clear()
 
         from stalker import Task
-        task = self.get_task()
-        if not task or not isinstance(task, Task):
+        task_id = self.get_task_id()
+        if not task_id:  # or not isinstance(task, Task):
             return
 
         # do not display any version for a container task
-        if task.is_container:
+        from stalker import db
+        children_count = db.DBSession\
+            .query(Task.id)\
+            .filter(Task.parent_id == task_id)\
+            .count()
+        if children_count > 0:
+            # clear the versions list
+            self.previous_versions_tableWidget.clear()
             return
 
         # take name
@@ -1455,9 +1502,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # query the Versions of this type and take
-        from stalker import Version
-        query = Version.query \
-            .filter(Version.task == task) \
+        from stalker import db, Version
+        query = db.DBSession.query(
+            # use only the necessary fields
+            Version.id, Version.version_number,
+            Version.is_published, Version.created_with,
+            Version.created_by_id, Version.updated_by_id,
+            Version.full_path,  # convert to absolute full path
+            Version.description,
+        )\
+            .filter(Version.task_id == task_id) \
             .filter(Version.take_name == take_name)
 
         # get the published only
@@ -1467,18 +1521,19 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # show how many
         count = self.version_count_spinBox.value()
 
-        versions = query.order_by(Version.version_number.desc()) \
-            .limit(count).all()
+        data_from_db = \
+            query.order_by(Version.version_number.desc()).limit(count).all()
+        versions = map(lambda x: VersionNT(*x), data_from_db)
         versions.reverse()
 
         self.previous_versions_tableWidget.update_content(versions)
         logger.debug('update_previous_versions_tableWidget is finished')
 
-    def get_task(self):
+    def get_task_id(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
         or project
         """
-        task = None
+        task_id = None
         selection_model = self.tasks_treeView.selectionModel()
         logger.debug('selection_model: %s' % selection_model)
 
@@ -1494,12 +1549,12 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
             if current_item:
                 task_id = current_item.task_id
-                if task_id:
-                    from stalker import db, Task
-                    task = Task.query.get(task_id)
+                # if task_id:
+                #     from stalker import db, Task
+                #     task = Task.query.get(task_id)
 
-        logger.debug('task: %s' % task)
-        return task
+        logger.debug('task_id: %s' % task_id)
+        return task_id
 
     def add_take_toolButton_clicked(self):
         """runs when the add_take_toolButton clicked
@@ -1535,10 +1590,12 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """
         # create a new version
         from stalker import Task
-        task = self.get_task()
-        if not task or not isinstance(task, Task):
+        task_id = self.get_task_id()
+
+        if not task_id:  # or not isinstance(task, Task):
             return None
 
+        task = Task.query.get(task_id)
         take_name = self.takes_listWidget.current_take_name
         user = self.get_logged_in_user()
         if not user:
@@ -1936,9 +1993,12 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """updates the thumbnail for the selected task
         """
         # get the current task
-        task = self.get_task()
-        if task:
+        task_id = self.get_task_id()
+        if task_id:
             from anima.ui import utils as ui_utils
+            # TODO: Update this too
+            from stalker import Task
+            task = Task.query.get(task_id)
             ui_utils.update_gview_with_task_thumbnail(
                 task,
                 self.thumbnail_graphicsView
@@ -1955,23 +2015,33 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # get the current task
-        task = self.get_task()
+        task_id = self.get_task_id()
 
-        ui_utils.upload_thumbnail(task, thumbnail_full_path)
+        if task_id:
+            # TODO: Update this too
+            from stalker import Task
+            task = Task.query.get(task_id)
+            ui_utils.upload_thumbnail(task, thumbnail_full_path)
 
-        # update the thumbnail
-        self.update_thumbnail()
+            # update the thumbnail
+            self.update_thumbnail()
 
     def clear_thumbnail_push_button_clicked(self):
         """clears the thumbnail of the current task if it has one
         """
-        task = self.get_task()
+        task_id = self.get_task_id()
 
-        if not task:
+        if not task_id:
             return
 
-        t = task.thumbnail
-        if not t:
+        from stalker import db, SimpleEntity
+        thumb_id = db.DBSession\
+            .query(SimpleEntity.thumbnail_id)\
+            .filter(SimpleEntity.id == task_id)\
+            .first()
+
+        # thumb_id = task.thumbnail
+        if not thumb_id:
             return
 
         answer = QtWidgets.QMessageBox.question(
@@ -1984,7 +2054,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
-            from stalker import db
+            from stalker import db, Link
+            t = Link.query.filter(Link.id == thumb_id).first()
             db.DBSession.delete(t)
             if t.thumbnail:
                 db.DBSession.delete(t.thumbnail)

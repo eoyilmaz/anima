@@ -112,6 +112,7 @@ status_colors = {
 }
 
 status_colors_by_id = {}
+user_names_lut = {}  # a table for fast user name look up
 
 
 def fill_status_colors_by_id():
@@ -127,4 +128,15 @@ def fill_status_colors_by_id():
         for status in task_status_list.statuses:
             status_colors_by_id[status.id] = status_colors[status.code.lower()]
 
+
+def fill_user_names_lut():
+    """fills the user_names_lut
+    """
+    from stalker import db, User
+    map(
+        lambda x: user_names_lut.__setitem__(x[0], x[1]),
+        db.DBSession.query(User.id, User.name).all()
+    )
+
 fill_status_colors_by_id()
+fill_user_names_lut()

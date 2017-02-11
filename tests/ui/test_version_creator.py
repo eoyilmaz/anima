@@ -434,7 +434,7 @@ class VersionCreatorTester(unittest.TestCase):
             # get the current selection
             self.assertEqual(
                 task,
-                self.dialog.get_task()
+                self.dialog.get_task_id()
             )
 
         # check if non of the other tasks or their parents are visible
@@ -445,7 +445,7 @@ class VersionCreatorTester(unittest.TestCase):
                     self.dialog.tasks_treeView
                 )
                 # get the current selection
-                self.assertTrue(self.dialog.get_task() is None)
+                self.assertTrue(self.dialog.get_task_id() is None)
 
         # now un check it and check if all tasks are shown
         self.dialog.my_tasks_only_checkBox.setChecked(False)
@@ -456,7 +456,7 @@ class VersionCreatorTester(unittest.TestCase):
                 self.dialog.tasks_treeView
             )
             # get the current selection
-            self.assertEqual(self.dialog.get_task(), task)
+            self.assertEqual(self.dialog.get_task_id(), task)
 
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
