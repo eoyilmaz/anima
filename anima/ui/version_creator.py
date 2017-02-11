@@ -1899,7 +1899,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             )
             return
 
-        logger.debug("referencing version %s" % previous_version)
+        logger.debug("referencing version with id: %s" % previous_version.id)
 
         # call the environments reference method
         if self.environment is not None:
