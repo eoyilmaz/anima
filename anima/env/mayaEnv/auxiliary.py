@@ -935,9 +935,13 @@ def perform_playblast(action):
         pb = Playblaster()
 
         # ask resolution
+        resolution = ask_playblast_resolution()
+        if resolution is None:
+            return
+
         extra_playblast_options = {
             'viewer': 1,
-            'percent': ask_playblast_resolution()
+            'percent': resolution
         }
 
         outputs = pb.playblast(
@@ -984,7 +988,7 @@ def ask_playblast_resolution():
     response = pm.confirmDialog(
         title='Resolution?',
         message='Resolution?',
-        button=['Default', 'Full', 'Half', 'Quarter'],
+        button=['Default', 'Full', 'Half', 'Quarter', 'Cancel'],
         defaultButton='Default',
         cancelButton='Default',
         dismissString='Default'
@@ -997,6 +1001,8 @@ def ask_playblast_resolution():
         return 50
     elif response == 'Quarter':
         return 25
+    elif response == 'Cancel':
+        return None
 
     return 50
 
@@ -1021,9 +1027,13 @@ def perform_playblast_shot(shot_name):
         return
 
     # ask resolution
+    resolution = ask_playblast_resolution()
+    if resolution is None:
+        return
+
     extra_playblast_options = {
         'viewer': 1,
-        'percent': ask_playblast_resolution()
+        'percent': resolution
     }
 
     shot = pm.PyNode(shot_name)
