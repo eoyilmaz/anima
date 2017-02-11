@@ -974,7 +974,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         for index in indexes:
             item = model.itemFromIndex(index)
             if item:
-                if item.task == entity:
+                if item.task_id == entity.id:
                     return item
         return None
 
@@ -1493,7 +1493,10 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             current_item = item_model.itemFromIndex(current_index)
 
             if current_item:
-                task = current_item.task
+                task_id = current_item.task_id
+                if task_id:
+                    from stalker import db, Task
+                    task = Task.query.get(task_id)
 
         logger.debug('task: %s' % task)
         return task

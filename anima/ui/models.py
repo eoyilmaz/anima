@@ -4,9 +4,9 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-from stalker import defaults, Task, Project
-
-from anima import logger, status_colors
+from stalker import (db, defaults, SimpleEntity, Task, Project, ProjectUser,
+                     Version)
+from anima import logger, status_colors_by_id
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 
 
@@ -323,17 +323,26 @@ class TaskItem(QtGui.QStandardItem):
     """Implements the Task as a QStandardItem
     """
 
+    task_entity_types = ['Task', 'Asset', 'Shot', 'Sequence']
+
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
         logger.debug(
             'TaskItem.__init__() is started for item: %s' % self.text()
         )
         self.loaded = False
-        self.task = None
+
+        self.task_id = None
+        self.task_name = None
+        self.task_entity_type = None
+        self.task_has_children = None
+        self.task_children_data = None
+
         self.parent = None
         self.fetched_all = False
         self.setEditable(False)
-        self.user = None
+        self.user_id = None
+        self.user_name = None
         self.user_tasks_only = False
         logger.debug(
             'TaskItem.__init__() is finished for item: %s' % self.text()
@@ -344,7 +353,7 @@ class TaskItem(QtGui.QStandardItem):
         """
         logger.debug('TaskItem.clone() is started for item: %s' % self.text())
         new_item = TaskItem()
-        new_item.task = self.task
+        new_item.task_id = self.task_id
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
         logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
@@ -355,11 +364,31 @@ class TaskItem(QtGui.QStandardItem):
             'TaskItem.canFetchMore() is started for item: %s' % self.text()
         )
         return_value = False
-        if self.task and not self.fetched_all:
-            if isinstance(self.task, Task):
-                return_value = self.task.is_container
-            elif isinstance(self.task, Project):
-                return_value = len(self.task.root_tasks) > 0
+        if self.task_id and not self.fetched_all:
+            if self.task_name is None:
+                self.task_name, self.task_entity_type = \
+                    db.DBSession.query(
+                        SimpleEntity.name,
+                        SimpleEntity.entity_type
+                    )\
+                    .filter(SimpleEntity.id == self.task_id)\
+                    .first()
+
+            if self.task_entity_type in self.task_entity_types:
+                if self.task_has_children is None:
+                    self.task_has_children = \
+                        Task.query\
+                            .filter(Task.parent_id == self.task_id)\
+                            .count() > 0
+                return_value = self.task_has_children
+            elif self.task_entity_type == 'Project':
+                if self.task_has_children is None:
+                    self.task_has_children = \
+                        Task.query\
+                            .filter(Task.project_id == self.task_id)\
+                            .filter(Task.parent_id == None)\
+                            .count() > 0
+                return_value = self.task_has_children
         else:
             return_value = False
         logger.debug(
@@ -374,31 +403,55 @@ class TaskItem(QtGui.QStandardItem):
 
         if self.canFetchMore():
             tasks = []
-            if isinstance(self.task, Task):
-                tasks = self.task.children
-            elif isinstance(self.task, Project):
-                tasks = self.task.root_tasks
 
-            # model = self.model() # This will cause a SEGFAULT
-            if self.user_tasks_only:
-                user_tasks_and_parents = []
-                # need to filter tasks which do not belong to user
-                for task in tasks:
-                    for user_task in self.user.tasks:
-                        if task in user_task.parents or \
-                           task is user_task or \
-                           task in self.user.projects:
-                            user_tasks_and_parents.append(task)
-                            break
+            if self.task_name is None:
+                self.task_name, self.task_entity_type = \
+                    db.DBSession \
+                        .query(SimpleEntity.name, SimpleEntity.entity_type) \
+                    .filter(SimpleEntity.id == self.task_id) \
+                    .first()
 
-                tasks = user_tasks_and_parents
-            tasks = sorted(tasks, key=lambda x: x.name)
+            if self.task_children_data is None:
+                if self.task_entity_type in self.task_entity_types:
+                    self.task_children_data = db.DBSession \
+                        .query(Task.id, Task.name, Task.entity_type, Task.status_id) \
+                        .filter(Task.parent_id == self.task_id) \
+                        .order_by(Task.name) \
+                        .all()
 
+                elif self.task_entity_type == 'Project':
+                    self.task_children_data = db.DBSession\
+                        .query(Task.id, Task.name, Task.entity_type, Task.status_id) \
+                        .filter(Task.parent_id == None) \
+                        .filter(Task.project_id == self.task_id) \
+                        .order_by(Task.name) \
+                        .all()
+
+                tasks = self.task_children_data
+
+            # # model = self.model() # This will cause a SEGFAULT
+            # # TODO: update it later on
+            # if self.user_tasks_only:
+            #     user_tasks_and_parents = []
+            #     # need to filter tasks which do not belong to user
+            #     for task in tasks:
+            #         for user_task in self.user.tasks:
+            #             if task in user_task.parents or \
+            #                task is user_task or \
+            #                task in self.user.projects:
+            #                 user_tasks_and_parents.append(task)
+            #                 break
+            #
+            #     tasks = user_tasks_and_parents
+            # # tasks = sorted(tasks, key=lambda x: x.name)
+
+            # start = time.time()
+            task_items = []
             for task in tasks:
                 task_item = TaskItem(0, 3)
                 task_item.parent = self
-                task_item.task = task
-                task_item.user = self.user
+                task_item.task_id = task[0]
+                task_item.user_id = self.user_id
                 task_item.user_tasks_only = self.user_tasks_only
 
                 # set the font
@@ -406,24 +459,30 @@ class TaskItem(QtGui.QStandardItem):
                 # entity_type_item = QtGui.QStandardItem(task.entity_type)
                 # task_item.setItem(0, 0, name_item)
                 # task_item.setItem(0, 1, entity_type_item)
-                task_item.setText(task.name)
+                task_item.setText(task[1])
 
-                make_bold = False
-                if isinstance(task, Task):
-                    if task.is_container:
-                        make_bold = True
-                elif isinstance(task, Project):
-                    make_bold = True
+                # make_bold = False
+                # if task_item.canFetchMore():
+                #     make_bold = True
+                # if task[2] in self.task_entity_types:
+                #     children_count = \
+                #         db.DBSession.query(Task.id)\
+                #             .filter(Task.parent_id == task[0])\
+                #             .count()
+                #     if children_count:
+                #         make_bold = True
+                # elif task[2] == 'Project':
+                #     make_bold = True
 
-                if make_bold:
-                    my_font = task_item.font()
-                    my_font.setBold(True)
-                    task_item.setFont(my_font)
+                # if make_bold:
+                #     my_font = task_item.font()
+                #     my_font.setBold(True)
+                #     task_item.setFont(my_font)
 
                 # color with task status
                 task_item.setData(
                     QtGui.QColor(
-                        *status_colors[task_item.task.status.code.lower()]
+                        *status_colors_by_id[task[3]]
                     ),
                     QtCore.Qt.BackgroundRole
                 )
@@ -433,9 +492,13 @@ class TaskItem(QtGui.QStandardItem):
                     QtGui.QBrush(QtGui.QColor(0, 0, 0))
                 )
 
-                self.appendRow(task_item)
+                task_items.append(task_item)
+
+            if task_items:
+                self.appendRows(task_items)
 
             self.fetched_all = True
+
         logger.debug(
             'TaskItem.fetchMore() is finished for item: %s' % self.text()
         )
@@ -445,19 +508,38 @@ class TaskItem(QtGui.QStandardItem):
             'TaskItem.hasChildren() is started for item: %s' % self.text()
         )
 
-        if self.task:
-            if isinstance(self.task, Task):
-                return_value = self.task.is_container
-            elif isinstance(self.task, Project):
-                return_value = len(self.task.root_tasks) > 0
+        if self.task_id:
+            if self.task_name is None:
+                self.task_name, self.task_entity_type = \
+                    db.DBSession \
+                    .query(SimpleEntity.name, SimpleEntity.entity_type) \
+                    .filter(SimpleEntity.id == self.task_id) \
+                    .first()
+            if self.task_entity_type in self.task_entity_types:
+                if self.task_has_children is None:
+                    self.task_has_children = db.DBSession.query(Task.id)\
+                        .filter(Task.parent_id == self.task_id)\
+                        .count() > 0
+                return_value = self.task_has_children
+            elif self.task_entity_type == 'Project':
+                if self.task_has_children is None:
+                    self.task_has_children = \
+                        db.DBSession.query(Task.id)\
+                            .filter(Task.project_id == self.task_id)\
+                            .filter(Task.parent_id == None)\
+                            .count() > 0
+                return_value = self.task_has_children
+
             else:
                 return_value = False
         else:
             return_value = False
+
+        # print('TaskItem.hasChildren | self.task_name: %s' % self.task_name)
+
         logger.debug(
             'TaskItem.hasChildren() is finished for item: %s' % self.text()
         )
-
         return return_value
 
     def type(self, *args, **kwargs):
@@ -473,7 +555,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
         logger.debug('TaskTreeModel.__init__() is started')
-        self.user = None
+        self.user_id = None
         self.root = None
         self.user_tasks_only = False
         logger.debug('TaskTreeModel.__init__() is finished')
@@ -498,8 +580,8 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.parent = None
             project_item.setColumnCount(3)
             project_item.setText(project.name)
-            project_item.task = project
-            project_item.user = self.user
+            project_item.task_id = project.id
+            project_item.user_id = self.user.id
             project_item.user_tasks_only = self.user_tasks_only
 
             # set the font
@@ -553,13 +635,15 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             'TaskTreeModel.hasChildren() is started for index: %s' % index)
         if not index.isValid():
             if self.user_tasks_only:
-                if self.user:
-                    projects = self.user.projects
+                if self.user_id:
+                    projects_count = db.DBSession.query(ProjectUser.id)\
+                        .filter(ProjectUser.user_id == self.user_id)\
+                        .count()
                 else:
-                    projects = []
+                    projects_count = 0
             else:
-                projects = Project.query.all()
-            return_value = len(projects) > 0
+                projects_count = db.DBSession.query(Project.id).count()
+            return_value = projects_count > 0
         else:
             item = self.itemFromIndex(index)
             return_value = False
@@ -608,7 +692,6 @@ class TakesListWidget(QtWidgets.QListWidget):
         """adds a new take to the takes list
         """
         # condition the input
-        from stalker import Version
         take_name = Version._format_take_name(take_name)
 
         # if the given take name is in the list don't add it

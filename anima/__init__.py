@@ -110,3 +110,21 @@ status_colors = {
     'oh': [213, 63, 64],
     'stop': [78, 89, 98],
 }
+
+status_colors_by_id = {}
+
+
+def fill_status_colors_by_id():
+    """fills the status_colors_by_id dictionary
+    """
+    if not status_colors_by_id:
+        from stalker import StatusList
+        task_status_list = \
+            StatusList.query\
+                .filter(StatusList.target_entity_type == 'Task')\
+                .first()
+
+        for status in task_status_list.statuses:
+            status_colors_by_id[status.id] = status_colors[status.code.lower()]
+
+fill_status_colors_by_id()
