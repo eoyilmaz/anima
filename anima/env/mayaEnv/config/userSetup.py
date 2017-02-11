@@ -101,7 +101,6 @@ from stalker import db
 db.setup()
 
 # set ui to PySide2 for maya2017
-print('before setting QtLib inside userSetup.py')
 if pymel.versions.current() > 201500:
     print('setting QtLib to PySide2 inside userSetup.py')
     from anima import ui
