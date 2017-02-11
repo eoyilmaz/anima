@@ -269,10 +269,10 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         # enter revision types
         revision_types = [
+            'Yetistiremedim',
             'Ajans',
             'Yonetmen',
             'Ic Revizyon',
-            'Yetistiremedim'
         ]
 
         self.revision_type_comboBox.addItems(revision_types)
