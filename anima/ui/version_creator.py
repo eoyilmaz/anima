@@ -809,7 +809,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
             from anima import utils
             if choice == 'Browse Path...':
-                path = os.path.expandvars(version.absolute_full_path)
+                path = os.path.expandvars(
+                    os.path.expandvars(
+                        version.full_path
+                    )
+                )
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
@@ -820,7 +824,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     )
             if choice == 'Browse Outputs...':
                 path = os.path.join(
-                    os.path.expandvars(version.absolute_path),
+                    os.path.dirname(
+                        os.path.expandvars(
+                            version.full_path
+                        )
+                    ),
                     "Outputs"
                 )
                 try:
@@ -869,7 +877,13 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             elif choice == 'Copy Path':
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtWidgets.QApplication.clipboard()
-                clipboard.setText(os.path.normpath(version.absolute_full_path))
+                clipboard.setText(
+                    os.path.normpath(
+                        os.path.expandvars(
+                            version.full_path
+                        )
+                    )
+                )
 
     def _show_tasks_treeView_context_menu(self, position):
         """the custom context menu for the tasks_treeView
@@ -1750,8 +1764,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             # set the clipboard to the new_version.absolute_full_path
             clipboard = QtWidgets.QApplication.clipboard()
 
-            logger.debug('new_version.absolute_full_path: %s' %
-                         new_version.absolute_full_path)
+            logger.debug(
+                'new_version.absolute_full_path: %s' %
+                new_version.absolute_full_path)
 
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
@@ -1795,7 +1810,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """
         self.chosen_version = self.previous_versions_tableWidget.current_version
         if self.chosen_version:
-            logger.debug(self.chosen_version)
+            logger.debug(self.chosen_version.id)
             self.close()
 
     def open_pushButton_clicked(self):
@@ -1803,9 +1818,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """
         # get the new version
         old_version = self.previous_versions_tableWidget.current_version
-
-        logger.debug("opening version %s" % old_version)
-
         skip_update_check = not self.checkUpdates_checkBox.isChecked()
 
         # call the environments open method
@@ -1814,6 +1826,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             ref_depth = ref_depth_res.index(
                 self.ref_depth_comboBox.currentText()
             )
+            from stalker import Version
+            old_version = Version.query.get(old_version.id)
 
             # environment can throw RuntimeError for unsaved changes
             try:
@@ -1895,12 +1909,13 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             # check if it has any representations
             # .filter(Version.parent == previous_version)\
             from stalker import Version
-            all_reprs = Version.query\
+            previous_version = Version.query.get(previous_version.id)
+            all_repr_count = Version.query\
                 .filter(Version.task == previous_version.task)\
                 .filter(Version.take_name.ilike(previous_version.take_name + '@%'))\
-                .all()
+                .count()
 
-            if len(all_reprs):
+            if all_repr_count > 0:
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText('Which Repr.?')
