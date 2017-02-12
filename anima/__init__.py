@@ -119,6 +119,8 @@ def fill_status_colors_by_id():
     """fills the status_colors_by_id dictionary
     """
     if not status_colors_by_id:
+        from anima.utils import do_db_setup
+        do_db_setup()
         from stalker import StatusList
         task_status_list = \
             StatusList.query\
@@ -132,11 +134,14 @@ def fill_status_colors_by_id():
 def fill_user_names_lut():
     """fills the user_names_lut
     """
-    from stalker import db, User
-    map(
-        lambda x: user_names_lut.__setitem__(x[0], x[1]),
-        db.DBSession.query(User.id, User.name).all()
-    )
+    if not user_names_lut:
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from stalker import db, User
+        map(
+            lambda x: user_names_lut.__setitem__(x[0], x[1]),
+            db.DBSession.query(User.id, User.name).all()
+        )
 
 fill_status_colors_by_id()
 fill_user_names_lut()
