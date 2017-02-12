@@ -85,22 +85,25 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.horizontalHeader().setStretchLastSection(True)
         self.verticalHeader().setStretchLastSection(False)
 
+        tool_tip_html = \
+            "<html><head/><body><p>Right click to:</p><ul style=\"" \
+            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; " \
+            "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" " \
+            "font-weight:600;\">Copy Path</span></li><li><span style=\" " \
+            "font-weight:600;\">Browse Path</span></li><li><span style=\" " \
+            "font-weight:600;\">Change Description</span></li></ul>" \
+            "<p>Double click to:</p><ul style=\"margin-top: 0px; " \
+            "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; " \
+            "-qt-list-indent: 1;\"><li style=\" margin-top:12px; " \
+            "margin-bottom:12px; margin-left:0px; margin-right:0px; " \
+            "-qt-block-indent:0; text-indent:0px;\"><span style=\" " \
+            "font-weight:600;\">Open</span></li></ul></body></html>"
+
         try:
             self.setToolTip(
                 QtWidgets.QApplication.translate(
                     "Dialog",
-                    "<html><head/><body><p>Right click to:</p><ul style=\""
-                    "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
-                    "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
-                    "font-weight:600;\">Copy Path</span></li><li><span style=\" "
-                    "font-weight:600;\">Browse Path</span></li><li><span style=\" "
-                    "font-weight:600;\">Change Description</span></li></ul>"
-                    "<p>Double click to:</p><ul style=\"margin-top: 0px; "
-                    "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
-                    "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
-                    "margin-bottom:12px; margin-left:0px; margin-right:0px; "
-                    "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
-                    "font-weight:600;\">Open</span></li></ul></body></html>",
+                    tool_tip_html,
                     None,
                     QtWidgets.QApplication.UnicodeUTF8
                 )
@@ -109,18 +112,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             self.setToolTip(
                 QtWidgets.QApplication.translate(
                     "Dialog",
-                    "<html><head/><body><p>Right click to:</p><ul style=\""
-                    "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
-                    "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" "
-                    "font-weight:600;\">Copy Path</span></li><li><span style=\" "
-                    "font-weight:600;\">Browse Path</span></li><li><span style=\" "
-                    "font-weight:600;\">Change Description</span></li></ul>"
-                    "<p>Double click to:</p><ul style=\"margin-top: 0px; "
-                    "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
-                    "-qt-list-indent: 1;\"><li style=\" margin-top:12px; "
-                    "margin-bottom:12px; margin-left:0px; margin-right:0px; "
-                    "-qt-block-indent:0; text-indent:0px;\"><span style=\" "
-                    "font-weight:600;\">Open</span></li></ul></body></html>",
+                    tool_tip_html,
                     None
                 )
             )

@@ -7,7 +7,7 @@
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtWidgets, QtGui
 
 
 if IS_PYSIDE():
@@ -98,6 +98,23 @@ class TaskComboBox(QtWidgets.QComboBox):
         self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
         super(TaskComboBox, self).showPopup(*args, **kwargs)
 
+    @classmethod
+    def generate_task_name(cls, task):
+        """Generates task names
+        :param task:
+        :return:
+        """
+        if task:
+            return '%s (%s)' % (
+                task.name,
+                '%s | %s' % (
+                    task.project.name,
+                    ' | '.join(map(lambda x: x.name, task.parents))
+                )
+            )
+        else:
+            return ''
+
     def addTasks(self, tasks):
         """Overridden addItems method
 
@@ -108,13 +125,7 @@ class TaskComboBox(QtWidgets.QComboBox):
         task_labels = []
         for task in tasks:
             # this is dirty
-            task_label = '%s (%s)' % (
-                task.name,
-                '%s | %s' % (
-                    task.project.name,
-                    ' | '.join(map(lambda x: x.name, task.parents))
-                )
-            )
+            task_label = self.generate_task_name(task)
             self.addItem(task_label, task)
 
     def currentTask(self):
@@ -262,6 +273,13 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             self.end_time_changed
         )
 
+        # # calendar page change
+        # QtCore.QObject.connect(
+        #     self.calendarWidget,
+        #     QtCore.SIGNAL('currentPageChanged(int,int)'),
+        #     self.fill_calendar_with_time_logs
+        # )
+
     def _set_defaults(self):
         """sets up the defaults for the interface
         """
@@ -355,6 +373,107 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
                 )
             )
 
+        self.fill_calendar_with_time_logs()
+
+    def fill_calendar_with_time_logs(self):
+        """fill the calendar with daily time log info
+        """
+        resource_id = self.get_current_resource_id()
+
+        from stalker import db
+        tool_tip_text_format = '{start:%H:%M} - {end:%H:%M} | {task_name}'
+
+        # import time
+        # start = time.time()
+        # get all the TimeLogs grouped daily
+        sql = """-- TOP DOWN SEARCH --
+select
+    "TimeLogs".start::date as date,
+    array_agg(task_rec_data.full_path) as task_name,
+    array_agg("TimeLogs".start) as start,
+    array_agg("TimeLogs".end) as end,
+    sum(extract(epoch from ("TimeLogs".end - "TimeLogs".start)))
+
+from "TimeLogs"
+
+join (
+    with recursive recursive_task(id, parent_id, path_names) as (
+        select
+        task.id,
+        task.project_id,
+        -- task.project_id::text as path,
+        ("Projects".code || '') as path_names
+        from "Tasks" as task
+        join "Projects" on task.project_id = "Projects".id
+        where task.parent_id is NULL
+    union all
+        select
+        task.id,
+        task.parent_id,
+        -- (parent.path || '|' || task.parent_id:: text) as path,
+        (parent.path_names || ' | ' || "Parent_SimpleEntities".name) as path_names
+        from "Tasks" as task
+        inner join recursive_task as parent on task.parent_id = parent.id
+        inner join "SimpleEntities" as "Parent_SimpleEntities" on parent.id = "Parent_SimpleEntities".id
+    ) select
+        recursive_task.id,
+        "SimpleEntities".name || ' (' || recursive_task.path_names || ')' as full_path
+    from recursive_task
+    join "SimpleEntities" on recursive_task.id = "SimpleEntities".id
+) as task_rec_data on "TimeLogs".task_id = task_rec_data.id
+
+-- getting all the data is as fast as getting one, so get all the TimeLogs of this user
+where "TimeLogs".resource_id = :resource_id
+group by cast("TimeLogs".start as date)
+order by cast("TimeLogs".start as date)
+        """
+        from sqlalchemy import text
+        result = db.DBSession.connection().execute(
+            text(sql),
+            resource_id=resource_id
+        ).fetchall()
+        # end = time.time()
+        # print('getting data from sql: %0.3f sec' % (end - start))
+
+        for r in result:
+            calendar_day = r[0]
+            year = calendar_day.year
+            month = calendar_day.month
+            day = calendar_day.day
+            daily_logged_seconds = r[4]
+            daily_logged_hours = daily_logged_seconds // 3600
+            daily_logged_minutes = \
+                (daily_logged_seconds - daily_logged_hours * 3600) // 60
+
+            tool_tip_text_data = [
+                'Total: %i h %i min logged' %
+                    (daily_logged_hours, daily_logged_minutes)
+                    if daily_logged_hours
+                    else 'Total: %i min logged' % daily_logged_minutes
+            ]
+            for task_name, start, end in sorted(zip(r[1], r[2], r[3]), key=lambda x: x[1]):
+                time_log_tool_tip_text = tool_tip_text_format.format(
+                    start=self.utc_to_local(start),
+                    end=self.utc_to_local(end),
+                    task_name=task_name
+                )
+                tool_tip_text_data.append(time_log_tool_tip_text)
+
+            merged_tool_tip = '\n'.join(tool_tip_text_data)
+
+            date_format = QtGui.QTextCharFormat()
+            bg_brush = QtGui.QBrush()
+            bg_brush.setColor(
+                QtGui.QColor(0, 255.0 / 86400.0 * daily_logged_seconds, 0)
+            )
+
+            date_format.setBackground(bg_brush)
+            date_format.setToolTip(merged_tool_tip)
+
+            date = QtCore.QDate(year, month, day)
+
+            self.calendarWidget.setDateTextFormat(date, date_format)
+
     def tasks_combo_box_index_changed(self, task_label):
         """runs when another task has been selected
         """
@@ -378,6 +497,15 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         resource_name = self.resource_comboBox.currentText()
         from stalker import User
         return User.query.filter(User.name == resource_name).first()
+
+    def get_current_resource_id(self):
+        """returns the current resource
+        """
+        resource_name = self.resource_comboBox.currentText()
+        from stalker import db, User
+        return db.DBSession\
+            .query(User.id).filter(User.name == resource_name)\
+            .first()
 
     def start_time_changed(self, q_time):
         """validates the start time
