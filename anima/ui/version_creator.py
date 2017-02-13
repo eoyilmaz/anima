@@ -1968,7 +1968,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """runs when the import_pushButton clicked
         """
         # get the previous version
-        previous_version = self.previous_versions_tableWidget.current_version
+        previous_version_id = \
+            self.previous_versions_tableWidget.current_version.id
+
+        from stalker import Version
+        previous_version = Version.query.get(previous_version_id)
 
         # logger.debug("importing version %s" % previous_version)
 
