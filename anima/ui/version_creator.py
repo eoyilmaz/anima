@@ -1967,11 +1967,10 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def import_pushButton_clicked(self):
         """runs when the import_pushButton clicked
         """
-
         # get the previous version
         previous_version = self.previous_versions_tableWidget.current_version
 
-        logger.debug("importing version %s" % previous_version)
+        # logger.debug("importing version %s" % previous_version)
 
         # call the environments import_ method
         if self.environment is not None:
