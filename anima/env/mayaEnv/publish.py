@@ -927,6 +927,7 @@ def check_multiple_connections_for_textures():
     nodes_to_ignore += pm.ls('defaultShaderList*')
     nodes_to_ignore += pm.ls('defaultTextureList*')
     nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
+    nodes_to_ignore += pm.ls('hyperShadePrimaryNodeEditorSavedTabsInfo')
 
     all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
     for node in nodes_to_ignore:
