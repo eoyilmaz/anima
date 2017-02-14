@@ -112,13 +112,32 @@ def check_time_logs():
             task_start = task.computed_start if task.computed_start else task.start
             task_start = utc_to_local(task_start)
             if task.status.code != 'WFD' and task_start <= now:
-                if len(task.time_logs) == 0:
-                    raise PublishError(
-                        '<p>Please create a TimeLog before publishing this '
-                        'asset:<br><br>'
-                        '<a href="%s/tasks/%s/view">Open In WebBrowser</a>'
-                        '</p>' % (stalker_server_internal_address, task.id)
-                    )
+                num_tlogs = len(task.time_logs)
+                if num_tlogs == 0 or task.status.code == 'HREV':
+                    window_title = 'Please create a TimeLog for this task!!!'
+                    if num_tlogs == 0:
+                        window_title = 'There is no TimeLog for this task, ' \
+                                       'please create one!!!'
+                    elif task.status.code == 'HREV':
+                        window_title = 'Task status is HREV, ' \
+                                       'please create a TimeLog!!!'
+
+                    # skip this if Maya is not running in UI mode
+                    if not pm.general.about(batch=1):
+                        from anima.ui import time_log_dialog
+                        time_log_created = False
+                        i = 0
+                        while not time_log_created:
+                            i += 1
+                            dialog = time_log_dialog.MainDialog(task=task)
+                            dialog.setWindowTitle(window_title)
+                            dialog.exec_()
+                            time_log_created = dialog.timelog_created
+                    else:
+                        raise PublishError(
+                            '<p>Please create a TimeLog before publishing '
+                            'this version, for task.id: %s' % task.id
+                        )
 
 
 @publisher

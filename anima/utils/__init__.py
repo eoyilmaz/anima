@@ -77,10 +77,6 @@ def open_browser_in_location(path):
 
     :param path: The path that the browser should be opened at.
     """
-    import os
-    import subprocess
-    import platform
-
     command = []
 
     platform_info = platform.platform()
@@ -269,7 +265,6 @@ def utc_to_local(utc_dt):
     # get integer timestamp to avoid precision lost
     timestamp = calendar.timegm(utc_dt.timetuple())
     local_dt = datetime.datetime.fromtimestamp(timestamp)
-    assert utc_dt.resolution >= datetime.timedelta(microseconds=1)
     return local_dt.replace(microsecond=utc_dt.microsecond)
 
 
@@ -281,9 +276,6 @@ def local_to_utc(local_dt):
     """
     # get the utc_dt as if the local_dt is utc and calculate the timezone
     # difference and add it to the local dt object
-    logger.debug('utc_to_local(local_dt) : %s' % utc_to_local(local_dt))
-    logger.debug('utc - local            : %s' % (utc_to_local(local_dt) - local_dt))
-    logger.debug('local - (utc - local)  : %s' % (local_dt - (utc_to_local(local_dt) - local_dt)))
     return local_dt - (utc_to_local(local_dt) - local_dt)
 
 
@@ -1096,7 +1088,6 @@ class MediaManager(object):
         filename = ''.join(filename_buffer)
 
         # replace ' ' with '_'
-        import re
         basename, extension = os.path.splitext(filename)
         filename = '%s%s' % (
             re.sub(r'[\s\.\\/:\*\?"<>|=,+]+', '_', basename),

@@ -347,8 +347,9 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             self.resource_comboBox.setEnabled(False)
 
             # set the start and end time
-            start_date = self.utc_to_local(self.timelog.start)
-            end_date = self.utc_to_local(self.timelog.end)
+            from anima.utils import utc_to_local
+            start_date = utc_to_local(self.timelog.start)
+            end_date = utc_to_local(self.timelog.end)
 
             # set the date
             self.calendarWidget.setSelectedDate(
@@ -435,6 +436,7 @@ order by cast("TimeLogs".start as date)
         # end = time.time()
         # print('getting data from sql: %0.3f sec' % (end - start))
 
+        from anima.utils import utc_to_local
         for r in result:
             calendar_day = r[0]
             year = calendar_day.year
@@ -447,14 +449,15 @@ order by cast("TimeLogs".start as date)
 
             tool_tip_text_data = [
                 'Total: %i h %i min logged' %
-                    (daily_logged_hours, daily_logged_minutes)
-                    if daily_logged_hours
-                    else 'Total: %i min logged' % daily_logged_minutes
+                (daily_logged_hours, daily_logged_minutes)
+                if daily_logged_hours
+                else 'Total: %i min logged' % daily_logged_minutes
             ]
-            for task_name, start, end in sorted(zip(r[1], r[2], r[3]), key=lambda x: x[1]):
+            for task_name, start, end in sorted(
+                    zip(r[1], r[2], r[3]), key=lambda x: x[1]):
                 time_log_tool_tip_text = tool_tip_text_format.format(
-                    start=self.utc_to_local(start),
-                    end=self.utc_to_local(end),
+                    start=utc_to_local(start),
+                    end=utc_to_local(end),
                     task_name=task_name
                 )
                 tool_tip_text_data.append(time_log_tool_tip_text)
@@ -609,23 +612,6 @@ order by cast("TimeLogs".start as date)
         self.revision_label.hide()
         self.revision_type_comboBox.hide()
 
-    @classmethod
-    def utc_to_local(cls, utc_dt):
-        """converts the given UTC time to local time
-        """
-        import calendar
-        import datetime
-        timestamp = calendar.timegm(utc_dt.timetuple())
-        local_dt = datetime.datetime.fromtimestamp(timestamp)
-        assert utc_dt.resolution >= datetime.timedelta(microseconds=1)
-        return local_dt.replace(microsecond=utc_dt.microsecond)
-
-    @classmethod
-    def local_to_utc(cls, local_dt):
-        """converts the given local time to UTC time
-        """
-        return local_dt - (cls.utc_to_local(local_dt) - local_dt)
-
     def accept(self):
         """overridden accept method
         """
@@ -676,8 +662,9 @@ order by cast("TimeLogs".start as date)
             return
 
         # convert them to utc
-        utc_start_date = self.local_to_utc(start_date)
-        utc_end_date = self.local_to_utc(end_date)
+        from anima.utils import local_to_utc
+        utc_start_date = local_to_utc(start_date)
+        utc_end_date = local_to_utc(end_date)
 
         # create a TimeLog
         # print('Task          : %s' % task.name)
@@ -688,7 +675,7 @@ order by cast("TimeLogs".start as date)
         # now if we are not using extra time just create the TimeLog
         from stalker import db, TimeLog
         from stalker.exceptions import OverBookedError
-        utc_now = self.local_to_utc(datetime.datetime.now())
+        utc_now = local_to_utc(datetime.datetime.now())
 
         if not self.timelog:
             try:
@@ -753,7 +740,7 @@ order by cast("TimeLogs".start as date)
                 ),
                 type=revision_type,
                 created_by=self.logged_in_user,
-                date_created=self.local_to_utc(datetime.datetime.now())
+                date_created=local_to_utc(datetime.datetime.now())
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
@@ -786,7 +773,7 @@ order by cast("TimeLogs".start as date)
                         resource.name,
                 type=forced_status_type,
                 created_by=self.logged_in_user,
-                date_created=self.local_to_utc(datetime.datetime.now())
+                date_created=local_to_utc(datetime.datetime.now())
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
@@ -823,7 +810,7 @@ order by cast("TimeLogs".start as date)
 
             # request a review
             reviews = task.request_review()
-            utc_now = self.local_to_utc(datetime.datetime.now())
+            utc_now = local_to_utc(datetime.datetime.now())
             for review in reviews:
                 review.created_by = review.updated_by = self.logged_in_user
                 review.date_created = utc_now
@@ -841,7 +828,7 @@ order by cast("TimeLogs".start as date)
             request_review_note = Note(
                 type=request_review_note_type,
                 created_by=self.logged_in_user,
-                date_created=self.local_to_utc(datetime.datetime.now())
+                date_created=local_to_utc(datetime.datetime.now())
             )
             db.DBSession.add(request_review_note)
             db.DBSession.add(task)
