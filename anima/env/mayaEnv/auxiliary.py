@@ -2330,14 +2330,23 @@ def match_hierarchy(source, target):
     Returns a dictionary where you can look up for matches by using the object
     name.
     """
+    from anima.ui import progress_dialog
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
+
+    caller = pdm.register(2, title='Getting source and target nodes')
     source_nodes = source.listRelatives(
         ad=1,
         type=(pm.nt.Mesh, pm.nt.NurbsSurface)
     )
+    caller.step()
     target_nodes = target.listRelatives(
         ad=1,
         type=(pm.nt.Mesh, pm.nt.NurbsSurface)
     )
+    caller.step()
+    caller.end_progress()
 
     source_node_names = []
     target_node_names = []
@@ -2346,14 +2355,22 @@ def match_hierarchy(source, target):
         'match': [],
         'no_match': []
     }
+
+    caller = pdm.register(len(source_nodes), title='Getting source node names')
     for node in source_nodes:
         name = node.name().split(':')[-1].split('|')[-1]
         source_node_names.append(name)
+        caller.step()
+    caller.end_progress()
 
+    caller = pdm.register(len(target_nodes), title='Getting target node names')
     for node in target_nodes:
         name = node.name().split(':')[-1].split('|')[-1]
         target_node_names.append(name)
+        caller.step()
+    caller.end_progress()
 
+    caller = pdm.register(len(target_nodes), title='Matching nodes')
     for i, target_node in enumerate(target_nodes):
         target_node_name = target_node_names[i]
         try:
@@ -2367,6 +2384,8 @@ def match_hierarchy(source, target):
             lut['no_match'].append(target_node)
         else:
             lut['match'].append((source_nodes[index], target_nodes[i]))
+        caller.step()
+    caller.end_progress()
 
     return lut
 

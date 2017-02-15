@@ -3624,6 +3624,12 @@ class Render(object):
             'aiStepSize'
         ]
 
+        from anima.ui import progress_dialog
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
+
+        caller = pdm.register(2, title='Ttransferring materials')
         for source_node, target_node in lut['match']:
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes
@@ -3635,6 +3641,8 @@ class Render(object):
                     )
                 except pm.MayaAttributeError:
                     pass
+            caller.step()
+        caller.end_progress()
 
         if len(lut['no_match']):
             pm.select(lut['no_match'])
