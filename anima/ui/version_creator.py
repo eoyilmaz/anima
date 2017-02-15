@@ -144,7 +144,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         # select the version in the previous version list
         index = -1
         for i, prev_version in enumerate(self.versions):
-            if self.versions[i] == version:
+            if self.versions[i].id == version.id:
                 index = i
                 break
 
@@ -687,6 +687,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         index = item.row()
         version = self.previous_versions_tableWidget.versions[index]
+        from stalker import Version
+        version = Version.query.get(version.id)
 
         # create the menu
         menu = QtWidgets.QMenu()
@@ -1800,7 +1802,17 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def chose_pushButton_clicked(self):
         """runs when the chose_pushButton clicked
         """
-        self.chosen_version = self.previous_versions_tableWidget.current_version
+        version = self.previous_versions_tableWidget.current_version
+        if not version:
+            return
+
+        version_id = version.id
+        if not version_id:
+            return
+
+        from stalker import Version
+        self.chosen_version = Version.query.get(version_id)
+
         if self.chosen_version:
             logger.debug(self.chosen_version.id)
             self.close()
