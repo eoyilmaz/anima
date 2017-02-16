@@ -5099,8 +5099,9 @@ class Animation(object):
                         )
                         min_frame = p.cut_in
                         max_frame = p.cut_out
+                        break
 
-        if min_frame and max_frame:
+        if min_frame is not None and max_frame is not None:
             pm.playbackOptions(
                 ast=min_frame,
                 aet=max_frame,
