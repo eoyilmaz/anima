@@ -1645,7 +1645,20 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         # call the environments export_as method
         if self.environment is not None:
-            self.environment.export_as(new_version)
+            from anima.exc import PublishError
+            try:
+                self.environment.export_as(new_version)
+            except (RuntimeError, PublishError) as e:
+                error_message = '%s' % e
+                print(error_message)
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    error_message
+                )
+                from stalker import db
+                db.DBSession.rollback()
+                return
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:

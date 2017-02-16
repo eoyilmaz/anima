@@ -241,6 +241,15 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         """
         start = time.time()
         if version.is_published:
+            # check if this is the first version
+            if version.version_number == 1:
+                # it is not allowed to publish the first version (desdur)
+                raise RuntimeError(
+                    'Desdur AMK! Ilk versiyonu publish etmek yasak!!!'
+                    '<br><br>'
+                    'Once bi normal save et.'
+                )
+
             # before doing anything run all publishers
             type_name = ''
             if version.task.type:
@@ -423,6 +432,16 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # check if there is something selected
         if len(pm.ls(sl=True)) < 1:
             raise RuntimeError("There is nothing selected to export")
+
+        # check if this is the first version
+        if version.is_published:
+            # it is not allowed to publish the first version (desdur)
+            raise RuntimeError(
+                'Desdur AMK! Publish ederek export yasak!!!'
+                '<br><br>'
+                'Once bi normal export et. Sonra dosyayi acip ustune '
+                'publishle...'
+            )
 
         # do not save if there are local files
         self.check_external_files(version)
