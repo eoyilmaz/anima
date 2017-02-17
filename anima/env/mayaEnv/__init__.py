@@ -200,6 +200,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
 
         self.set_arnold_texture_search_path()
 
+        self.allow_publish_on_export = False
+
     def set_arnold_texture_search_path(self):
         """sets environment defaults
         """
@@ -242,6 +244,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         start = time.time()
         if version.is_published:
             # check if this is the first version
+            logger.debug('version.version_number: %s' % version.version_number)
             if version.version_number == 1:
                 # it is not allowed to publish the first version (desdur)
                 raise RuntimeError(
@@ -434,7 +437,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             raise RuntimeError("There is nothing selected to export")
 
         # check if this is the first version
-        if version.is_published:
+        if version.is_published and not self.allow_publish_on_export:
             # it is not allowed to publish the first version (desdur)
             raise RuntimeError(
                 'Desdur AMK! Publish ederek export yasak!!!'

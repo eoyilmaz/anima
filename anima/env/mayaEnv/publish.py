@@ -1705,4 +1705,5 @@ def export_camera():
 
         pm.select([shot, camera, sequencer])
 
+        m.allow_publish_on_export = True
         m.export_as(cam_v)
