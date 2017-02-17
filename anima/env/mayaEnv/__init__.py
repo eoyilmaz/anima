@@ -245,7 +245,8 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         if version.is_published:
             # check if this is the first version
             logger.debug('version.version_number: %s' % version.version_number)
-            if version.version_number == 1:
+            if version.version_number == 1 \
+               and Representation.repr_separator not in version.take_name:
                 # it is not allowed to publish the first version (desdur)
                 raise RuntimeError(
                     'Desdur AMK! Ilk versiyonu publish etmek yasak!!!'
