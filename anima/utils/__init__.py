@@ -356,6 +356,7 @@ class MediaManager(object):
 
         orientation_string = tags.get('Image Orientation')
 
+        from PIL import Image
         if orientation_string:
             orientation = orientation_string.values[0]
             if orientation == 1:
@@ -390,6 +391,7 @@ class MediaManager(object):
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
 
+        from PIL import Image
         img = Image.open(file_full_path)
         # do a double scale
         img.thumbnail((2 * self.thumbnail_width, 2 * self.thumbnail_height))
@@ -421,6 +423,7 @@ class MediaManager(object):
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
 
+        from PIL import Image
         img = Image.open(file_full_path)
         if img.size[0] > self.web_image_width \
            or img.size[1] > self.web_image_height:

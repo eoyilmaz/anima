@@ -171,6 +171,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         self.timelog = timelog
         self.timelog_created = False
+        self.task = task
 
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
@@ -213,6 +214,8 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.start_timeEdit.setTime(current_time)
         self.end_timeEdit.setTime(current_time.addSecs(timing_resolution * 60))
 
+        self.calendarWidget.resource_id = -1
+
         # setup signals
         self._setup_signals()
 
@@ -221,13 +224,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
 
         # center window
         self.center_window()
-
-        # if given a task set it in to the view
-        if not self.timelog and task:
-            try:
-                self.tasks_comboBox.setCurrentTask(task)
-            except IndexError:
-                pass
 
     def close(self):
         logger.debug('closing the ui')
@@ -273,12 +269,12 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             self.end_time_changed
         )
 
-        # # calendar page change
-        # QtCore.QObject.connect(
-        #     self.calendarWidget,
-        #     QtCore.SIGNAL('currentPageChanged(int,int)'),
-        #     self.fill_calendar_with_time_logs
-        # )
+        # resource changed
+        QtCore.QObject.connect(
+            self.resource_comboBox,
+            QtCore.SIGNAL('currentIndexChanged(QString'),
+            self.resource_changed
+        )
 
     def _set_defaults(self):
         """sets up the defaults for the interface
@@ -304,21 +300,32 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
         status_prev = Status.query.filter(Status.code == 'PREV').first()
 
-        all_tasks = Task.query\
-            .filter(Task.resources.contains(self.logged_in_user))\
-            .filter(Task.status != status_wfd)\
-            .filter(Task.status != status_cmpl)\
-            .filter(Task.status != status_prev)\
-            .all()
-        # sort the task labels
-        all_tasks = sorted(
-            all_tasks,
-            key=lambda task:
-                '%s | %s' % (
-                    task.project.name.lower(),
-                    ' | '.join(map(lambda x: x.name.lower(), task.parents))
+        if not self.timelog:
+            # dialog is in create TimeLog mode
+            # if a task has been given just feed that task to the comboBox
+            if self.task:
+                all_tasks = [self.task]
+            else:
+                # no Task is given nor updating a TimeLog
+                # show all the suitable tasks of the logged_in_user
+                all_tasks = Task.query \
+                    .filter(Task.resources.contains(self.logged_in_user)) \
+                    .filter(Task.status != status_wfd) \
+                    .filter(Task.status != status_cmpl) \
+                    .filter(Task.status != status_prev) \
+                    .all()
+                # sort the task labels
+                all_tasks = sorted(
+                    all_tasks,
+                    key=lambda task:
+                    '%s | %s' % (
+                        task.project.name.lower(),
+                        ' | '.join(map(lambda x: x.name.lower(), task.parents))
+                    )
                 )
-        )
+        else:
+            # dialog is working in update TimeLog mode
+            all_tasks = [self.timelog.task]
 
         self.tasks_comboBox.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToContentsOnFirstShow
@@ -380,6 +387,9 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         """fill the calendar with daily time log info
         """
         resource_id = self.get_current_resource_id()
+        # do not update if the calendar is showing the same user
+        if self.calendarWidget.resource_id == resource_id or resource_id == -1:
+            return
 
         from stalker import db
         tool_tip_text_format = '{start:%H:%M} - {end:%H:%M} | {task_name}'
@@ -486,7 +496,10 @@ order by cast("TimeLogs".start as date)
         self.update_info_text()
 
         # update resources comboBox
-        resource_names = [self.logged_in_user.name]
+        resource_names = []
+        if self.logged_in_user in task.resources:
+            resource_names = [self.logged_in_user.name]
+
         for r in task.resources:
             if r != self.logged_in_user:
                 resource_names.append(r.name)
@@ -618,6 +631,26 @@ order by cast("TimeLogs".start as date)
         # get the info
         task = self.tasks_comboBox.currentTask()
         resource = self.get_current_resource()
+
+        # war the user if the resource is not the logged_in_user
+        if resource != self.logged_in_user:
+            msg_box = QtWidgets.QMessageBox(self)
+            msg_box.setWindowTitle('Baskasi Adina TimeLog Giriyorsun')
+            msg_box.setText('Baskasi adina TimeLog giriyorsun???')
+            accept_button = msg_box.addButton(
+                'Sorumlulugu Kabul Ediyorum',
+                QtWidgets.QMessageBox.AcceptRole
+            )
+            cancel_button = msg_box.addButton(
+                'Cancel',
+                QtWidgets.QMessageBox.RejectRole
+            )
+            msg_box.setDefaultButton(cancel_button)
+            msg_box.exec_()
+            clicked_button = msg_box.clickedButton()
+            if clicked_button == cancel_button:
+                return
+
         description = self.description_plainTextEdit.toPlainText()
         revision_cause_text = \
             self.revision_type_comboBox.currentText().replace(' ', '_')
@@ -849,3 +882,8 @@ order by cast("TimeLogs".start as date)
 
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()
+
+    def resource_changed(self):
+        """runs when the selected resource has changed
+        """
+        self.fill_calendar_with_time_logs()

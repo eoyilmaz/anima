@@ -144,6 +144,15 @@ def upload_thumbnail(task, thumbnail_full_path):
     except OSError:
         pass
 
+    # # convert the thumbnail to jpg if it is a format that is not supported by
+    # # browsers
+    # ext_not_supported_by_browsers = ['.bmp', '.tga', '.tif', '.tiff', '.exr']
+    # if extension in ext_not_supported_by_browsers:
+    #     # use MediaManager to convert them
+    #     from anima.utils import MediaManager
+    #     mm = MediaManager()
+    #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
+
     shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
 
     from stalker import db, Link, Version, Repository
@@ -180,6 +189,7 @@ def choose_thumbnail(parent):
     thumbnail_full_path = QtWidgets.QFileDialog.getOpenFileName(
         parent, "Choose Thumbnail",
         os.path.expanduser("~"),
+        # "Image Files (*.png *.jpg *.bmp *.tga *.tif *.tiff *.exr)"
         "Image Files (*.png *.jpg *.bmp)"
     )
 

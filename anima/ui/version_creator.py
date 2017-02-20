@@ -725,7 +725,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             if version:
                 if choice == "Publish":
                     # check if the user is able to publish this
-                    if not logged_in_user in version.task.responsible \
+                    if logged_in_user not in version.task.responsible \
                        and not self.is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
                             self,
