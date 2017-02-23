@@ -1492,7 +1492,7 @@ class Playblaster(object):
                         float(playblast_options['wh'][1]) /
                         float(playblast_options['wh'][0])
                     )
-                except AttributeError:
+                except (AttributeError, RuntimeError) as e:
                     pass
 
             result = [pm.playblast(**playblast_options)]
