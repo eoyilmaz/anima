@@ -392,7 +392,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             return
 
         from stalker import db
-        tool_tip_text_format = '{start:%H:%M} - {end:%H:%M} | {task_name}'
+        tool_tip_text_format = u'{start:%H:%M} - {end:%H:%M} | {task_name}'
 
         # import time
         # start = time.time()
@@ -458,10 +458,10 @@ order by cast("TimeLogs".start as date)
                 (daily_logged_seconds - daily_logged_hours * 3600) // 60
 
             tool_tip_text_data = [
-                'Total: %i h %i min logged' %
+                u'Total: %i h %i min logged' %
                 (daily_logged_hours, daily_logged_minutes)
                 if daily_logged_hours
-                else 'Total: %i min logged' % daily_logged_minutes
+                else u'Total: %i min logged' % daily_logged_minutes
             ]
             for task_name, start, end in sorted(
                     zip(r[1], r[2], r[3]), key=lambda x: x[1]):
@@ -472,7 +472,7 @@ order by cast("TimeLogs".start as date)
                 )
                 tool_tip_text_data.append(time_log_tool_tip_text)
 
-            merged_tool_tip = '\n'.join(tool_tip_text_data)
+            merged_tool_tip = u'\n'.join(tool_tip_text_data)
 
             date_format = QtGui.QTextCharFormat()
             bg_brush = QtGui.QBrush()
