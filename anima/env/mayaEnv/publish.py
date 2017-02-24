@@ -96,51 +96,6 @@ def delete_unknown_nodes():
 
 
 @publisher
-def check_time_logs():
-    """do not allow publishing if there is no time logs for the task, do that
-    only for non WFD tasks
-    """
-    # skip if this is a representation
-    v = staging.get('version')
-    if v and Representation.repr_separator in v.take_name:
-        return
-
-    if v:
-        task = v.task
-        if task.schedule_model == 'effort':
-            now = datetime.datetime.now()
-            task_start = task.computed_start if task.computed_start else task.start
-            task_start = utc_to_local(task_start)
-            if task.status.code != 'WFD' and task_start <= now:
-                num_tlogs = len(task.time_logs)
-                if num_tlogs == 0 or task.status.code == 'HREV':
-                    window_title = 'Please create a TimeLog for this task!!!'
-                    if num_tlogs == 0:
-                        window_title = 'There is no TimeLog for this task, ' \
-                                       'please create one!!!'
-                    elif task.status.code == 'HREV':
-                        window_title = 'Task status is HREV, ' \
-                                       'please create a TimeLog!!!'
-
-                    # skip this if Maya is not running in UI mode
-                    if not pm.general.about(batch=1):
-                        from anima.ui import time_log_dialog
-                        time_log_created = False
-                        i = 0
-                        while not time_log_created:
-                            i += 1
-                            dialog = time_log_dialog.MainDialog(task=task)
-                            dialog.setWindowTitle(window_title)
-                            dialog.exec_()
-                            time_log_created = dialog.timelog_created
-                    else:
-                        raise PublishError(
-                            '<p>Please create a TimeLog before publishing '
-                            'this version, for task.id: %s' % task.id
-                        )
-
-
-@publisher
 def check_node_names_with_bad_characters():
     """checks node names and ensures that there are no nodes with ord(c) > 127
     """
@@ -1141,6 +1096,51 @@ def check_smartass_animator():
                 "You're not allowed to publish for this task:<br><br>"
                 "Please <b>Request a REVISION</b>!!!!<br>"
             )
+
+
+@publisher
+def check_time_logs():
+    """do not allow publishing if there is no time logs for the task, do that
+    only for non WFD tasks
+    """
+    # skip if this is a representation
+    v = staging.get('version')
+    if v and Representation.repr_separator in v.take_name:
+        return
+
+    if v:
+        task = v.task
+        if task.schedule_model == 'effort':
+            now = datetime.datetime.now()
+            task_start = task.computed_start if task.computed_start else task.start
+            task_start = utc_to_local(task_start)
+            if task.status.code != 'WFD' and task_start <= now:
+                num_tlogs = len(task.time_logs)
+                if num_tlogs == 0 or task.status.code == 'HREV':
+                    window_title = 'Please create a TimeLog for this task!!!'
+                    if num_tlogs == 0:
+                        window_title = 'There is no TimeLog for this task, ' \
+                                       'please create one!!!'
+                    elif task.status.code == 'HREV':
+                        window_title = 'Task status is HREV, ' \
+                                       'please create a TimeLog!!!'
+
+                    # skip this if Maya is not running in UI mode
+                    if not pm.general.about(batch=1):
+                        from anima.ui import time_log_dialog
+                        time_log_created = False
+                        i = 0
+                        while not time_log_created:
+                            i += 1
+                            dialog = time_log_dialog.MainDialog(task=task)
+                            dialog.setWindowTitle(window_title)
+                            dialog.exec_()
+                            time_log_created = dialog.timelog_created
+                    else:
+                        raise PublishError(
+                            '<p>Please create a TimeLog before publishing '
+                            'this version, for task.id: %s' % task.id
+                        )
 
 
 @publisher(['animation', 'previs', 'shot previs'])
