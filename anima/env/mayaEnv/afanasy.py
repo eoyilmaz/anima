@@ -327,6 +327,10 @@ class UI(object):
         frames_per_task = max(1, frames_per_task)
         by_frame = max(1, by_frame)
 
+        # store without quota sign
+        hosts_mask = hosts_mask.replace('"', '')
+        hosts_exclude = hosts_exclude.replace('"', '')
+
         # store field values
         pm.optionVar['cgru_afanasy__start_frame_ov'] = start_frame
         pm.optionVar['cgru_afanasy__end_frame_ov'] = end_frame
@@ -335,6 +339,10 @@ class UI(object):
         pm.optionVar['cgru_afanasy__hosts_mask_ov'] = hosts_mask
         pm.optionVar['cgru_afanasy__hosts_exclude_ov'] = hosts_exclude
         pm.optionVar['cgru_afanasy__separate_layers'] = separate_layers
+
+        # add quota sign
+        hosts_mask = '"%s"' % hosts_mask
+        hosts_exclude = '"%s"' % hosts_exclude
 
         # get paths
         scene_name = pm.sceneName()
