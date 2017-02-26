@@ -74,7 +74,27 @@ if 'ANIMA_TEST_SETUP' not in os.environ.keys():
     __pluginLoader('tiffFloatReader')
     __pluginLoader('tiffFloatReader')
 
-    mayautils.executeDeferred(__pluginLoader, 'mtoa')
+    def load_arnold():
+        __pluginLoader('mtoa')
+        # create defaultArnoldRenderOptions
+        # to disable autotx
+        # TODO: Make this beautiful
+        try:
+            pm.PyNode('defaultArnoldRenderOptions')
+        except pm.MayaNodeError:
+            pm.createNode(
+                'aiOptions',
+                name='defaultArnoldRenderOptions'
+            )
+        finally:
+            daro = pm.PyNode('defaultArnoldRenderOptions')
+            try:
+                daro.setAttr("autotx", 0)
+            except AttributeError:  # Maya2014
+                pass
+        pm.select(None)
+
+    mayautils.executeDeferred(load_arnold)
     mayautils.executeDeferred(__pluginLoader, 'AbcExport')
     mayautils.executeDeferred(__pluginLoader, 'AbcImport')
     mayautils.executeDeferred(__pluginLoader, 'gpuCache')

@@ -113,14 +113,14 @@ class UI(object):
                 pm.text(l='Host Mask')
                 pm.textField(
                     'cgru_afanasy__hosts_mask',
-                    text='""'
+                    text=pm.optionVar['cgru_afanasy__hosts_mask_ov']
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
                 pm.text(l='Host Exclude')
                 pm.textField(
                     'cgru_afanasy__hosts_exclude',
-                    text='""'
+                    text=pm.optionVar['cgru_afanasy__hosts_exclude_ov']
                 )
 
             pm.checkBox('cgru_afanasy__paused', l='Start Paused', v=0)
@@ -378,6 +378,7 @@ class UI(object):
             '-images "%(images)s"',
             '-deletescene',
             '-exec "%(exec)s"',
+            '-lifetime 864000'  # 10 days
         ]
 
         kwargs = {
@@ -474,5 +475,4 @@ class UI(object):
         # call each command separately
         for cmd in cmds:
             print(cmds)
-
-            os.system(cmd)
+            print os.system(cmd)
