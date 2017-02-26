@@ -1349,6 +1349,8 @@ class Playblaster(object):
             except RuntimeError:
                 pass
 
+        # pm.mel.eval('displayStyle("-ss")')
+
     def restore_user_options(self):
         """restores user options
         """

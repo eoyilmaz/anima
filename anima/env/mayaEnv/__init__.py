@@ -317,30 +317,36 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # create workspace folders
         self.create_workspace_folders(workspace_path)
 
-        # set scene fps only if this scene is published or it is the first
-        # version
-        # if version.is_published or version.version_number == 1:
-        #     self.set_fps(project.fps)
-        # TODO: This is a shitty patch, please update it later on
-        if version.version_number == 1:
-            self.set_fps(project.fps)
-
-        # set linear and angular units
-        pm.currentUnit(l='cm', a='deg')
-
-        # set render resolution
-        # if this is a shot related task set it to shots resolution
+        # check if this is a shot related task
         is_shot_related_task = False
         shot = None
         from stalker import Shot
-
         for task in version.task.parents:
             if isinstance(task, Shot):
                 is_shot_related_task = True
                 shot = task
                 break
 
+        # set linear and angular units
+        pm.currentUnit(l='cm', a='deg')
+
+        # set scene fps
+        # even if this is not the first version set the fps
+        #
+        # or better try to get the parent versions and see if we can reach to
+        # a v001 which will guarantee that this version is coming from a file
+        # that has its fps set before.
+        #
+        # If we can't get a v001 file, than it means that the user created a
+        # new scene and saved it as a new version for series of already
+        # existing versions, (ex. save as v002 for the first time)
+        #
+        # Let's hope that it will not break animators scenes, where we have
+        # 12 FPS set for the shot and the intended fps is 25 which we will
+        # newer know.
         if is_shot_related_task:
+            self.set_fps(shot.fps)
+            # set render resolution
             self.set_resolution(shot.image_format.width,
                                 shot.image_format.height,
                                 shot.image_format.pixel_aspect)
@@ -348,10 +354,12 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             if version.version_number == 1:
                 self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
+            # set render resolution
             if version.version_number == 1:
                 self.set_resolution(project.image_format.width,
                                     project.image_format.height,
                                     project.image_format.pixel_aspect)
+            self.set_fps(project.fps)
 
         # set arnold texture search paths
         self.set_arnold_texture_search_path()
@@ -1260,7 +1268,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         return self.time_to_fps[pm.currentUnit(q=1, t=1)]
 
     @classmethod
-    def set_fps(cls, fps=25):
+    def set_fps(cls, fps=25.0):
         """sets the fps of the environment
         """
         start = time.time()
