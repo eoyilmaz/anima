@@ -345,7 +345,14 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # 12 FPS set for the shot and the intended fps is 25 which we will
         # newer know.
         if is_shot_related_task:
-            self.set_fps(shot.fps)
+            # TODO: Remove this next line when the shitty "Sizinkiler" project
+            #       is finished
+            if version.version_number != 1:
+                if self.version.task.project_id != 373116:
+                    self.set_fps(shot.fps)
+            else:
+                self.set_fps(shot.fps)
+
             # set render resolution
             self.set_resolution(shot.image_format.width,
                                 shot.image_format.height,
