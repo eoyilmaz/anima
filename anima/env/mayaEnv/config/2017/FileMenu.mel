@@ -505,10 +505,11 @@ global proc buildFileMenu()
 
         menuItem -divider true -longDivider false;
 
-        menuItem -subMenu 1 -tearOff 1 -allowOptionBoxes true -l (uiRes("m_FileMenu.kMASHToAE"));
-            menuItem -l (uiRes("m_FileMenu.kMASHToAESet")) -c ("MASHexecuteProc( \"CreateMayaToAESet\")");
-            menuItem -l (uiRes("m_FileMenu.kMASHToAE") + "...") -c ("MASHexecuteProc( \"MayaToAE\")");
-        setParent -menu ..;
+        menuItem -label (uiRes("m_FileMenu.kMASHToAEL"))
+            -annotation (uiRes("m_FileMenu.kMASHToAELAnnot"))
+            -command ("MASHexecuteProc(\"MayaToAEL\")")
+            -version "2017"
+            adobeAfterEffectsLiveLink;
 
         menuItem -divider true -longDivider false;
 
