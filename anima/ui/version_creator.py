@@ -1746,6 +1746,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
                     if answer == QtWidgets.QMessageBox.No:
                         # no, just return
+                        db.DBSession.rollback()
                         return
 
         from anima.exc import PublishError
