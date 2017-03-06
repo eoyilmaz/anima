@@ -18,9 +18,8 @@ global proc manipScaleBuildOrientMenu(string $menu) {
 global proc manipScaleBuildAxisMenu(string $menu) {
 	menu -e -dai $menu;
 	menuItem -label `uiRes("m_manipMoveProperties.kObject")` -p $menu -c "manipScaleContext -e -mode 0 Scale";
-
+    // disabled in Anima
 	//menuItem -label `uiRes("m_manipMoveProperties.kWorld")` -p $menu -c "manipScaleContext -e -mode 2 Scale";
-
 	menuItem -label `uiRes("m_manipMoveProperties.kAutoAlign")` -p $menu -c "manipScaleContext -e -mode 9 Scale";
 	menuItem -label `uiRes("m_manipMoveProperties.kLocal")` -p $menu -c "manipScaleContext -e -mode 1 Scale";
 	menuItem -label `uiRes("m_manipMoveProperties.kNormal")` -p $menu -c "manipScaleContext -e -mode 3 Scale";
@@ -84,7 +83,7 @@ global proc scaleOrientAxesChanged(int $i, float $value)
 	manipScaleContext -e -mode 6 -orientAxes $ori[0] $ori[1] $ori[2] Scale;
 }
 
-global proc manipScaleProperties () 
+global proc manipScaleProperties ()
 {
 	global int $manipScalePrevSnapMode = 1;
 	global string $manipScalePrevXformConstraint = "surface";
@@ -113,14 +112,14 @@ global proc manipScaleProperties ()
 
 				string $axisButton = `iconTextButton
 					-w 17 -h 26
-					-image ("popupMenuIcon.png") 
+					-image ("popupMenuIcon.png")
 					axisOrientMenuButton`;
 					string $axisMenu = `popupMenu -b 1 -p $axisButton`;
 					menu -e -pmc ("manipScaleBuildAxisMenu " + $axisMenu) $axisMenu;
 					string $axisMenu2 = `popupMenu -b 2 -p $axisButton`;
 					menu -e -pmc "manipScaleContext -e -mode `manipScaleContext -q -lastMode Scale` Scale" $axisMenu2;
 
-				textField 
+				textField
 					-ed false
 					-width 190
 					-height 25
@@ -134,7 +133,7 @@ global proc manipScaleProperties ()
 
 				string $orientButton = `iconTextButton
 					-w 17 -h 26
-					-image ("popupMenuIcon.png") 
+					-image ("popupMenuIcon.png")
 					scaleOrientMenuButton`;
 
 					string $menu = `popupMenu -b 1 -p $orientButton`;
@@ -144,17 +143,17 @@ global proc manipScaleProperties ()
 
 				floatField -w 62
 					-ann  `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
-					-cc "scaleOrientAxesChanged 0 #1"	
+					-cc "scaleOrientAxesChanged 0 #1"
 					manipScaleOrientFieldX;
 
 				floatField -w 62
 					-ann  `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
-					-cc "scaleOrientAxesChanged 1 #1"	
+					-cc "scaleOrientAxesChanged 1 #1"
 					manipScaleOrientFieldY;
 
 				floatField -w 62
 					-ann `uiRes("m_manipMoveProperties.kCustomAxisOrientFieldsAnn")`
-					-cc "scaleOrientAxesChanged 2 #1"	
+					-cc "scaleOrientAxesChanged 2 #1"
 					manipScaleOrientFieldZ;
 				setParent ..;
 
@@ -167,7 +166,7 @@ global proc manipScaleProperties ()
 				iconTextButton
 					-st "textOnly"
 					-l `uiRes("m_manipMoveProperties.kEditPivot")`
-					-ann `uiRes("m_manipMoveProperties.kEditPivotAnn")` 
+					-ann `uiRes("m_manipMoveProperties.kEditPivotAnn")`
 					-flat 0
 					-w 100
 					-h 23
@@ -184,70 +183,70 @@ global proc manipScaleProperties ()
 				setParent ..;
 
 				checkBoxGrp -ncb 1
-					-label $emptyLabel 
-					-label1 `uiRes("m_manipMoveProperties.kSnapPivotPos")` 
+					-label $emptyLabel
+					-label1 `uiRes("m_manipMoveProperties.kSnapPivotPos")`
 					-cc ("setTRSSnapPivotPos #1")
 					-ann `uiRes("m_manipMoveProperties.kSnapPivotPosAnn")`
 					snapPivotPosCheckBx;
 
 				checkBoxGrp -ncb 1
-					-label $emptyLabel 
+					-label $emptyLabel
 					-label1 `uiRes("m_manipMoveProperties.kSnapPivotOri")`
 					-cc1 ("setTRSSnapPivotOri #1")
 					-ann `uiRes("m_manipMoveProperties.kSnapPivotOriAnn")`
 					snapPivotOriCheckBx;
 
-				checkBoxGrp -ncb 1 
+				checkBoxGrp -ncb 1
 					-label $emptyLabel
 					-label1 `uiRes("m_manipMoveProperties.kPinComponentPivot")`
 					-cc1 ("setTRSPinPivot #1")
 					-ann `uiRes("m_manipMoveProperties.kPinComponentPivotAnn")`
 					pinComponentPivotCheckBx;
 
-				checkBoxGrp -ncb 1 
+				checkBoxGrp -ncb 1
 					-label $emptyLabel
 					-label1 `uiRes("m_manipMoveProperties.kPivotOriHandle")`
 					-cc1 ("setTRSPivotOriHandle #1")
 					-ann `uiRes("m_manipMoveProperties.kPivotOriHandleAnn")`
 					pivotOriHandleCheckBx;
 
-				radioButtonGrp -nrb 3 
-					-label (uiRes("m_manipScaleProperties.kScalePivot"))  
-					-label1 (uiRes("m_manipScaleProperties.kDefaultPivot")) 
-					-label2 (uiRes("m_manipScaleProperties.kObjectPivot")) 
-					-label3 (uiRes("m_manipScaleProperties.kManipPivot")) 
+				radioButtonGrp -nrb 3
+					-label (uiRes("m_manipScaleProperties.kScalePivot"))
+					-label1 (uiRes("m_manipScaleProperties.kDefaultPivot"))
+					-label2 (uiRes("m_manipScaleProperties.kObjectPivot"))
+					-label3 (uiRes("m_manipScaleProperties.kManipPivot"))
 					-ann (uiRes("m_manipScaleProperties.kScalePivotAnn"))
 					manipPivotRadio;
 
 				separator;
 
 				rowLayout -nc 3 -cw3 132 20 131;
-					text -align right 
+					text -align right
 						-l (uiRes("m_manipMoveProperties.kManipMoveXformConstraint"))
 						-ann (uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn"))
 						manipScaleXformConstraintLabel;
-	
+
 					string $constraintButton = `iconTextButton
 						-w 17 -h 26
 						-image ("popupMenuIcon.png")
 						-ann (uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn"))
 						manipScaleXformConstraintButton`;
-	
+
 					string $constraintMenu = `popupMenu -b 1 -p $constraintButton`;
 					menu -e -pmc ("manipScaleBuildXformConstraintMenu " + $constraintMenu) $constraintMenu;
 					string $constraintToggle = `popupMenu -b 2 -p $constraintButton`;
 					menu -e -pmc "manipScaleToggleXformConstraint" $constraintToggle;
-	
-					textField 
+
+					textField
 						-ed false
 						-width 131
 						-height 25
 						-ann `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAnn")`
 						manipScaleXformConstraintModeLabel;
-	
+
 					setParent ..;
 
-				radioButtonGrp -nrb 2 -label $emptyLabel 
+				radioButtonGrp -nrb 2 -label $emptyLabel
 					-label1 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAlongNormals")`
 					-label2 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintClosestPoint")`
 				 	-an1 `uiRes("m_manipMoveProperties.kManipMoveXformConstraintAlongNormalsAnn")`
@@ -257,29 +256,29 @@ global proc manipScaleProperties ()
 					manipScaleXformConstraintAlongNormalRadioBtn;
 
 				rowLayout -nc 4 -cw4 132 20 77 52;
-					text -align right 
+					text -align right
 						-l (uiRes("m_manipMoveProperties.kStepSnap"))
 						-ann (uiRes("m_manipMoveProperties.kStepSnapAnn"))
 						manipScaleSnapLabel;
-	
+
 					string $snapButton = `iconTextButton
 						-w 17 -h 26
 						-image ("popupMenuIcon.png")
 						-ann (uiRes("m_manipMoveProperties.kStepSnapAnn"))
 						manipScaleSnapButton`;
-	
+
 					string $snapMenu = `popupMenu -b 1 -p $snapButton`;
 					menu -e -pmc ("manipScaleBuildSnapMenu " + $snapMenu) $snapMenu;
 					string $snapToggle = `popupMenu -b 2 -p $snapButton`;
 					menu -e -pmc "manipScaleToggleSnapMode" $snapToggle;
-	
-					textField 
+
+					textField
 						-ed false
 						-width 77
 						-height 25
 						-ann `uiRes("m_manipMoveProperties.kStepSnapAnn")`
 						manipScaleSnapModeLabel;
-	
+
 					floatField -w 52 -pre 2 -v 1.0
 						-cc "manipScaleContext -e -snapValue #1 Scale"
 						manipScaleSnapValue;
@@ -291,7 +290,7 @@ global proc manipScaleProperties ()
 					-ann `uiRes("m_manipMoveProperties.kPreserveChildPosAnn")`
 					scalePreserveChildCheckBx;
 
-				checkBoxGrp -ncb 1 
+				checkBoxGrp -ncb 1
 					-label `uiRes("m_manipMoveProperties.kPreserveUVMove")`
 					-label1 $emptyLabel
 					-ann `uiRes("m_manipMoveProperties.kPreserveUVMoveAnn")`
@@ -299,12 +298,12 @@ global proc manipScaleProperties ()
 
 				checkBoxGrp -ncb 1
 					-vis true
-					-label `uiRes("m_manipMoveProperties.kTweakMode")`  -label1 ""  
+					-label `uiRes("m_manipMoveProperties.kTweakMode")`  -label1 ""
 					-ann `uiRes("m_manipMoveProperties.kTweakModeAnn")`
 					tweakModeCheckBox;
 
-				checkBoxGrp -ncb 1 
-					-label (uiRes("m_manipScaleProperties.kPreventNegativeScale")) 
+				checkBoxGrp -ncb 1
+					-label (uiRes("m_manipScaleProperties.kPreventNegativeScale"))
 					-label1 $emptyLabel
 					-ann (uiRes("m_manipScaleProperties.kPreventNegativeScaleAnn"))
 					preventNegativeScale;
@@ -312,11 +311,11 @@ global proc manipScaleProperties ()
 			setParent ..;
 		setParent ..;
 
-		commonSelectProperties(/*collapsed*/true);
+		commonSelectProperties(/*collapsed*/true, /*uvTool*/false);
 		softSelectProperties(/*collapsed*/true, /*uvTool*/false);
-		reflectionProperties(/*collapsed*/true);
+		reflectionProperties(/*collapsed*/true, /*uvTool*/false);
 
 	setParent ..;
-	
+
 	setUITemplate -popTemplate;
 }
