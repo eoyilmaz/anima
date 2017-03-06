@@ -7,10 +7,16 @@
 import hou
 
 from anima import logger
-from anima.ui import SET_PYSIDE
-from anima.utils import do_db_setup
 
-SET_PYSIDE()
+
+if hou.applicationVersion()[0] <= 15:
+    from anima.ui import SET_PYSIDE
+    from anima.utils import do_db_setup
+    SET_PYSIDE()
+else:
+    from anima.ui import SET_PYSIDE2
+    from anima.utils import do_db_setup
+    SET_PYSIDE2()
 
 
 class Executor(object):
