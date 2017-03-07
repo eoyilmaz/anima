@@ -348,7 +348,7 @@ workspace -fr "translatorData" ".mayaFiles/data/";
             # TODO: Remove this next line when the shitty "Sizinkiler" project
             #       is finished
             if version.version_number != 1:
-                if self.version.task.project_id != 373116:
+                if version.task.project_id != 373116:
                     self.set_fps(shot.fps)
             else:
                 self.set_fps(shot.fps)
