@@ -3621,7 +3621,20 @@ class Render(object):
             'aiDispPadding',
             'aiDispZeroValue',
             'aiDispAutobump',
-            'aiStepSize'
+            'aiStepSize',
+
+            'rsEnableSubdivision',
+            'rsSubdivisionRule',
+            'rsScreenSpaceAdaptive',
+            'rsDoSmoothSubdivision',
+            'rsMinTessellationLength',
+            'rsMaxTessellationSubdivs',
+            'rsOutOfFrustumTessellationFactor',
+
+            'rsEnableDisplacement',
+            'rsMaxDisplacement',
+            'rsDisplacementScale',
+            'rsAutoBumpMap',
         ]
 
         # from anima.ui import progress_dialog
@@ -3629,7 +3642,7 @@ class Render(object):
         # wrp = MayaMainProgressBarWrapper()
         # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
 
-        # caller = pdm.register(2, title='Ttransferring materials')
+        # caller = pdm.register(2, title='Transferring materials')
         for source_node, target_node in lut['match']:
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes

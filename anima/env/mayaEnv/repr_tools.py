@@ -566,23 +566,25 @@ class RepresentationGenerator(object):
             'Outputs/alembic/'
         ).replace('\\', '/')
 
-        abc_command = \
-            'AbcExport -j "-frameRange %(start_frame)s ' \
-            '%(end_frame)s ' \
-            '-ro -stripNamespaces ' \
-            '-uvWrite ' \
-            '-wholeFrameGeo ' \
-            '-worldSpace ' \
-            '-root |%(node)s -file %(file_path)s";'
-
         gpu_command = \
-            'gpuCache -startTime %(start_frame)s ' \
-            '-endTime %(end_frame)s ' \
-            '-optimize -optimizationThreshold 40000 ' \
+            'gpuCache -startTime %(start_frame)s -endTime %(end_frame)s '\
+            '-optimize -optimizationThreshold 40000 '\
             '-writeMaterials ' \
-            '-directory "%(path)s" ' \
+            '-dataFormat ogawa '\
+            '-directory "%(path)s" '\
             '-fileName "%(filename)s" ' \
             '%(node)s;'
+
+        # do not use the -dataFormat flag if it is earlier than Maya2014 Ext1
+        if pm.versions.current() < 201450:
+            gpu_command = \
+                'gpuCache -startTime %(start_frame)s ' \
+                '-endTime %(end_frame)s ' \
+                '-optimize -optimizationThreshold 40000 ' \
+                '-writeMaterials ' \
+                '-directory "%(path)s" ' \
+                '-fileName "%(filename)s" ' \
+                '%(node)s;'
 
         start_frame = end_frame = int(pm.currentTime(q=1))
 

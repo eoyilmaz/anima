@@ -144,6 +144,74 @@ CONVERSION_SPEC_SHEET = {
             os.path.expandvars(x.computedFileTextureNamePattern.get())
         ).convert()
     },
+    
+    'aiImage': {
+        # A dirty one liner that converts textures to rstexbin files
+        'call_before': lambda x: RedShiftTextureProcessor(
+            os.path.expandvars(x.filename.get())
+        ).convert()
+    },
+
+    # LIGHTS
+    'areaLight': {
+        'attributes': {
+            'aiExposure': {
+                'intensity': lambda x: 2 ** x
+            },
+            'aiSamples': {
+                'shadowRays': 1  # TODO: Test it later
+            },
+            'aiDecayType': {
+                'decayRate': lambda x: 0 if x == 0 else 2
+            },
+            'aiColorTemperature': {
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x) if x.getAttr('aiUseColorTemperature') else (0, 0, 0)
+            },
+            'color': 'color',
+        }
+    },
+
+    # 'aiSkyDomeLight': {
+    #     'node_type': 'RedshiftDomeLight',
+    #     'secondary_type': 'light'
+    # },
+
+    'pointLight': {
+        'attributes': {
+            'aiExposure': {
+                'intensity': lambda x: 2 ** x
+            },
+            'aiSamples': {
+                'shadowRays': 1  # TODO: Test it later
+            },
+            'aiDecayType': {
+                'decayRate': lambda x: 0 if x == 0 else 2
+            },
+            'aiColorTemperature': {
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x) if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
+            },
+            'aiRadius': 'lightRadius',
+            'color': 'color',
+        }
+    },
+
+    'directionalLight': {
+        'attributes': {
+            'aiExposure': {
+                'intensity': lambda x: 2 ** x
+            },
+            'aiSamples': {
+                'shadowRays': 1  # TODO: Test it later
+            },
+            'aiColorTemperature': {
+                'color': lambda x, y: pm.arnoldTemperatureToColor(
+                    x) if y.getAttr('aiUseColorTemperature') else y.getAttr(
+                    'color')
+            },
+            'aiAngle': 'lightAngle',
+            'color': 'color',
+        }
+    },
 
     'mesh': {
         'attributes': {
@@ -221,7 +289,12 @@ class ConversionManager(object):
                     source_attr_value = node.getAttr(source_attr)
                     for attr, converter in target_attr.items():
                         if callable(converter):
-                            attr_value = converter(source_attr_value)
+                            try:
+                                attr_value = converter(source_attr_value)
+                            except TypeError:
+                                # it should use two parameters, also include
+                                # the node itself
+                                attr_value = converter(source_attr_value, node)
                         else:
                             attr_value = converter
                         rs_node.setAttr(attr, attr_value)
@@ -248,8 +321,11 @@ class NodeCreator(object):
         secondary_type = self.specs.get('secondary_type')
 
         if secondary_type == 'shader':
-            shader, shding_engine = pm.createSurfaceShader(node_type)
+            shader, shading_engine = pm.createSurfaceShader(node_type)
             return shader
+        elif secondary_type == 'light':
+            light_transform = pm.shadingNode(node_type, asLight=1)
+            return light_transform.getShape()
 
 
 class RedShiftTextureProcessor(object):
