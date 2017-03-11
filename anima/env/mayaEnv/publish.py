@@ -135,7 +135,7 @@ VALID_MATERIALS = [
 
 @publisher
 def delete_unknown_nodes():
-    """deletes unknown nodes
+    """Delete unknown nodes
     """
     # delete the unknown nodes
     unknown_nodes = pm.ls(type='unknown')
@@ -147,7 +147,9 @@ def delete_unknown_nodes():
 
 @publisher
 def check_node_names_with_bad_characters():
-    """checks node names and ensures that there are no nodes with ord(c) > 127
+    """No bad characters in node names
+
+    checks node names and ensures that there are no nodes with ord(c) > 127
     """
     nodes_with_bad_name = []
     for node in pm.ls():
@@ -169,7 +171,7 @@ def check_node_names_with_bad_characters():
 
 @publisher
 def delete_unused_nodes():
-    """deletes unused shading nodes
+    """Delete unused shading nodes
     """
     num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
     if num_of_items_deleted:
@@ -179,7 +181,9 @@ def delete_unused_nodes():
 
 @publisher
 def check_representations():
-    """checks if the referenced versions are all matching the representation
+    """Representations are matching
+
+    checks if the referenced versions are all matching the representation
     type of the current version
     """
     ref_reprs = []
@@ -239,7 +243,9 @@ def check_representations():
 
 @publisher
 def cleanup_intermediate_objects():
-    """deletes any unused intermediate object in the current scene
+    """Delete unused intermediate objects
+
+    deletes any unused intermediate object in the current scene
     """
     pm.delete(
         [node
@@ -250,8 +256,10 @@ def cleanup_intermediate_objects():
 
 
 @publisher
-def convert_old_object_smoothing_to_renderer_smoothing():
-    """convert objects with old type display smoothing to renderer smoothing.
+def convert_old_object_smoothing_to_renderer_time_smoothing():
+    """Convert old smoothing to render time smoothing
+
+    convert objects with old type display smoothing to renderer smoothing.
 
     Currently supports Arnold only.
     """
@@ -264,7 +272,9 @@ def convert_old_object_smoothing_to_renderer_smoothing():
 
 @publisher
 def check_local_references():
-    """check if all of the references are legit
+    """Legitimate references
+
+    check if all of the references are legit
     """
     for ref in pm.listReferences():
         if ref.version is None:
@@ -275,7 +285,9 @@ def check_local_references():
 
 @publisher
 def check_if_previous_version_references():
-    """check if a previous version of the same task is referenced to the scene
+    """No previous version is referenced
+
+    check if a previous version of the same task is referenced to the scene
     """
     from anima.env.mayaEnv import Maya
     m = Maya()
@@ -307,7 +319,9 @@ def check_if_previous_version_references():
 
 @publisher
 def delete_empty_namespaces():
-    """checks and deletes empty namespaces
+    """Delete empty namespaces
+
+    checks and deletes empty namespaces
     """
     # only allow namespaces with DAG objects in it and no child namespaces
     empty_namespaces = [
@@ -329,7 +343,9 @@ def delete_empty_namespaces():
 
 @publisher
 def check_only_published_versions_are_used():
-    """checks if only published versions are used in this scene
+    """References are all Published
+
+    checks if only published versions are used in this scene
     """
     non_published_versions = []
     for ref in pm.listReferences():
@@ -349,7 +365,9 @@ def check_only_published_versions_are_used():
 
 @publisher
 def disable_all_performance_options():
-    """disables any performance degradation settings
+    """Disable performance degradation settings
+
+    disables any performance degradation settings
     """
     pm.performanceOptions(
         ds=0, dt=0, pbf=0, pbs=0, pc=0, pf=0, pl=0, pp=0, ps=0, pw=0
@@ -361,7 +379,9 @@ def disable_all_performance_options():
 # ******* #
 @publisher('model')
 def check_no_references():
-    """there should be no references
+    """No references in the model scene
+
+    there should be no references
     """
     if len(pm.listReferences()):
         raise PublishError(
@@ -371,7 +391,9 @@ def check_no_references():
 
 @publisher('model')
 def check_no_namespace():
-    """there should be no namespaces in a model file
+    """No namespaces
+
+    there should be no namespaces in a model file
     """
     if len(pm.listNamespaces()):
         raise PublishError(
@@ -381,7 +403,9 @@ def check_no_namespace():
 
 @publisher('model')
 def check_history():
-    """there should be no history on the objects
+    """No history
+
+    there should be no history on the objects
     """
     excluded_types = ['mesh', 'shadingEngine', 'groupId']
     nodes_with_history = []
@@ -415,7 +439,9 @@ def check_history():
 
 @publisher('model')
 def check_if_default_shader():
-    """check if only default shader is assigned
+    """Default shader used
+
+    check if only default shader is assigned
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -430,7 +456,9 @@ def check_if_default_shader():
 
 @publisher('model')
 def check_if_root_nodes_have_no_transformation():
-    """checks if transform nodes directly under world have 0 transformations
+    """Root nodes have no transformation
+
+    checks if transform nodes directly under world have 0 transformations
     """
     root_transform_nodes = auxiliary.get_root_nodes()
 
@@ -457,7 +485,9 @@ def check_if_root_nodes_have_no_transformation():
 
 @publisher('model')
 def check_if_leaf_mesh_nodes_have_no_transformation():
-    """checks if all the Mesh transforms have 0 transformation, but it is
+    """Leaf mesh nodes has no transformation
+
+    checks if all the Mesh transforms have 0 transformation, but it is
     allowed to move the mesh nodes in space with a parent group node.
     """
     mesh_nodes_with_transform_children = []
@@ -485,7 +515,9 @@ def check_if_leaf_mesh_nodes_have_no_transformation():
 
 @publisher('model')
 def check_model_quality():
-    """checks the quality of the model
+    """Models have good quality
+
+    checks the quality of the model
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -513,7 +545,9 @@ def check_model_quality():
 
 @publisher('model')
 def check_anim_layers():
-    """check if there are animation layers on the scene
+    """No animation layers
+
+    check if there are animation layers on the scene
     """
     if len(pm.ls(type='animLayer')) > 0:
         raise PublishError(
@@ -523,7 +557,9 @@ def check_anim_layers():
 
 @publisher('model')
 def check_display_layer():
-    """check if there are display layers
+    """No display layers
+
+    check if there are display layers
     """
     if len(pm.ls(type='displayLayer')) > 1:
         raise PublishError(
@@ -533,7 +569,9 @@ def check_display_layer():
 
 @publisher('model')
 def check_extra_cameras():
-    """checking if there are extra cameras
+    """No extra cameras
+
+    checking if there are extra cameras
     """
     if len(pm.ls(type='camera')) > 4:
         raise PublishError('There should be no extra cameras in your scene!')
@@ -541,7 +579,9 @@ def check_extra_cameras():
 
 @publisher('model')
 def check_empty_groups():
-    """check if there are empty groups
+    """No empty groups
+
+    check if there are empty groups
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -563,7 +603,9 @@ def check_empty_groups():
 
 @publisher('model')
 def check_empty_shapes():
-    """checks if there are empty mesh nodes
+    """No empty mesh nodes
+
+    checks if there are empty mesh nodes
     """
     empty_shape_nodes = []
     for node in pm.ls(type='mesh'):
@@ -583,7 +625,9 @@ def check_empty_shapes():
 
 @publisher('model')
 def check_uv_existence():
-    """check if there are uvs in all objects
+    """All objects have UVs
+
+    check if there are uvs in all objects
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -616,7 +660,9 @@ def check_uv_existence():
 
 @publisher('model')
 def check_out_of_space_uvs():
-    """checks if there are uvs with u values that are bigger than 10.0
+    """UV values are smaller than 10.0
+
+    checks if there are uvs with u values that are bigger than 10.0
     """
 
     # skip if this is a representation
@@ -665,7 +711,9 @@ def check_out_of_space_uvs():
 
 @publisher('model')
 def check_uv_border_crossing():
-    """checks if any of the uv shells are crossing uv borders
+    """UV shells are not crossing uv borders
+
+    checks if any of the uv shells are crossing uv borders
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -736,7 +784,9 @@ def check_uv_border_crossing():
 
 @publisher('model')
 def check_uvs():
-    """checks uvs with no uv area
+    """All polygons have non-zero uv area
+
+    checks uvs with no uv area
 
     The area of a 2d polygon calculation is based on the answer of Darius Bacon
     in http://stackoverflow.com/questions/451426/how-do-i-calculate-the-surface-area-of-a-2d-polygon
@@ -805,7 +855,9 @@ LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 @publisher(LOOK_DEV_TYPES + ['model'])
 def set_pixel_error():
-    """sets the pixel error on objects which have a linear subdiv
+    """Set aiSubdivPixelError to 0
+
+    sets the pixel error on objects which have a linear subdiv
     """
     for node in pm.ls(type='mesh'):
         # subdiv_type = node.getAttr('aiSubdivType')
@@ -822,7 +874,9 @@ def set_pixel_error():
 
 @publisher(LOOK_DEV_TYPES)
 def disable_internal_reflections_in_aiStandard():
-    """disable internal reflections in aiStandard
+    """Disable internal reflections in aiStandard
+
+    disable internal reflections in aiStandard
     """
     for mat in pm.ls(type='aiStandard'):
         if mat.referenceFile() is None:
@@ -831,7 +885,9 @@ def disable_internal_reflections_in_aiStandard():
 
 @publisher(LOOK_DEV_TYPES)
 def check_all_tx_textures():
-    """checks if tx textures are created for all of the texture nodes in the
+    """TX textures exists
+
+    checks if tx textures are created for all of the texture nodes in the
     current scene
     """
     excluded_extensions = ['.ptex']
@@ -877,7 +933,9 @@ def check_all_tx_textures():
 
 @publisher(LOOK_DEV_TYPES + ['layout'])
 def check_lights():
-    """checks if there are lights in the scene
+    """No lights in the scene
+
+    checks if there are lights in the scene
     """
     all_lights = pm.ls(
         type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight']
@@ -893,7 +951,9 @@ def check_lights():
 
 @publisher(LOOK_DEV_TYPES)
 def check_only_supported_materials_are_used():
-    """check if only supported materials are used
+    """Only supported materials are used
+
+    check if only supported materials are used
     """
     non_arnold_materials = []
 
@@ -913,7 +973,9 @@ def check_only_supported_materials_are_used():
 
 @publisher(LOOK_DEV_TYPES)
 def check_multiple_connections_for_textures():
-    """check if textures are only used in one material (not liking it very much
+    """No multiple connections for textures (Arnold)
+
+    check if textures are only used in one material (not liking it very much
     but it is breaking ASS files.
     """
     # load necessary plugins
@@ -952,6 +1014,7 @@ def check_multiple_connections_for_textures():
     nodes_to_ignore += pm.ls('defaultTextureList*')
     nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
     nodes_to_ignore += pm.ls('hyperShadePrimaryNodeEditorSavedTabsInfo*')
+    nodes_to_ignore += pm.ls('MayaNodeEditorSavedTabsInfo*')
 
     all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
     for node in nodes_to_ignore:
@@ -991,7 +1054,9 @@ def check_multiple_connections_for_textures():
 
 @publisher(LOOK_DEV_TYPES)
 def check_objects_still_using_default_shader():
-    """check if there are objects still using the default shader
+    """Default shader is not used
+
+    check if there are objects still using the default shader
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -1016,7 +1081,9 @@ def check_objects_still_using_default_shader():
 
 @publisher(LOOK_DEV_TYPES + ['layout'])
 def check_component_edits_on_references():
-    """check if there are component edits on references
+    """No component edits
+
+    check if there are component edits on references
     """
     # skip if this is a representation
     v = staging.get('version')
@@ -1070,7 +1137,9 @@ def check_component_edits_on_references():
 
 @publisher('rig')
 def check_cacheable_attr():
-    """checks if there is at least one cacheable attr
+    """Cacheable attribute exists
+
+    checks if there is at least one cacheable attr
     """
     root_nodes = auxiliary.get_root_nodes()
     root_node_has_cacheable_attr = any(
@@ -1101,7 +1170,9 @@ def check_cacheable_attr():
 
 @publisher('animation')
 def check_smartass_animator():
-    """checks if the smartass animator is silently trying to create a new
+    """Animator doesn't try to be a smart-ass
+
+    checks if the smartass animator is silently trying to create a new
     version for a completed animation scene
     """
     from stalker.models import walk_hierarchy
@@ -1150,7 +1221,9 @@ def check_smartass_animator():
 
 @publisher
 def check_time_logs():
-    """do not allow publishing if there is no time logs for the task, do that
+    """TimeLogs entered
+
+    do not allow publishing if there is no time logs for the task, do that
     only for non WFD tasks
     """
     # skip if this is a representation
@@ -1195,7 +1268,9 @@ def check_time_logs():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_sequencer():
-    """checks if there is a sequencer node in the scene
+    """Sequencer node exists
+
+    checks if there is a sequencer node in the scene
     """
     sequencers = pm.ls(type='sequencer')
     if len(sequencers) == 0:
@@ -1204,7 +1279,9 @@ def check_sequencer():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_shot_nodes():
-    """checks if there is at least one shot node
+    """Shot node exists
+
+    checks if there is at least one shot node
     """
     shot_nodes = pm.ls(type='shot')
     if len(shot_nodes) == 0:
@@ -1213,7 +1290,9 @@ def check_shot_nodes():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name():
-    """checks if the sequence name attribute is properly set
+    """Sequence name is properly set
+
+    checks if the sequence name attribute is properly set
     """
     # do not consider referenced shot nodes
     shots = pm.ls(type='shot')
@@ -1231,7 +1310,9 @@ def check_sequence_name():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name_format():
-    """checks if the sequence name format is correct
+    """Sequence name format is ok
+
+    checks if the sequence name format is correct
     """
     # do not consider referenced shot nodes
     shots = pm.ls(type='shot')
@@ -1307,7 +1388,9 @@ def check_sequence_name_format():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_shot_name_format():
-    """check shot name format
+    """Shot name format is ok
+
+    check shot name format
     """
     import re
     regex = r'^[\d]+$'
@@ -1343,7 +1426,9 @@ def check_shot_name_format():
 
 @publisher('previs')
 def check_unique_shot_names():
-    """check if the shot names are unique
+    """Shot names are unique
+
+    check if the shot names are unique
     """
     shot_nodes = pm.ls(type='shot')
 
@@ -1373,7 +1458,9 @@ def check_unique_shot_names():
 
 @publisher(['animation', 'shot previs'])
 def check_multiple_shot_nodes():
-    """checks if there are multiple shot nodes
+    """Single shot node in the scene
+
+    checks if there are multiple shot nodes
     """
     shot_nodes = pm.ls(type='shot')
 
@@ -1390,7 +1477,9 @@ def check_multiple_shot_nodes():
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_frame_range_selection():
-    """checks if there is any range selected in the time slider
+    """No frame range selection in time slider
+
+    checks if there is any range selected in the time slider
 
     Because it breaks shots to be playblasted as a whole the user should not
     have selected a range in the time slider
@@ -1408,7 +1497,9 @@ def check_frame_range_selection():
 
 @publisher(['animation', 'shot previs'])
 def set_frame_range():
-    """sets the frame range from the shot node
+    """Set frame range
+
+    sets the frame range from the shot node
     """
     shot_node = pm.ls(type='shot')[0]
     start_frame = shot_node.startFrame.get()
@@ -1431,7 +1522,9 @@ def set_frame_range():
 
 @publisher('layout')
 def check_reference_types():
-    """It is not allowed to publish a layout that contains:
+    """No "ActiveProps" in the scene
+
+    It is not allowed to publish a layout that contains:
 
     Active Prop
     """
@@ -1463,21 +1556,25 @@ def check_reference_types():
         )
 
 
-@publisher('animation')
-def freezing_last_frame():
-    """checks if the last frame of the shot is freezing
-    """
-    # get cacheable nodes
-    # check the last 2 frames
-    # if the character is in move in the last 2 frames
-    # then there should be movement in the first frame after the current
-    # playback range
-    pass
+# @publisher('animation')
+# def freezing_last_frame():
+#     """
+#
+#     checks if the last frame of the shot is freezing
+#     """
+#     # get cacheable nodes
+#     # check the last 2 frames
+#     # if the character is in move in the last 2 frames
+#     # then there should be movement in the first frame after the current
+#     # playback range
+#     pass
 
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)
 def update_audit_info():
-    """updates the audit info of the version
+    """Update audit info
+
+    updates the audit info of the version
     """
     from stalker import LocalSession
     local_session = LocalSession()
@@ -1496,7 +1593,9 @@ def update_audit_info():
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)
 def generate_thumbnail():
-    """generates thumbnail for the current scene
+    """Generate thumbnails
+
+    generates thumbnail for the current scene
     """
     # TODO: For now skip if this is Maya2017
     import pymel
@@ -1517,7 +1616,9 @@ def generate_thumbnail():
     publisher_type=POST_PUBLISHER_TYPE
 )
 def create_representations():
-    """creates the representations of the scene
+    """Create representations
+
+    creates the representations of the scene
     """
     from anima.env import mayaEnv
     m_env = mayaEnv.Maya()
@@ -1550,7 +1651,9 @@ def create_representations():
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def update_shot_range():
-    """update shot range
+    """Update shot range
+
+    update shot range
     """
     from stalker import db, Shot
     from anima.env import mayaEnv
@@ -1569,7 +1672,7 @@ def update_shot_range():
 
 @publisher(['animation', 'pose', 'mocap'], publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations():
-    """cache animations
+    """Cache animations
     """
     reload(auxiliary)
     auxiliary.export_alembic_from_cache_node(handles=1)
@@ -1577,7 +1680,9 @@ def cache_animations():
 
 @publisher(['animation', 'previs', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def generate_playblast():
-    """generates a playblast for the current scene
+    """Generate playblast
+
+    generates a playblast for the current scene
     """
     import anima
     from anima import utils
@@ -1603,7 +1708,9 @@ def generate_playblast():
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def export_edl_and_xml():
-    """exports edl and xml representations of animation scenes
+    """Export EDL and XML
+
+    exports edl and xml representations of animation scenes
     """
     from anima.env.mayaEnv import Maya
     m = Maya()
@@ -1708,7 +1815,9 @@ def export_edl_and_xml():
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
 def export_camera():
-    """exports camera and the related shot node
+    """Export camera and shot node
+
+    exports camera and the related shot node
     """
     from stalker import Task, Version
     from anima.env import mayaEnv
