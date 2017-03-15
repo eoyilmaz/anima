@@ -361,7 +361,7 @@ class RedShiftTextureProcessor(object):
             -log            Enable logging to log file
     """
     executable = os.path.join(
-        os.environ['REDSHIFT_COREDATAPATH'],
+        os.environ.get('REDSHIFT_COREDATAPATH'),
         'bin/redshiftTextureProcessor'
     )
 
