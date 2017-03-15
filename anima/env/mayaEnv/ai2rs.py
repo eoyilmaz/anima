@@ -171,10 +171,20 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
-    # 'aiSkyDomeLight': {
-    #     'node_type': 'RedshiftDomeLight',
-    #     'secondary_type': 'light'
-    # },
+    'aiSkyDomeLight': {
+        'node_type': 'RedshiftDomeLight',
+        'secondary_type': 'light',
+
+        'attributes': {
+            'color': {
+                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('filename')
+            }
+        },
+
+        'call_after': lambda x, y: RedShiftTextureProcessor(
+            os.path.expandvars(y.tex0.get())
+        ).convert(),
+    },
 
     'pointLight': {
         'attributes': {
@@ -246,7 +256,7 @@ class ConversionManager(object):
 
         # call any call_before
         call_before = conversion_specs.get('call_before')
-        if call_before:
+        if call_before and callable(call_before):
             call_before(node)
 
         node_creator = NodeCreator(conversion_specs)
@@ -301,7 +311,7 @@ class ConversionManager(object):
 
         # call any call_after
         call_after = conversion_specs.get('call_after')
-        if call_after:
+        if call_after and callable(call_after):
             call_after(node, rs_node)
 
         return rs_node
@@ -360,7 +370,11 @@ class RedShiftTextureProcessor(object):
                  iangularmap=None, ocolor=None, oalpha=None, noskip=False,
                  r=None, log=None):
 
-        self.input_file_full_path = input_file_full_path
+        self.input_file_full_path = os.path.normpath(
+            os.path.expandvars(
+                input_file_full_path
+            )
+        ).replace('\\', '/')
         self.files_to_process = []
         self.expand_tiles()
         self.noskip = noskip

@@ -98,6 +98,9 @@ VALID_MATERIALS = [
 ]
 
 
+LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
+
+
 # ********* #
 # GENERIC   #
 # ********* #
@@ -483,6 +486,27 @@ def check_if_root_nodes_have_no_transformation():
         )
 
 
+@publisher(['model', 'rig'] + LOOK_DEV_TYPES)
+def check_if_only_one_root_node():
+    """Only one root node
+
+    checks if there is only one root node with no shape (group)
+    """
+    root_transform_nodes = auxiliary.get_root_nodes()
+
+    if len(root_transform_nodes) > 1:
+        raise PublishError(
+            'There is more than one root node in the scene'
+        )
+
+    # check shape
+    if root_transform_nodes[0].getShape():
+        raise PublishError(
+            'Root node should be a Group node!'
+            # 'Root node should not have a shape'
+        )
+
+
 @publisher('model')
 def check_if_leaf_mesh_nodes_have_no_transformation():
     """Leaf mesh nodes has no transformation
@@ -850,7 +874,6 @@ def check_uvs():
 # ****************** #
 # LOOK DEVELOPMENT   #
 # ****************** #
-LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 
 
 @publisher(LOOK_DEV_TYPES + ['model'])
@@ -1136,6 +1159,20 @@ def check_component_edits_on_references():
 
 
 @publisher('rig')
+def check_root_node_name():
+    """Root node name is correct
+
+    In rig scenes, the name of the root node should not end with a number
+    """
+    root_nodes = auxiliary.get_root_nodes()
+    root_node_name = root_nodes[0].name()
+    if root_node_name[-1].isdigit():
+        raise PublishError(
+            "The name of the root node should not end with a number"
+        )
+
+
+@publisher('rig')
 def check_cacheable_attr():
     """Cacheable attribute exists
 
@@ -1166,6 +1203,19 @@ def check_cacheable_attr():
                 'Please add <b>cacheable</b> attribute and set it to a '
                 '<b>proper name</b>!'
             )
+
+
+@publisher('rig')
+def cacheable_attr_to_lowercase():
+    """Cacheable -> lower case
+
+    Converts the cacheable attribute value to lowercase
+    """
+    root_nodes = auxiliary.get_root_nodes()
+    root_nodes[0].setAttr(
+        'cacheable',
+        root_nodes[0].getAttr('cacheable').lower()
+    )
 
 
 @publisher('animation')

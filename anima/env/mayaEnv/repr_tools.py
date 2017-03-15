@@ -1175,7 +1175,7 @@ class RepresentationGenerator(object):
             root_nodes = self.get_local_root_nodes()
 
             for root_node in root_nodes:
-                for child_node in root_node.getChildren():
+                for child_node in root_node.getChildren(type=pm.nt.Transform):
                     child_node_name = child_node.name()
 
                     rp = pm.xform(child_node, q=1, ws=1, rp=1)
