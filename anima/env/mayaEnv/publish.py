@@ -410,7 +410,7 @@ def check_history():
 
     there should be no history on the objects
     """
-    excluded_types = ['mesh', 'shadingEngine', 'groupId']
+    excluded_types = ['mesh', 'shadingEngine', 'groupId', 'RedshiftProxyMesh']
     nodes_with_history = []
 
     # get all shapes

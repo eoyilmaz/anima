@@ -13,6 +13,7 @@ import uuid
 import pymel.core as pm
 from stalker import LocalSession, Repository
 
+from anima.env.mayaEnv import ai2rs
 from anima.repr import Representation
 from anima.env.mayaEnv import auxiliary
 from anima import logger
@@ -437,6 +438,7 @@ class RepresentationGenerator(object):
         """
         self.generate_gpu()
         self.generate_ass()
+        self.generate_rs()
 
     def generate_bbox(self):
         """generates the BBox representation of the current scene
@@ -854,26 +856,41 @@ class RepresentationGenerator(object):
     def make_tx(self, texture_path):
         """converts the given texture to TX
         """
-        tx_path = ''.join([os.path.splitext(texture_path)[0], '.tx'])
+        # check if it is tiled
+        tile_path = texture_path
+        orig_path_as_tx = ''.join([os.path.splitext(texture_path)[0], '.tx'])
 
-        # generate if not exists
-        if not os.path.exists(tx_path):
-            cmd = 'maketx -o "%s" -u --oiio %s' % (tx_path, texture_path)
+        if '<' in tile_path:
+            # replace any <U> and <V> with an *
+            tile_path = tile_path.replace('<U>', '*')
+            tile_path = tile_path.replace('<V>', '*')
+            tile_path = tile_path.replace('<UDIM>', '*')
 
-            if os.name == 'nt':
-                proc = subprocess.Popen(
-                    cmd,
-                    creationflags=subprocess.SW_HIDE,
-                    shell=True
-                )
-            else:
-                proc = subprocess.Popen(
-                    cmd,
-                    shell=True
-                )
+        import glob
+        files_to_process = glob.glob(tile_path)
 
-            proc.wait()
-        return tx_path
+        for tile_path in files_to_process:
+            tx_path = ''.join([os.path.splitext(tile_path)[0], '.tx'])
+            # generate if not exists
+            if not os.path.exists(tx_path):
+                # TODO: Consider Color Management
+                cmd = 'maketx -o "%s" -u --oiio %s' % (tx_path, tile_path)
+
+                if os.name == 'nt':
+                    proc = subprocess.Popen(
+                        cmd,
+                        creationflags=subprocess.SW_HIDE,
+                        shell=True
+                    )
+                else:
+                    proc = subprocess.Popen(
+                        cmd,
+                        shell=True
+                    )
+    
+                proc.wait()
+
+        return orig_path_as_tx
 
     @classmethod
     def clean_up(self):
@@ -968,7 +985,7 @@ class RepresentationGenerator(object):
             # This is needed to properly render textures with any OS
             types_and_attrs = {
                 'aiImage': 'filename',
-                'file': 'fileTextureName',
+                'file': 'computedFileTextureNamePattern',
                 'imagePlane': 'imageName'
             }
 
@@ -1154,9 +1171,9 @@ class RepresentationGenerator(object):
                     sp = pm.xform(child_node, q=1, ws=1, sp=1)
                     # rpt = child_node.getRotatePivotTranslation()
 
-                    pm.xform(ass_node, ws=1, rp=rp)
-                    pm.xform(ass_node, ws=1, sp=sp)
-                    # ass_node.setRotatePivotTranslation(rpt)
+                    pm.xform(ass_tra, ws=1, rp=rp)
+                    pm.xform(ass_tra, ws=1, sp=sp)
+                    # ass_tra.setRotatePivotTranslation(rpt)
 
                     # delete the child_node
                     pm.delete(child_node)
@@ -1282,3 +1299,363 @@ class RepresentationGenerator(object):
         # reset show plugin shapes option
         active_panel = auxiliary.Playblaster.get_active_panel()
         pm.modelEditor(active_panel, e=1, pluginShapes=show_plugin_shapes)
+
+    def generate_rs(self):
+        """generates the RS representation of the current scene
+
+        For Model Tasks the RS is generated over the LookDev Task because it
+        is not possible to assign a material to an object inside an RS file.
+        """
+        # before doing anything, check if this is a look dev task
+        # and export the objects from the referenced files with their current
+        # shadings, then replace all of the references to RS repr and than
+        # add Stand-in nodes and parent them under the referenced models
+
+        # load necessary plugins
+        try:
+            pm.loadPlugin('redshift4maya')
+        except RuntimeError:
+            # Redshift For maya is not installed
+            return
+
+        # # disable "show plugin shapes"
+        # active_panel = auxiliary.Playblaster.get_active_panel()
+        # show_plugin_shapes = pm.modelEditor(active_panel, q=1, pluginShapes=1)
+        # pm.modelEditor(active_panel, e=1, pluginShapes=False)
+
+        # validate the version first
+        self.version = self._validate_version(self.version)
+
+        self.open_version(self.version)
+
+        task = self.version.task
+
+        export_command = 'rsProxy -fp "%(path)s" -sl;'
+
+        # calculate output path
+        output_path = \
+            os.path.join(self.version.absolute_path, 'Outputs/rs/')\
+            .replace('\\', '/')
+
+        # check if all references have an ASS repr first
+        refs_with_no_ass_repr = []
+        for ref in pm.listReferences():
+            if ref.version and not ref.has_repr('RS'):
+                refs_with_no_ass_repr.append(ref)
+
+        if len(refs_with_no_ass_repr):
+            raise RuntimeError(
+                'Please generate the RS Representation of the references '
+                'first!!!\n%s' %
+                '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+            )
+
+        if self.is_look_dev_task(task):
+            # in look dev files, we export the RS files directly from the Base
+            # version and parent the resulting RS node to the parent of
+            # the child node
+
+            # load only Model references
+            for ref in pm.listReferences():
+                v = ref.version
+                load_ref = False
+                if v:
+                    ref_task = v.task
+                    if self.is_model_task(ref_task):
+                        load_ref = True
+
+                if load_ref:
+                    ref.load()
+                    ref.importContents()
+
+            # Make all texture paths relative
+            # replace all "$REPO#" from all texture paths first
+            #
+            # This is needed to properly render textures with any OS
+            types_and_attrs = {
+                'aiImage': 'filename',
+                'file': 'computedFileTextureNamePattern',
+                'imagePlane': 'imageName'
+            }
+
+            for node_type in types_and_attrs.keys():
+                attr_name = types_and_attrs[node_type]
+                for node in pm.ls(type=node_type):
+                    orig_path = node.getAttr(attr_name).replace("\\", "/")
+                    path = re.sub(
+                        r'(\$REPO[0-9/]+)',
+                        '',
+                        orig_path
+                    )
+                    rstexbin_paths = \
+                        ai2rs.RedShiftTextureProcessor(path).convert()
+                    # inputs = node.attr(attr_name).inputs(p=1)
+                    # do not need to set the inputs
+                    # if len(inputs):
+                    #     # set the input attribute
+                    #     for input_node_attr in inputs:
+                    #         input_node_attr.set(rstexbin_paths)
+                    # else:
+                    #     node.setAttr(attr_name, rstexbin_paths)
+
+            # randomize all render node names
+            # This is needed to prevent clashing of materials in a bigger scene
+            # for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+            #     if node.referenceFile() is None and \
+            #        node.name() not in READ_ONLY_NODE_NAMES:
+            #         node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+
+            nodes_to_rs_files = {}
+
+            # export all root rs files as they are
+            for root_node in auxiliary.get_root_nodes():
+                for child_node in root_node.getChildren():
+                    # check if it is a transform node
+                    if not isinstance(child_node, pm.nt.Transform):
+                        continue
+
+                    if not auxiliary.has_shape(child_node):
+                        continue
+
+                    # randomize child node name
+                    child_node_name = child_node\
+                        .fullPath()\
+                        .replace('|', '_')\
+                        .split(':')[-1]
+
+                    child_node_full_path = child_node.fullPath()
+
+                    pm.select(child_node)
+                    child_node.rename(
+                        '%s_%s' % (child_node.name(), uuid.uuid4().hex)
+                    )
+
+                    output_filename =\
+                        '%s_%s.rs' % (
+                            self.version.nice_name,
+                            child_node_name
+                        )
+
+                    output_full_path = \
+                        os.path.join(output_path, output_filename)
+
+                    # create path
+                    try:
+                        os.makedirs(os.path.dirname(output_full_path))
+                    except OSError:
+                        # dir exists
+                        pass
+
+                    # run the mel command
+                    pm.mel.eval(
+                        export_command % {
+                            'path': output_full_path.replace('\\', '/')
+                        }
+                    )
+                    nodes_to_rs_files[child_node_full_path] = output_full_path
+                    # print('%s -> %s' % (
+                    #     child_node_full_path,
+                    #     output_full_path)
+                    # )
+
+            # reload the scene
+            pm.newFile(force=True)
+            self.open_version(self.version)
+
+            # convert all references to RS
+            # we are doing it a little bit early here, but we need to
+            for ref in pm.listReferences():
+                ref.to_repr('RS')
+
+            all_proxies = pm.ls(type='RedshiftProxyMesh')
+            for rs_proxy_node in all_proxies:
+                # somehow the output of the RedshiftProxyNode is the Transform node
+                rs_proxy_tra = rs_proxy_node.outMesh.outputs()[0]
+                full_path = rs_proxy_tra.fullPath()
+                if full_path in nodes_to_rs_files:
+                    proxy_file_path = nodes_to_rs_files[full_path]
+                    # Repository.to_os_independent_path(
+                    #     nodes_to_rs_files[full_path]
+                    # )
+                    rs_proxy_node.setAttr('fileName', proxy_file_path)
+
+        elif self.is_vegetation_task(task):
+            # in vegetation files, we export the RS files directly from the
+            # Base version, also we use the geometry under "pfxPolygons"
+            # and parent the resulting Proxy nodes to the
+            # pfxPolygons
+            # load all references
+            for ref in pm.listReferences():
+                ref.load()
+
+            # Make all texture paths relative
+            # replace all "$REPO#" from all texture paths first
+            #
+            # This is needed to properly render textures with any OS
+            types_and_attrs = {
+                'aiImage': 'filename',
+                'file': 'computedFileTextureNamePattern',
+                'imagePlane': 'imageName'
+            }
+
+            for node_type in types_and_attrs.keys():
+                attr_name = types_and_attrs[node_type]
+                for node in pm.ls(type=node_type):
+                    orig_path = node.getAttr(attr_name).replace("\\", "/")
+                    path = re.sub(
+                        r'(\$REPO[0-9/]+)',
+                        '',
+                        orig_path
+                    )
+                    rstexbin_paths = \
+                        ai2rs.RedShiftTextureProcessor(path).convert()
+                    # inputs = node.attr(attr_name).inputs(p=1)
+                    # if len(inputs):
+                    #     # set the input attribute
+                    #     for input_node_attr in inputs:
+                    #         input_node_attr.set(rstexbin_paths)
+                    # else:
+                    #     node.setAttr(attr_name, rstexbin_paths)
+
+            # import shaders that are referenced to this scene
+            # there is only one reference in the vegetation task and this is
+            # the shader scene
+            for ref in pm.listReferences():
+                ref.importContents()
+
+            # randomize all render node names
+            # This is needed to prevent clashing of materials in a bigger scene
+            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+                if node.referenceFile() is None and \
+                   node.name() not in READ_ONLY_NODE_NAMES:
+                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+
+            # find the _pfxPolygons node
+            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+
+            for node in pfx_polygons_node.getChildren():
+                for child_node in node.getChildren():
+                    #print('processing %s' % child_node.name())
+                    child_node_name = child_node.name().split('___')[-1]
+
+                    pm.select(child_node)
+                    output_filename =\
+                        '%s_%s.rs' % (
+                            self.version.nice_name,
+                            child_node_name.replace(':', '_').replace('|', '_')
+                        )
+
+                    output_full_path = \
+                        os.path.join(output_path, output_filename)
+
+                    # create path
+                    try:
+                        os.makedirs(os.path.dirname(output_full_path))
+                    except OSError:
+                        # dir exists
+                        pass
+
+                    # run the mel command
+                    pm.mel.eval(
+                        export_command % {
+                            'path': output_full_path.replace('\\', '/')
+                        }
+                    )
+
+                    # generate an aiStandIn node and set the path
+                    rs_proxy_mesh_node, rs_proxy_mesh_shape = \
+                        auxiliary.create_rs_proxy_node(path=output_full_path)
+                    rs_proxy_tra = rs_proxy_mesh_shape.getParent()
+
+                    # parent the rs_proxy_mesh_shape under the current node
+                    # under pfx_polygons_node
+                    pm.parent(rs_proxy_tra, node)
+
+                    # set pivots
+                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                    # rpt = child_node.getRotatePivotTranslation()
+
+                    pm.xform(rs_proxy_tra, ws=1, rp=rp)
+                    pm.xform(rs_proxy_tra, ws=1, sp=sp)
+                    # rs_proxy_node.setRotatePivotTranslation(rpt)
+
+                    # delete the child_node
+                    pm.delete(child_node)
+
+                    # give it the same name with the original
+                    rs_proxy_tra.rename('%s' % child_node_name)
+
+            # clean up other nodes
+            pm.delete('kks___vegetation_pfxStrokes')
+            pm.delete('kks___vegetation_paintableGeos')
+
+        elif self.is_model_task(task):
+            # convert all children of the root node
+            # to an empty rs node
+            # and save it as it is
+            root_nodes = self.get_local_root_nodes()
+
+            for root_node in root_nodes:
+                for child_node in root_node.getChildren(type=pm.nt.Transform):
+                    child_node_name = child_node.name()
+
+                    rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                    sp = pm.xform(child_node, q=1, ws=1, sp=1)
+
+                    pm.delete(child_node)
+
+                    rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(path='')
+                    rs_proxy_tra = rs_proxy_mesh.getParent()
+                    pm.parent(rs_proxy_tra, root_node)
+                    rs_proxy_tra.rename(child_node_name)
+
+                    # set pivots
+                    pm.xform(rs_proxy_tra, ws=1, rp=rp)
+                    pm.xform(rs_proxy_tra, ws=1, sp=sp)
+
+        # convert all references to RS
+        for ref in pm.listReferences():
+            ref.to_repr('RS')
+            ref.load()
+
+        # if this is an Exterior/Interior -> Layout -> Hires task flatten it
+        is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
+        if is_exterior_or_interior_task:
+            # and import all of the references
+            all_refs = pm.listReferences()
+            while len(all_refs) != 0:
+                for ref in all_refs:
+                    if not ref.isLoaded():
+                        ref.load()
+                    ref.importContents()
+                all_refs = pm.listReferences()
+
+            # assign lambert1 to all RS nodes
+            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+
+            # # now remove them from the group
+            # pm.sets('initialShadingGroup', e=1, rm=pm.ls())
+
+            # clean up
+            self.clean_up()
+
+        # save the scene as {{original_take}}___ASS
+        # use maya
+        take_name = '%s%s%s' % (
+            self.base_take_name, Representation.repr_separator, 'RS'
+        )
+        v = self.get_latest_repr_version(take_name)
+        self.maya_env.save_as(v)
+
+        # export the root nodes under the same file
+        if is_exterior_or_interior_task:
+            pm.select(auxiliary.get_root_nodes())
+            pm.exportSelected(
+                v.absolute_full_path,
+                type='mayaAscii',
+                force=True
+            )
+
+        # new scene
+        pm.newFile(force=True)

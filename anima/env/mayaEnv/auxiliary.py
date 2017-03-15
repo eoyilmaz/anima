@@ -749,6 +749,20 @@ def create_arnold_stand_in(path=None):
     return stand_in
 
 
+def create_rs_proxy_node(path=None):
+    """Creates Redshift Proxies showing a proxy object
+    """
+    proxy_mesh_node = pm.createNode('RedshiftProxyMesh')
+    proxy_mesh_node.fileName.set(path)
+    proxy_mesh_shape = pm.createNode('mesh')
+    proxy_mesh_node.outMesh >> proxy_mesh_shape.inMesh
+
+    # assign default material
+    pm.sets('initialShadingGroup', fe=proxy_mesh_shape)
+
+    return proxy_mesh_node, proxy_mesh_shape
+
+
 def run_pre_publishers():
     """runs pre publishers if the current scene is a published version
 
