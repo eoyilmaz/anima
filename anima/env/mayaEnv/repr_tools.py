@@ -983,14 +983,28 @@ class RepresentationGenerator(object):
             # replace all "$REPO#" from all texture paths first
             #
             # This is needed to properly render textures with any OS
-            types_and_attrs = {
-                'aiImage': 'filename',
-                'file': 'computedFileTextureNamePattern',
-                'imagePlane': 'imageName'
-            }
+            maya_version = int(pm.about(v=1))
+            if maya_version == 2014:
+                types_and_attrs = {
+                    'aiImage': 'filename',
+                    'file': 'fileTextureName',
+                    'imagePlane': 'imageName'
+                }
+            else:
+                types_and_attrs = {
+                    'aiImage': 'filename',
+                    'file': ('computedFileTextureNamePattern',
+                             'fileTextureName'),
+                    'imagePlane': 'imageName'
+                }
 
             for node_type in types_and_attrs.keys():
                 attr_name = types_and_attrs[node_type]
+                set_attr_name = attr_name
+                if isinstance(attr_name, tuple):
+                    set_attr_name = attr_name[1]
+                    attr_name = attr_name[0]
+
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
                     path = re.sub(
@@ -999,13 +1013,14 @@ class RepresentationGenerator(object):
                         orig_path
                     )
                     tx_path = self.make_tx(path)
-                    inputs = node.attr(attr_name).inputs(p=1)
+                    inputs = node.attr(set_attr_name).inputs(p=1)
+
                     if len(inputs):
                         # set the input attribute
                         for input_node_attr in inputs:
                             input_node_attr.set(tx_path)
                     else:
-                        node.setAttr(attr_name, tx_path)
+                        node.setAttr(set_attr_name, tx_path)
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
@@ -1094,14 +1109,28 @@ class RepresentationGenerator(object):
             # replace all "$REPO#" from all texture paths first
             #
             # This is needed to properly render textures with any OS
-            types_and_attrs = {
-                'aiImage': 'filename',
-                'file': 'fileTextureName',
-                'imagePlane': 'imageName'
-            }
+            maya_version = int(pm.about(v=1))
+            if maya_version == 2014:
+                types_and_attrs = {
+                    'aiImage': 'filename',
+                    'file': 'fileTextureName',
+                    'imagePlane': 'imageName'
+                }
+            else:
+                types_and_attrs = {
+                    'aiImage': 'filename',
+                    'file': ('computedFileTextureNamePattern',
+                             'fileTextureName'),
+                    'imagePlane': 'imageName'
+                }
 
             for node_type in types_and_attrs.keys():
                 attr_name = types_and_attrs[node_type]
+                set_attr_name = attr_name
+                if isinstance(attr_name, tuple):
+                    set_attr_name = attr_name[1]
+                    attr_name = attr_name[0]
+
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
                     path = re.sub(
@@ -1110,13 +1139,14 @@ class RepresentationGenerator(object):
                         orig_path
                     )
                     tx_path = self.make_tx(path)
-                    inputs = node.attr(attr_name).inputs(p=1)
+                    inputs = node.attr(set_attr_name).inputs(p=1)
+
                     if len(inputs):
                         # set the input attribute
                         for input_node_attr in inputs:
                             input_node_attr.set(tx_path)
                     else:
-                        node.setAttr(attr_name, tx_path)
+                        node.setAttr(set_attr_name, tx_path)
 
             # import shaders that are referenced to this scene
             # there is only one reference in the vegetation task and this is
@@ -1387,16 +1417,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    rstexbin_paths = \
-                        ai2rs.RedShiftTextureProcessor(path).convert()
-                    # inputs = node.attr(attr_name).inputs(p=1)
-                    # do not need to set the inputs
-                    # if len(inputs):
-                    #     # set the input attribute
-                    #     for input_node_attr in inputs:
-                    #         input_node_attr.set(rstexbin_paths)
-                    # else:
-                    #     node.setAttr(attr_name, rstexbin_paths)
+                    ai2rs.RedShiftTextureProcessor(path).convert()
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
@@ -1507,15 +1528,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    rstexbin_paths = \
-                        ai2rs.RedShiftTextureProcessor(path).convert()
-                    # inputs = node.attr(attr_name).inputs(p=1)
-                    # if len(inputs):
-                    #     # set the input attribute
-                    #     for input_node_attr in inputs:
-                    #         input_node_attr.set(rstexbin_paths)
-                    # else:
-                    #     node.setAttr(attr_name, rstexbin_paths)
+                    ai2rs.RedShiftTextureProcessor(path).convert()
 
             # import shaders that are referenced to this scene
             # there is only one reference in the vegetation task and this is
