@@ -14,6 +14,9 @@ CONVERSION_SPEC_SHEET = {
         'node_type': 'RedshiftMaterial',
         'secondary_type': 'shader',
 
+        'call_after': lambda x, y: y.outColor >>
+                                   x.outputs(type='shadingEngine', p=1)[0],
+
         # aiStandard material attributes
         'attributes': {
             'color': [
@@ -102,6 +105,8 @@ CONVERSION_SPEC_SHEET = {
         'node_type': 'RedshiftSkin',
         'secondary_type': 'shader',
     
+        'call_after': lambda x, y: y.outColor >>
+                                   x.outputs(type='shadingEngine', p=1)[0],
         # aiSkin material attributes
         'attributes': {
             'sssWeight': 'overall_scale',

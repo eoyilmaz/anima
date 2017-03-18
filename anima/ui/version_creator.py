@@ -60,7 +60,6 @@ class RecentFilesComboBox(QtWidgets.QComboBox):
         super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
 
 
-
 class VersionsTableWidget(QtWidgets.QTableWidget):
     """A QTableWidget derivative specialized to hold version data
     """

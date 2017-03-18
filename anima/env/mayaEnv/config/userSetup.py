@@ -76,10 +76,10 @@ if 'ANIMA_TEST_SETUP' not in os.environ.keys():
 
     def load_arnold():
         __pluginLoader('mtoa')
+
         # create defaultArnoldRenderOptions
         # to disable autotx
         # TODO: Make this beautiful
-        
         if int(pm.about(v=1)) > 2014:
             try:
                 pm.PyNode('defaultArnoldRenderOptions')
