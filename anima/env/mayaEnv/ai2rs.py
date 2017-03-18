@@ -15,7 +15,8 @@ CONVERSION_SPEC_SHEET = {
         'secondary_type': 'shader',
 
         'call_after': lambda x, y: y.outColor >>
-                                   x.outputs(type='shadingEngine', p=1)[0],
+                                   x.outputs(type='shadingEngine', p=1)[0]
+        if x.outputs(type='shadingEngine', p=1) else None,
 
         # aiStandard material attributes
         'attributes': {
@@ -106,7 +107,8 @@ CONVERSION_SPEC_SHEET = {
         'secondary_type': 'shader',
     
         'call_after': lambda x, y: y.outColor >>
-                                   x.outputs(type='shadingEngine', p=1)[0],
+                                   x.outputs(type='shadingEngine', p=1)[0]
+        if x.outputs(type='shadingEngine', p=1) else None,
         # aiSkin material attributes
         'attributes': {
             'sssWeight': 'overall_scale',
@@ -170,7 +172,8 @@ CONVERSION_SPEC_SHEET = {
                 'decayRate': lambda x: 0 if x == 0 else 2
             },
             'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(x) if x.getAttr('aiUseColorTemperature') else (0, 0, 0)
+                'color': lambda x, y: pm.arnoldTemperatureToColor(
+                    x) if x.getAttr('aiUseColorTemperature') else (0, 0, 0)
             },
             'color': 'color',
         }
