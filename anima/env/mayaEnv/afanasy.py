@@ -413,6 +413,10 @@ class UI(object):
             # set the verbosity level to warnin+info
             aro = pm.PyNode('defaultArnoldRenderOptions')
             aro.setAttr('log_verbosity', 1)
+        elif render_engine == 'redshift':
+            cmd_buffer.append('-type maya_redshift')
+            redshift = pm.PyNode('redshiftOptions')
+            redshift.logLevel.set(1)
 
         if pause:
             cmd_buffer.append('-pause')
@@ -479,8 +483,15 @@ class UI(object):
                 '%s' % ' '.join(cmd_buffer) % kwargs
             ])
             cmds.append(afjob_cmd)        
-            
+
         # call each command separately
         for cmd in cmds:
             print(cmds)
             print os.system(cmd)
+
+    # reset redshift log level
+    try:
+        redshift = pm.PyNode('redshiftOptions')
+        redshift.logLevel.set(0)
+    except MayaNodeError:
+        pass
