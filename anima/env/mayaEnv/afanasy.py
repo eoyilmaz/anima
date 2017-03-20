@@ -493,5 +493,5 @@ class UI(object):
     try:
         redshift = pm.PyNode('redshiftOptions')
         redshift.logLevel.set(0)
-    except MayaNodeError:
+    except pm.MayaNodeError:
         pass
