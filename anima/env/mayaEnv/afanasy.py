@@ -406,24 +406,25 @@ class UI(object):
 
         drg = pm.PyNode('defaultRenderGlobals')
         render_engine = drg.getAttr('currentRenderer')
+        stored_log_level = None
         if render_engine == 'mentalRay':
             cmd_buffer.append('-type maya_mental')
         elif render_engine == 'arnold':
             cmd_buffer.append('-type maya_arnold')
             # set the verbosity level to warnin+info
             aro = pm.PyNode('defaultArnoldRenderOptions')
+            stored_log_level = aro.getAttr('log_verbosity')
             aro.setAttr('log_verbosity', 1)
+            # set output to console
+            aro.setAttr("log_to_console", 1)
         elif render_engine == 'redshift':
             cmd_buffer.append('-type maya_redshift')
             redshift = pm.PyNode('redshiftOptions')
-            redshift.logLevel.set(1)
+            stored_log_level = redshift.logLevel.get()
+            redshift.logLevel.set(2)
 
         if pause:
             cmd_buffer.append('-pause')
-
-        # set output to console
-        dARO = pm.PyNode('defaultArnoldRenderOptions')
-        dARO.setAttr("log_to_console", 1)
 
         # save file
         pm.saveAs(
@@ -434,9 +435,6 @@ class UI(object):
 
         # rename back to original name
         pm.renameFile(scene_name)
-
-        # disable set output to console
-        dARO.setAttr("log_to_console", 0)
 
         cmds = []
 
@@ -488,10 +486,13 @@ class UI(object):
         for cmd in cmds:
             print(cmds)
             print os.system(cmd)
-
-    # reset redshift log level
-    try:
-        redshift = pm.PyNode('redshiftOptions')
-        redshift.logLevel.set(0)
-    except pm.MayaNodeError:
-        pass
+    
+        # reset log level
+        if render_engine == 'arnold':
+            aro = pm.PyNode('defaultArnoldRenderOptions')
+            aro.setAttr('log_verbosity', stored_log_level)
+            # disable set output to console
+            aro.setAttr("log_to_console", 0)
+        elif render_engine == 'redshift':
+            redshift = pm.PyNode('redshiftOptions')
+            redshift.logLevel.set(stored_log_level)
