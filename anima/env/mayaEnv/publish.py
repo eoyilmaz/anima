@@ -1032,12 +1032,12 @@ def check_multiple_connections_for_textures():
     )
 
     # by name
-    nodes_to_ignore += pm.ls('lambert1')
-    nodes_to_ignore += pm.ls('defaultShaderList*')
-    nodes_to_ignore += pm.ls('defaultTextureList*')
-    nodes_to_ignore += pm.ls('defaultRenderUtilityList*')
-    nodes_to_ignore += pm.ls('hyperShadePrimaryNodeEditorSavedTabsInfo*')
-    nodes_to_ignore += pm.ls('MayaNodeEditorSavedTabsInfo*')
+    nodes_to_ignore += pm.ls('lambert1', r=1)
+    nodes_to_ignore += pm.ls('defaultShaderList*', r=1)
+    nodes_to_ignore += pm.ls('defaultTextureList*', r=1)
+    nodes_to_ignore += pm.ls('defaultRenderUtilityList*', r=1)
+    nodes_to_ignore += pm.ls('hyperShadePrimaryNodeEditorSavedTabsInfo*', r=1)
+    nodes_to_ignore += pm.ls('MayaNodeEditorSavedTabsInfo*', r=1)
 
     all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
     for node in nodes_to_ignore:
@@ -1057,9 +1057,13 @@ def check_multiple_connections_for_textures():
         else:
             connections_out_of_this_node = node.outputs()
 
-            [connections_out_of_this_node.remove(h)
-             for h in nodes_to_ignore
-             if h in connections_out_of_this_node]
+            # [connections_out_of_this_node.remove(h)
+            #  for h in nodes_to_ignore
+            #  if h in connections_out_of_this_node]
+            connections_out_of_this_node = [h
+                for h in connections_out_of_this_node
+                if h not in nodes_to_ignore
+            ]
 
             if len(set(connections_out_of_this_node)) > 1:
                 nodes_with_multiple_materials.append(node)
