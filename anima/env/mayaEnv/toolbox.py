@@ -362,11 +362,11 @@ def UI():
                 pm.checkBoxGrp(
                     'generate_repr_types_checkbox_grp',
                     label='Reprs',
-                    numberOfCheckBoxes=2,
-                    labelArray2=['GPU', 'ASS'],
-                    cl3=['left', 'left', 'left'],
-                    cw3=[67, 67, 67],
-                    valueArray2=[1, 1]
+                    numberOfCheckBoxes=3,
+                    labelArray3=['GPU', 'ASS', 'RS'],
+                    cl4=['left', 'left', 'left', 'left'],
+                    cw4=[51, 50, 50, 50],
+                    valueArray3=[1, 1, 1]
                 )
 
             pm.checkBox(
@@ -2409,6 +2409,7 @@ class Reference(object):
         """
         generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
         generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
+        generate_rs = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -2416,6 +2417,7 @@ class Reference(object):
         cls.generate_repr_of_scene(
             generate_gpu,
             generate_ass,
+            generate_rs,
             skip_existing
         )
 
@@ -2423,6 +2425,7 @@ class Reference(object):
     def generate_repr_of_scene(cls,
                                generate_gpu=True,
                                generate_ass=True,
+                               generate_rs=True,
                                skip_existing=False):
         """generates desired representations of this scene
         """
@@ -2476,6 +2479,10 @@ class Reference(object):
 
         if generate_ass:
             gen.generate_ass()
+            caller.step()
+
+        if generate_rs:
+            gen.generate_rs()
             caller.step()
 
         # now open the source version again

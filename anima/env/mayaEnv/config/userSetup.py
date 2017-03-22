@@ -66,7 +66,7 @@ def __pluginUnloader(pluginName):
 
 if 'ANIMA_TEST_SETUP' not in os.environ.keys():
     #
-    __pluginUnloader('Mayatomr')
+    # __pluginUnloader('Mayatomr')
     __pluginLoader('objExport')
     __pluginLoader('closestPointOnCurve.py')
     __pluginLoader('fbxmaya')
@@ -96,7 +96,14 @@ if 'ANIMA_TEST_SETUP' not in os.environ.keys():
                     pass
             pm.select(None)
 
+    def load_redshift():
+        try:
+            __pluginLoader('redshift4maya')
+        except RuntimeError:
+            pass
+
     mayautils.executeDeferred(load_arnold)
+    mayautils.executeDeferred(load_redshift)
     mayautils.executeDeferred(__pluginLoader, 'AbcExport')
     mayautils.executeDeferred(__pluginLoader, 'AbcImport')
     mayautils.executeDeferred(__pluginLoader, 'gpuCache')
