@@ -2468,7 +2468,10 @@ class Reference(object):
                 if generate_ass is True and '@ASS' in cv.take_name:
                     generate_ass = False
 
-        total_number_of_reprs = generate_gpu + generate_ass
+                if generate_rs is True and '@RS' in cv.take_name:
+                    generate_rs = False
+
+        total_number_of_reprs = generate_gpu + generate_ass + generate_rs
         caller = pdm.register(total_number_of_reprs, title='Generate Reprs')
 
         gen.version = source_version
@@ -2496,6 +2499,7 @@ class Reference(object):
         """
         generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
         generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
+        generate_rs = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -2503,6 +2507,7 @@ class Reference(object):
         cls.generate_repr_of_all_references(
             generate_gpu,
             generate_ass,
+            generate_rs,
             skip_existing
         )
 
@@ -2510,6 +2515,7 @@ class Reference(object):
     def generate_repr_of_all_references(cls,
                                         generate_gpu=True,
                                         generate_ass=True,
+                                        generate_rs=True,
                                         skip_existing=False):
         """generates all representations of all references of this scene
         """
@@ -2571,6 +2577,7 @@ class Reference(object):
         for v in versions_to_visit:
             local_generate_gpu = generate_gpu
             local_generate_ass = generate_ass
+            local_generate_rs = generate_rs
 
             # check if this is a repr
             if '@' in v.take_name:
@@ -2590,6 +2597,9 @@ class Reference(object):
                     if local_generate_ass is True and '@ASS' in cv.take_name:
                         local_generate_ass = False
 
+                    if local_generate_rs is True and '@RS' in cv.take_name:
+                        local_generate_rs = False
+
             gen.version = v
             # generate representations
             if local_generate_gpu:
@@ -2602,6 +2612,13 @@ class Reference(object):
             if local_generate_ass:
                 try:
                     gen.generate_ass()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
+
+            if local_generate_rs:
+                try:
+                    gen.generate_rs()
                 except RuntimeError:
                     if v not in versions_cannot_be_published:
                         versions_cannot_be_published.append(v)
@@ -2620,6 +2637,8 @@ class Reference(object):
                 gen.generate_gpu()
             if generate_ass:
                 gen.generate_ass()
+            if generate_rs:
+                gen.generate_rs()
         else:
             pm.confirmDialog(
                 title='Error',
