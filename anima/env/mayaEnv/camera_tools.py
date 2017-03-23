@@ -13,41 +13,78 @@ def camera_film_offset_tool():
 
     Usage :
     -------
-    - to add it, select the camera and use oyCameraFilmOffsetTool
-    - to remove it, set the transformations to 0 0 1 and then simply delete
+    - To add it, select the camera and use camera_film_offset_tool
+    - To remove it, set the transformations to 0 0 1 and then simply delete
     the curve
+    - You can also use the ``enable`` option to temporarily disable the effect
     """
-    sel_list = pm.ls(sl=1)
-
-    camera_shape = ""
-    found_camera = 0
-
-    for obj in sel_list:
-        #if it is a transform node query for shapes
-        if isinstance(obj, pm.nt.Transform):
-            for shape in obj.listRelatives(s=True):
-                if isinstance(shape, pm.nt.Camera):
-                    camera_shape = shape
-                    found_camera = 1
-                    break
-        elif isinstance(obj, pm.nt.Camera):
-            camera_shape = obj
-            found_camera = 1
-            break
-
-    if found_camera:
-        pass
-    else:
+    camera_shape = get_selected_camera()
+    if not camera_shape:
         raise RuntimeError("please select one camera!")
 
-    #get the camera transform node
-    temp = camera_shape.listRelatives(p=True)
-    camera_transform = temp[0]
+    # get the camera transform node
+    camera_transform = camera_shape.getParent()
 
-    pm.getAttr("defaultResolution.deviceAspectRatio")
-    pm.getAttr("defaultResolution.pixelAspect")
+    frustum_curve = create_frustum_curve(camera_transform)
+    handle = create_camera_space_locator(frustum_curve)
 
-    #create the outer box
+    # connect the locator tx and ty to film offset x and y
+    handle.tx >> camera_shape.pan.horizontalPan
+    handle.ty >> camera_shape.pan.verticalPan
+
+    handle.sy.set(lock=False)
+    handle.sz.set(lock=False)
+    handle.sx >> handle.sy
+    handle.sx >> handle.sz
+    handle.sy.set(lock=True, keyable=False)
+    handle.sz.set(lock=True, keyable=False)
+
+    handle.sx >> camera_shape.zoom
+
+    pm.transformLimits(handle, sx=(0.01, 2.0), esx=(True, True))
+
+    handle.addAttr('enable', at='bool', dv=True, k=True)
+    handle.enable >> camera_shape.panZoomEnabled
+
+
+def create_camera_space_locator(frustum_curve):
+    """Creates a locator under the given frame_curve
+
+    :param frustum_curve:
+    :return:
+    """
+    # create the locator
+    locator = pm.spaceLocator()
+    locator_shape = locator.getShape()
+    pm.parent(locator, frustum_curve, r=True)
+    locator.tz.set(lock=True, keyable=False)
+    locator.rx.set(lock=True, keyable=False)
+    locator.ry.set(lock=True, keyable=False)
+    locator.rz.set(lock=True, keyable=False)
+    pm.transformLimits(locator, tx=(-0.5, 0.5), etx=(True, True))
+    pm.transformLimits(locator, ty=(-0.5, 0.5), ety=(True, True))
+    locator_shape.localScaleZ.set(0)
+    return locator
+
+
+def create_frustum_curve(camera):
+    """Creates a curve showing the frustum of the given camera
+
+    :param camera:
+    :return:
+    """
+
+    if isinstance(camera, pm.nt.Transform):
+        camera_tranform = camera
+        camera = camera_tranform.getShape()
+    elif isinstance(camera, pm.nt.Camera):
+        camera_tranform = camera.getParent()
+
+    # validate the camera
+    if not isinstance(camera, pm.nt.Camera):
+        raise RuntimeError('Please select a camera')
+    
+    # create the outer box
     frame_curve = pm.curve(
         d=1,
         p=[(-0.5, 0.5, 0),
@@ -57,47 +94,33 @@ def camera_film_offset_tool():
            (-0.5, 0.5, 0)],
         k=[0, 1, 2, 3, 4]
     )
-    pm.parent(frame_curve, camera_transform, r=True)
 
-    #transform the frame curve
+    pm.parent(frame_curve, camera_tranform, r=True)
+    # transform the frame curve
     frame_curve.tz.set(-10.0)
 
-    #create the locator
-    temp = pm.spaceLocator()
-    adj_locator = temp
-    adj_locator_shape = temp
-
-    adj_locator.addAttr('enable', at='bool', dv=True, k=True)
-
-    pm.parent(adj_locator, frame_curve, r=True)
-
-    pm.transformLimits(adj_locator, tx=(-0.5, 0.5), etx=(True, True))
-    pm.transformLimits(adj_locator, ty=(-0.5, 0.5), ety=(True, True))
-    pm.transformLimits(adj_locator, sx=(0.01, 2.0), esx=(True, True))
-
-    #connect the locator tx and ty to film offset x and y
-    adj_locator.tx >> camera_shape.pan.horizontalPan
-    adj_locator.ty >> camera_shape.pan.verticalPan
-
-    exp = 'float $flen = %s.focalLength;\n\n' \
-          'float $hfa = %s.horizontalFilmAperture * 25.4;\n' \
-          '%s.sx = %s.sy = -%s.translateZ * $hfa/ $flen;' % (
-          camera_shape, camera_shape, frame_curve, frame_curve, frame_curve)
+    exp = """float $flen = {camera}.focalLength;
+float $hfa = {camera}.horizontalFilmAperture * 25.4;
+{curve}.sx = {curve}.sy = -{curve}.translateZ * $hfa/ $flen;""".format(
+        camera=camera.name(),
+        curve=frame_curve.name()
+    )
     pm.expression(s=exp, o='', ae=1, uc="all")
 
-    adj_locator.sx >> adj_locator.sy
-    adj_locator.sx >> adj_locator.sz
-    adj_locator.sx >> camera_shape.zoom
-    adj_locator.enable >> camera_shape.panZoomEnabled
+    return frame_curve
 
-    adj_locator_shape.localScaleZ.set(0)
 
-    adj_locator.tz.set(lock=True, keyable=False)
-    adj_locator.rx.set(lock=True, keyable=False)
-    adj_locator.ry.set(lock=True, keyable=False)
-    adj_locator.rz.set(lock=True, keyable=False)
-    adj_locator.sy.set(lock=True, keyable=False)
-    adj_locator.sz.set(lock=True, keyable=False)
+def get_selected_camera():
+    """Returns the selected camera
+    """
+    for obj in pm.ls(sl=1, type=pm.nt.Transform):
+        # if it is a transform node query for shapes
+        if isinstance(obj, pm.nt.Transform):
+            for shape in obj.listRelatives(s=True):
+                if isinstance(shape, pm.nt.Camera):
+                    return shape
+        elif isinstance(obj, pm.nt.Camera):
+            return obj
 
 
 def camera_focus_plane_tool():
@@ -204,3 +227,45 @@ def cam_to_chan(start_frame, end_frame):
 
     with open(chan_file, 'w') as f:
         f.writelines('\n'.join(lines))
+
+
+def create_3dequalizer_points(width, height):
+    """creates 3d equalizer points under the selected camera
+
+    :param width: The width of the plate
+    :param height: The height of the plate
+    """
+    width = float(width)
+    height = float(height)
+
+    # get the text file
+    path = pm.fileDialog()
+
+    # parse the file
+    from anima import utils
+    man = utils.C3DEqualizerPointManager()
+    man.read(path)
+
+    # get the camera
+    cam_shape = get_selected_camera()
+
+    pm.getAttr("defaultResolution.deviceAspectRatio")
+    pm.getAttr("defaultResolution.pixelAspect")
+
+    frustum_curve = create_frustum_curve(cam_shape)
+
+    for point in man.points:
+        # create a locator
+        loc = create_camera_space_locator(frustum_curve)
+        loc.rename('p%s' % point.name)
+
+        # animate the locator
+        for frame in point.data.keys():
+            pm.currentTime(frame)
+            frame_data = point.data[frame]
+            local_x = frame_data[0] / width - 0.5
+            local_y = frame_data[1] / width - 0.5 * height / width
+            loc.tx.set(local_x)
+            loc.ty.set(local_y)
+            loc.tx.setKey()
+            loc.ty.setKey()
