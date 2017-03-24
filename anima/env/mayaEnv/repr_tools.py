@@ -1460,19 +1460,25 @@ class RepresentationGenerator(object):
                     output_full_path = \
                         os.path.join(output_path, output_filename)
 
+                    temp_full_path = \
+                        tempfile.mktemp(suffix='.rs')
+
                     # create path
                     try:
-                        os.makedirs(os.path.dirname(output_full_path))
+                        os.makedirs(output_path)
                     except OSError:
                         # dir exists
                         pass
 
-                    # run the mel command
+                    # run the mel command with temp file path
                     pm.mel.eval(
                         export_command % {
-                            'path': output_full_path.replace('\\', '/')
+                            'path': temp_full_path.replace('\\', '/')
                         }
                     )
+                    # then move it to the original place
+                    shutil.move(temp_full_path, output_full_path)
+
                     nodes_to_rs_files[child_node_full_path] = output_full_path
                     # print('%s -> %s' % (
                     #     child_node_full_path,
