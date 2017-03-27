@@ -1080,11 +1080,11 @@ class Playblaster(object):
     display_flags = [
         'nurbsCurves', 'nurbsSurfaces', 'cv', 'hulls', 'polymeshes',
         'subdivSurfaces', 'planes', 'lights', 'cameras', 'imagePlane',
-        'joints', 'ikHandles', 'deformers', 'dynamics', 'fluids',
-        'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
+        'joints', 'ikHandles', 'deformers', 'dynamics', 'particleInstancers',
+        'fluids', 'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
         'dynamicConstraints', 'locators', 'dimensions', 'pivots',
         'handles', 'textures', 'strokes', 'motionTrails', 'pluginShapes',
-        'clipGhosts', 'greasePencils', 'manipulators', 'grid'
+        'clipGhosts', 'greasePencils', 'manipulators', 'grid',
     ]
 
     cam_attribute_names = [
@@ -1329,6 +1329,7 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
         pm.modelEditor(active_panel, e=1, dynamics=True)
+        pm.modelEditor(active_panel, e=1, particleInstancers=True)
         pm.modelEditor(active_panel, e=1, nParticles=True)
         pm.modelEditor(active_panel, e=1, nCloths=True)
         pm.modelEditor(active_panel, e=1, fluids=True)

@@ -696,6 +696,7 @@ order by cast("TimeLogs".start as date)
 
         # convert them to utc
         from anima.utils import local_to_utc
+        import pytz
         utc_start_date = local_to_utc(start_date)
         utc_end_date = local_to_utc(end_date)
 
@@ -709,6 +710,14 @@ order by cast("TimeLogs".start as date)
         from stalker import db, TimeLog
         from stalker.exceptions import OverBookedError
         utc_now = local_to_utc(datetime.datetime.now())
+
+        import stalker
+        if int(stalker.__version__.replace('.', '')) >= 218:
+            print('Stalker needs tzinfo!!! Injecting')
+            # inject timezone info
+            utc_start_date = utc_start_date.replace(tzinfo=pytz.utc)
+            utc_end_date = utc_end_date.replace(tzinfo=pytz.utc)
+            utc_now = utc_now.replace(tzinfo=pytz.utc)
 
         if not self.timelog:
             try:
@@ -773,7 +782,7 @@ order by cast("TimeLogs".start as date)
                 ),
                 type=revision_type,
                 created_by=self.logged_in_user,
-                date_created=local_to_utc(datetime.datetime.now())
+                date_created=utc_now
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
@@ -806,7 +815,7 @@ order by cast("TimeLogs".start as date)
                         resource.name,
                 type=forced_status_type,
                 created_by=self.logged_in_user,
-                date_created=local_to_utc(datetime.datetime.now())
+                date_created=utc_now
             )
             db.DBSession.add(new_note)
             task.notes.append(new_note)
@@ -843,7 +852,6 @@ order by cast("TimeLogs".start as date)
 
             # request a review
             reviews = task.request_review()
-            utc_now = local_to_utc(datetime.datetime.now())
             for review in reviews:
                 review.created_by = review.updated_by = self.logged_in_user
                 review.date_created = utc_now
@@ -861,7 +869,7 @@ order by cast("TimeLogs".start as date)
             request_review_note = Note(
                 type=request_review_note_type,
                 created_by=self.logged_in_user,
-                date_created=local_to_utc(datetime.datetime.now())
+                date_created=utc_now
             )
             db.DBSession.add(request_review_note)
             db.DBSession.add(task)
@@ -883,7 +891,7 @@ order by cast("TimeLogs".start as date)
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()
 
-    def resource_changed(self):
+    def resource_changed(self, resource_name):
         """runs when the selected resource has changed
         """
         self.fill_calendar_with_time_logs()

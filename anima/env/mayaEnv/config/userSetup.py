@@ -75,26 +75,11 @@ if 'ANIMA_TEST_SETUP' not in os.environ.keys():
     __pluginLoader('tiffFloatReader')
 
     def load_arnold():
-        __pluginLoader('mtoa')
+        try:
+            __pluginLoader('mtoa')
+        except RuntimeError:
+            pass
 
-        # create defaultArnoldRenderOptions
-        # to disable autotx
-        # TODO: Make this beautiful
-        if int(pm.about(v=1)) > 2014:
-            try:
-                pm.PyNode('defaultArnoldRenderOptions')
-            except pm.MayaNodeError:
-                pm.createNode(
-                    'aiOptions',
-                    name='defaultArnoldRenderOptions'
-                )
-            finally:
-                daro = pm.PyNode('defaultArnoldRenderOptions')
-                try:
-                    daro.setAttr("autotx", 0)
-                except AttributeError:  # Maya2014
-                    pass
-            pm.select(None)
 
     def load_redshift():
         try:
