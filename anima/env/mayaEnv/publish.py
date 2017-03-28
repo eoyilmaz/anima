@@ -25,77 +25,82 @@ MAX_NODE_DISPLAY = 80
 
 # TODO: this should be depending on to the project some projects still can
 #       use mental ray
-VALID_MATERIALS = [
-    # DEFAULT MAYA SHADERS
-    u'blinn',
-    u'displacementShader',
-    u'hairPhysicalShader',  # for Maya2017
-    u'lambert',
-    u'layeredShader',
-    u'oceanShader',
-    u'phong',
-    u'phongE',
-    u'rampShader',
-    u'surfaceShader',
+VALID_MATERIALS = {
+    'maya': [
+        # DEFAULT MAYA SHADERS
+        'blinn',
+        'displacementShader',
+        'hairPhysicalShader',  # for Maya2017
+        'lambert',
+        'layeredShader',
+        'oceanShader',
+        'phong',
+        'phongE',
+        'rampShader',
+        'surfaceShader',
+    ],
+    'arnold': [
+        # ARNOLD
+        'aiAmbientOcclusion',
+        'aiHair',
+        'aiRaySwitch',
+        'aiShadowCatcher',
+        'aiSkin',
+        'aiSkinSss',
+        'aiStandard',
+        'aiUtility',
+        'aiWireframe',
+    ],
+    'redshift': [
+        # REDSHIFT
+        'RedshiftAmbientOcclusion',
+        'RedshiftArchitectural',
+        'RedshiftAttributeLookup',
+        'RedshiftBokeh',
+        'RedshiftBumpBlender',
+        'RedshiftBumpMap',
+        'RedshiftCameraMap',
+        'RedshiftCarPaint',
+        'RedshiftCurvature',
+        'RedshiftDisplacement',
+        'RedshiftDisplacementBlender',
+        'RedshiftDomeLight',
+        'RedshiftEnvironment',
+        'RedshiftFresnel',
+        'RedshiftLightGobo',
+        'RedshiftIESLight',
+        'RedshiftIncandescent',
+        'RedshiftLensDistortion',
+        'RedshiftMaterial',
+        'RedshiftMaterialBlender',
+        'RedshiftNormalMap',
+        'RedshiftHair',
+        'RedshiftHairPosition',
+        'RedshiftHairRandomColor',
+        'RedshiftMatteShadowCatcher',
+        'RedshiftPhotographicExposure',
+        'RedshiftPhysicalLight',
+        'RedshiftPhysicalSky',
+        'RedshiftPhysicalSun',
+        'RedshiftPortalLight',
+        'RedshiftRaySwitch',
+        'RedshiftRoundCorners',
+        'RedshiftShaderSwitch',
+        'RedshiftSkin',
+        'RedshiftSprite',
+        'RedshiftState',
+        'RedshiftSubSurfaceScatter',
+        'RedshiftUserDataColor',
+        'RedshiftUserDataInteger',
+        'RedshiftUserDataVector',
+        'RedshiftUserDataScalar',
+        'RedshiftVertexColor',
+        'RedshiftVolume',
+        'RedshiftVolumeScattering',
+        'RedshiftWireFrame',
+    ]
+}
 
-    # ARNOLD
-    u'aiAmbientOcclusion',
-    u'aiHair',
-    u'aiRaySwitch',
-    u'aiShadowCatcher',
-    u'aiSkin',
-    u'aiSkinSss',
-    u'aiStandard',
-    u'aiUtility',
-    u'aiWireframe',
-
-    # REDSHIFT
-    u'RedshiftAmbientOcclusion',
-    u'RedshiftArchitectural',
-    u'RedshiftAttributeLookup',
-    u'RedshiftBokeh',
-    u'RedshiftBumpBlender',
-    u'RedshiftBumpMap',
-    u'RedshiftCameraMap',
-    u'RedshiftCarPain',
-    u'RedshiftCurvature',
-    u'RedshiftDisplacement',
-    u'RedshiftDisplacementBlender',
-    u'RedshiftDomeLight',
-    u'RedshiftEnvironment',
-    u'RedshiftFresnel',
-    u'RedshiftLightGobo',
-    u'RedshiftIESLight',
-    u'RedshiftIncandescent',
-    u'RedshiftLensDistortion',
-    u'RedshiftMaterial',
-    u'RedshiftMaterialBlender',
-    u'RedshiftNormalMap',
-    u'RedshiftHair',
-    u'RedshiftHairPosition',
-    u'RedshiftMatteShadowCatcher',
-    u'RedshiftPhotographicExposure',
-    u'RedshiftPhysicalLight',
-    u'RedshiftPhysicalSky',
-    u'RedshiftPhysicalSun',
-    u'RedshiftPortalLight',
-    u'RedshiftRandomColor',
-    u'RedshiftRaySwitch',
-    u'RedshiftRoundCorners',
-    u'RedshiftShaderSwitch',
-    u'RedshiftSkin',
-    u'RedshiftSprite',
-    u'RedshiftState',
-    u'RedshiftSubSurfaceScatter',
-    u'RedshiftUserDataColor',
-    u'RedshiftUserDataInteger',
-    u'RedshiftUserDataVector',
-    u'RedshiftUserDataScalar',
-    u'RedshiftVertexColor',
-    u'RedshiftVolume',
-    u'RedshiftVolumeScattering',
-    u'RedshiftWireFrame',
-]
 
 
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
@@ -930,8 +935,13 @@ def check_all_tx_textures():
                     os.path.normpath(os.path.join(workspace_path, path))
             texture_file_paths.append(path)
 
+    maya_version = int(pm.about(v=1))
     for node in pm.ls(type='file'):
-        file_path = node.fileTextureName.get()
+        if maya_version <= 2014:
+            file_path = node.fileTextureName.get()
+        else:
+            file_path = node.computedFileTextureNamePattern.get()
+
         if os.path.splitext(file_path)[-1] not in excluded_extensions:
             add_path(file_path)
 
@@ -941,16 +951,25 @@ def check_all_tx_textures():
             add_path(file_path)
 
     import glob
+    # TODO: Also check .rstexbin files for Redshift
     textures_with_no_tx = []
     for path in texture_file_paths:
-        tx_path = '%s.tx' % os.path.splitext(path)[0]
-        # replace any <udim> value with *
-        tx_path = tx_path.replace('<udim>', '*')
+        expanded_path = path\
+            .replace('<udim>', '*')\
+            .replace('<UDIM>', '*')\
+            .replace('<U>', '*')\
+            .replace('<V>', '*')
+        textures_found_on_path = glob.glob(expanded_path)
 
-        if not len(glob.glob(tx_path)):
-            textures_with_no_tx.append(path)
+        for orig_texture_path in textures_found_on_path:
+            # now check if there is a .tx for this texture
+            tx_path = '%s.tx' % os.path.splitext(orig_texture_path)[0]
+
+            if not os.path.exists(tx_path):
+                textures_with_no_tx.append(tx_path)
 
     if len(textures_with_no_tx):
+        print(textures_with_no_tx)
         raise PublishError('There are textures with no <b>TX</b> file!!!')
 
 
@@ -980,9 +999,13 @@ def check_only_supported_materials_are_used():
     """
     non_arnold_materials = []
 
+    all_valid_materials = []
+    for renderer in VALID_MATERIALS.keys():
+        all_valid_materials.extend(VALID_MATERIALS[renderer])
+
     for material in pm.ls(mat=1):
         if material.name() not in ['lambert1', 'particleCloud1']:
-            if material.type() not in VALID_MATERIALS:
+            if material.type() not in all_valid_materials:
                 non_arnold_materials.append(material)
 
     if len(non_arnold_materials):
@@ -1023,13 +1046,14 @@ def check_multiple_connections_for_textures():
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
 
+    types_to_ignore = [
+        'hyperLayout', 'shadingEngine', 'materialInfo', 'time',
+        'unitConversion', 'hyperView'
+    ] + VALID_MATERIALS['redshift']
+
     # by type
-    nodes_to_ignore = pm.ls(
-        type=[
-            'hyperLayout', 'shadingEngine', 'materialInfo', 'time',
-            'unitConversion', 'hyperView'
-        ]
-    )
+    nodes_to_ignore = [node for node in pm.ls()
+                       if node.type() in types_to_ignore]
 
     # by name
     nodes_to_ignore += pm.ls('lambert1', r=1)
@@ -1039,7 +1063,8 @@ def check_multiple_connections_for_textures():
     nodes_to_ignore += pm.ls('hyperShadePrimaryNodeEditorSavedTabsInfo*', r=1)
     nodes_to_ignore += pm.ls('MayaNodeEditorSavedTabsInfo*', r=1)
 
-    all_nodes = pm.ls(type=repr_tools.RENDER_RELATED_NODE_TYPES)
+    all_nodes = [node for node in pm.ls()
+                 if node.type() in repr_tools.RENDER_RELATED_NODE_TYPES]
     for node in nodes_to_ignore:
         if node in all_nodes:
             all_nodes.remove(node)
@@ -1047,6 +1072,14 @@ def check_multiple_connections_for_textures():
     for node in all_nodes:
         materials_connected_to_this_node = \
             pm.ls(node.listHistory(future=True), mat=True)
+
+        # remove any Redshift Materials from this list
+        # create a temp list
+        new_materials_connected_to_this_node = []
+        for mat in materials_connected_to_this_node:
+            if mat.type() not in VALID_MATERIALS['redshift']:
+                new_materials_connected_to_this_node.append(mat)
+        materials_connected_to_this_node = new_materials_connected_to_this_node
 
         # remove self from all_nodes
         if node in materials_connected_to_this_node:
@@ -1060,10 +1093,9 @@ def check_multiple_connections_for_textures():
             # [connections_out_of_this_node.remove(h)
             #  for h in nodes_to_ignore
             #  if h in connections_out_of_this_node]
-            connections_out_of_this_node = [h
-                for h in connections_out_of_this_node
-                if h not in nodes_to_ignore
-            ]
+            connections_out_of_this_node = \
+                [h for h in connections_out_of_this_node
+                 if h not in nodes_to_ignore]
 
             if len(set(connections_out_of_this_node)) > 1:
                 nodes_with_multiple_materials.append(node)
