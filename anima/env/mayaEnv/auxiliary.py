@@ -1296,8 +1296,11 @@ class Playblaster(object):
         self.reset_user_view_options_storage()
 
         for flag in self.display_flags:
-            val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
-            self.user_view_options['display_flags'][flag] = val
+            try:
+                val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
+                self.user_view_options['display_flags'][flag] = val
+            except TypeError:
+                pass
 
         # store hud display options
         hud_names = pm.headsUpDisplay(lh=1)
@@ -1329,7 +1332,10 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
         pm.modelEditor(active_panel, e=1, dynamics=True)
-        pm.modelEditor(active_panel, e=1, particleInstancers=True)
+
+        if int(pm.about(v=1)) > 2014:
+            pm.modelEditor(active_panel, e=1, particleInstancers=True)
+
         pm.modelEditor(active_panel, e=1, nParticles=True)
         pm.modelEditor(active_panel, e=1, nCloths=True)
         pm.modelEditor(active_panel, e=1, fluids=True)
@@ -1371,7 +1377,10 @@ class Playblaster(object):
         """
         active_panel = self.get_active_panel()
         for flag, value in self.user_view_options['display_flags'].items():
-            pm.modelEditor(active_panel, **{'e': 1, flag: value})
+            try:
+                pm.modelEditor(active_panel, **{'e': 1, flag: value})
+            except TypeError:
+                pass
 
         # reassign original hud display options
         for hud, value in self.user_view_options['huds'].items():
