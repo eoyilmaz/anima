@@ -1208,6 +1208,9 @@ def check_legacy_render_layers():
         all_render_layers = pm.ls(type='renderLayer')
         render_setup_layers = pm.renderSetup(q=1, renderLayers=1)
 
+        if render_setup_layers is None:
+            render_setup_layers = []
+
         for render_layer in all_render_layers:
             is_default_layer = \
                 render_layer == render_layer.defaultRenderLayer()
