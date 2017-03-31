@@ -1212,9 +1212,7 @@ def check_legacy_render_layers():
             render_setup_layers = []
 
         for render_layer in all_render_layers:
-            is_default_layer = \
-                render_layer == render_layer.defaultRenderLayer()
-            if not is_default_layer \
+            if render_layer.name()[-18:] != 'defaultRenderLayer' \
                and render_layer[3:] not in render_setup_layers:
                 legacy_render_layers.append(render_layer)
 
