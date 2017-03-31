@@ -1407,7 +1407,7 @@ class RepresentationGenerator(object):
 
         task = self.version.task
 
-        export_command = 'rsProxy -fp "%(path)s" -sl;'
+        export_command = 'rsProxy -fp "%(path)s" -c -sl;'
 
         # calculate output path
         output_path = \

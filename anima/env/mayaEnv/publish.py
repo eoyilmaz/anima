@@ -1194,6 +1194,37 @@ def check_component_edits_on_references():
         )
 
 
+@publisher()
+def check_legacy_render_layers():
+    """No legacy render layer is used
+
+    Checks if there is no legacy render layers in Maya 2017
+    """
+    maya_version = pm.about(v=1)
+
+    if int(maya_version) >= 2017:
+        legacy_render_layers = []
+
+        all_render_layers = pm.ls(type='renderLayer')
+        render_setup_layers = pm.renderSetup(q=1, renderLayers=1)
+
+        for render_layer in all_render_layers:
+            is_default_layer = \
+                render_layer == render_layer.defaultRenderLayer()
+            if not is_default_layer \
+               and render_layer[3:] not in render_setup_layers:
+                legacy_render_layers.append(render_layer)
+
+        if legacy_render_layers:
+            print legacy_render_layers
+            raise PublishError(
+                'There are <b>LEGACY RENDER LAYERS<b> in your current '
+                'scene<br>'
+                '<br>'
+                'Please remove them!'
+            )
+
+
 @publisher('rig')
 def check_root_node_name():
     """Root node name is correct

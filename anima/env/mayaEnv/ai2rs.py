@@ -172,8 +172,8 @@ CONVERSION_SPEC_SHEET = {
                 'decayRate': lambda x: 0 if x == 0 else 2
             },
             'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(
-                    x) if x.getAttr('aiUseColorTemperature') else (0, 0, 0)
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr('aiUseColorTemperature') else (0, 0, 0)
             },
             'color': 'color',
         }
@@ -185,7 +185,7 @@ CONVERSION_SPEC_SHEET = {
 
         'attributes': {
             'color': {
-                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('filename')
+                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('fileTextureName')
             }
         },
 
