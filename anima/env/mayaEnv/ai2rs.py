@@ -406,7 +406,7 @@ class RedShiftTextureProcessor(object):
         """
         processed_files = []
         for file_path in self.files_to_process:
-            command = '%s %s' % (self.executable, file_path)
+            command = '%s "%s"' % (self.executable, file_path)
             rsmap_full_path = \
                 '%s.rstexbin' % os.path.splitext(file_path)[0]
 

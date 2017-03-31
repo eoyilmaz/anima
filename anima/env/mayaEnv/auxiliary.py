@@ -1381,7 +1381,13 @@ class Playblaster(object):
         # reassign original camera options
         for camera in pm.ls(type='camera'):
             camera_name = camera.name()
-            camera_flags = self.user_view_options['camera_flags'][camera_name]
+
+            try:
+                camera_flags = \
+                    self.user_view_options['camera_flags'][camera_name]
+            except KeyError:
+                continue
+
             for attr, value in camera_flags.items():
                 try:
                     camera.setAttr(attr, value)

@@ -912,13 +912,27 @@ def disable_internal_reflections_in_aiStandard():
 
 
 @publisher(LOOK_DEV_TYPES)
-def check_all_tx_textures():
-    """TX textures exists
+def check_all_renderer_specific_textures():
+    """TX or RSTEXBIN textures exists
 
-    checks if tx textures are created for all of the texture nodes in the
-    current scene
+    checks if tx or rstexbin textures are created for all of the texture nodes
+    in the current scene
     """
     excluded_extensions = ['.ptex']
+
+    renderer_texture_extensions = {
+        'arnold': '.tx',
+        'redshift': '.rstexbin'
+    }
+    default_renderer = 'arnold'
+
+    # set the default extension to default_renderer
+    current_renderer = pm.PyNode('defaultRenderGlobals').currentRenderer.get()
+    current_renderer_texture_extension = \
+        renderer_texture_extensions.get(
+            current_renderer,
+            renderer_texture_extensions[default_renderer]
+        )
 
     v = staging.get('version')
     if v and Representation.repr_separator in v.take_name:
@@ -963,14 +977,25 @@ def check_all_tx_textures():
 
         for orig_texture_path in textures_found_on_path:
             # now check if there is a .tx for this texture
-            tx_path = '%s.tx' % os.path.splitext(orig_texture_path)[0]
+            bin_texture_path = \
+                '%s%s' % (
+                    os.path.splitext(orig_texture_path)[0],
+                    current_renderer_texture_extension
+                )
 
-            if not os.path.exists(tx_path):
-                textures_with_no_tx.append(tx_path)
+            if not os.path.exists(bin_texture_path):
+                textures_with_no_tx.append(bin_texture_path)
 
     if len(textures_with_no_tx):
-        print(textures_with_no_tx)
-        raise PublishError('There are textures with no <b>TX</b> file!!!')
+        for path in textures_with_no_tx:
+            print(path)
+        raise PublishError(
+            'There are textures with no <b>%s</b> file!!!<br><br>'
+            '%s' % (
+                current_renderer_texture_extension.upper(),
+                '<br>'.join(textures_with_no_tx)
+            )
+        )
 
 
 @publisher(LOOK_DEV_TYPES + ['layout'])
@@ -1206,6 +1231,9 @@ def check_legacy_render_layers():
         legacy_render_layers = []
 
         all_render_layers = pm.ls(type='renderLayer')
+        default_render_layer = all_render_layers[0].defaultRenderLayer()
+        all_render_layers.remove(default_render_layer)
+
         render_setup_layers = pm.renderSetup(q=1, renderLayers=1)
 
         if render_setup_layers is None:
@@ -1217,7 +1245,7 @@ def check_legacy_render_layers():
                 legacy_render_layers.append(render_layer)
 
         if legacy_render_layers:
-            print legacy_render_layers
+            print(legacy_render_layers)
             raise PublishError(
                 'There are <b>LEGACY RENDER LAYERS<b> in your current '
                 'scene<br>'
