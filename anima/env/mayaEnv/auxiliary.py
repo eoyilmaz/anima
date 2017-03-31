@@ -847,6 +847,32 @@ def run_post_publishers():
         staging.clear()
 
 
+def get_default_render_layer():
+    """Returns the default render layer
+    :return:
+    """
+    return pm.ls(type='renderLayer')[0].defaultRenderLayer()
+
+
+def switch_to_default_render_layer():
+    """sets the current layer to defaultRenderLayer
+    """
+    try:
+        default_render_layer = get_default_render_layer()
+        default_render_layer.setCurrent()
+    except (NameError, RuntimeError):
+        pass
+
+
+def get_current_render_layer():
+    """Returns the current render layer
+
+    :return:
+    """
+    default_render_layer = get_default_render_layer()
+    return default_render_layer.currentLayer()
+
+
 def fix_external_paths():
     """fixes external paths in a maya scene
     """

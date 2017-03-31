@@ -41,6 +41,11 @@ global proc fix_external_paths()
     python("from anima.env.mayaEnv import auxiliary; auxiliary.fix_external_paths();");
 }
 
+global proc switch_to_default_render_layer()
+{
+    python("from anima.env.mayaEnv import auxiliary; reload(auxiliary); auxiliary.switch_to_default_render_layer();");
+}
+
 global proc FileMenu_SaveItem()
 //
 // If the current file is named, save it.  If it
@@ -50,6 +55,9 @@ global proc FileMenu_SaveItem()
 {
     // fix external paths
     fix_external_paths();
+
+    // go to the defaultRenderLayer to fix Maya bug that creates "_untitled_" collection
+    switch_to_default_render_layer();
 
     // before doing anything check if it is a published version and run
     // publishers again

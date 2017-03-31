@@ -984,18 +984,25 @@ def check_all_renderer_specific_textures():
                 )
 
             if not os.path.exists(bin_texture_path):
-                textures_with_no_tx.append(bin_texture_path)
+                textures_with_no_tx.append(orig_texture_path)
 
     if len(textures_with_no_tx):
-        for path in textures_with_no_tx:
-            print(path)
-        raise PublishError(
-            'There are textures with no <b>%s</b> file!!!<br><br>'
-            '%s' % (
-                current_renderer_texture_extension.upper(),
-                '<br>'.join(textures_with_no_tx)
+        if current_renderer == 'redshift':
+            # Generate the textures if it is Redshift
+            from anima.env.mayaEnv import ai2rs
+            for texture_path in textures_with_no_tx:
+                rstp = ai2rs.RedShiftTextureProcessor(texture_path)
+                rstp.convert()
+        else:
+            for path in textures_with_no_tx:
+                print(path)
+            raise PublishError(
+                'There are textures with no <b>%s</b> file!!!<br><br>'
+                '%s' % (
+                    current_renderer_texture_extension.upper(),
+                    '<br>'.join(textures_with_no_tx)
+                )
             )
-        )
 
 
 @publisher(LOOK_DEV_TYPES + ['layout'])
