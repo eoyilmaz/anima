@@ -1241,14 +1241,12 @@ def check_legacy_render_layers():
         default_render_layer = all_render_layers[0].defaultRenderLayer()
         all_render_layers.remove(default_render_layer)
 
-        render_setup_layers = pm.renderSetup(q=1, renderLayers=1)
-
-        if render_setup_layers is None:
-            render_setup_layers = []
+        # render_setup_layers = pm.renderSetup(q=1, renderLayers=1)
+        render_setup_layers = pm.ls('rs_*', type='renderLayer')
 
         for render_layer in all_render_layers:
             if render_layer.name()[-18:] != 'defaultRenderLayer' \
-               and render_layer[3:] not in render_setup_layers:
+               and render_layer not in render_setup_layers:
                 legacy_render_layers.append(render_layer)
 
         if legacy_render_layers:
