@@ -711,7 +711,7 @@ order by cast("TimeLogs".start as date)
         utc_now = local_to_utc(datetime.datetime.now())
 
         import stalker
-        if int(stalker.__version__.replace('.', '')) >= 218:
+        if int(''.join(stalker.__version__.split('.')[0:3])) >= 218:
             import pytz
             print('Stalker needs tzinfo!!! Injecting')
             # inject timezone info
