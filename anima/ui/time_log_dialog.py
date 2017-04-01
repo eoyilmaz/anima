@@ -711,10 +711,10 @@ order by cast("TimeLogs".start as date)
         utc_now = local_to_utc(datetime.datetime.now())
 
         import stalker
-        if int(''.join(stalker.__version__.split('.')[0:3])) >= 218:
-            import pytz
-            print('Stalker needs tzinfo!!! Injecting')
+        from distutils.version import LooseVersion
+        if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
             # inject timezone info
+            import pytz
             utc_start_date = utc_start_date.replace(tzinfo=pytz.utc)
             utc_end_date = utc_end_date.replace(tzinfo=pytz.utc)
             utc_now = utc_now.replace(tzinfo=pytz.utc)
