@@ -479,6 +479,17 @@ class EnvironmentBase(object):
             version.absolute_full_path.replace(':', '')
         ).replace('\\', '/')
 
+        # do nothing if the version and the copy is on the same drive
+        # (ex: do not duplicate the file)
+        if len(os.path.commonprefix([output_full_path,
+                                     version.absolute_full_path])):
+            logger.debug(
+                'Local copy file: %s is on the same drive with the source '
+                'file: %s' % (output_full_path, version.absolute_full_path)
+            )
+            logger.debug('Not duplicating it!')
+            return
+
         # create intermediate folders
         try:
             os.makedirs(output_path)
