@@ -205,6 +205,53 @@ RENDER_RELATED_NODE_TYPES = [
     # arnoldTextureEnvironment
     'aiPhysicalSky',
     'aiSky',
+
+    # Redshift Materials
+    'RedshiftAmbientOcclusion',
+    'RedshiftArchitectural',
+    'RedshiftAttributeLookup',
+    'RedshiftBokeh',
+    'RedshiftBumpBlender',
+    'RedshiftBumpMap',
+    'RedshiftCameraMap',
+    'RedshiftCarPaint',
+    'RedshiftCurvature',
+    'RedshiftDisplacement',
+    'RedshiftDisplacementBlender',
+    'RedshiftDomeLight',
+    'RedshiftEnvironment',
+    'RedshiftFresnel',
+    'RedshiftLightGobo',
+    'RedshiftIESLight',
+    'RedshiftIncandescent',
+    'RedshiftLensDistortion',
+    'RedshiftMaterial',
+    'RedshiftMaterialBlender',
+    'RedshiftNormalMap',
+    'RedshiftHair',
+    'RedshiftHairPosition',
+    'RedshiftHairRandomColor',
+    'RedshiftMatteShadowCatcher',
+    'RedshiftPhotographicExposure',
+    'RedshiftPhysicalLight',
+    'RedshiftPhysicalSky',
+    'RedshiftPhysicalSun',
+    'RedshiftPortalLight',
+    'RedshiftRaySwitch',
+    'RedshiftRoundCorners',
+    'RedshiftShaderSwitch',
+    'RedshiftSkin',
+    'RedshiftSprite',
+    'RedshiftState',
+    'RedshiftSubSurfaceScatter',
+    'RedshiftUserDataColor',
+    'RedshiftUserDataInteger',
+    'RedshiftUserDataVector',
+    'RedshiftUserDataScalar',
+    'RedshiftVertexColor',
+    'RedshiftVolume',
+    'RedshiftVolumeScattering',
+    'RedshiftWireFrame',
 ]
 
 READ_ONLY_NODE_NAMES = [
@@ -1360,7 +1407,7 @@ class RepresentationGenerator(object):
 
         task = self.version.task
 
-        export_command = 'rsProxy -fp "%(path)s" -sl;'
+        export_command = 'rsProxy -fp "%(path)s" -c -sl;'
 
         # calculate output path
         output_path = \

@@ -397,11 +397,23 @@ workspace -fr "translatorData" ".mayaFiles/data/";
         # set the file paths for external resources
         self.replace_external_paths()
 
+        # go to master layer for Maya 2017
+        # to prevent __untitled__ collection creation
+        from anima.env.mayaEnv import auxiliary
+        reload(auxiliary)
+        current_render_layer = auxiliary.get_current_render_layer()
+        if int(pm.about(v=1)) >= 2017:
+            auxiliary.switch_to_default_render_layer()
+
         # save the file
         pm.saveAs(
             version.absolute_full_path,
             type='mayaAscii'
         )
+
+        # switch back to the last layer
+        if int(pm.about(v=1)) >= 2017:
+            current_render_layer.setCurrent()
 
         # update the parent info
         if version != current_version:  # prevent CircularDependencyError

@@ -166,14 +166,14 @@ CONVERSION_SPEC_SHEET = {
                 'intensity': lambda x: 2 ** x
             },
             'aiSamples': {
-                'shadowRays': 1  # TODO: Test it later
+                'shadowRays': 1
             },
             'aiDecayType': {
                 'decayRate': lambda x: 0 if x == 0 else 2
             },
             'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(
-                    x) if x.getAttr('aiUseColorTemperature') else (0, 0, 0)
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr('aiUseColorTemperature') else (0, 0, 0)
             },
             'color': 'color',
         }
@@ -185,7 +185,7 @@ CONVERSION_SPEC_SHEET = {
 
         'attributes': {
             'color': {
-                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('filename')
+                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('fileTextureName')
             }
         },
 
@@ -200,7 +200,7 @@ CONVERSION_SPEC_SHEET = {
                 'intensity': lambda x: 2 ** x
             },
             'aiSamples': {
-                'shadowRays': 1  # TODO: Test it later
+                'shadowRays': 1
             },
             'aiDecayType': {
                 'decayRate': lambda x: 0 if x == 0 else 2
@@ -219,7 +219,7 @@ CONVERSION_SPEC_SHEET = {
                 'intensity': lambda x: 2 ** x
             },
             'aiSamples': {
-                'shadowRays': 1  # TODO: Test it later
+                'shadowRays': 1
             },
             'aiColorTemperature': {
                 'color': lambda x, y: pm.arnoldTemperatureToColor(
@@ -393,11 +393,10 @@ class RedShiftTextureProcessor(object):
         if '<' in self.input_file_full_path:
             # replace any <U> and <V> with an *
             self.input_file_full_path = \
-                self.input_file_full_path.replace('<U>', '*')
-            self.input_file_full_path = \
-                self.input_file_full_path.replace('<V>', '*')
-            self.input_file_full_path = \
-                self.input_file_full_path.replace('<UDIM>', '*')
+                self.input_file_full_path\
+                    .replace('<U>', '*')\
+                    .replace('<V>', '*')\
+                    .replace('<UDIM>', '*')
 
         import glob
         self.files_to_process = glob.glob(self.input_file_full_path)
@@ -407,7 +406,7 @@ class RedShiftTextureProcessor(object):
         """
         processed_files = []
         for file_path in self.files_to_process:
-            command = '%s %s' % (self.executable, file_path)
+            command = '%s "%s"' % (self.executable, file_path)
             rsmap_full_path = \
                 '%s.rstexbin' % os.path.splitext(file_path)[0]
 
