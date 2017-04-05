@@ -271,6 +271,13 @@ class ConversionManager(object):
     """Manages the conversion from Arnold to RedShift
     """
 
+    def auto_convert(self):
+        """finds and converts all the nodes in the current scene
+        """
+        for node_type in CONVERSION_SPEC_SHEET:
+            for node in pm.ls(type=node_type):
+                self.convert(node)
+
     def convert(self, node):
         """converts the given node to redShift counterpart
         """
