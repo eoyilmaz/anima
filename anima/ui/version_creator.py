@@ -1793,6 +1793,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         # check if the new version is pointing to a valid file
         # save the new version to the database
+        db.DBSession.add(new_version)
         if not os.path.exists(new_version.absolute_full_path):
             # raise an error
             QtWidgets.QMessageBox.critical(
