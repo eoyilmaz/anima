@@ -1384,9 +1384,10 @@ def check_time_logs():
 
     if v:
         task = v.task
-        if task.schedule_model == 'effort':
+        if task.schedule_model == 'effort' and task.resources:
             now = datetime.datetime.now()
-            task_start = task.computed_start if task.computed_start else task.start
+            task_start = \
+                task.computed_start if task.computed_start else task.start
             task_start = utc_to_local(task_start)
             if task.status.code != 'WFD' and task_start <= now:
                 num_tlogs = len(task.time_logs)
