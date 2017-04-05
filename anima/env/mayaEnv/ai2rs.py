@@ -108,7 +108,7 @@ CONVERSION_SPEC_SHEET = {
     
         'call_after': lambda x, y: y.outColor >>
                                    x.outputs(type='shadingEngine', p=1)[0]
-        if x.outputs(type='shadingEngine', p=1) else None,
+                        if x.outputs(type='shadingEngine', p=1) else None,
         # aiSkin material attributes
         'attributes': {
             'sssWeight': 'overall_scale',
@@ -142,6 +142,24 @@ CONVERSION_SPEC_SHEET = {
             # 'fresnelAffectSss': None,
 
             'normalCamera': 'bump_input',
+        }
+    },
+
+    'aiAmbientOcclusion': {
+        'node_type': 'RedshiftAmbientOcclusion',
+        'secondary_type': 'utility',
+    
+        'call_after': lambda x, y: y.outColor >> x.outColor.outputs(p=1)[0],
+
+        'attributes': {
+            'white': 'bright',
+            'black': 'dark',
+            'spread': 'spread',
+            'falloff': {
+                'fallOff': lambda x: x + 1
+            },
+            'farClip': 'maxDistance',
+            'invertNormals': 'invert',
         }
     },
 
@@ -340,6 +358,9 @@ class NodeCreator(object):
 
         if secondary_type == 'shader':
             shader, shading_engine = pm.createSurfaceShader(node_type)
+            return shader
+        if secondary_type == 'utility':
+            shader = pm.shadingNode(node_type, asUtility=1)
             return shader
         elif secondary_type == 'light':
             light_transform = pm.shadingNode(node_type, asLight=1)
