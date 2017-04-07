@@ -191,7 +191,7 @@ CONVERSION_SPEC_SHEET = {
             },
             'aiColorTemperature': {
                 'color': lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr('aiUseColorTemperature') else (0, 0, 0)
+                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
             },
             'color': 'color',
         }
@@ -203,7 +203,8 @@ CONVERSION_SPEC_SHEET = {
 
         'attributes': {
             'color': {
-                'tex0': lambda x, y: y.attr('color').inputs()[0].getAttr('fileTextureName')
+                'tex0': lambda x, y:
+                y.attr('color').inputs()[0].getAttr('fileTextureName')
             }
         },
 
@@ -224,7 +225,8 @@ CONVERSION_SPEC_SHEET = {
                 'decayRate': lambda x: 0 if x == 0 else 2
             },
             'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(x) if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
             },
             'aiRadius': 'lightRadius',
             'color': 'color',
@@ -240,9 +242,8 @@ CONVERSION_SPEC_SHEET = {
                 'shadowRays': 1
             },
             'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(
-                    x) if y.getAttr('aiUseColorTemperature') else y.getAttr(
-                    'color')
+                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
             },
             'aiAngle': 'lightAngle',
             'color': 'color',
@@ -274,9 +275,13 @@ class ConversionManager(object):
     def auto_convert(self):
         """finds and converts all the nodes in the current scene
         """
+        nodes_converted = []
         for node_type in CONVERSION_SPEC_SHEET:
             for node in pm.ls(type=node_type):
                 self.convert(node)
+                nodes_converted.append(node)
+
+        return nodes_converted
 
     def convert(self, node):
         """converts the given node to redShift counterpart
@@ -311,12 +316,16 @@ class ConversionManager(object):
             for source_attr, target_attr in attributes.items():
                 # value can be a string
                 if isinstance(target_attr, basestring):
-                    # just read and set the value directly
-                    rs_node.setAttr(target_attr, node.getAttr(source_attr))
-    
-                    # also connect any textures to the target node
-                    for input_ in node.attr(source_attr).inputs(p=1):
-                        input_ >> rs_node.attr(target_attr)
+                    # check incoming connections
+                    incoming_connections = node.attr(source_attr).inputs(p=1)
+                    if incoming_connections:
+                        # connect any textures to the target node
+                        for input_ in node.attr(source_attr).inputs(p=1):
+                            input_ >> rs_node.attr(target_attr)
+                    else:
+                        # just read and set the value directly
+                        rs_node.setAttr(target_attr, node.getAttr(source_attr))
+
                 elif isinstance(target_attr, list):
                     # or a list
                     # where we set multiple attributes in the rs_node to the
