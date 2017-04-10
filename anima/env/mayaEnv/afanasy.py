@@ -464,8 +464,8 @@ class UI(object):
 
                 # create one big command
                 afjob_cmd = ' '.join([
-                    os.environ['CGRU_PYTHONEXE'],
-                    '"%s/python/afjob.py"' % os.environ['AF_ROOT'],
+                    os.environ['CGRU_PYTHONEXE'].replace('\\', '/'),
+                    '"%s/python/afjob.py"' % os.environ['AF_ROOT'].replace('\\', '/'),
                     '%s' % ' '.join(tmp_cmd_buffer) % kwargs
                 ])
                 cmds.append(afjob_cmd)
@@ -476,8 +476,8 @@ class UI(object):
         else:
             # create one big command
             afjob_cmd = ' '.join([
-                os.environ['CGRU_PYTHONEXE'],
-                '%s/python/afjob.py' % os.environ['AF_ROOT'],
+                os.environ['CGRU_PYTHONEXE'].replace('\\', '/'),
+                '%s/python/afjob.py' % os.environ['AF_ROOT'].replace('\\', '/'),
                 '%s' % ' '.join(cmd_buffer) % kwargs
             ])
             cmds.append(afjob_cmd)        
