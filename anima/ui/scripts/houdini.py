@@ -30,7 +30,8 @@ class Executor(object):
 
     def exec_(self, app, dialog):
         self.application = app
-        self.application.setStyle('Cleanlooks')
+        self.application.setStyle('Fusion')
+
         hou.ui.addEventLoopCallback(self.processEvents)
         dialog.exec_()
 
