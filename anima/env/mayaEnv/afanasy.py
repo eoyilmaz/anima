@@ -426,6 +426,10 @@ class UI(object):
         if pause:
             cmd_buffer.append('-pause')
 
+        # go to the default render layer
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.switch_to_default_render_layer()
+
         # save file
         pm.saveAs(
             filename,
