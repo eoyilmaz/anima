@@ -75,6 +75,15 @@ class Houdini(EnvironmentBase):
         # set the render file name
         self.set_render_filename(version)
 
+        # set the fps
+        from stalker import Shot
+        if version and isinstance(version.task.parent, Shot):
+            # set to shot.fps if this is a shot related scene
+            self.set_fps(version.task.parent.fps)
+        else:
+            # set to project fps
+            self.set_fps(version.task.project.fps)
+
         # houdini accepts only strings as file name, no unicode support as I
         # see
         hou.hipFile.save(file_name=str(version.absolute_full_path))
