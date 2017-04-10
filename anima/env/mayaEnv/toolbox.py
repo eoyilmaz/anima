@@ -808,6 +808,14 @@ def UI():
             )
 
             color.change()
+            pm.button('auto_convert_to_redshift_button',
+                      l="Auto Convert Scene To RedShift (BETA)",
+                      c=RepeatedCallback(Render.auto_convert_to_redshift),
+                      ann="Automatically converts the scene from Arnold to "
+                          "Redshift, including materials and lights",
+                      bgc=color.color)
+
+            color.change()
             pm.button(
                 'fix_render_layer_out_adjustment_errors_button',
                 l="fixRenderLayerOutAdjustmentErrors",
@@ -3209,6 +3217,14 @@ class Rigging(object):
 class Render(object):
     """Tools for render
     """
+
+    @classmethod
+    def auto_convert_to_redshift(cls):
+        """converts the current scene to Redshift
+        """
+        from anima.env.mayaEnv import ai2rs
+        cm = ai2rs.ConversionManager()
+        cm.auto_convert()
 
     @classmethod
     def standin_to_bbox(cls):
