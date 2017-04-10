@@ -48,12 +48,6 @@ import pymel.core as pm
 from pymel import mayautils
 # import maya.cmds as cmds
 
-try:
-    pm.Mel.source("HKLocalTools")
-except pm.MelError:
-    pass
-
-
 def __pluginLoader(pluginName):
     if not pm.pluginInfo(pluginName, q=1, loaded=1):
         pm.loadPlugin(pluginName)
