@@ -221,11 +221,28 @@ sourceimages/3dPaintTextures"""
             with open(new_file_path, 'w+') as f:
                 f.write(data)
         else:
+            # fix for UDIM texture paths
+            # if the path contains 1001 or u1_v1 than find the other
+            # textures
+            import glob
+            new_file_paths = [new_file_path]
+            if '1001' in new_file_path or 'u1_v1' in new_file_path.lower():
+                # get the rest of the textures
+                new_file_paths = glob.glob(
+                    new_file_path
+                        .replace('1001', '*')
+                        .replace('u1_v1', 'u*_v*')
+                        .replace('U1_V1', 'U*_V*')
+                )
+                for p in new_file_paths:
+                    print(p)
+
             # just copy the file
-            try:
-                shutil.copy(path, new_file_path)
-            except IOError:
-                pass
+            for new_file_path in new_file_paths:
+                try:
+                    shutil.copy(path, new_file_path)
+                except IOError:
+                    pass
 
         return ref_paths
 

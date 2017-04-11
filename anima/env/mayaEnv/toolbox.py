@@ -453,12 +453,6 @@ def UI():
                       bgc=color.color)
 
             color.change()
-            pm.button('oyUVTools_button', l="oyUVTools",
-                      c=RepeatedCallback(Modeling.uvTools),
-                      ann="opens oyUVTools",
-                      bgc=color.color)
-
-            color.change()
             pm.button(
                 'oyHierarchyInstancer_button',
                 l="hierarchy_instancer on selected",
@@ -812,6 +806,14 @@ def UI():
                 ann="Open node in browser",
                 bgc=color.color
             )
+
+            color.change()
+            pm.button('auto_convert_to_redshift_button',
+                      l="Auto Convert Scene To RedShift (BETA)",
+                      c=RepeatedCallback(Render.auto_convert_to_redshift),
+                      ann="Automatically converts the scene from Arnold to "
+                          "Redshift, including materials and lights",
+                      bgc=color.color)
 
             color.change()
             pm.button(
@@ -2258,8 +2260,8 @@ class Reference(object):
             project_path = arch.flatten(path, project_name=project_name)
 
             # append link file
-            stalker_link_file_path = os.path.join(project_path,
-                                                  'scenes/stalker_links.txt')
+            stalker_link_file_path = \
+                os.path.join(project_path, 'scenes/stalker_links.txt')
             version_upload_link = '%s/tasks/%s/versions/list' % (
                 anima.stalker_server_external_address,
                 task.id
@@ -2731,12 +2733,6 @@ class Modeling(object):
     def relax_vertices(cls):
         from anima.env.mayaEnv import relax_vertices
         relax_vertices.relax()
-
-    @classmethod
-    def uvTools(cls):
-        """opens the mel script oyUVTools
-        """
-        pm.mel.eval('oyUVTools;')
 
     @classmethod
     def create_curve_from_mesh_edges(cls):
@@ -3221,6 +3217,14 @@ class Rigging(object):
 class Render(object):
     """Tools for render
     """
+
+    @classmethod
+    def auto_convert_to_redshift(cls):
+        """converts the current scene to Redshift
+        """
+        from anima.env.mayaEnv import ai2rs
+        cm = ai2rs.ConversionManager()
+        cm.auto_convert()
 
     @classmethod
     def standin_to_bbox(cls):

@@ -702,7 +702,6 @@ order by cast("TimeLogs".start as date)
 
         # convert them to utc
         from anima.utils import local_to_utc
-        import pytz
         utc_start_date = local_to_utc(start_date)
         utc_end_date = local_to_utc(end_date)
 
@@ -718,9 +717,10 @@ order by cast("TimeLogs".start as date)
         utc_now = local_to_utc(datetime.datetime.now())
 
         import stalker
-        if int(stalker.__version__.replace('.', '')) >= 218:
-            print('Stalker needs tzinfo!!! Injecting')
+        from distutils.version import LooseVersion
+        if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
             # inject timezone info
+            import pytz
             utc_start_date = utc_start_date.replace(tzinfo=pytz.utc)
             utc_end_date = utc_end_date.replace(tzinfo=pytz.utc)
             utc_now = utc_now.replace(tzinfo=pytz.utc)

@@ -27,9 +27,11 @@ class Houdini(EnvironmentBase):
         from stalker import Repository
         # re initialize repo vars
         for repo in Repository.query.all():
-            name = repo.env_var
+            env_var_name = repo.env_var
             value = repo.path
-            self.set_environment_variable(name, value)
+            self.set_environment_variable(env_var_name, value)
+
+        self.name = '%s %s' % (self.name, hou.applicationVersionString())
 
     def save_as(self, version):
         """the save action for houdini environment

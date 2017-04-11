@@ -426,6 +426,10 @@ class UI(object):
         if pause:
             cmd_buffer.append('-pause')
 
+        # go to the default render layer
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.switch_to_default_render_layer()
+
         # save file
         pm.saveAs(
             filename,
@@ -464,8 +468,8 @@ class UI(object):
 
                 # create one big command
                 afjob_cmd = ' '.join([
-                    os.environ['CGRU_PYTHONEXE'],
-                    '"%s/python/afjob.py"' % os.environ['AF_ROOT'],
+                    os.environ['CGRU_PYTHONEXE'].replace('\\', '/'),
+                    '"%s/python/afjob.py"' % os.environ['AF_ROOT'].replace('\\', '/'),
                     '%s' % ' '.join(tmp_cmd_buffer) % kwargs
                 ])
                 cmds.append(afjob_cmd)
@@ -476,8 +480,8 @@ class UI(object):
         else:
             # create one big command
             afjob_cmd = ' '.join([
-                os.environ['CGRU_PYTHONEXE'],
-                '%s/python/afjob.py' % os.environ['AF_ROOT'],
+                os.environ['CGRU_PYTHONEXE'].replace('\\', '/'),
+                '%s/python/afjob.py' % os.environ['AF_ROOT'].replace('\\', '/'),
                 '%s' % ' '.join(cmd_buffer) % kwargs
             ])
             cmds.append(afjob_cmd)        
