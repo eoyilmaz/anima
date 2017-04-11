@@ -272,7 +272,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         # resource changed
         QtCore.QObject.connect(
             self.resource_comboBox,
-            QtCore.SIGNAL('currentIndexChanged(QString'),
+            QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.resource_changed
         )
 
@@ -447,6 +447,12 @@ order by cast("TimeLogs".start as date)
         # print('getting data from sql: %0.3f sec' % (end - start))
 
         from anima.utils import utc_to_local
+        time_shifter = utc_to_local
+        import stalker
+        if int(stalker.__version__.replace('.', '')) >= 218:
+            def time_shifter(x):
+                return x
+
         for r in result:
             calendar_day = r[0]
             year = calendar_day.year
@@ -466,8 +472,8 @@ order by cast("TimeLogs".start as date)
             for task_name, start, end in sorted(
                     zip(r[1], r[2], r[3]), key=lambda x: x[1]):
                 time_log_tool_tip_text = tool_tip_text_format.format(
-                    start=utc_to_local(start),
-                    end=utc_to_local(end),
+                    start=time_shifter(start),
+                    end=time_shifter(end),
                     task_name=task_name
                 )
                 tool_tip_text_data.append(time_log_tool_tip_text)
@@ -736,6 +742,7 @@ order by cast("TimeLogs".start as date)
                     'Error',
                     'O saatte baska time log var!!!'
                 )
+                db.DBSession.rollback()
                 return
 
             from sqlalchemy.exc import IntegrityError
