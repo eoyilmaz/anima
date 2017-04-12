@@ -830,13 +830,13 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # defaultRenderGlobals
         dRG = pm.PyNode('defaultRenderGlobals')
-        dRG.setAttr('imageFilePrefix', render_file_rel_path)
-        dRG.setAttr('renderVersion', "v%03d" % version.version_number)
-        dRG.setAttr('animation', 1)
-        dRG.setAttr('outFormatControl', 0)
-        dRG.setAttr('extensionPadding', 4)
-        dRG.setAttr('imageFormat', 7)  # force the format to iff
-        dRG.setAttr('pff', 1)
+        dRG.imageFilePrefix.set(render_file_rel_path)
+        dRG.renderVersion.set("v%03d" % version.version_number)
+        dRG.animation.set(1)
+        dRG.outFormatControl.set(0)
+        dRG.extensionPadding.set(4)
+        dRG.imageFormat.set(7)  # force the format to iff
+        dRG.pff.set(1)
 
         self.set_output_file_format()
         end = time.time()
@@ -892,15 +892,23 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 dAD.halfPrecision.set(1)  # half
                 dAD.tiled.set(0)  # not tiled
                 dAD.autocrop.set(1)  # will enhance file load times in Nuke
-            except pm.general.MayaNodeError:
-                # arnold is not rendered any single frame yet
+            except pm.MayaNodeError:
+                # arnold has not rendered any single frame yet
                 pass
-
-        ## check all the render layers and try to get if any of them are using
-        ## mayaSoftware as the renderer, and set the render output to iff if any
-        #for renderLayer in pm.ls(type='renderLayer'):
-            ## if the renderer is set to mayaSoftware (which is very rare)
-            #if dRG.getAttr('currentRenderer') == 'mayaSoftware':
+        elif current_renderer == 'redshift':
+            try:
+                dRO = pm.PyNode('redshiftOptions')
+                dRO.imageFormat.set(1)
+                dRO.exrBits.set(16)
+                dRO.exrCompression.set(0)
+                dRO.exrIsTiled.set(0)
+                dRO.autocrop.set(1)
+                dRO.exrForceMultilayer.set(0)
+                dRO.exrMultipart.set(0)
+                dRO.noSaveImage.set(0)
+                dRO.skipExistingFrames.set(0)
+            except pm.MayaNodeError:
+                pass
 
     @classmethod
     def set_playblast_file_name(cls, version):
