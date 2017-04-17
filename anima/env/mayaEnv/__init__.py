@@ -22,10 +22,10 @@ from anima.ui.progress_dialog import ProgressDialogManager
 
 # empty publishers first
 from anima.env.mayaEnv import publish as publish_scripts  # register publishers
-reload(publish_scripts)
 
 from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                            POST_PUBLISHER_TYPE)
+reload(publish_scripts)
 
 
 class MayaMainProgressBarWrapper(object):
@@ -55,7 +55,6 @@ class MayaMainProgressBarWrapper(object):
     def setValue(self, value):
         self.progress_bar.setProgress(value)
         self.progress_bar.step()
-
 
 
 class Maya(EnvironmentBase):

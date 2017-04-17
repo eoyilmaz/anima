@@ -381,7 +381,7 @@ class UI(object):
             '-hostsexcl %(exc)s',
             '-fpt %(fpt)s',
             '-name "%(name)s"',
-            '-pwd "%(pwd)s"',
+            # '-pwd "%(pwd)s"',
             '-proj "%(proj)s"',
             '-images "%(images)s"',
             '-deletescene',
