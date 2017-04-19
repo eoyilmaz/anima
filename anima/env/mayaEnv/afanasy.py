@@ -381,7 +381,7 @@ class UI(object):
             '-hostsexcl %(exc)s',
             '-fpt %(fpt)s',
             '-name "%(name)s"',
-            # '-pwd "%(pwd)s"',
+            '-pwd "%(pwd)s"',
             '-proj "%(proj)s"',
             '-images "%(images)s"',
             '-deletescene',
@@ -410,6 +410,8 @@ class UI(object):
         if render_engine == 'mentalRay':
             cmd_buffer.append('-type maya_mental')
         elif render_engine == 'arnold':
+            # remove working directory
+            cmd_buffer.remove('-pwd "%(pwd)s"')
             cmd_buffer.append('-type maya_arnold')
             # set the verbosity level to warnin+info
             aro = pm.PyNode('defaultArnoldRenderOptions')
