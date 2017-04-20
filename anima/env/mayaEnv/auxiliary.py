@@ -878,7 +878,8 @@ def fix_external_paths():
     """
     from anima.env import mayaEnv
     m_env = mayaEnv.Maya()
-    m_env.replace_external_paths()
+    if m_env.get_current_version():
+        m_env.replace_external_paths()
 
 
 def has_shape(node):
