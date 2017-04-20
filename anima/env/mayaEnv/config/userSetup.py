@@ -156,3 +156,7 @@ if not pm.general.about(batch=1):
         from mtoa.ui.globals import settings
         settings.createArnoldTextureSettings = \
             arnold_patches.createArnoldTextureSettings
+
+
+# set CMD_EXTENSION for Afanasy
+os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
