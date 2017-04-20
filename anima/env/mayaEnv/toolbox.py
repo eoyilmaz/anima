@@ -815,6 +815,13 @@ def UI():
                           "Redshift, including materials and lights",
                       bgc=color.color)
 
+            pm.button('convert_nodes_to_redshift_button',
+                      l="Convert Selected To RedShift (BETA)",
+                      c=RepeatedCallback(Render.convert_nodes_to_redshift),
+                      ann="Automatically converts the selected node from "
+                          "Arnold to Redshift",
+                      bgc=color.color)
+
             color.change()
             pm.button(
                 'fix_render_layer_out_adjustment_errors_button',
@@ -3225,6 +3232,15 @@ class Render(object):
         from anima.env.mayaEnv import ai2rs
         cm = ai2rs.ConversionManager()
         cm.auto_convert()
+
+    @classmethod
+    def convert_nodes_to_redshift(cls):
+        """converts the selected nodes to Redshift
+        """
+        from anima.env.mayaEnv import ai2rs
+        cm = ai2rs.ConversionManager()
+        for node in pm.selected():
+            cm.convert(node)
 
     @classmethod
     def standin_to_bbox(cls):

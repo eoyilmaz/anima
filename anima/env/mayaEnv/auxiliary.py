@@ -859,7 +859,9 @@ def switch_to_default_render_layer():
     """
     try:
         default_render_layer = get_default_render_layer()
-        default_render_layer.setCurrent()
+        current_layer = get_current_render_layer()
+        if current_layer != default_render_layer:
+            default_render_layer.setCurrent()
     except (NameError, RuntimeError):
         pass
 
