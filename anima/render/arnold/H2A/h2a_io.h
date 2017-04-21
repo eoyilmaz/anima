@@ -40,7 +40,9 @@ namespace H2A {
 									 bool color, 
 									 int type,
 									 int p_type,
-									 fpreal radius);
+									 fpreal radius,
+									 int subdiv_type,
+									 int subdiv_ite);
 
 }
 
