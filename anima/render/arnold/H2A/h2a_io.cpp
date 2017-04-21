@@ -24,6 +24,7 @@
 #include "point_write.cpp"
 #include "poly_write.cpp"
 #include "curve_write.cpp"
+#include "light_write.cpp"
 
 using namespace std;
 
@@ -39,7 +40,9 @@ namespace H2A{
 		bool color, 
 		int type,
 		int p_type,
-		fpreal radius)
+		fpreal radius,
+		int subdiv_type,
+		int subdiv_ite)
 
 	{
 
@@ -55,10 +58,13 @@ namespace H2A{
 			curve_writer(gdp, filename, name, pwidth, shutter, mode, motionb, color, use_gzip);
 			break;
 		case 1:
-			poly_writer(gdp,filename, name, shutter, motionb, color, use_gzip);
+			poly_writer(gdp,filename, name, shutter, motionb, color,subdiv_type, subdiv_ite, use_gzip);
 			break;
 		case 2:
 			point_writer(gdp,fname, name, shutter,motionb,color,p_type,radius,use_gzip);
+			break;
+		case 3:
+			light_writer(gdp,fname,use_gzip);
 			break;
 		}
 

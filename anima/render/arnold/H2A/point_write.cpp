@@ -51,8 +51,7 @@ bool point_write_normal_file(const GU_Detail *gdp,
 		render_type = "quad";
 		break;
 	}
-
-
+	fpreal p_radius = radius; 
 
 	GA_ROHandleV3 pos_h(gdp,GA_ATTRIB_POINT,"P");
 	UT_Vector3F pos_val(0,0,0);
@@ -102,8 +101,8 @@ bool point_write_normal_file(const GU_Detail *gdp,
 	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 			if(rad_h.isValid()) rad_val = rad_h.get(ptoff);
-			rad_val *= radius;
-			ass_file<<rad_val<<" ";
+			//rad_val *= radius;
+			ass_file<<rad_val * p_radius<<" ";
 			if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
 		}
 	}
@@ -139,7 +138,7 @@ bool point_write_gz_file(const GU_Detail *gdp,
 
 	UT_String render_type("disk"); 
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
-
+	fpreal p_radius = radius;
 	switch(p_type)
 	{
 	case 0:
@@ -204,8 +203,8 @@ bool point_write_gz_file(const GU_Detail *gdp,
 	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
 			if(rad_h.isValid()) rad_val = rad_h.get(ptoff);
-			rad_val *= radius;
-			gzprintf(ass_file,"%f ",rad_val);
+			//rad_val *= radius;
+			gzprintf(ass_file,"%f ",rad_val * p_radius);
 			if((ptoff+1) % 300 == 0 ) gzprintf(ass_file,"\n"); 
 		}
 	}

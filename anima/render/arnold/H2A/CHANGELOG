@@ -5,4 +5,27 @@ Changes
 0.1.13.dev
 ==========
 
-* Inıtial release of H2A ROP renderer
+* Initial release of H2A ROP renderer
+
+
+0.1.alpha
+=========
+
+* added uv and N attribute export for poly render. 
+* minor bug fix in curve render and point render. 
+
+
+1.0.0
+==========
+
+Light instancing options for points. 
+
+1.0.1
+==========
+
+Polygon subdivision models. Bug fixes. 
+
+1.0.2
+==========
+
+H16 and VC19 Support. Fixed curve uv.  
