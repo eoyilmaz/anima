@@ -460,6 +460,7 @@ class RepresentationGenerator(object):
         """Generates a unique filename if the file already exists
 
         :param filename:
+        :param force:
         :return:
         """
         import uuid
@@ -1071,7 +1072,11 @@ class RepresentationGenerator(object):
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
-            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+            all_render_related_nodes = [
+                node for node in pm.ls()
+                if node.type() in RENDER_RELATED_NODE_TYPES
+            ]
+            for node in all_render_related_nodes:
                 if node.referenceFile() is None and \
                    node.name() not in READ_ONLY_NODE_NAMES:
                     node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
@@ -1099,7 +1104,9 @@ class RepresentationGenerator(object):
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
-                    child_node.rename('%s_%s' % (child_node.name(), uuid.uuid4().hex))
+                    child_node.rename(
+                        '%s_%s' % (child_node.name(), uuid.uuid4().hex)
+                    )
 
                     output_filename =\
                         '%s_%s.ass' % (
@@ -1203,7 +1210,11 @@ class RepresentationGenerator(object):
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
-            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+            all_render_related_nodes = [
+                node for node in pm.ls()
+                if node.type() in RENDER_RELATED_NODE_TYPES
+            ]
+            for node in all_render_related_nodes:
                 if node.referenceFile() is None and \
                    node.name() not in READ_ONLY_NODE_NAMES:
                     node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
@@ -1591,7 +1602,11 @@ class RepresentationGenerator(object):
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
-            for node in pm.ls(type=RENDER_RELATED_NODE_TYPES):
+            all_render_related_nodes = [
+                node for node in pm.ls()
+                if node.type() in RENDER_RELATED_NODE_TYPES
+            ]
+            for node in all_render_related_nodes:
                 if node.referenceFile() is None and \
                    node.name() not in READ_ONLY_NODE_NAMES:
                     node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
@@ -1601,7 +1616,7 @@ class RepresentationGenerator(object):
 
             for node in pfx_polygons_node.getChildren():
                 for child_node in node.getChildren():
-                    #print('processing %s' % child_node.name())
+                    # print('processing %s' % child_node.name())
                     child_node_name = child_node.name().split('___')[-1]
 
                     pm.select(child_node)
