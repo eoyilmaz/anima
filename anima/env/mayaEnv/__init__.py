@@ -792,7 +792,6 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def set_render_filename(self, version):
         """sets the render file name
         """
-        start = time.time()
         render_output_folder = os.path.join(
             version.absolute_path,
             'Outputs'
@@ -838,9 +837,6 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         dRG.pff.set(1)
 
         self.set_output_file_format()
-        end = time.time()
-        logger.debug('set_render_filename() took '
-                     '%f seconds' % (end - start))
 
     @classmethod
     def set_output_file_format(cls):
@@ -906,6 +902,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 dRO.exrMultipart.set(0)
                 dRO.noSaveImage.set(0)
                 dRO.skipExistingFrames.set(0)
+                dRO.unifiedRandomizePattern.set(1)
             except pm.MayaNodeError:
                 pass
 
