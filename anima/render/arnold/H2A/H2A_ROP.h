@@ -77,6 +77,10 @@ namespace H2A {
 		ROP_H2A_TYPE,
 		ROP_H2A_P_RENDER_TYPE,
 		ROP_H2A_P_RAD_MULT,
+		ROP_H2A_SUBDIV_TYPE,
+		ROP_H2A_SUBDIV_ITE,
+
+		//render parameters
 		ROP_H2A_INITSIM,
 		ROP_H2A_MKPATH,
 		ROP_H2A_ALFPROGRESS,
@@ -130,6 +134,8 @@ namespace H2A {
 		bool	COLOR()								{ return evalInt  ("export_color", 0, 0); }
 		int		TYPE()								{ return evalInt  ("export_type", 0, 0); }
 		int		P_RENDER_TYPE()						{ return evalInt  ("prender_type", 0, 0); }
+		int		SUBDIV_TYPE()						{ return evalInt  ("subdiv_type", 0, 0); }
+		int		SUBDIV_ITE(fpreal t)				{ return evalInt  ("subdiv_ite", 0, 0); }
 		fpreal  RADIUS(fpreal t)					{ return evalFloat("rad_mult", 0, t);}
 		int		ALFPROGRESS()						{ return evalInt  ("alfprogress", 0, 0); }
 

@@ -32,7 +32,9 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 							const char * name,
 							fpreal shutter,
 							bool motionb,
-							bool color)
+							bool color,
+							int subdiv_type,
+							int subdiv_ite)
 {
 
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
@@ -87,9 +89,6 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 		idx.clear();
 		if((prim_off+1) % 300 == 0) ass_file<<"\n"; 
 	}
-
-
-
 
 	ass_file<<"\n vlist "<<gdp->getNumPoints()<<" "<<sample_count<<" POINT\n";
 
@@ -164,7 +163,6 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 	}
 
 
-
 	if(uv_h.isValid()){
 		ass_file<<"\n uvidxs "<<gdp->getNumVertices()<<" 1 UINT\n";
 		for(GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd();++p_it){
@@ -194,7 +192,20 @@ bool poly_write_normal_file(const GU_Detail *gdp,
 		}
 	}
 
-	ass_file<<"\n smoothing on\n visibility 255\n sidedness 255\n invert normals off\n receive_shadows on\n self_shadows on\n"
+	ass_file<<"\n smoothing on\n"; 
+	switch (subdiv_type)
+	{
+	case 0: // none
+		break;
+	case 1: // cat-clark
+		ass_file<<" subdiv_type \"catclark\"\n";
+		break;
+	case 2: // linear
+		ass_file<<" subdiv_type \"linear\"\n";
+		break;
+	}
+	if(subdiv_ite>1) ass_file<<" subdiv_iterations "<<subdiv_ite<<"\n";
+	ass_file<<" visibility 255\n sidedness 255\n invert_normals off\n receive_shadows on\n self_shadows on\n"
 		" opaque on\n matrix\n1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n";
 
 	if(motionb) ass_file<<"1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n";
@@ -224,7 +235,9 @@ bool poly_write_gz_file(const GU_Detail *gdp,
 						const char * name,
 						fpreal shutter,
 						bool motionb,
-						bool color)
+						bool color,
+						int subdiv_type,
+						int subdiv_ite)
 {
 
 	fpreal fps = OPgetDirector()->getChannelManager()->getSamplesPerSec();
@@ -267,7 +280,6 @@ bool poly_write_gz_file(const GU_Detail *gdp,
 	}
 
 	gzprintf(ass_file, "\n vidxs %d 1 UINT\n",gdp->getNumVertices());
-
 
 	for(GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd();++p_it){
 		prim_off = p_it.getOffset();
@@ -384,7 +396,22 @@ bool poly_write_gz_file(const GU_Detail *gdp,
 		}
 	}
 
-	gzprintf(ass_file,"\n smoothing on\n visibility 255\n sidedness 255\n invert_normals off\n receive_shadows on\n self_shadows on\n"
+	gzprintf(ass_file,"\n smoothing on\n"); 
+	
+	switch (subdiv_type)
+	{
+	case 0: // none
+		break;
+	case 1: // cat-clark
+		gzprintf(ass_file," subdiv_type \"catclark\"\n");
+		break;
+	case 2: // linear
+		gzprintf(ass_file," subdiv_type \"linear\"\n");
+		break;
+	}
+	
+	if(subdiv_ite>1) gzprintf(ass_file," subdiv_iterations %d \n", subdiv_ite);
+	gzprintf(ass_file, " visibility 255\n sidedness 255\n invert_normals off\n receive_shadows on\n self_shadows on\n"
 		" opaque on\n matrix\n1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n");
 
 	if(motionb) gzprintf(ass_file,"1 0 0 0\n0 1 0 0\n0 0 1 0\n0 0 0 1\n");
@@ -413,10 +440,12 @@ bool poly_writer(const GU_Detail *gdp,
 				 fpreal shutter,
 				 bool motionb,
 				 bool color,
+				 int subdiv_type,
+				 int subdiv_ite,
 				 bool use_gzip)
 {
-	if(!use_gzip) poly_write_normal_file(gdp,fname,name,shutter,motionb,color);
-	else poly_write_gz_file(gdp,fname,name,shutter,motionb,color);
+	if(!use_gzip) poly_write_normal_file(gdp,fname,name,shutter,motionb,color,subdiv_type,subdiv_ite);
+	else poly_write_gz_file(gdp,fname,name,shutter,motionb,color,subdiv_type,subdiv_ite);
 
 	return true;
 };
