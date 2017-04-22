@@ -404,10 +404,15 @@ class UI(object):
         elif render_engine == 'arnold':
             # check if the samples are too high
             dAO = pm.PyNode('defaultArnoldRenderOptions')
+
+
             aa_samples = dAO.AASamples.get()
             diff_samples = dAO.GIDiffuseSamples.get()
             glossy_samples = dAO.GIGlossySamples.get()
-            sss_samples = dAO.GISssSamples.get()
+            if int(pm.about(v=1)) >= 2017:
+                sss_samples = dAO.GISssSamples.get()
+            else:
+                sss_samples = dAO.sssBssrdfSamples.get()
 
             total_diff_samples = aa_samples**2 * diff_samples**2
             total_glossy_samples = aa_samples**2 * glossy_samples**2
