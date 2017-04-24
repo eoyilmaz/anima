@@ -420,7 +420,7 @@ class UI(object):
 
             max_allowed_diff_samples = 225
             max_allowed_glossy_samples = 100
-            max_allowed_sss_samples = 450
+            max_allowed_sss_samples = 800
 
             if total_diff_samples > max_allowed_diff_samples:
                 pm.confirmDialog(
