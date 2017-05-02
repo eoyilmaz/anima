@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\time_log_dialog.ui'
+# Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\time_log_dialog.ui'
 #
-# Created: Fri Feb 10 02:19:26 2017
+# Created: Mon May 01 21:42:46 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

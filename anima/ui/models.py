@@ -6,7 +6,7 @@
 
 from stalker import (db, defaults, SimpleEntity, Task, Project, ProjectUser,
                      Version)
-from anima import logger, status_colors_by_id
+from anima import logger
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 
 
@@ -27,7 +27,8 @@ class VersionItem(QtGui.QStandardItem):
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
         logger.debug(
-            'VersionItem.__init__() is started for item: %s' % self.text())
+            'VersionItem.__init__() is started for item: %s' % self.text()
+        )
         self.loaded = False
         self.version = None
         self.parent = None
@@ -35,28 +36,35 @@ class VersionItem(QtGui.QStandardItem):
         self.fetched_all = False
         self.setEditable(False)
         logger.debug(
-            'VersionItem.__init__() is finished for item: %s' % self.text())
+            'VersionItem.__init__() is finished for item: %s' % self.text()
+        )
 
     def clone(self):
         """returns a copy of this item
         """
-        logger.debug('VersionItem.clone() is started for item: %s' % self.text())
+        logger.debug(
+            'VersionItem.clone() is started for item: %s' % self.text()
+        )
         new_item = VersionItem()
         new_item.version = self.version
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
-        logger.debug('VersionItem.clone() is finished for item: %s' % self.text())
+        logger.debug(
+            'VersionItem.clone() is finished for item: %s' % self.text()
+        )
         return new_item
 
     def canFetchMore(self):
         logger.debug(
-            'VersionItem.canFetchMore() is started for item: %s' % self.text())
+            'VersionItem.canFetchMore() is started for item: %s' % self.text()
+        )
         if self.version and not self.fetched_all:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
         logger.debug(
-            'VersionItem.canFetchMore() is finished for item: %s' % self.text())
+            'VersionItem.canFetchMore() is finished for item: %s' % self.text()
+        )
         return return_value
 
     @classmethod
@@ -190,7 +198,8 @@ class VersionItem(QtGui.QStandardItem):
 
     def fetchMore(self):
         logger.debug(
-            'VersionItem.fetchMore() is started for item: %s' % self.text())
+            'VersionItem.fetchMore() is started for item: %s' % self.text()
+        )
 
         if self.canFetchMore():
             # model = self.model() # This will cause a SEGFAULT
@@ -203,17 +212,20 @@ class VersionItem(QtGui.QStandardItem):
 
             self.fetched_all = True
         logger.debug(
-            'VersionItem.fetchMore() is finished for item: %s' % self.text())
+            'VersionItem.fetchMore() is finished for item: %s' % self.text()
+        )
 
     def hasChildren(self):
         logger.debug(
-            'VersionItem.hasChildren() is started for item: %s' % self.text())
+            'VersionItem.hasChildren() is started for item: %s' % self.text()
+        )
         if self.version:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
         logger.debug(
-            'VersionItem.hasChildren() is finished for item: %s' % self.text())
+            'VersionItem.hasChildren() is finished for item: %s' % self.text()
+        )
         return return_value
 
     def type(self, *args, **kwargs):
@@ -255,14 +267,16 @@ class VersionTreeModel(QtGui.QStandardItemModel):
 
     def canFetchMore(self, index):
         logger.debug(
-            'VersionTreeModel.canFetchMore() is started for index: %s' % index)
+            'VersionTreeModel.canFetchMore() is started for index: %s' % index
+        )
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
         logger.debug(
-            'VersionTreeModel.canFetchMore() is finished for index: %s' % index)
+            'VersionTreeModel.canFetchMore() is finished for index: %s' % index
+        )
         return return_value
 
     def fetchMore(self, index):
@@ -316,7 +330,352 @@ class TaskTreeView(QtWidgets.QTreeView):
     """
 
     def __init__(self, *args, **kwargs):
-        super(TaskTreeView, self).__init__(*args, **kwargs)
+        #super(TaskTreeView, self).__init__(*args, **kwargs)
+        QtWidgets.QTreeView.__init__(self, *args, **kwargs)
+        self.is_updating = False
+        self.user = None
+        self.user_tasks_only = False
+
+        self.setup_signals()
+
+    def setup_signals(self):
+        """connects the signals to slots
+        """
+        # fit column 0 on expand/collapse
+        QtCore.QObject.connect(
+            self,
+            QtCore.SIGNAL('expanded(QModelIndex)'),
+            self.auto_fit_column
+        )
+
+        QtCore.QObject.connect(
+            self,
+            QtCore.SIGNAL('collapsed(QModelIndex)'),
+            self.auto_fit_column
+        )
+
+        # custom context menu for the tasks_treeView
+        self.setContextMenuPolicy(
+            QtCore.Qt.CustomContextMenu
+        )
+
+        QtCore.QObject.connect(
+            self,
+            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
+            self.show_context_menu
+        )
+
+    def replace_with_other(self, layout, index, tree_view):
+        """Replaces the given tree_view with itself
+
+        :param layout: The QtGui.QLayout of the parent of the original
+          QTreeView
+        :param index: The item index.
+        :param tree_view: The QtWidgets.QTreeView to replace with
+        :return:
+        """
+        tree_view.deleteLater()
+        layout.insertWidget(index, self)
+        return self
+
+    def auto_fit_column(self):
+        """fits columns to content
+        """
+        self.resizeColumnToContents(0)
+
+    def fill(self, user=None):
+        """fills the tree view with data
+        """
+        logger.debug('start filling tasks_treeView')
+
+        logger.debug('creating a new model')
+        from stalker import Project
+        projects = Project.query.order_by(Project.name).all()
+        logger.debug('projects: %s' % projects)
+
+        task_tree_model = TaskTreeModel()
+        task_tree_model.user = user
+        task_tree_model.user_tasks_only = self.user_tasks_only
+        task_tree_model.populateTree(projects)
+        self.setModel(task_tree_model)
+
+        # self.setModel(task_tree_model)
+        self.is_updating = False
+        logger.debug('finished filling tasks_treeView')
+
+    def show_context_menu(self, position):
+        """the custom context menu
+        """
+        # convert the position to global screen position
+        global_position = self.mapToGlobal(position)
+
+        index = self.indexAt(position)
+        model = self.model()
+        item = model.itemFromIndex(index)
+        logger.debug('itemAt(position) : %s' % item)
+
+        if not item:
+            return
+
+        if not hasattr(item, 'task_id'):
+            return
+
+        task_id = item.task_id
+        if not task_id:
+            return
+
+        from stalker import Task
+        # TODO: Update this to use only task_id
+        task = Task.query.get(task_id)
+        # create the menu
+        menu = QtWidgets.QMenu()  # Open in browser
+        menu.addAction('Open In Web Browser...')
+        menu.addAction('Copy URL')
+        menu.addAction('Copy ID to clipboard')
+
+        # logged_in_user = self.get_logged_in_user()
+        logged_in_user = model.user
+        from stalker import Status
+        status_wfd = Status.query.filter(Status.code == 'WFD').first()
+        status_prev = Status.query.filter(Status.code == 'PREV').first()
+        status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+        if logged_in_user in task.resources \
+           and task.status not in [status_wfd, status_prev, status_cmpl]:
+            menu.addSeparator()
+            menu.addAction('Create TimeLog...')
+
+        # update task and create child task menu items
+        from anima import is_power_user
+        if is_power_user(logged_in_user):
+            menu.addSeparator()
+            menu.addAction('Update task...')
+            menu.addAction('Create child task...')
+            menu.addAction('Delete task...')
+
+        menu.addSeparator()
+
+        # Add Depends To menu
+        depends = task.depends
+        if depends:
+            depends_to_menu = menu.addMenu('Depends To')
+
+            for dTask in depends:
+                action = depends_to_menu.addAction(dTask.name)
+                action.task = dTask
+
+        # Add Dependent Of Menu
+        dependent_of = task.dependent_of
+        if dependent_of:
+            dependent_of_menu = menu.addMenu('Dependent Of')
+
+            for dTask in dependent_of:
+                action = dependent_of_menu.addAction(dTask.name)
+                action.task = dTask
+
+        if not depends and not dependent_of:
+            no_deps_action = menu.addAction('No Dependencies')
+            no_deps_action.setEnabled(False)
+
+        selected_item = menu.exec_(global_position)
+        if selected_item:
+            choice = selected_item.text()
+            import anima
+            task_url = 'http://%s/tasks/%s/view' % (
+                anima.stalker_server_internal_address,
+                task.id
+            )
+            if choice == 'Open In Web Browser...':
+                import webbrowser
+                webbrowser.open(task_url)
+            elif choice == 'Copy URL':
+                clipboard = QtWidgets.QApplication.clipboard()
+                clipboard.setText(task_url)
+
+                # and warn the user about a new version is created and the
+                # clipboard is set to the new version full path
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "URL Copied To Clipboard",
+                    "URL:<br><br>%s<br><br>is copied to clipboard!" % task_url,
+                    QtWidgets.QMessageBox.Ok
+                )
+            elif choice == 'Copy ID to clipboard':
+                clipboard = QtWidgets.QApplication.clipboard()
+                clipboard.setText('%s' % task.id)
+
+                # and warn the user about a new version is created and the
+                # clipboard is set to the new version full path
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "ID Copied To Clipboard",
+                    "ID %s is copied to clipboard!" % task.id,
+                    QtWidgets.QMessageBox.Ok
+                )
+
+            elif choice == 'Create TimeLog...':
+                from anima.ui import time_log_dialog
+                time_log_dialog_main_dialog = time_log_dialog.MainDialog(
+                    parent=self,
+                    task=task,
+                )
+                time_log_dialog_main_dialog.exec_()
+
+            elif choice == 'Update task...':
+                from anima.ui import task_dialog
+                task_main_dialog = task_dialog.MainDialog(
+                    parent=self,
+                    task=task
+                )
+                task_main_dialog.exec_()
+
+            elif choice == 'Create child task...':
+                from anima.ui import task_dialog
+                task_main_dialog = task_dialog.MainDialog(
+                    parent=self,
+                    parent_task=task
+                )
+                task_main_dialog.exec_()
+
+            elif choice == 'Delete task...':
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Not Supported!!!",
+                    "Deleting a task is not supported for now!!!"
+                )
+            else:
+                # go to the dependencies
+                dep_task = selected_item.task
+                self.find_and_select_entity_item(
+                    dep_task,
+                    self
+                )
+
+    def find_and_select_entity_item(self, task, tree_view=None):
+        """finds and selects the task in the given tree_view item
+        """
+        if not task:
+            return
+
+        if not tree_view:
+            tree_view = self
+
+        item = self.load_task_item_hierarchy(task, tree_view)
+
+        if not item:
+            self.selectionModel().clearSelection()
+            return
+
+        try:
+            self.selectionModel().select(
+                item.index(), QtGui.QItemSelectionModel.ClearAndSelect
+            )
+        except AttributeError:  # Fix for Qt5
+            self.selectionModel().select(
+                item.index(), QtCore.QItemSelectionModel.ClearAndSelect
+            )
+
+        self.scrollTo(
+            item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
+        )
+        return item
+
+    def load_task_item_hierarchy(self, task, tree_view):
+        """loads the TaskItem related to the given task in the given tree_view
+
+        :return: TaskItem instance
+        """
+        if not task:
+            return
+
+        self.is_updating = True
+        item = self.find_entity_item(task)
+        if not item:
+            # the item is not loaded to the UI yet
+            # start loading its parents
+            # start from the project
+            item = self.find_entity_item(task.project, tree_view)
+            logger.debug('item for project: %s' % item)
+
+            if item:
+                tree_view.setExpanded(item.index(), True)
+
+            if task.parents:
+                # now starting from the most outer parent expand the tasks
+                for parent in task.parents:
+                    item = self.find_entity_item(parent, tree_view)
+
+                    if item:
+                        tree_view.setExpanded(item.index(), True)
+
+            # finally select the task
+            item = self.find_entity_item(task, tree_view)
+
+            if not item:
+                # still no item
+                logger.debug('can not find item')
+
+        self.is_updating = False
+        return item
+
+    def find_entity_item(self, entity, tree_view=None):
+        """finds the item related to the stalker entity in the given
+        QtTreeView
+        """
+        if not entity:
+            return None
+
+        if tree_view is None:
+            tree_view = self
+
+        indexes = self.get_item_indices_containing_text(entity.name, tree_view)
+        model = tree_view.model()
+        logger.debug('items matching name : %s' % indexes)
+        for index in indexes:
+            item = model.itemFromIndex(index)
+            if item:
+                if item.task_id == entity.id:
+                    return item
+        return None
+
+    def get_item_indices_containing_text(self, text, tree_view):
+        """returns the indexes of the item indices containing the given text
+        """
+        model = tree_view.model()
+        logger.debug('searching for text : %s' % text)
+        return model.match(
+            model.index(0, 0),
+            0,
+            text,
+            -1,
+            QtCore.Qt.MatchRecursive
+        )
+
+    def get_task_id(self):
+        """returns the task from the UI, it is an task, asset, shot, sequence
+        or project
+        """
+        task_id = None
+        selection_model = self.selectionModel()
+        logger.debug('selection_model: %s' % selection_model)
+
+        indexes = selection_model.selectedIndexes()
+        logger.debug('selected indexes : %s' % indexes)
+
+        if indexes:
+            current_index = indexes[0]
+            logger.debug('current_index : %s' % current_index)
+
+            item_model = self.model()
+            current_item = item_model.itemFromIndex(current_index)
+
+            if current_item:
+                task_id = current_item.task_id
+                # if task_id:
+                #     from stalker import db, Task
+                #     task = Task.query.get(task_id)
+
+        logger.debug('task_id: %s' % task_id)
+        return task_id
 
 
 class TaskItem(QtGui.QStandardItem):
@@ -446,6 +805,7 @@ class TaskItem(QtGui.QStandardItem):
             # # tasks = sorted(tasks, key=lambda x: x.name)
 
             # start = time.time()
+            from anima import status_colors_by_id
             task_items = []
             for task in tasks:
                 task_item = TaskItem(0, 3)
@@ -535,8 +895,6 @@ class TaskItem(QtGui.QStandardItem):
         else:
             return_value = False
 
-        # print('TaskItem.hasChildren | self.task_name: %s' % self.task_name)
-
         logger.debug(
             'TaskItem.hasChildren() is finished for item: %s' % self.text()
         )
@@ -581,7 +939,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.setColumnCount(3)
             project_item.setText(project.name)
             project_item.task_id = project.id
-            project_item.user_id = self.user.id
+            project_item.user_id = self.user.id if self.user else -1
             project_item.user_tasks_only = self.user_tasks_only
 
             # set the font
@@ -606,33 +964,38 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
     def canFetchMore(self, index):
         logger.debug(
-            'TaskTreeModel.canFetchMore() is started for index: %s' % index)
+            'TaskTreeModel.canFetchMore() is started for index: %s' % index
+        )
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
         logger.debug(
-            'TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+            'TaskTreeModel.canFetchMore() is finished for index: %s' % index
+        )
         return return_value
 
     def fetchMore(self, index):
         """fetches more elements
         """
         logger.debug(
-            'TaskTreeModel.canFetchMore() is started for index: %s' % index)
+            'TaskTreeModel.canFetchMore() is started for index: %s' % index
+        )
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
         logger.debug(
-            'TaskTreeModel.canFetchMore() is finished for index: %s' % index)
+            'TaskTreeModel.canFetchMore() is finished for index: %s' % index
+        )
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
         logger.debug(
-            'TaskTreeModel.hasChildren() is started for index: %s' % index)
+            'TaskTreeModel.hasChildren() is started for index: %s' % index
+        )
         if not index.isValid():
             if self.user_tasks_only:
                 if self.user_id:
@@ -650,7 +1013,8 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             if item:
                 return_value = item.hasChildren()
         logger.debug(
-            'TaskTreeModel.hasChildren() is finished for index: %s' % index)
+            'TaskTreeModel.hasChildren() is finished for index: %s' % index
+        )
         return return_value
 
 
@@ -756,3 +1120,404 @@ class TaskNameCompleter(QtWidgets.QCompleter):
 
         # if completion_prefix.strip() != '':
         self.complete()
+
+
+class TimeEdit(QtWidgets.QTimeEdit):
+    """Customized time edit widget
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.resolution = None
+        if 'resolution' in kwargs:
+            self.resolution = kwargs['resolution']
+            kwargs.pop('resolution')
+
+        super(TimeEdit, self).__init__(*args, **kwargs)
+
+    def stepBy(self, step):
+        """Custom stepBy function
+
+        :param step:
+        :return:
+        """
+        if self.currentSectionIndex() == 1:
+            if step < 0:
+                # auto update the hour section to the next hour
+                minute = self.time().minute()
+                if minute == 0:
+                    # increment the hour section by one
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour() - 1,
+                            60 - self.resolution
+                        )
+                    )
+                else:
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour(),
+                            minute - self.resolution
+                        )
+                    )
+
+            else:
+                # auto update the hour section to the next hour
+                minute = self.time().minute()
+                if minute == (60 - self.resolution):
+                    # increment the hour section by one
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour()+1,
+                            0
+                        )
+                    )
+                else:
+                    self.setTime(
+                        QtCore.QTime(
+                            self.time().hour(),
+                            minute + self.resolution
+                        )
+                    )
+        else:
+            if step < 0:
+                if self.time().hour() != 0:
+                    super(TimeEdit, self).stepBy(step)
+            else:
+                if self.time().hour() != 23:
+                    super(TimeEdit, self).stepBy(step)
+
+
+class TaskComboBox(QtWidgets.QComboBox):
+    """A customized combobox that holds Tasks
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(TaskComboBox, self).__init__(*args, **kwargs)
+
+    def showPopup(self, *args, **kwargs):
+        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
+        super(TaskComboBox, self).showPopup(*args, **kwargs)
+
+    @classmethod
+    def generate_task_name(cls, task):
+        """Generates task names
+        :param task:
+        :return:
+        """
+        if task:
+            return '%s (%s)' % (
+                task.name,
+                '%s | %s' % (
+                    task.project.name,
+                    ' | '.join(map(lambda x: x.name, task.parents))
+                )
+            )
+        else:
+            return ''
+
+    def addTasks(self, tasks):
+        """Overridden addItems method
+
+        :param tasks: A list of Tasks
+        :return:
+        """
+        # prepare task labels
+        task_labels = []
+        for task in tasks:
+            # this is dirty
+            task_label = self.generate_task_name(task)
+            self.addItem(task_label, task)
+
+    def currentTask(self):
+        """returns the current task
+        """
+        return self.itemData(self.currentIndex())
+
+    def setCurrentTask(self, task):
+        """sets the current task to the given task
+        """
+        for i in range(self.count()):
+            t = self.itemData(i)
+            if t.id == task.id:
+                self.setCurrentIndex(i)
+                return
+
+        raise IndexError('Task not found!')
+
+
+class RecentFilesComboBox(QtWidgets.QComboBox):
+    """A Fixed with popup box comboBox alternative
+    """
+
+    def showPopup(self, *args, **kwargs):
+        view = self.view()
+        column_size_hint = view.sizeHintForColumn(0)
+        view.setMinimumWidth(column_size_hint + 20)
+        super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
+
+
+class VersionsTableWidget(QtWidgets.QTableWidget):
+    """A QTableWidget derivative specialized to hold version data
+    """
+
+    def __init__(self, parent=None, *args, **kwargs):
+        QtWidgets.QTableWidget.__init__(self, parent, *args, **kwargs)
+
+        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.setAlternatingRowColors(True)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.setShowGrid(False)
+        self.setColumnCount(5)
+        self.setObjectName("previous_versions_tableWidget")
+        self.setColumnCount(5)
+        self.setRowCount(0)
+        self.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
+        self.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
+        self.horizontalHeader().setStretchLastSection(True)
+        self.verticalHeader().setStretchLastSection(False)
+
+        tool_tip_html = \
+            "<html><head/><body><p>Right click to:</p><ul style=\"" \
+            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; " \
+            "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" " \
+            "font-weight:600;\">Copy Path</span></li><li><span style=\" " \
+            "font-weight:600;\">Browse Path</span></li><li><span style=\" " \
+            "font-weight:600;\">Change Description</span></li></ul>" \
+            "<p>Double click to:</p><ul style=\"margin-top: 0px; " \
+            "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; " \
+            "-qt-list-indent: 1;\"><li style=\" margin-top:12px; " \
+            "margin-bottom:12px; margin-left:0px; margin-right:0px; " \
+            "-qt-block-indent:0; text-indent:0px;\"><span style=\" " \
+            "font-weight:600;\">Open</span></li></ul></body></html>"
+
+        try:
+            self.setToolTip(
+                QtWidgets.QApplication.translate(
+                    "Dialog",
+                    tool_tip_html,
+                    None,
+                    QtWidgets.QApplication.UnicodeUTF8
+                )
+            )
+        except AttributeError:
+            self.setToolTip(
+                QtWidgets.QApplication.translate(
+                    "Dialog",
+                    tool_tip_html,
+                    None
+                )
+            )
+
+        self.versions = []
+        self.labels = [
+            '#',
+            'App',
+            'Created By',
+            'Updated By',
+            'Size',
+            'Date',
+            'Description',
+        ]
+        self.setColumnCount(len(self.labels))
+
+    def clear(self):
+        """overridden clear method
+        """
+        QtWidgets.QTableWidget.clear(self)
+        self.versions = []
+
+        # reset the labels
+        self.setHorizontalHeaderLabels(self.labels)
+
+    def select_version(self, version):
+        """selects the given version in the list
+        """
+        # select the version in the previous version list
+        index = -1
+        for i, prev_version in enumerate(self.versions):
+            if self.versions[i].id == version.id:
+                index = i
+                break
+
+        logger.debug('current index: %s' % index)
+
+        # select the row
+        if index != -1:
+            item = self.item(index, 0)
+            logger.debug('item : %s' % item)
+            self.setCurrentItem(item)
+
+    @property
+    def current_version(self):
+        """returns the current selected version from the table
+        """
+        index = self.currentRow()
+        try:
+            version = self.versions[index]
+            return version
+        except IndexError:
+            return None
+
+    def update_content(self, versions):
+        """updates the content with the given versions data
+        """
+        import os
+        import datetime
+
+        logger.debug('VersionsTableWidget.update_content() is started')
+
+        self.clear()
+        self.versions = versions
+        self.setRowCount(len(versions))
+
+        def set_font(item):
+            """sets the font for the given item
+
+            :param item: the a QTableWidgetItem
+            """
+            my_font = item.font()
+            my_font.setBold(True)
+
+            item.setFont(my_font)
+
+            foreground = item.foreground()
+            foreground.setColor(QtGui.QColor(0, 192, 0))
+            item.setForeground(foreground)
+
+        # update the previous versions list
+        from anima import user_names_lut
+        for i, version in enumerate(versions):
+            is_published = version.is_published
+
+            c = 0
+
+            # ------------------------------------
+            # version_number
+            item = QtWidgets.QTableWidgetItem(str(version.version_number))
+            # align to center and vertical center
+            item.setTextAlignment(0x0004 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # created_with
+            item = QtWidgets.QTableWidgetItem()
+            if version.created_with:
+                from anima.ui import utils as ui_utils
+                item.setIcon(ui_utils.get_icon(version.created_with.lower()))
+
+            if is_published:
+                set_font(item)
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # user.name
+            created_by = ''
+            if version.created_by_id:
+                created_by = user_names_lut[version.created_by_id]
+            item = QtWidgets.QTableWidgetItem(created_by)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # user.name
+            updated_by = ''
+            if version.updated_by_id:
+                updated_by = user_names_lut[version.updated_by_id]
+            item = QtWidgets.QTableWidgetItem(updated_by)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # file size
+
+            # get the file size
+            #file_size_format = "%.2f MB"
+            file_size = -1
+            absolute_full_path = os.path.normpath(
+                os.path.expandvars(version.full_path)
+            ).replace('\\', '/')
+            if os.path.exists(absolute_full_path):
+                file_size = float(
+                    os.path.getsize(absolute_full_path)) / 1048576
+
+            from stalker import defaults
+            item = QtWidgets.QTableWidgetItem(
+                defaults.file_size_format % file_size
+            )
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # date
+
+            # get the file date
+            file_date = datetime.datetime.today()
+            if os.path.exists(absolute_full_path):
+                file_date = datetime.datetime.fromtimestamp(
+                    os.path.getmtime(absolute_full_path)
+                )
+            item = QtWidgets.QTableWidgetItem(
+                file_date.strftime(defaults.date_time_format)
+            )
+
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+            # ------------------------------------
+            # description
+            item = QtWidgets.QTableWidgetItem(version.description)
+            # align to left and vertical center
+            item.setTextAlignment(0x0001 | 0x0080)
+
+            if is_published:
+                set_font(item)
+
+            self.setItem(i, c, item)
+            c += 1
+            # ------------------------------------
+
+        # resize the first column
+        self.resizeRowsToContents()
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+        logger.debug('VersionsTableWidget.update_content() is finished')

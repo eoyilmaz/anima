@@ -22,129 +22,6 @@ reload(time_log_dialog_UI)
 timing_resolution = 10  # in minutes
 
 
-class TimeEdit(QtWidgets.QTimeEdit):
-    """Customized time edit widget
-    """
-
-    def __init__(self, *args, **kwargs):
-        self.resolution = None
-        if 'resolution' in kwargs:
-            self.resolution = kwargs['resolution']
-            kwargs.pop('resolution')
-
-        super(TimeEdit, self).__init__(*args, **kwargs)
-
-    def stepBy(self, step):
-        """Custom stepBy function
-
-        :param step:
-        :return:
-        """
-        if self.currentSectionIndex() == 1:
-            if step < 0:
-                # auto update the hour section to the next hour
-                minute = self.time().minute()
-                if minute == 0:
-                    # increment the hour section by one
-                    self.setTime(
-                        QtCore.QTime(
-                            self.time().hour() - 1,
-                            60 - self.resolution
-                        )
-                    )
-                else:
-                    self.setTime(
-                        QtCore.QTime(
-                            self.time().hour(),
-                            minute - self.resolution
-                        )
-                    )
-
-            else:
-                # auto update the hour section to the next hour
-                minute = self.time().minute()
-                if minute == (60 - self.resolution):
-                    # increment the hour section by one
-                    self.setTime(
-                        QtCore.QTime(
-                            self.time().hour()+1,
-                            0
-                        )
-                    )
-                else:
-                    self.setTime(
-                        QtCore.QTime(
-                            self.time().hour(),
-                            minute + self.resolution
-                        )
-                    )
-        else:
-            if step < 0:
-                if self.time().hour() != 0:
-                    super(TimeEdit, self).stepBy(step)
-            else:
-                if self.time().hour() != 23:
-                    super(TimeEdit, self).stepBy(step)
-
-
-class TaskComboBox(QtWidgets.QComboBox):
-    """A customized combobox that holds Tasks
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(TaskComboBox, self).__init__(*args, **kwargs)
-
-    def showPopup(self, *args, **kwargs):
-        self.view().setMinimumWidth(self.view().sizeHintForColumn(0))
-        super(TaskComboBox, self).showPopup(*args, **kwargs)
-
-    @classmethod
-    def generate_task_name(cls, task):
-        """Generates task names
-        :param task:
-        :return:
-        """
-        if task:
-            return '%s (%s)' % (
-                task.name,
-                '%s | %s' % (
-                    task.project.name,
-                    ' | '.join(map(lambda x: x.name, task.parents))
-                )
-            )
-        else:
-            return ''
-
-    def addTasks(self, tasks):
-        """Overridden addItems method
-
-        :param tasks: A list of Tasks
-        :return:
-        """
-        # prepare task labels
-        task_labels = []
-        for task in tasks:
-            # this is dirty
-            task_label = self.generate_task_name(task)
-            self.addItem(task_label, task)
-
-    def currentTask(self):
-        """returns the current task
-        """
-        return self.itemData(self.currentIndex())
-
-    def setCurrentTask(self, task):
-        """sets the current task to the given task
-        """
-        for i in range(self.count()):
-            t = self.itemData(i)
-            if t.id == task.id:
-                self.setCurrentIndex(i)
-                return
-
-        raise IndexError('Task not found!')
-
-
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param app_in: A Qt Application instance, which you can pass to let the UI
@@ -177,6 +54,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.setupUi(self)
 
         # customize the ui elements
+        from anima.ui.models import TaskComboBox
         self.tasks_comboBox = TaskComboBox(self)
         self.tasks_comboBox.setObjectName("tasks_comboBox")
         self.formLayout.setWidget(
@@ -186,6 +64,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         )
 
         # self.start_timeEdit.deleteLater()
+        from anima.ui.models import TimeEdit
         self.start_timeEdit = TimeEdit(self, resolution=timing_resolution)
         self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
         self.start_timeEdit.setCalendarPopup(True)
@@ -277,7 +156,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         )
 
     def _set_defaults(self):
-        """sets up the defaults for the interface
+        """sets the defaults for the ui
         """
         logger.debug("started setting up interface defaults")
 

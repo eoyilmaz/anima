@@ -24,15 +24,13 @@ Place the following variables in to the config.py file::
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
 
-__version__ = "0.1.13.dev"
+__version__ = "0.1.14.dev"
 
 from stalker import defaults
 
 import os
 import stat
-import datetime
 import tempfile
-import platform
 import logging
 
 # create logger
@@ -57,11 +55,6 @@ log_file_handler.setFormatter(logging_formatter)
 logger.addHandler(log_file_handler)
 
 # set stalker to use the same logger
-
-# create initial log
-#logger.debug('***************************************************************')
-#logger.debug('started new anima instance on %s' % datetime.datetime.now())
-#logger.debug('***************************************************************')
 
 # fix file mod for log file
 os.chmod(
@@ -145,3 +138,17 @@ def fill_user_names_lut():
 
 fill_status_colors_by_id()
 fill_user_names_lut()
+
+
+def is_power_user(user):
+    """A predicate that returns if the user is a power user
+    """
+    from stalker import Group
+    power_users_groups = Group.query\
+        .filter(Group.name.in_(power_users_group_names))\
+        .all()
+    if power_users_groups:
+        for group in power_users_groups:
+            if group in user.groups:
+                return True
+    return False
