@@ -9,6 +9,11 @@ from anima import logger
 from anima.env.mayaEnv import Maya
 from anima.utils import do_db_setup
 
+
+# version_creator_dialog = None
+# version_updater_dialog = None
+
+
 def set_qt_lib():
     """sets the Qt lib according to the maya version
     """
@@ -30,6 +35,7 @@ def version_creator(logging_level=logging.WARNING):
     do_db_setup()
 
     # use PySide for Maya 2014
+    # and PySide2 for Maya 2017
     set_qt_lib()
 
     from anima.ui import version_creator, models
@@ -44,6 +50,11 @@ def version_creator(logging_level=logging.WARNING):
 
     logger.setLevel(logging_level)
 
+    # global version_creator_dialog
+    # if version_creator_dialog is None:
+    #     version_creator_dialog = version_creator.UI(environment=m)
+    # else:
+    #     version_creator_dialog.show()
     version_creator.UI(environment=m)
 
 
@@ -68,6 +79,11 @@ def version_updater(logging_level=logging.WARNING):
     logger.setLevel(logging_level)
 
     # generate a reference_resolution
+    # global version_updater_dialog
+    # if version_updater_dialog is None:
+    #     version_updater_dialog = version_updater.UI(environment=m)
+    # else:
+    #     version_updater_dialog.show()
     version_updater.UI(environment=m)
 
 

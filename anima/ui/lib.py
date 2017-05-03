@@ -8,10 +8,6 @@ from anima import logger
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 
 
-print ("IS_PYQT4(): %s" % IS_PYQT4())
-print ("IS_PYSIDE(): %s" % IS_PYSIDE())
-print ("IS_PYSIDE2(): %s" % IS_PYSIDE2())
-
 if IS_PYQT4():
     logger.debug('importing PyQt4')
     import sip

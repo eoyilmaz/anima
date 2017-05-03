@@ -5,18 +5,16 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import logging
-import datetime
-
 import os
-import anima
-from anima import logger, user_names_lut
-from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtGui, QtCore, QtWidgets
-from anima.ui.models import TaskTreeModel, TakesListWidget
-
 from collections import namedtuple
 
+import anima
+from anima import logger, is_power_user
+from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
+from anima.ui.base import AnimaDialogBase, ui_caller
+from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.models import (TaskTreeView, TakesListWidget,
+                             RecentFilesComboBox, VersionsTableWidget)
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
@@ -47,280 +45,6 @@ VersionNT = namedtuple(
         'description'
     ]
 )
-
-
-class RecentFilesComboBox(QtWidgets.QComboBox):
-    """A Fixed with popup box comboBox alternative
-    """
-
-    def showPopup(self, *args, **kwargs):
-        view = self.view()
-        column_size_hint = view.sizeHintForColumn(0)
-        view.setMinimumWidth(column_size_hint + 20)
-        super(RecentFilesComboBox, self).showPopup(*args, **kwargs)
-
-
-class VersionsTableWidget(QtWidgets.QTableWidget):
-    """A QTableWidget derivative specialized to hold version data
-    """
-
-    def __init__(self, parent=None, *args, **kwargs):
-        QtWidgets.QTableWidget.__init__(self, parent, *args, **kwargs)
-
-        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.setAlternatingRowColors(True)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.setShowGrid(False)
-        self.setColumnCount(5)
-        self.setObjectName("previous_versions_tableWidget")
-        self.setColumnCount(5)
-        self.setRowCount(0)
-        self.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())
-        self.setHorizontalHeaderItem(1, QtWidgets.QTableWidgetItem())
-        self.setHorizontalHeaderItem(2, QtWidgets.QTableWidgetItem())
-        self.setHorizontalHeaderItem(3, QtWidgets.QTableWidgetItem())
-        self.setHorizontalHeaderItem(4, QtWidgets.QTableWidgetItem())
-        self.horizontalHeader().setStretchLastSection(True)
-        self.verticalHeader().setStretchLastSection(False)
-
-        tool_tip_html = \
-            "<html><head/><body><p>Right click to:</p><ul style=\"" \
-            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; " \
-            "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" " \
-            "font-weight:600;\">Copy Path</span></li><li><span style=\" " \
-            "font-weight:600;\">Browse Path</span></li><li><span style=\" " \
-            "font-weight:600;\">Change Description</span></li></ul>" \
-            "<p>Double click to:</p><ul style=\"margin-top: 0px; " \
-            "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; " \
-            "-qt-list-indent: 1;\"><li style=\" margin-top:12px; " \
-            "margin-bottom:12px; margin-left:0px; margin-right:0px; " \
-            "-qt-block-indent:0; text-indent:0px;\"><span style=\" " \
-            "font-weight:600;\">Open</span></li></ul></body></html>"
-
-        try:
-            self.setToolTip(
-                QtWidgets.QApplication.translate(
-                    "Dialog",
-                    tool_tip_html,
-                    None,
-                    QtWidgets.QApplication.UnicodeUTF8
-                )
-            )
-        except AttributeError:
-            self.setToolTip(
-                QtWidgets.QApplication.translate(
-                    "Dialog",
-                    tool_tip_html,
-                    None
-                )
-            )
-
-        self.versions = []
-        self.labels = [
-            '#',
-            'App',
-            'Created By',
-            'Updated By',
-            'Size',
-            'Date',
-            'Description',
-        ]
-        self.setColumnCount(len(self.labels))
-
-    def clear(self):
-        """overridden clear method
-        """
-        QtWidgets.QTableWidget.clear(self)
-        self.versions = []
-
-        # reset the labels
-        self.setHorizontalHeaderLabels(self.labels)
-
-    def select_version(self, version):
-        """selects the given version in the list
-        """
-        # select the version in the previous version list
-        index = -1
-        for i, prev_version in enumerate(self.versions):
-            if self.versions[i].id == version.id:
-                index = i
-                break
-
-        logger.debug('current index: %s' % index)
-
-        # select the row
-        if index != -1:
-            item = self.item(index, 0)
-            logger.debug('item : %s' % item)
-            self.setCurrentItem(item)
-
-    @property
-    def current_version(self):
-        """returns the current selected version from the table
-        """
-        index = self.currentRow()
-        try:
-            version = self.versions[index]
-            return version
-        except IndexError:
-            return None
-
-    def update_content(self, versions):
-        """updates the content with the given versions data
-        """
-        logger.debug('VersionsTableWidget.update_content() is started')
-
-        self.clear()
-        self.versions = versions
-        self.setRowCount(len(versions))
-
-        def set_font(item):
-            """sets the font for the given item
-
-            :param item: the a QTableWidgetItem
-            """
-            my_font = item.font()
-            my_font.setBold(True)
-
-            item.setFont(my_font)
-
-            foreground = item.foreground()
-            foreground.setColor(QtGui.QColor(0, 192, 0))
-            item.setForeground(foreground)
-
-        # update the previous versions list
-        for i, version in enumerate(versions):
-            is_published = version.is_published
-
-            c = 0
-
-            # ------------------------------------
-            # version_number
-            item = QtWidgets.QTableWidgetItem(str(version.version_number))
-            # align to center and vertical center
-            item.setTextAlignment(0x0004 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # created_with
-            item = QtWidgets.QTableWidgetItem()
-            if version.created_with:
-                from anima.ui import utils as ui_utils
-                item.setIcon(ui_utils.get_icon(version.created_with.lower()))
-
-            if is_published:
-                set_font(item)
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # user.name
-            created_by = ''
-            if version.created_by_id:
-                created_by = user_names_lut[version.created_by_id]
-            item = QtWidgets.QTableWidgetItem(created_by)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # user.name
-            updated_by = ''
-            if version.updated_by_id:
-                updated_by = user_names_lut[version.updated_by_id]
-            item = QtWidgets.QTableWidgetItem(updated_by)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # file size
-
-            # get the file size
-            #file_size_format = "%.2f MB"
-            file_size = -1
-            absolute_full_path = os.path.normpath(
-                os.path.expandvars(version.full_path)
-            ).replace('\\', '/')
-            if os.path.exists(absolute_full_path):
-                file_size = float(
-                    os.path.getsize(absolute_full_path)) / 1048576
-
-            from stalker import defaults
-            item = QtWidgets.QTableWidgetItem(
-                defaults.file_size_format % file_size
-            )
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # date
-
-            # get the file date
-            file_date = datetime.datetime.today()
-            if os.path.exists(absolute_full_path):
-                file_date = datetime.datetime.fromtimestamp(
-                    os.path.getmtime(absolute_full_path)
-                )
-            item = QtWidgets.QTableWidgetItem(
-                file_date.strftime(defaults.date_time_format)
-            )
-
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-            # ------------------------------------
-            # description
-            item = QtWidgets.QTableWidgetItem(version.description)
-            # align to left and vertical center
-            item.setTextAlignment(0x0001 | 0x0080)
-
-            if is_published:
-                set_font(item)
-
-            self.setItem(i, c, item)
-            c += 1
-            # ------------------------------------
-
-        # resize the first column
-        self.resizeRowsToContents()
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-        logger.debug('VersionsTableWidget.update_content() is finished')
 
 
 # class RepresentationMessageBox(QtGui.QDialog, AnimaDialogBase):
@@ -429,6 +153,16 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # create the project attribute in projects_comboBox
         self.current_dialog = None
 
+        # replace tasks_treeView with new one
+        orig_tasks_tree_view = self.tasks_treeView
+        self.tasks_treeView = TaskTreeView()
+        self.tasks_treeView.replace_with_other(
+            self.tasks_groupBox.layout(),
+            4,
+            orig_tasks_tree_view
+        )
+        self.tasks_treeView.setObjectName('tasks_treeView')
+
         # remove recent files comboBox and create a new one
         layout = self.horizontalLayout_8
         self.recent_files_comboBox.deleteLater()
@@ -488,7 +222,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.my_tasks_only_checkBox,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.fill_tasks_treeView
+            self.my_tasks_only_check_box_changed
         )
 
         # search for tasks
@@ -497,19 +231,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         #     QtCore.SIGNAL("editTextChanged(QString)"),
         #     self.search_task_comboBox_textChanged
         # )
-
-        # fit column 0 on expand/collapse
-        QtCore.QObject.connect(
-            self.tasks_treeView,
-            QtCore.SIGNAL('expanded(QModelIndex)'),
-            self.tasks_treeView_auto_fit_column
-        )
-
-        QtCore.QObject.connect(
-            self.tasks_treeView,
-            QtCore.SIGNAL('collapsed(QModelIndex)'),
-            self.tasks_treeView_auto_fit_column
-        )
 
         # # takes_listWidget
         # QtCore.QObject.connect(
@@ -522,7 +243,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.repr_as_separate_takes_checkBox,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.tasks_treeView_changed
+            self.tasks_tree_view_changed
         )
 
         # takes_listWidget
@@ -545,17 +266,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             self.find_from_path_pushButton,
             QtCore.SIGNAL('clicked()'),
             self.find_from_path_pushButton_clicked
-        )
-
-        # custom context menu for the tasks_treeView
-        self.tasks_treeView.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu
-        )
-
-        QtCore.QObject.connect(
-            self.tasks_treeView,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self._show_tasks_treeView_context_menu
         )
 
         # add_take_toolButton
@@ -611,14 +321,14 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.show_published_only_checkBox,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.update_previous_versions_tableWidget
+            self.update_previous_versions_table_widget
         )
 
         # show_only_published_checkBox
         QtCore.QObject.connect(
             self.version_count_spinBox,
             QtCore.SIGNAL("valueChanged(int)"),
-            self.update_previous_versions_tableWidget
+            self.update_previous_versions_table_widget
         )
 
         # upload_thumbnail_pushButton
@@ -658,20 +368,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         lsession = LocalSession()
         lsession.delete()
         self.close()
-
-    def is_power_user(self, user):
-        """A predicate that returns if the user is a power user
-        """
-        from anima import power_users_group_names
-        from stalker import Group
-        power_users_groups = Group.query\
-            .filter(Group.name.in_(power_users_group_names))\
-            .all()
-        if power_users_groups:
-            for group in power_users_groups:
-                if group in user.groups:
-                    return True
-        return False
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
         """the custom context menu for the previous_versions_tableWidget
@@ -725,7 +421,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 if choice == "Publish":
                     # check if the user is able to publish this
                     if logged_in_user not in version.task.responsible \
-                       and not self.is_power_user(logged_in_user):
+                       and not is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
@@ -744,7 +440,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     db.DBSession.add(version)
                     db.DBSession.commit()
                     # refresh the tableWidget
-                    self.update_previous_versions_tableWidget()
+                    self.update_previous_versions_table_widget()
                     return
                 elif choice == "Un-Publish":
                     # allow the user un-publish this version if it is not used
@@ -780,7 +476,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     # user
                     if logged_in_user not in version.task.responsible \
                        and not logged_in_user in version.task.resources \
-                       and not self.is_power_user(logged_in_user):
+                       and not is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
@@ -797,7 +493,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     db.DBSession.add(version)
                     db.DBSession.commit()
                     # refresh the tableWidget
-                    self.update_previous_versions_tableWidget()
+                    self.update_previous_versions_table_widget()
                     return
 
             from anima import utils
@@ -866,7 +562,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                         db.DBSession.commit()
 
                         # update the previous_versions_tableWidget
-                        self.update_previous_versions_tableWidget()
+                        self.update_previous_versions_table_widget()
             elif choice == 'Copy Path':
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtWidgets.QApplication.clipboard()
@@ -878,108 +574,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     )
                 )
 
-    def _show_tasks_treeView_context_menu(self, position):
-        """the custom context menu for the tasks_treeView
-        """
-        # convert the position to global screen position
-        global_position = \
-            self.tasks_treeView.mapToGlobal(position)
-
-        index = self.tasks_treeView.indexAt(position)
-        model = self.tasks_treeView.model()
-        item = model.itemFromIndex(index)
-        logger.debug('itemAt(position) : %s' % item)
-
-        if not item:
-            return
-
-        if not hasattr(item, 'task_id'):
-            return
-
-        task_id = item.task_id
-        if not task_id:
-            return
-
-        from stalker import Task
-        # TODO: Update this to use only task_id
-        task = Task.query.get(task_id)
-        # create the menu
-        menu = QtWidgets.QMenu()  # Open in browser
-        menu.addAction('Open In Web Browser...')
-        menu.addAction('Copy ID to clipboard')
-
-        logged_in_user = self.get_logged_in_user()
-        from stalker import Status
-        status_wfd = Status.query.filter(Status.code == 'WFD').first()
-        status_prev = Status.query.filter(Status.code == 'PREV').first()
-        status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
-        if logged_in_user in task.resources \
-           and task.status not in [status_wfd, status_prev, status_cmpl]:
-            menu.addAction('Create TimeLog...')
-
-        menu.addSeparator()
-
-        # Add Depends To menu
-        depends = task.depends
-        if depends:
-            depends_to_menu = menu.addMenu('Depends To')
-
-            for dTask in depends:
-                action = depends_to_menu.addAction(dTask.name)
-                action.task = dTask
-
-        # Add Dependent Of Menu
-        dependent_of = task.dependent_of
-        if dependent_of:
-            dependent_of_menu = menu.addMenu('Dependent Of')
-
-            for dTask in dependent_of:
-                action = dependent_of_menu.addAction(dTask.name)
-                action.task = dTask
-
-        if not depends and not dependent_of:
-            no_deps_action = menu.addAction('No Dependencies')
-            no_deps_action.setEnabled(False)
-
-        selected_item = menu.exec_(global_position)
-        if selected_item:
-            choice = selected_item.text()
-            if choice == 'Open In Web Browser...':
-                import webbrowser
-                webbrowser.open(
-                    '%s/tasks/%s/view' % (
-                        anima.stalker_server_internal_address,
-                        task.id
-                    )
-                )
-            elif choice == 'Copy ID to clipboard':
-                clipboard = QtWidgets.QApplication.clipboard()
-                clipboard.setText('%s' % task.id)
-
-                # and warn the user about a new version is created and the
-                # clipboard is set to the new version full path
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "ID Copied To Clipboard",
-                    "ID %s is copied to clipboard!" % task.id,
-                    QtWidgets.QMessageBox.Ok
-                )
-
-            elif choice == 'Create TimeLog...':
-                from anima.ui import time_log_dialog
-                time_log_dialog_main_dialog = time_log_dialog.MainDialog(
-                    parent=self,
-                    task=task,
-                )
-                time_log_dialog_main_dialog.exec_()
-
-            else:
-                # go to the dependencies
-                dep_task = selected_item.task
-                self.find_and_select_entity_item_in_treeView(
-                    dep_task,
-                    self.tasks_treeView
-                )
 
     def get_item_indices_containing_text(self, text, treeView):
         """returns the indexes of the item indices containing the given text
@@ -1010,12 +604,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 if item.task_id == entity.id:
                     return item
         return None
-
-    def clear_tasks_treeView(self):
-        """clears the tasks_treeView items and also removes the connection
-        between Stalker entities and ui items
-        """
-        pass
 
     def clear_recent_files(self):
         """clears the recent files
@@ -1078,51 +666,40 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             except KeyError:
                 pass
 
-    def fill_tasks_treeView(self):
-        """sets up the tasks_treeView
+    def my_tasks_only_check_box_changed(self, state):
+        """Runs when the my_tasks_only_checkBox state changed
+
+        :param state:
+        :return:
         """
-        logger.debug('start filling tasks_treeView')
-        logged_in_user = self.get_logged_in_user()
+        self.tasks_treeView.user_tasks_only = bool(state)
+        self.fill_tasks_tree_view()
 
-        logger.debug('creating a new model')
-        from stalker import Project
-        projects = Project.query.order_by(Project.name).all()
-        logger.debug('projects: %s' % projects)
+    def fill_tasks_tree_view(self, user=None):
+        """wrapper for the tasks_treeView.fill() method
+        """
+        if user is None:
+            user = self.get_logged_in_user()
 
-        task_tree_model = TaskTreeModel()
-        task_tree_model.user = logged_in_user
-        task_tree_model.user_tasks_only = \
-            self.my_tasks_only_checkBox.isChecked()
-        task_tree_model.populateTree(projects)
-
-        self.tasks_treeView.setModel(task_tree_model)
+        self.tasks_treeView.fill(user=user)
 
         logger.debug('setting up signals for tasks_treeView_changed')
-        # tasks_treeView
         QtCore.QObject.connect(
             self.tasks_treeView.selectionModel(),
             QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
                           'const QItemSelection &)'),
-            self.tasks_treeView_changed
+            self.tasks_tree_view_changed
         )
 
-        self.tasks_treeView.is_updating = False
-        logger.debug('finished filling tasks_treeView')
-
-    def tasks_treeView_auto_fit_column(self):
-        """fits columns to content
-        """
-        self.tasks_treeView.resizeColumnToContents(0)
-
-    def tasks_treeView_changed(self):
+    def tasks_tree_view_changed(self):
         """runs when the tasks_treeView item is changed
         """
-        logger.debug('tasks_treeView_changed running')
+        logger.debug('tasks_tree_view_changed running')
         if self.tasks_treeView.is_updating:
             logger.debug('tasks_treeView is updating, so returning early')
             return
 
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
         logger.debug('task_id : %s' % task_id)
 
         # update the thumbnail
@@ -1214,7 +791,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.clear_thumbnail()
 
         # fill the tasks
-        self.fill_tasks_treeView()
+        self.fill_tasks_tree_view()
 
         # *********************************************************************
         # use the new TakeListWidget
@@ -1380,8 +957,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # set the task
         task = version.task
 
-        if not self.find_and_select_entity_item_in_treeView(
-                task, self.tasks_treeView):
+        found_task_item = self.tasks_treeView.find_and_select_entity_item(task)
+        if not found_task_item:
             return
 
         # take_name
@@ -1401,91 +978,30 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 pass
             else:
                 # find it in the comboBox
-                index = self.environment_comboBox.findText(
-                    env.name, QtCore.Qt.MatchContains)
+                index = \
+                    self.environment_comboBox.findText(
+                        env.name,
+                        QtCore.Qt.MatchContains
+                    )
                 if index:
                     self.environment_comboBox.setCurrentIndex(index)
-
-    def load_task_item_hierarchy(self, task, treeView):
-        """loads the TaskItem related to the given task in the given treeView
-
-        :return: TaskItem instance
-        """
-        if not task:
-            return
-
-        self.tasks_treeView.is_updating = True
-        item = self.find_entity_item_in_tree_view(task, treeView)
-        if not item:
-            # the item is not loaded to the UI yet
-            # start loading its parents
-            # start from the project
-            item = self.find_entity_item_in_tree_view(task.project, treeView)
-            logger.debug('item for project: %s' % item)
-
-            if item:
-                treeView.setExpanded(item.index(), True)
-
-            if task.parents:
-                # now starting from the most outer parent expand the tasks
-                for parent in task.parents:
-                    item = self.find_entity_item_in_tree_view(parent, treeView)
-
-                    if item:
-                        treeView.setExpanded(item.index(), True)
-
-            # finally select the task
-            item = self.find_entity_item_in_tree_view(task, treeView)
-
-            if not item:
-                # still no item
-                logger.debug('can not find item')
-
-        self.tasks_treeView.is_updating = False
-        return item
-
-    def find_and_select_entity_item_in_treeView(self, task, treeView):
-        """finds and selects the task in the given treeView item
-        """
-        if not task:
-            return
-
-        item = self.load_task_item_hierarchy(task, treeView)
-
-        if not item:
-            self.tasks_treeView.selectionModel().clearSelection()
-            return None
-
-        try:
-            self.tasks_treeView.selectionModel().select(
-                item.index(), QtGui.QItemSelectionModel.ClearAndSelect
-            )
-        except AttributeError:  # Fix for Qt5
-            self.tasks_treeView.selectionModel().select(
-                item.index(), QtCore.QItemSelectionModel.ClearAndSelect
-            )
-
-        self.tasks_treeView.scrollTo(
-            item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
-        )
-        return item
 
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
         """
         logger.debug('takes_listWidget_changed started')
         # update the previous_versions_tableWidget
-        self.update_previous_versions_tableWidget()
+        self.update_previous_versions_table_widget()
         logger.debug('takes_listWidget_changed finished')
 
-    def update_previous_versions_tableWidget(self):
+    def update_previous_versions_table_widget(self):
         """updates the previous_versions_tableWidget
         """
-        logger.debug('update_previous_versions_tableWidget is started')
+        logger.debug('update_previous_versions_table_widget is started')
         self.previous_versions_tableWidget.clear()
 
         from stalker import Task
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
         if not task_id:  # or not isinstance(task, Task):
             return
 
@@ -1534,39 +1050,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         versions.reverse()
 
         self.previous_versions_tableWidget.update_content(versions)
-        logger.debug('update_previous_versions_tableWidget is finished')
-
-    def get_task_id(self):
-        """returns the task from the UI, it is an task, asset, shot, sequence
-        or project
-        """
-        task_id = None
-        selection_model = self.tasks_treeView.selectionModel()
-        logger.debug('selection_model: %s' % selection_model)
-
-        indexes = selection_model.selectedIndexes()
-        logger.debug('selected indexes : %s' % indexes)
-
-        if indexes:
-            current_index = indexes[0]
-            logger.debug('current_index : %s' % current_index)
-
-            item_model = self.tasks_treeView.model()
-            current_item = item_model.itemFromIndex(current_index)
-
-            if current_item:
-                task_id = current_item.task_id
-                # if task_id:
-                #     from stalker import db, Task
-                #     task = Task.query.get(task_id)
-
-        logger.debug('task_id: %s' % task_id)
-        return task_id
+        logger.debug('update_previous_versions_table_widget is finished')
 
     def add_take_toolButton_clicked(self):
         """runs when the add_take_toolButton clicked
         """
-
         # open up a QInputDialog and ask for a take name
         # anything is acceptable
         # because the validation will occur in the Version instance
@@ -1597,7 +1085,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """
         # create a new version
         from stalker import Task
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
 
         if not task_id:  # or not isinstance(task, Task):
             return None
@@ -1809,7 +1297,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         if is_external_env:
             # refresh the UI
-            self.tasks_treeView_changed()
+            self.tasks_tree_view_changed()
         else:
             # close the UI
             self.close()
@@ -2030,7 +1518,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """updates the thumbnail for the selected task
         """
         # get the current task
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
         if task_id:
             from anima.ui import utils as ui_utils
             # TODO: Update this too
@@ -2052,7 +1540,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # get the current task
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
 
         if task_id:
             # TODO: Update this too
@@ -2066,7 +1554,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
     def clear_thumbnail_push_button_clicked(self):
         """clears the thumbnail of the current task if it has one
         """
-        task_id = self.get_task_id()
+        task_id = self.tasks_treeView.get_task_id()
 
         if not task_id:
             return
