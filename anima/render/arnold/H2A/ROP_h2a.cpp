@@ -41,10 +41,12 @@ static PRM_Name names[] = {
 	PRM_Name("mode",  "Mode"),
 	PRM_Name("prender_type",  "Particle Render Type"),
 	PRM_Name("rad_mult",  "Radius Multiplier"),
+	PRM_Name("subdiv_type",  "Subdivision Type"),
+	PRM_Name("subdiv_ite",  "Iterations"),
 };
 
-static PRM_Default	 theFileDefault(0, "defgeo.ass.gz");
-char *nameName = "`$OS`"; 
+static PRM_Default	 theFileDefault(0, "$HIP/Outputs/ass/defgeo.ass.gz");
+const char *nameName = "`$OS`"; 
 static PRM_Default	 theNameDefault(0, nameName);
 
 static PRM_Name		sopOpMenuNames[] = {
@@ -58,6 +60,7 @@ static PRM_Name		sopTypeMenuNames[] = {
 	PRM_Name("curves",	"Curves"),
 	PRM_Name("polygon",	"Polygon"),
 	PRM_Name("particle","Particles"),
+	PRM_Name("light","Lights"),
 	PRM_Name(0)
 };
 
@@ -68,23 +71,34 @@ static PRM_Name		pRenderTypeMenuNames[] = {
 	PRM_Name(0)
 };
 
+
+static PRM_Name		subDivTypeMenuNames[] = {
+	PRM_Name("none",	"None"),
+	PRM_Name("cclark",	"Cat_Clark"),
+	PRM_Name("linear",	"Linear"),
+	PRM_Name(0)
+};
+
 static PRM_ChoiceList	sopOpMenu(PRM_MENU_CHOICES,	sopOpMenuNames);
 static PRM_ChoiceList	sopTypeMenu(PRM_MENU_CHOICES,	sopTypeMenuNames);
 static PRM_ChoiceList	pRenderTypeMenu(PRM_MENU_CHOICES,	pRenderTypeMenuNames);
+static PRM_ChoiceList	subdivTypeMenu(PRM_MENU_CHOICES,	subDivTypeMenuNames);
 
 PRM_Template H2A_Rop::myTemplateList[] = {
-	PRM_Template(PRM_FILE_E, 1, &names[0], &theFileDefault , 0, 0 , 0 ,  &PRM_SpareData::fileChooserModeWrite),	// file Output
-	PRM_Template(PRM_STRING, PRM_TYPE_DYNAMIC_PATH, 1, &names[1], 0, 0, 0, 0, &PRM_SpareData::sopPath ),		// sop path
-	PRM_Template(PRM_STRING,	1, &names[2], &theNameDefault),													// Name
-	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[3], PRMpointFiveDefaults),					// min pixel width
-	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[4], PRMpointFiveDefaults),					// shutter speed
-	PRM_Template(PRM_TOGGLE,    1, &names[5], PRMoneDefaults),													// motion blur ? 
-	PRM_Template(PRM_TOGGLE,    1, &names[6], PRMoneDefaults),													// export color ? 
-	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MIN, 1, &names[7], 0, &sopTypeMenu),				// polygon, curve, point?
-	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[8], 0, &sopOpMenu),				// export mode for curves
-	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MIN, 1, &names[9], 0, &pRenderTypeMenu),			// disk, sphere, quad render for particles
-	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[10], PRMoneDefaults),						// global point radius multiplier
-	PRM_Template()																								// placeholder
+	PRM_Template(PRM_FILE_E,	1, &names[0], &theFileDefault , 0, 0 , 0 ,  &PRM_SpareData::fileChooserModeWrite),	// file Output
+	PRM_Template(PRM_STRING, PRM_TYPE_DYNAMIC_PATH, 1, &names[1], 0, 0, 0, 0, &PRM_SpareData::sopPath ),			// sop path
+	PRM_Template(PRM_STRING,	1, &names[2], &theNameDefault),														// Name
+	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[3], PRMpointFiveDefaults),						// min pixel width
+	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[4], PRMpointFiveDefaults),						// shutter speed
+	PRM_Template(PRM_TOGGLE,    1, &names[5], PRMoneDefaults),														// motion blur ? 
+	PRM_Template(PRM_TOGGLE,    1, &names[6], PRMoneDefaults),														// export color ? 
+	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MIN, 1, &names[7], 0, &sopTypeMenu),					// polygon, curve, point?
+	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MAX, 1, &names[8], 0, &sopOpMenu),					// export mode for curves
+	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MIN, 1, &names[9], 0, &pRenderTypeMenu),				// disk, sphere, quad render for particles
+	PRM_Template(PRM_FLT_J, PRM_Template::PRM_EXPORT_TBX, 1, &names[10], PRMoneDefaults),							// global point radius multiplier
+	PRM_Template((PRM_Type) PRM_ORD, PRM_Template::PRM_EXPORT_MIN, 1, &names[11], 0, &subdivTypeMenu),				// subdivision type
+	PRM_Template(PRM_INT, 1, &names[12], PRMoneDefaults),															// subdivision iterations
+	PRM_Template()																									// placeholder
 };
 
 // End custom template list
@@ -121,6 +135,8 @@ static PRM_Template * getTemplates()
 	prmTemplate[ROP_H2A_TYPE]               = H2A_Rop::myTemplateList[8];
 	prmTemplate[ROP_H2A_P_RENDER_TYPE]		= H2A_Rop::myTemplateList[9];
 	prmTemplate[ROP_H2A_P_RAD_MULT]			= H2A_Rop::myTemplateList[10];
+	prmTemplate[ROP_H2A_SUBDIV_TYPE]		= H2A_Rop::myTemplateList[11];
+	prmTemplate[ROP_H2A_SUBDIV_ITE]			= H2A_Rop::myTemplateList[12];
 
 	prmTemplate[ROP_H2A_TPRERENDER]         = theRopTemplates[ROP_TPRERENDER_TPLATE];
 	prmTemplate[ROP_H2A_PRERENDER]          = theRopTemplates[ROP_PRERENDER_TPLATE];
@@ -195,6 +211,10 @@ bool H2A_Rop::updateParmsFlags(){
 		changed |= setVisibleState("rad_mult",0);
 		changed |= enableParm("mode",1);
 		changed |= setVisibleState("mode",1);
+		changed |= enableParm("subdiv_type",0);
+		changed |= setVisibleState("subdiv_type",0);
+		changed |= enableParm("subdiv_ite",0);
+		changed |= setVisibleState("subdiv_ite",0);
 		break;
 	case 1: // polygon selected
 		changed |= enableParm("prender_type",0);
@@ -203,6 +223,10 @@ bool H2A_Rop::updateParmsFlags(){
 		changed |= setVisibleState("rad_mult",0);
 		changed |= enableParm("mode",0);
 		changed |= setVisibleState("mode",0);
+		changed |= enableParm("subdiv_type",1);
+		changed |= setVisibleState("subdiv_type",1);
+		changed |= enableParm("subdiv_ite",1);
+		changed |= setVisibleState("subdiv_ite",1);
 		break;
 	case 2: // point selected
 		changed |= enableParm("prender_type",1);
@@ -211,8 +235,25 @@ bool H2A_Rop::updateParmsFlags(){
 		changed |= setVisibleState("rad_mult",1);
 		changed |= enableParm("mode",0);
 		changed |= setVisibleState("mode",0);
+		changed |= enableParm("subdiv_type",0);
+		changed |= setVisibleState("subdiv_type",0);
+		changed |= enableParm("subdiv_ite",0);
+		changed |= setVisibleState("subdiv_ite",0);
+		break;
+	case 3: // light selected
+		changed |= enableParm("prender_type",0);
+		changed |= setVisibleState("prender_type",0);
+		changed |= enableParm("rad_mult",0);
+		changed |= setVisibleState("rad_mult",0);
+		changed |= enableParm("mode",0);
+		changed |= setVisibleState("mode",0);
+		changed |= enableParm("subdiv_type",0);
+		changed |= setVisibleState("subdiv_type",0);
+		changed |= enableParm("subdiv_ite",0);
+		changed |= setVisibleState("subdiv_ite",0);
 		break;
 	}
+
 
 	return changed;
 }
@@ -248,6 +289,9 @@ ROP_RENDER_CODE H2A_Rop::renderFrame(fpreal time, UT_Interrupt *)
 
 	SOP_Node		*sop;
 	UT_String		 soppath, savepath, name;
+
+	OUTPUT(savepath, time);
+	NAME(name,time);
 
 	if( !executePreFrameScript(time) )
 		return ROP_ABORT_RENDER;
@@ -299,10 +343,7 @@ ROP_RENDER_CODE H2A_Rop::renderFrame(fpreal time, UT_Interrupt *)
 		ROP_Node::makeFilePathDirs(savepath);
 	}
 
-	OUTPUT(savepath, time);
-	NAME(name,time);
-
-	h2a_fileSave(gdp, (const char *) savepath, (const char *) name, PWIDTH(time), SHUTTER(time), MODE(), MOTIONB(), COLOR(), TYPE(), P_RENDER_TYPE(), RADIUS(time));
+	h2a_fileSave(gdp, (const char *) savepath, (const char *) name, PWIDTH(time), SHUTTER(time), MODE(), MOTIONB(), COLOR(), TYPE(), P_RENDER_TYPE(), RADIUS(time), SUBDIV_TYPE(), SUBDIV_ITE(time));
 
 	if (ALFPROGRESS() && (endTime != startTime))
 	{

@@ -34,7 +34,7 @@ Export Color:
 
 Export Type:
 	Curves: 
-		Exports curves (the point attributes "width" and "uv" 			must be present and point attribute "v" must be 				present if motion blur is exported). Exported color 			channel name is "Cd". 
+		Exports curves (the point attributes "width" and "v" 			must be present. "uv" should be primitive attribute. Exported color 			channel name is "Cd". 
 
 		Mode: 
 			Arnold curve render type

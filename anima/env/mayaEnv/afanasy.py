@@ -377,6 +377,160 @@ class UI(object):
             # no default render globals node
             pass
 
+        drg = pm.PyNode('defaultRenderGlobals')
+        render_engine = drg.getAttr('currentRenderer')
+        # RENDERER SPECIFIC CHECKS
+
+        if render_engine == 'redshift':
+            # if the renderer is RedShift
+            # check if unifiedDisableDivision is 1 which will take too much time
+            # to render
+            dro = pm.PyNode('redshiftOptions')
+            if dro.unifiedDisableDivision.get() == 1:
+                response = pm.confirmDialog(
+                    title="Enabled **Don't Automatically Reduce Samples of Other Effects**",
+                    message='It is not allowed to render with the following option is enabled:<br>'
+                            '<br>'
+                            "Don't Automatically Reduce Samples of Other Effects: Enabled<br>"
+                            "<br>"
+                            "Please DISABLE it!",
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+        elif render_engine == 'arnold':
+            # check if the samples are too high
+            dAO = pm.PyNode('defaultArnoldRenderOptions')
+
+
+            aa_samples = dAO.AASamples.get()
+            diff_samples = dAO.GIDiffuseSamples.get()
+            glossy_samples = dAO.GIGlossySamples.get()
+            if int(pm.about(v=1)) >= 2017:
+                sss_samples = dAO.GISssSamples.get()
+            else:
+                sss_samples = dAO.sssBssrdfSamples.get()
+
+            total_diff_samples = aa_samples**2 * diff_samples**2
+            total_glossy_samples = aa_samples**2 * glossy_samples**2
+            total_sss_samples = aa_samples**2 * sss_samples**2
+
+            max_allowed_diff_samples = 225
+            max_allowed_glossy_samples = 100
+            max_allowed_sss_samples = 450
+
+            if total_diff_samples > max_allowed_diff_samples:
+                pm.confirmDialog(
+                    title="Too Much Diffuse Samples!!!",
+                    message='You are using too much DIFFUSE SAMPLES (>%s)<br>'
+                            '<br>'
+                            'Please either reduce AA samples of Diffuse '
+                            'Samples!!!' % max_allowed_diff_samples,
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+            if total_glossy_samples > max_allowed_glossy_samples:
+                pm.confirmDialog(
+                    title="Too Much Glossy Samples!!!",
+                    message='You are using too much GLOSSY SAMPLES (>%s)<br>'
+                            '<br>'
+                            'Please either reduce AA samples of Glossy '
+                            'Samples!!!' % max_allowed_glossy_samples,
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+            if total_sss_samples > max_allowed_sss_samples:
+                pm.confirmDialog(
+                    title="Too Much SSS Samples!!!",
+                    message='You are using too much SSS SAMPLES (>%s)<br>'
+                            '<br>'
+                            'Please either reduce AA samples of SSS '
+                            'Samples!!!' % max_allowed_sss_samples,
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+            # check Light Samples
+            # check point lights with zero radius but more than one samples
+            all_point_lights = pm.ls(type='pointLight')
+            ridiculous_point_lights = []
+            for point_light in all_point_lights:
+                if point_light.aiRadius.get() < 0.1 and point_light.aiSamples.get() > 1:
+                    ridiculous_point_lights.append(point_light)
+
+            if ridiculous_point_lights:
+                pm.confirmDialog(
+                    title="Unnecessary Samples on Point Lights!!!",
+                    message='You are using too much SAMPLES (>1)<br>'
+                            '<br>'
+                            'on <b>Point lights with zero radius</b><br>'
+                            '<br>'
+                            'Please reduce the samples to 1',
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+            # Check area lights with more than 2 samples
+            all_area_lights = pm.ls(type=['areaLight', 'aiAreaLight'])
+            ridiculous_area_lights = []
+            for area_light in all_area_lights:
+                if area_light.aiSamples.get() > 2:
+                    ridiculous_area_lights.append(area_light)
+
+            if ridiculous_area_lights:
+                pm.confirmDialog(
+                    title="Unnecessary Samples on Area Lights!!!",
+                    message='You are using too much SAMPLES (>2) on<br>'
+                            '<br>'
+                            '<b>Area Lights</b><br>'
+                            '<br>'
+                            'Please reduce the samples to 2',
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
+            # Check directional lights with angle == 0 and samples > 1
+            all_directional_lights = pm.ls(type='directionalLight')
+            ridiculous_directional_lights = []
+            for directional_light in all_directional_lights:
+                if directional_light.aiAngle.get() == 0 and directional_light.aiSample.get() > 1:
+                    ridiculous_directional_lights.append(directional_light)
+
+            if ridiculous_directional_lights:
+                pm.confirmDialog(
+                    title="Unnecessary Samples on Directional Lights!!!",
+                    message='You are using too much SAMPLES (>1) on <br>'
+                            '<br>'
+                            '<b>Directional lights with zero angle</b><br>'
+                            '<br>'
+                            'Please reduce the samples to 1',
+                    button=['OK'],
+                    defaultButton='OK',
+                    cancelButton='OK',
+                    dismissString='OK'
+                )
+                return
+
         # get values
         start_frame = pm.intField('cgru_afanasy__start_frame', q=1, v=1)
         end_frame = pm.intField('cgru_afanasy__end_frame', q=1, v=1)
@@ -440,8 +594,7 @@ class UI(object):
         if pm.checkBox('cgru_afanasy__close', q=1, v=1):
             pm.deleteUI(self.window)
 
-        drg = pm.PyNode('defaultRenderGlobals')
-        render_engine = drg.getAttr('currentRenderer')
+
 
         job = af.Job(job_name)
 
