@@ -491,7 +491,7 @@ def check_if_root_nodes_have_no_transformation():
         )
 
 
-@publisher(['model', 'rig'] + LOOK_DEV_TYPES)
+@publisher(['model', 'rig' + 'layout'] + LOOK_DEV_TYPES)
 def check_if_only_one_root_node():
     """Only one root node
 
