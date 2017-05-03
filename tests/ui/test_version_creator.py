@@ -15,6 +15,8 @@ from anima.env.testing import TestEnvironment
 logger = logging.getLogger('anima.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
+from stalker import (db, defaults, User, Project, Repository, Structure,
+                     Status, StatusList, Task, Group, Version)
 from stalker.models.auth import LocalSession
 from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_creator
 
@@ -40,10 +42,6 @@ elif IS_PYQT4():
     from PyQt4.QtTest import QTest
     from PyQt4.QtCore import Qt
     QtWidgets = QtGui
-
-
-from stalker import (db, defaults, User, Project, Repository, Structure,
-                     Status, StatusList, Task, Group, Version)
 
 
 class VersionCreatorTester(unittest.TestCase):

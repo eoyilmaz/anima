@@ -36,7 +36,7 @@ import logging
 # create logger
 #logging.basicConfig()
 logger = logging.getLogger(__name__)
-logging_level = logging.DEBUG
+logging_level = logging.ERROR
 logger.setLevel(logging_level)
 
 # create formatter

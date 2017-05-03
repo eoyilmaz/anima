@@ -321,14 +321,14 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.show_published_only_checkBox,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.update_previous_versions_tableWidget
+            self.update_previous_versions_table_widget
         )
 
         # show_only_published_checkBox
         QtCore.QObject.connect(
             self.version_count_spinBox,
             QtCore.SIGNAL("valueChanged(int)"),
-            self.update_previous_versions_tableWidget
+            self.update_previous_versions_table_widget
         )
 
         # upload_thumbnail_pushButton
@@ -440,7 +440,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     db.DBSession.add(version)
                     db.DBSession.commit()
                     # refresh the tableWidget
-                    self.update_previous_versions_tableWidget()
+                    self.update_previous_versions_table_widget()
                     return
                 elif choice == "Un-Publish":
                     # allow the user un-publish this version if it is not used
@@ -493,7 +493,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     db.DBSession.add(version)
                     db.DBSession.commit()
                     # refresh the tableWidget
-                    self.update_previous_versions_tableWidget()
+                    self.update_previous_versions_table_widget()
                     return
 
             from anima import utils
@@ -562,7 +562,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                         db.DBSession.commit()
 
                         # update the previous_versions_tableWidget
-                        self.update_previous_versions_tableWidget()
+                        self.update_previous_versions_table_widget()
             elif choice == 'Copy Path':
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtWidgets.QApplication.clipboard()
@@ -978,8 +978,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 pass
             else:
                 # find it in the comboBox
-                index = self.environment_comboBox.findText(
-                    env.name, QtCore.Qt.MatchContains)
+                index = \
+                    self.environment_comboBox.findText(
+                        env.name,
+                        QtCore.Qt.MatchContains
+                    )
                 if index:
                     self.environment_comboBox.setCurrentIndex(index)
 
@@ -988,13 +991,13 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         """
         logger.debug('takes_listWidget_changed started')
         # update the previous_versions_tableWidget
-        self.update_previous_versions_tableWidget()
+        self.update_previous_versions_table_widget()
         logger.debug('takes_listWidget_changed finished')
 
-    def update_previous_versions_tableWidget(self):
+    def update_previous_versions_table_widget(self):
         """updates the previous_versions_tableWidget
         """
-        logger.debug('update_previous_versions_tableWidget is started')
+        logger.debug('update_previous_versions_table_widget is started')
         self.previous_versions_tableWidget.clear()
 
         from stalker import Task
@@ -1047,12 +1050,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         versions.reverse()
 
         self.previous_versions_tableWidget.update_content(versions)
-        logger.debug('update_previous_versions_tableWidget is finished')
+        logger.debug('update_previous_versions_table_widget is finished')
 
     def add_take_toolButton_clicked(self):
         """runs when the add_take_toolButton clicked
         """
-
         # open up a QInputDialog and ask for a take name
         # anything is acceptable
         # because the validation will occur in the Version instance

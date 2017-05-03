@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\choose_from_list_dialog.ui'
 #
-# Created: Tue May 02 09:18:36 2017
+# Created: Wed May 03 15:22:34 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!

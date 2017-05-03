@@ -54,15 +54,34 @@ class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialog
         self.setupUi(self)
 
         # create the custom task tree view
-        orig_tree_view = self.tasks_treeView
 
         from anima.ui.models import TaskTreeView
-        self.tasks_treeView = TaskTreeView()
+        self.tasks_treeView = TaskTreeView(project=project)
 
         self.tasks_treeView.replace_with_other(
             self.verticalLayout,
-            1,
-            orig_tree_view
+            0
         )
 
         self.tasks_treeView.fill(self.get_logged_in_user())
+
+        # setup the double click signal
+        QtCore.QObject.connect(
+            self.tasks_treeView,
+            QtCore.SIGNAL('doubleClicked(QModelIndex)'),
+            self.tasks_tree_view_double_clicked
+        )
+
+    def tasks_tree_view_double_clicked(self, model_index):
+        """runs when double clicked on to a task
+
+        :param model_index: QModelIndex
+        :return:
+        """
+        # get the task
+        task_id = self.tasks_treeView.get_task_id()
+        from stalker import Task
+        task = Task.query.get(task_id)
+        # if the task is a leaf task then return it
+        if task and task.is_leaf:
+            self.accept()

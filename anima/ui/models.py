@@ -331,6 +331,8 @@ class TaskTreeView(QtWidgets.QTreeView):
 
     def __init__(self, *args, **kwargs):
         #super(TaskTreeView, self).__init__(*args, **kwargs)
+        self.project = kwargs.pop('project', None)
+
         QtWidgets.QTreeView.__init__(self, *args, **kwargs)
         self.is_updating = False
         self.user = None
@@ -365,7 +367,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             self.show_context_menu
         )
 
-    def replace_with_other(self, layout, index, tree_view):
+    def replace_with_other(self, layout, index, tree_view=None):
         """Replaces the given tree_view with itself
 
         :param layout: The QtGui.QLayout of the parent of the original
@@ -374,7 +376,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         :param tree_view: The QtWidgets.QTreeView to replace with
         :return:
         """
-        tree_view.deleteLater()
+        if tree_view:
+            tree_view.deleteLater()
         layout.insertWidget(index, self)
         return self
 
@@ -389,11 +392,16 @@ class TaskTreeView(QtWidgets.QTreeView):
         logger.debug('start filling tasks_treeView')
 
         logger.debug('creating a new model')
-        from stalker import Project
-        projects = Project.query.order_by(Project.name).all()
+        if not self.project:
+            from stalker import Project
+            projects = Project.query.order_by(Project.name).all()
+        else:
+            projects = [self.project]
+
         logger.debug('projects: %s' % projects)
 
         task_tree_model = TaskTreeModel()
+        self.user = user
         task_tree_model.user = user
         task_tree_model.user_tasks_only = self.user_tasks_only
         task_tree_model.populateTree(projects)
@@ -519,6 +527,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     task=task,
                 )
                 time_log_dialog_main_dialog.exec_()
+                time_log_dialog_main_dialog.deleteLater()
 
             elif choice == 'Update task...':
                 from anima.ui import task_dialog
@@ -527,6 +536,13 @@ class TaskTreeView(QtWidgets.QTreeView):
                     task=task
                 )
                 task_main_dialog.exec_()
+                task_main_dialog.deleteLater()
+
+                # refresh the task list
+                self.fill(self.user)
+
+                # reselect the same task
+                self.find_and_select_entity_item(task)
 
             elif choice == 'Create child task...':
                 from anima.ui import task_dialog
@@ -535,6 +551,17 @@ class TaskTreeView(QtWidgets.QTreeView):
                     parent_task=task
                 )
                 task_main_dialog.exec_()
+                task_created = task_main_dialog.task_created
+                task_main_dialog.deleteLater()
+
+                if task_created:
+                    # refresh the task list
+                    self.fill(self.user)
+    
+                    # reselect the same task
+                    self.find_and_select_entity_item(
+                        task_created
+                    )
 
             elif choice == 'Delete task...':
                 QtWidgets.QMessageBox.warning(
@@ -561,18 +588,23 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         item = self.load_task_item_hierarchy(task, tree_view)
 
+        selection_model = self.selectionModel()
         if not item:
-            self.selectionModel().clearSelection()
+            selection_model.clearSelection()
             return
 
         try:
-            self.selectionModel().select(
-                item.index(), QtGui.QItemSelectionModel.ClearAndSelect
+            selection_model.select(
+                item.index(),
+                QtCore.QItemSelectionModel.ClearAndSelect
             )
         except AttributeError:  # Fix for Qt5
-            self.selectionModel().select(
-                item.index(), QtCore.QItemSelectionModel.ClearAndSelect
+            selection_model.select(
+                item.index(),
+                QtCore.QItemSelectionModel.ClearAndSelect
             )
+
+        self.setCurrentIndex(item.index())
 
         self.scrollTo(
             item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
@@ -790,19 +822,6 @@ class TaskItem(QtGui.QStandardItem):
 
             # # model = self.model() # This will cause a SEGFAULT
             # # TODO: update it later on
-            # if self.user_tasks_only:
-            #     user_tasks_and_parents = []
-            #     # need to filter tasks which do not belong to user
-            #     for task in tasks:
-            #         for user_task in self.user.tasks:
-            #             if task in user_task.parents or \
-            #                task is user_task or \
-            #                task in self.user.projects:
-            #                 user_tasks_and_parents.append(task)
-            #                 break
-            #
-            #     tasks = user_tasks_and_parents
-            # # tasks = sorted(tasks, key=lambda x: x.name)
 
             # start = time.time()
             from anima import status_colors_by_id
@@ -815,29 +834,7 @@ class TaskItem(QtGui.QStandardItem):
                 task_item.user_tasks_only = self.user_tasks_only
 
                 # set the font
-                # name_item = QtGui.QStandardItem(task.name)
-                # entity_type_item = QtGui.QStandardItem(task.entity_type)
-                # task_item.setItem(0, 0, name_item)
-                # task_item.setItem(0, 1, entity_type_item)
                 task_item.setText(task[1])
-
-                # make_bold = False
-                # if task_item.canFetchMore():
-                #     make_bold = True
-                # if task[2] in self.task_entity_types:
-                #     children_count = \
-                #         db.DBSession.query(Task.id)\
-                #             .filter(Task.parent_id == task[0])\
-                #             .count()
-                #     if children_count:
-                #         make_bold = True
-                # elif task[2] == 'Project':
-                #     make_bold = True
-
-                # if make_bold:
-                #     my_font = task_item.font()
-                #     my_font.setBold(True)
-                #     task_item.setFont(my_font)
 
                 # color with task status
                 task_item.setData(
