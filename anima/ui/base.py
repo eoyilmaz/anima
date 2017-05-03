@@ -39,6 +39,7 @@ class AnimaDialogBase(object):
         if not logged_in_user:
             from anima.ui import login_dialog
             dialog = login_dialog.MainDialog(parent=self)
+            dialog.deleteLater()
             dialog.exec_()
             logger.debug("dialog.DialogCode: %s" % dialog.DialogCode)
 
@@ -49,7 +50,7 @@ class AnimaDialogBase(object):
                 # PyQt4
                 accepted = QtWidgets.QDialog.Accepted
 
-            if dialog.DialogCode == accepted:
+            if dialog.result() == accepted:
                 local_session = LocalSession()
                 logged_in_user = local_session.logged_in_user
             else:
@@ -57,7 +58,7 @@ class AnimaDialogBase(object):
                 # logged_in_user = self.get_logged_in_user()
                 logger.debug("no logged in user")
                 self.close()
-
+        
         return logged_in_user
 
 

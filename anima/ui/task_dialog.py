@@ -64,17 +64,13 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         if self.task:
             self.fill_ui_with_task(self.task)
 
-    def close(self):
-        logger.debug('closing the ui')
-        QtWidgets.QDialog.close(self)
-
     def show(self):
         """overridden show method
         """
         logger.debug('MainDialog.show is started')
         self.logged_in_user = self.get_logged_in_user()
         if not self.logged_in_user:
-            self.close()
+            self.reject()
             return_val = None
         else:
             return_val = super(MainDialog, self).show()
@@ -186,7 +182,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.update_bid_label.setVisible(False)
         self.update_bid_checkBox.setVisible(False)
 
-
         # fill projects list
         self.projects_comboBox.clear()
         from stalker import Project
@@ -281,6 +276,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             # manually and just allow it to hide or show fields
             self.entity_type_combo_box_changed(self.task.entity_type)
 
+        match_exactly = QtCore.Qt.MatchExactly
         # task or asset type
         if self.task.type:
             combo_box = None
@@ -290,7 +286,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 combo_box = self.asset_type_comboBox
 
             if combo_box:
-                match_exactly = QtCore.Qt.MatchExactly
                 index = combo_box.findText(self.task.type.name, match_exactly)
                 if index:
                     combo_box.setCurrentIndex(index)
@@ -302,8 +297,33 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             self.code_lineEdit.setText(self.task.code)
 
         # shot info
+        # set the fps to project by default, later update it to the shot.fps
         self.fps_spinBox.setValue(self.task.project.fps)
+
+        # sequences
+        from stalker import db, Sequence
+        all_sequence_names = db.DBSession \
+            .query(Sequence.name) \
+            .filter(Sequence.project == task.project) \
+            .order_by(Sequence.name.asc()) \
+            .all()
+        self.sequence_comboBox.clear()
+        self.sequence_comboBox.addItems(
+            [''] + map(lambda x: x[0], all_sequence_names)
+        )
+
         if isinstance(self.task, Shot):
+            # select the correct sequence
+            if self.task.sequences:
+                seq = self.task.sequences[0]
+                index = self.sequence_comboBox.findText(
+                    seq.name,
+                    match_exactly
+                )
+                if index:
+                    self.sequence_comboBox.setCurrentIndex(index)
+
+            self.fps_spinBox.setValue(self.task.fps)
             self.cutIn_spinBox.setValue(self.task.cut_in)
             self.cutOut_spinBox.setValue(self.task.cut_out)
 
@@ -958,7 +978,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 )
             else:
                 self.task_created = task
-                self.close()
+                self.reject()
         else:
             # Update
             self.task.name = name
@@ -1036,4 +1056,4 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     str(e)
                 )
             finally:
-                self.close()
+                super(MainDialog, self).accept()

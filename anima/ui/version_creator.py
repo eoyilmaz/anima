@@ -132,18 +132,17 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.chosen_version = None
         self.environment_name_format = '%n (%e)'
 
-        window_title = 'Version Creator | ' + \
-                       'Anima v' + anima.__version__
+        window_title = 'Version Creator | Anima v' + anima.__version__
 
         if environment:
-            window_title += " | " + environment.name
+            window_title = "%s | %s" % (window_title, environment.name)
         else:
-            window_title += " | No Environment"
+            window_title = "%s | No Environment" % window_title
 
         if self.mode:
-            window_title += " | Read-Only Mode"
+            window_title = "%s | Read-Only Mode" % window_title
         else:
-            window_title += " | Normal Mode"
+            window_title = "%s | Normal Mode" % window_title
 
         # change the window title
         self.setWindowTitle(window_title)
@@ -158,7 +157,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.tasks_treeView = TaskTreeView()
         self.tasks_treeView.replace_with_other(
             self.tasks_groupBox.layout(),
-            4,
+            3,
             orig_tasks_tree_view
         )
         self.tasks_treeView.setObjectName('tasks_treeView')

@@ -330,10 +330,9 @@ class TaskTreeView(QtWidgets.QTreeView):
     """
 
     def __init__(self, *args, **kwargs):
-        #super(TaskTreeView, self).__init__(*args, **kwargs)
         self.project = kwargs.pop('project', None)
 
-        QtWidgets.QTreeView.__init__(self, *args, **kwargs)
+        super(TaskTreeView, self).__init__(*args, **kwargs)
         self.is_updating = False
         self.user = None
         self.user_tasks_only = False
@@ -484,6 +483,13 @@ class TaskTreeView(QtWidgets.QTreeView):
             no_deps_action = menu.addAction('No Dependencies')
             no_deps_action.setEnabled(False)
 
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
         selected_item = menu.exec_(global_position)
         if selected_item:
             choice = selected_item.text()
@@ -535,14 +541,15 @@ class TaskTreeView(QtWidgets.QTreeView):
                     parent=self,
                     task=task
                 )
-                task_main_dialog.exec_()
                 task_main_dialog.deleteLater()
+                task_main_dialog.exec_()
 
                 # refresh the task list
-                self.fill(self.user)
-
-                # reselect the same task
-                self.find_and_select_entity_item(task)
+                if task_main_dialog.result() == accepted:
+                    self.fill(self.user)
+    
+                    # reselect the same task
+                    self.find_and_select_entity_item(task)
 
             elif choice == 'Create child task...':
                 from anima.ui import task_dialog
@@ -596,7 +603,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         try:
             selection_model.select(
                 item.index(),
-                QtCore.QItemSelectionModel.ClearAndSelect
+                QtGui.QItemSelectionModel.ClearAndSelect
             )
         except AttributeError:  # Fix for Qt5
             selection_model.select(
