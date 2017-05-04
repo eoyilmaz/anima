@@ -551,6 +551,13 @@ class TaskTreeView(QtWidgets.QTreeView):
                 time_log_dialog_main_dialog.exec_()
                 time_log_dialog_main_dialog.deleteLater()
 
+                if time_log_dialog_main_dialog.result() == accepted:
+                    # refresh the task list
+                    self.fill(self.user)
+
+                    # reselect the same task
+                    self.find_and_select_entity_item(entity)
+
             elif choice == 'Update Task...':
                 from anima.ui import task_dialog
                 task_main_dialog = task_dialog.MainDialog(

@@ -433,6 +433,11 @@ order by cast("TimeLogs".start as date)
         self.update_percentage()
         self.update_info_text()
 
+    def resource_changed(self, resource_name):
+        """runs when the selected resource has changed
+        """
+        self.fill_calendar_with_time_logs()
+
     def calculate_percentage(self):
         # task = self.get_current_task()
         task = self.tasks_comboBox.currentTask()
@@ -630,6 +635,7 @@ order by cast("TimeLogs".start as date)
                 db.DBSession.commit()
                 self.timelog_created = True
             except IntegrityError as e:
+                db.DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -637,7 +643,6 @@ order by cast("TimeLogs".start as date)
                     '<br>'
                     '%s' % e
                 )
-                db.DBSession.rollback()
                 return
         else:
             # just update the date values
@@ -708,9 +713,6 @@ order by cast("TimeLogs".start as date)
             task.status = status_cmpl
             db.DBSession.commit()
 
-            task.update_parent_statuses()
-            db.DBSession.commit()
-
         elif submit_to_final_review:
             # clip the Task timing to current time logs
             from stalker import Task
@@ -774,10 +776,12 @@ order by cast("TimeLogs".start as date)
                 db.DBSession.rollback()
                 return
 
+        # Fix statuses
+        task.update_parent_statuses()
+        for dep_task in task.dependent_of:
+            dep_task.update_status_with_dependent_statuses()
+
+        db.DBSession.commit()
+
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()
-
-    def resource_changed(self, resource_name):
-        """runs when the selected resource has changed
-        """
-        self.fill_calendar_with_time_logs()
