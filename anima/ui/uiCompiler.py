@@ -16,22 +16,22 @@ from anima import utils, logger
 
 # PyQt4
 try:
-    from PyQt4 import uic
-    pyqt4_compiler = uic
+    from PyQt4.uic import compileUi as pyqt4_compileUi
+    pyqt4_compiler = pyqt4_compileUi
 except ImportError:
     pyqt4_compiler = None
 
 # PySide
 try:
-    from pysideuic import compileUi
-    pyside_compiler = compileUi
+    from pysideuic import compileUi as pyside_compileUi
+    pyside_compiler = pyside_compileUi
 except ImportError:
     pyside_compiler = None
 
 # PySide2
 try:
-    from pyside2uic import compileUi as compileUi2
-    pyside2_compiler = compileUi2
+    from pyside2uic import compileUi as pyside2_compileUi
+    pyside2_compiler = pyside2_compileUi
 except ImportError:
     pyside2_compiler = None
 
@@ -77,20 +77,20 @@ class Compiler(object):
 
     def compile(self, ui_file, output_path):
         if self.compiler:
-            pyfile_full_path = os.path.join(
+            py_file_full_path = os.path.join(
                 output_path,
                 self.get_py_file_name(ui_file.full_path)
             )
 
-            temp_uiFile = file(ui_file.full_path)
-            temp_pyside2_file = file(pyfile_full_path, 'w')
+            temp_ui_file = file(ui_file.full_path)
+            temp_py_file = file(py_file_full_path, 'w')
             try:
-                self.compiler(temp_uiFile, temp_pyside2_file)
+                self.compiler(temp_ui_file, temp_py_file)
             except TypeError:
                 pass
             finally:
-                temp_uiFile.close()
-                temp_pyside2_file.close()
+                temp_ui_file.close()
+                temp_py_file.close()
         else:
             raise RuntimeError('No Compiler!')
 

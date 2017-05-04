@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\ui\ui_files\task_dialog.ui'
+# Form implementation generated from reading ui file 'ui_files\task_dialog.ui'
 #
-# Created: Wed May 03 16:17:21 2017
+# Created: Thu May 04 11:01:53 2017
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!

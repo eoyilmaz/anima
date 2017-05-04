@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './ui_files/version_updater.ui'
+# Form implementation generated from reading ui file 'ui_files\version_updater.ui'
 #
-# Created: Wed Feb 08 15:27:53 2017
+# Created: Thu May 04 11:01:53 2017
 #      by: pyside-uic 0.2.14 running on PySide 1.1.1
 #
 # WARNING! All changes made in this file will be lost!
