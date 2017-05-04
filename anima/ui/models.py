@@ -1423,7 +1423,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.versions = versions
         self.setRowCount(len(versions))
 
-        def set_font(item):
+        def set_published_font(item):
             """sets the font for the given item
 
             :param item: the a QTableWidgetItem
@@ -1441,6 +1441,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         from anima import user_names_lut
         for i, version in enumerate(versions):
             is_published = version.is_published
+            absolute_full_path = os.path.normpath(
+                os.path.expandvars(version.full_path)
+            ).replace('\\', '/')
+            version_file_exists = os.path.exists(absolute_full_path)
 
             c = 0
 
@@ -1451,7 +1455,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0004 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1
@@ -1465,7 +1472,11 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
                 item.setIcon(ui_utils.get_icon(version.created_with.lower()))
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
+
             self.setItem(i, c, item)
             c += 1
             # ------------------------------------
@@ -1480,7 +1491,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0001 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1
@@ -1496,7 +1510,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0001 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1
@@ -1508,10 +1525,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # get the file size
             #file_size_format = "%.2f MB"
             file_size = -1
-            absolute_full_path = os.path.normpath(
-                os.path.expandvars(version.full_path)
-            ).replace('\\', '/')
-            if os.path.exists(absolute_full_path):
+            if version_file_exists:
                 file_size = float(
                     os.path.getsize(absolute_full_path)) / 1048576
 
@@ -1523,7 +1537,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0001 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1
@@ -1534,7 +1551,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
             # get the file date
             file_date = datetime.datetime.today()
-            if os.path.exists(absolute_full_path):
+            if version_file_exists:
                 file_date = datetime.datetime.fromtimestamp(
                     os.path.getmtime(absolute_full_path)
                 )
@@ -1546,7 +1563,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0001 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1
@@ -1559,7 +1579,10 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setTextAlignment(0x0001 | 0x0080)
 
             if is_published:
-                set_font(item)
+                set_published_font(item)
+
+            if not version_file_exists:
+                item.setBackground(QtGui.QColor(64, 0, 0))
 
             self.setItem(i, c, item)
             c += 1

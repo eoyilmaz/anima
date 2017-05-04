@@ -313,7 +313,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.reference_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.reference_pushButton_clicked
+            self.reference_push_button_clicked
         )
 
         # import
@@ -1359,14 +1359,18 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         old_version = self.previous_versions_tableWidget.current_version
         skip_update_check = not self.checkUpdates_checkBox.isChecked()
 
+        from stalker import Version
+        old_version = Version.query.get(old_version.id)
+
+        if not self.check_version_file_exists(old_version):
+            return
+
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
             ref_depth = ref_depth_res.index(
                 self.ref_depth_comboBox.currentText()
             )
-            from stalker import Version
-            old_version = Version.query.get(old_version.id)
 
             # environment can throw RuntimeError for unsaved changes
             try:
@@ -1420,13 +1424,31 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # close the dialog
         self.close()
 
-    def reference_pushButton_clicked(self):
+    def check_version_file_exists(self, version):
+        """Checks if the version file exists in the file system
+
+        :param version: A Stalker Version instance
+        :return:
+        """
+        if not os.path.exists(version.absolute_full_path):
+            # the file doesn't exist
+            # warn the user
+            QtWidgets.QMessageBox.critical(
+                self,
+                "File Doesn't Exist!",
+                "File doesn't exist!:<br><br>%s" %
+                version.absolute_full_path
+            )
+            return False
+        return True
+
+    def reference_push_button_clicked(self):
         """runs when the reference_pushButton clicked
         """
         # get the new version
         previous_version = self.previous_versions_tableWidget.current_version
 
-        # allow only published versions to be referenced
+        # allow only published versions to be referenced
         if not previous_version.is_published:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -1438,8 +1460,13 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             )
             return
 
-        logger.debug("referencing version with id: %s" % previous_version.id)
+        from stalker import Version
+        previous_version = Version.query.get(previous_version.id)
 
+        if not self.check_version_file_exists(previous_version):
+            return
+
+        logger.debug("referencing version with id: %s" % previous_version.id)
         # call the environments reference method
         if self.environment is not None:
             # get the use namespace state
@@ -1447,8 +1474,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
             # check if it has any representations
             # .filter(Version.parent == previous_version)\
-            from stalker import Version
-            previous_version = Version.query.get(previous_version.id)
             all_repr_count = Version.query\
                 .filter(Version.task == previous_version.task)\
                 .filter(Version.take_name.ilike(previous_version.take_name + '@%'))\
@@ -1520,6 +1545,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         from stalker import Version
         previous_version = Version.query.get(previous_version_id)
+
+        if not self.check_version_file_exists(previous_version):
+            return
 
         # logger.debug("importing version %s" % previous_version)
 
