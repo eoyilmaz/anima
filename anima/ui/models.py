@@ -4,8 +4,6 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-from stalker import (db, defaults, SimpleEntity, Task, Project, ProjectUser,
-                     Version)
 from anima import logger
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 
@@ -431,165 +429,175 @@ class TaskTreeView(QtWidgets.QTreeView):
         if not task_id:
             return
 
-        from stalker import Task
+        from stalker import SimpleEntity, Task, Project
         # TODO: Update this to use only task_id
-        task = Task.query.get(task_id)
-        # create the menu
-        menu = QtWidgets.QMenu()  # Open in browser
-        menu.addAction('Open In Web Browser...')
-        menu.addAction('Copy URL')
-        menu.addAction('Copy ID to clipboard')
+        entity = SimpleEntity.query.get(task_id)
+        if not entity:
+            return
 
-        # logged_in_user = self.get_logged_in_user()
-        logged_in_user = model.user
-        from stalker import Status
-        status_wfd = Status.query.filter(Status.code == 'WFD').first()
-        status_prev = Status.query.filter(Status.code == 'PREV').first()
-        status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
-        if logged_in_user in task.resources \
-           and task.status not in [status_wfd, status_prev, status_cmpl]:
+        if isinstance(entity, Task):
+            task = entity
+
+            # create the menu
+            menu = QtWidgets.QMenu()  # Open in browser
+            menu.addAction('Open In Web Browser...')
+            menu.addAction('Copy URL')
+            menu.addAction('Copy ID to clipboard')
+
+            # logged_in_user = self.get_logged_in_user()
+            logged_in_user = model.user
+            from stalker import Status
+            status_wfd = Status.query.filter(Status.code == 'WFD').first()
+            status_prev = Status.query.filter(Status.code == 'PREV').first()
+            status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+            if logged_in_user in task.resources \
+               and task.status not in [status_wfd, status_prev, status_cmpl]:
+                menu.addSeparator()
+                menu.addAction('Create TimeLog...')
+
+            # update task and create child task menu items
+            from anima import is_power_user
+            if is_power_user(logged_in_user):
+                menu.addSeparator()
+                menu.addAction('Update task...')
+                menu.addAction('Create child task...')
+                menu.addAction('Duplicate Task Hierarchy...')
+                menu.addAction('Delete task...')
+
             menu.addSeparator()
-            menu.addAction('Create TimeLog...')
 
-        # update task and create child task menu items
-        from anima import is_power_user
-        if is_power_user(logged_in_user):
-            menu.addSeparator()
-            menu.addAction('Update task...')
-            menu.addAction('Create child task...')
-            menu.addAction('Duplicate Task Hierarchy...')
-            menu.addAction('Delete task...')
-
-        menu.addSeparator()
-
-        # Add Depends To menu
-        depends = task.depends
-        if depends:
-            depends_to_menu = menu.addMenu('Depends To')
-
-            for dTask in depends:
-                action = depends_to_menu.addAction(dTask.name)
-                action.task = dTask
-
-        # Add Dependent Of Menu
-        dependent_of = task.dependent_of
-        if dependent_of:
-            dependent_of_menu = menu.addMenu('Dependent Of')
-
-            for dTask in dependent_of:
-                action = dependent_of_menu.addAction(dTask.name)
-                action.task = dTask
-
-        if not depends and not dependent_of:
-            no_deps_action = menu.addAction('No Dependencies')
-            no_deps_action.setEnabled(False)
-
-        try:
-            # PySide
-            accepted = QtWidgets.QDialog.DialogCode.Accepted
-        except AttributeError:
-            # PyQt4
-            accepted = QtWidgets.QDialog.Accepted
-
-        selected_item = menu.exec_(global_position)
-        if selected_item:
-            choice = selected_item.text()
-            import anima
-            task_url = 'http://%s/tasks/%s/view' % (
-                anima.stalker_server_internal_address,
-                task.id
-            )
-            if choice == 'Open In Web Browser...':
-                import webbrowser
-                webbrowser.open(task_url)
-            elif choice == 'Copy URL':
-                clipboard = QtWidgets.QApplication.clipboard()
-                clipboard.setText(task_url)
-
-                # and warn the user about a new version is created and the
-                # clipboard is set to the new version full path
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "URL Copied To Clipboard",
-                    "URL:<br><br>%s<br><br>is copied to clipboard!" % task_url,
-                    QtWidgets.QMessageBox.Ok
-                )
-            elif choice == 'Copy ID to clipboard':
-                clipboard = QtWidgets.QApplication.clipboard()
-                clipboard.setText('%s' % task.id)
-
-                # and warn the user about a new version is created and the
-                # clipboard is set to the new version full path
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "ID Copied To Clipboard",
-                    "ID %s is copied to clipboard!" % task.id,
-                    QtWidgets.QMessageBox.Ok
-                )
-
-            elif choice == 'Create TimeLog...':
-                from anima.ui import time_log_dialog
-                time_log_dialog_main_dialog = time_log_dialog.MainDialog(
-                    parent=self,
-                    task=task,
-                )
-                time_log_dialog_main_dialog.exec_()
-                time_log_dialog_main_dialog.deleteLater()
-
-            elif choice == 'Update task...':
-                from anima.ui import task_dialog
-                task_main_dialog = task_dialog.MainDialog(
-                    parent=self,
-                    task=task
-                )
-                task_main_dialog.deleteLater()
-                task_main_dialog.exec_()
-
-                # refresh the task list
-                if task_main_dialog.result() == accepted:
-                    self.fill(self.user)
+            # Add Depends To menu
+            depends = task.depends
+            if depends:
+                depends_to_menu = menu.addMenu('Depends To')
     
-                    # reselect the same task
-                    self.find_and_select_entity_item(task)
+                for dTask in depends:
+                    action = depends_to_menu.addAction(dTask.name)
+                    action.task = dTask
 
-            elif choice == 'Create child task...':
-                from anima.ui import task_dialog
-                task_main_dialog = task_dialog.MainDialog(
-                    parent=self,
-                    parent_task=task
-                )
-                task_main_dialog.exec_()
-                task_created = task_main_dialog.task_created
-                task_main_dialog.deleteLater()
-
-                if task_created:
-                    # refresh the task list
-                    self.fill(self.user)
+            # Add Dependent Of Menu
+            dependent_of = task.dependent_of
+            if dependent_of:
+                dependent_of_menu = menu.addMenu('Dependent Of')
     
-                    # reselect the same task
-                    self.find_and_select_entity_item(
-                        task_created
+                for dTask in dependent_of:
+                    action = dependent_of_menu.addAction(dTask.name)
+                    action.task = dTask
+
+            if not depends and not dependent_of:
+                no_deps_action = menu.addAction('No Dependencies')
+                no_deps_action.setEnabled(False)
+
+            try:
+                # PySide
+                accepted = QtWidgets.QDialog.DialogCode.Accepted
+            except AttributeError:
+                # PyQt4
+                accepted = QtWidgets.QDialog.Accepted
+
+            selected_item = menu.exec_(global_position)
+            if selected_item:
+                choice = selected_item.text()
+                import anima
+                task_url = 'http://%s/tasks/%s/view' % (
+                    anima.stalker_server_internal_address,
+                    task.id
+                )
+                if choice == 'Open In Web Browser...':
+                    import webbrowser
+                    webbrowser.open(task_url)
+                elif choice == 'Copy URL':
+                    clipboard = QtWidgets.QApplication.clipboard()
+                    clipboard.setText(task_url)
+    
+                    # and warn the user about a new version is created and the
+                    # clipboard is set to the new version full path
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "URL Copied To Clipboard",
+                        "URL:<br><br>%s<br><br>is copied to clipboard!" %
+                        task_url,
+                        QtWidgets.QMessageBox.Ok
+                    )
+                elif choice == 'Copy ID to clipboard':
+                    clipboard = QtWidgets.QApplication.clipboard()
+                    clipboard.setText('%s' % task.id)
+
+                    # and warn the user about a new version is created and the
+                    # clipboard is set to the new version full path
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "ID Copied To Clipboard",
+                        "ID %s is copied to clipboard!" % task.id,
+                        QtWidgets.QMessageBox.Ok
                     )
 
-            elif choice == 'Duplicate Task Hierarchy...':
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
-                )
-            elif choice == 'Delete task...':
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
-                )
-            else:
-                # go to the dependencies
-                dep_task = selected_item.task
-                self.find_and_select_entity_item(
-                    dep_task,
-                    self
-                )
+                elif choice == 'Create TimeLog...':
+                    from anima.ui import time_log_dialog
+                    time_log_dialog_main_dialog = time_log_dialog.MainDialog(
+                        parent=self,
+                        task=task,
+                    )
+                    time_log_dialog_main_dialog.exec_()
+                    time_log_dialog_main_dialog.deleteLater()
+
+                elif choice == 'Update task...':
+                    from anima.ui import task_dialog
+                    task_main_dialog = task_dialog.MainDialog(
+                        parent=self,
+                        task=task
+                    )
+                    task_main_dialog.deleteLater()
+                    task_main_dialog.exec_()
+
+                    # refresh the task list
+                    if task_main_dialog.result() == accepted:
+                        self.fill(self.user)
+
+                        # reselect the same task
+                        self.find_and_select_entity_item(task)
+
+                elif choice == 'Create child task...':
+                    from anima.ui import task_dialog
+                    task_main_dialog = task_dialog.MainDialog(
+                        parent=self,
+                        parent_task=task
+                    )
+                    task_main_dialog.exec_()
+                    task_created = task_main_dialog.task_created
+                    task_main_dialog.deleteLater()
+
+                    if task_created:
+                        # refresh the task list
+                        self.fill(self.user)
+
+                        # reselect the same task
+                        self.find_and_select_entity_item(
+                            task_created
+                        )
+
+                elif choice == 'Duplicate Task Hierarchy...':
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Not Implemented!",
+                        "Not implemented yet!"
+                    )
+                elif choice == 'Delete task...':
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Not Implemented!",
+                        "Not implemented yet!"
+                    )
+                else:
+                    # go to the dependencies
+                    dep_task = selected_item.task
+                    self.find_and_select_entity_item(
+                        dep_task,
+                        self
+                    )
+        elif isinstance(entity, Project):
+            # this is a project!
+            pass
 
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item
@@ -770,6 +778,7 @@ class TaskItem(QtGui.QStandardItem):
         )
         return_value = False
         if self.task_id and not self.fetched_all:
+            from stalker import db, SimpleEntity, Task
             if self.task_name is None:
                 self.task_name, self.task_entity_type = \
                     db.DBSession.query(
@@ -808,25 +817,36 @@ class TaskItem(QtGui.QStandardItem):
 
         if self.canFetchMore():
             tasks = []
+            from stalker import db, SimpleEntity, Task
 
             if self.task_name is None:
                 self.task_name, self.task_entity_type = \
                     db.DBSession \
-                        .query(SimpleEntity.name, SimpleEntity.entity_type) \
+                    .query(SimpleEntity.name, SimpleEntity.entity_type) \
                     .filter(SimpleEntity.id == self.task_id) \
                     .first()
 
             if self.task_children_data is None:
                 if self.task_entity_type in self.task_entity_types:
                     self.task_children_data = db.DBSession \
-                        .query(Task.id, Task.name, Task.entity_type, Task.status_id) \
+                        .query(
+                            Task.id,
+                            Task.name,
+                            Task.entity_type,
+                            Task.status_id
+                        ) \
                         .filter(Task.parent_id == self.task_id) \
                         .order_by(Task.name) \
                         .all()
 
                 elif self.task_entity_type == 'Project':
                     self.task_children_data = db.DBSession\
-                        .query(Task.id, Task.name, Task.entity_type, Task.status_id) \
+                        .query(
+                            Task.id,
+                            Task.name,
+                            Task.entity_type,
+                            Task.status_id
+                        ) \
                         .filter(Task.parent_id == None) \
                         .filter(Task.project_id == self.task_id) \
                         .order_by(Task.name) \
@@ -880,6 +900,7 @@ class TaskItem(QtGui.QStandardItem):
         )
 
         if self.task_id:
+            from stalker import db, SimpleEntity, Task
             if self.task_name is None:
                 self.task_name, self.task_entity_type = \
                     db.DBSession \
@@ -1008,6 +1029,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             'TaskTreeModel.hasChildren() is started for index: %s' % index
         )
         if not index.isValid():
+            from stalker import db, Project, ProjectUser
             if self.user_tasks_only:
                 if self.user_id:
                     projects_count = db.DBSession.query(ProjectUser.id)\
@@ -1047,6 +1069,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         logger.debug('setting take names')
         self.clear()
         self._take_names = take_names_in
+        from stalker import defaults
         main = defaults.version_take_name
         if main in self._take_names:
             logger.debug('removing default take name from list')
@@ -1067,6 +1090,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         """adds a new take to the takes list
         """
         # condition the input
+        from stalker import Version
         take_name = Version._format_take_name(take_name)
 
         # if the given take name is in the list don't add it
@@ -1119,6 +1143,7 @@ class TaskNameCompleter(QtWidgets.QCompleter):
         QtWidgets.QCompleter.__init__(self, [], parent)
 
     def update(self, completion_prefix):
+        from stalker import Task
         tasks = Task.query \
             .filter(Task.name.ilike('%' + completion_prefix + '%')) \
             .all()
