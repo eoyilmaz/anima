@@ -180,9 +180,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         logger.debug("finished initializing the interface")
 
-    def close(self):
-        logger.debug('closing the ui')
-        QtWidgets.QDialog.close(self)
+    # def close(self):
+    #     logger.debug('closing the ui')
+    #     QtWidgets.QDialog.close(self)
 
     def show(self):
         """overridden show method
@@ -264,42 +264,49 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         QtCore.QObject.connect(
             self.find_from_path_pushButton,
             QtCore.SIGNAL('clicked()'),
-            self.find_from_path_pushButton_clicked
+            self.find_from_path_push_button_clicked
         )
 
         # add_take_toolButton
         QtCore.QObject.connect(
-            self.add_take_toolButton,
+            self.add_take_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.add_take_toolButton_clicked
+            self.add_take_push_button_clicked
         )
 
         # export_as
         QtCore.QObject.connect(
             self.export_as_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.export_as_pushButton_clicked
+            self.export_as_push_button_clicked
         )
 
         # save_as
         QtCore.QObject.connect(
             self.save_as_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.save_as_pushButton_clicked
+            self.save_as_push_button_clicked
+        )
+
+        # publish
+        QtCore.QObject.connect(
+            self.publish_pushButton,
+            QtCore.SIGNAL("clicked()"),
+            self.publish_push_button_clicked
         )
 
         # open
         QtCore.QObject.connect(
             self.open_pushButton,
             QtCore.SIGNAL("clicked()"),
-            self.open_pushButton_clicked
+            self.open_push_button_clicked
         )
 
         # chose
         QtCore.QObject.connect(
             self.chose_pushButton,
             QtCore.SIGNAL("cliched()"),
-            self.chose_pushButton_clicked
+            self.chose_push_button_clicked
         )
 
         # reference
@@ -474,7 +481,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     # check if this user is one of the responsible or a power
                     # user
                     if logged_in_user not in version.task.responsible \
-                       and not logged_in_user in version.task.resources \
+                       and logged_in_user not in version.task.resources \
                        and not is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
                             self,
@@ -781,7 +788,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # self.search_task_toolButton.setIcon(icon)
 
         # disable update_paths_checkBox
-        self.update_paths_checkBox.setVisible(False)
+        # self.update_paths_checkBox.setVisible(False)
 
         # check login
         self.fill_logged_in_user()
@@ -845,7 +852,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             QtCore.QObject.connect(
                 self.previous_versions_tableWidget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.chose_pushButton_clicked
+                self.chose_push_button_clicked
             )
         else:
             # Read-Write mode, Open the version
@@ -853,7 +860,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             QtCore.QObject.connect(
                 self.previous_versions_tableWidget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.open_pushButton_clicked
+                self.open_push_button_clicked
             )
         # *********************************************************************
         # set the completer for the search_task_lineEdit
@@ -912,13 +919,14 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         if self.mode:
             # run in read-only mode
             # hide buttons
-            self.add_take_toolButton.setVisible(False)
+            self.add_take_pushButton.setVisible(False)
             self.description_label.setVisible(False)
             self.description_textEdit.setVisible(False)
-            self.publish_checkBox.setVisible(False)
-            self.update_paths_checkBox.setVisible(False)
+            # self.publish_checkBox.setVisible(False)
+            # self.update_paths_checkBox.setVisible(False)
             self.export_as_pushButton.setVisible(False)
             self.save_as_pushButton.setVisible(False)
+            self.publish_pushButton.setVisible(False)
             self.open_pushButton.setVisible(False)
             self.reference_pushButton.setVisible(False)
             self.import_pushButton.setVisible(False)
@@ -1051,7 +1059,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.previous_versions_tableWidget.update_content(versions)
         logger.debug('update_previous_versions_table_widget is finished')
 
-    def add_take_toolButton_clicked(self):
+    def add_take_push_button_clicked(self):
         """runs when the add_take_toolButton clicked
         """
         # open up a QInputDialog and ask for a take name
@@ -1096,7 +1104,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             self.close()
 
         description = self.description_textEdit.toPlainText()
-        published = self.publish_checkBox.isChecked()
+        # published = self.publish_checkBox.isChecked()
 
         from stalker import Version
         version = Version(
@@ -1105,11 +1113,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             take_name=take_name,
             description=description
         )
-        version.is_published = published
+        # version.is_published = published
 
         return version
 
-    def export_as_pushButton_clicked(self):
+    def export_as_push_button_clicked(self):
         """runs when the export_as_pushButton clicked
         """
         logger.debug("exporting the data as a new version")
@@ -1157,15 +1165,40 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     new_version.filename
                 )
 
-    def save_as_pushButton_clicked(self):
+    def save_as_push_button_clicked(self):
         """runs when the save_as_pushButton clicked
         """
         logger.debug("saving the data as a new version")
+        self.save_as_wrapper()
 
+    def publish_push_button_clicked(self):
+        """runs when the publish_pushButton clicked
+        """
+        logger.debug("saving the data as a new published version")
+        answer = QtWidgets.QMessageBox.question(
+            self,
+            'Publish?',
+            "Publish?",
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
+        if answer == QtWidgets.QMessageBox.Yes:
+            self.save_as_wrapper(publish=True)
+        else:
+            return
+
+    def save_as_wrapper(self, publish=False):
+        """The wrapper function that runs when save_as or publish push buttons
+        are clicked
+
+        :param publish:
+        :return:
+        """
         # get the new version
         from stalker import db
         try:
             new_version = self.get_new_version()
+            new_version.is_published = publish
             db.DBSession.add(new_version)
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
@@ -1301,7 +1334,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             # close the UI
             self.close()
 
-    def chose_pushButton_clicked(self):
+    def chose_push_button_clicked(self):
         """runs when the chose_pushButton clicked
         """
         version = self.previous_versions_tableWidget.current_version
@@ -1319,7 +1352,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             logger.debug(self.chosen_version.id)
             self.close()
 
-    def open_pushButton_clicked(self):
+    def open_push_button_clicked(self):
         """runs when the open_pushButton clicked
         """
         # get the new version
@@ -1591,7 +1624,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             # update the thumbnail
             self.clear_thumbnail()
 
-    def find_from_path_pushButton_clicked(self):
+    def find_from_path_push_button_clicked(self):
         """runs when find_from_path_pushButton is clicked
         """
         full_path = self.find_from_path_lineEdit.text()
@@ -1640,4 +1673,4 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         current_index = self.recent_files_comboBox.currentIndex()
         path = self.recent_files_comboBox.itemData(current_index)
         self.find_from_path_lineEdit.setText(path)
-        self.find_from_path_pushButton_clicked()
+        self.find_from_path_push_button_clicked()

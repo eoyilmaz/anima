@@ -457,6 +457,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             menu.addSeparator()
             menu.addAction('Update task...')
             menu.addAction('Create child task...')
+            menu.addAction('Duplicate Task Hierarchy...')
             menu.addAction('Delete task...')
 
         menu.addSeparator()
@@ -570,11 +571,17 @@ class TaskTreeView(QtWidgets.QTreeView):
                         task_created
                     )
 
+            elif choice == 'Duplicate Task Hierarchy...':
+                QtWidgets.QMessageBox.warning(
+                    self,
+                    "Not Implemented!",
+                    "Not implemented yet!"
+                )
             elif choice == 'Delete task...':
                 QtWidgets.QMessageBox.warning(
                     self,
-                    "Not Supported!!!",
-                    "Deleting a task is not supported for now!!!"
+                    "Not Implemented!",
+                    "Not implemented yet!"
                 )
             else:
                 # go to the dependencies
