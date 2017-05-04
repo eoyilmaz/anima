@@ -499,6 +499,13 @@ def check_if_only_one_root_node():
     """
     root_transform_nodes = auxiliary.get_root_nodes()
 
+    # check of no root node
+    if len(root_transform_nodes) == 0:
+        raise PublishError(
+            'There should be at least one root node in the scene'
+        )
+
+    # check more than one root node
     if len(root_transform_nodes) > 1:
         raise PublishError(
             'There is more than one root node in the scene'
