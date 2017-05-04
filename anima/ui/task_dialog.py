@@ -184,7 +184,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         # fill projects list
         self.projects_comboBox.clear()
-        from stalker import Project
+        from stalker import Project, Task
         self.projects_comboBox.addItems(
             sorted([p.name for p in Project.query.all()])
         )
@@ -192,7 +192,11 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         # select the project if a parent_task or task given
         project = None
         if self.parent_task:
-            project = self.parent_task.project
+            if isinstance(self.parent_task, Task):
+                project = self.parent_task.project
+            elif isinstance(self.parent_task, Project):
+                project = self.parent_task
+                self.parent_task = None
         self.set_project(project)
 
         # if a parent is given set it to the parent_task_lineEdit
