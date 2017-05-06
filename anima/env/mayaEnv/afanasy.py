@@ -512,9 +512,9 @@ class UI(object):
             # Check directional lights with angle == 0 and samples > 1
             all_directional_lights = pm.ls(type='directionalLight')
             ridiculous_directional_lights = []
-            dir_sample_attr_name = 'aiSample'
-            if pm.about(v=1) == "2014":
-                dir_sample_attr_name = 'aiSamples'
+            dir_sample_attr_name = 'aiSamples'
+            # if pm.about(v=1) == "2014":
+            #     dir_sample_attr_name = 'aiSamples'
 
             for directional_light in all_directional_lights:
                 if directional_light.aiAngle.get() == 0 and directional_light.attr(dir_sample_attr_name).get() > 1:
