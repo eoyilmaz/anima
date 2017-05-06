@@ -7,13 +7,31 @@
     <x>0</x>
     <y>0</y>
     <width>553</width>
-    <height>689</height>
+    <height>733</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Task Dialog</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QLabel" name="dialog_label">
+     <property name="styleSheet">
+      <string notr="true">color: rgb(71, 143, 202);
+font: 18pt;</string>
+     </property>
+     <property name="text">
+      <string>Create Task</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+    </widget>
+   </item>
    <item>
     <layout class="QFormLayout" name="formLayout">
      <property name="fieldGrowthPolicy">

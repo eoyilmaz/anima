@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\task_dialog.ui'
 #
-# Created: Sat May 06 12:51:08 2017
+# Created: Sat May 06 16:09:59 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,9 +12,19 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(553, 689)
+        Dialog.resize(553, 733)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.dialog_label = QtWidgets.QLabel(Dialog)
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n"
+"font: 18pt;")
+        self.dialog_label.setObjectName("dialog_label")
+        self.verticalLayout.addWidget(self.dialog_label)
+        self.line = QtWidgets.QFrame(Dialog)
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line.setObjectName("line")
+        self.verticalLayout.addWidget(self.line)
         self.formLayout = QtWidgets.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setLabelAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -223,7 +233,8 @@ class Ui_Dialog(object):
         Dialog.setTabOrder(self.update_bid_checkBox, self.priority_spinBox)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "Dialog", None, -1))
+        Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "Task Dialog", None, -1))
+        self.dialog_label.setText(QtWidgets.QApplication.translate("Dialog", "Create Task", None, -1))
         self.entity_type_label.setText(QtWidgets.QApplication.translate("Dialog", "Entity Type", None, -1))
         self.entity_type_comboBox.setItemText(0, QtWidgets.QApplication.translate("Dialog", "Task", None, -1))
         self.entity_type_comboBox.setItemText(1, QtWidgets.QApplication.translate("Dialog", "Asset", None, -1))

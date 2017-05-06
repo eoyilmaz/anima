@@ -37,6 +37,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
     def __init__(self, parent=None, parent_task=None, task=None):
         logger.debug("initializing the interface")
+        super(MainDialog, self).__init__(parent)
+        self.setupUi(self)
+
         # store the logged in user
         self.logged_in_user = None
 
@@ -45,6 +48,8 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.mode = 'Create'
         if self.task:
             self.mode = 'Update'
+
+        self.dialog_label.setText('%s Task' % self.mode)
 
         self.task_created = None
 
@@ -55,8 +60,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         self.last_selected_dependent_task = None
 
-        super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
 
         # add self.parent_task_lineEdit
         from anima.ui.models import ValidatedLineEdit
