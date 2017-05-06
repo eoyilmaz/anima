@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+import re
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
@@ -16,7 +17,6 @@ elif IS_PYSIDE2():
     from anima.ui.ui_compiled import task_dialog_UI_pyside2 as task_dialog_UI
 elif IS_PYQT4():
     from anima.ui.ui_compiled import task_dialog_UI_pyqt4 as task_dialog_UI
-reload(task_dialog_UI)
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -51,11 +51,83 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.updating_resources_combo_box = False
         self.updating_responsible_combo_box = False
         self.updating_name_lineEdit = False
+        self.updating_code_lineEdit = False
 
         self.last_selected_dependent_task = None
 
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
+
+        # add self.parent_task_lineEdit
+        from anima.ui.models import ValidatedLineEdit
+
+        self.parent_task_lineEdit = ValidatedLineEdit(
+            message_field=self.parent_task_validator_label
+        )
+        self.parent_task_lineEdit.setEnabled(False)
+        self.parent_task_fields_horizontalLayout.insertWidget(
+            0, self.parent_task_lineEdit
+        )
+
+        # add name_lineEdit
+        self.name_lineEdit = ValidatedLineEdit(
+            message_field=self.name_validator_label
+        )
+        self.name_field_verticalLayout.insertWidget(
+            0, self.name_lineEdit
+        )
+
+        # add code_lineEdit
+        self.code_lineEdit = ValidatedLineEdit(
+            message_field=self.code_validator_label
+        )
+        self.code_field_verticalLayout.insertWidget(
+            0, self.code_lineEdit
+        )
+
+        # update the tab order
+        self.setTabOrder(self.entity_type_comboBox, self.projects_comboBox)
+        self.setTabOrder(self.projects_comboBox, self.parent_task_lineEdit)
+        self.setTabOrder(
+            self.parent_task_lineEdit, self.pick_parent_task_pushButton
+        )
+        self.setTabOrder(self.pick_parent_task_pushButton, self.name_lineEdit)
+        self.setTabOrder(self.name_lineEdit, self.code_lineEdit)
+        self.setTabOrder(self.code_lineEdit, self.task_type_comboBox)
+        self.setTabOrder(self.task_type_comboBox, self.asset_type_comboBox)
+        self.setTabOrder(self.asset_type_comboBox, self.sequence_comboBox)
+        self.setTabOrder(self.sequence_comboBox, self.fps_spinBox)
+        self.setTabOrder(self.fps_spinBox, self.cutIn_spinBox)
+        self.setTabOrder(self.cutIn_spinBox, self.cutOut_spinBox)
+        self.setTabOrder(self.cutOut_spinBox, self.depends_to_listWidget)
+        self.setTabOrder(
+            self.depends_to_listWidget, self.add_depending_task_pushButton
+        )
+        self.setTabOrder(
+            self.add_depending_task_pushButton,
+            self.remove_depending_task_pushButton
+        )
+        self.setTabOrder(
+            self.remove_depending_task_pushButton, self.resources_comboBox
+        )
+        self.setTabOrder(self.resources_comboBox, self.resources_listWidget)
+        self.setTabOrder(self.resources_listWidget, self.responsible_comboBox)
+        self.setTabOrder(
+            self.responsible_comboBox, self.responsible_listWidget
+        )
+        self.setTabOrder(
+            self.responsible_listWidget, self.schedule_timing_spinBox
+        )
+        self.setTabOrder(
+            self.schedule_timing_spinBox, self.schedule_unit_comboBox
+        )
+        self.setTabOrder(
+            self.schedule_unit_comboBox, self.schedule_model_comboBox
+        )
+        self.setTabOrder(
+            self.schedule_model_comboBox, self.update_bid_checkBox
+        )
+        self.setTabOrder(self.update_bid_checkBox, self.priority_spinBox)
 
         self._setup_signals()
 
@@ -100,6 +172,13 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             self.name_lineEdit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.name_line_edit_changed
+        )
+
+        # code_lineEdit is changed
+        QtCore.QObject.connect(
+            self.code_lineEdit,
+            QtCore.SIGNAL('textChanged(QString)'),
+            self.code_line_edit_changed
         )
 
         # pick_task_pushButton
@@ -161,6 +240,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def _set_defaults(self):
         """sets the defaults fro the ui
         """
+        # hide validators
+        self.parent_task_validator_label.setVisible(False)
+
         # hide code area
         self.code_label.setVisible(False)
         self.code_lineEdit.setVisible(False)
@@ -601,19 +683,54 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             parent=self,
             project=self.get_project()
         )
+        if self.mode == 'Update':
+            # also inform the task_picker_dialog that we want to select for
+            # parent
+
+            task_picker_main_dialog.pick_task_for = self.task
+            task_picker_main_dialog.pick_as_parent = True
+
+            # scroll to the current task
+            task_picker_main_dialog.tasks_treeView\
+                .find_and_select_entity_item(self.task)
+
+        task_picker_main_dialog.deleteLater()
         task_picker_main_dialog.exec_()
 
-        task_id = task_picker_main_dialog.tasks_treeView.get_task_id()
-        if task_id is None:
-            return
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
 
-        from stalker import Task
-        task = Task.query.get(task_id)
+        if task_picker_main_dialog.result() == accepted:
+            parent_task_id = \
+                task_picker_main_dialog.tasks_treeView.get_task_id()
 
-        if task is None:
-            return
+            if parent_task_id is None:
+                return
 
-        self.set_parent_task(task)
+            from stalker import Task
+            parent_task = Task.query.get(parent_task_id)
+
+            if parent_task is None:
+                return
+
+            self.set_parent_task(parent_task)
+
+            # also validate if this parent task is ok
+            if self.task and self.mode == 'Update':
+                # check if the picked parent task is suitable for the updated
+                # task
+                if self.task in parent_task.parents \
+                   or self.task == parent_task:
+                    # warn the user by invalidating the field
+                    self.parent_task_lineEdit.set_invalid(
+                        'New parent is not valid!'
+                    )
+                else:
+                    self.parent_task_lineEdit.set_valid()
 
     def projects_combo_box_changed(self, project_name):
         """runs when the project_comboBox is changed
@@ -655,31 +772,45 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def name_line_edit_changed(self, text):
         """runs when the name_lineEdit text has changed
         """
-        if self.updating_name_lineEdit:
-            return
-        self.updating_name_lineEdit = True
-        # don't allow non ascii characters
-        new_text = ''.join([c for c in text if ord(c) < 128])
+        # if any([True for c in text if ord(c) >= 128]):
+        #     self.name_lineEdit.set_invalid('Turkce karakter kullanma!!!!')
+        # else:
+        #     self.name_lineEdit.set_valid()
 
-        if text != new_text:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Hata!!!',
-                'Turkce karakter kullanma!!!!'
-            )
-        text = new_text
-
-        self.name_lineEdit.setText(text)
-        self.updating_name_lineEdit = False
+        if re.findall(r'[^a-zA-Z0-9_ ]+', text):
+            self.name_lineEdit.set_invalid('Invalid character')
+        else:
+            self.name_lineEdit.set_valid()
 
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
 
         # remove multiple under scores
-        import re
         formatted_text = re.sub('[_]+', '_', formatted_text)
 
         self.code_lineEdit.setText(formatted_text)
+
+    def code_line_edit_changed(self, text):
+        """runs when the code_lineEdit text has changed
+        """
+        if self.updating_code_lineEdit:
+            return
+
+        self.updating_code_lineEdit = True
+
+        if re.findall(r'[^a-zA-Z0-9_ ]+', text):
+            self.code_lineEdit.set_invalid('Invalid character')
+        else:
+            self.code_lineEdit.set_valid()
+
+        # just update the code field
+        formatted_text = text.strip().replace(' ', '_').replace('-', '_')
+
+        # remove multiple under scores
+        formatted_text = re.sub('[_]+', '_', formatted_text)
+
+        self.code_lineEdit.setText(formatted_text)
+        self.updating_code_lineEdit = False
 
     def add_depending_task_push_button_clicked(self):
         """runs when add depending task push button clicked
@@ -895,22 +1026,67 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         # start with creating the task
         entity_type = self.entity_type_comboBox.currentText()
         project = self.get_project()
+
+        if not self.parent_task_lineEdit.is_valid:
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Some fields are not valid!'
+            )
+            return
         parent_task = self.get_parent_task()
+
+        if not self.name_lineEdit.is_valid:
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Some fields are not valid!'
+            )
+            return
         name = self.name_lineEdit.text()
+
+        if not self.code_lineEdit.is_valid:
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Some fields are not valid!'
+            )
+            return
         code = self.code_lineEdit.text()
+
         task_type_name = self.task_type_comboBox.currentText()
 
-        from stalker import Type
-        task_type = Type.query\
-            .filter(Type.target_entity_type == 'Task')\
-            .filter(Type.name == task_type_name)\
-            .first()
+        from stalker import db, Type
+        task_type = None
+        if task_type_name:
+            task_type = Type.query\
+                .filter(Type.target_entity_type == 'Task')\
+                .filter(Type.name == task_type_name)\
+                .first()
+            if not task_type:
+                # create a new Task Type
+                task_type = Type(
+                    name=task_type_name,
+                    code=task_type_name,
+                    target_entity_type='Task'
+                )
+                db.DBSession.add(task_type)
 
         asset_type_name = self.asset_type_comboBox.currentText()
-        asset_type = Type.query\
-            .filter(Type.target_entity_type == 'Asset')\
-            .filter(Type.name == asset_type_name)\
-            .first()
+        asset_type = None
+        if asset_type_name:
+            asset_type = Type.query\
+                .filter(Type.target_entity_type == 'Asset')\
+                .filter(Type.name == asset_type_name)\
+                .first()
+            if not asset_type:
+                # create a new Asset Type
+                asset_type = Type(
+                    name=asset_type_name,
+                    code=asset_type_name,
+                    target_entity_type='Asset'
+                )
+                db.DBSession.add(asset_type)
 
         from stalker import Sequence
         sequence_name = self.sequence_comboBox.currentText()
@@ -966,7 +1142,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             entity_class = Task
             kwargs['type'] = task_type
 
-        from stalker import db
         if self.mode == 'Create':
             # Create
             try:
@@ -1012,6 +1187,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     )
                 else:
                     self.parent_task_lineEdit.setText('')
+                self.parent_task_lineEdit.set_valid()
                 return
 
             try:

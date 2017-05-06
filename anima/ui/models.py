@@ -711,7 +711,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                     return item
         return None
 
-    def get_item_indices_containing_text(self, text, tree_view):
+    @classmethod
+    def get_item_indices_containing_text(cls, text, tree_view):
         """returns the indexes of the item indices containing the given text
         """
         model = tree_view.model()
@@ -1600,3 +1601,69 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         logger.debug('VersionsTableWidget.update_content() is finished')
+
+
+class ValidatedLineEdit(QtWidgets.QLineEdit):
+    """A custom line edit that can display an icon
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.message_field = kwargs.pop('message_field', None)
+        super(ValidatedLineEdit, self).__init__(*args, **kwargs)
+        self.message_field.setVisible(False)
+        self.icon = None
+        self.is_valid = True
+        self.message = ''
+
+    def set_valid(self):
+        """sets the field valid
+        """
+        self.set_icon(None)
+        self.is_valid = True
+        self.message = ''
+
+        if self.message_field:
+            self.message_field.setVisible(False)
+
+    def set_invalid(self, message=''):
+        """sets the field invalid
+        """
+        self.icon = self.style()\
+            .standardIcon(QtWidgets.QStyle.SP_MessageBoxCritical)
+        self.set_icon(self.icon)
+
+        self.is_valid = False
+
+        if self.message_field:
+            self.message_field.setText(message)
+            if self.isVisible():
+                self.message_field.setVisible(True)
+
+    def set_icon(self, icon=None):
+        """Sets the icon
+
+        :param icon: QIcon instance
+        :return:
+        """
+        self.icon = icon
+        if icon is None:
+            self.setTextMargins(1, 1, 1, 1)
+        else:
+            self.setTextMargins(1, 1, 20, 1)
+
+    def paintEvent(self, event):
+        """Overridden paint event
+
+        :param event: QPaintEvent instance
+        :return:
+        """
+        super(ValidatedLineEdit, self).paintEvent(event)
+        if self.icon is not None:
+            painter = QtGui.QPainter(self)
+            pixmap = self.icon.pixmap(self.height() - 6, self.height() - 6)
+
+            x = self.width() - self.height() + 4
+
+            painter.drawPixmap(x, 3, pixmap)
+            painter.setPen(QtGui.QColor("lightgrey"))
+            painter.drawLine(x - 2, 3, x - 2, self.height() - 4)

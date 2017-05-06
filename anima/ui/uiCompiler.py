@@ -226,25 +226,31 @@ def main():
         py_file_pyside = compiler_pyside.get_py_file(ui_file, output_path)
         py_file_pyside2 = compiler_pyside2.get_py_file(ui_file, output_path)
 
-        if ui_file.is_new() or not py_file_pyqt4.exists()\
-           or not py_file_pyside.exists()\
-           or not py_file_pyside2.exists():
-            # just save the md5 and generate the modules
-            ui_file.update_md5_file()
+        renew_md5 = False
+        if ui_file.is_new() or not py_file_pyqt4.exists():
+            renew_md5 = True
             try:
                 compiler_pyqt4.compile(ui_file, output_path)
             except RuntimeError:
                 pass
 
+        if ui_file.is_new() or not py_file_pyside.exists():
+            renew_md5 = True
             try:
                 compiler_pyside.compile(ui_file, output_path)
             except RuntimeError:
                 pass
 
+        if ui_file.is_new() or not py_file_pyside2.exists():
+            renew_md5 = True
             try:
                 compiler_pyside2.compile(ui_file, output_path)
             except RuntimeError:
                 pass
+
+        if renew_md5:
+            # just save the md5 and generate the modules
+            ui_file.update_md5_file()
 
     print "Finished compiling"
 
