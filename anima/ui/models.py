@@ -549,9 +549,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                     task=entity,
                 )
                 time_log_dialog_main_dialog.exec_()
+                result = time_log_dialog_main_dialog.result()
                 time_log_dialog_main_dialog.deleteLater()
 
-                if time_log_dialog_main_dialog.result() == accepted:
+                if result == accepted:
                     # refresh the task list
                     self.fill(self.user)
 
@@ -564,11 +565,12 @@ class TaskTreeView(QtWidgets.QTreeView):
                     parent=self,
                     task=entity
                 )
-                task_main_dialog.deleteLater()
                 task_main_dialog.exec_()
+                result = task_main_dialog.result()
+                task_main_dialog.deleteLater()
 
                 # refresh the task list
-                if task_main_dialog.result() == accepted:
+                if result == accepted:
                     self.fill(self.user)
 
                     # reselect the same task
@@ -581,17 +583,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                     parent_task=entity
                 )
                 task_main_dialog.exec_()
-                task_created = task_main_dialog.task_created
+                result = task_main_dialog.result()
+                task = task_main_dialog.task
                 task_main_dialog.deleteLater()
 
-                if task_created:
+                if result == accepted and task:
                     # refresh the task list
                     self.fill(self.user)
 
                     # reselect the same task
-                    self.find_and_select_entity_item(
-                        task_created
-                    )
+                    self.find_and_select_entity_item(task)
 
             elif choice == 'Duplicate Task Hierarchy...':
                 QtWidgets.QMessageBox.warning(
@@ -611,15 +612,18 @@ class TaskTreeView(QtWidgets.QTreeView):
                     parent=self,
                     project=entity
                 )
-                project_main_dialog.deleteLater()
                 project_main_dialog.exec_()
+                result = project_main_dialog.result()
 
                 # refresh the task list
-                if project_main_dialog.result() == accepted:
+                if result == accepted:
                     self.fill(self.user)
 
                     # reselect the same task
                     self.find_and_select_entity_item(entity)
+
+                project_main_dialog.deleteLater()
+
             else:
                 # go to the dependencies
                 dep_task = selected_item.task

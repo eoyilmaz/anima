@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\project_dialog.ui'
 #
-# Created: Sat May 06 22:44:54 2017
+# Created: Sun May 07 12:42:18 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide2 import QtCore, QtGui, QtWidgets
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.resize(517, 550)
+        Dialog.resize(517, 545)
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.dialog_label = QtWidgets.QLabel(Dialog)
@@ -90,9 +90,9 @@ class Ui_Dialog(object):
         self.repository_comboBox = QtWidgets.QComboBox(Dialog)
         self.repository_comboBox.setObjectName("repository_comboBox")
         self.repository_horizontalLayout.addWidget(self.repository_comboBox)
-        self.new_repository_pushButton = QtWidgets.QPushButton(Dialog)
-        self.new_repository_pushButton.setObjectName("new_repository_pushButton")
-        self.repository_horizontalLayout.addWidget(self.new_repository_pushButton)
+        self.create_repository_pushButton = QtWidgets.QPushButton(Dialog)
+        self.create_repository_pushButton.setObjectName("create_repository_pushButton")
+        self.repository_horizontalLayout.addWidget(self.create_repository_pushButton)
         self.repository_horizontalLayout.setStretch(0, 1)
         self.project_info_formLayout.setLayout(6, QtWidgets.QFormLayout.FieldRole, self.repository_horizontalLayout)
         self.label_4 = QtWidgets.QLabel(Dialog)
@@ -103,9 +103,9 @@ class Ui_Dialog(object):
         self.structure_comboBox = QtWidgets.QComboBox(Dialog)
         self.structure_comboBox.setObjectName("structure_comboBox")
         self.structure_horizontalLayout.addWidget(self.structure_comboBox)
-        self.structure_pushButton = QtWidgets.QPushButton(Dialog)
-        self.structure_pushButton.setObjectName("structure_pushButton")
-        self.structure_horizontalLayout.addWidget(self.structure_pushButton)
+        self.create_structure_pushButton = QtWidgets.QPushButton(Dialog)
+        self.create_structure_pushButton.setObjectName("create_structure_pushButton")
+        self.structure_horizontalLayout.addWidget(self.create_structure_pushButton)
         self.structure_horizontalLayout.setStretch(0, 1)
         self.project_info_formLayout.setLayout(7, QtWidgets.QFormLayout.FieldRole, self.structure_horizontalLayout)
         self.label_5 = QtWidgets.QLabel(Dialog)
@@ -176,9 +176,9 @@ class Ui_Dialog(object):
         self.create_image_format_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.fps_label.setText(QtWidgets.QApplication.translate("Dialog", "FPS", None, -1))
         self.label_3.setText(QtWidgets.QApplication.translate("Dialog", "Repository", None, -1))
-        self.new_repository_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
+        self.create_repository_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.label_4.setText(QtWidgets.QApplication.translate("Dialog", "Structure", None, -1))
-        self.structure_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
+        self.create_structure_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.label_5.setText(QtWidgets.QApplication.translate("Dialog", "Status", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("Dialog", "Client Info", None, -1))
         self.client_label.setText(QtWidgets.QApplication.translate("Dialog", "Client", None, -1))

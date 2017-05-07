@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>517</width>
-    <height>550</height>
+    <height>545</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -154,7 +154,7 @@ font: 18pt;</string>
         <widget class="QComboBox" name="repository_comboBox"/>
        </item>
        <item>
-        <widget class="QPushButton" name="new_repository_pushButton">
+        <widget class="QPushButton" name="create_repository_pushButton">
          <property name="text">
           <string>New...</string>
          </property>
@@ -175,7 +175,7 @@ font: 18pt;</string>
         <widget class="QComboBox" name="structure_comboBox"/>
        </item>
        <item>
-        <widget class="QPushButton" name="structure_pushButton">
+        <widget class="QPushButton" name="create_structure_pushButton">
          <property name="text">
           <string>New...</string>
          </property>
@@ -283,8 +283,8 @@ font: 18pt;</string>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>248</x>
-     <y>254</y>
+     <x>257</x>
+     <y>540</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
@@ -299,8 +299,8 @@ font: 18pt;</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>316</x>
-     <y>260</y>
+     <x>325</x>
+     <y>540</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>

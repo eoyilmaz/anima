@@ -106,6 +106,13 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.code_line_edit_changed
         )
 
+        # new_image_format_pushButton
+        QtCore.QObject.connect(
+            self.create_image_format_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.create_image_format_push_button_clicked
+        )
+
     def _set_defaults(self):
         """setup the default values
         """
@@ -154,17 +161,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         for type_id, type_name in project_types:
             self.type_comboBox.addItem(type_name, type_id)
 
-        # fill the image format field
-        from stalker import ImageFormat
-        all_image_formats = db.DBSession\
-            .query(ImageFormat.id, ImageFormat.name, ImageFormat.width, ImageFormat.height)\
-            .order_by(ImageFormat.name)\
-            .all()
-
-        self.image_format_comboBox.clear()
-        for imf_id, imf_name, imf_width, imf_height in all_image_formats:
-            imf_text = '%s (%s x %s)' % (imf_name, imf_width, imf_height)
-            self.image_format_comboBox.addItem(imf_text, imf_id)
+        self.fill_image_format_comboBox()
 
         # fill the repository field
         from stalker import Repository
@@ -198,6 +195,21 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         for st_id, st_name in all_project_statuses:
             self.status_comboBox.addItem(st_name, st_id)
+
+    def fill_image_format_comboBox(self):
+        """fills the image_format_comboBox
+        """
+        # fill the image format field
+        from stalker import db, ImageFormat
+        all_image_formats = db.DBSession \
+            .query(ImageFormat.id, ImageFormat.name, ImageFormat.width,
+                   ImageFormat.height) \
+            .order_by(ImageFormat.name) \
+            .all()
+        self.image_format_comboBox.clear()
+        for imf_id, imf_name, imf_width, imf_height in all_image_formats:
+            imf_text = '%s (%s x %s)' % (imf_name, imf_width, imf_height)
+            self.image_format_comboBox.addItem(imf_text, imf_id)
 
     def name_line_edit_changed(self, text):
         """runs when the name_lineEdit text has changed
@@ -278,6 +290,33 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             )
             if index:
                 self.status_comboBox.setCurrentIndex(index)
+
+    def create_image_format_push_button_clicked(self):
+        """runs when create_image_format_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        from anima.ui import image_format_dialog
+        create_image_format_dialog = \
+            image_format_dialog.MainDialog(parent=self)
+        create_image_format_dialog.exec_()
+        result = create_image_format_dialog.result()
+
+        if result == accepted:
+            image_format = create_image_format_dialog.image_format
+
+            # select the created image format
+            self.fill_image_format_comboBox()
+            index = self.image_format_comboBox.findData(image_format.id)
+            if index:
+                self.image_format_comboBox.setCurrentIndex(index)
+
+        create_image_format_dialog.deleteLater()
 
     def accept(self):
         """create/update the project
