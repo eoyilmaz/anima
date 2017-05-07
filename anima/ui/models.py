@@ -606,11 +606,20 @@ class TaskTreeView(QtWidgets.QTreeView):
                     "Not implemented yet!"
                 )
             elif choice == 'Update Project...':
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
+                from anima.ui import project_dialog
+                project_main_dialog = project_dialog.MainDialog(
+                    parent=self,
+                    project=entity
                 )
+                project_main_dialog.deleteLater()
+                project_main_dialog.exec_()
+
+                # refresh the task list
+                if project_main_dialog.result() == accepted:
+                    self.fill(self.user)
+
+                    # reselect the same task
+                    self.find_and_select_entity_item(entity)
             else:
                 # go to the dependencies
                 dep_task = selected_item.task

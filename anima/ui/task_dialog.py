@@ -60,7 +60,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         self.last_selected_dependent_task = None
 
-
         # add self.parent_task_lineEdit
         from anima.ui.models import ValidatedLineEdit
 
@@ -1024,7 +1023,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         return users
 
     def accept(self):
-        """now create/update the task
+        """create/update the task
         """
         # start with creating the task
         entity_type = self.entity_type_comboBox.currentText()

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\task_dialog.ui'
 #
-# Created: Sat May 06 16:09:59 2017
+# Created: Sat May 06 17:08:42 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -244,11 +244,11 @@ class Ui_Dialog(object):
         self.parent_label.setText(QtWidgets.QApplication.translate("Dialog", "Parent", None, -1))
         self.pick_parent_task_pushButton.setToolTip(QtWidgets.QApplication.translate("Dialog", "Pick parent task", None, -1))
         self.pick_parent_task_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "...", None, -1))
-        self.parent_task_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validate Message", None, -1))
+        self.parent_task_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validator Message", None, -1))
         self.name_label.setText(QtWidgets.QApplication.translate("Dialog", "Name", None, -1))
-        self.name_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validate Message", None, -1))
+        self.name_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validator Message", None, -1))
         self.code_label.setText(QtWidgets.QApplication.translate("Dialog", "Code", None, -1))
-        self.code_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validate Message", None, -1))
+        self.code_validator_label.setText(QtWidgets.QApplication.translate("Dialog", "Validator Message", None, -1))
         self.task_type_label.setText(QtWidgets.QApplication.translate("Dialog", "Task Type", None, -1))
         self.asset_type_label.setText(QtWidgets.QApplication.translate("Dialog", "Asset Type", None, -1))
         self.fps_label.setText(QtWidgets.QApplication.translate("Dialog", "FPS", None, -1))
