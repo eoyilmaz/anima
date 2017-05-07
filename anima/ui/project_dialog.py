@@ -106,11 +106,18 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.code_line_edit_changed
         )
 
-        # new_image_format_pushButton
+        # create_image_format_pushButton
         QtCore.QObject.connect(
             self.create_image_format_pushButton,
             QtCore.SIGNAL('clicked()'),
             self.create_image_format_push_button_clicked
+        )
+
+        # create_repository_pushButton
+        QtCore.QObject.connect(
+            self.create_repository_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.create_repository_push_button_clicked
         )
 
     def _set_defaults(self):
@@ -161,16 +168,8 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         for type_id, type_name in project_types:
             self.type_comboBox.addItem(type_name, type_id)
 
-        self.fill_image_format_comboBox()
-
-        # fill the repository field
-        from stalker import Repository
-        all_repos = db.DBSession\
-            .query(Repository.id, Repository.name)\
-            .order_by(Repository.name)\
-            .all()
-        for repo_id, repo_name in all_repos:
-            self.repository_comboBox.addItem(repo_name, repo_id)
+        self.fill_image_format_combo_box()
+        self.fill_repository_combo_box()
 
         # fill the structure field
         from stalker import Structure
@@ -196,7 +195,20 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         for st_id, st_name in all_project_statuses:
             self.status_comboBox.addItem(st_name, st_id)
 
-    def fill_image_format_comboBox(self):
+    def fill_repository_combo_box(self):
+        """fills the repository_comboBox with Repository instances
+        """
+        # fill the repository field
+        from stalker import db, Repository
+        all_repos = db.DBSession \
+            .query(Repository.id, Repository.name) \
+            .order_by(Repository.name) \
+            .all()
+        self.repository_comboBox.clear()
+        for repo_id, repo_name in all_repos:
+            self.repository_comboBox.addItem(repo_name, repo_id)
+
+    def fill_image_format_combo_box(self):
         """fills the image_format_comboBox
         """
         # fill the image format field
@@ -311,12 +323,39 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             image_format = create_image_format_dialog.image_format
 
             # select the created image format
-            self.fill_image_format_comboBox()
+            self.fill_image_format_combo_box()
             index = self.image_format_comboBox.findData(image_format.id)
             if index:
                 self.image_format_comboBox.setCurrentIndex(index)
 
         create_image_format_dialog.deleteLater()
+
+    def create_repository_push_button_clicked(self):
+        """runs when create_repository_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        from anima.ui import repository_dialog
+        create_repository_dialog = \
+            repository_dialog.MainDialog(parent=self)
+        create_repository_dialog.exec_()
+        result = create_repository_dialog.result()
+
+        if result == accepted:
+            repository = create_repository_dialog.repository
+
+            # select the created repository
+            self.fill_repository_combo_box()
+            index = self.repository_comboBox.findData(repository.id)
+            if index:
+                self.repository_comboBox.setCurrentIndex(index)
+
+        create_repository_dialog.deleteLater()
 
     def accept(self):
         """create/update the project

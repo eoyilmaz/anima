@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>328</width>
-    <height>184</height>
+    <width>348</width>
+    <height>220</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
 font: 18pt;</string>
      </property>
      <property name="text">
-      <string>Create Image Format</string>
+      <string>Create Repository</string>
      </property>
     </widget>
    </item>
@@ -34,9 +34,13 @@ font: 18pt;</string>
    </item>
    <item>
     <layout class="QFormLayout" name="formLayout">
-     <property name="labelAlignment">
-      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-     </property>
+     <item row="0" column="0">
+      <widget class="QLabel" name="name_label">
+       <property name="text">
+        <string>Name</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="1">
       <layout class="QVBoxLayout" name="name_fields_verticalLayout">
        <item>
@@ -52,57 +56,34 @@ font: 18pt;</string>
       </layout>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="width_height_Label">
+      <widget class="QLabel" name="windows_path_label">
        <property name="text">
-        <string>Width x Height</string>
+        <string>Windows Path</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,0,1">
-       <item>
-        <widget class="QSpinBox" name="width_spinBox">
-         <property name="maximum">
-          <number>99999</number>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>x</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="height_spinBox">
-         <property name="maximum">
-          <number>99999</number>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <widget class="QLineEdit" name="windows_path_lineEdit"/>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="pixel_aspect_label">
+      <widget class="QLabel" name="linux_label">
        <property name="text">
-        <string>Pixel Aspect</string>
+        <string>Linux Path</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QDoubleSpinBox" name="pixel_aspect_doubleSpinBox">
-       <property name="value">
-        <double>1.000000000000000</double>
+      <widget class="QLineEdit" name="linux_path_lineEdit"/>
+     </item>
+     <item row="3" column="0">
+      <widget class="QLabel" name="osx_path_label">
+       <property name="text">
+        <string>OSX Path</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="name_label">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
+     <item row="3" column="1">
+      <widget class="QLineEdit" name="osx_path_lineEdit"/>
      </item>
     </layout>
    </item>
@@ -127,12 +108,12 @@ font: 18pt;</string>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>227</x>
-     <y>181</y>
+     <x>248</x>
+     <y>254</y>
     </hint>
     <hint type="destinationlabel">
      <x>157</x>
-     <y>198</y>
+     <y>274</y>
     </hint>
    </hints>
   </connection>
@@ -143,12 +124,12 @@ font: 18pt;</string>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>295</x>
-     <y>187</y>
+     <x>316</x>
+     <y>260</y>
     </hint>
     <hint type="destinationlabel">
      <x>286</x>
-     <y>198</y>
+     <y>274</y>
     </hint>
    </hints>
   </connection>

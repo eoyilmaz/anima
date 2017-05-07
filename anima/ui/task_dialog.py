@@ -51,8 +51,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         self.dialog_label.setText('%s Task' % self.mode)
 
-        self.task_created = None
-
         self.updating_resources_combo_box = False
         self.updating_responsible_combo_box = False
         self.updating_name_lineEdit = False
@@ -1056,9 +1054,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             return
         code = self.code_lineEdit.text()
 
-        task_type_name = self.task_type_comboBox.currentText()
-
+        # Task Type
         from stalker import db, Type
+        task_type_name = self.task_type_comboBox.currentText()
         task_type = None
         if task_type_name:
             task_type = Type.query\
@@ -1074,6 +1072,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 )
                 db.DBSession.add(task_type)
 
+        # Asset Type
         asset_type_name = self.asset_type_comboBox.currentText()
         asset_type = None
         if asset_type_name:
@@ -1090,6 +1089,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 )
                 db.DBSession.add(asset_type)
 
+        # Sequence
         from stalker import Sequence
         sequence_name = self.sequence_comboBox.currentText()
         sequence = Sequence.query\
@@ -1158,8 +1158,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     str(e)
                 )
             else:
-                self.task_created = task
-                self.reject()
+                self.task = task
         else:
             # Update
             self.task.name = name
@@ -1237,5 +1236,5 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     'Error',
                     str(e)
                 )
-            finally:
-                super(MainDialog, self).accept()
+
+        super(MainDialog, self).accept()

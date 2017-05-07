@@ -12,14 +12,14 @@ from anima.ui.lib import QtCore, QtWidgets, QtGui
 
 
 if IS_PYSIDE():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyside \
-        as image_format_dialog_UI
+    from anima.ui.ui_compiled import repository_dialog_UI_pyside \
+        as repository_dialog_UI
 elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyside2 \
-        as image_format_dialog_UI
+    from anima.ui.ui_compiled import repository_dialog_UI_pyside2 \
+        as repository_dialog_UI
 elif IS_PYQT4():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyqt4 \
-        as image_format_dialog_UI
+    from anima.ui.ui_compiled import repository_dialog_UI_pyqt4 \
+        as repository_dialog_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -34,20 +34,21 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialogBase):
-    """The ImageFormat Dialog
+class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogBase):
+    """The Repository Dialog
     """
 
-    def __init__(self, parent=None, image_format=None):
+    def __init__(self, parent=None, repository=None):
         super(MainDialog, self).__init__(parent=parent)
         self.setupUi(self)
 
-        self.image_format = image_format
+        self.repository = repository
         self.mode = 'Create'
-        if self.image_format:
+
+        if self.repository:
             self.mode = 'Update'
 
-        self.dialog_label.setText('%s Image Format' % self.mode)
+        self.dialog_label.setText('%s Repository' % self.mode)
 
         # create name_lineEdit
         from anima.ui.models import ValidatedLineEdit
@@ -63,8 +64,8 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
 
         self._set_defaults()
 
-        if self.image_format:
-            self.fill_ui_with_image_format(self.image_format)
+        if self.repository:
+            self.fill_ui_with_repository(self.repository)
 
     def _setup_signals(self):
         """create the signals
@@ -92,25 +93,23 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
             else:
                 self.name_lineEdit.set_valid()
 
-    def fill_ui_with_image_format(self, image_format):
-        """fills the UI with the given image_format
+    def fill_ui_with_repository(self, repository):
+        """fills the UI with the given repository
 
-        :param image_format: A Stalker ImageFormat instance
+        :param repository: A Stalker ImageFormat instance
         :return:
         """
         if False:
-            from stalker import ImageFormat
-            assert isinstance(image_format, ImageFormat)
+            from stalker import Repository
+            assert isinstance(repository, Repository)
 
-        self.image_format = image_format
-        self.name_lineEdit.setText(self.image_format.name)
+        self.repository = repository
+        self.name_lineEdit.setText(self.repository.name)
         self.name_lineEdit.set_valid()
 
-        self.width_spinBox.setValie(self.image_format.width)
-        self.height_spinBox.setValie(self.image_format.height)
-        self.pixel_aspect_doubleSpinBox.setValue(
-            self.image_format.pixel_aspect
-        )
+        self.windows_path_lineEdit.setText(self.repository.windows_path)
+        self.linux_path_lineEdit.setText(self.repository.linux_path)
+        self.osx_path_lineEdit.setText(self.repository.osx_path)
 
     def accept(self):
         """overridden accept method
@@ -124,24 +123,23 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
             return
         name = self.name_lineEdit.text()
 
-        width = self.width_spinBox.value()
-        height = self.height_spinBox.value()
-        pixel_aspect = self.pixel_aspect_doubleSpinBox.value()
+        windows_path = self.windows_path_lineEdit.text()
+        linux_path = self.linux_path_lineEdit.text()
+        osx_path = self.osx_path_lineEdit.text()
 
-        from stalker import db, ImageFormat
+        from stalker import db, Repository
         logged_in_user = self.get_logged_in_user()
         if self.mode == 'Create':
-            # Create a new Image Format
+            # Create a new Repository
             try:
-                imf = ImageFormat(
+                repo = Repository(
                     name=name,
-                    width=width,
-                    height=height,
-                    pixel_aspect=pixel_aspect,
-                    created_by=logged_in_user
+                    windows_path=windows_path,
+                    linux_path=linux_path,
+                    osx_path=osx_path
                 )
-                self.image_format = imf
-                db.DBSession.add(imf)
+                self.repository = repo
+                db.DBSession.add(repo)
                 db.DBSession.commit()
             except Exception as e:
                 db.DBSession.rollback()
@@ -153,14 +151,14 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
                 return
 
         elif self.mode == 'Update':
-            # Update the image format
+            # Update the repository
             try:
-                self.image_format.name = name
-                self.image_format.width = width
-                self.image_format.height = height
-                self.image_format.pixel_aspect = pixel_aspect
-                self.image_format.updated_by = logged_in_user
-                db.DBSession.add(self.image_format)
+                self.repository.name = name
+                self.repository.windows_path = windows_path
+                self.repository.linux_path = linux_path
+                self.repository.osx_path = osx_path
+                self.repository.updated_by = logged_in_user
+                db.DBSession.add(self.repository)
                 db.DBSession.commit()
             except Exception as e:
                 db.DBSession.rollback()
