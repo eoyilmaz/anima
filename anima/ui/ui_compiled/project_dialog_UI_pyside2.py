@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'C:\Users\eoyilmaz\Documents\development\anima\anima\anima\ui\ui_files\project_dialog.ui'
 #
-# Created: Sun May 07 12:42:18 2017
+# Created: Mon May 08 19:08:56 2017
 #      by: pyside2-uic  running on PySide2 2.0.0~alpha0
 #
 # WARNING! All changes made in this file will be lost!
@@ -69,6 +69,9 @@ class Ui_Dialog(object):
         self.image_format_comboBox = QtWidgets.QComboBox(Dialog)
         self.image_format_comboBox.setObjectName("image_format_comboBox")
         self.image_format_horizontalLayout.addWidget(self.image_format_comboBox)
+        self.update_image_format_pushButton = QtWidgets.QPushButton(Dialog)
+        self.update_image_format_pushButton.setObjectName("update_image_format_pushButton")
+        self.image_format_horizontalLayout.addWidget(self.update_image_format_pushButton)
         self.create_image_format_pushButton = QtWidgets.QPushButton(Dialog)
         self.create_image_format_pushButton.setObjectName("create_image_format_pushButton")
         self.image_format_horizontalLayout.addWidget(self.create_image_format_pushButton)
@@ -90,6 +93,9 @@ class Ui_Dialog(object):
         self.repository_comboBox = QtWidgets.QComboBox(Dialog)
         self.repository_comboBox.setObjectName("repository_comboBox")
         self.repository_horizontalLayout.addWidget(self.repository_comboBox)
+        self.update_repository_pushButton = QtWidgets.QPushButton(Dialog)
+        self.update_repository_pushButton.setObjectName("update_repository_pushButton")
+        self.repository_horizontalLayout.addWidget(self.update_repository_pushButton)
         self.create_repository_pushButton = QtWidgets.QPushButton(Dialog)
         self.create_repository_pushButton.setObjectName("create_repository_pushButton")
         self.repository_horizontalLayout.addWidget(self.create_repository_pushButton)
@@ -103,6 +109,9 @@ class Ui_Dialog(object):
         self.structure_comboBox = QtWidgets.QComboBox(Dialog)
         self.structure_comboBox.setObjectName("structure_comboBox")
         self.structure_horizontalLayout.addWidget(self.structure_comboBox)
+        self.update_structure_pushButton = QtWidgets.QPushButton(Dialog)
+        self.update_structure_pushButton.setObjectName("update_structure_pushButton")
+        self.structure_horizontalLayout.addWidget(self.update_structure_pushButton)
         self.create_structure_pushButton = QtWidgets.QPushButton(Dialog)
         self.create_structure_pushButton.setObjectName("create_structure_pushButton")
         self.structure_horizontalLayout.addWidget(self.create_structure_pushButton)
@@ -173,11 +182,14 @@ class Ui_Dialog(object):
         self.type_label.setText(QtWidgets.QApplication.translate("Dialog", "Type", None, -1))
         self.date_label.setText(QtWidgets.QApplication.translate("Dialog", "Date", None, -1))
         self.image_format_label.setText(QtWidgets.QApplication.translate("Dialog", "Image Format", None, -1))
+        self.update_image_format_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "Update...", None, -1))
         self.create_image_format_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.fps_label.setText(QtWidgets.QApplication.translate("Dialog", "FPS", None, -1))
         self.label_3.setText(QtWidgets.QApplication.translate("Dialog", "Repository", None, -1))
+        self.update_repository_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "Update...", None, -1))
         self.create_repository_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.label_4.setText(QtWidgets.QApplication.translate("Dialog", "Structure", None, -1))
+        self.update_structure_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "Update...", None, -1))
         self.create_structure_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "New...", None, -1))
         self.label_5.setText(QtWidgets.QApplication.translate("Dialog", "Status", None, -1))
         self.label_2.setText(QtWidgets.QApplication.translate("Dialog", "Client Info", None, -1))

@@ -1680,3 +1680,167 @@ class ValidatedLineEdit(QtWidgets.QLineEdit):
             painter.drawPixmap(x, 3, pixmap)
             painter.setPen(QtGui.QColor("lightgrey"))
             painter.drawLine(x - 2, 3, x - 2, self.height() - 4)
+
+
+class DoubleListWidget(object):
+    """This is a Widget that has two QListWidgets.
+    """
+
+    def __init__(self, dialog=None, parent_layout=None, primary_label_text='',
+                 secondary_label_text=''):
+        """
+        :param dialog: QDialog instance that this is the child of.
+        :param parent_layout: The QLayout instance to add this widgets to
+        :param str primary_label_text: The label of the primary list
+        :param str secondary_label_text: The label of the secondary list
+        """
+        self.dialog = dialog
+        self.parent_layout = parent_layout
+
+        # Layouts
+        self.main_layout = None
+        self.button_layout = None
+        self.primary_widgets_layout = None
+        self.secondary_widgets_layout = None
+
+        # Widgets
+        self.primary_list_widget = None
+        self.secondary_list_widget = None
+        self.primary_to_secondary_push_button = None
+        self.secondary_to_primary_push_button = None
+
+        self.primary_label = None
+        self.secondary_label = None
+
+        # Data
+        self.primary_label_text = primary_label_text
+        self.secondary_label_text = secondary_label_text
+
+        self.__init__ui()
+
+    def __init__ui(self):
+        """creates the Widgets
+        """
+        # create a horizontal layout to hold the widgets
+        self.main_layout = QtWidgets.QHBoxLayout()
+
+        # ----------------------------------
+        # Primary Widgets Layout
+        self.primary_widgets_layout = QtWidgets.QVBoxLayout()
+
+        # label
+        self.primary_label = QtWidgets.QLabel(self.dialog)
+        self.primary_label.setText(self.primary_label_text)
+        self.primary_label.setAlignment(QtCore.Qt.AlignCenter)
+        self.primary_widgets_layout.addWidget(self.primary_label)
+
+        # list widget
+        self.primary_list_widget = QtWidgets.QListWidget(self.dialog)
+        self.primary_widgets_layout.addWidget(self.primary_list_widget)
+        self.main_layout.addLayout(self.primary_widgets_layout)
+
+        # ----------------------------------
+        # Button Layout
+        self.button_layout = QtWidgets.QVBoxLayout()
+        self.button_layout.insertStretch(0, 0)
+        self.primary_to_secondary_push_button = \
+            QtWidgets.QPushButton('>>', parent=self.dialog)
+        self.secondary_to_primary_push_button = \
+            QtWidgets.QPushButton('<<', parent=self.dialog)
+
+        self.primary_to_secondary_push_button.setMaximumSize(25, 16777215)
+        self.secondary_to_primary_push_button.setMaximumSize(25, 16777215)
+
+        self.button_layout.addWidget(self.primary_to_secondary_push_button)
+        self.button_layout.addWidget(self.secondary_to_primary_push_button)
+
+        self.button_layout.insertStretch(3, 0)
+        self.main_layout.addLayout(self.button_layout)
+
+        # ----------------------------------
+        # Secondary Widgets Layout
+        self.secondary_widgets_layout = QtWidgets.QVBoxLayout()
+
+        # label
+        self.secondary_label = QtWidgets.QLabel(self.dialog)
+        self.secondary_label.setText(self.secondary_label_text)
+        self.secondary_label.setAlignment(QtCore.Qt.AlignCenter)
+
+        # list widget
+        self.secondary_widgets_layout.addWidget(self.secondary_label)
+
+        self.secondary_list_widget = QtWidgets.QListWidget(self.dialog)
+        self.secondary_widgets_layout.addWidget(self.secondary_list_widget)
+        self.main_layout.addLayout(self.secondary_widgets_layout)
+
+        self.main_layout.setStretch(0, 1)
+        self.main_layout.setStretch(1, 0)
+        self.main_layout.setStretch(2, 1)
+
+        self.parent_layout.addLayout(self.main_layout)
+
+        # Create signals
+        QtCore.QObject.connect(
+            self.primary_to_secondary_push_button,
+            QtCore.SIGNAL('clicked()'),
+            self.primary_to_secondary_push_button_clicked
+        )
+
+        QtCore.QObject.connect(
+            self.secondary_to_primary_push_button,
+            QtCore.SIGNAL('clicked()'),
+            self.secondary_to_primary_push_button_clicked
+        )
+
+    def add_primary_items(self, items):
+        """Adds the given items to the primary list
+
+        :param items:
+        :return:
+        """
+        self.primary_list_widget.addItems(items)
+
+    def add_secondary_items(self, items):
+        """Adds the given items to the secondary list
+
+        :param items:
+        :return:
+        """
+        self.secondary_list_widget.addItems(items)
+
+    def clear(self):
+        """clears both of the lists
+        """
+        self.primary_list_widget.clear()
+        self.secondary_list_widget.clear()
+
+    def primary_to_secondary_push_button_clicked(self):
+        """runs when the primary_to_secondary_push_button is clicked
+        """
+        # get the current item selected in primary list
+        index = self.primary_list_widget.currentRow()
+        item = self.primary_list_widget.takeItem(index)
+        self.secondary_list_widget.addItem(item)
+
+    def secondary_to_primary_push_button_clicked(self):
+        """runs when the secondary_to_primary_push_button is clicked
+        """
+        index = self.secondary_list_widget.currentRow()
+        item = self.secondary_list_widget.takeItem(index)
+        self.primary_list_widget.addItem(item)
+
+    def primary_items(self):
+        """returns the items in primary_list_widget
+        """
+        items = []
+        for i in range(self.primary_list_widget.count()):
+            items.append(self.primary_list_widget.item(i))
+        return items
+
+    def secondary_items(self):
+        """returns the items in secondary_list_widget
+        """
+        items = []
+        for i in range(self.secondary_list_widget.count()):
+            items.append(self.secondary_list_widget.item(i))
+        return items

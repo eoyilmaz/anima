@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>502</width>
-    <height>220</height>
+    <width>754</width>
+    <height>662</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
 font: 18pt;</string>
      </property>
      <property name="text">
-      <string>Create Repository</string>
+      <string>Create Structure</string>
      </property>
     </widget>
    </item>
@@ -59,34 +59,24 @@ font: 18pt;</string>
       </layout>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="windows_path_label">
+      <widget class="QLabel" name="filenmate_templates_label">
        <property name="text">
-        <string>Windows Path</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Filename&lt;br/&gt;Templates&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item row="1" column="1">
-      <widget class="QLineEdit" name="windows_path_lineEdit"/>
+      <layout class="QVBoxLayout" name="filename_template_fields_verticalLayout"/>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="linux_label">
+      <widget class="QLabel" name="custom_template_label">
        <property name="text">
-        <string>Linux Path</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Custom&lt;br/&gt;Template&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
      </item>
      <item row="2" column="1">
-      <widget class="QLineEdit" name="linux_path_lineEdit"/>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="osx_path_label">
-       <property name="text">
-        <string>OSX Path</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
-      <widget class="QLineEdit" name="osx_path_lineEdit"/>
+      <widget class="QPlainTextEdit" name="custom_template_plainTextEdit"/>
      </item>
     </layout>
    </item>

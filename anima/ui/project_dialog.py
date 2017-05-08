@@ -113,11 +113,39 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.create_image_format_push_button_clicked
         )
 
+        # update_image_format_pushButton
+        QtCore.QObject.connect(
+            self.update_image_format_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.update_image_format_push_button_clicked
+        )
+
         # create_repository_pushButton
         QtCore.QObject.connect(
             self.create_repository_pushButton,
             QtCore.SIGNAL('clicked()'),
             self.create_repository_push_button_clicked
+        )
+
+        # update_repository_pushButton
+        QtCore.QObject.connect(
+            self.update_repository_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.update_repository_push_button_clicked
+        )
+
+        # create_structure_pushButton
+        QtCore.QObject.connect(
+            self.create_structure_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.create_structure_push_button_clicked
+        )
+
+        # update_structure_pushButton
+        QtCore.QObject.connect(
+            self.update_structure_pushButton,
+            QtCore.SIGNAL('clicked()'),
+            self.update_structure_push_button_clicked
         )
 
     def _set_defaults(self):
@@ -170,14 +198,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         self.fill_image_format_combo_box()
         self.fill_repository_combo_box()
-
-        # fill the structure field
-        from stalker import Structure
-        all_structures = db.DBSession\
-            .query(Structure.id, Structure.name).order_by(Structure.name).all()
-
-        for st_id, st_name in all_structures:
-            self.structure_comboBox.addItem(st_name, st_id)
+        self.fill_structure_combo_box()
 
         # fill status field
         sql = """select
@@ -207,6 +228,19 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         self.repository_comboBox.clear()
         for repo_id, repo_name in all_repos:
             self.repository_comboBox.addItem(repo_name, repo_id)
+
+    def fill_structure_combo_box(self):
+        """fills the structure_comboBox with Structure instances
+        """
+        # fill the structure field
+        from stalker import db, Structure
+        all_structures = db.DBSession \
+            .query(Structure.id, Structure.name) \
+            .order_by(Structure.name) \
+            .all()
+        self.structure_comboBox.clear()
+        for st_id, st_name in all_structures:
+            self.structure_comboBox.addItem(st_name, st_id)
 
     def fill_image_format_combo_box(self):
         """fills the image_format_comboBox
@@ -330,6 +364,36 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         create_image_format_dialog.deleteLater()
 
+    def update_image_format_push_button_clicked(self):
+        """runs when update_image_format_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        image_format = self.get_current_image_format()
+
+        from anima.ui import image_format_dialog
+        update_image_format_dialog = \
+            image_format_dialog.MainDialog(parent=self,
+                                           image_format=image_format)
+        update_image_format_dialog.exec_()
+        result = update_image_format_dialog.result()
+
+        if result == accepted:
+            image_format = update_image_format_dialog.image_format
+
+            # select the created image format
+            self.fill_image_format_combo_box()
+            index = self.image_format_comboBox.findData(image_format.id)
+            if index:
+                self.image_format_comboBox.setCurrentIndex(index)
+
+        update_image_format_dialog.deleteLater()
+
     def create_repository_push_button_clicked(self):
         """runs when create_repository_pushButton is clicked
         """
@@ -356,6 +420,95 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
                 self.repository_comboBox.setCurrentIndex(index)
 
         create_repository_dialog.deleteLater()
+
+    def update_repository_push_button_clicked(self):
+        """runs when update_repository_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        repo = self.get_current_repository()
+        if not repo:
+            return
+
+        from anima.ui import repository_dialog
+        update_repository_dialog = \
+            repository_dialog.MainDialog(parent=self, repository=repo)
+        update_repository_dialog.exec_()
+        result = update_repository_dialog.result()
+
+        if result == accepted:
+            repository = update_repository_dialog.repository
+
+            # select the created repository
+            self.fill_repository_combo_box()
+            index = self.repository_comboBox.findData(repository.id)
+            if index:
+                self.repository_comboBox.setCurrentIndex(index)
+
+        update_repository_dialog.deleteLater()
+
+    def create_structure_push_button_clicked(self):
+        """runs when create_structure_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        from anima.ui import structure_dialog
+        create_structure_dialog = \
+            structure_dialog.MainDialog(parent=self)
+        create_structure_dialog.exec_()
+        result = create_structure_dialog.result()
+
+        if result == accepted:
+            structure = create_structure_dialog.structure
+
+            # select the created repository
+            self.fill_structure_combo_box()
+            index = self.structure_comboBox.findData(structure.id)
+            if index:
+                self.structure_comboBox.setCurrentIndex(index)
+
+        create_structure_dialog.deleteLater()
+
+    def update_structure_push_button_clicked(self):
+        """runs when update_structure_pushButton is clicked
+        """
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        structure = self.get_current_structure()
+        if not structure:
+            return
+
+        from anima.ui import structure_dialog
+        update_structure_dialog = \
+            structure_dialog.MainDialog(parent=self, structure=structure)
+        update_structure_dialog.exec_()
+        result = update_structure_dialog.result()
+
+        if result == accepted:
+            structure = update_structure_dialog.structure
+
+            # select the created repository
+            self.fill_structure_combo_box()
+            index = self.structure_comboBox.findData(structure.id)
+            if index:
+                self.structure_comboBox.setCurrentIndex(index)
+
+        update_structure_dialog.deleteLater()
 
     def accept(self):
         """create/update the project
@@ -384,13 +537,10 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         from stalker import Type
         index = self.type_comboBox.currentIndex()
         type_id = self.type_comboBox.itemData(index)
-        type = Type.query.get(type_id) # None type is ok
+        type = Type.query.get(type_id)  # None type is ok
 
         # Image Format
-        from stalker import ImageFormat
-        index = self.image_format_comboBox.currentIndex()
-        image_format_id = self.image_format_comboBox.itemData(index)
-        image_format = ImageFormat.query.get(image_format_id)
+        image_format = self.get_current_image_format()
         if not image_format:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -403,10 +553,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         fps = self.fps_spinBox.value()
 
         # Repository
-        from stalker import Repository
-        index = self.repository_comboBox.currentIndex()
-        repo_id = self.repository_comboBox.itemData(index)
-        repo = Repository.query.get(repo_id)
+        repo = self.get_current_repository()
         if not repo:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -416,10 +563,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             return
 
         # Structure
-        from stalker import Structure
-        index = self.structure_comboBox.currentIndex()
-        structure_id = self.structure_comboBox.itemData(index)
-        structure = Structure.query.get(structure_id)
+        structure = self.get_current_structure()
         if not structure:
             QtWidgets.QMessageBox.critical(
                 self,
@@ -492,3 +636,30 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
                 return
 
         super(MainDialog, self).accept()
+
+    def get_current_image_format(self):
+        """returns the currently selected image format instance from the UI
+        """
+        from stalker import ImageFormat
+        index = self.image_format_comboBox.currentIndex()
+        image_format_id = self.image_format_comboBox.itemData(index)
+        image_format = ImageFormat.query.get(image_format_id)
+        return image_format
+
+    def get_current_repository(self):
+        """returns the currently selected repository instance from the UI
+        """
+        from stalker import Repository
+        index = self.repository_comboBox.currentIndex()
+        repo_id = self.repository_comboBox.itemData(index)
+        repo = Repository.query.get(repo_id)
+        return repo
+
+    def get_current_structure(self):
+        """returns the currently selected structure instance from the UI
+        """
+        from stalker import Structure
+        index = self.structure_comboBox.currentIndex()
+        structure_id = self.structure_comboBox.itemData(index)
+        structure = Structure.query.get(structure_id)
+        return structure

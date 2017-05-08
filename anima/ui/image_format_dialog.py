@@ -106,8 +106,8 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
         self.name_lineEdit.setText(self.image_format.name)
         self.name_lineEdit.set_valid()
 
-        self.width_spinBox.setValie(self.image_format.width)
-        self.height_spinBox.setValie(self.image_format.height)
+        self.width_spinBox.setValue(self.image_format.width)
+        self.height_spinBox.setValue(self.image_format.height)
         self.pixel_aspect_doubleSpinBox.setValue(
             self.image_format.pixel_aspect
         )
