@@ -216,33 +216,72 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         :return:
         """
         item = list_widget.itemAt(position)
-        if not item:
-            return
-
-        ft_id = int(item.text().split('(')[-1].split(')')[0])
-        if not ft_id:
-            return
 
         menu = QtWidgets.QMenu()
         menu.addAction('Create FilenameTemplate...')
-        menu.addAction('Update FilenameTemplate...')
+        if item:
+            menu.addAction('Update FilenameTemplate...')
 
         global_position = list_widget.mapToGlobal(position)
         selected_item = menu.exec_(global_position)
+
+        try:
+            # PySide
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
         if selected_item:
             choice = selected_item.text()
             if choice == 'Create FilenameTemplate...':
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
-                )
+                from anima.ui import filename_template_dialog
+                create_filename_template_dialog = \
+                    filename_template_dialog.MainDialog(parent=self)
+                create_filename_template_dialog.exec_()
+
+                if create_filename_template_dialog.result() == accepted:
+                    ft = create_filename_template_dialog.filename_template
+                    list_widget.addItem(
+                        '%s (%s) (%s)' % (ft.name,
+                                          ft.target_entity_type,
+                                          ft.id)
+                    )
+                create_filename_template_dialog.deleteLater()
+
             elif choice == 'Update FilenameTemplate...':
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
-                )
+                ft_id = int(item.text().split('(')[-1].split(')')[0])
+                if not ft_id:
+                    return
+
+                from stalker import FilenameTemplate
+                ft = FilenameTemplate.query.get(ft_id)
+    
+                from anima.ui import filename_template_dialog
+                update_filename_template_dialog = \
+                    filename_template_dialog.MainDialog(
+                        parent=self,
+                        filename_template=ft
+                    )
+                try:
+                    update_filename_template_dialog.exec_()
+                    if update_filename_template_dialog.result() == accepted:
+                        # update the text of the item
+                        ft = update_filename_template_dialog.filename_template
+                        item.setText(
+                            '%s (%s) (%s)' % (ft.name,
+                                              ft.target_entity_type,
+                                              ft.id)
+                        )
+    
+                    update_filename_template_dialog.deleteLater()
+                except Exception as e:
+                    QtWidgets.QMessageBox.warning(
+                        self,
+                        "Error",
+                        str(e)
+                    )
+                    return
 
     def accept(self):
         """overridden accept method

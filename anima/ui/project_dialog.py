@@ -281,7 +281,10 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             if text == '':
                 self.code_lineEdit.set_invalid('Enter a code')
             else:
-                self.code_lineEdit.set_valid()
+                if len(text) > 16:
+                    self.code_lineEdit.set_invalid('Code is too long (>16)')
+                else:
+                    self.code_lineEdit.set_valid()
 
     def fill_ui_with_project(self, project):
         """fills the UI fields with the given project
@@ -510,6 +513,33 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         update_structure_dialog.deleteLater()
 
+    def get_current_image_format(self):
+        """returns the currently selected image format instance from the UI
+        """
+        from stalker import ImageFormat
+        index = self.image_format_comboBox.currentIndex()
+        image_format_id = self.image_format_comboBox.itemData(index)
+        image_format = ImageFormat.query.get(image_format_id)
+        return image_format
+
+    def get_current_repository(self):
+        """returns the currently selected repository instance from the UI
+        """
+        from stalker import Repository
+        index = self.repository_comboBox.currentIndex()
+        repo_id = self.repository_comboBox.itemData(index)
+        repo = Repository.query.get(repo_id)
+        return repo
+
+    def get_current_structure(self):
+        """returns the currently selected structure instance from the UI
+        """
+        from stalker import Structure
+        index = self.structure_comboBox.currentIndex()
+        structure_id = self.structure_comboBox.itemData(index)
+        structure = Structure.query.get(structure_id)
+        return structure
+
     def accept(self):
         """create/update the project
         """
@@ -596,6 +626,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             new_project = Project(
                 name=name,
                 code=code,
+                type=type,
                 repositories=[repo],
                 structure=structure,
                 image_format=image_format,
@@ -619,6 +650,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.project.updated_by = logged_in_user
             self.project.name = name
             self.project.code = code
+            self.proect.type = type
             self.project.repositories = [repo]
             self.project.structure = structure
             self.project.image_format = image_format
@@ -636,30 +668,3 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
                 return
 
         super(MainDialog, self).accept()
-
-    def get_current_image_format(self):
-        """returns the currently selected image format instance from the UI
-        """
-        from stalker import ImageFormat
-        index = self.image_format_comboBox.currentIndex()
-        image_format_id = self.image_format_comboBox.itemData(index)
-        image_format = ImageFormat.query.get(image_format_id)
-        return image_format
-
-    def get_current_repository(self):
-        """returns the currently selected repository instance from the UI
-        """
-        from stalker import Repository
-        index = self.repository_comboBox.currentIndex()
-        repo_id = self.repository_comboBox.itemData(index)
-        repo = Repository.query.get(repo_id)
-        return repo
-
-    def get_current_structure(self):
-        """returns the currently selected structure instance from the UI
-        """
-        from stalker import Structure
-        index = self.structure_comboBox.currentIndex()
-        structure_id = self.structure_comboBox.itemData(index)
-        structure = Structure.query.get(structure_id)
-        return structure

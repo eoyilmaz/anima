@@ -801,7 +801,10 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         if re.findall(r'[^a-zA-Z0-9_ ]+', text):
             self.code_lineEdit.set_invalid('Invalid character')
         else:
-            self.code_lineEdit.set_valid()
+            if len(text) > 16:
+                self.code_lineEdit.set_invalid('Code is too long (>16)')
+            else:
+                self.code_lineEdit.set_valid()
 
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
