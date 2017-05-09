@@ -1681,6 +1681,17 @@ class ValidatedLineEdit(QtWidgets.QLineEdit):
             painter.setPen(QtGui.QColor("lightgrey"))
             painter.drawLine(x - 2, 3, x - 2, self.height() - 4)
 
+    def setVisible(self, vis):
+        """overridden shot method
+        """
+        super(ValidatedLineEdit, self).setVisible(vis)
+        if vis:
+            if not self.is_valid:
+                # also show the validator message field
+                self.message_field.setVisible(vis)
+        else:
+            self.message_field.setVisible(vis)
+
 
 class DoubleListWidget(object):
     """This is a Widget that has two QListWidgets.

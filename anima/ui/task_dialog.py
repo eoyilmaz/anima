@@ -243,9 +243,15 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         # hide validators
         self.parent_task_validator_label.setVisible(False)
 
+        # invalidate the name field by default
+        self.name_lineEdit.set_invalid('Please enter a name!')
+
         # hide code area
         self.code_label.setVisible(False)
         self.code_lineEdit.setVisible(False)
+
+        # invalidate the code by default
+        self.code_lineEdit.set_invalid('Please enter a code!')
 
         # hide asset type area
         self.asset_type_label.setVisible(False)
@@ -782,6 +788,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         else:
             self.name_lineEdit.set_valid()
 
+        if text == '':
+            self.name_lineEdit.set_invalid('Please enter a name!')
+
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
 
@@ -801,10 +810,13 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         if re.findall(r'[^a-zA-Z0-9_ ]+', text):
             self.code_lineEdit.set_invalid('Invalid character')
         else:
-            if len(text) > 16:
-                self.code_lineEdit.set_invalid('Code is too long (>16)')
+            if text == '':
+                self.code_lineEdit.set_invalid('Please enter a code!')
             else:
-                self.code_lineEdit.set_valid()
+                if len(text) > 16:
+                    self.code_lineEdit.set_invalid('Code is too long (>16)')
+                else:
+                    self.code_lineEdit.set_valid()
 
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
