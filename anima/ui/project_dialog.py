@@ -650,7 +650,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.project.updated_by = logged_in_user
             self.project.name = name
             self.project.code = code
-            self.proect.type = type
+            self.project.type = type
             self.project.repositories = [repo]
             self.project.structure = structure
             self.project.image_format = image_format

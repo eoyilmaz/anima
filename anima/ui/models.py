@@ -491,6 +491,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         elif isinstance(entity, Project):
             # this is a project!
             project = entity
+            menu.addAction('Create Project Structure')
             if is_power_user(logged_in_user):
                 menu.addSeparator()
                 menu.addAction('Update Project...')
@@ -606,6 +607,21 @@ class TaskTreeView(QtWidgets.QTreeView):
                     "Not Implemented!",
                     "Not implemented yet!"
                 )
+            elif choice == 'Create Project Structure':
+
+                answer = QtWidgets.QMessageBox.question(
+                    self,
+                    'Create Project Structure?',
+                    "This will create project folders, OK?",
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.No
+                )
+                if answer == QtWidgets.QMessageBox.Yes:
+                    from anima import utils
+                    utils.create_project_structure(entity)
+                else:
+                    return
+
             elif choice == 'Update Project...':
                 from anima.ui import project_dialog
                 project_main_dialog = project_dialog.MainDialog(

@@ -1523,3 +1523,25 @@ class C3DEqualizerTrackPoint(object):
         for i, pos in enumerate(data):
             pos = map(float, pos.split(' '))
             self.data[i] = pos[1:]
+
+
+def create_project_structure(project):
+    """Creates the project structure of the given project
+
+    :param project: A Stalker Project instance
+    :return:
+    """
+    from stalker import Project
+    if not isinstance(project, Project):
+        raise TypeError('Please supply a Stalker Project instance!')
+
+    import jinja2
+    t = jinja2.Template(project.structure.custom_template)
+    for line in t.render(project=project):
+        line = line.strip()
+        if line != '':
+            try:
+                os.makedirs(line)
+            except OSError as e:
+                # path already exist
+                pass
