@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_files\task_dialog.ui'
 #
-# Created: Sat May 06 13:29:49 2017
+# Created: Tue May 09 09:41:16 2017
 #      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -17,9 +17,19 @@ except AttributeError:
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
-        Dialog.resize(553, 689)
+        Dialog.resize(553, 788)
         self.verticalLayout = QtGui.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName(_fromUtf8("verticalLayout"))
+        self.dialog_label = QtGui.QLabel(Dialog)
+        self.dialog_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n"
+"font: 18pt;"))
+        self.dialog_label.setObjectName(_fromUtf8("dialog_label"))
+        self.verticalLayout.addWidget(self.dialog_label)
+        self.line = QtGui.QFrame(Dialog)
+        self.line.setFrameShape(QtGui.QFrame.HLine)
+        self.line.setFrameShadow(QtGui.QFrame.Sunken)
+        self.line.setObjectName(_fromUtf8("line"))
+        self.verticalLayout.addWidget(self.line)
         self.formLayout = QtGui.QFormLayout()
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setLabelAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -228,7 +238,8 @@ class Ui_Dialog(object):
         Dialog.setTabOrder(self.update_bid_checkBox, self.priority_spinBox)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
+        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Task Dialog", None, QtGui.QApplication.UnicodeUTF8))
+        self.dialog_label.setText(QtGui.QApplication.translate("Dialog", "Create Task", None, QtGui.QApplication.UnicodeUTF8))
         self.entity_type_label.setText(QtGui.QApplication.translate("Dialog", "Entity Type", None, QtGui.QApplication.UnicodeUTF8))
         self.entity_type_comboBox.setItemText(0, QtGui.QApplication.translate("Dialog", "Task", None, QtGui.QApplication.UnicodeUTF8))
         self.entity_type_comboBox.setItemText(1, QtGui.QApplication.translate("Dialog", "Asset", None, QtGui.QApplication.UnicodeUTF8))
@@ -238,11 +249,11 @@ class Ui_Dialog(object):
         self.parent_label.setText(QtGui.QApplication.translate("Dialog", "Parent", None, QtGui.QApplication.UnicodeUTF8))
         self.pick_parent_task_pushButton.setToolTip(QtGui.QApplication.translate("Dialog", "Pick parent task", None, QtGui.QApplication.UnicodeUTF8))
         self.pick_parent_task_pushButton.setText(QtGui.QApplication.translate("Dialog", "...", None, QtGui.QApplication.UnicodeUTF8))
-        self.parent_task_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validate Message", None, QtGui.QApplication.UnicodeUTF8))
+        self.parent_task_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validator Message", None, QtGui.QApplication.UnicodeUTF8))
         self.name_label.setText(QtGui.QApplication.translate("Dialog", "Name", None, QtGui.QApplication.UnicodeUTF8))
-        self.name_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validate Message", None, QtGui.QApplication.UnicodeUTF8))
+        self.name_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validator Message", None, QtGui.QApplication.UnicodeUTF8))
         self.code_label.setText(QtGui.QApplication.translate("Dialog", "Code", None, QtGui.QApplication.UnicodeUTF8))
-        self.code_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validate Message", None, QtGui.QApplication.UnicodeUTF8))
+        self.code_validator_label.setText(QtGui.QApplication.translate("Dialog", "Validator Message", None, QtGui.QApplication.UnicodeUTF8))
         self.task_type_label.setText(QtGui.QApplication.translate("Dialog", "Task Type", None, QtGui.QApplication.UnicodeUTF8))
         self.asset_type_label.setText(QtGui.QApplication.translate("Dialog", "Asset Type", None, QtGui.QApplication.UnicodeUTF8))
         self.fps_label.setText(QtGui.QApplication.translate("Dialog", "FPS", None, QtGui.QApplication.UnicodeUTF8))
