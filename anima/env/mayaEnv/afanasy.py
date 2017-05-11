@@ -693,6 +693,8 @@ class UI(object):
         job.setHostsMaskExclude(hosts_exclude)
         if life_time > 0:
             job.setTimeLife(life_time * 3600)
+        else:
+            job.setTimeLife(240 * 3600)
 
         job.setCmdPost('deletefiles "%s"' % os.path.abspath(filename))
         if pause:
