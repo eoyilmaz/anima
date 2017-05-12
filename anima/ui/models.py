@@ -1012,7 +1012,8 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
         self.loaded_font_families = load_font('FontAwesome.otf')
         self.font = QtGui.QFont()
-        self.font.setFamily(self.loaded_font_families[0])
+        if self.loaded_font_families:
+            self.font.setFamily(self.loaded_font_families[0])
         # self.font.setPixelSize(14)
 
         logger.debug('TaskTreeModel.__init__() is finished')
