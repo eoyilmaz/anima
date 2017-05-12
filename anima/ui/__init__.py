@@ -38,6 +38,7 @@ def SET_PYSIDE():
     global qt_lib
     qt_lib = PYSIDE
 
+
 def SET_PYSIDE2():
     logger.debug('setting environment to PySide2')
     global qt_lib

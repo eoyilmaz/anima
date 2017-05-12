@@ -6,7 +6,7 @@
 
 from anima import logger
 from anima.ui.lib import QtGui, QtCore, QtWidgets
-
+from anima.ui.utils import load_font
 
 def set_item_color(item, color):
     """sets the item color
@@ -437,9 +437,9 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
-        menu.addAction('Open In Web Browser...')
-        menu.addAction('Copy URL')
-        menu.addAction('Copy ID to clipboard')
+        menu.addAction(u'\uf14c Open In Web Browser...')
+        menu.addAction(u'\uf0c5 Copy URL')
+        menu.addAction(u'\uf0c5 Copy ID to clipboard')
 
         from anima import is_power_user
         # logged_in_user = self.get_logged_in_user()
@@ -454,22 +454,22 @@ class TaskTreeView(QtWidgets.QTreeView):
             if logged_in_user in task.resources \
                and task.status not in [status_wfd, status_prev, status_cmpl]:
                 menu.addSeparator()
-                menu.addAction('Create TimeLog...')
+                menu.addAction(u'\uf073 Create TimeLog...')
 
             # update task and create child task menu items
             if is_power_user(logged_in_user):
                 menu.addSeparator()
-                menu.addAction('Update Task...')
-                menu.addAction('Create Child Task...')
-                menu.addAction('Duplicate Task Hierarchy...')
-                menu.addAction('Delete Task...')
+                menu.addAction(u'\uf044 Update Task...')
+                menu.addAction(u'\uf0ae Create Child Task...')
+                menu.addAction(u'\uf0c5 Duplicate Task Hierarchy...')
+                menu.addAction(u'\uf1f8 Delete Task...')
 
             menu.addSeparator()
 
             # Add Depends To menu
             depends = task.depends
             if depends:
-                depends_to_menu = menu.addMenu('Depends To')
+                depends_to_menu = menu.addMenu(u'\uf090 Depends To')
     
                 for dTask in depends:
                     action = depends_to_menu.addAction(dTask.name)
@@ -478,25 +478,25 @@ class TaskTreeView(QtWidgets.QTreeView):
             # Add Dependent Of Menu
             dependent_of = task.dependent_of
             if dependent_of:
-                dependent_of_menu = menu.addMenu('Dependent Of')
+                dependent_of_menu = menu.addMenu(u'\uf08b Dependent Of')
     
                 for dTask in dependent_of:
                     action = dependent_of_menu.addAction(dTask.name)
                     action.task = dTask
 
             if not depends and not dependent_of:
-                no_deps_action = menu.addAction('No Dependencies')
+                no_deps_action = menu.addAction(u'\uf00d No Dependencies')
                 no_deps_action.setEnabled(False)
 
         elif isinstance(entity, Project):
             # this is a project!
             project = entity
-            menu.addAction('Create Project Structure')
+            menu.addAction(u'\uf115 Create Project Structure')
             if is_power_user(logged_in_user):
                 menu.addSeparator()
-                menu.addAction('Update Project...')
+                menu.addAction(u'\uf044 Update Project...')
                 menu.addSeparator()
-                menu.addAction('Create Child Task...')
+                menu.addAction(u'\uf0ae Create Child Task...')
 
         try:
             # PySide and PySide2
@@ -507,7 +507,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         selected_item = menu.exec_(global_position)
         if selected_item:
-            choice = selected_item.text()
+            choice = selected_item.text()[2:]  # text without icon
             import anima
             url = 'http://%s/%ss/%s/view' % (
                 anima.stalker_server_internal_address,
@@ -787,6 +787,13 @@ class TaskItem(QtGui.QStandardItem):
     """
 
     task_entity_types = ['Task', 'Asset', 'Shot', 'Sequence']
+    task_entity_type_icons = {
+        'Task': u'\uf0ae',
+        'Asset': u'\uf12e',
+        'Shot': u'\uf030',
+        'Sequence': u'\uf1de',
+        'Project': u'\uf0e8'
+    }
 
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
@@ -917,8 +924,12 @@ class TaskItem(QtGui.QStandardItem):
                 task_item.user_id = self.user_id
                 task_item.user_tasks_only = self.user_tasks_only
 
-                # set the font
-                task_item.setText(task[1])
+                # set the icon + text
+                task_item.setText(
+                    u'%s %s' % (
+                        self.task_entity_type_icons[task[2]], task[1]
+                    )
+                )
 
                 # color with task status
                 task_item.setData(
@@ -998,6 +1009,12 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         self.user_id = None
         self.root = None
         self.user_tasks_only = False
+
+        self.loaded_font_families = load_font('FontAwesome.otf')
+        self.font = QtGui.QFont()
+        self.font.setFamily(self.loaded_font_families[0])
+        # self.font.setPixelSize(14)
+
         logger.debug('TaskTreeModel.__init__() is finished')
 
     def populateTree(self, projects):
@@ -1019,7 +1036,11 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item = TaskItem(0, 3)
             project_item.parent = None
             project_item.setColumnCount(3)
-            project_item.setText(project.name)
+            project_item.setText(
+                u'%s %s' % (
+                    TaskItem.task_entity_type_icons['Project'], project.name
+                )
+            )
             project_item.task_id = project.id
             project_item.user_id = self.user.id if self.user else -1
             project_item.user_tasks_only = self.user_tasks_only

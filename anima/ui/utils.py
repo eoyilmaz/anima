@@ -218,3 +218,14 @@ def render_image_from_gview(gview, image_full_path):
         pixmap.save(
             image_full_path
         )
+
+
+def load_font(font_filename):
+    """loads extra fonts from the fonts folder
+    """
+    here = os.path.dirname(os.path.realpath(__file__))
+    font_id = QtGui.QFontDatabase.addApplicationFont(
+        os.path.join(here, 'fonts', font_filename)
+    )
+    loaded_font_families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+    return loaded_font_families
