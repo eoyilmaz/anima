@@ -8,6 +8,7 @@ from anima import logger
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 from anima.ui.utils import load_font
 
+
 def set_item_color(item, color):
     """sets the item color
 
@@ -926,9 +927,10 @@ class TaskItem(QtGui.QStandardItem):
 
                 # set the icon + text
                 task_item.setText(
-                    u'%s %s' % (
-                        self.task_entity_type_icons[task[2]], task[1]
-                    )
+                    # u'%s %s' % (
+                    #     self.task_entity_type_icons[task[2]], task[1]
+                    # )
+                    task[1]
                 )
 
                 # color with task status
@@ -1038,9 +1040,10 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.parent = None
             project_item.setColumnCount(3)
             project_item.setText(
-                u'%s %s' % (
-                    TaskItem.task_entity_type_icons['Project'], project.name
-                )
+            #     u'%s %s' % (
+            #         TaskItem.task_entity_type_icons['Project'], project.name
+            #     )
+                project.name
             )
             project_item.task_id = project.id
             project_item.user_id = self.user.id if self.user else -1
