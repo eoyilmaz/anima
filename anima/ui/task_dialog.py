@@ -1129,6 +1129,16 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         created_by = self.get_logged_in_user()
 
+        import datetime
+        from anima.utils import local_to_utc
+        utc_now = local_to_utc(datetime.datetime.now())
+        import stalker
+        from distutils.version import LooseVersion
+        if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
+            # inject timezone info
+            import pytz
+            utc_now = utc_now.replace(tzinfo=pytz.utc)
+
         kwargs = {
             'name': name,
             'code': code,
@@ -1141,7 +1151,8 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             'schedule_unit': schedule_unit,
             'schedule_model': schedule_model,
             'priority': priority,
-            'created_by': created_by
+            'created_by': created_by,
+            'date_created': utc_now
         }
         from stalker import Task, Asset, Shot, Sequence
         if entity_type == 'Asset':

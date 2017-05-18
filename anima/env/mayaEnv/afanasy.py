@@ -598,8 +598,6 @@ class UI(object):
         if pm.checkBox('cgru_afanasy__close', q=1, v=1):
             pm.deleteUI(self.window)
 
-
-
         job = af.Job(job_name)
 
         stored_log_level = None
@@ -628,8 +626,10 @@ class UI(object):
 
         # create the render command
         mrc = MayaRenderCommandBuilder(
-            name=job_name, file_full_path=filename,
-            render_engine=render_engine, project=project_path,
+            name=job_name,
+            file_full_path=filename,
+            render_engine=render_engine,
+            project=project_path,
             by_frame=by_frame
         )
 
@@ -663,8 +663,8 @@ class UI(object):
                 block.setNumeric(
                     start_frame, end_frame, frames_per_task, by_frame
                 )
-                block.setCommand(mrc_layer.build_command())
-
+                command = mrc_layer.build_command()
+                block.setCommand(command)
                 blocks.append(block)
         else:
             # create only one block
@@ -683,7 +683,8 @@ class UI(object):
             block.setNumeric(
                 start_frame, end_frame, frames_per_task, by_frame
             )
-            block.setCommand(mrc.build_command())
+            command = mrc.build_command()
+            block.setCommand(command)
 
             blocks.append(block)
 
