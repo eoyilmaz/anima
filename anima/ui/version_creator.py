@@ -13,8 +13,11 @@ from anima import logger, is_power_user
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
-from anima.ui.models import (TaskTreeView, TakesListWidget,
-                             RecentFilesComboBox, VersionsTableWidget)
+
+from anima.ui.views.task import TaskTreeView
+from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
+from anima.ui.widgets.version import VersionsTableWidget
+
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
@@ -217,12 +220,12 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             self.logout
         )
 
-        # my_tasks_only_checkBox
-        QtCore.QObject.connect(
-            self.my_tasks_only_checkBox,
-            QtCore.SIGNAL("stateChanged(int)"),
-            self.my_tasks_only_check_box_changed
-        )
+        # # my_tasks_only_checkBox
+        # QtCore.QObject.connect(
+        #     self.my_tasks_only_checkBox,
+        #     QtCore.SIGNAL("stateChanged(int)"),
+        #     self.my_tasks_only_check_box_changed
+        # )
 
         # search for tasks
         # QtCore.QObject.connect(
@@ -672,22 +675,22 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             except KeyError:
                 pass
 
-    def my_tasks_only_check_box_changed(self, state):
-        """Runs when the my_tasks_only_checkBox state changed
-
-        :param state:
-        :return:
-        """
-        self.tasks_treeView.user_tasks_only = bool(state)
-        self.fill_tasks_tree_view()
+    # def my_tasks_only_check_box_changed(self, state):
+    #     """Runs when the my_tasks_only_checkBox state changed
+    #
+    #     :param state:
+    #     :return:
+    #     """
+    #     # self.tasks_treeView.user_tasks_only = bool(state)
+    #     # self.fill_tasks_tree_view()
 
     def fill_tasks_tree_view(self, user=None):
         """wrapper for the tasks_treeView.fill() method
         """
-        if user is None:
-            user = self.get_logged_in_user()
+        # if user is None:
+        #     user = self.get_logged_in_user()
 
-        self.tasks_treeView.fill(user=user)
+        self.tasks_treeView.fill()
 
         logger.debug('setting up signals for tasks_treeView_changed')
         QtCore.QObject.connect(
@@ -910,7 +913,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         if is_external_env:
             # hide some buttons
             self.export_as_pushButton.setVisible(False)
-            #self.open_pushButton.setVisible(False)
             self.reference_pushButton.setVisible(False)
             self.import_pushButton.setVisible(False)
         else:
@@ -922,8 +924,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             self.add_take_pushButton.setVisible(False)
             self.description_label.setVisible(False)
             self.description_textEdit.setVisible(False)
-            # self.publish_checkBox.setVisible(False)
-            # self.update_paths_checkBox.setVisible(False)
             self.export_as_pushButton.setVisible(False)
             self.save_as_pushButton.setVisible(False)
             self.publish_pushButton.setVisible(False)
