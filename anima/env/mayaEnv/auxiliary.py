@@ -2720,3 +2720,39 @@ class DummyWindowLight(object):
             self.shader.resolution.set(1024)
         except AttributeError:
             pass
+
+
+def fix_joint_hierarchy_scale(source_joint):
+    """Duplicates the given joint hierarchy
+
+    :param source_joint: A maya joint
+    """
+    data = {}
+    joints = [source_joint]
+    while joints:
+        joint = joints.pop(0)
+        joint
+        data[joint.name()] = {
+            't': pm.xform(joint, q=1, ws=1, t=1),
+            'r': pm.xform(joint, q=1, ws=1, ro=1)
+        }
+        # add children to list
+        joints.extend(joint.getChildren())
+
+    # fix parent scale
+    pm.selected()[0].getParent().s.set(1, 1, 1)
+
+    joints = pm.selected()
+    while joints:
+        joint = joints.pop(0)
+        j_data = data[joint.name()]
+        # add children to list
+        joints.extend(joint.getChildren())
+        pm.general.transformLimits(
+            joint,
+            etx=(False, False),
+            ety=(False, False),
+            etz=(False, False)
+        )
+        pm.xform(joint, ws=1, t=j_data['t'])
+        # pm.xform(joint, ws=1, t=j_data['r'])

@@ -2,6 +2,18 @@
 Changes
 =======
 
+0.2.1
+=====
+
+* **Update:** Rearranged the UI modules to better organize the system.
+* **Update:** ``anima.ui.models.task.TaskTreeModel`` is now loading task
+  hierarchies considerably faster.
+* **New:** Added item icons to ``TaskTreeView`` context menu.
+* **New:** Added code that will allow the system to draw font based icons for
+  ``TaskItem``\ s, but it is not working for now.
+* **New:** Added preliminary support for parsing and replicating XSens Network
+  Protocol.
+
 0.2.0
 =====
 
