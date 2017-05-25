@@ -259,7 +259,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                and Representation.repr_separator not in version.take_name:
                 # it is not allowed to publish the first version (desdur)
                 raise RuntimeError(
-                    'Desdur AMK! Ilk versiyonu publish etmek yasak!!!'
+                    'Ilk versiyonu publish etmek yasak!!!'
                     '<br><br>'
                     'Once bi normal save et.'
                 )
@@ -476,7 +476,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         if version.is_published and not self.allow_publish_on_export:
             # it is not allowed to publish the first version (desdur)
             raise RuntimeError(
-                'Desdur AMK! Publish ederek export yasak!!!'
+                'Publish ederek export yasak!!!'
                 '<br><br>'
                 'Once bi normal export et. Sonra dosyayi acip ustune '
                 'publishle...'
