@@ -117,7 +117,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         if not item:
             return
 
-        if not hasattr(item, 'task_id'):
+        if not hasattr(item, 'task'):
             return
 
         task_id = item.task.id
@@ -137,8 +137,10 @@ class TaskTreeView(QtWidgets.QTreeView):
         menu.addAction(u'\uf0c5 Copy ID to clipboard')
 
         from anima import is_power_user
-        # logged_in_user = self.get_logged_in_user()
-        logged_in_user = model.user
+        from stalker import LocalSession
+        local_session = LocalSession()
+        logged_in_user = local_session.logged_in_user
+
         if isinstance(entity, Task):
             # this is a task
             task = entity

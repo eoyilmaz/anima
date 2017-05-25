@@ -393,22 +393,12 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         version = self.previous_versions_tableWidget.versions[index]
         from stalker import Version
         version = Version.query.get(version.id)
+        print('version: %s' % version)
 
         # create the menu
         menu = QtWidgets.QMenu()
 
-        #change_status_menu = menu.addMenu('Change Status')
-        #menu.addSeparator()
-
         logged_in_user = self.get_logged_in_user()
-
-        # if version.created_by == logged_in_user:
-        if version.is_published:
-            menu_action = menu.addAction('Un-Publish')
-        else:
-            menu_action = menu.addAction('Publish')
-
-        menu.addSeparator()
 
         # add Browse Outputs
         menu.addAction("Browse Path...")
@@ -421,27 +411,23 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             menu.addAction("Change Description...")
             menu.addSeparator()
 
+        # Create power menu
+        if logged_in_user in version.task.responsible \
+           or logged_in_user not in version.task.resources \
+           or is_power_user(logged_in_user):
+            if version.is_published:
+                menu.addAction('Un-Publish')
+            else:
+                menu.addAction('Publish')
+            menu.addSeparator()
+            menu.addAction('Delete')
+
         selected_item = menu.exec_(global_position)
 
         if selected_item:
             choice = selected_item.text()
-
             if version:
                 if choice == "Publish":
-                    # check if the user is able to publish this
-                    if logged_in_user not in version.task.responsible \
-                       and not is_power_user(logged_in_user):
-                        QtWidgets.QMessageBox.critical(
-                            self,
-                            'Error',
-                            'You are not a <b>Responsible</b> of this task<br>'
-                            'nor a <b>Power User</b><br>'
-                            '<br>'
-                            'So, you can not <b>Publish</b> this!!!'
-                        )
-                        return
-
-                    # publish the selected version
                     # publish it
                     version.is_published = True
                     version.updated_by = logged_in_user
@@ -471,7 +457,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                             'Error',
                             'This version is referenced by the following '
                             'tasks:<br><br>%s<br><br>'
-                            'So, you can not un-publish this version!' %
+                            'So, you can not un-publish it!' %
                             '<br>'.join(
                                 map(
                                     lambda x: x.name,
@@ -479,31 +465,70 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                                 )
                             )
                         )
-                        return
+                    else:
+                        version.is_published = False
+                        version.updated_by = logged_in_user
+                        from stalker import db
+                        db.DBSession.add(version)
+                        db.DBSession.commit()
+                        # refresh the tableWidget
+                        self.update_previous_versions_table_widget()
+                elif choice == 'Delete':
+                    versions_using_this_versions = \
+                        Version.query\
+                               .filter(Version.inputs.contains(version))\
+                               .all()
+                    # if there are other versions using this version
+                    # don't allow it to be deleted
+                    if len(versions_using_this_versions):
+                        related_tasks = []
+                        for v in versions_using_this_versions:
+                            if v.task not in related_tasks:
+                                related_tasks.append(v.task)
 
-                    # check if this user is one of the responsible or a power
-                    # user
-                    if logged_in_user not in version.task.responsible \
-                       and logged_in_user not in version.task.resources \
-                       and not is_power_user(logged_in_user):
                         QtWidgets.QMessageBox.critical(
                             self,
                             'Error',
-                            'You are not a <b>Resource/Responsible</b> of '
-                            'this task<br> nor a <b>Power User</b><br>'
-                            '<br>'
-                            'So, you can not <b>Un-Publish</b> this!!!'
+                            'This version is referenced by the following '
+                            'tasks:<br><br>%s<br><br>'
+                            'So, you can not delete it!' %
+                            '<br>'.join(
+                                map(
+                                    lambda x: x.name,
+                                    related_tasks
+                                )
+                            )
                         )
-                        return
+                    else:
+                        # Ask user if he/she is sure
+                        answer = QtWidgets.QMessageBox.question(
+                            self,
+                            'Delete?',
+                            "Delete the version?"
+                            "<br>"
+                            "<br>Files will not be deleted!",
+                            QtWidgets.QMessageBox.Yes,
+                            QtWidgets.QMessageBox.No
+                        )
+                        if answer == QtWidgets.QMessageBox.Yes:
+                            from stalker.db.session import DBSession
+                            # remove any parent data
 
-                    version.is_published = False
-                    version.updated_by = logged_in_user
-                    from stalker import db
-                    db.DBSession.add(version)
-                    db.DBSession.commit()
-                    # refresh the tableWidget
-                    self.update_previous_versions_table_widget()
-                    return
+                            try:
+                                DBSession.delete(version)
+                                DBSession.commit()
+                            except Exception as e:
+                                DBSession.rollback()
+                                QtWidgets.QMessageBox.critical(
+                                    self,
+                                    'Error',
+                                    str(e)
+                                )
+                            finally:
+                                # refresh the tableWidget
+                                self.update_previous_versions_table_widget()
+                        else:
+                            return
 
             from anima import utils
             if choice == 'Browse Path...':

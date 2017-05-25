@@ -13,6 +13,8 @@ Changes
   ``TaskItem``\ s, but it is not working for now.
 * **New:** Added preliminary support for parsing and replicating XSens Network
   Protocol.
+* **New:** Added option for power users to delete versions in version_creator
+  UI.
 
 0.2.0
 =====
