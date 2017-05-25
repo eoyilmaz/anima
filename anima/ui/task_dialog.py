@@ -685,22 +685,15 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         """runs when pick_parent_task_pushButton is clicked
         """
         from anima.ui import task_picker_dialog
+
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self,
             project=self.get_project()
         )
-        if self.mode == 'Update':
-            # also inform the task_picker_dialog that we want to select for
-            # parent
-
-            task_picker_main_dialog.pick_task_for = self.task
-            task_picker_main_dialog.pick_as_parent = True
-
-            # scroll to the current task
-            task_picker_main_dialog.tasks_treeView\
-                .find_and_select_entity_item(self.task)
-
-        task_picker_main_dialog.deleteLater()
+        # scroll to the current task
+        parent_task = self.get_parent_task()
+        task_picker_main_dialog.tasks_treeView\
+            .find_and_select_entity_item(parent_task)
         task_picker_main_dialog.exec_()
 
         try:
@@ -737,6 +730,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     )
                 else:
                     self.parent_task_lineEdit.set_valid()
+
+        # delete the dialog
+        task_picker_main_dialog.deleteLater()
 
     def projects_combo_box_changed(self, project_name):
         """runs when the project_comboBox is changed
@@ -830,36 +826,49 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def add_depending_task_push_button_clicked(self):
         """runs when add depending task push button clicked
         """
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
         from anima.ui import task_picker_dialog
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self,
             project=self.get_project()
         )
+
         if self.last_selected_dependent_task:
             task_picker_main_dialog.tasks_treeView.find_and_select_entity_item(
                 self.last_selected_dependent_task
             )
+        else:
+            # then select the parent at least
+            task_picker_main_dialog.tasks_treeView.find_and_select_entity_item(
+                self.get_parent_task()
+            )
+
         task_picker_main_dialog.exec_()
 
-        task_id = task_picker_main_dialog.tasks_treeView.get_task_id()
-        if task_id is None:
-            return
+        if task_picker_main_dialog.result() == accepted:
+            task_id = task_picker_main_dialog.tasks_treeView.get_task_id()
+            from stalker import Task
+            task = Task.query.get(task_id)
 
-        from stalker import Task
-        task = Task.query.get(task_id)
+            if task is not None:
+                if task.project != self.get_project():
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        'Error',
+                        'Please select a task from the same project!'
+                    )
+                else:
+                    self.add_dependent_task(task)
 
-        if task is None:
-            return
-
-        if task.project != self.get_project():
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please select a task from the same project!'
-            )
-            return
-
-        self.add_dependent_task(task)
+        # Delete the dialog
+        # TODO: Try to immediately delete the dialog don't wait until here
+        task_picker_main_dialog.deleteLater()
 
     def add_dependent_task(self, task):
         """Adds a task to the dependent task listWidget
