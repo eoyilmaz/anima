@@ -51,7 +51,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         self.dialog_label.setText('%s Project' % self.mode)
 
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         # add name_lineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label

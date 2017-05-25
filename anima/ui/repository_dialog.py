@@ -51,7 +51,7 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
         self.dialog_label.setText('%s Repository' % self.mode)
 
         # create name_lineEdit
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )

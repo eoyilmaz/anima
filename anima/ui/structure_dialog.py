@@ -52,7 +52,7 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         self.dialog_label.setText('%s Structure' % self.mode)
 
         # create name_lineEdit
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
@@ -62,7 +62,7 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         )
 
         # create DoubleListWidget
-        from anima.ui.models import DoubleListWidget
+        from anima.ui.widgets import DoubleListWidget
         self.filename_templates_double_list_widget = DoubleListWidget(
             dialog=self,
             parent_layout=self.filename_template_fields_verticalLayout,

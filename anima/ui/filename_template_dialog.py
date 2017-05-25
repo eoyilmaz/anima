@@ -92,7 +92,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_validator_label = QtWidgets.QLabel(self)
         self.name_validator_label.setStyleSheet('color: rgb(255, 0, 0);')
 
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         self.name_line_edit = ValidatedLineEdit(
             self,
             message_field=self.name_validator_label

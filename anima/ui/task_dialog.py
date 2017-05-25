@@ -59,7 +59,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.last_selected_dependent_task = None
 
         # add self.parent_task_lineEdit
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
 
         self.parent_task_lineEdit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label

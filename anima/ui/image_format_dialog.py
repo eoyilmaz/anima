@@ -50,7 +50,7 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
         self.dialog_label.setText('%s Image Format' % self.mode)
 
         # create name_lineEdit
-        from anima.ui.models import ValidatedLineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
