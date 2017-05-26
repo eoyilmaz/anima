@@ -349,8 +349,8 @@ class Ai2RSTester(unittest.TestCase):
         """testing if no error will be raised when the given node type is not
         on the conversion spec sheet
         """
-        # create a mesh
-        node = pm.createNode('mesh')
+        # create a surface node
+        node = pm.createNode('surface')
         conversion_man = ai2rs.ConversionManager()
         rs_material = conversion_man.convert(node)
         self.assertIsNone(rs_material)
@@ -431,8 +431,8 @@ class RedShiftTextureProcessorTester(unittest.TestCase):
 
         rsmap_full_path = os.path.abspath('./test_data/texture.rstexbin')
         self.assertEqual(
-            result[0],
-            rsmap_full_path
+            result[0].replace('\\', '/'),
+            rsmap_full_path.replace('\\', '/')
         )
 
         self.assertTrue(

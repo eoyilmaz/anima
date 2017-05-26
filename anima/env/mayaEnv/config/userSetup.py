@@ -46,7 +46,6 @@ for path in os.environ['PYTHONPATH'].split(os.path.pathsep):
 import pymel
 import pymel.core as pm
 from pymel import mayautils
-# import maya.cmds as cmds
 
 def __pluginLoader(pluginName):
     if not pm.pluginInfo(pluginName, q=1, loaded=1):
@@ -104,10 +103,6 @@ try:
 except pm.MayaNodeError:
     pass
 
-# create environment variables for each Repository
-from stalker import db
-db.setup()
-
 # set ui to PySide2 for maya2017
 if pymel.versions.current() > 201500:
     print('setting QtLib to PySide2 inside userSetup.py')
@@ -160,3 +155,6 @@ if not pm.general.about(batch=1):
 
 # set CMD_EXTENSION for Afanasy
 os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
+
+# create environment variables for each Repository
+pm.evalDeferred("from stalker import db; db.setup();")

@@ -458,9 +458,11 @@ class EnvironmentBase(object):
         :return:
         """
         # use the user home directory .stalker_local_backup
-        from anima import local_cache_folder
+        from anima import defaults
         return os.path.normpath(
-            os.path.expanduser('%s/projects_backup' % local_cache_folder)
+            os.path.expanduser(
+                '%s/projects_backup' % defaults.local_cache_folder
+            )
         ).replace('\\', '/')
 
     @classmethod

@@ -2045,7 +2045,8 @@ class Reference(object):
         # Create LookDev for Current Model Task
         #
 
-        from stalker import db, Task, Version, Type, LocalSession, defaults
+        from stalker import db, Task, Version, Type, LocalSession
+        from anima import defaults
         from anima.env import mayaEnv
 
         do_db_setup()

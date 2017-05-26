@@ -11,7 +11,6 @@ import pymel.core as pm
 import maya.cmds as mc
 import tempfile
 
-from anima import stalker_server_internal_address
 from anima.publish import (clear_publishers, publisher, staging,
                            POST_PUBLISHER_TYPE)
 from anima.exc import PublishError

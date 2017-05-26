@@ -8426,14 +8426,14 @@ workspace -fr "shaders" "renderData/shaders";
                     os.path.join(
                         current_dir_path,
                         dir_name
-                    )[len(parent_path):] + '/'  # for dirs only
+                    )[len(parent_path):].replace('\\', '/') + '/'
                 )
             for file_name in file_names:
                 original_files.append(
                     os.path.join(
                         current_dir_path,
                         file_name
-                    )[len(parent_path):]
+                    )[len(parent_path):].replace('\\', '/')
                 )
 
         # archive it
@@ -8518,7 +8518,7 @@ workspace -fr "shaders" "renderData/shaders";
 
         # check if the first level references are using the flattened files
         self.assertEqual(
-            all_refs[0].unresolvedPath(),
+            all_refs[0].unresolvedPath().replace('\\\, \/'),
             archived_version4_unresolved_path
         )
         self.assertEqual(

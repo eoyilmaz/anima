@@ -143,7 +143,8 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = '/Test/Value'
         discover_env_vars()
         self.assertEqual(
-            '/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2',
+            '/Test/Value%(pathsep)s/mnt/Z/some/path1%(pathsep)s'
+            '/mnt/Z/some/path2' % {'pathsep': os.path.pathsep},
             os.environ['ENV1']
         )
 
@@ -154,7 +155,8 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = '/Test/Value'
         discover_env_vars('some_env_name')
         self.assertEqual(
-            '/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2',
+            '/Test/Value%(pathsep)s/mnt/Z/some/path1%(pathsep)s'
+            '/mnt/Z/some/path2' % {'pathsep': os.path.pathsep},
             os.environ['ENV1']
         )
 
@@ -168,8 +170,9 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = '/Test/Value'
         discover_env_vars('test_env')
         self.assertEqual(
-            '/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2:'
-            '/mnt/Z/some/other/path1:/mnt/Z/some/other/path2',
+            '/Test/Value%(pathsep)s/mnt/Z/some/path1%(pathsep)s'
+            '/mnt/Z/some/path2%(pathsep)s/mnt/Z/some/other/path1%(pathsep)s'
+            '/mnt/Z/some/other/path2' % {'pathsep': os.path.pathsep},
             os.environ['ENV1']
         )
 
@@ -187,8 +190,9 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = '/Test/Value'
         discover_env_vars('test_env')
         self.assertEqual(
-            '/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2:'
-            '/mnt/Z/some/other/path1:/mnt/Z/some/other/path2',
+            '/Test/Value%(pathsep)s/mnt/Z/some/path1%(pathsep)s'
+            '/mnt/Z/some/path2%(pathsep)s/mnt/Z/some/other/path1%(pathsep)s'
+            '/mnt/Z/some/other/path2' % {'pathsep': os.path.pathsep},
             os.environ['ENV1']
         )
 
@@ -206,8 +210,10 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = 'Z:/Test/Value'
         discover_env_vars('test_env')
         self.assertEqual(
-            'Z:/Test/Value:Z:/some/path1:Z:/some/path2:'
-            'Z:/some/other/path1:Z:/some/other/path2',
+            'Z:/Test/Value:Z%(pathsep)s/some/path1%(pathsep)sZ:/some/path2'
+            '%(pathsep)sZ:/some/other/path1%(pathsep)sZ:/some/other/path2' % {
+                'pathsep': os.path.pathsep
+            },
             os.environ['ENV1']
         )
 
@@ -230,10 +236,13 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = '/Volumes/Z/Test/Value'
         discover_env_vars('test_env')
         self.assertEqual(
-            '/Volumes/Z/Test/Value:/Volumes/Z/some/path1:/Volumes/Z/some/path2:'
-            '/Volumes/Z/some/other/path1:/Volumes/Z/some/other/path2',
+            '/Volumes/Z/Test/Value%(pathsep)s/Volumes/Z/some/path1%(pathsep)s'
+            '/Volumes/Z/some/path2%(pathsep)s/Volumes/Z/some/other/path1'
+            '%(pathsep)s/Volumes/Z/some/other/path2' % {
+                'pathsep': os.path.pathsep
+            },
             os.environ['ENV1']
         )
-        '/Volumes/Z/Test/Value:/Volumes/Z/some/path1:/Volumes/Z/some/path2:/Volumes/Z/some/other/path1:/Volumes/Z/some/other/path2'
-        '/Volumes/Z/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2:/mnt/Z/some/other/path1:/mnt/Z/some/other/path2'
+        # '/Volumes/Z/Test/Value:/Volumes/Z/some/path1:/Volumes/Z/some/path2:/Volumes/Z/some/other/path1:/Volumes/Z/some/other/path2'
+        # '/Volumes/Z/Test/Value:/mnt/Z/some/path1:/mnt/Z/some/path2:/mnt/Z/some/other/path1:/mnt/Z/some/other/path2'
 

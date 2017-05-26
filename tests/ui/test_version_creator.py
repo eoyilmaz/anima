@@ -15,10 +15,11 @@ from anima.env.testing import TestEnvironment
 logger = logging.getLogger('anima.ui.version_creator')
 logger.setLevel(logging.DEBUG)
 
-from stalker import (db, defaults, User, Project, Repository, Structure,
+from stalker import (db, User, Project, Repository, Structure,
                      Status, StatusList, Task, Group, Version)
 from stalker.models.auth import LocalSession
-from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_creator
+from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, SET_PYSIDE
+from anima.ui import version_creator
 
 SET_PYSIDE()
 
@@ -59,6 +60,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         cls.repo_path = tempfile.mkdtemp()
 
+        from anima import defaults
         defaults.local_storage_path = tempfile.mktemp()
 
         db.setup({
@@ -302,6 +304,7 @@ class VersionCreatorTester(unittest.TestCase):
     def tearDownClass(cls):
         """teardown once
         """
+        from anima import defaults
         shutil.rmtree(
             defaults.local_storage_path,
             True
@@ -469,6 +472,7 @@ class VersionCreatorTester(unittest.TestCase):
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
         """
+        from anima import defaults
         dialog = version_creator.MainDialog()
         self.assertEqual(
             defaults.version_take_name,
@@ -485,6 +489,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
 
+        from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
             dialog.takes_listWidget.currentItem().text()
@@ -500,6 +505,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_creator.MainDialog()
         # self.show_dialog(dialog)
 
+        from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
             dialog.takes_listWidget.currentItem().text()

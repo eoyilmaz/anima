@@ -255,7 +255,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         logger.debug('setting take names')
         self.clear()
         self._take_names = take_names_in
-        from stalker import defaults
+        from anima import defaults
         main = defaults.version_take_name
         if main in self._take_names:
             logger.debug('removing default take name from list')

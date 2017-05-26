@@ -6,8 +6,6 @@
 import json
 import os
 
-from anima import max_recent_files
-
 
 class RecentFileManager(object):
     """Manages recent files list per environment
@@ -39,14 +37,13 @@ class RecentFileManager(object):
     def cache_file_full_path(cls):
         """:return str: the cache file full path
         """
-        import anima
-
+        from anima import defaults
         return os.path.normpath(
             os.path.expandvars(
                 os.path.expanduser(
                     os.path.join(
-                        anima.local_cache_folder,
-                        anima.recent_file_name
+                        defaults.local_cache_folder,
+                        defaults.recent_file_name
                     )
                 )
             )
@@ -96,8 +93,10 @@ class RecentFileManager(object):
             pass
 
         # limit maximum recent files
+        from anima import defaults
         for env in self.recent_files:
-            self.recent_files[env] = self.recent_files[env][:max_recent_files]
+            self.recent_files[env] = \
+                self.recent_files[env][:defaults.max_recent_files]
 
     def add(self, env_name, file_path):
         """Saves the given file_path under the given environment name
@@ -106,7 +105,7 @@ class RecentFileManager(object):
         :param file_path: The file_path
         :return: None
         """
-        if not self.recent_files.has_key(env_name):
+        if env_name not in self.recent_files:
             self.recent_files[env_name] = []
 
         if file_path in self.recent_files[env_name]:
@@ -115,8 +114,9 @@ class RecentFileManager(object):
         self.recent_files[env_name].insert(0, file_path)
 
         # clamp max files stored
+        from anima import defaults
         self.recent_files[env_name] = \
-            self.recent_files[env_name][:max_recent_files]
+            self.recent_files[env_name][:defaults.max_recent_files]
 
         self.save()
 

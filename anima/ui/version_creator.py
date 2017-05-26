@@ -9,7 +9,7 @@ import os
 from collections import namedtuple
 
 import anima
-from anima import logger, is_power_user
+from anima import logger
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
@@ -393,7 +393,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         version = self.previous_versions_tableWidget.versions[index]
         from stalker import Version
         version = Version.query.get(version.id)
-        print('version: %s' % version)
 
         # create the menu
         menu = QtWidgets.QMenu()
@@ -412,9 +411,10 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             menu.addSeparator()
 
         # Create power menu
+        from anima import defaults
         if logged_in_user in version.task.responsible \
            or logged_in_user not in version.task.resources \
-           or is_power_user(logged_in_user):
+           or defaults.is_power_user(logged_in_user):
             if version.is_published:
                 menu.addAction('Un-Publish')
             else:

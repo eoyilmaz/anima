@@ -129,20 +129,20 @@ class StalkerThumbnailCache(object):
     def get(cls, thumbnail_full_path, login=None, password=None):
         """returns the file either from cache or from stalker server
         """
-        import anima
+        from anima import defaults
 
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
         logger.debug('filename : %s' % filename)
 
-        cache_path = os.path.expanduser(anima.local_cache_folder)
+        cache_path = os.path.expanduser(defaults.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
         url = '%s/%s' % (
-            anima.stalker_server_internal_address,
+            defaults.stalker_server_internal_address,
             thumbnail_full_path
         )
-        login_url = '%s/login' % anima.stalker_server_internal_address
+        login_url = '%s/login' % defaults.stalker_server_internal_address
 
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)
@@ -249,7 +249,7 @@ def do_db_setup():
     except UnboundExecutionError:
         # no connection do setup
         logger.debug('doing a new connection with NullPool')
-        from stalker import defaults
+        from anima import defaults
         from sqlalchemy.pool import NullPool
         settings = defaults.database_engine_settings
         settings['sqlalchemy.poolclass'] = NullPool
@@ -338,9 +338,9 @@ class MediaManager(object):
         self.web_video_bitrate = 4096  # in kBits/sec
 
         # commands
-        import anima
-        self.ffmpeg_command_path = anima.ffmpeg_command_path
-        self.ffprobe_command_path = anima.ffprobe_command_path
+        from anima import defaults
+        self.ffmpeg_command_path = defaults.ffmpeg_command_path
+        self.ffprobe_command_path = defaults.ffprobe_command_path
 
     @classmethod
     def reorient_image(cls, img):
@@ -653,7 +653,7 @@ class MediaManager(object):
         first_folder = new_filename[:2]
         second_folder = new_filename[2:4]
 
-        from stalker import defaults
+        from anima import defaults
         file_path = os.path.join(
             defaults.server_side_storage_path,
             first_folder,
@@ -1282,7 +1282,8 @@ class MediaManager(object):
         :param str extension: The file extension of the version.
         :returns: :class:`.Version` instance.
         """
-        from stalker import defaults, Version
+        from anima import defaults
+        from stalker import Version
         if take_name is None:
             take_name = defaults.version_take_name
 

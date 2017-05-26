@@ -85,13 +85,15 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
         super(MainDialog, self).__init__()
         self.setupUi(self)
 
+        from anima import defaults
+
         self.media_files_path = ''
         self.cache_file_full_path = os.path.normpath(
             os.path.expanduser(
                 os.path.expandvars(
                     os.path.join(
-                        anima.local_cache_folder,
-                        anima.avid_media_file_path_storage
+                        defaults.local_cache_folder,
+                        defaults.avid_media_file_path_storage
                     )
                 )
             )

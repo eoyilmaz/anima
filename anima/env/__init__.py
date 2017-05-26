@@ -8,8 +8,6 @@ import os
 import json
 import platform
 
-from anima import anima_env_var, env_var_file_name
-
 
 def empty_reference_resolution(root=None, leave=None, update=None, create=None):
     """Generates an empty reference_resolution dictionary.
@@ -127,9 +125,10 @@ def discover_env_vars(env_name=''):
     PYTHONPATH in your system environment then the variables defined in
     env.json will be appended to them.
     """
-    env_path = os.environ[anima_env_var]
+    from anima import defaults
+    env_path = os.environ[defaults.anima_env_var]
 
-    env_json_path = os.path.join(env_path, env_var_file_name)
+    env_json_path = os.path.join(env_path, defaults.env_var_file_name)
 
     # parse the file as a json file
     with open(env_json_path) as f:

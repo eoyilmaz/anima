@@ -329,7 +329,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         # schedule info defaults
         # schedule timing
-        from stalker import defaults
+        from anima import defaults
         self.schedule_timing_spinBox.setValue(10)
 
         # schedule unit
@@ -742,7 +742,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         # reset resources
         # add resources
-        from anima import user_names_lut
+        from anima import defaults
         from stalker import db, Project, User, ProjectUser
         all_project_user_ids = db.DBSession.query(User.id)\
             .join(ProjectUser)\
@@ -751,7 +751,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             .all()
 
         all_user_names = \
-            map(lambda x: user_names_lut[x[0]], all_project_user_ids)
+            map(lambda x: defaults.user_names_lut[x[0]], all_project_user_ids)
 
         # clear depends_to_listWidget
         self.depends_to_listWidget.clear()

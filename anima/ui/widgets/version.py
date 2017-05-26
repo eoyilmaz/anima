@@ -141,7 +141,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item.setForeground(foreground)
         
         # update the previous versions list
-        from anima import user_names_lut
+        from anima import defaults
         for i, version in enumerate(versions):
             is_published = version.is_published
             absolute_full_path = os.path.normpath(
@@ -188,7 +188,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # user.name
             created_by = ''
             if version.created_by_id:
-                created_by = user_names_lut[version.created_by_id]
+                created_by = defaults.user_names_lut[version.created_by_id]
             item = QtWidgets.QTableWidgetItem(created_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -207,7 +207,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # user.name
             updated_by = ''
             if version.updated_by_id:
-                updated_by = user_names_lut[version.updated_by_id]
+                updated_by = defaults.user_names_lut[version.updated_by_id]
             item = QtWidgets.QTableWidgetItem(updated_by)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
@@ -232,7 +232,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
                 file_size = float(
                     os.path.getsize(absolute_full_path)) / 1048576
             
-            from stalker import defaults
+            from anima import defaults
             item = QtWidgets.QTableWidgetItem(
                 defaults.file_size_format % file_size
             )

@@ -136,7 +136,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         menu.addAction(u'\uf0c5 Copy URL')
         menu.addAction(u'\uf0c5 Copy ID to clipboard')
 
-        from anima import is_power_user
+        from anima import defaults
         from stalker import LocalSession
         local_session = LocalSession()
         logged_in_user = local_session.logged_in_user
@@ -155,7 +155,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 menu.addAction(u'\uf073 Create TimeLog...')
 
             # update task and create child task menu items
-            if is_power_user(logged_in_user):
+            if defaults.is_power_user(logged_in_user):
                 menu.addSeparator()
                 menu.addAction(u'\uf044 Update Task...')
                 menu.addAction(u'\uf0ae Create Child Task...')
@@ -190,7 +190,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             # this is a project!
             project = entity
             menu.addAction(u'\uf115 Create Project Structure')
-            if is_power_user(logged_in_user):
+            if defaults.is_power_user(logged_in_user):
                 menu.addSeparator()
                 menu.addAction(u'\uf044 Update Project...')
                 menu.addSeparator()
@@ -206,9 +206,9 @@ class TaskTreeView(QtWidgets.QTreeView):
         selected_item = menu.exec_(global_position)
         if selected_item:
             choice = selected_item.text()[2:]  # text without icon
-            import anima
+            from anima import defaults
             url = 'http://%s/%ss/%s/view' % (
-                anima.stalker_server_internal_address,
+                defaults.stalker_server_internal_address,
                 entity.entity_type.lower(),
                 entity.id
             )

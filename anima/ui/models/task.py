@@ -246,7 +246,7 @@ class TaskItem(QtGui.QStandardItem):
             # # TODO: update it later on
 
             # start = time.time()
-            from anima import status_colors_by_id
+            from anima import defaults
             task_items = []
             for task in tasks:
                 task_item = TaskItem(0, 3, entity=task)
@@ -254,7 +254,9 @@ class TaskItem(QtGui.QStandardItem):
 
                 # color with task status
                 task_item.setData(
-                    QtGui.QColor(*status_colors_by_id[task.status_id]),
+                    QtGui.QColor(
+                        *defaults.status_colors_by_id[task.status_id]
+                    ),
                     QtCore.Qt.BackgroundRole
                 )
 
