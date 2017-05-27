@@ -3,13 +3,8 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import os
-import shutil
-import copy
 
 import pymel.core as pm
-import maya.mel as mel
-import tempfile
 
 import re
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
@@ -413,6 +408,8 @@ def hair_from_curves():
         pm.rename(hair_dag, new_name)
 
     pm.select(hair_system, r=True)
+
+    import maya.mel as mel
     mel.eval('displayHairCurves("current", true')
 
     pm.delete(cpom)
@@ -540,6 +537,7 @@ def load_shelf_tab(shelf_path):
     """loads the given shelf tab
     """
     # look in to the shelf mel file from user folders
+    import os
     if os.path.exists(shelf_path):
         try:
             pm.mel.eval('loadNewShelf "%s"' % shelf_path)
@@ -601,6 +599,7 @@ def delete_shelf_tab(shelf_name, confirm=True):
     pm.windows.deleteUI('%s|%s' % (shelf_top_level_path, shelf_name), layout=1)
 
     # remove the shelf mel file from user folders
+    import os
     for path in pm.internalVar(userShelfDir=1).split(os.path.pathsep):
         shelf_file_name = 'shelf_%s.mel' % shelf_name
         shelf_file_full_path = os.path.join(path, shelf_file_name)
@@ -1491,6 +1490,7 @@ class Playblaster(object):
           options.
         :return: A string showing the path of the resultant movie file
         """
+        import copy
         playblast_options = copy.copy(self.global_playblast_options)
         playblast_options['sequenceTime'] = False
         playblast_options['percent'] = 50
@@ -1522,6 +1522,7 @@ class Playblaster(object):
             playblast_options['wh'] = (width, height)
 
         # output path
+        import os
         if 'filename' not in playblast_options:
             if self.version:
                 # use version.base_name
@@ -1534,6 +1535,7 @@ class Playblaster(object):
                     )
                 )[0]
             # also render to temp
+            import tempfile
             playblast_options['filename'] = \
                 os.path.join(tempfile.gettempdir(), filename)
 
@@ -1565,6 +1567,7 @@ class Playblaster(object):
     def playblast_shot(self, shot, extra_playblast_options=None):
         """does the real thing
         """
+        import copy
         shot_playblast_options = copy.copy(self.global_playblast_options)
 
         shot_playblast_options.update({
@@ -1648,6 +1651,7 @@ class Playblaster(object):
             generic_playblast_options['useTraxSounds'] = True
 
         temp_video_file_full_paths = []
+        import copy
         for shot in shots:
             per_shot_playblast_options = copy.copy(generic_playblast_options)
 
@@ -1719,6 +1723,7 @@ class Playblaster(object):
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
+        import os
         output_file_name = os.path.basename(output_file_full_path)
 
         hires_output_file_name = '%s%s' % (
@@ -1767,6 +1772,7 @@ class Playblaster(object):
         except OSError:
             pass
 
+        import shutil
         shutil.copy(output_file_full_path, hires_path)
 
         # generate the web version
@@ -1921,6 +1927,8 @@ def export_alembic_from_cache_node(handles=0, step=1):
     kill_all_torn_off_panels()
     maximize_first_model_panel()
 
+    import tempfile
+    import shutil
     for cacheable_node in cacheable_nodes:
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         if cacheable_attr_value == previous_cacheable_attr_value:

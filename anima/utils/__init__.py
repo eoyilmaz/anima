@@ -1543,8 +1543,14 @@ def create_project_structure(project):
         if line != '':
             try:
                 os.makedirs(line)
-            except OSError as e:
+            except OSError:
                 # path already exist
                 pass
 
-
+    # Generate folders for tasks
+    for t in project.tasks:
+        try:
+            os.makedirs(t.absolute_path)
+        except OSError:
+            # path already exist
+            pass

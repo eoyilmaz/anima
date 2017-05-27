@@ -281,7 +281,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         project = None
         if self.parent_task:
             if isinstance(self.parent_task, Task):
-                project = self.parent_task.project
+                project = Project.query.get(self.parent_task.project_id)
             elif isinstance(self.parent_task, Project):
                 project = self.parent_task
                 self.parent_task = None

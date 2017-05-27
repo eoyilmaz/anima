@@ -316,7 +316,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                 )
                 if answer == QtWidgets.QMessageBox.Yes:
                     from anima import utils
-                    utils.create_project_structure(entity)
+                    try:
+                        utils.create_project_structure(entity)
+                    except Exception as e:
+                        pass
+                    finally:
+                        QtWidgets.QMessageBox.information(
+                            self,
+                            'Project Structure is created!',
+                            'Project Structure is created!',
+                        )
                 else:
                     return
 

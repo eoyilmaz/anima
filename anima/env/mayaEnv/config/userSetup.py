@@ -9,8 +9,6 @@ import os
 import traceback
 import maya.cmds as cmds
 
-__version__ = "1.0.0"
-
 # ----------------------------------------------------------------------------
 # add environment variables relative to this path
 here = ""
@@ -46,6 +44,7 @@ for path in os.environ['PYTHONPATH'].split(os.path.pathsep):
 import pymel
 import pymel.core as pm
 from pymel import mayautils
+
 
 def __pluginLoader(pluginName):
     if not pm.pluginInfo(pluginName, q=1, loaded=1):
@@ -103,16 +102,6 @@ try:
 except pm.MayaNodeError:
     pass
 
-# set ui to PySide2 for maya2017
-if pymel.versions.current() > 201500:
-    print('setting QtLib to PySide2 inside userSetup.py')
-    from anima import ui
-    ui.SET_PYSIDE2()
-else:
-    print('setting QtLib to PySide inside userSetup.py')
-    from anima import ui
-    ui.SET_PYSIDE()
-
 
 if not pm.general.about(batch=1):
     # load shelves
@@ -152,6 +141,15 @@ if not pm.general.about(batch=1):
         settings.createArnoldTextureSettings = \
             arnold_patches.createArnoldTextureSettings
 
+    # set ui to PySide2 for maya2017
+    if pymel.versions.current() > 201500:
+        print('setting QtLib to PySide2 inside userSetup.py')
+        from anima import ui
+        ui.SET_PYSIDE2()
+    else:
+        print('setting QtLib to PySide inside userSetup.py')
+        from anima import ui
+        ui.SET_PYSIDE()
 
 # set CMD_EXTENSION for Afanasy
 os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
