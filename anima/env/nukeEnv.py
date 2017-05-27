@@ -4,16 +4,10 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-
 import os
-
-import jinja2
-from stalker.db import DBSession
-
 import nuke
-from .. import utils
 from anima.env import empty_reference_resolution
-from base import EnvironmentBase
+from anima.env.base import EnvironmentBase
 
 
 class Nuke(EnvironmentBase):
@@ -113,6 +107,7 @@ class Nuke(EnvironmentBase):
             version.parent = current_version
 
             # update database with new version info
+            from stalker.db.session import DBSession
             DBSession.commit()
 
         return True
@@ -336,7 +331,9 @@ class Nuke(EnvironmentBase):
         # but if it is not then expand all the paths to absolute paths
 
         # convert the given path to tcl environment script
-        def repPath(path):
+        from anima import utils
+
+        def rep_path(path):
             return utils.relpath(self.project_directory, path, "/", "..")
 
         # get all read nodes
@@ -354,7 +351,7 @@ class Nuke(EnvironmentBase):
             """helper function to replace path values
             """
             [node["file"].setValue(
-                repPath(
+                rep_path(
                     os.path.expandvars(
                         os.path.expanduser(
                             node["file"].getValue()
@@ -411,6 +408,7 @@ class Nuke(EnvironmentBase):
         shot = version.task
 
         # create a jinja2 template
+        import jinja2
         template = jinja2.Template("""Project: {{shot.project.name}}
 Shot: {{shot.name}}
 Frame Range: {{shot.cut_in}}-{{shot.cut_out}}

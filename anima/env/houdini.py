@@ -5,15 +5,8 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import re
-import logging
-
-from stalker.db import DBSession
-
 import hou
-from anima import utils, logger
-from anima.env import empty_reference_resolution
-from base import EnvironmentBase
+from anima.env.base import EnvironmentBase
 
 
 class Houdini(EnvironmentBase):
@@ -103,6 +96,7 @@ class Houdini(EnvironmentBase):
             version.parent = current_version
 
             # update database with new version info
+            from stalker.db.session import DBSession
             DBSession.commit()
 
         # create a local copy
@@ -133,6 +127,7 @@ class Houdini(EnvironmentBase):
             version.absolute_full_path
         )
 
+        from anima.env import empty_reference_resolution
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
@@ -185,6 +180,7 @@ class Houdini(EnvironmentBase):
             return
 
         # set the $JOB variable to the parent of version.full_path
+        from anima import logger
         logger.debug('version: %s' % version)
         logger.debug('version.path: %s' % version.absolute_path)
         logger.debug('version.filename: %s' % version.filename)
@@ -242,6 +238,7 @@ class Houdini(EnvironmentBase):
 
         pattern = r'[-0-9\.]+'
 
+        import re
         start_frame = int(
             hou.timeToFrame(
                 float(re.search(pattern, time_info[2]).group(0))
@@ -324,6 +321,7 @@ class Houdini(EnvironmentBase):
         while "$" in job:
             job = os.path.expandvars(job)
 
+        from anima import utils
         job_relative_output_file_path = \
             "$JOB/%s" % utils.relpath(job, output_filename, "/", "..")
 

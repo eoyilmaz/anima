@@ -6,12 +6,12 @@
 import os
 import shutil
 from sqlalchemy import distinct
-from stalker import db, Project, Task, Version
+from stalker import Project, Version
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.models import TaskTreeView, TaskTreeModel
-
+from anima.ui.views.task import TaskTreeView
+from anima.ui.models.task import TaskTreeModel
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -222,9 +222,10 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
 
         # get take names and related versions
         # get distinct take names
+        from stalker.db.session import DBSession
         from_take_names = map(
             lambda x: x[0],
-            db.DBSession.query(distinct(Version.take_name))
+            DBSession.query(distinct(Version.take_name))
             .filter(Version.task == from_task)
             .order_by(Version.take_name)
             .all()
@@ -264,13 +265,13 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
                     'Moved from another task (id=%s) with Version Mover' % \
                     latest_version.task.id
                 new_version.created_with = latest_version.created_with
-                db.DBSession.add(new_version)
-                db.DBSession.commit()
+                DBSession.add(new_version)
+                DBSession.commit()
 
                 # update path
                 new_version.update_paths()
-                db.DBSession.add(new_version)
-                db.DBSession.commit()
+                DBSession.add(new_version)
+                DBSession.commit()
 
                 # now copy the last_version file to the new_version path
                 try:

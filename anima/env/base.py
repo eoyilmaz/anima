@@ -205,10 +205,11 @@ class EnvironmentBase(object):
         os_independent_path = Repository.to_os_independent_path(path)
         logger.debug('os_independent_path: %s' % os_independent_path)
 
-        from stalker import db, Version
+        from stalker import Version
+        from stalker.db.session import DBSession
 
         # try to get all versions with that info
-        with db.DBSession.no_autoflush:
+        with DBSession.no_autoflush:
             versions = Version.query.\
                 filter(Version.full_path.startswith(os_independent_path)).all()
 

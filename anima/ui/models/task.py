@@ -218,7 +218,7 @@ class TaskItem(QtGui.QStandardItem):
 
         if self.canFetchMore():
             from sqlalchemy import alias
-            from stalker import db, Task
+            from stalker import Task
             from stalker.db.session import DBSession
 
             inner_tasks = alias(Task.__table__)
@@ -373,8 +373,9 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             'TaskTreeModel.hasChildren() is started for index: %s' % index
         )
         if not index.isValid():
-            from stalker import db, Project
-            projects_count = db.DBSession.query(Project.id).count()
+            from stalker import Project
+            from stalker.db.session import DBSession
+            projects_count = DBSession.query(Project.id).count()
             return_value = projects_count > 0
         else:
             item = self.itemFromIndex(index)

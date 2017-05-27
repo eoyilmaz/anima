@@ -54,7 +54,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.setupUi(self)
 
         # customize the ui elements
-        from anima.ui.models import TaskComboBox
+        from anima.ui.widgets import TaskComboBox
         self.tasks_comboBox = TaskComboBox(self)
         self.tasks_comboBox.setObjectName("tasks_comboBox")
         self.formLayout.setWidget(
@@ -64,7 +64,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         )
 
         # self.start_timeEdit.deleteLater()
-        from anima.ui.models import TimeEdit
+        from anima.ui.widgets import TimeEdit
         self.start_timeEdit = TimeEdit(self, resolution=timing_resolution)
         self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
         self.start_timeEdit.setCalendarPopup(True)
@@ -270,7 +270,6 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         if self.calendarWidget.resource_id == resource_id or resource_id == -1:
             return
 
-        from stalker import db
         tool_tip_text_format = u'{start:%H:%M} - {end:%H:%M} | {task_name}'
 
         # import time
@@ -318,7 +317,8 @@ group by cast("TimeLogs".start as date)
 order by cast("TimeLogs".start as date)
         """
         from sqlalchemy import text
-        result = db.DBSession.connection().execute(
+        from stalker.db.session import DBSession
+        result = DBSession.connection().execute(
             text(sql),
             resource_id=resource_id
         ).fetchall()
@@ -403,9 +403,10 @@ order by cast("TimeLogs".start as date)
         """returns the current resource
         """
         resource_name = self.resource_comboBox.currentText()
-        from stalker import db, User
-        return db.DBSession\
-            .query(User.id).filter(User.name == resource_name)\
+        from stalker import User
+        from stalker.db.session import DBSession
+        return DBSession.query(User.id)\
+            .filter(User.name == resource_name)\
             .first()
 
     def start_time_changed(self, q_time):
@@ -596,7 +597,8 @@ order by cast("TimeLogs".start as date)
         # print('utc_end_date  : %s' % utc_end_date)
 
         # now if we are not using extra time just create the TimeLog
-        from stalker import db, TimeLog
+        from stalker import TimeLog
+        from stalker.db.session import DBSession
         from stalker.exceptions import OverBookedError
         utc_now = local_to_utc(datetime.datetime.now())
 
@@ -609,6 +611,7 @@ order by cast("TimeLogs".start as date)
             utc_end_date = utc_end_date.replace(tzinfo=pytz.utc)
             utc_now = utc_now.replace(tzinfo=pytz.utc)
 
+        from sqlalchemy.exc import IntegrityError
         if not self.timelog:
             try:
                 new_time_log = TimeLog(
@@ -626,16 +629,15 @@ order by cast("TimeLogs".start as date)
                     'Error',
                     'O saatte baska time log var!!!'
                 )
-                db.DBSession.rollback()
+                DBSession.rollback()
                 return
 
-            from sqlalchemy.exc import IntegrityError
             try:
-                db.DBSession.add(new_time_log)
-                db.DBSession.commit()
+                DBSession.add(new_time_log)
+                DBSession.commit()
                 self.timelog_created = True
             except IntegrityError as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -649,8 +651,8 @@ order by cast("TimeLogs".start as date)
             self.timelog.start = utc_start_date
             self.timelog.end = utc_end_date
             self.timelog.date_updated = utc_now
-            db.DBSession.add(self.timelog)
-            db.DBSession.commit()
+            DBSession.add(self.timelog)
+            DBSession.commit()
 
         if self.no_time_left:
             # we have no time left so automatically extend the task
@@ -675,11 +677,11 @@ order by cast("TimeLogs".start as date)
                 created_by=self.logged_in_user,
                 date_created=utc_now
             )
-            db.DBSession.add(new_note)
+            DBSession.add(new_note)
             task.notes.append(new_note)
 
             try:
-                db.DBSession.commit()
+                DBSession.commit()
             except IntegrityError as e:
                 QtWidgets.QMessageBox.critical(
                     self,
@@ -688,7 +690,7 @@ order by cast("TimeLogs".start as date)
                     '<br>'
                     '%s' % e
                 )
-                db.DBSession.rollback()
+                DBSession.rollback()
                 return
 
         if is_complete:
@@ -708,10 +710,10 @@ order by cast("TimeLogs".start as date)
                 created_by=self.logged_in_user,
                 date_created=utc_now
             )
-            db.DBSession.add(new_note)
+            DBSession.add(new_note)
             task.notes.append(new_note)
             task.status = status_cmpl
-            db.DBSession.commit()
+            DBSession.commit()
 
         elif submit_to_final_review:
             # clip the Task timing to current time logs
@@ -723,10 +725,10 @@ order by cast("TimeLogs".start as date)
 
             task.schedule_timing = schedule_timing
             task.schedule_unit = schedule_unit
-            db.DBSession.add(task)
+            DBSession.add(task)
 
             try:
-                db.DBSession.commit()
+                DBSession.commit()
             except IntegrityError as e:
                 QtWidgets.QMessageBox.critical(
                     self,
@@ -735,7 +737,7 @@ order by cast("TimeLogs".start as date)
                     '<br>'
                     '%s' % e
                 )
-                db.DBSession.rollback()
+                DBSession.rollback()
                 return
 
             # request a review
@@ -744,7 +746,7 @@ order by cast("TimeLogs".start as date)
                 review.created_by = review.updated_by = self.logged_in_user
                 review.date_created = utc_now
                 review.date_updated = utc_now
-            db.DBSession.add_all(reviews)
+            DBSession.add_all(reviews)
 
             # and create a Note for the Task
             request_review_note_type = \
@@ -759,13 +761,14 @@ order by cast("TimeLogs".start as date)
                 created_by=self.logged_in_user,
                 date_created=utc_now
             )
-            db.DBSession.add(request_review_note)
-            db.DBSession.add(task)
+            DBSession.add(request_review_note)
+            DBSession.add(task)
             task.notes.append(request_review_note)
 
             try:
-                db.DBSession.commit()
+                DBSession.commit()
             except IntegrityError as e:
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -773,15 +776,165 @@ order by cast("TimeLogs".start as date)
                     '<br>'
                     '%s' % e
                 )
-                db.DBSession.rollback()
                 return
 
-        # Fix statuses
-        task.update_parent_statuses()
-        for dep_task in task.dependent_of:
-            dep_task.update_status_with_dependent_statuses()
-
-        db.DBSession.commit()
+        # # Fix statuses
+        # task.update_parent_statuses()
+        # for dep_task in task.dependent_of:
+        #     dep_task.update_status_with_dependent_statuses()
+        fix_task_statuses(task)
+        try:
+            DBSession.commit()
+        except IntegrityError as e:
+            DBSession.rollback()
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Database hatasi!!!'
+                '<br>'
+                '%s' % e
+            )
+            return
 
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()
+
+
+# The following functions are coming from Stalker Pyramid
+def check_task_status_by_schedule_model(task):
+    """after scheduling project checks the task statuses
+    """
+    logger.debug('check_task_status_by_schedule_model starts')
+
+    from stalker import Status
+    status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+    if task.is_leaf and task.schedule_model == 'duration':
+        depends_tasks_cmpl = True
+        for dependent_task in task.depends:
+            if dependent_task.status is not status_cmpl:
+                depends_tasks_cmpl = False
+
+        if depends_tasks_cmpl:
+            task.status = status_cmpl
+
+
+def fix_task_statuses(task):
+    """fixes task statuses
+    """
+    from stalker import Task
+    if task:
+        assert isinstance(task, Task)
+        task.update_status_with_dependent_statuses()
+        task.update_status_with_children_statuses()
+        task.update_schedule_info()
+
+        check_task_status_by_schedule_model(task)
+        fix_task_computed_time(task)
+
+
+def fix_task_computed_time(task):
+    """Fix task's computed_start and computed_end time based on timelogs of the given task.
+
+    :param task: The stalker task instance that the time log will be
+      investigated.
+    :type task: :class:`stalker.models.task.Task`
+    :return: :class:`datetime.datetime`
+    """
+    if task.status.code not in ['CMPL', 'STOP', 'OH']:
+        return
+
+    else:
+        start_time = get_actual_start_time(task)
+        end_time = get_actual_end_time(task)
+
+        task.computed_start = start_time
+        task.computed_end = end_time
+
+        logger.debug('Task computed time is fixed!')
+
+
+def get_actual_start_time(task):
+    """Returns the start time of the earliest time logs of the given task if it
+    has any time logs, or it will return the task start_time.
+
+    :param task: The stalker task instance that the time log will be
+      investigated.
+    :type task: :class:`stalker.models.task.Task`
+    :return: :class:`datetime.datetime`
+    """
+    from stalker import Task, TimeLog
+
+    if not isinstance(task, Task):
+        raise TypeError(
+            'task should be an instance of stalker.models.task.Task, not %s' %
+            task.__class__.__name__
+        )
+
+    first_time_log = TimeLog.query\
+        .filter(TimeLog.task == task)\
+        .order_by(TimeLog.start.asc())\
+        .first()
+
+    if first_time_log:
+        return first_time_log.start
+    else:
+        if task.schedule_model == 'duration':
+            start_time = task.project.start
+            for tdep in task.depends:
+                if tdep.computed_end > start_time:
+                    start_time = tdep.computed_end
+            return start_time
+
+    return task.computed_start
+
+
+def get_actual_end_time(task):
+    """Returns the end time of the latest time logs of the given task if it
+    has any time logs, or it will return the task end_time.
+
+    :param task: The stalker task instance that the time log will be
+      investigated.
+    :type task: :class:`stalker.models.task.Task`
+    :return: :class:`datetime.datetime`
+    """
+    from stalker import Task, TimeLog
+
+    if not isinstance(task, Task):
+        raise TypeError(
+            'task should be an instance of stalker.models.task.Task, not %s' %
+            task.__class__.__name__
+        )
+
+    end_time_log = TimeLog.query\
+        .filter(TimeLog.task == task)\
+        .order_by(TimeLog.end.desc())\
+        .first()
+
+    if end_time_log:
+        return end_time_log.end
+    else:
+        if task.schedule_model == 'duration':
+            end_time = task.project.start
+            import datetime
+            for tdep in task.depends:
+                if tdep.computed_end > end_time:
+                    duration = datetime.timedelta(minutes=0)
+                    if task.schedule_unit == 'min':
+                        duration = \
+                            datetime.timedelta(minutes=task.schedule_timing)
+                    elif task.schedule_unit == 'h':
+                        duration = \
+                             datetime.timedelta(hours=task.schedule_timing)
+                    elif task.schedule_unit == 'd':
+                        duration = \
+                            datetime.timedelta(days=task.schedule_timing)
+                    elif task.schedule_unit == 'w':
+                        duration = \
+                            datetime.timedelta(weeks=task.schedule_timing)
+                    elif task.schedule_unit == 'm':
+                        duration = \
+                            datetime.timedelta(weeks=4*task.schedule_timing)
+                    end_time = tdep.computed_end + duration
+            return end_time
+
+    return task.computed_end

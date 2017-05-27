@@ -127,7 +127,8 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
         linux_path = self.linux_path_lineEdit.text()
         osx_path = self.osx_path_lineEdit.text()
 
-        from stalker import db, Repository
+        from stalker import Repository
+        from stalker.db.session import DBSession
         logged_in_user = self.get_logged_in_user()
         if self.mode == 'Create':
             # Create a new Repository
@@ -139,10 +140,10 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
                     osx_path=osx_path
                 )
                 self.repository = repo
-                db.DBSession.add(repo)
-                db.DBSession.commit()
+                DBSession.add(repo)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -158,10 +159,10 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
                 self.repository.linux_path = linux_path
                 self.repository.osx_path = osx_path
                 self.repository.updated_by = logged_in_user
-                db.DBSession.add(self.repository)
-                db.DBSession.commit()
+                DBSession.add(self.repository)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

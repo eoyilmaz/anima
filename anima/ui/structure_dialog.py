@@ -309,7 +309,8 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         filename_templates = FilenameTemplate.query\
             .filter(FilenameTemplate.id.in_(filename_template_ids)).all()
 
-        from stalker import db, Structure
+        from stalker import Structure
+        from stalker.db.session import DBSession
         logged_in_user = self.get_logged_in_user()
         if self.mode == 'Create':
             # Create a new Structure
@@ -321,10 +322,10 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
                     created_by=logged_in_user
                 )
                 self.structure = structure
-                db.DBSession.add(structure)
-                db.DBSession.commit()
+                DBSession.add(structure)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -339,10 +340,10 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
                 self.structure.templates = filename_templates
                 self.structure.custom_template = custom_template
                 self.structure.updated_by = logged_in_user
-                db.DBSession.add(self.structure)
-                db.DBSession.commit()
+                DBSession.add(self.structure)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

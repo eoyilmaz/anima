@@ -91,10 +91,11 @@ class Config(ConfigBase):
         if not self._user_names_lut:
             from anima.utils import do_db_setup
             do_db_setup()
-            from stalker import db, User
+            from stalker import User
+            from stalker.db.session import DBSession
             map(
                 lambda x: self._user_names_lut.__setitem__(x[0], x[1]),
-                db.DBSession.query(User.id, User.name).all()
+                DBSession.query(User.id, User.name).all()
             )
         return self._user_names_lut
 

@@ -431,9 +431,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     # publish it
                     version.is_published = True
                     version.updated_by = logged_in_user
-                    from stalker import db
-                    db.DBSession.add(version)
-                    db.DBSession.commit()
+                    from stalker.db.session import DBSession
+                    DBSession.add(version)
+                    DBSession.commit()
                     # refresh the tableWidget
                     self.update_previous_versions_table_widget()
                     return
@@ -468,9 +468,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     else:
                         version.is_published = False
                         version.updated_by = logged_in_user
-                        from stalker import db
-                        db.DBSession.add(version)
-                        db.DBSession.commit()
+                        from stalker.db.session import DBSession
+                        DBSession.add(version)
+                        DBSession.commit()
                         # refresh the tableWidget
                         self.update_previous_versions_table_widget()
                 elif choice == 'Delete':
@@ -591,9 +591,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                         # change the description of the version
                         version.description = new_description
 
-                        from stalker import db
-                        db.DBSession.add(version)
-                        db.DBSession.commit()
+                        from stalker.db.session import DBSession
+                        DBSession.add(version)
+                        DBSession.commit()
 
                         # update the previous_versions_tableWidget
                         self.update_previous_versions_table_widget()
@@ -749,8 +749,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             logger.debug('clear takes widget')
             self.takes_listWidget.clear()
 
-            from stalker import db, SimpleEntity
-            entity_type = db.DBSession\
+            from stalker import SimpleEntity
+            from stalker.db.session import DBSession
+            entity_type = DBSession\
                 .query(SimpleEntity.entity_type)\
                 .filter(SimpleEntity.id == task_id)\
                 .first()
@@ -758,8 +759,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             if entity_type == "Project":
                 return
 
-            from stalker import db, Task
-            children_count = db.DBSession.query(Task.id)\
+            from stalker import Task
+            from stalker.db.session import DBSession
+            children_count = DBSession.query(Task.id)\
                 .filter(Task.parent_id == task_id)\
                 .count()
 
@@ -770,7 +772,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 FROM "Versions"
                 WHERE "Versions".task_id = :task_id
                 """
-                result = db.DBSession\
+                result = DBSession\
                     .connection()\
                     .execute(text(sql), task_id=task_id)\
                     .fetchall()
@@ -1038,8 +1040,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # do not display any version for a container task
-        from stalker import db
-        children_count = db.DBSession\
+        from stalker.db.session import DBSession
+        children_count = DBSession\
             .query(Task.id)\
             .filter(Task.parent_id == task_id)\
             .count()
@@ -1057,8 +1059,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             return
 
         # query the Versions of this type and take
-        from stalker import db, Version
-        query = db.DBSession.query(
+        from stalker import Version
+        query = DBSession.query(
             # use only the necessary fields
             Version.id, Version.version_number,
             Version.is_published, Version.created_with,
@@ -1160,8 +1162,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
             )
-            from stalker import db
-            db.DBSession.rollback()
+            from stalker.db.session import DBSession
+            DBSession.rollback()
             return
 
         # call the environments export_as method
@@ -1177,11 +1179,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                     'Error',
                     error_message
                 )
-                from stalker import db
-                db.DBSession.rollback()
+                from stalker.db.session import DBSession
+                DBSession.rollback()
                 return
 
-            # inform the user about what happened
+            # inform the user about what has happened
             if logger.level != logging.DEBUG:
                 QtWidgets.QMessageBox.information(
                     self,
@@ -1220,11 +1222,11 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         :return:
         """
         # get the new version
-        from stalker import db
+        from stalker.db.session import DBSession
         try:
             new_version = self.get_new_version()
             new_version.is_published = publish
-            db.DBSession.add(new_version)
+            DBSession.add(new_version)
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
             try:
@@ -1233,7 +1235,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 error_message = unicode(e)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
 
-            db.DBSession.rollback()
+            DBSession.rollback()
             return None
 
         if not new_version:
@@ -1246,7 +1248,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 'Error',
                 'Please select a <strong>leaf</strong> task!'
             )
-            db.DBSession.rollback()
+            DBSession.rollback()
             return
 
         # call the environments save_as method
@@ -1264,7 +1266,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
             is_external_env = True
             if not environment:
                 logger.debug('no env found with name: %s' % env_name)
-                db.DBSession.rollback()
+                DBSession.rollback()
                 return
             logger.debug('env: %s' % environment.name)
         else:
@@ -1293,7 +1295,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
                     if answer == QtWidgets.QMessageBox.No:
                         # no, just return
-                        db.DBSession.rollback()
+                        DBSession.rollback()
                         return
 
         from anima.exc import PublishError
@@ -1312,7 +1314,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 error_message
             )
 
-            db.DBSession.rollback()
+            DBSession.rollback()
             return
 
         if is_external_env:
@@ -1349,8 +1351,8 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
                 'and the file is not created!\n\n'
                 'Please save again!' % environment.name
             )
-            db.DBSession.rollback()
-        db.DBSession.commit()
+            DBSession.rollback()
+        DBSession.commit()
 
         if is_external_env:
             # refresh the UI
@@ -1644,8 +1646,9 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         if not task_id:
             return
 
-        from stalker import db, SimpleEntity
-        thumb_id = db.DBSession\
+        from stalker import SimpleEntity
+        from stalker.db.session import DBSession
+        thumb_id = DBSession\
             .query(SimpleEntity.thumbnail_id)\
             .filter(SimpleEntity.id == task_id)\
             .first()
@@ -1664,15 +1667,15 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
-            from stalker import db, Link
+            from stalker import Link
             t = Link.query.filter(Link.id == thumb_id).first()
-            db.DBSession.delete(t)
+            DBSession.delete(t)
             if t.thumbnail:
-                db.DBSession.delete(t.thumbnail)
+                DBSession.delete(t.thumbnail)
                 if t.thumbnail.thumbnail:
-                    db.DBSession.delete(t.thumbnail.thumbnail)
+                    DBSession.delete(t.thumbnail.thumbnail)
             # leave the files there
-            db.DBSession.commit()
+            DBSession.commit()
 
             # update the thumbnail
             self.clear_thumbnail()

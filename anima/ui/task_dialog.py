@@ -58,6 +58,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         self.last_selected_dependent_task = None
 
+        self.cutOut_spinBox.setMaximum(999999)
         # add self.parent_task_lineEdit
         from anima.ui.widgets import ValidatedLineEdit
 
@@ -291,8 +292,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.set_parent_task(self.parent_task)
 
         # task types
-        from stalker import db, Type
-        all_task_type_names = db.DBSession.query(Type.name)\
+        from stalker import Type
+        from stalker.db.session import DBSession
+        all_task_type_names = DBSession.query(Type.name)\
             .filter(Type.target_entity_type == 'Task')\
             .order_by(Type.name.asc())\
             .all()
@@ -303,7 +305,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         # asset types
         from stalker import Type
-        all_asset_type_names = db.DBSession.query(Type.name)\
+        all_asset_type_names = DBSession.query(Type.name)\
             .filter(Type.target_entity_type == 'Asset')\
             .order_by(Type.name.asc())\
             .all()
@@ -314,7 +316,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         # sequences
         from stalker import Sequence
-        all_sequence_names = db.DBSession\
+        all_sequence_names = DBSession\
             .query(Sequence.name)\
             .filter(Sequence.project == project)\
             .all()
@@ -393,8 +395,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         self.fps_spinBox.setValue(self.task.project.fps)
 
         # sequences
-        from stalker import db, Sequence
-        all_sequence_names = db.DBSession \
+        from stalker import Sequence
+        from stalker.db.session import DBSession
+        all_sequence_names = DBSession \
             .query(Sequence.name) \
             .filter(Sequence.project == task.project) \
             .order_by(Sequence.name.asc()) \
@@ -743,8 +746,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         # reset resources
         # add resources
         from anima import defaults
-        from stalker import db, Project, User, ProjectUser
-        all_project_user_ids = db.DBSession.query(User.id)\
+        from stalker import Project, User, ProjectUser
+        from stalker.db.session import DBSession
+        all_project_user_ids = DBSession.query(User.id)\
             .join(ProjectUser)\
             .join(Project)\
             .filter(Project.name == project_name)\
@@ -1079,7 +1083,8 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         code = self.code_lineEdit.text()
 
         # Task Type
-        from stalker import db, Type
+        from stalker import Type
+        from stalker.db.session import DBSession
         task_type_name = self.task_type_comboBox.currentText()
         task_type = None
         if task_type_name:
@@ -1094,7 +1099,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     code=task_type_name,
                     target_entity_type='Task'
                 )
-                db.DBSession.add(task_type)
+                DBSession.add(task_type)
 
         # Asset Type
         asset_type_name = self.asset_type_comboBox.currentText()
@@ -1111,7 +1116,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
                     code=asset_type_name,
                     target_entity_type='Asset'
                 )
-                db.DBSession.add(asset_type)
+                DBSession.add(asset_type)
 
         # Sequence
         from stalker import Sequence
@@ -1183,10 +1188,10 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             # Create
             try:
                 task = entity_class(**kwargs)
-                db.DBSession.add(task)
-                db.DBSession.commit()
+                DBSession.add(task)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -1210,7 +1215,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             try:
                 self.task.parent = parent_task
             except CircularDependencyError as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -1229,7 +1234,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             try:
                 self.task.depends = depends
             except CircularDependencyError as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -1262,10 +1267,10 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
             self.task.date_updated = utc_now
             try:
-                db.DBSession.add(self.task)
-                db.DBSession.commit()
+                DBSession.add(self.task)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

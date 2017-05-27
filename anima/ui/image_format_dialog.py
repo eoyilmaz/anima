@@ -128,7 +128,8 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
         height = self.height_spinBox.value()
         pixel_aspect = self.pixel_aspect_doubleSpinBox.value()
 
-        from stalker import db, ImageFormat
+        from stalker import ImageFormat
+        from stalker.db.session import DBSession
         logged_in_user = self.get_logged_in_user()
         if self.mode == 'Create':
             # Create a new Image Format
@@ -141,10 +142,10 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
                     created_by=logged_in_user
                 )
                 self.image_format = imf
-                db.DBSession.add(imf)
-                db.DBSession.commit()
+                DBSession.add(imf)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -160,10 +161,10 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
                 self.image_format.height = height
                 self.image_format.pixel_aspect = pixel_aspect
                 self.image_format.updated_by = logged_in_user
-                db.DBSession.add(self.image_format)
-                db.DBSession.commit()
+                DBSession.add(self.image_format)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

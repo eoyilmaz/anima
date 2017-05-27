@@ -55,7 +55,7 @@ class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialog
 
         # create the custom task tree view
 
-        from anima.ui.models import TaskTreeView
+        from anima.ui.views.task import TaskTreeView
         self.tasks_treeView = TaskTreeView(project=project)
 
         self.tasks_treeView.replace_with_other(
@@ -63,7 +63,7 @@ class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialog
             0
         )
 
-        self.tasks_treeView.fill(self.get_logged_in_user())
+        self.tasks_treeView.fill()
 
         # setup the double click signal
         QtCore.QObject.connect(

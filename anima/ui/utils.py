@@ -155,7 +155,7 @@ def upload_thumbnail(task, thumbnail_full_path):
 
     shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
 
-    from stalker import db, Link, Version, Repository
+    from stalker import Link, Version, Repository
 
     thumbnail_os_independent_path = \
         Repository.to_os_independent_path(thumbnail_final_full_path)
@@ -171,15 +171,16 @@ def upload_thumbnail(task, thumbnail_full_path):
     task.thumbnail = l_thumb
 
     # get a version of this Task
+    from stalker.db.session import DBSession
     v = Version.query.filter(Version.task == task).first()
     if v:
         for naming_parent in v.naming_parents:
             if not naming_parent.thumbnail:
                 naming_parent.thumbnail = l_thumb
-                db.DBSession.add(naming_parent)
+                DBSession.add(naming_parent)
 
-    db.DBSession.add(l_thumb)
-    db.DBSession.commit()
+    DBSession.add(l_thumb)
+    DBSession.commit()
 
 
 def choose_thumbnail(parent):

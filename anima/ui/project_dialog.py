@@ -184,9 +184,10 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         self.code_lineEdit.set_invalid('Enter a code')
 
         # update type field
-        from stalker import db, Type
+        from stalker import Type
+        from stalker.db.session import DBSession
         project_types = \
-            db.DBSession.query(Type.id, Type.name)\
+            DBSession.query(Type.id, Type.name)\
                 .filter(Type.target_entity_type == 'Project')\
                 .order_by(Type.name)\
                 .all()
@@ -211,7 +212,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
     where "StatusLists".target_entity_type = 'Project'"""
 
         all_project_statuses = \
-            db.DBSession.connection().execute(sql).fetchall()
+            DBSession.connection().execute(sql).fetchall()
 
         for st_id, st_name in all_project_statuses:
             self.status_comboBox.addItem(st_name, st_id)
@@ -220,8 +221,9 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         """fills the repository_comboBox with Repository instances
         """
         # fill the repository field
-        from stalker import db, Repository
-        all_repos = db.DBSession \
+        from stalker import Repository
+        from stalker.db.session import DBSession
+        all_repos = DBSession \
             .query(Repository.id, Repository.name) \
             .order_by(Repository.name) \
             .all()
@@ -233,8 +235,9 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         """fills the structure_comboBox with Structure instances
         """
         # fill the structure field
-        from stalker import db, Structure
-        all_structures = db.DBSession \
+        from stalker import Structure
+        from stalker.db.session import DBSession
+        all_structures = DBSession \
             .query(Structure.id, Structure.name) \
             .order_by(Structure.name) \
             .all()
@@ -246,8 +249,9 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         """fills the image_format_comboBox
         """
         # fill the image format field
-        from stalker import db, ImageFormat
-        all_image_formats = db.DBSession \
+        from stalker import ImageFormat
+        from stalker.db.session import DBSession
+        all_image_formats = DBSession \
             .query(ImageFormat.id, ImageFormat.name, ImageFormat.width,
                    ImageFormat.height) \
             .order_by(ImageFormat.name) \
@@ -619,7 +623,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         logged_in_user = self.get_logged_in_user()
 
         # create or update project
-        from stalker import db
+        from stalker.db.session import DBSession
         if self.mode == 'Create':
             # create a new project
             from stalker import Project
@@ -633,11 +637,11 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
                 fps=fps,
                 created_by=logged_in_user
             )
-            db.DBSession.add(new_project)
+            DBSession.add(new_project)
             try:
-                db.DBSession.commit()
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -655,11 +659,11 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.project.structure = structure
             self.project.image_format = image_format
             self.project.fps = fps
-            db.DBSession.add(self.project)
+            DBSession.add(self.project)
             try:
-                db.DBSession.commit()
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

@@ -1797,7 +1797,8 @@ class Playblaster(object):
         project = task.project
         repo = project.repository
 
-        from stalker import db, Link
+        from stalker import Link
+        from stalker.db.session import DBSession
 
         # try to find a file with the same name assigned to the version as
         # output
@@ -1830,8 +1831,8 @@ class Playblaster(object):
             )
             l_for_web.thumbnail = l_thumb
 
-            db.DBSession.add_all([l_hires, l_for_web, l_thumb])
-            db.DBSession.commit()
+            DBSession.add_all([l_hires, l_for_web, l_thumb])
+            DBSession.commit()
 
         return hires_path
 

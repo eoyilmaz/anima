@@ -481,9 +481,6 @@ class TaskTreeView(QtWidgets.QTreeView):
 
             if current_item:
                 task_id = current_item.task.id
-                # if task_id:
-                #     from stalker import db, Task
-                #     task = Task.query.get(task_id)
 
         logger.debug('task_id: %s' % task_id)
         return task_id

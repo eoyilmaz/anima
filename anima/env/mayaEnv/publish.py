@@ -1745,8 +1745,8 @@ def update_audit_info():
         if v:
             v.updated_by = logged_in_user
 
-            from stalker import db
-            db.DBSession.commit()
+            from stalker.db.session import DBSession
+            DBSession.commit()
 
 
 @publisher(publisher_type=POST_PUBLISHER_TYPE)
@@ -1813,7 +1813,8 @@ def update_shot_range():
 
     update shot range
     """
-    from stalker import db, Shot
+    from stalker import Shot
+    from stalker.db.session import DBSession
     from anima.env import mayaEnv
     m = mayaEnv.Maya()
     v = m.get_current_version()
@@ -1825,7 +1826,7 @@ def update_shot_range():
         end_frame = shot_node.endFrame.get()
         shot.cut_in = int(start_frame)
         shot.cut_out = int(end_frame)
-        db.DBSession.commit()
+        DBSession.commit()
 
 
 @publisher(['animation', 'pose', 'mocap'], publisher_type=POST_PUBLISHER_TYPE)
@@ -1940,7 +1941,7 @@ def export_edl_and_xml():
         caller.step()
 
     # create EDL and XML files
-    from stalker import db
+    from stalker.db.session import DBSession
     from anima import utils
     mm = utils.MediaManager()
 
@@ -1951,7 +1952,7 @@ def export_edl_and_xml():
 
     with open(edl_file_full_path, 'r') as f:
         link = mm.upload_version_output(current_version, f, edl_file_name)
-        db.DBSession.add(link)
+        DBSession.add(link)
 
     # XML
     x = sm.to_xml()
@@ -1960,10 +1961,10 @@ def export_edl_and_xml():
 
     with open(xml_file_full_path, 'r') as f:
         link = mm.upload_version_output(current_version, f, xml_file_name)
-        db.DBSession.add(link)
+        DBSession.add(link)
 
     # add the link to database
-    db.DBSession.commit()
+    DBSession.commit()
 
     # revert the handles to 0
     for shot in pm.ls(type='shot'):

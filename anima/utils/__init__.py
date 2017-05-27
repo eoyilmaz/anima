@@ -236,23 +236,20 @@ def do_db_setup():
     """the common routing for setting up the database
     """
     from sqlalchemy.exc import UnboundExecutionError
-
-    from stalker import db
-    from stalker.db import DBSession
-
-    DBSession.remove()
-    DBSession.close()
-
+    from stalker.db.session import DBSession
     try:
         DBSession.connection()
         logger.debug('already connected, not creating any new connections')
     except UnboundExecutionError:
+        # DBSession.remove()
+        # DBSession.close()
         # no connection do setup
         logger.debug('doing a new connection with NullPool')
         from anima import defaults
         from sqlalchemy.pool import NullPool
         settings = defaults.database_engine_settings
         settings['sqlalchemy.poolclass'] = NullPool
+        from stalker import db
         db.setup(settings)
 
 

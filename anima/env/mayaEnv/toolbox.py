@@ -2045,7 +2045,8 @@ class Reference(object):
         # Create LookDev for Current Model Task
         #
 
-        from stalker import db, Task, Version, Type, LocalSession
+        from stalker import Task, Version, Type, LocalSession
+        from stalker.db.session import DBSession
         from anima import defaults
         from anima.env import mayaEnv
 
@@ -2115,7 +2116,7 @@ class Reference(object):
             )
 
             pm.saveFile()
-            db.DBSession.add(new_version)
+            DBSession.add(new_version)
 
         else:
             latest_look_dev_version = previous_look_dev_version.latest_version
@@ -2186,7 +2187,7 @@ class Reference(object):
             if not result:
                 return
 
-        from stalker import db, LocalSession
+        from stalker import LocalSession
         from anima.env import mayaEnv
         m = mayaEnv.Maya()
 
@@ -2200,7 +2201,8 @@ class Reference(object):
         for version in versions:
             version.created_by = logged_in_user
 
-        db.DBSession.commit()
+        from stalker.db.session import DBSession
+        DBSession.commit()
 
     @classmethod
     def fix_reference_paths(cls):

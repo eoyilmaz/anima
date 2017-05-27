@@ -236,10 +236,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return
 
-        from stalker import db, FilenameTemplate
         logged_in_user = self.get_logged_in_user()
+        from stalker.db.session import DBSession
         if self.mode == 'Create':
             try:
+                from stalker import FilenameTemplate
                 # create a new FilenameTemplate
                 ft = FilenameTemplate(
                     name=name,
@@ -249,10 +250,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     created_by=logged_in_user
                 )
                 self.filename_template = ft
-                db.DBSession.add(ft)
-                db.DBSession.commit()
+                DBSession.add(ft)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
@@ -265,10 +266,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 self.filename_template.path = path
                 self.filename_template.filename = filename
                 self.filename_template.updated_by = logged_in_user
-                db.DBSession.add(self.filename_template)
-                db.DBSession.commit()
+                DBSession.add(self.filename_template)
+                DBSession.commit()
             except Exception as e:
-                db.DBSession.rollback()
+                DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',

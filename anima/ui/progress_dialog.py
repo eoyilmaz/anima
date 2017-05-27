@@ -4,7 +4,6 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from anima.base import Singleton
-from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class ProgressCaller(object):
@@ -70,6 +69,7 @@ class ProgressDialogManager(object):
         """
         if self.use_ui:
             if self.dialog is None:
+                from anima.ui.lib import QtWidgets
                 self.dialog = \
                     QtWidgets.QProgressDialog(self.parent)
                     # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
@@ -119,6 +119,7 @@ class ProgressDialogManager(object):
         """recenters the dialog window to the screen
         """
         if self.dialog is not None:
+            from anima.ui.lib import QtGui, QtWidgets
             desktop = QtWidgets.QApplication.desktop()
             cursor_pos = QtGui.QCursor.pos()
             desktop_number = desktop.screenNumber(cursor_pos)
@@ -127,9 +128,13 @@ class ProgressDialogManager(object):
             size = self.dialog.geometry()
 
             if size:
+                dr_width = desktop_rect.width()
+                dr_left = desktop_rect.left()
+                dr_height = desktop_rect.height()
+                dr_top = desktop_rect.top()
                 self.dialog.move(
-                    (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
-                    (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
+                    (dr_width - size.width()) * 0.5 + dr_left,
+                    (dr_height - size.height()) * 0.5 + dr_top
                 )
 
     def step(self, caller, step=1, message=''):
@@ -150,6 +155,7 @@ class ProgressDialogManager(object):
             # kill the caller
             self.end_progress(caller)
 
+        from anima.ui.lib import QtWidgets
         QtWidgets.qApp.processEvents()
 
     def end_progress(self, caller):

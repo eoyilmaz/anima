@@ -430,8 +430,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # update the reference list
         # IMPORTANT: without this, the update workflow is not able to do
         # updates correctly, so do not disable this
-        from stalker import db
-        db.DBSession.add(version)
+        from stalker.db.session import DBSession
+        DBSession.add(version)
 
         self.update_version_inputs()
 
@@ -440,7 +440,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             version.absolute_full_path
         )
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         # create a local copy
         self.create_local_copy(version)
@@ -511,9 +511,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         )
 
         # save the version to database
-        from stalker import db
-        db.DBSession.add(version)
-        db.DBSession.commit()
+        from stalker.db.session import DBSession
+        DBSession.add(version)
+        DBSession.commit()
 
         # create a local copy
         self.create_local_copy(version)
@@ -695,8 +695,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         current_version = self.get_current_version()
         if current_version:
             current_version.inputs.append(version)
-            from stalker import db
-            db.DBSession.commit()
+            from stalker.db.session import DBSession
+            DBSession.commit()
 
         # also update version.inputs for the referenced input
         self.update_version_inputs(ref)
@@ -1222,9 +1222,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             version.inputs = referenced_versions
 
             # commit data to the database
-            from stalker import db
-            db.DBSession.add(version)
-            db.DBSession.commit()
+            from stalker.db.session import DBSession
+            DBSession.add(version)
+            DBSession.commit()
 
         end = time.time()
         logger.debug('update_version_inputs() took %f seconds' % (end - start))

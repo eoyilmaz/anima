@@ -115,9 +115,9 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 date=datetime.datetime.now(),
                 action=LOGIN
             )
-            from stalker import db
-            db.DBSession.add(al)
-            db.DBSession.commit()
+            from stalker.db.session import DBSession
+            DBSession.add(al)
+            DBSession.commit()
 
             self.accept()
         else:

@@ -6,7 +6,7 @@
 from anima import logger
 from anima.env import empty_reference_resolution
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.models import VersionTreeModel
+from anima.ui.models.version import VersionTreeModel
 from anima.ui.lib import QtGui, QtCore, QtWidgets
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 

@@ -38,6 +38,15 @@ Changes
 * **Update:** ``anima`` now loads considerably faster, which speeds up Maya's
   initialization process.
 
+* **Fix:** Fixed ``time_log_dialog`` to properly fix both task statuses and
+  schedule info of the given task (with the code coming from Stalker Pyramid).
+
+* **Fix:** Fixed all ``stalker.db.session.DBSession`` imports to make the
+  system compatible with ``Stalker v0.2.20+``.
+
+* **Fix:** Fixed ``cutOut_spinBox`` maximum value to be settable bigger than
+  99.
+
 
 0.2.0
 =====
