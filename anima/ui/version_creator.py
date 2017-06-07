@@ -10,21 +10,12 @@ from collections import namedtuple
 
 import anima
 from anima import logger
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 from anima.ui.views.task import TaskTreeView
 from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import version_creator_UI_pyside as version_creator_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import version_creator_UI_pyside2 as version_creator_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import version_creator_UI_pyqt4 as version_creator_UI
 
 
 ref_depth_res = [
@@ -85,7 +76,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The main version creation dialog for the pipeline.
 
     This is the main interface that the users of the ``anima`` will use to
@@ -129,7 +120,7 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         logger.debug("initializing the interface")
 
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
+        self._setup_ui()
 
         self.mode = mode
         self.chosen_version = None
@@ -155,23 +146,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         # create the project attribute in projects_comboBox
         self.current_dialog = None
 
-        # replace tasks_treeView with new one
-        orig_tasks_tree_view = self.tasks_treeView
-        self.tasks_treeView = TaskTreeView()
-        self.tasks_treeView.replace_with_other(
-            self.tasks_groupBox.layout(),
-            3,
-            orig_tasks_tree_view
-        )
-        self.tasks_treeView.setObjectName('tasks_treeView')
-
-        # remove recent files comboBox and create a new one
-        layout = self.horizontalLayout_8
-        self.recent_files_comboBox.deleteLater()
-        self.recent_files_comboBox = RecentFilesComboBox()
-        self.recent_files_comboBox.setObjectName('recent_files_comboBox')
-        layout.insertWidget(1, self.recent_files_comboBox)
-
         # setup signals
         self._setup_signals()
 
@@ -182,6 +156,450 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
         self.center_window()
 
         logger.debug("finished initializing the interface")
+
+    def _setup_ui(self):
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.resize(1753, 769)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred,
+                                           QtWidgets.QSizePolicy.Preferred)
+        size_policy.setHorizontalStretch(1)
+        size_policy.setVerticalStretch(1)
+        size_policy.setHeightForWidth(
+            self.sizePolicy().hasHeightForWidth())
+        self.setSizePolicy(size_policy)
+        self.setSizeGripEnabled(True)
+        self.setModal(True)
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
+        self.verticalWidget = QtWidgets.QWidget(self)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred,
+                                           QtWidgets.QSizePolicy.Preferred)
+        size_policy.setHorizontalStretch(1)
+        size_policy.setVerticalStretch(1)
+        size_policy.setHeightForWidth(
+            self.verticalWidget.sizePolicy().hasHeightForWidth())
+        self.verticalWidget.setSizePolicy(size_policy)
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalWidget)
+        self.verticalLayout.setSizeConstraint(
+            QtWidgets.QLayout.SetMaximumSize)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
+        spacerItem = QtWidgets.QSpacerItem(40, 20,
+                                           QtWidgets.QSizePolicy.Expanding,
+                                           QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_11.addItem(spacerItem)
+        self.logged_in_as_label = QtWidgets.QLabel(self.verticalWidget)
+        self.logged_in_as_label.setTextFormat(QtCore.Qt.AutoText)
+        self.horizontalLayout_11.addWidget(self.logged_in_as_label)
+        self.logged_in_user_label = QtWidgets.QLabel(self.verticalWidget)
+        self.horizontalLayout_11.addWidget(self.logged_in_user_label)
+        self.logout_pushButton = QtWidgets.QPushButton(self.verticalWidget)
+        self.horizontalLayout_11.addWidget(self.logout_pushButton)
+        self.verticalLayout.addLayout(self.horizontalLayout_11)
+        self.line_3 = QtWidgets.QFrame(self.verticalWidget)
+        self.line_3.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_3)
+        self.horizontalLayout_14 = QtWidgets.QHBoxLayout()
+        self.tasks_groupBox = QtWidgets.QGroupBox(self.verticalWidget)
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tasks_groupBox)
+        self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
+        self.my_tasks_only_checkBox = QtWidgets.QCheckBox(
+            self.tasks_groupBox)
+        self.my_tasks_only_checkBox.setChecked(False)
+        self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.search_task_lineEdit = QtWidgets.QLineEdit(
+            self.tasks_groupBox)
+        self.horizontalLayout_4.addWidget(self.search_task_lineEdit)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
+
+        # self.tasks_treeView = QtWidgets.QTreeView()
+        self.tasks_treeView = TaskTreeView(self.tasks_groupBox)
+        self.tasks_treeView.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tasks_treeView.setAlternatingRowColors(True)
+        self.tasks_treeView.setUniformRowHeights(True)
+        self.tasks_treeView.header().setCascadingSectionResizes(True)
+        self.verticalLayout_2.addWidget(self.tasks_treeView)
+
+        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+
+        self.recent_files_comboBox = RecentFilesComboBox(self.tasks_groupBox)
+        self.horizontalLayout_8.addWidget(self.recent_files_comboBox)
+
+        self.clear_recent_files_pushButton = QtWidgets.QPushButton(
+            self.tasks_groupBox)
+        self.horizontalLayout_8.addWidget(
+            self.clear_recent_files_pushButton)
+        self.horizontalLayout_8.setStretch(0, 1)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_8)
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.find_from_path_lineEdit = QtWidgets.QLineEdit(
+            self.tasks_groupBox)
+        self.horizontalLayout_3.addWidget(self.find_from_path_lineEdit)
+        self.find_from_path_pushButton = QtWidgets.QPushButton(
+            self.tasks_groupBox)
+        self.find_from_path_pushButton.setDefault(True)
+        self.horizontalLayout_3.addWidget(self.find_from_path_pushButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
+        self.thumbnail_graphicsView = QtWidgets.QGraphicsView(
+            self.tasks_groupBox)
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(
+            self.thumbnail_graphicsView.sizePolicy().hasHeightForWidth())
+        self.thumbnail_graphicsView.setSizePolicy(size_policy)
+        self.thumbnail_graphicsView.setMinimumSize(QtCore.QSize(320, 180))
+        self.thumbnail_graphicsView.setMaximumSize(QtCore.QSize(320, 180))
+        self.thumbnail_graphicsView.setAutoFillBackground(False)
+        self.thumbnail_graphicsView.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff)
+        self.thumbnail_graphicsView.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff)
+        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        self.thumbnail_graphicsView.setBackgroundBrush(brush)
+        self.thumbnail_graphicsView.setInteractive(False)
+        self.thumbnail_graphicsView.setRenderHints(
+            QtGui.QPainter.Antialiasing |
+            QtGui.QPainter.HighQualityAntialiasing |
+            QtGui.QPainter.SmoothPixmapTransform |
+            QtGui.QPainter.TextAntialiasing
+        )
+        self.verticalLayout_2.addWidget(self.thumbnail_graphicsView)
+        self.horizontalLayout_16 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_16.setContentsMargins(-1, -1, -1, 10)
+        spacer_item1 = QtWidgets.QSpacerItem(40, 20,
+                                            QtWidgets.QSizePolicy.Expanding,
+                                            QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_16.addItem(spacer_item1)
+        self.upload_thumbnail_pushButton = QtWidgets.QPushButton(
+            self.tasks_groupBox)
+        self.horizontalLayout_16.addWidget(self.upload_thumbnail_pushButton)
+        self.clear_thumbnail_pushButton = \
+            QtWidgets.QPushButton(self.tasks_groupBox)
+        self.horizontalLayout_16.addWidget(self.clear_thumbnail_pushButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_16)
+        self.horizontalLayout_14.addWidget(self.tasks_groupBox)
+        self.new_version_groupBox = QtWidgets.QGroupBox(self.verticalWidget)
+        font = QtGui.QFont()
+        font.setWeight(50)
+        font.setBold(False)
+        self.new_version_groupBox.setFont(font)
+        self.verticalLayout_6 = \
+            QtWidgets.QVBoxLayout(self.new_version_groupBox)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
+        self.takes_label = QtWidgets.QLabel(self.new_version_groupBox)
+        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
+        font = QtGui.QFont()
+        font.setWeight(50)
+        font.setBold(False)
+        self.takes_label.setFont(font)
+        self.horizontalLayout_9.addWidget(self.takes_label)
+        self.repr_as_separate_takes_checkBox = QtWidgets.QCheckBox(
+            self.new_version_groupBox)
+        self.horizontalLayout_9.addWidget(
+            self.repr_as_separate_takes_checkBox)
+        self.add_take_pushButton = QtWidgets.QPushButton(
+            self.new_version_groupBox)
+        self.horizontalLayout_9.addWidget(self.add_take_pushButton)
+        self.horizontalLayout_9.setStretch(1, 1)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_9)
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+
+        # =================
+        # Takes List Widget
+        self.takes_listWidget = TakesListWidget(self.new_version_groupBox)
+        self.horizontalLayout_6.addWidget(self.takes_listWidget)
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
+        self.description_label = QtWidgets.QLabel(self.new_version_groupBox)
+        self.description_label.setMinimumSize(QtCore.QSize(35, 0))
+        self.verticalLayout_3.addWidget(self.description_label)
+        self.description_textEdit = QtWidgets.QTextEdit(
+            self.new_version_groupBox
+        )
+        self.description_textEdit.setEnabled(True)
+        self.description_textEdit.setTabChangesFocus(True)
+        self.verticalLayout_3.addWidget(self.description_textEdit)
+        self.verticalLayout_3.setStretch(1, 10)
+        self.verticalLayout_3.setStretch(3, 3)
+        self.verticalLayout_6.addLayout(self.verticalLayout_3)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.environment_comboBox = QtWidgets.QComboBox(
+            self.new_version_groupBox
+        )
+        self.horizontalLayout_2.addWidget(self.environment_comboBox)
+        self.export_as_pushButton = QtWidgets.QPushButton(
+            self.new_version_groupBox
+        )
+        self.horizontalLayout_2.addWidget(self.export_as_pushButton)
+        self.publish_pushButton = QtWidgets.QPushButton(
+            self.new_version_groupBox
+        )
+        self.horizontalLayout_2.addWidget(self.publish_pushButton)
+        self.save_as_pushButton = QtWidgets.QPushButton(
+            self.new_version_groupBox
+        )
+        self.save_as_pushButton.setDefault(False)
+        self.horizontalLayout_2.addWidget(self.save_as_pushButton)
+        self.verticalLayout_6.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_14.addWidget(self.new_version_groupBox)
+        self.previous_versions_groupBox = QtWidgets.QGroupBox(
+            self.verticalWidget)
+        self.verticalLayout_7 = \
+            QtWidgets.QVBoxLayout(self.previous_versions_groupBox)
+        self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
+        self.show_only_label = \
+            QtWidgets.QLabel(self.previous_versions_groupBox)
+        self.horizontalLayout_10.addWidget(self.show_only_label)
+        self.version_count_spinBox = \
+            QtWidgets.QSpinBox(self.previous_versions_groupBox)
+        self.version_count_spinBox.setMaximum(999999)
+        self.version_count_spinBox.setProperty("value", 25)
+        self.horizontalLayout_10.addWidget(self.version_count_spinBox)
+        self.line = QtWidgets.QFrame(self.previous_versions_groupBox)
+        self.line.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.horizontalLayout_10.addWidget(self.line)
+        self.show_published_only_checkBox = \
+            QtWidgets.QCheckBox(self.previous_versions_groupBox)
+        self.horizontalLayout_10.addWidget(self.show_published_only_checkBox)
+        spacerItem2 = QtWidgets.QSpacerItem(40, 20,
+                                            QtWidgets.QSizePolicy.Expanding,
+                                            QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_10.addItem(spacerItem2)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_10)
+        self.previous_versions_tableWidget = \
+            QtWidgets.QTableWidget(self.previous_versions_groupBox)
+        self.previous_versions_tableWidget.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.previous_versions_tableWidget.setAlternatingRowColors(True)
+        self.previous_versions_tableWidget.setSelectionMode(
+            QtWidgets.QAbstractItemView.SingleSelection)
+        self.previous_versions_tableWidget.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectRows)
+        self.previous_versions_tableWidget.setShowGrid(False)
+        self.previous_versions_tableWidget.setColumnCount(5)
+        self.previous_versions_tableWidget.setColumnCount(5)
+        self.previous_versions_tableWidget.setRowCount(0)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(0, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(1, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(2, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(3, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(4, item)
+        self.previous_versions_tableWidget\
+            .horizontalHeader()\
+            .setStretchLastSection(True)
+        self.previous_versions_tableWidget\
+            .verticalHeader()\
+            .setStretchLastSection(False)
+        self.verticalLayout_7.addWidget(self.previous_versions_tableWidget)
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.label = QtWidgets.QLabel(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.label)
+        self.representations_comboBox = \
+            QtWidgets.QComboBox(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.representations_comboBox)
+        self.label_2 = QtWidgets.QLabel(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.label_2)
+        self.ref_depth_comboBox = \
+            QtWidgets.QComboBox(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.ref_depth_comboBox)
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20,
+                                            QtWidgets.QSizePolicy.Expanding,
+                                            QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem3)
+        self.useNameSpace_checkBox = \
+            QtWidgets.QCheckBox(self.previous_versions_groupBox)
+        self.useNameSpace_checkBox.setChecked(True)
+        self.horizontalLayout_5.addWidget(self.useNameSpace_checkBox)
+        self.chose_pushButton = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.chose_pushButton)
+        self.checkUpdates_checkBox = \
+            QtWidgets.QCheckBox(self.previous_versions_groupBox)
+        self.checkUpdates_checkBox.setChecked(True)
+        self.horizontalLayout_5.addWidget(self.checkUpdates_checkBox)
+        self.open_pushButton = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.open_pushButton)
+        self.reference_pushButton = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.reference_pushButton)
+        self.import_pushButton = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.import_pushButton)
+        self.close_pushButton = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.close_pushButton.setStyleSheet("")
+        self.horizontalLayout_5.addWidget(self.close_pushButton)
+        self.verticalLayout_7.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout_14.addWidget(self.previous_versions_groupBox)
+        self.horizontalLayout_14.setStretch(2, 1)
+        self.verticalLayout.addLayout(self.horizontalLayout_14)
+        self.horizontalLayout.addWidget(self.verticalWidget)
+
+        self.setWindowTitle("Version Creator - Stalker")
+        self.logged_in_as_label.setText("<b>Logged In As:</b>")
+        self.logout_pushButton.setText("Logout")
+        self.tasks_groupBox.setTitle("Tasks")
+        self.my_tasks_only_checkBox.setText("Show my tasks only")
+        self.tasks_treeView.setToolTip(
+            "<html><head/><body><p>Right Click:</p><ul style=\""
+            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
+            "margin-right: 0px; -qt-list-indent: 1; "
+            "\"><li style=\" margin-top:12px; margin-bottom:0px; "
+            "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
+            "text-indent:0px;\">"
+            "To go to the <span style=\" font-weight:600;\">"
+            "Dependent Tasks</span></li><li style=\" margin-top:0px; "
+            "margin-bottom:12px; margin-left:0px; margin-right:0px; "
+            "-qt-block-indent:0; text-indent:0px;\">"
+            "To go to the <span style=\" font-weight:600;\">"
+            "Dependee Tasks</span></li></ul><p><br/></p></body></html>"
+        )
+        self.recent_files_comboBox.setToolTip("Recent Files")
+        self.clear_recent_files_pushButton.setText("Clear")
+        self.find_from_path_lineEdit.setPlaceholderText("Find From Path")
+        self.find_from_path_pushButton.setText("Find")
+        self.upload_thumbnail_pushButton.setText("Upload")
+        self.clear_thumbnail_pushButton.setText("Clear")
+        self.new_version_groupBox.setTitle("New Version")
+        self.takes_label.setText("Take")
+        self.repr_as_separate_takes_checkBox.setToolTip(
+            "<html><head/><body><p>Check this to show "
+            "<span style=\" font-weight:600;\">Representations</span> as "
+            "separate takes if available</p></body></html>"
+        )
+        self.repr_as_separate_takes_checkBox.setText("Show Repr.")
+        self.add_take_pushButton.setText("New Take")
+        self.description_label.setText("Desc.")
+        self.description_textEdit.setHtml(
+            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \""
+            "http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+            "<html><head><meta name=\"qrichtext\" content=\"1\" />"
+            "<style type=\"text/css\">\n"
+            "p, li { white-space: pre-wrap; }\n"
+            "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; "
+            "font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
+            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; "
+            "margin-bottom:0px; margin-left:0px; margin-right:0px; "
+            "-qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\'; "
+            "font-size:9pt;\"><br /></p></body></html>",
+        )
+        self.export_as_pushButton.setText("Export Selection As")
+        self.save_as_pushButton.setText("Save As")
+        self.publish_pushButton.setText("Publish")
+        self.previous_versions_groupBox.setTitle("Previous Versions")
+        self.show_only_label.setText("Show Only")
+        self.show_published_only_checkBox.setText("Show Published Only")
+        self.previous_versions_tableWidget.setToolTip(
+            """
+            <html>
+            <head/>
+            <body>
+                <p>Right click to:</p>
+                <ul style="margin-top: 0px;
+                           margin-bottom: 0px;
+                           margin-left: 0px;
+                           margin-right: 0px;
+                           -qt-list-indent: 1;">
+                    <li>
+                        <span style="font-weight:600;">Copy Path</span>
+                    </li>
+
+                    <li>
+                        <span style="font-weight:600;">Browse Path</span>
+                    </li>
+
+                    <li>
+                        <span style="font-weight:600;">Change Description</span>
+                    </li>
+                </ul>
+                <p>Double click to:</p>
+                <ul style="margin-top: 0px;
+                           margin-bottom: 0px;
+                           margin-left: 0px;
+                           margin-right: 0px;
+                           -qt-list-indent: 1;">
+                    <li style="margin-top:12px;
+                               margin-bottom:12px;
+                               margin-left:0px;
+                               margin-right:0px;
+                               -qt-block-indent:0;
+                               text-indent:0px;">
+                        <span style=" font-weight:600;">Open</span>
+                    </li>
+                </ul>
+            </body>
+            </html>
+            """
+        )
+        self.previous_versions_tableWidget.horizontalHeaderItem(0).setText(
+            "Version"
+        )
+        self.previous_versions_tableWidget.horizontalHeaderItem(1).setText(
+            "User"
+        )
+        self.previous_versions_tableWidget.horizontalHeaderItem(2).setText(
+            "File Size"
+        )
+        self.previous_versions_tableWidget.horizontalHeaderItem(3).setText(
+            "Date"
+        )
+        self.previous_versions_tableWidget.horizontalHeaderItem(4).setText(
+            "Description"
+        )
+        self.label.setText("Repr")
+        self.representations_comboBox.setToolTip(
+            "Choose Representation (if supported by the environment)"
+        )
+        self.label_2.setText("Refs")
+        self.ref_depth_comboBox.setToolTip(
+            "Choose reference depth (if supported by environment)"
+        )
+        self.useNameSpace_checkBox.setToolTip(
+            """
+            <html>
+                <head/>
+                <body>
+                    <p>Uncheck it if you are going to use 
+                        <span style="font-weight:600;">Alembic Cache</span>.
+                    </p>
+                </body>
+            </html>
+            """
+        )
+        self.useNameSpace_checkBox.setText("Use Namespace")
+        self.chose_pushButton.setText("Choose")
+        self.checkUpdates_checkBox.setToolTip("Disable update check (faster)")
+        self.checkUpdates_checkBox.setText("Check Updates")
+        self.open_pushButton.setText("Open")
+        self.reference_pushButton.setText("Reference")
+        self.import_pushButton.setText("Import")
+        self.close_pushButton.setText("Close")
+
+        QtCore.QMetaObject.connectSlotsByName(self)
+        self.setTabOrder(self.description_textEdit, self.export_as_pushButton)
+        self.setTabOrder(self.export_as_pushButton, self.save_as_pushButton)
+        self.setTabOrder(self.save_as_pushButton,
+                         self.previous_versions_tableWidget)
+        self.setTabOrder(self.previous_versions_tableWidget,
+                         self.open_pushButton)
+        self.setTabOrder(self.open_pushButton, self.reference_pushButton)
+        self.setTabOrder(self.reference_pushButton, self.import_pushButton)
 
     # def close(self):
     #     logger.debug('closing the ui')
@@ -828,13 +1246,6 @@ class MainDialog(QtWidgets.QDialog, version_creator_UI.Ui_Dialog, AnimaDialogBas
 
         # fill the tasks
         self.fill_tasks_tree_view()
-
-        # *********************************************************************
-        # use the new TakeListWidget
-        self.takes_listWidget.deleteLater()
-        self.takes_listWidget = TakesListWidget()
-        self.takes_listWidget.setObjectName("takes_listWidget")
-        self.horizontalLayout_6.insertWidget(1, self.takes_listWidget)
 
         # reconnect signals
         # takes_listWidget
