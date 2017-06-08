@@ -80,6 +80,7 @@ class Maya(EnvironmentBase):
 
     name = "Maya%s" % str(pm.versions.current())[0:4]
     representations = ['Base', 'GPU', 'ASS', 'RS']
+    has_publishers = True
 
     time_to_fps = {
         u'sec': 1,
@@ -396,11 +397,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             pass
 
         # delete the unknown nodes
-        unknown_nodes = pm.ls(type='unknown')
+        unknown_nodes = mc.ls(type='unknown')
         # unlock each possible locked unknown nodes
         for node in unknown_nodes:
-            node.unlock()
-        pm.delete(unknown_nodes)
+            mc.lockNode(node, lock=False)
+        mc.delete(unknown_nodes)
 
         # set the file paths for external resources
         self.replace_external_paths()

@@ -145,11 +145,12 @@ def delete_unknown_nodes():
     """Delete unknown nodes
     """
     # delete the unknown nodes
-    unknown_nodes = pm.ls(type='unknown')
+    unknown_nodes = mc.ls(type='unknown')
+
     # unlock each possible locked unknown nodes
     for node in unknown_nodes:
-        node.unlock()
-    pm.delete(unknown_nodes)
+        mc.lockNode(node, lock=False)
+    mc.delete(unknown_nodes)
 
 
 @publisher
@@ -158,10 +159,11 @@ def check_node_names_with_bad_characters():
 
     checks node names and ensures that there are no nodes with ord(c) > 127
     """
-    nodes_with_bad_name = []
-    for node in pm.ls():
-        if any(map(lambda x: x == '?' or ord(x) > 127, node.name())):
-            nodes_with_bad_name.append(node)
+    nodes_with_bad_name = [
+        node_name for node_name in mc.ls()
+        if ':' not in node_name
+           and any(map(lambda x: x == '?' or ord(x) > 127, node_name))
+    ]
 
     if len(nodes_with_bad_name) > 0:
         pm.select(nodes_with_bad_name)
@@ -177,7 +179,7 @@ def check_node_names_with_bad_characters():
 
 
 @publisher
-def delete_unused_nodes():
+def delete_unused_shading_nodes():
     """Delete unused shading nodes
     """
     num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
@@ -1069,6 +1071,8 @@ def check_multiple_connections_for_textures():
             pm.loadPlugin(plugin)
 
     v = staging.get('version')
+    if not v:
+        return
 
     # skip if
     skip_types = ['character', 'animation', 'previs']
@@ -1319,10 +1323,12 @@ def cacheable_attr_to_lowercase():
     Converts the cacheable attribute value to lowercase
     """
     root_nodes = auxiliary.get_root_nodes()
-    root_nodes[0].setAttr(
-        'cacheable',
-        root_nodes[0].getAttr('cacheable').lower()
-    )
+
+    if root_nodes[0].hasAttr('cacheable'):
+        root_nodes[0].setAttr(
+            'cacheable',
+            root_nodes[0].getAttr('cacheable').lower()
+        )
 
 
 @publisher('animation')
@@ -1364,7 +1370,7 @@ def check_smartass_animator():
         #
         # also check if the logged in user is one of the resources of the
         # dependent tasks
-        if any([t.status.code not in ['WFD', 'RTS']
+        if any([t.status.code not in ['WFD', 'RTS', 'HREV', 'DREV']
                 for t in dependent_tasks_all_hierarchy]) \
            and logged_in_user not in white_list_resources:
             # so the animator is trying to stab behind us
@@ -2002,15 +2008,18 @@ def export_camera():
     if shot:
         camera = shot.currentCamera.get()
 
-    camera_task = \
-        Task.query\
-            .filter(Task.parent == v.task.parent)\
-            .filter(Task.name == 'Camera').first()
+    from stalker.db.session import DBSession
+    with DBSession.no_autoflush:
+        camera_task = \
+            Task.query\
+                .filter(Task.parent == v.task.parent)\
+                .filter(Task.name == 'Camera').first()
 
     if camera_task:
         from stalker import LocalSession
-        local_session = LocalSession()
-        logged_in_user = local_session.logged_in_user
+        with DBSession.no_autoflush:
+            local_session = LocalSession()
+            logged_in_user = local_session.logged_in_user
 
         cam_v = Version(
             task=camera_task,

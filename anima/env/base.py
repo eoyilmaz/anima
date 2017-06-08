@@ -67,6 +67,7 @@ class EnvironmentBase(object):
 
     name = "EnvironmentBase"
     representations = ['Base']
+    has_publishers = False
 
     def __init__(self, name="", extensions=None, version=None):
         self._name = name

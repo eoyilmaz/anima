@@ -142,6 +142,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setWindowTitle(window_title)
 
         self.environment = environment
+        if not self.environment.has_publishers:
+            self.publish_pushButton.setText('Publish')
 
         # create the project attribute in projects_comboBox
         self.current_dialog = None
@@ -501,7 +503,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.export_as_pushButton.setText("Export Selection As")
         self.save_as_pushButton.setText("Save As")
-        self.publish_pushButton.setText("Publish")
+        self.publish_pushButton.setText("Publish Checker")
         self.previous_versions_groupBox.setTitle("Previous Versions")
         self.show_only_label.setText("Show Only")
         self.show_published_only_checkBox.setText("Show Published Only")
@@ -1522,7 +1524,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if take_name != "":
                 self.takes_listWidget.add_take(take_name)
 
-    def get_new_version(self):
+    def get_new_version(self, publish=False):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
         from the UI by looking at the input fields
 
@@ -1532,10 +1534,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from stalker import Task
         task_id = self.tasks_treeView.get_task_id()
 
-        if not task_id:  # or not isinstance(task, Task):
+        if not task_id:
             return None
 
-        task = Task.query.get(task_id)
+        from stalker.db.session import DBSession
+        with DBSession.no_autoflush:
+            task = Task.query.get(task_id)
+
+        # check if the task is a leaf task
+        if not task.is_leaf:
+            QtWidgets.QMessageBox.critical(
+                self,
+                'Error',
+                'Please select a <strong>leaf</strong> task!'
+            )
+            return None
+
         take_name = self.takes_listWidget.current_take_name
         user = self.get_logged_in_user()
         if not user:
@@ -1544,15 +1558,29 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         description = self.description_textEdit.toPlainText()
         # published = self.publish_checkBox.isChecked()
 
+        from stalker.db.session import DBSession
         from stalker import Version
-        version = Version(
-            task=task,
-            created_by=user,
-            take_name=take_name,
-            description=description
-        )
-        # version.is_published = published
+        try:
+            version = Version(
+                task=task,
+                created_by=user,
+                take_name=take_name,
+                description=description
+            )
+            version.is_published = publish
+            DBSession.add(version)
+        except (TypeError, ValueError) as e:
+            # pop up an Message Dialog to give the error message
+            try:
+                error_message = '%s' % e
+            except UnicodeEncodeError:
+                error_message = unicode(e)
+            QtWidgets.QMessageBox.critical(self, "Error", error_message)
 
+            DBSession.rollback()
+            return None
+
+        # if everything went well return the new version
         return version
 
     def export_as_push_button_clicked(self):
@@ -1561,28 +1589,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("exporting the data as a new version")
 
         # get the new version
+        # exporting a published version is not allowed anymore
         new_version = self.get_new_version()
 
         if not new_version:
             return
 
-        # check if the task is a leaf task
-        if not new_version.task.is_leaf:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please select a <strong>leaf</strong> task!'
-            )
-            from stalker.db.session import DBSession
-            DBSession.rollback()
-            return
-
         # call the environments export_as method
         if self.environment is not None:
-            from anima.exc import PublishError
             try:
                 self.environment.export_as(new_version)
-            except (RuntimeError, PublishError) as e:
+            except RuntimeError as e:
                 error_message = '%s' % e
                 print(error_message)
                 QtWidgets.QMessageBox.critical(
@@ -1607,7 +1624,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the save_as_pushButton clicked
         """
         logger.debug("saving the data as a new version")
-        self.save_as_wrapper()
+        new_version = self.get_new_version()
+        self.save_as_wrapper(new_version)
 
     def publish_push_button_clicked(self):
         """runs when the publish_pushButton clicked
@@ -1616,53 +1634,49 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         answer = QtWidgets.QMessageBox.question(
             self,
             'Publish?',
-            "Publish?",
+            'Publish?',
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No
         )
         if answer == QtWidgets.QMessageBox.Yes:
-            self.save_as_wrapper(publish=True)
+            new_version = self.get_new_version(publish=True)
+            if self.environment and self.environment.has_publishers:
+                import functools
+                callback = functools.partial(
+                    self.save_as_wrapper,
+                    version=new_version
+                )
+                # create the publish window
+                from anima.ui import publish_checker
+                self.close()
+                dialog = publish_checker.UI(
+                    environment=self.environment,
+                    publish_callback=callback,
+                    version=new_version
+                )
+                dialog.show()
+                dialog.check_all_publishers()
+            else:
+                self.save_as_wrapper(new_version)
         else:
             return
 
-    def save_as_wrapper(self, publish=False):
+    def save_as_wrapper(self, version):
         """The wrapper function that runs when save_as or publish push buttons
         are clicked
 
-        :param publish:
+        :param version: A Stalker Version instance.
         :return:
         """
         # get the new version
-        from stalker.db.session import DBSession
-        try:
-            new_version = self.get_new_version()
-            new_version.is_published = publish
-            DBSession.add(new_version)
-        except (TypeError, ValueError) as e:
-            # pop up an Message Dialog to give the error message
-            try:
-                error_message = '%s' % e
-            except UnicodeEncodeError:
-                error_message = unicode(e)
-            QtWidgets.QMessageBox.critical(self, "Error", error_message)
+        new_version = version
 
-            DBSession.rollback()
-            return None
-
+        # if we still don't have a version just return without doing anything
         if not new_version:
             return
 
-        # check if the task is a leaf task
-        if not new_version.task.is_leaf:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please select a <strong>leaf</strong> task!'
-            )
-            DBSession.rollback()
-            return
-
         # call the environments save_as method
+        from stalker.db.session import DBSession
         is_external_env = False
         environment = self.environment
         if not environment:
@@ -1685,29 +1699,28 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # that is currently open in the current environment belongs to the
             # same task
             current_version = environment.get_current_version()
-            if current_version:
-                if current_version.task != new_version.task:
-                    # ask to the user if he/she is sure about that
-                    answer = QtWidgets.QMessageBox.question(
-                        self,
-                        'Possible Mistake?',
-                        "Saving under different Task<br>"
-                        "<br>"
-                        "current version: <b>%s</b><br>"
-                        "new version    : <b>%s</b><br>"
-                        "<br>"
-                        "Are you sure?" % (
-                            current_version.nice_name,
-                            new_version.nice_name
-                        ),
-                        QtWidgets.QMessageBox.Yes,
-                        QtWidgets.QMessageBox.No
-                    )
+            if current_version and current_version.task != new_version.task:
+            # ask to the user if he/she is sure about that
+                answer = QtWidgets.QMessageBox.question(
+                    self,
+                    'Possible Mistake?',
+                    "Saving under different Task<br>"
+                    "<br>"
+                    "current version: <b>%s</b><br>"
+                    "new version    : <b>%s</b><br>"
+                    "<br>"
+                    "Are you sure?" % (
+                        current_version.nice_name,
+                        new_version.nice_name
+                    ),
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.No
+                )
 
-                    if answer == QtWidgets.QMessageBox.No:
-                        # no, just return
-                        DBSession.rollback()
-                        return
+                if answer == QtWidgets.QMessageBox.No:
+                    # no, just return
+                    DBSession.rollback()
+                    return
 
         from anima.exc import PublishError
         try:
