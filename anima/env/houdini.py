@@ -26,7 +26,7 @@ class Houdini(EnvironmentBase):
 
         self.name = '%s%s' % (self.name, hou.applicationVersion()[0])
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """the save action for houdini environment
         """
         if not version:

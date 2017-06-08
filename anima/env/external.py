@@ -245,11 +245,13 @@ class ExternalEnv(EnvironmentBase):
                 # dir exists
                 pass
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """A compatibility method which will allow this environment to be used
         in place of stalker.model.env.EnvironmentBase derivatives.
 
         :param version: stalker.models.version.Version instance
+        :param bool run_pre_publishers: Run pre publishers of this environment
+          or not. Default value is True
         :return:
         """
         # just conform the version and initialize_structure

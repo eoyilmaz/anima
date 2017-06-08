@@ -247,7 +247,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         logger.debug('set_arnold_texture_search_path() took '
                      '%f seconds' % (end - start))
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """The save_as action for maya environment.
 
         It saves the given Version instance to the Version.absolute_full_path.
@@ -265,19 +265,22 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     'Once bi normal save et.'
                 )
 
-            # before doing anything run all publishers
-            type_name = ''
-            if version.task.type:
-                type_name = version.task.type.name
+            if run_pre_publishers:
+                # before doing anything run all publishers
+                type_name = ''
+                if version.task.type:
+                    type_name = version.task.type.name
 
-            # before running use the staging area to store the current version
-            staging['version'] = version
-            try:
-                run_publishers(type_name, publisher_type=PRE_PUBLISHER_TYPE)
-            except PublishError as e:
-                # do not forget to clean up the staging area
-                staging.clear()
-                raise e
+                # before running use the staging area to store the current
+                # version
+                staging['version'] = version
+                try:
+                    run_publishers(type_name,
+                                   publisher_type=PRE_PUBLISHER_TYPE)
+                except PublishError as e:
+                    # do not forget to clean up the staging area
+                    staging.clear()
+                    raise e
         else:
             # run some of the publishers
             publish_scripts.check_node_names_with_bad_characters()

@@ -1644,7 +1644,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 import functools
                 callback = functools.partial(
                     self.save_as_wrapper,
-                    version=new_version
+                    version=new_version,
+                    run_pre_publishers=False
                 )
                 # create the publish window
                 from anima.ui import publish_checker
@@ -1661,7 +1662,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         else:
             return
 
-    def save_as_wrapper(self, version):
+    def save_as_wrapper(self, version, **kwargs):
         """The wrapper function that runs when save_as or publish push buttons
         are clicked
 
@@ -1724,7 +1725,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from anima.exc import PublishError
         try:
-            environment.save_as(new_version)
+            environment.save_as(new_version, **kwargs)
         except (RuntimeError, PublishError) as e:
             try:
                 error_message = '%s' % e

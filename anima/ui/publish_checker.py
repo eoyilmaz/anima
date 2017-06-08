@@ -8,6 +8,50 @@ import threading
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets, QtGui
+from anima.publish import ProgressControllerBase
+
+
+class QProgressBarWrapper(ProgressControllerBase):
+    """Wrapper for QProgressBar
+    """
+
+    def __init__(self, progress_bar=None,
+                 minimum=0.0, maximum=100.0, value=0.0):
+        self.progress_bar = progress_bar
+        super(QProgressBarWrapper, self).__init__(
+            value=value,
+            minimum=minimum,
+            maximum=maximum
+        )
+
+    @property
+    def value(self):
+        return self.progress_bar.value()
+
+    @value.setter
+    def value(self, value):
+        self.progress_bar.setValue(float(value))
+        QtWidgets.qApp.sendPostedEvents()
+
+    @property
+    def minimum(self):
+        return self.progress_bar.minimum()
+
+    @minimum.setter
+    def minimum(self, minimum):
+        self.progress_bar.setMaximum(float(minimum))
+        QtWidgets.qApp.sendPostedEvents()
+
+    @property
+    def maximum(self):
+        return self.progress_bar.maximum()
+
+    @maximum.setter
+    def maximum(self, maximum):
+        if maximum == 0:
+            maximum = 1.0
+        self.progress_bar.setMaximum(float(maximum))
+        QtWidgets.qApp.sendPostedEvents()
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -38,8 +82,13 @@ class PublisherElement(object):
         self.publisher_state_not_ok_icon = None
 
         self.publisher_state_label = None
-        self._state = False
+        self.performance_label = None
         self.exception_message = None
+        self.progress_bar = None
+        self.progress_bar_manager = None
+
+        self.duration = 0.0
+        self._state = False
 
     def create(self, parent=None):
         """Creates this publisher
@@ -65,21 +114,50 @@ class PublisherElement(object):
             QtWidgets.QSizePolicy.Fixed
         )
 
+        # Create Progress Bar
+        self.progress_bar = QtWidgets.QProgressBar(parent)
+        self.progress_bar.setFixedWidth(100)
+        self.progress_bar.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        self.layout.addWidget(self.progress_bar)
+
+        self.progress_bar_manager = QProgressBarWrapper(
+            progress_bar=self.progress_bar,
+            minimum=0, maximum=100.0, value=0.0
+        )
+
         # Create state label
         self.publisher_state_label = QtWidgets.QLabel(parent)
-
-        self.layout.addWidget(self.publisher_state_label)
         self.publisher_state_label.setSizePolicy(
             QtWidgets.QSizePolicy.Fixed,
             QtWidgets.QSizePolicy.Fixed
         )
+        self.layout.addWidget(self.publisher_state_label)
+
+        # Create performance label
+        self.performance_label = QtWidgets.QLabel(parent)
+        self.performance_label.setText('x.x sec')
+        self.performance_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        self.layout.addWidget(self.performance_label)
 
         # Create name label
         self.publisher_name_label = QtWidgets.QLabel(parent)
         self.publisher_name_label.setText(
-            self.publisher.__doc__.split('\n')[0]
+            self.publisher.__doc__.split('\n')[0].strip()
+        )
+        self.publisher_name_label.setAlignment(
+            QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter
         )
         self.publisher_name_label.setToolTip(self.publisher.__doc__)
+        self.performance_label.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
         self.layout.addWidget(self.publisher_name_label)
 
         self.state = False
@@ -138,9 +216,18 @@ class PublisherElement(object):
             # from anima.exc import PublishError
             import sys
             import traceback
+            import time
+
+            start = time.time()
             try:
-                self.publisher()
+                # disable Check button
+                self.check_push_button.setText('Checking...')
+                self.check_push_button.setEnabled(False)
+                QtWidgets.qApp.sendPostedEvents()
+                self.publisher(progress_controller=self.progress_bar_manager)
+                end = time.time()
             except Exception as e:
+                end = time.time()
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 self.state = False
                 self.publisher_state_label.setToolTip(
@@ -151,6 +238,12 @@ class PublisherElement(object):
             else:
                 self.state = True
                 self.publisher_state_label.setToolTip('')
+
+            # set performance label
+            self.duration = end - start
+            self.performance_label.setText('%0.1f sec' % self.duration)
+            self.check_push_button.setText('Check')
+            self.check_push_button.setEnabled(True)
 
 
 class PublisherRunner(threading.Thread):
@@ -185,7 +278,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_ui(self):
         """create the ui elements
         """
-        self.resize(400, 850)
+        self.resize(650, 850)
         # ----------------------------------------------------
         # Main Layout
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -244,14 +337,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.scroll_area_widget.setLayout(self.publisher_vertical_layout)
 
         self.scroll_area = QtWidgets.QScrollArea(self)
-        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAsNeeded
+        )
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAsNeeded
+        )
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_area_widget)
 
         # self.scroll_area_layout = QtWidgets.QVBoxLayout(self)
         # self.main_layout.addLayout(self.scroll_area_layout)
         self.main_layout.addWidget(self.scroll_area)
+
+        # performance label
+        self.duration_label = QtWidgets.QLabel(self)
+        self.main_layout.addWidget(self.duration_label)
 
         # Publish push button
         self.publish_push_button = QtWidgets.QPushButton(self)
@@ -265,6 +366,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.SIGNAL('clicked()'),
             self.publish_push_button_clicked
         )
+
 
         # Add spacer
         # vertical_spacer = QtWidgets.QSpacerItem(
@@ -336,29 +438,47 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs all the publishers as if their check buttons are pushed one by
         one
         """
-        # job_thread = PublisherRunner(publishers=self.publishers)
-        # job_thread.start()
-        # job_thread.join()
-
-        from anima.ui.lib import QtWidgets
         QtWidgets.qApp.processEvents()
-
         for publisher in self.publishers:
             publisher.run_publisher()
+            self.update_publisher_total_duration_info()
             QtWidgets.qApp.sendPostedEvents()
 
         self.check_publisher_states()
+
+    def update_publisher_total_duration_info(self):
+        """updates the total duration info of publishers
+        """
+        # update duration info
+        total_duration = 0.0
+        for publisher in self.publishers:
+            total_duration += publisher.duration
+
+        minute = total_duration // 60.0
+        seconds = total_duration - minute * 60.0
+
+        if minute:
+            self.duration_label.setText(
+                'Publishers run in: %i min %i sec!' % (int(minute), int(seconds))
+            )
+        else:
+            self.duration_label.setText(
+                'Publishers run in: %0.1f sec!' % seconds
+            )
 
     def check_publisher_states(self):
         """check publisher states
         """
         if self.publishers:
-            if all([publisher.state for publisher in self.publishers]):
+            self.update_publisher_total_duration_info()
+            if all([publisher.state for publisher in self.publishers]) \
+               and self.version:
                 self.publish_push_button.setEnabled(True)
             else:
                 self.publish_push_button.setEnabled(False)
         else:
-            self.publish_push_button.setEnabled(True)
+            if self.version:
+                self.publish_push_button.setEnabled(True)
 
     def publish_push_button_clicked(self):
         """runs when the publish button is clicked
