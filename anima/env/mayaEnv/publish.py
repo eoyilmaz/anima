@@ -349,6 +349,7 @@ def check_local_references(progress_controller=None):
             raise PublishError(
                 'Please remove any <b>non-legit</b> references!!!'
             )
+    progress_controller.complete()
 
 
 @publisher
@@ -883,7 +884,7 @@ def check_out_of_space_uvs(progress_controller=None):
 
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
-    progress_controller.maximum = len(mesh_count)
+    progress_controller.maximum = mesh_count
     nodes_with_out_of_space_uvs = []
 
     # from anima.ui.progress_dialog import ProgressDialogManager
@@ -939,7 +940,7 @@ def check_uv_border_crossing(progress_controller=None):
 
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
-    progress_controller.maximum = len(mesh_count)
+    progress_controller.maximum = mesh_count
     nodes_with_uvs_crossing_borders = []
 
     # from anima.ui.progress_dialog import ProgressDialogManager
@@ -1027,7 +1028,7 @@ def check_uvs(progress_controller=None):
 
     all_meshes = pm.ls(type='mesh')
     mesh_count = len(all_meshes)
-    progress_controller.maximum = len(mesh_count)
+    progress_controller.maximum = mesh_count
 
     # from anima.ui.progress_dialog import ProgressDialogManager
     # from anima.env.mayaEnv import MayaMainProgressBarWrapper
@@ -2207,7 +2208,7 @@ def create_representations(progress_controller=None):
     for t in v.naming_parents:
         for st in skip_types:
             if t.type and t.type.name.lower().startswith(st):
-                progress_controller.compete()
+                progress_controller.complete()
                 return
     progress_controller.increment()
 
@@ -2224,7 +2225,7 @@ def create_representations(progress_controller=None):
     if current_version != v:
         m_env.open(v, force=True, skip_update_check=True)
     progress_controller.increment()
-    progress_controller.compete()
+    progress_controller.complete()
 
 
 @publisher(['animation', 'shot previs'], publisher_type=POST_PUBLISHER_TYPE)
