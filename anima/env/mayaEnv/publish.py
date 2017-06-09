@@ -1226,6 +1226,7 @@ def check_all_renderer_specific_textures(progress_controller=None):
                     '<br>'.join(textures_with_no_tx)
                 )
             )
+    progress_controller.complete()
 
 
 @publisher(LOOK_DEV_TYPES + ['layout'])

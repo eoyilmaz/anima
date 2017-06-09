@@ -140,7 +140,7 @@ class PublisherElement(object):
         self.performance_label = QtWidgets.QLabel(parent)
         self.performance_label.setText('x.x sec')
         self.performance_label.setSizePolicy(
-            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Fixed,
             QtWidgets.QSizePolicy.Fixed
         )
         self.layout.addWidget(self.performance_label)
@@ -159,6 +159,13 @@ class PublisherElement(object):
             QtWidgets.QSizePolicy.Fixed
         )
         self.layout.addWidget(self.publisher_name_label)
+
+        spacer = QtWidgets.QSpacerItem(
+            20, 40,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.layout.addItem(spacer)
 
         self.state = False
 
