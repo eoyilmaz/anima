@@ -327,6 +327,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Check all push button
         self.check_all_push_button = QtWidgets.QPushButton(self)
         self.check_all_push_button.setText('CHECK ALL')
+        if self.version and self.version.task.type:
+            self.check_all_push_button.setText('CHECK ALL for %s' %
+                                               self.version.task.type.name)
+
         self.main_layout.addWidget(self.check_all_push_button)
 
         # create the signal for check all push button
@@ -411,9 +415,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # get the current type
         if self.environment:
-            version = self.environment.get_current_version()
-            if version and version.task.type:
-                type_name = version.task.type.name.lower()
+            # version = self.environment.get_current_version()
+            if self.version and self.version.task.type:
+                type_name = self.version.task.type.name.lower()
 
                 # generate generics first
                 if type_name in publish.publishers[ppt]:
