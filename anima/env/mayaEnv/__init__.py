@@ -404,7 +404,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # unlock each possible locked unknown nodes
         for node in unknown_nodes:
             mc.lockNode(node, lock=False)
-        mc.delete(unknown_nodes)
+
+        if unknown_nodes:
+            mc.delete(unknown_nodes)
 
         # set the file paths for external resources
         self.replace_external_paths()

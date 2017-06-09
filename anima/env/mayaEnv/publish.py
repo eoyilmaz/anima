@@ -161,7 +161,8 @@ def delete_unknown_nodes(progress_controller=None):
         mc.lockNode(node, lock=False)
         progress_controller.increment()
 
-    mc.delete(unknown_nodes)
+    if unknown_nodes:
+        mc.delete(unknown_nodes)
     progress_controller.complete()
 
 
