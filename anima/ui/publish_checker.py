@@ -220,6 +220,11 @@ class PublisherElement(object):
         """runs the publisher
         """
         if self.publisher:
+            # reset the counter and state
+            self.state = False
+            self.performance_label.setText('x.x sec')
+            self.progress_bar.setValue(0)
+
             # from anima.exc import PublishError
             import sys
             import traceback
@@ -378,7 +383,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.publish_push_button_clicked
         )
 
-
         # Add spacer
         # vertical_spacer = QtWidgets.QSpacerItem(
         #     20, 40,
@@ -452,10 +456,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtWidgets.qApp.processEvents()
         for publisher in self.publishers:
             publisher.run_publisher()
+            # move the view to this publisher
+            self.scroll_area.ensureWidgetVisible(
+                publisher.check_push_button
+            )
             self.update_publisher_total_duration_info()
             QtWidgets.qApp.sendPostedEvents()
 
-        self.check_publisher_states()
+        return self.check_publisher_states()
 
     def update_publisher_total_duration_info(self):
         """updates the total duration info of publishers
@@ -485,18 +493,29 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if all([publisher.state for publisher in self.publishers]) \
                and self.version:
                 self.publish_push_button.setEnabled(True)
+                return True
             else:
                 self.publish_push_button.setEnabled(False)
+                for publisher in self.publishers:
+                    if not publisher.state:
+                        self.scroll_area.ensureWidgetVisible(
+                            publisher.check_push_button
+                        )
+                return False
         else:
             if self.version:
                 self.publish_push_button.setEnabled(True)
+                return True
+        return True
 
     def publish_push_button_clicked(self):
         """runs when the publish button is clicked
         """
-        self.accept()
-        if self.publish_callback:
-            self.publish_callback()
+        # rerun all publishers
+        if self.check_all_publishers():
+            self.accept()
+            if self.publish_callback:
+                self.publish_callback()
 
     def reject(self):
         QtWidgets.QDialog.reject(self)
