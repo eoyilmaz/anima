@@ -158,7 +158,10 @@ def delete_unknown_nodes(progress_controller=None):
 
     # unlock each possible locked unknown nodes
     for node in enumerate(unknown_nodes):
-        mc.lockNode(node, lock=False)
+        try:
+            mc.lockNode(node, lock=False)
+        except TypeError:
+            pass
         progress_controller.increment()
 
     if unknown_nodes:

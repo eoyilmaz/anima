@@ -403,7 +403,10 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         unknown_nodes = mc.ls(type='unknown')
         # unlock each possible locked unknown nodes
         for node in unknown_nodes:
-            mc.lockNode(node, lock=False)
+            try:
+                mc.lockNode(node, lock=False)
+            except TypeError:
+                pass
 
         if unknown_nodes:
             mc.delete(unknown_nodes)
