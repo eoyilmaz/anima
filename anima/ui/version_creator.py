@@ -378,8 +378,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                                             QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem2)
         self.verticalLayout_7.addLayout(self.horizontalLayout_10)
-        self.previous_versions_tableWidget = \
-            QtWidgets.QTableWidget(self.previous_versions_groupBox)
+
+
+        # self.previous_versions_tableWidget = \
+        #     QtWidgets.QTableWidget(self.previous_versions_groupBox)
+        # previous_versions_tableWidget
+        self.previous_versions_tableWidget = VersionsTableWidget(
+            self.previous_versions_groupBox
+        )
+
         self.previous_versions_tableWidget.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
         self.previous_versions_tableWidget.setAlternatingRowColors(True)
@@ -1265,18 +1272,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.takes_listWidget_changed
         )
         # *********************************************************************
-
-        # *********************************************************************
-        # previous_versions_tableWidget
-        self.previous_versions_tableWidget.deleteLater()
-        self.previous_versions_tableWidget = VersionsTableWidget(
-            self.previous_versions_groupBox
-        )
-        self.verticalLayout_7.insertWidget(1, self.previous_versions_tableWidget)
-        self.setTabOrder(self.save_as_pushButton,
-                         self.previous_versions_tableWidget)
-        self.setTabOrder(self.previous_versions_tableWidget,
-                         self.open_pushButton)
 
         # custom context menu for the previous_versions_tableWidget
         self.previous_versions_tableWidget.setContextMenuPolicy(
