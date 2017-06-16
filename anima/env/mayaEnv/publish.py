@@ -617,7 +617,15 @@ def check_if_only_one_root_node(progress_controller=None):
         progress_controller = ProgressControllerBase()
 
     root_transform_nodes = auxiliary.get_root_nodes()
-    progress_controller.maximum = 3
+    progress_controller.maximum = 4
+
+    # remove any group nodes that contains a foster parent
+    local_root_nodes = []
+    for node in root_transform_nodes:
+        if not isinstance(node, pm.nt.FosterParent):
+            local_root_nodes.append(node)
+    root_transform_nodes = local_root_nodes
+    progress_controller.increment()
 
     # check of no root node
     if len(root_transform_nodes) == 0:
