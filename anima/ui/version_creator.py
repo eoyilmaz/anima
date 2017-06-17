@@ -379,9 +379,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontalLayout_10.addItem(spacerItem2)
         self.verticalLayout_7.addLayout(self.horizontalLayout_10)
 
-
-        # self.previous_versions_tableWidget = \
-        #     QtWidgets.QTableWidget(self.previous_versions_groupBox)
         # previous_versions_tableWidget
         self.previous_versions_tableWidget = VersionsTableWidget(
             self.previous_versions_groupBox
@@ -395,8 +392,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_tableWidget.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
         self.previous_versions_tableWidget.setShowGrid(False)
-        self.previous_versions_tableWidget.setColumnCount(5)
-        self.previous_versions_tableWidget.setColumnCount(5)
+        self.previous_versions_tableWidget.setColumnCount(7)
         self.previous_versions_tableWidget.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.previous_versions_tableWidget.setHorizontalHeaderItem(0, item)
@@ -408,6 +404,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_tableWidget.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
         self.previous_versions_tableWidget.setHorizontalHeaderItem(4, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(5, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.previous_versions_tableWidget.setHorizontalHeaderItem(6, item)
         self.previous_versions_tableWidget\
             .horizontalHeader()\
             .setStretchLastSection(True)
