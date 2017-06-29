@@ -285,7 +285,8 @@ class Houdini(EnvironmentBase):
         out_nodes = rop_context.children()
 
         exclude_node_types = [
-            hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge")
+            hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge"),
+            hou.nodeType(hou.nodeTypeCategories()["Driver"], "fetch")
         ]
 
         # remove nodes in type in exclude_node_types list
