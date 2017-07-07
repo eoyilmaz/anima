@@ -24,10 +24,6 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-required_packages = [
-    'stalker', 'edl', 'timecode', 'sqlalchemy'
-]
-
 setup(
     name="anima",
     version=anima.__version__,
@@ -52,7 +48,8 @@ setup(
         "Topic :: Software Development",
         "Topic :: Utilities",
     ],
-    requires=required_packages,
-    install_requires=required_packages,
+    requires=['stalker', 'edl', 'timecode', 'sqlalchemy'],
+    install_requires=['stalker', 'edl', 'timecode', 'sqlalchemy'],
+    test_requires=['pytest', 'pytest-xdist', 'coverage', 'pytest-cov']
 )
 

@@ -130,11 +130,28 @@ class TaskTreeView(QtWidgets.QTreeView):
         if not entity:
             return
 
+        from anima import utils
+        file_browser = utils.file_browser_name()
+
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
-        menu.addAction(u'\uf14c Open In Web Browser...')
-        menu.addAction(u'\uf0c5 Copy URL')
-        menu.addAction(u'\uf0c5 Copy ID to clipboard')
+        open_in_web_browser_action = \
+            menu.addAction(u'\uf14c Open In Web Browser...')
+        open_in_file_browser_action = \
+            menu.addAction(u'\uf07c Open In %s...' % file_browser)
+        copy_url_action = menu.addAction(u'\uf0c5 Copy URL')
+        copy_id_to_clipboard = menu.addAction(u'\uf0c5 Copy ID to clipboard')
+
+        # -----------------------------------
+        # actions created in different scopes
+        create_time_log_action = None
+        update_task_action = None
+        create_child_task_action = None
+        duplicate_task_hierarchy_action = None
+        delete_task_action = None
+        no_deps_action = None
+        create_project_structure_action = None
+        update_project_action = None
 
         from anima import defaults
         from stalker import LocalSession
@@ -152,15 +169,18 @@ class TaskTreeView(QtWidgets.QTreeView):
                     and task.status not in [status_wfd, status_prev,
                                             status_cmpl]:
                 menu.addSeparator()
-                menu.addAction(u'\uf073 Create TimeLog...')
+                create_time_log_action = \
+                    menu.addAction(u'\uf073 Create TimeLog...')
 
             # update task and create child task menu items
             if defaults.is_power_user(logged_in_user):
                 menu.addSeparator()
-                menu.addAction(u'\uf044 Update Task...')
-                menu.addAction(u'\uf0ae Create Child Task...')
-                menu.addAction(u'\uf0c5 Duplicate Task Hierarchy...')
-                menu.addAction(u'\uf1f8 Delete Task...')
+                update_task_action = menu.addAction(u'\uf044 Update Task...')
+                create_child_task_action = \
+                    menu.addAction(u'\uf0ae Create Child Task...')
+                duplicate_task_hierarchy_action = \
+                    menu.addAction(u'\uf0c5 Duplicate Task Hierarchy...')
+                delete_task_action = menu.addAction(u'\uf1f8 Delete Task...')
 
             menu.addSeparator()
 
@@ -189,12 +209,16 @@ class TaskTreeView(QtWidgets.QTreeView):
         elif isinstance(entity, Project):
             # this is a project!
             project = entity
-            menu.addAction(u'\uf115 Create Project Structure')
+            menu.addSeparator()
+            create_project_structure_action = \
+                menu.addAction(u'\uf115 Create Project Structure')
             if defaults.is_power_user(logged_in_user):
                 menu.addSeparator()
-                menu.addAction(u'\uf044 Update Project...')
+                update_project_action = \
+                    menu.addAction(u'\uf044 Update Project...')
                 menu.addSeparator()
-                menu.addAction(u'\uf0ae Create Child Task...')
+                create_child_task_action = \
+                    menu.addAction(u'\uf0ae Create Child Task...')
 
         try:
             # PySide and PySide2
@@ -205,17 +229,19 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         selected_item = menu.exec_(global_position)
         if selected_item:
-            choice = selected_item.text()[2:]  # text without icon
             from anima import defaults
             url = 'http://%s/%ss/%s/view' % (
                 defaults.stalker_server_internal_address,
                 entity.entity_type.lower(),
                 entity.id
             )
-            if choice == 'Open In Web Browser...':
+            if selected_item is open_in_web_browser_action:
                 import webbrowser
                 webbrowser.open(url)
-            elif choice == 'Copy URL':
+            elif selected_item is open_in_file_browser_action:
+                from anima import utils
+                utils.open_browser_in_location(entity.absolute_path)
+            elif selected_item is copy_url_action:
                 clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText(url)
 
@@ -228,7 +254,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     url,
                     QtWidgets.QMessageBox.Ok
                 )
-            elif choice == 'Copy ID to clipboard':
+            elif selected_item is copy_id_to_clipboard:
                 clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText('%s' % entity.id)
 
@@ -241,7 +267,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     QtWidgets.QMessageBox.Ok
                 )
 
-            elif choice == 'Create TimeLog...':
+            elif selected_item is create_time_log_action:
                 from anima.ui import time_log_dialog
                 time_log_dialog_main_dialog = time_log_dialog.MainDialog(
                     parent=self,
@@ -258,7 +284,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     # reselect the same task
                     self.find_and_select_entity_item(entity)
 
-            elif choice == 'Update Task...':
+            elif selected_item is update_task_action:
                 from anima.ui import task_dialog
                 task_main_dialog = task_dialog.MainDialog(
                     parent=self,
@@ -275,7 +301,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     # reselect the same task
                     self.find_and_select_entity_item(entity)
 
-            elif choice == 'Create Child Task...':
+            elif selected_item == create_child_task_action:
                 from anima.ui import task_dialog
                 task_main_dialog = task_dialog.MainDialog(
                     parent=self,
@@ -293,20 +319,19 @@ class TaskTreeView(QtWidgets.QTreeView):
                     # reselect the same task
                     self.find_and_select_entity_item(task)
 
-            elif choice == 'Duplicate Task Hierarchy...':
+            elif selected_item is duplicate_task_hierarchy_action:
                 QtWidgets.QMessageBox.warning(
                     self,
                     "Not Implemented!",
                     "Not implemented yet!"
                 )
-            elif choice == 'Delete Task...':
+            elif selected_item is delete_task_action:
                 QtWidgets.QMessageBox.warning(
                     self,
                     "Not Implemented!",
                     "Not implemented yet!"
                 )
-            elif choice == 'Create Project Structure':
-
+            elif selected_item == create_project_structure_action:
                 answer = QtWidgets.QMessageBox.question(
                     self,
                     'Create Project Structure?',
@@ -329,7 +354,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 else:
                     return
 
-            elif choice == 'Update Project...':
+            elif selected_item == update_project_action:
                 from anima.ui import project_dialog
                 project_main_dialog = project_dialog.MainDialog(
                     parent=self,
