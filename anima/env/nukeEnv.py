@@ -32,7 +32,7 @@ class Nuke(EnvironmentBase):
         """
         return nuke.toNode("root")
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """"the save action for nuke environment
 
         uses Nukes own python binding

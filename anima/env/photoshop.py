@@ -27,7 +27,7 @@ class Photoshop(EnvironmentBase):
         # connect to the application
         self.photoshop = comtypes.client.CreateObject('Photoshop.Application')
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """the save action for photoshop environment
 
         :param version: stalker.models.version.Version instance

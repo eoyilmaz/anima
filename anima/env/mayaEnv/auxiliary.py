@@ -2740,13 +2740,12 @@ def fix_joint_hierarchy_scale(source_joint):
     joints = [source_joint]
     while joints:
         joint = joints.pop(0)
-        joint
         data[joint.name()] = {
             't': pm.xform(joint, q=1, ws=1, t=1),
             'r': pm.xform(joint, q=1, ws=1, ro=1)
         }
         # add children to list
-        joints.extend(joint.getChildren())
+        joints.extend(joint.getChildren(type='joint'))
 
     # fix parent scale
     pm.selected()[0].getParent().s.set(1, 1, 1)
@@ -2756,7 +2755,7 @@ def fix_joint_hierarchy_scale(source_joint):
         joint = joints.pop(0)
         j_data = data[joint.name()]
         # add children to list
-        joints.extend(joint.getChildren())
+        joints.extend(joint.getChildren(type='joint'))
         pm.general.transformLimits(
             joint,
             etx=(False, False),

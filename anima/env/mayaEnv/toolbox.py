@@ -790,6 +790,12 @@ def UI():
                       ann="reset tweaks",
                       bgc=color.color)
 
+            color.change()
+            pm.button('add_cacheable_attr_button', l="add `cacheable` attribute",
+                      c=RepeatedCallback(Rigging.add_cacheable_attribute),
+                      ann="add <b>cacheable</b> attribute",
+                      bgc=color.color)
+
         # ----- RENDER ------
         render_columnLayout = pm.columnLayout(
             'render_columnLayout',
@@ -3032,6 +3038,17 @@ class Modeling(object):
 class Rigging(object):
     """Rigging tools
     """
+
+    @classmethod
+    def add_cacheable_attribute(cls):
+        """adds the cacheable attribute to the selected node
+        """
+        selection = pm.selected()
+        if selection:
+            node = selection[0]
+            if not node.hasAttr('cacheable'):
+                node.addAttr('cacheable', dt='string')
+                node.setAttr('cacheable', node.name().lower())
 
     @classmethod
     def setup_stretchy_spline_IKCurve(cls):

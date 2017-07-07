@@ -238,7 +238,7 @@ class Fusion(EnvironmentBase):
 
         self._main_output_node_name = "Main_Output"
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """"the save action for fusion environment
 
         uses Fusions own python binding

@@ -31,7 +31,7 @@ class TestEnvironment(EnvironmentBase):
         pass
 
     @count_calls
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         pass
 
     @count_calls

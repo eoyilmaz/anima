@@ -88,3 +88,78 @@ def clear_publishers():
     """
     publishers[PRE_PUBLISHER_TYPE].clear()
     publishers[POST_PUBLISHER_TYPE].clear()
+
+
+class ProgressControllerBase(object):
+    """Base class for progress controllers.
+
+    If given each publisher can call progress_controller objects. This class is
+    the base class and shows the minimum required interface to the progress
+    controllers.
+
+    Instantiate this and customize to your needs.
+    """
+
+    def __init__(self, minimum=0.0, maximum=100.0, value=0.0):
+        self._minimum = 0.0
+        self._maximum = 100.0
+        self._value = 0.0
+
+        self.value = value
+        self.minimum = minimum
+        self.maximum = maximum
+
+    @property
+    def value(self):
+        """getter for the value attribute
+        """
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        """setter for the value attribute
+
+        :param value: 
+        :return: 
+        """
+        self._value = value
+
+    @property
+    def minimum(self):
+        """getter for the minimum attribute
+        """
+        return self._minimum
+
+    @minimum.setter
+    def minimum(self, minimum):
+        """setter for the minimum attribute
+
+        :param minimum: 
+        :return: 
+        """
+        self._minimum = minimum
+
+    @property
+    def maximum(self):
+        """getter for the maximum attribute
+        """
+        return self._maximum
+
+    @maximum.setter
+    def maximum(self, maximum):
+        """setter for the maximum attribute
+
+        :param maximum: 
+        :return: 
+        """
+        self._maximum = maximum
+
+    def increment(self, step=1.0):
+        """increases value by 1 step
+        """
+        self.value += step
+
+    def complete(self):
+        """completes the progress
+        """
+        self.value = self.maximum

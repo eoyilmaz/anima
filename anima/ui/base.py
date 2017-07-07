@@ -35,7 +35,10 @@ class AnimaDialogBase(object):
         """returns the logged in user
         """
         local_session = LocalSession()
-        logged_in_user = local_session.logged_in_user
+        from stalker.db.session import DBSession
+        with DBSession.no_autoflush:
+            logged_in_user = local_session.logged_in_user
+
         if not logged_in_user:
             from anima.ui import login_dialog
             dialog = login_dialog.MainDialog(parent=self)

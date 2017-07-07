@@ -67,6 +67,7 @@ class EnvironmentBase(object):
 
     name = "EnvironmentBase"
     representations = ['Base']
+    has_publishers = False
 
     def __init__(self, name="", extensions=None, version=None):
         self._name = name
@@ -99,9 +100,13 @@ class EnvironmentBase(object):
         """
         self._name = name
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """The save as action of this environment. It should save the current
         scene or file to the given version.full_path
+
+        :param version: stalker.models.version.Version instance.
+        :param bool run_pre_publishers: Run pre publishers of this environment
+          or not. Default value is True
         """
         raise NotImplementedError
 
