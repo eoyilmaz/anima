@@ -11,6 +11,7 @@ from anima import logger
 PYSIDE = 'PySide'
 PYSIDE2 = 'PySide2'
 PYQT4 = 'PyQt4'
+QTPY = 'QtPy'  # support for https://www.gihub.com/motttoso/Qt.py
 
 # set the default
 qt_lib_key = "QT_LIB"
@@ -33,6 +34,10 @@ def IS_PYQT4():
     return qt_lib == PYQT4
 
 
+def IS_QTPY():
+    return qt_lib == QTPY
+
+
 def SET_PYSIDE():
     logger.debug('setting environment to PySide')
     global qt_lib
@@ -47,5 +52,11 @@ def SET_PYSIDE2():
 
 def SET_PYQT4():
     logger.debug('setting environment to PyQt4')
+    global qt_lib
+    qt_lib = PYQT4
+
+
+def SET_QT():
+    logger.debug('setting environment to Qt')
     global qt_lib
     qt_lib = PYQT4

@@ -53,7 +53,120 @@ class Config(ConfigBase):
         },
 
         _status_colors_by_id={},
-        _user_names_lut={},  # a table for fast user name look up
+        _user_names_lut={},  # a table for fast user name look up,
+
+        task_template={
+            
+            "Asset": {
+                "Character": {
+                    "Default": {
+                        "child_tasks": {
+                            "Model": {
+                                "type": "Model"
+                            },
+                            "LookDev": {
+                                "type": "Look Development"
+                            },
+                            "Rig": {
+                                "type": "Rig"
+                            }
+                        }
+                    }
+                },
+                "Prop": {
+                    "Default": {
+                        "child_tasks": {
+                            "Model": {
+                                "type": "Model"
+                            },
+                            "LookDev": {
+                                "type": "Look Development"
+                            }
+                        }
+                    }
+                },
+                "Active Prop": {
+                    "Default": {
+                        "child_tasks": {
+                            "Model": {
+                                "type": "Model"
+                            },
+                            "LookDev": {
+                                "type": "Look Development"
+                            },
+                            "Rig": {
+                                "type": "Rig"
+                            }
+                        }
+                    }
+                }
+            },
+            "Sequence": {
+                "Default": {
+                    "child_tasks": {
+                        "Edit": {
+                            "type": "Edit"
+                        },
+                        "Shots": {}
+                    }
+                }
+            },
+            "Shot": {
+                "Default": {
+                    "child_tasks": {
+                        "Animation": {
+                            "type": "Animation"
+                        },
+                        "Lighting": {
+                            "type": "Lighting",
+                            "depends": ["Animation"]
+                        },
+                        "Comp": {
+                            "type": "Comp",
+                            "depends": ["Lighting"]
+                        },
+                        "Camera": {
+                            "type": "Camera",
+                            "schedule_model": "duration"
+                        }
+                    }
+                },
+                "AC": {
+                    "child_tasks": {
+                        "Animation": {
+                            "type": "Animation"
+                        },
+                        "Camera": {
+                            "type": "Camera",
+                            "depends": ["Plate"]
+                        },
+                        "Lighting": {
+                            "type": "Lighting",
+                            "depends": ["Animation"]
+                        },
+                        "Comp": {
+                            "type": "Comp",
+                            "depends": ["Lighting"]
+                        },
+                        "Plate": {
+                            "type": "Plate",
+                            "schedule_model": "duration"
+                        }
+                    }
+                },
+                "CC": {
+                    "child_tasks": {
+                        "Comp": {
+                            "type": "Comp"
+                        },
+                        "Plate": {
+                            "type": "Plate",
+                            "schedule_model": "duration"
+                        }
+                    }
+                }
+            }
+        }
     )
 
     def __init__(self):

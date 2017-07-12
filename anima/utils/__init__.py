@@ -1551,3 +1551,15 @@ def create_project_structure(project):
         except OSError:
             # path already exist
             pass
+
+
+def file_browser_name():
+    """returns the file browser name of the current OS
+    """
+    import platform
+    file_browsers = {
+        'windows': 'Explorer',  # All windows versions
+        'darwin': 'Finder',  # OSX
+        'linux': 'File Browser'  # Gnome: Files, Ubuntu: Nautilus
+    }
+    return file_browsers[platform.system().lower()]

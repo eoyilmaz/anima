@@ -18,8 +18,7 @@ How To Install
 
 First of all, Anima uses Stalker. So you need to have a running PostgreSQL
 database. Stalker can work with other databases too but the preferred database
-is Postgresql and it is developed and tested against a PostgreSQL database, and
-in future the only database option will probably be Postgresql.
+is PostgreSQL and it is developed and tested against a PostgreSQL database.
 
 To manage your database settings from one place, you need to create a
 `config.py` file in a location that all of workstations and farm computers are
@@ -38,14 +37,16 @@ database_engine_settings={
 ```
 
 Then you need to create an environment variable called "STALKER_PATH" in every
-computer that you want to use stalker and then set it to the path (directory)
+computer that you want to use stalker and then set it to that path (directory)
 that contains the `config.py` file.
 
-It is a good idea to install Python 2.7.x in to the all of the computers, and
-then install `psycopg`, `PySide` and `PyQt4`. Then copy the installed `pyscopg`
-files (under python/Lib/site-packages) to your Maya installation.
+For Windows, it is a good idea to create another folder in a network storage,
+copy `anima` and all of its dependencies to that folder. Then install a local
+copy of the `pyscopg2` library and copy the installed `pyscopg2` files (under
+python/Lib/site-packages) to that network drive again. So you do not need to
+install all of the libraries for every single computer in your studio.
 
-With these 5 steps you will be able to use:
+With these steps you will be able to use:
 
 ```python
 from stalker import db
