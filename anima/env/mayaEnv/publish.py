@@ -2514,3 +2514,35 @@ def export_camera(progress_controller=None):
         progress_controller.increment()
 
     progress_controller.complete()
+
+
+@publisher(['realtimerig'], publisher_type=POST_PUBLISHER_TYPE)
+def export_fbx(progress_controll=None):
+    """Export FBX
+
+    Exports FBX of this rig
+    """
+    # select all the root nodes
+    root_transform_nodes = auxiliary.get_root_nodes()
+    pm.select(root_transform_nodes)
+
+    # create the output_fbx_path
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+
+    # get the asset name
+    asset = v.task.parent
+
+    output_fbx_path = \
+        '%s/Outputs/FBX/%s.fbx' % (v.absolute_path, asset.nice_name)
+
+    # do export
+    pm.exportSelected(
+        output_fbx_path,
+        force=1,
+        options="v=0;",
+        typ="FBX export",
+        pr=True,
+        es=True
+    )
