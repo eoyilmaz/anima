@@ -401,6 +401,9 @@ class UI(object):
                 )
                 return
 
+            # abort on license fail
+            dro.abortOnLicenseFail.set(1)
+
         elif render_engine == 'arnold':
             # check if the samples are too high
             dAO = pm.PyNode('defaultArnoldRenderOptions')
@@ -718,3 +721,6 @@ class UI(object):
         elif render_engine == 'redshift':
             redshift = pm.PyNode('redshiftOptions')
             redshift.logLevel.set(stored_log_level)
+
+            # disable abort on license fail
+            redshift.abortOnLicenseFail.set(0)
