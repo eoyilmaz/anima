@@ -1190,22 +1190,36 @@ class Playblaster(object):
     def get_hud_data(self):
         """
         """
+        # try to get the shot from sequencer
         current_shot = pm.sequenceManager(q=1, currentShot=1)
 
-        if not current_shot:
-            return ''
+        if current_shot:
+            shot_name = pm.getAttr('%s.shotName' % current_shot)
+            current_cam_name = pm.shot(current_shot, q=1, cc=1)
+            current_cam = pm.PyNode(current_cam_name)
+        else:
+            # then try to get the shot name from the file name
+            import os
+            shot_name = os.path.split(pm.sceneName())[1].split('_')[0]
+            # use the active panel camera
+            active_panel = self.get_active_panel()
+            current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+            current_cam_name = current_cam.name()
 
-        shot_name = pm.getAttr('%s.shotName' % current_shot)
-        current_cam_name = pm.shot(current_shot, q=1, cc=1)
-        current_cam = pm.PyNode(current_cam_name)
         if isinstance(current_cam, pm.nt.Transform):
             current_cam = current_cam.getShape()
+
         focal_length = current_cam.getAttr('focalLength')
-        sequencer = pm.ls(type='sequencer')[0]
-        if sequencer.getAttr('sequence_name') != '':
-            shot_info = sequencer.getAttr('sequence_name')
+
+        sequencers = pm.ls(type='sequencer')
+        if sequencers:
+            sequencer = sequencers[0]
+            if sequencer.getAttr('sequence_name') != '':
+                shot_info = sequencer.getAttr('sequence_name')
+            else:
+                shot_info = 'INVALID'
         else:
-            shot_info = 'INVALID'
+            shot_info = shot_name
 
         cf = pm.currentTime(q=1) + 1
 
@@ -1213,14 +1227,27 @@ class Playblaster(object):
         # TODO: This should use project frame rate
         tc = timecode.Timecode('24', frames=cf)
 
-        start_time = pm.shot(current_shot, q=1, st=1)
-        end_time = pm.shot(current_shot, q=1, et=1)
+        if current_shot:
+            start_time = pm.shot(current_shot, q=1, st=1)
+            end_time = pm.shot(current_shot, q=1, et=1)
+        else:
+            # no shot node use the current playback range
+            start_time = pm.playbackOptions(q=1, min=1)
+            end_time = pm.playbackOptions(q=1, max=1)
 
         cs_frame = int(cf - start_time)
 
         length = int(end_time - start_time) + 1
 
-        user_name = self.version.updated_by.name
+        if self.version:
+            user_name = self.version.updated_by.name
+        else:
+            # get the user name from the login info
+            if self.logged_in_user:
+                user_name = self.logged_in_user.name
+            else:
+                # ok try to use the filename
+                user_name = pm.sceneName().split('_')[-1]
 
         hud_string = \
             '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
