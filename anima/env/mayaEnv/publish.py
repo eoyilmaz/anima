@@ -103,6 +103,7 @@ VALID_MATERIALS = {
 
 
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
+REALTIME_RIG_TYPES = ['RealtimeRig', 'Realtime Rig']
 
 
 # ********* #
@@ -2516,7 +2517,7 @@ def export_camera(progress_controller=None):
     progress_controller.complete()
 
 
-@publisher(['realtimerig'], publisher_type=POST_PUBLISHER_TYPE)
+@publisher(REALTIME_RIG_TYPES, publisher_type=POST_PUBLISHER_TYPE)
 def export_fbx(progress_controll=None):
     """Export FBX
 
