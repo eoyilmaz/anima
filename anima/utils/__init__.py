@@ -774,7 +774,14 @@ class MediaManager(object):
 
         logger.debug('calling ffmpeg with args: %s' % args)
 
-        process = subprocess.Popen(args, stderr=subprocess.PIPE)
+
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(args, stderr=subprocess.PIPE,
+                                   startupinfo=startupinfo)
 
         # loop until process finishes and capture stderr output
         stderr_buffer = []
@@ -817,7 +824,13 @@ class MediaManager(object):
 
         logger.debug('calling ffprobe with args: %s' % args)
 
-        process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                   startupinfo=startupinfo)
 
         # loop until process finishes and capture stderr output
         stdout_buffer = []
