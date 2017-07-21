@@ -119,11 +119,11 @@ static PRM_Template * getTemplates()
 	prmTemplate                             = new PRM_Template[ROP_H2A_MAXPARMS + 1];
 
 	prmTemplate[ROP_H2A_RENDER]             = theRopTemplates[ROP_RENDER_TPLATE];
+	prmTemplate[ROP_H2A_RENDERBACKGROUND]   = theRopTemplates[ROP_RENDERBACKGROUND_TPLATE];
 	prmTemplate[ROP_H2A_RENDER_CTRL]        = theRopTemplates[ROP_RENDERDIALOG_TPLATE];
 	prmTemplate[ROP_H2A_TRANGE]             = theRopTemplates[ROP_TRANGE_TPLATE];
 	prmTemplate[ROP_H2A_FRANGE]             = theRopTemplates[ROP_FRAMERANGE_TPLATE];
 	prmTemplate[ROP_H2A_TAKE]               = theRopTemplates[ROP_TAKENAME_TPLATE];
-
 	prmTemplate[ROP_H2A_SOPOUTPUT]          = H2A_Rop::myTemplateList[0];
 	prmTemplate[ROP_H2A_SOPPATH]            = H2A_Rop::myTemplateList[1];
 	prmTemplate[ROP_H2A_NAME]               = H2A_Rop::myTemplateList[2];
