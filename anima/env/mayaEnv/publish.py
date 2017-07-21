@@ -2524,8 +2524,8 @@ def export_fbx(progress_controll=None):
     Exports FBX of this rig
     """
     # select all the root nodes
-    root_transform_nodes = auxiliary.get_root_nodes()
-    pm.select(root_transform_nodes)
+    # root_transform_nodes = auxiliary.get_root_nodes()
+    # pm.select(root_transform_nodes)
 
     # create the output_fbx_path
     from anima.env import mayaEnv
@@ -2538,8 +2538,17 @@ def export_fbx(progress_controll=None):
     output_fbx_path = \
         '%s/Outputs/FBX/%s.fbx' % (v.absolute_path, asset.nice_name)
 
+    # Create the folder first
+    try:
+        os.makedirs(
+            os.path.dirname(output_fbx_path)
+        )
+    except OSError:
+        # dir exists
+        pass
+
     # do export
-    pm.exportSelected(
+    pm.exportAll(
         output_fbx_path,
         force=1,
         options="v=0;",
