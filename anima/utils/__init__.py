@@ -1576,3 +1576,176 @@ def file_browser_name():
         'linux': 'File Browser'  # Gnome: Files, Ubuntu: Nautilus
     }
     return file_browsers[platform.system().lower()]
+
+
+def duplicate_task(task, user):
+    """Duplicates the given task without children.
+
+    :param task: a stalker.models.task.Task instance
+    :return: stalker.models.task.Task
+    """
+    # TODO: Update this to pytz
+    utc_now = local_to_utc(
+        datetime.datetime.now()
+    )
+
+    # create a new task and change its attributes
+    from stalker import Task
+    class_ = Task
+    extra_kwargs = {}
+    if task.entity_type == 'Asset':
+        from stalker import Asset
+        class_ = Asset
+        extra_kwargs = {
+            'code': task.code
+        }
+    elif task.entity_type == 'Shot':
+        from stalker import Shot
+        class_ = Shot
+        extra_kwargs = {
+            'code': task.code + 'dup'
+        }
+    elif task.entity_type == 'Sequence':
+        from stalker import Sequence
+        class_ = Sequence
+        extra_kwargs = {
+            'code': task.code
+        }
+
+    # all duplicated tasks are new tasks
+    from stalker import Status
+    new = Status.query.filter(Status.code == 'WFD').first()
+
+    dup_task = class_(
+        name=task.name,
+        project=task.project,
+        bid_timing=task.bid_timing,
+        bid_unit=task.bid_unit,
+        computed_end=task.computed_end,
+        computed_start=task.computed_start,
+        created_by=user,
+        description=task.description,
+        is_milestone=task.is_milestone,
+        resources=task.resources,
+        priority=task.priority,
+        schedule_constraint=task.schedule_constraint,
+        schedule_model=task.schedule_model,
+        schedule_timing=task.schedule_timing,
+        schedule_unit=task.schedule_unit,
+        status=new,
+        status_list=task.status_list,
+        tags=task.tags,
+        responsible=task.responsible,
+        start=task.start,
+        end=task.end,
+        # thumbnail=task.thumbnail,
+        type=task.type,
+        watchers=task.watchers,
+        date_created=utc_now,
+        **extra_kwargs
+    )
+    dup_task.generic_data = task.generic_data
+
+    return dup_task
+
+
+def walk_and_duplicate_task_hierarchy(task, user):
+    """Walks through task hierarchy and creates duplicates of all the tasks
+    it finds
+
+    :param task: task
+    :param user: stalker.models.auth.User instance that does this action.
+    :return:
+    """
+    # start from the given task
+    logger.debug('duplicating task : %s' % task)
+    logger.debug('task.children    : %s' % task.children)
+    dup_task = duplicate_task(task, user)
+    task.duplicate = dup_task
+    for child in task.children:
+        logger.debug('duplicating child : %s' % child)
+        duplicated_child = walk_and_duplicate_task_hierarchy(child, user)
+        duplicated_child.parent = dup_task
+    return dup_task
+
+
+def update_dependencies_in_duplicated_hierarchy(task):
+    """Updates the dependencies in the given task. Uses the task.duplicate
+    attribute to find the duplicate
+
+    :param task: The top most task of the hierarchy
+    :return: None
+    """
+    try:
+        duplicated_task = task.duplicate
+    except AttributeError:
+        # not a duplicated task
+        logger.debug('task has no duplicate: %s' % task)
+        return
+
+    for dependent_task in task.depends:
+        if hasattr(dependent_task, 'duplicate'):
+            logger.debug('there is a duplicate!')
+            logger.debug('dependent_task.duplicate : %s' %
+                         dependent_task.duplicate)
+            duplicated_task.depends.append(dependent_task.duplicate)
+        else:
+            logger.debug('there is no duplicate!')
+            duplicated_task.depends.append(dependent_task)
+
+    for child in task.children:
+        # check child dependencies
+        # loop through children
+        update_dependencies_in_duplicated_hierarchy(child)
+
+
+def cleanup_duplicate_residuals(task):
+    """Cleans the duplicate attributes in the hierarchy
+
+    :param task: The top task in the hierarchy
+    :return:
+    """
+    try:
+        delattr(task, 'duplicate')
+    except AttributeError:
+        pass
+
+    for child in task.children:
+        cleanup_duplicate_residuals(child)
+
+
+def duplicate_task_hierarchy(task, parent, name, description, user):
+    """Duplicates the given task hierarchy.
+
+    Walks through the hierarchy of the given task and duplicates every
+    instance it finds in a new task.
+
+    task: The task that wanted to be duplicated
+
+    :return: A list of stalker.models.task.Task
+    """
+    # TODO: update this to pytz
+    # import pytz
+    utc_now = local_to_utc(
+        datetime.datetime.now()
+    )
+
+    dup_task = walk_and_duplicate_task_hierarchy(task, user)
+    update_dependencies_in_duplicated_hierarchy(task)
+
+    cleanup_duplicate_residuals(task)
+    # update the parent
+    if parent is None and task.parent is not None:
+        parent = task.parent
+
+    dup_task.parent = parent
+    # just rename the dup_task
+
+    dup_task.name = name
+    dup_task.code = name
+    dup_task.description = description
+
+    from stalker.db.session import DBSession
+    DBSession.add(dup_task)
+
+    return dup_task
