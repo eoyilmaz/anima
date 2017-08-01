@@ -97,6 +97,10 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         logger.debug('projects: %s' % projects)
 
+        # delete the old model if any
+        if self.model() is not None:
+            self.model().deleteLater()
+
         task_tree_model = TaskTreeModel()
         task_tree_model.populateTree(projects)
         self.setModel(task_tree_model)
@@ -279,7 +283,10 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 if result == accepted:
                     # refresh the task list
-                    self.fill()
+                    if item.parent:
+                        item.parent.reload()
+                    else:
+                        self.fill()
 
                     # reselect the same task
                     self.find_and_select_entity_item(entity)
@@ -296,9 +303,12 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 # refresh the task list
                 if result == accepted:
-                    self.fill()
-
-                    # reselect the same task
+                    # just reload the same item
+                    if item.parent:
+                        item.parent.reload()
+                    else:
+                        # reload the entire
+                        self.fill()
                     self.find_and_select_entity_item(entity)
 
             elif selected_item == create_child_task_action:
@@ -313,24 +323,57 @@ class TaskTreeView(QtWidgets.QTreeView):
                 task_main_dialog.deleteLater()
 
                 if result == accepted and task:
-                    # refresh the task list
-                    self.fill()
-
-                    # reselect the same task
+                    # reload the parent item
+                    if item.parent:
+                        item.parent.reload()
+                    else:
+                        self.fill()
                     self.find_and_select_entity_item(task)
 
             elif selected_item is duplicate_task_hierarchy_action:
-                QtWidgets.QMessageBox.warning(
+                new_task_name, result = QtWidgets.QInputDialog.getText(
                     self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
+                    "Input Dialog", "Duplicated Task Name:",
+                    QtWidgets.QLineEdit.Normal,
+                    item.task.name
                 )
+                if result:
+                    from anima import utils
+                    from stalker import Task
+                    task = Task.query.get(item.task.id)
+                    new_task = utils.duplicate_task_hierarchy(
+                        task,
+                        None,
+                        new_task_name,
+                        description='Duplicated from Task(%s)' % task.id,
+                        user=logged_in_user
+                    )
+                    if new_task:
+                        from stalker.db.session import DBSession
+                        DBSession.commit()
+                        item.parent.reload()
+
             elif selected_item is delete_task_action:
-                QtWidgets.QMessageBox.warning(
+                answer = QtWidgets.QMessageBox.question(
                     self,
-                    "Not Implemented!",
-                    "Not implemented yet!"
+                    'Delete Task?',
+                    "Delete the task and children?<br><br>(NO UNDO!!!!)",
+                    QtWidgets.QMessageBox.Yes,
+                    QtWidgets.QMessageBox.No
                 )
+                if answer == QtWidgets.QMessageBox.Yes:
+                    from stalker.db.session import DBSession
+                    from stalker import Task
+                    task = Task.query.get(item.task.id)
+                    DBSession.delete(task)
+                    DBSession.commit()
+                    # reload the parent
+                    if item.parent:
+                        item.parent.reload()
+                    else:
+                        self.fill()
+                    self.find_and_select_entity_item(item.parent.task)
+
             elif selected_item == create_project_structure_action:
                 answer = QtWidgets.QMessageBox.question(
                     self,
@@ -383,7 +426,11 @@ class TaskTreeView(QtWidgets.QTreeView):
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item
         """
+        import time
+        start = time.time()
         if not task:
+            print ('TaskTreeView.find_and_select_entity_item returned early '
+                   '(1) and took: %0.2f seconds' % (time.time() - start))
             return
 
         if not tree_view:
@@ -394,6 +441,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         selection_model = self.selectionModel()
         if not item:
             selection_model.clearSelection()
+            print ('TaskTreeView.find_and_select_entity_item returned early '
+                   '(2) and took: %0.2f seconds' % (time.time() - start))
             return
 
         try:
@@ -412,6 +461,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.scrollTo(
             item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
         )
+        print ('TaskTreeView.find_and_select_entity_item took: '
+               '%0.2f seconds' % (time.time() - start))
         return item
 
     def load_task_item_hierarchy(self, task, tree_view):

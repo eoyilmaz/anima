@@ -292,6 +292,15 @@ class TaskItem(QtGui.QStandardItem):
         """
         return QtGui.QStandardItem.UserType + 1
 
+    def reload(self):
+        """reloads the self data
+        """
+        # delete all the children and fetch them again
+        for i in range(self.rowCount()):
+            self.removeRow(0)
+        self.fetched_all = False
+        self.fetchMore()
+
 
 class TaskTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the task hierarchy
@@ -386,3 +395,13 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             'TaskTreeModel.hasChildren() is finished for index: %s' % index
         )
         return return_value
+
+    def reload(self, index):
+        """reloads the item at the given index
+        """
+        if not index.isValid():
+            # just return
+            return
+        else:
+            item = self.itemFromIndex(index)
+            item.reload()
