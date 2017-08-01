@@ -278,6 +278,8 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             sorted([p.name for p in Project.query.all()])
         )
 
+        self.fps_spinBox.setValue(25)
+
         # select the project if a parent_task or task given
         project = None
         if self.parent_task:
@@ -286,6 +288,9 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             elif isinstance(self.parent_task, Project):
                 project = self.parent_task
                 self.parent_task = None
+            if project:
+                # set the default value of the fps
+                self.fps_spinBox.setValue(project.fps)
         self.set_project(project)
 
         # if a parent is given set it to the parent_task_lineEdit
@@ -325,7 +330,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             [''] + map(lambda x: x[0], all_sequence_names)
         )
 
-        self.fps_spinBox.setValue(25)
         self.cutIn_spinBox.setValue(0)
         self.cutOut_spinBox.setValue(0)
 
@@ -755,7 +759,12 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             .all()
 
         all_user_names = \
-            map(lambda x: defaults.user_names_lut[x[0]], all_project_user_ids)
+            sorted(
+                map(
+                    lambda x: defaults.user_names_lut[x[0]],
+                    all_project_user_ids
+                )
+            )
 
         # clear depends_to_listWidget
         self.depends_to_listWidget.clear()
