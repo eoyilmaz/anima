@@ -401,13 +401,38 @@ class UI(object):
                 )
                 return
 
+            # Check dome light backgrounds
+            domes_to_fix = []
+            rs_domes = pm.ls(type='RedshiftDomeLight')
+            if rs_domes:
+                for rs_dome in rs_domes:
+                    if rs_dome.getAttr('background_enable') == 1 \
+                       or rs_dome.getAttr('backPlateEnabled') == 1:
+                        domes_to_fix.append(rs_dome.name())
+
+            if domes_to_fix:
+                message = 'Some DomeLights have <b>BackGround Render ' \
+                          'Enabled</b>:' \
+                          '<br><br>%s<br><br>' \
+                          'Are you Sure?' % '<br>'.join(domes_to_fix)
+
+                response = pm.confirmDialog(
+                    title='Dome Lights with Background Enabled?',
+                    message=message,
+                    button=['Yes', 'No'],
+                    defaultButton='No',
+                    cancelButton='No',
+                    dismissString='No'
+                )
+                if response == 'No':
+                    return
+
             # abort on license fail
             dro.abortOnLicenseFail.set(1)
 
         elif render_engine == 'arnold':
             # check if the samples are too high
             dAO = pm.PyNode('defaultArnoldRenderOptions')
-
 
             aa_samples = dAO.AASamples.get()
             diff_samples = dAO.GIDiffuseSamples.get()
