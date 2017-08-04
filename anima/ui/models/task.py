@@ -169,6 +169,7 @@ class TaskItem(QtGui.QStandardItem):
     task_entity_types = ['Task', 'Asset', 'Shot', 'Sequence']
 
     def __init__(self, *args, **kwargs):
+        # TODO: rename self.task to self.entity
         self.task = kwargs.pop('entity', None)
         self.loaded = False
         self.fetched_all = False
