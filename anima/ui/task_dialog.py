@@ -7,16 +7,7 @@ import re
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.lib import QtCore, QtWidgets, QtGui
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import task_dialog_UI_pyside as task_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import task_dialog_UI_pyside2 as task_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import task_dialog_UI_pyqt4 as task_dialog_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -31,14 +22,13 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Task Dialog
     """
 
     def __init__(self, parent=None, parent_task=None, task=None):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
 
         # store the logged in user
         self.logged_in_user = None
@@ -49,7 +39,7 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
         if self.task:
             self.mode = 'Update'
 
-        self.dialog_label.setText('%s Task' % self.mode)
+        self._setup()
 
         self.updating_resources_combo_box = False
         self.updating_responsible_combo_box = False
@@ -58,43 +48,403 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
 
         self.last_selected_dependent_task = None
 
-        self.cutOut_spinBox.setMaximum(999999)
-        # add self.parent_task_lineEdit
-        from anima.ui.widgets import ValidatedLineEdit
+        self._setup_signals()
+        self._set_defaults()
 
+        if self.task:
+            self.fill_ui_with_task(self.task)
+
+    def _setup(self):
+        """setup the ui elements
+        """
+        self.setWindowTitle("Task Dialog")
+        self.resize(553, 788)
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
+
+        # Dialog Label
+        self.dialog_label = QtWidgets.QLabel(self)
+        self.dialog_label.setText('%s Task' % self.mode)
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
+        self.vertical_layout.addWidget(self.dialog_label)
+
+        # Title Line
+        line = QtWidgets.QFrame(self)
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.vertical_layout.addWidget(line)
+
+        # Form Layout
+        self.form_layout = QtWidgets.QFormLayout()
+        self.form_layout.setFieldGrowthPolicy(
+            QtWidgets.QFormLayout.AllNonFixedFieldsGrow
+        )
+        self.form_layout.setLabelAlignment(
+            QtCore.Qt.AlignRight |
+            QtCore.Qt.AlignTrailing |
+            QtCore.Qt.AlignVCenter
+        )
+
+        # ----------------------------------------------
+        # Project Field
+        self.project_label = QtWidgets.QLabel("Project", self)
+        self.form_layout.setWidget(
+            0, QtWidgets.QFormLayout.LabelRole, self.project_label
+        )
+        self.projects_comboBox = QtWidgets.QComboBox(self)
+        self.form_layout.setWidget(
+            0, QtWidgets.QFormLayout.FieldRole, self.projects_comboBox
+        )
+
+        # ----------------------------------------------
+        # Entity Type Field
+
+        # label
+        self.entity_type_label = QtWidgets.QLabel("Entity Type", self)
+        self.form_layout.setWidget(
+            1, QtWidgets.QFormLayout.LabelRole, self.entity_type_label
+        )
+
+        # field
+        self.entity_type_comboBox = QtWidgets.QComboBox(self)
+
+        self.entity_type_comboBox.addItem("Task")
+        self.entity_type_comboBox.addItem("Asset")
+        self.entity_type_comboBox.addItem("Shot")
+        self.entity_type_comboBox.addItem("Sequence")
+
+        self.form_layout.setWidget(
+            1,
+            QtWidgets.QFormLayout.FieldRole,
+            self.entity_type_comboBox
+        )
+
+        # ----------------------------------------------
+        # Parent Task Field
+        self.parent_label = QtWidgets.QLabel("Parent", self)
+        self.parent_label.setObjectName("parent_label")
+        self.form_layout.setWidget(
+            2,
+            QtWidgets.QFormLayout.LabelRole,
+            self.parent_label
+        )
+        self.parent_task_fields_verticalLayout = QtWidgets.QVBoxLayout()
+        self.parent_task_fields_verticalLayout.setObjectName(
+            "parent_task_fields_verticalLayout")
+        self.parent_task_fields_horizontalLayout = QtWidgets.QHBoxLayout()
+        self.parent_task_fields_horizontalLayout.setObjectName(
+            "parent_task_fields_horizontalLayout")
+
+        # Validator
+        self.parent_task_validator_label = \
+            QtWidgets.QLabel("Validator Message", self)
+        self.parent_task_validator_label.setStyleSheet(
+            "color: rgb(255, 0, 0);"
+        )
+
+        # Line Edit
+        from anima.ui.widgets import ValidatedLineEdit
         self.parent_task_lineEdit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label
         )
         self.parent_task_lineEdit.setEnabled(False)
-        self.parent_task_fields_horizontalLayout.insertWidget(
-            0, self.parent_task_lineEdit
+        self.parent_task_fields_horizontalLayout.addWidget(
+            self.parent_task_lineEdit
         )
 
-        # add name_lineEdit
+        self.pick_parent_task_pushButton = QtWidgets.QPushButton(self)
+        self.pick_parent_task_pushButton.setToolTip("Pick parent task")
+        self.pick_parent_task_pushButton.setText("...")
+
+        self.parent_task_fields_horizontalLayout.addWidget(
+            self.pick_parent_task_pushButton
+        )
+        self.parent_task_fields_verticalLayout.addLayout(
+            self.parent_task_fields_horizontalLayout
+        )
+        self.parent_task_fields_verticalLayout.addWidget(
+            self.parent_task_validator_label
+        )
+        self.form_layout.setLayout(
+            2,
+            QtWidgets.QFormLayout.FieldRole,
+            self.parent_task_fields_verticalLayout
+        )
+
+        # ----------------------------------------------
+        # Name Fields
+        self.name_label = QtWidgets.QLabel("Name", self)
+        self.form_layout.setWidget(
+            3,
+            QtWidgets.QFormLayout.LabelRole,
+            self.name_label
+        )
+        self.name_field_verticalLayout = QtWidgets.QVBoxLayout()
+        self.name_validator_label = QtWidgets.QLabel("Validator Message", self)
+        self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
+        self.name_field_verticalLayout.addWidget(self.name_validator_label)
+        self.form_layout.setLayout(
+            3,
+            QtWidgets.QFormLayout.FieldRole,
+            self.name_field_verticalLayout
+        )
+
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
-        self.name_field_verticalLayout.insertWidget(
-            0, self.name_lineEdit
-        )
+        self.name_field_verticalLayout.addWidget(self.name_lineEdit)
 
-        # add code_lineEdit
+        # ----------------------------------------------
+        # Code Fields
+        self.code_label = QtWidgets.QLabel("Code", self)
+        self.form_layout.setWidget(
+            4,
+            QtWidgets.QFormLayout.LabelRole,
+            self.code_label
+        )
+        self.code_field_verticalLayout = QtWidgets.QVBoxLayout()
+
+        # Validator Label
+        self.code_validator_label = QtWidgets.QLabel("Validator Message", self)
+        self.code_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
+
+        # Validated Line Edit
         self.code_lineEdit = ValidatedLineEdit(
             message_field=self.code_validator_label
         )
-        self.code_field_verticalLayout.insertWidget(
-            0, self.code_lineEdit
+        self.code_field_verticalLayout.addWidget(self.code_lineEdit)
+        self.code_field_verticalLayout.addWidget(self.code_validator_label)
+
+        self.form_layout.setLayout(
+            4,
+            QtWidgets.QFormLayout.FieldRole,
+            self.code_field_verticalLayout
         )
 
-        # update the tab order
-        self.setTabOrder(self.entity_type_comboBox, self.projects_comboBox)
-        self.setTabOrder(self.projects_comboBox, self.parent_task_lineEdit)
-        self.setTabOrder(
-            self.parent_task_lineEdit, self.pick_parent_task_pushButton
+        # ----------------------------------------------
+        # Task Type Fields
+        self.task_type_label = QtWidgets.QLabel("Task Type", self)
+        self.form_layout.setWidget(
+            5,
+            QtWidgets.QFormLayout.LabelRole,
+            self.task_type_label
         )
-        self.setTabOrder(self.pick_parent_task_pushButton, self.name_lineEdit)
-        self.setTabOrder(self.name_lineEdit, self.code_lineEdit)
-        self.setTabOrder(self.code_lineEdit, self.task_type_comboBox)
+
+        self.task_type_comboBox = QtWidgets.QComboBox(self)
+        self.task_type_comboBox.setEditable(True)
+        self.form_layout.setWidget(
+            5, QtWidgets.QFormLayout.FieldRole, self.task_type_comboBox
+        )
+
+        # ----------------------------------------------
+        # Asset Type Fields
+        self.asset_type_label = QtWidgets.QLabel("Asset Type", self)
+        self.form_layout.setWidget(
+            6,
+            QtWidgets.QFormLayout.LabelRole,
+            self.asset_type_label
+        )
+
+        self.asset_type_comboBox = QtWidgets.QComboBox(self)
+        self.asset_type_comboBox.setEditable(True)
+        self.form_layout.setWidget(
+            6, QtWidgets.QFormLayout.FieldRole, self.asset_type_comboBox
+        )
+
+        # ----------------------------------------------
+        # Sequence Fields
+        self.sequence_label = QtWidgets.QLabel("Sequence", self)
+        self.form_layout.setWidget(
+            7, QtWidgets.QFormLayout.LabelRole, self.sequence_label
+        )
+        self.sequence_comboBox = QtWidgets.QComboBox(self)
+        self.form_layout.setWidget(
+            7, QtWidgets.QFormLayout.FieldRole, self.sequence_comboBox
+        )
+
+        # ----------------------------------------------
+        # FPS Fields
+        self.fps_label = QtWidgets.QLabel("FPS", self)
+        self.form_layout.setWidget(
+            8,
+            QtWidgets.QFormLayout.LabelRole,
+            self.fps_label
+        )
+        self.fps_spinBox = QtWidgets.QSpinBox(self)
+        self.fps_spinBox.setMinimum(1)
+        self.form_layout.setWidget(
+            8,
+            QtWidgets.QFormLayout.FieldRole,
+            self.fps_spinBox
+        )
+
+        # ----------------------------------------------
+        # CutIn & CutOut Fields
+        self.cutIn_cutOut_label = QtWidgets.QLabel("Cut In & Out", self)
+        self.form_layout.setWidget(
+            9,
+            QtWidgets.QFormLayout.LabelRole,
+            self.cutIn_cutOut_label
+        )
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.cutIn_spinBox = QtWidgets.QSpinBox(self)
+        self.horizontalLayout_4.addWidget(self.cutIn_spinBox)
+        self.cutOut_spinBox = QtWidgets.QSpinBox(self)
+        self.cutOut_spinBox.setMaximum(999999)
+
+        self.horizontalLayout_4.addWidget(self.cutOut_spinBox)
+        self.form_layout.setLayout(
+            9,
+            QtWidgets.QFormLayout.FieldRole,
+            self.horizontalLayout_4
+        )
+
+        # ----------------------------------------------
+        # DependsTo Fields
+        self.depends_to_label = QtWidgets.QLabel("Depends To", self)
+        self.form_layout.setWidget(
+            10,
+            QtWidgets.QFormLayout.LabelRole,
+            self.depends_to_label
+        )
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.depends_to_listWidget = QtWidgets.QListWidget(self)
+        self.depends_to_listWidget.setSelectionMode(
+            QtWidgets.QAbstractItemView.MultiSelection
+        )
+        self.horizontalLayout_3.addWidget(self.depends_to_listWidget)
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.add_depending_task_pushButton = QtWidgets.QPushButton("+", self)
+        self.add_depending_task_pushButton.setMaximumSize(
+            QtCore.QSize(25, 16777215))
+        self.verticalLayout_3.addWidget(self.add_depending_task_pushButton)
+        self.remove_depending_task_pushButton =\
+            QtWidgets.QPushButton("-", self)
+        self.remove_depending_task_pushButton.setMaximumSize(
+            QtCore.QSize(25, 16777215))
+        self.verticalLayout_3.addWidget(
+            self.remove_depending_task_pushButton)
+        spacerItem = QtWidgets.QSpacerItem(
+            20, 40,
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Expanding
+        )
+        self.verticalLayout_3.addItem(spacerItem)
+        self.horizontalLayout_3.addLayout(self.verticalLayout_3)
+        self.form_layout.setLayout(
+            10,
+            QtWidgets.QFormLayout.FieldRole,
+            self.horizontalLayout_3
+        )
+
+        # ----------------------------------------------
+        # Resources Fields
+        self.resources_label = QtWidgets.QLabel("Resources", self)
+        self.form_layout.setWidget(
+            11,
+            QtWidgets.QFormLayout.LabelRole,
+            self.resources_label
+        )
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
+        self.resources_comboBox = QtWidgets.QComboBox(self)
+        self.resources_comboBox.setEditable(True)
+
+        self.verticalLayout_2.addWidget(self.resources_comboBox)
+        self.resources_listWidget = QtWidgets.QListWidget(self)
+        self.resources_listWidget.setToolTip("Double click to remove")
+        self.verticalLayout_2.addWidget(self.resources_listWidget)
+        self.form_layout.setLayout(
+            11,
+            QtWidgets.QFormLayout.FieldRole,
+            self.verticalLayout_2
+        )
+
+        # ----------------------------------------------
+        # Responsible Fields
+        self.responsible_label = QtWidgets.QLabel("Responsible", self)
+        self.form_layout.setWidget(
+            12,
+            QtWidgets.QFormLayout.LabelRole,
+            self.responsible_label
+        )
+        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.responsible_comboBox = QtWidgets.QComboBox(self)
+        self.responsible_comboBox.setEditable(True)
+        self.verticalLayout_4.addWidget(self.responsible_comboBox)
+        self.responsible_listWidget = QtWidgets.QListWidget(self)
+        self.verticalLayout_4.addWidget(self.responsible_listWidget)
+        self.form_layout.setLayout(
+            12,
+            QtWidgets.QFormLayout.FieldRole,
+            self.verticalLayout_4
+        )
+
+        # ----------------------------------------------
+        # Schedule Timing Fields
+        self.schedule_timing_label = QtWidgets.QLabel("Schedule Timing", self)
+        self.form_layout.setWidget(
+            13,
+            QtWidgets.QFormLayout.LabelRole,
+            self.schedule_timing_label
+        )
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.schedule_timing_spinBox = QtWidgets.QSpinBox(self)
+        self.schedule_timing_spinBox.setMaximum(9999)
+        self.horizontalLayout_2.addWidget(self.schedule_timing_spinBox)
+        self.schedule_unit_comboBox = QtWidgets.QComboBox(self)
+        self.horizontalLayout_2.addWidget(self.schedule_unit_comboBox)
+        self.schedule_model_comboBox = QtWidgets.QComboBox(self)
+        self.horizontalLayout_2.addWidget(self.schedule_model_comboBox)
+        self.form_layout.setLayout(
+            13,
+            QtWidgets.QFormLayout.FieldRole,
+            self.horizontalLayout_2
+        )
+
+        # ----------------------------------------------
+        # Update Bid Fields
+        self.update_bid_label = QtWidgets.QLabel("Update Bid", self)
+        self.form_layout.setWidget(
+            14, QtWidgets.QFormLayout.LabelRole, self.update_bid_label
+        )
+        self.update_bid_checkBox = QtWidgets.QCheckBox(self)
+        self.update_bid_checkBox.setText("")
+        self.form_layout.setWidget(
+            14, QtWidgets.QFormLayout.FieldRole, self.update_bid_checkBox
+        )
+
+        # ----------------------------------------------
+        # Priority Fields
+        self.priority_label = QtWidgets.QLabel("Priority", self)
+        self.form_layout.setWidget(
+            15, QtWidgets.QFormLayout.LabelRole, self.priority_label
+        )
+        self.priority_spinBox = QtWidgets.QSpinBox(self)
+        self.priority_spinBox.setMaximum(1000)
+        self.priority_spinBox.setProperty("value", 500)
+        self.form_layout.setWidget(
+            15, QtWidgets.QFormLayout.FieldRole, self.priority_spinBox
+        )
+
+        self.vertical_layout.addLayout(self.form_layout)
+
+        # ----------------------------------------------
+        # Button Box
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        self.vertical_layout.addWidget(self.buttonBox)
+
+        # ----------------------------------------------
+        # Set Tab Order
+        self.setTabOrder(self.entity_type_comboBox, self.projects_comboBox)
+        self.setTabOrder(
+            self.projects_comboBox, self.pick_parent_task_pushButton
+        )
+        self.setTabOrder(
+            self.pick_parent_task_pushButton, self.task_type_comboBox
+        )
         self.setTabOrder(self.task_type_comboBox, self.asset_type_comboBox)
         self.setTabOrder(self.asset_type_comboBox, self.sequence_comboBox)
         self.setTabOrder(self.sequence_comboBox, self.fps_spinBox)
@@ -129,13 +479,6 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             self.schedule_model_comboBox, self.update_bid_checkBox
         )
         self.setTabOrder(self.update_bid_checkBox, self.priority_spinBox)
-
-        self._setup_signals()
-
-        self._set_defaults()
-
-        if self.task:
-            self.fill_ui_with_task(self.task)
 
     def show(self):
         """overridden show method
@@ -236,6 +579,18 @@ class MainDialog(QtWidgets.QDialog, task_dialog_UI.Ui_Dialog, AnimaDialogBase):
             self.responsible_listWidget,
             QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
             self.responsible_list_widget_item_double_clicked
+        )
+
+        # button box
+        QtCore.QObject.connect(
+            self.buttonBox,
+            QtCore.SIGNAL("accepted()"),
+            self.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox,
+            QtCore.SIGNAL("rejected()"),
+            self.reject
         )
 
     def _set_defaults(self):
