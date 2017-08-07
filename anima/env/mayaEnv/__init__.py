@@ -907,7 +907,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 dRO.exrCompression.set(0)
                 dRO.exrIsTiled.set(0)
                 dRO.autocrop.set(1)
-                dRO.exrForceMultilayer.set(0)
+                # dRO.exrForceMultilayer.set(0)
                 dRO.exrMultipart.set(0)
                 dRO.noSaveImage.set(0)
                 dRO.skipExistingFrames.set(0)
