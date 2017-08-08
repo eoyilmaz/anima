@@ -86,7 +86,7 @@ except pm.MayaNodeError:
     pass
 
 # set ui to PySide2 for maya2017
-if pymel.versions.current() > 201500:
+if pymel.versions.current() > 201650:
     logprint('setting QtLib to PySide2 inside userSetup.py')
     from anima import ui
     ui.SET_PYSIDE2()
