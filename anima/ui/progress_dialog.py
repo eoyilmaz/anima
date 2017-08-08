@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from anima.base import Singleton
-from anima.ui.lib import QtCore, QtGui
 
 
 class ProgressCaller(object):
@@ -50,9 +49,9 @@ class ProgressDialogManager(object):
 
     __metaclass__ = Singleton
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, dialog=None):
         self.in_progress = False
-        self.dialog = None
+        self.dialog = dialog
         self.callers = []
 
         if not hasattr(self, 'use_ui'):
@@ -70,8 +69,9 @@ class ProgressDialogManager(object):
         """
         if self.use_ui:
             if self.dialog is None:
+                from anima.ui.lib import QtWidgets
                 self.dialog = \
-                    QtGui.QProgressDialog(self.parent)
+                    QtWidgets.QProgressDialog(self.parent)
                     # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
                 # self.dialog.setMinimumDuration(2000)
                 self.dialog.setRange(0, self.max_steps)
@@ -91,7 +91,7 @@ class ProgressDialogManager(object):
             self.dialog.close()
 
         # re initialize self
-        self.__init__()
+        self.__init__(dialog=self.dialog)
 
     def register(self, max_iteration, title=''):
         """registers a new caller
@@ -119,17 +119,23 @@ class ProgressDialogManager(object):
         """recenters the dialog window to the screen
         """
         if self.dialog is not None:
-            desktop = QtGui.QApplication.desktop()
+            from anima.ui.lib import QtGui, QtWidgets
+            desktop = QtWidgets.QApplication.desktop()
             cursor_pos = QtGui.QCursor.pos()
             desktop_number = desktop.screenNumber(cursor_pos)
             desktop_rect = desktop.screenGeometry(desktop_number)
 
             size = self.dialog.geometry()
 
-            self.dialog.move(
-                (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
-                (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
-            )
+            if size:
+                dr_width = desktop_rect.width()
+                dr_left = desktop_rect.left()
+                dr_height = desktop_rect.height()
+                dr_top = desktop_rect.top()
+                self.dialog.move(
+                    (dr_width - size.width()) * 0.5 + dr_left,
+                    (dr_height - size.height()) * 0.5 + dr_top
+                )
 
     def step(self, caller, step=1, message=''):
         """Increments the progress by the given mount
@@ -149,7 +155,8 @@ class ProgressDialogManager(object):
             # kill the caller
             self.end_progress(caller)
 
-        QtGui.qApp.processEvents()
+        from anima.ui.lib import QtWidgets
+        QtWidgets.qApp.processEvents()
 
     def end_progress(self, caller):
         """Ends the progress for the given caller

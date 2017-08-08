@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -24,21 +24,18 @@ Place the following variables in to the config.py file::
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
 
-__version__ = "0.1.13.dev"
-
-from stalker import defaults
-
 import os
 import stat
-import datetime
 import tempfile
-import platform
 import logging
+from anima.config import Config
+
+__version__ = "0.2.1"
 
 # create logger
-#logging.basicConfig()
+# logging.basicConfig()
 logger = logging.getLogger(__name__)
-logging_level = logging.DEBUG
+logging_level = logging.ERROR
 logger.setLevel(logging_level)
 
 # create formatter
@@ -58,11 +55,6 @@ logger.addHandler(log_file_handler)
 
 # set stalker to use the same logger
 
-# create initial log
-#logger.debug('***************************************************************')
-#logger.debug('started new anima instance on %s' % datetime.datetime.now())
-#logger.debug('***************************************************************')
-
 # fix file mod for log file
 os.chmod(
     log_file_path,
@@ -70,43 +62,4 @@ os.chmod(
     stat.S_IXUSR - stat.S_IXGRP - stat.S_IXOTH
 )
 
-stalker_server_internal_address = ''
-stalker_server_external_address = ''
-try:
-    stalker_server_internal_address = defaults.stalker_server_internal_address
-    stalker_server_external_address = defaults.stalker_server_external_address
-except KeyError:
-    pass
-
-stalker_dummy_user_login = 'anima'
-stalker_dummy_user_pass = 'anima'
-local_cache_folder = '~/.cache/anima/'
-recent_file_name = 'recent_files'
-avid_media_file_path_storage = 'avid_media_file_path'
-
-normal_users_group_names = ['Normal Users']
-power_users_group_names = ['Power Users', 'admins']
-
-# environment variable template for repositories
-repo_env_template = 'REPO%(id)s'
-
-anima_env_var = 'ANIMAPATH'
-env_var_file_name = 'env.json'
-
-# some media
-ffmpeg_command_path = 'ffmpeg'
-ffprobe_command_path = 'ffprobe'
-
-max_recent_files = 50
-
-status_colors = {
-    'wfd': [171, 186, 195],
-    'rts': [209, 91, 71],
-    'wip': [255, 198, 87],
-    'prev': [111, 179, 224],
-    'hrev': [126, 110, 176],
-    'drev': [126, 110, 176],
-    'cmpl': [130, 175, 111],
-    'oh': [213, 63, 64],
-    'stop': [78, 89, 98],
-}
+defaults = Config()

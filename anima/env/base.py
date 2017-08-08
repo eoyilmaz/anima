@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -67,6 +67,7 @@ class EnvironmentBase(object):
 
     name = "EnvironmentBase"
     representations = ['Base']
+    has_publishers = False
 
     def __init__(self, name="", extensions=None, version=None):
         self._name = name
@@ -99,9 +100,13 @@ class EnvironmentBase(object):
         """
         self._name = name
 
-    def save_as(self, version):
+    def save_as(self, version, run_pre_publishers=True):
         """The save as action of this environment. It should save the current
         scene or file to the given version.full_path
+
+        :param version: stalker.models.version.Version instance.
+        :param bool run_pre_publishers: Run pre publishers of this environment
+          or not. Default value is True
         """
         raise NotImplementedError
 
@@ -206,10 +211,12 @@ class EnvironmentBase(object):
         logger.debug('os_independent_path: %s' % os_independent_path)
 
         from stalker import Version
+        from stalker.db.session import DBSession
 
         # try to get all versions with that info
-        versions = Version.query.\
-            filter(Version.full_path.startswith(os_independent_path)).all()
+        with DBSession.no_autoflush:
+            versions = Version.query.\
+                filter(Version.full_path.startswith(os_independent_path)).all()
 
         return versions
 
@@ -457,9 +464,11 @@ class EnvironmentBase(object):
         :return:
         """
         # use the user home directory .stalker_local_backup
-        from anima import local_cache_folder
+        from anima import defaults
         return os.path.normpath(
-            os.path.expanduser('%s/projects_backup' % local_cache_folder)
+            os.path.expanduser(
+                '%s/projects_backup' % defaults.local_cache_folder
+            )
         ).replace('\\', '/')
 
     @classmethod
@@ -478,6 +487,17 @@ class EnvironmentBase(object):
             cls.local_backup_path(),
             version.absolute_full_path.replace(':', '')
         ).replace('\\', '/')
+
+        # do nothing if the version and the copy is on the same drive
+        # (ex: do not duplicate the file)
+        if len(os.path.commonprefix([output_full_path,
+                                     version.absolute_full_path])):
+            logger.debug(
+                'Local copy file: %s is on the same drive with the source '
+                'file: %s' % (output_full_path, version.absolute_full_path)
+            )
+            logger.debug('Not duplicating it!')
+            return
 
         # create intermediate folders
         try:

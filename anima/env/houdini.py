@@ -1,19 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import re
-import logging
-
-from stalker.db import DBSession
-
 import hou
-from anima import utils, logger
-from anima.env import empty_reference_resolution
-from base import EnvironmentBase
+from anima.env.base import EnvironmentBase
 
 
 class Houdini(EnvironmentBase):
@@ -27,11 +20,13 @@ class Houdini(EnvironmentBase):
         from stalker import Repository
         # re initialize repo vars
         for repo in Repository.query.all():
-            name = repo.env_var
+            env_var_name = repo.env_var
             value = repo.path
-            self.set_environment_variable(name, value)
+            self.set_environment_variable(env_var_name, value)
 
-    def save_as(self, version):
+        self.name = '%s%s' % (self.name, hou.applicationVersion()[0])
+
+    def save_as(self, version, run_pre_publishers=True):
         """the save action for houdini environment
         """
         if not version:
@@ -75,6 +70,15 @@ class Houdini(EnvironmentBase):
         # set the render file name
         self.set_render_filename(version)
 
+        # set the fps
+        from stalker import Shot
+        if version and isinstance(version.task.parent, Shot):
+            # set to shot.fps if this is a shot related scene
+            self.set_fps(version.task.parent.fps)
+        else:
+            # set to project fps
+            self.set_fps(version.task.project.fps)
+
         # houdini accepts only strings as file name, no unicode support as I
         # see
         hou.hipFile.save(file_name=str(version.absolute_full_path))
@@ -92,6 +96,7 @@ class Houdini(EnvironmentBase):
             version.parent = current_version
 
             # update database with new version info
+            from stalker.db.session import DBSession
             DBSession.commit()
 
         # create a local copy
@@ -122,6 +127,7 @@ class Houdini(EnvironmentBase):
             version.absolute_full_path
         )
 
+        from anima.env import empty_reference_resolution
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
@@ -174,6 +180,7 @@ class Houdini(EnvironmentBase):
             return
 
         # set the $JOB variable to the parent of version.full_path
+        from anima import logger
         logger.debug('version: %s' % version)
         logger.debug('version.path: %s' % version.absolute_path)
         logger.debug('version.filename: %s' % version.filename)
@@ -231,6 +238,7 @@ class Houdini(EnvironmentBase):
 
         pattern = r'[-0-9\.]+'
 
+        import re
         start_frame = int(
             hou.timeToFrame(
                 float(re.search(pattern, time_info[2]).group(0))
@@ -277,7 +285,8 @@ class Houdini(EnvironmentBase):
         out_nodes = rop_context.children()
 
         exclude_node_types = [
-            hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge")
+            hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge"),
+            hou.nodeType(hou.nodeTypeCategories()["Driver"], "fetch")
         ]
 
         # remove nodes in type in exclude_node_types list
@@ -313,6 +322,7 @@ class Houdini(EnvironmentBase):
         while "$" in job:
             job = os.path.expandvars(job)
 
+        from anima import utils
         job_relative_output_file_path = \
             "$JOB/%s" % utils.relpath(job, output_filename, "/", "..")
 

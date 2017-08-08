@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from sqlalchemy import distinct
-from stalker import db, Version
 
 
 class RepresentationManager(object):
@@ -128,6 +126,7 @@ class Representation(object):
         """
         # find the base repr name from the current version
         take_name = ''
+        from stalker import Version
         if isinstance(version, Version):
             take_name = version.take_name
         elif isinstance(version, str):
@@ -149,9 +148,12 @@ class Representation(object):
 
         # find any version that starts with the base_repr_name
         # under the same task
+        from stalker import Version
+        from stalker.db.session import DBSession
+        from sqlalchemy import distinct
         take_names = map(
             lambda x: x[0],
-            db.DBSession.query(distinct(Version.take_name))
+            DBSession.query(distinct(Version.take_name))
             .filter(Version.task == self.version.task)
             .all()
         )
@@ -183,6 +185,7 @@ class Representation(object):
                 base_take_name, self.repr_separator, repr_name
             )
 
+        from stalker import Version
         return Version.query\
             .filter_by(task=self.version.task)\
             .filter_by(take_name=take_name)\

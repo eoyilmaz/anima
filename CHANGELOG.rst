@@ -2,6 +2,60 @@
 Changes
 =======
 
+0.2.1
+=====
+
+* **Update:** Rearranged the UI modules to better organize the system.
+
+* **Update:** ``anima.ui.models.task.TaskTreeModel`` is now loading task
+  hierarchies considerably faster.
+
+* **New:** Added item icons to ``TaskTreeView`` context menu.
+
+* **New:** Added code that will allow the system to draw font based icons for
+  ``TaskItem``\ s, but it is not working for now.
+
+* **New:** Added preliminary support for parsing and replicating XSens Network
+  Protocol.
+
+* **New:** Added option for power users to delete versions in version_creator
+  UI.
+
+* **New:** Added ``config.py`` and ``Config`` class that expands
+  ``stalker.defaults``. So no need to use ``stalker.defaults`` anymore. All the
+  configuration variables are moved to ``Config`` class and can be reached with
+  ``anima.defaults`` instance:
+
+  .. code-block::
+
+      from anima import defaults
+      # Access to stalker.defaults
+      print(defaults.database_engine_settings)
+
+      # Access anima config variables and functions
+      print(defaults.status_colors)
+
+* **Update:** ``anima`` now loads considerably faster, which speeds up Maya's
+  initialization process.
+
+* **Fix:** Fixed ``time_log_dialog`` to properly fix both task statuses and
+  schedule info of the given task (with the code coming from Stalker Pyramid).
+
+* **Fix:** Fixed all ``stalker.db.session.DBSession`` imports to make the
+  system compatible with ``Stalker v0.2.20+``.
+
+* **Fix:** Fixed ``cutOut_spinBox`` maximum value to be settable bigger than
+  99.
+
+
+0.2.0
+=====
+
+* **Update:** Added support for Maya 2017.
+* **Update:** Updated the system to work with Qt5 and PySide2.
+* **New:** ``LoginDialog`` now creates a ``AuthenticationLog`` instance upon
+  user login.
+
 0.1.13.dev
 ==========
 

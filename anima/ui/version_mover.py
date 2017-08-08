@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 import os
 import shutil
 from sqlalchemy import distinct
-from stalker import db, Project, Task, Version
+from stalker import Project, Version
 
-from anima.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.models import TaskTreeView, TaskTreeModel
-
+from anima.ui.views.task import TaskTreeView
+from anima.ui.models.task import TaskTreeModel
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -30,7 +30,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, VersionMover, **kwargs)
 
 
-class VersionMover(QtGui.QDialog, AnimaDialogBase):
+class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
     """Moves versions from one task to other.
 
     It is capable of moving the files or just copying and creating a new
@@ -59,15 +59,15 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         dialog.setWindowModality(QtCore.Qt.ApplicationModal)
         dialog.resize(1200, 800)
         # layout vertical first
-        self.vertical_layout = QtGui.QVBoxLayout(dialog)
+        self.vertical_layout = QtWidgets.QVBoxLayout(dialog)
         self.vertical_layout.setObjectName('verticalLayout1')
 
-        self.horizontal_layout = QtGui.QHBoxLayout()
+        self.horizontal_layout = QtWidgets.QHBoxLayout()
 
-        self.from_task_tree_view = QtGui.QTreeView(dialog)
+        self.from_task_tree_view = QtWidgets.QTreeView(dialog)
         self.from_task_tree_view.setObjectName("from_tasks_treeView")
 
-        self.copy_push_button = QtGui.QPushButton(dialog)
+        self.copy_push_button = QtWidgets.QPushButton(dialog)
         self.copy_push_button.setObjectName("copy_push_button")
         self.copy_push_button.setText('>')
 
@@ -81,7 +81,7 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
 
         self.vertical_layout.addLayout(self.horizontal_layout)
 
-        self.horizontal_layout_2 = QtGui.QHBoxLayout()
+        self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
         self.horizontal_layout_2.setContentsMargins(-1, 10, -1, -1)
         self.horizontal_layout_2.setObjectName("horizontal_layout_2")
 
@@ -193,7 +193,7 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         logged_in_user = self.get_logged_in_user()
 
         if not from_task:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please select a task from <b>From Task</b> list'
@@ -204,7 +204,7 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
         to_task = self.get_task_from_tree_view(self.to_task_tree_view)
 
         if not to_task:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please select a task from <b>To Task</b> list'
@@ -213,7 +213,7 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
 
         # check if tasks are the same
         if from_task == to_task:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please select two different tasks'
@@ -222,16 +222,17 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
 
         # get take names and related versions
         # get distinct take names
+        from stalker.db.session import DBSession
         from_take_names = map(
             lambda x: x[0],
-            db.DBSession.query(distinct(Version.take_name))
+            DBSession.query(distinct(Version.take_name))
             .filter(Version.task == from_task)
             .order_by(Version.take_name)
             .all()
         )
 
         # create versions for each take
-        answer = QtGui.QMessageBox.question(
+        answer = QtWidgets.QMessageBox.question(
             self,
             'Info',
             "Will copy %s versions from take names:<br><br>"
@@ -241,11 +242,11 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
                 len(from_take_names),
                 '<br>'.join(from_take_names)
             ),
-            QtGui.QMessageBox.Yes,
-            QtGui.QMessageBox.No
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
         )
 
-        if answer == QtGui.QMessageBox.Yes:
+        if answer == QtWidgets.QMessageBox.Yes:
             for take_name in from_take_names:
                 latest_version = Version.query\
                     .filter_by(task=from_task)\
@@ -264,13 +265,13 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
                     'Moved from another task (id=%s) with Version Mover' % \
                     latest_version.task.id
                 new_version.created_with = latest_version.created_with
-                db.DBSession.add(new_version)
-                db.DBSession.commit()
+                DBSession.add(new_version)
+                DBSession.commit()
 
                 # update path
                 new_version.update_paths()
-                db.DBSession.add(new_version)
-                db.DBSession.commit()
+                DBSession.add(new_version)
+                DBSession.commit()
 
                 # now copy the last_version file to the new_version path
                 try:
@@ -285,10 +286,8 @@ class VersionMover(QtGui.QDialog, AnimaDialogBase):
                 )
 
             # inform the user
-            QtGui.QMessageBox.information(
+            QtWidgets.QMessageBox.information(
                 self,
                 'Success',
                 'Successfully copied %s versions' % len(from_take_names)
             )
-
-

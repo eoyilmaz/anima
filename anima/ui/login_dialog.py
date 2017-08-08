@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -8,13 +8,15 @@ from sqlalchemy import or_
 
 import anima
 from anima import logger
-from anima.ui import IS_PYQT4, IS_PYSIDE
+from anima.ui import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 if IS_PYSIDE():
     from anima.ui.ui_compiled import login_dialog_UI_pyside as login_dialog_UI
+elif IS_PYSIDE2():
+    from anima.ui.ui_compiled import login_dialog_UI_pyside2 as login_dialog_UI
 elif IS_PYQT4():
     from anima.ui.ui_compiled import login_dialog_UI_pyqt4 as login_dialog_UI
 
@@ -31,7 +33,7 @@ def UI(app_in=None, executor=None):
     return ui_caller(app_in, executor, MainDialog)
 
 
-class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
     """This is a simple login dialog which connects to Stalker to authenticate
     the username/password couple.
     """
@@ -105,9 +107,21 @@ class MainDialog(QtGui.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
             session.store_user(user)
             session.save()
 
+            # also store a log
+            import datetime
+            from stalker.models.auth import LOGIN, AuthenticationLog
+            al = AuthenticationLog(
+                user=user,
+                date=datetime.datetime.now(),
+                action=LOGIN
+            )
+            from stalker.db.session import DBSession
+            DBSession.add(al)
+            DBSession.commit()
+
             self.accept()
         else:
-            QtGui.QMessageBox.critical(
+            QtWidgets.QMessageBox.critical(
                 self,
                 "Error",
                 "login or password is incorrect"

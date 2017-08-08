@@ -54,9 +54,10 @@ class EDLImporterTestCase(unittest.TestCase):
     def setUp(self):
         """setup the tests
         """
-        # patch anima.local_cache_folder
-        self.original_cache_folder = anima.local_cache_folder
-        anima.local_cache_folder = tempfile.gettempdir()
+        # patch anima.defaults.local_cache_folder
+        from anima import defaults
+        self.original_cache_folder = defaults.local_cache_folder
+        defaults.local_cache_folder = tempfile.gettempdir()
 
         if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
@@ -75,8 +76,9 @@ class EDLImporterTestCase(unittest.TestCase):
         """
         PatchedMessageBox.tear_down()
 
-        # restore anima.local_cache_folder
-        anima.local_cache_folder = self.original_cache_folder
+        # restore anima.defaults.local_cache_folder
+        from anima import defaults
+        defaults.local_cache_folder = self.original_cache_folder
 
         # remove self.remove_files
         for f in self.remove_files:
@@ -288,21 +290,22 @@ class EDLImporterTestCase(unittest.TestCase):
         """testing if the media_files_path_lineEdit content will be stored in
         local_cache_folder/avid_media_file_path_storage file
         """
-        # patch anima.local_cache_folder
-        original_value = anima.local_cache_folder
+        # patch anima.defaults.local_cache_folder
+        from anima import defaults
+        original_value = defaults.local_cache_folder
         anima.local_cache_folder = tempfile.gettempdir()
 
         media_file_path_storage_full_path = os.path.join(
-            anima.local_cache_folder,
-            anima.avid_media_file_path_storage
+            defaults.local_cache_folder,
+            defaults.avid_media_file_path_storage
         )
         self.remove_files.append(media_file_path_storage_full_path)
 
         test_value = 'some path'
         self.dialog.media_files_path_lineEdit.setText(test_value)
 
-        # restore anima.local_cache_folder before asserting
-        anima.local_cache_folder = original_value
+        # restore anima.defaults.local_cache_folder before asserting
+        defaults.local_cache_folder = original_value
 
         self.assertTrue(os.path.exists(media_file_path_storage_full_path))
 
@@ -315,9 +318,10 @@ class EDLImporterTestCase(unittest.TestCase):
         """testing if the media_files_path_lineEdit content will be stored in
         local_cache_folder/avid_media_file_path_storage file
         """
+        from anima import defaults
         media_file_path_storage_full_path = os.path.join(
-            anima.local_cache_folder,
-            anima.avid_media_file_path_storage
+            defaults.local_cache_folder,
+            defaults.avid_media_file_path_storage
         )
         self.remove_files.append(media_file_path_storage_full_path)
 

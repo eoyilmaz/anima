@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -7,10 +7,16 @@
 import hou
 
 from anima import logger
-from anima.ui import SET_PYSIDE
-from anima.utils import do_db_setup
 
-SET_PYSIDE()
+
+if hou.applicationVersion()[0] <= 15:
+    from anima.ui import SET_PYSIDE
+    from anima.utils import do_db_setup
+    SET_PYSIDE()
+else:
+    from anima.ui import SET_PYSIDE2
+    from anima.utils import do_db_setup
+    SET_PYSIDE2()
 
 
 class Executor(object):
@@ -24,6 +30,11 @@ class Executor(object):
 
     def exec_(self, app, dialog):
         self.application = app
+        if hou.applicationVersion()[0] <= 15:
+            self.application.setStyle('CleanLooks')
+        else:
+            self.application.setStyle('Fusion')
+
         hou.ui.addEventLoopCallback(self.processEvents)
         dialog.exec_()
 

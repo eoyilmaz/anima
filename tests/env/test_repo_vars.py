@@ -8,7 +8,6 @@ import os
 import unittest
 
 from stalker import db, Repository
-from anima import repo_env_template
 
 
 class RepoVarsTestCase(unittest.TestCase):
@@ -67,9 +66,10 @@ class RepoVarsTestCase(unittest.TestCase):
     def test_environment_var_values_are_correct(self):
         """testing if all environment var values are correct
         """
+        from anima import defaults
         for repo in self.all_repos:
             self.assertEqual(
-                os.environ[repo_env_template % {'id': repo.id}],
+                os.environ[defaults.repo_env_template % {'id': repo.id}],
                 repo.path
             )
 
@@ -120,4 +120,3 @@ class RepoVarsTestCase(unittest.TestCase):
             Repository.to_os_independent_path(osx_path),
             os_independent_path
         )
-

@@ -1,0 +1,674 @@
+// Copyright (C) 1997-2006 Autodesk, Inc., and/or its licensors.
+// All rights reserved.
+//
+// The coded instructions, statements, computer programs, and/or related
+// material (collectively the "Data") in these files contain unpublished
+// information proprietary to Autodesk, Inc. ("Autodesk") and/or its licensors,
+// which is protected by U.S. and Canadian federal copyright law and by
+// international treaties.
+//
+// The Data is provided for use exclusively by You. You have the right to use,
+// modify, and incorporate this Data into other products for purposes authorized
+// by the Autodesk software license agreement, without fee.
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. AUTODESK
+// DOES NOT MAKE AND HEREBY DISCLAIMS ANY EXPRESS OR IMPLIED WARRANTIES
+// INCLUDING, BUT NOT LIMITED TO, THE WARRANTIES OF NON-INFRINGEMENT,
+// MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE, OR ARISING FROM A COURSE
+// OF DEALING, USAGE, OR TRADE PRACTICE. IN NO EVENT WILL AUTODESK AND/OR ITS
+// LICENSORS BE LIABLE FOR ANY LOST REVENUES, DATA, OR PROFITS, OR SPECIAL,
+// DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES, EVEN IF AUTODESK AND/OR ITS
+// LICENSORS HAS BEEN ADVISED OF THE POSSIBILITY OR PROBABILITY OF SUCH DAMAGES.
+
+//
+// Alias Script File
+// MODIFY THIS AT YOUR OWN RISK
+//
+// Creation Date:  13 April 1997
+//
+//  Procedure Name:
+//      ModObjectsMenu
+//
+//  Description:
+//		Create the MODELLING->Objects menu
+//
+//  Input Arguments:
+//      parent to parent the menu to.
+//
+//  Return Value:
+//      None.
+//
+
+global proc updateModObjectsMenu ( string $parent )
+{
+	setParent -menu $parent;
+
+	string $lsObjs[] = `ls -geometry`;
+	string $lslive[] = `ls -live`;
+
+	if (size($lsObjs) == 0 || size($lslive) == 0) {
+		menuItem -edit -label (uiRes("m_ModObjectsMenu.kMakeLive1"))
+			-annotation (uiRes("m_ModObjectsMenu.kMakeLive1Annot"))  liveItem;
+	} else {
+  		string $lsSel[] = `ls -sl`;
+		if (size($lsSel) == 0) {
+			menuItem -edit -label (uiRes("m_ModObjectsMenu.kMakeNotLive"))
+			-annotation (uiRes("m_ModObjectsMenu.kMakeNotLiveAnnot"))  liveItem;
+		} else {
+			menuItem -edit -label (uiRes("m_ModObjectsMenu.kMakeLive2"))
+				-annotation (uiRes("m_ModObjectsMenu.kMakeLive2Annot"))  liveItem;
+		}
+	}
+
+	menuItem -edit -checkBox `ikSystem -query -solve` iksolverOnOff;
+}
+
+global proc ModObjectsMenu( string $parent )
+{
+    int $dimWhenNoSelect = 0;
+	setParent -menu $parent;
+
+	if( `menu -query -numberOfItems $parent` != 0 ) {
+		//
+		//	Menu is built already
+		//
+  		updateModObjectsMenu ($parent);
+		return;
+	}
+
+	//	Transforms
+	//
+	menuItem -label (uiRes("m_ModObjectsMenu.kTransformationTools"))  -subMenu true -tearOff true -allowOptionBoxes true transHierItem;
+		menuItem
+			-label (uiRes("m_ModObjectsMenu.kMoveTool"))
+			-annotation (getRunTimeCommandAnnotation("MoveTool"))
+			-image "move_M.xpm"
+			-command "MoveTool"
+			-dragDoubleClickCommand "MoveToolOptions"
+			;
+
+		menuItem -optionBox true
+			-annotation (getRunTimeCommandAnnotation("MoveToolOptions"))
+			-image "move_M.xpm"
+			-command "MoveToolOptions"
+			;
+
+		menuItem
+			-label (uiRes("m_ModObjectsMenu.kRotateTool"))
+			-annotation (getRunTimeCommandAnnotation("RotateTool"))
+			-image "rotate_M.xpm"
+			-command "RotateTool"
+			-dragDoubleClickCommand "RotateToolOptions"
+			;
+
+		menuItem -optionBox true
+			-annotation (getRunTimeCommandAnnotation("RotateToolOptions"))
+			-image "rotate_M.xpm"
+			-command "RotateToolOptions"
+			;
+
+		menuItem
+			-label (uiRes("m_ModObjectsMenu.kScaleTool"))
+			-annotation (getRunTimeCommandAnnotation("ScaleTool"))
+			-image "scale_M.xpm"
+			-command "ScaleTool"
+			-dragDoubleClickCommand "ScaleToolOptions"
+			;
+
+		menuItem -optionBox true
+			-annotation (getRunTimeCommandAnnotation("ScaleToolOptions"))
+			-image "scale_M.xpm"
+			-command "ScaleToolOptions"
+			;
+
+		menuItem
+			-label (uiRes("m_ModObjectsMenu.kUniversalManipulator"))
+			-annotation (getRunTimeCommandAnnotation("UniversalManip"))
+			-image "globalManip.xpm"
+			-command "UniversalManip"
+			-dragDoubleClickCommand "UniversalManipOptions"
+			;
+
+		menuItem -optionBox true
+			-annotation (getRunTimeCommandAnnotation("UniversalManipOptions"))
+			-image "globalManip.xpm"
+			-command "UniversalManipOptions"
+			;
+
+		menuItem
+			-label (uiRes("m_ModObjectsMenu.kMoveNormalTool"))
+			-annotation (getRunTimeCommandAnnotation("MoveNormalTool"))
+			-image "moveNormal.xpm"
+			-command "MoveNormalTool"
+			-dragDoubleClickCommand "MoveNormalToolOptions"
+			;
+
+		menuItem -optionBox true
+			-annotation (getRunTimeCommandAnnotation("MoveNormalToolOptions"))
+			-image "moveNormal.xpm"
+			-command "MoveNormalToolOptions"
+			;
+
+
+
+        // Local Tools items.
+        menuItem
+            -l "Local Tools"
+		     -annotation ("Local Tools")
+		     -c "HKLocalToolsAction();" localToolItem;
+
+
+		menuItem -optionBox true
+		     -label "Local Tools Option Box"
+		     -command "HKLTOptionBox();" localToolItemOB;
+        //
+
+
+		menuItem -divider true;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kMoveRotateScaleTool"))
+			-annotation (uiRes("m_ModObjectsMenu.kMoveRotateScaleToolAnnot"))
+			-image "srt.xpm"
+			-command "MoveRotateScaleTool";
+		menuItem -label (uiRes("m_ModObjectsMenu.kShowManipulatorTool"))
+			-annotation (uiRes("m_ModObjectsMenu.kShowManipulatorToolAnnot"))
+			-image "showManip.xpm"
+			-command "ShowManipulatorTool";
+
+		// Default Manipulators
+		//
+		menuItem -label (uiRes("m_ModObjectsMenu.kDefaultObjectManipulator"))  -subMenu true -tearOff true defManipItem;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDefaultManipulatorNone"))
+				-annotation (uiRes("m_ModObjectsMenu.kDefaultManipulatorNoneAnnot"))
+				-command "setDefaultManip 0" noneManipItem;
+			menuItem -divider true;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDefaultManipulatorMove"))
+				-annotation (uiRes("m_ModObjectsMenu.kDefaultManipulatorMoveAnnot"))
+				-command "setDefaultManip 1" transManipItem;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDefaultManipulatorRotate"))
+				-annotation (uiRes("m_ModObjectsMenu.kDefaultManipulatorRotateAnnot"))
+				-command "setDefaultManip 2" rotateManipItem;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDefaultManipulatorScale"))
+				-annotation (uiRes("m_ModObjectsMenu.kDefaultManipulatorScaleAnnot"))
+				-command "setDefaultManip 3" scaleManipItem;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDefaultManipulatorTransform"))
+				-annotation (uiRes("m_ModObjectsMenu.kDefaultManipulatorTransformAnnot"))
+				-command "setDefaultManip 4" transformManipItem;
+		setParent -menu ..;
+    	if( $dimWhenNoSelect )
+			dimWhen -false "SomethingSelected" ($parent+"|transHierItem|defManipItem");
+
+		menuItem -divider true;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kProportionalModificationTool"))
+			-annotation (uiRes("m_ModObjectsMenu.kProportionalModificationToolAnnot"))
+			-image "propMod.xpm"
+			-command "ProportionalModificationTool" propModItem;
+       			menuItem -optionBox true -image "propMod.xpm"
+				-annotation (uiRes("m_ModObjectsMenu.kProportionalModificationToolOptionsAnnot"))
+				-command "setToolTo $gPropMod; toolPropertyWindow"
+				propModDialogItem;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kSoftModificationTool"))
+			-annotation (`runTimeCommand -query -annotation SoftModTool`)
+			-image "softMod.xpm"
+			-command "SoftModTool" softModItem;
+       			menuItem -optionBox true -image "softMod.xpm"
+				-annotation (uiRes("m_ModObjectsMenu.kSoftModificationToolOptionsAnnot"))
+				-command "SoftModToolOptions"
+				softModDialogItem;
+
+	setParent -menu ..;
+
+	// Limits
+	//
+	setParent -menu ..;
+
+	menuItem -label (uiRes("m_ModObjectsMenu.kResetTransformations"))
+		-annotation (uiRes("m_ModObjectsMenu.kResetTransformationsAnnot"))
+		-command "ResetTransformations" identityResetItem;
+    if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" ($parent+"|identityResetItem");
+	menuItem -optionBox true
+		-annotation (uiRes("m_ModObjectsMenu.kResetTransformationsOptionsAnnot"))
+		-command "ResetTransformationsOptions"
+		identityResetItemOption;
+
+	menuItem -label (uiRes("m_ModObjectsMenu.kFreezeTransformations"))
+		-annotation (uiRes("m_ModObjectsMenu.kFreezeTransformationsAnnot"))
+		-command "FreezeTransformations"
+		identityApplyItem;
+    if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" ($parent+"|identityApplyItem");
+	menuItem -optionBox true
+		-annotation (uiRes("m_ModObjectsMenu.kFreezeTransformationsOptionsAnnot"))
+		-command "FreezeTransformationsOptions"
+		identityApplyItemOption;
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_ModObjectsMenu.kSnapAlignObjects"))  -subMenu true -allowOptionBoxes true -tearOff true
+		graspItem;
+
+		string $g1Item = `menuItem -label (uiRes("m_ModObjectsMenu.kSnapPointToPoint"))
+			-annotation (uiRes("m_ModObjectsMenu.kSnapPointToPointAnnot"))
+			-image "pointToPoint.xpm"
+			-command "SnapPointToPoint" snap1PointItem`;
+   		if( $dimWhenNoSelect )
+			dimWhen -false "SomethingSelected" $g1Item;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kSnapPointToPointOptionsAnnot"))
+			-image "pointToPoint.xpm"
+			-command "SnapPointToPointOptions"
+			snapPointItemOption;
+
+		string $g2Item = `menuItem -label (uiRes("m_ModObjectsMenu.kSnap2PointTo2Point"))
+			-annotation (uiRes("m_ModObjectsMenu.kSnap2PointTo2PointAnnot"))
+			-image "twoPointToPoint.xpm"
+			-command "Snap2PointsTo2Points" snap2PointsItem`;
+   		if( $dimWhenNoSelect )
+			dimWhen -false "SomethingSelected" $g2Item;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kSnap2PointTo2PointOptionsAnnot"))
+			-image "twoPointToPoint.xpm"
+			-command "Snap2PointsTo2PointsOptions"
+			snap2PointsItemOption;
+
+		string $g3Item = `menuItem -label (uiRes("m_ModObjectsMenu.kSnap3PointTo3Point"))
+			-annotation (uiRes("m_ModObjectsMenu.kSnap3PointTo3PointAnnot"))
+			-image "threePointToPoint.xpm"
+			-dragMenuCommand "performSnap3PtTo3Pt 2"
+			-command "Snap3PointsTo3Points" snap3PointsItem`;
+   		if( $dimWhenNoSelect )
+			dimWhen -false "SomethingSelected" $g3Item;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kSnap3PointTo3PointOptionsAnnot"))
+			-image "threePointToPoint.xpm"
+			-command "Snap3PointsTo3PointsOptions"
+			snap3PointsItemOption;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kAlignObjects"))
+			-annotation (uiRes("m_ModObjectsMenu.kAlignObjectsAnnot"))
+			-command "performAlignObjects 0" -image "alignObjects.xpm" ;
+
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kAlignObjectsOptionsAnnot"))
+			-command "performAlignObjects 1" -enableCommandRepeat false -image "alignObjects.xpm" ;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kPositionAlongCurve"))
+			-annotation (getRunTimeCommandAnnotation("PositionAlongCurve"))
+			-command "PositionAlongCurve"
+			;
+
+		setParent -menu ..;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kAlignTool"))
+			-annotation (uiRes("m_ModObjectsMenu.kAlignToolAnnot"))
+			-image "alignTool.xpm"
+			-command "setToolTo alignToolCtx"
+			alignToolItem;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kSnapTogetherTool"))
+			-annotation (uiRes("m_ModObjectsMenu.kSnapTogetherToolAnnot"))
+			-image "snapTogetherTool.xpm"
+			-command "setToolTo snapTogetherToolCtx"
+			snapTogetherToolItem;
+
+			menuItem -optionBox true
+				-annotation (uiRes("m_ModObjectsMenu.kSnapTogetherToolOptionsAnnot"))
+				-command "setToolTo snapTogetherToolCtx; toolPropertyWindow"
+				snapTogetherToolDialogItem;
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_ModObjectsMenu.kEvaluateNodes"))  -subMenu true -tearOff true;
+		menuItem -label (uiRes("m_ModObjectsMenu.kEvaluateAll"))
+			-annotation (uiRes("m_ModObjectsMenu.kEvaluateAllAnnot"))
+			-command "EnableAll";
+		menuItem -label (uiRes("m_ModObjectsMenu.kIgnoreAll"))
+			-annotation (uiRes("m_ModObjectsMenu.kIgnoreAllAnnot"))
+			-command "DisableAll";
+		menuItem -divider true;
+		menuItem -label (uiRes("m_ModObjectsMenu.kIKSolvers"))
+			-annotation (uiRes("m_ModObjectsMenu.kIKSolversAnnot"))
+			-checkBox on
+			-command "EnableIKSolvers"
+			iksolverOnOff;
+		menuItem -label (uiRes("m_ModObjectsMenu.kConstraints"))
+			-annotation (uiRes("m_ModObjectsMenu.kConstraintsAnnot"))
+			-checkBox on
+			-command "EnableConstraints"
+			constraintOnOff;
+		menuItem -label (uiRes("m_ModObjectsMenu.kExpressions"))
+			-annotation (uiRes("m_ModObjectsMenu.kExpressionsAnnot"))
+			-checkBox on
+			-command "EnableExpressions"
+			expressionOnOff;
+		if( fluidEditLicenseFound() ) {
+			menuItem -label (uiRes("m_ModObjectsMenu.kFluids"))
+				-annotation (getRunTimeCommandAnnotation("EnableFluids"))
+				-checkBox on
+				-command "EnableFluids"
+				fluidOnOff;
+		}
+		menuItem -label (uiRes("m_ModObjectsMenu.kGlobalStitch"))
+			-annotation (uiRes("m_ModObjectsMenu.kGlobalStitchAnnot"))
+			-checkBox on
+			-command "EnableGlobalStitch"
+			globalstitchOnOff;
+		if( nClothEditLicenseFound() ) {
+			menuItem -label (uiRes("m_ModObjectsMenu.kNCloths"))
+				-annotation (getRunTimeCommandAnnotation("EnableNCloths"))
+				-checkBox on
+				-command "EnableNCloths"
+				nClothOnOff;
+			menuItem -label (uiRes("m_ModObjectsMenu.kNParticles"))
+				-annotation (getRunTimeCommandAnnotation("EnableNParticles"))
+				-checkBox on
+				-command "EnableNParticles"
+				nParticleOnOff;
+			menuItem -label (uiRes("m_ModObjectsMenu.kNRigids"))
+				-annotation (getRunTimeCommandAnnotation("EnableNRigids"))
+				-checkBox on
+				-command "EnableNRigids"
+				nRigidOnOff;
+			menuItem -label (uiRes("m_ModObjectsMenu.kDynamicConstraints"))
+				-annotation (getRunTimeCommandAnnotation("EnableDynamicConstraints"))
+				-checkBox on
+				-command "EnableDynamicConstraints"
+				dynamicConstraintOnOff;
+			menuItem -label (uiRes("m_ModObjectsMenu.kNucleuses"))
+				-annotation (getRunTimeCommandAnnotation("EnableNucleuses"))
+				-checkBox on
+				-command "EnableNucleuses"
+				nucleusOnOff;
+		}
+		menuItem -label (uiRes("m_ModObjectsMenu.kParticles"))
+			-annotation (uiRes("m_ModObjectsMenu.kParticlesAnnot"))
+			-checkBox on
+			-command "EnableParticles"
+			particleOnOff;
+		menuItem -label (uiRes("m_ModObjectsMenu.kRigidBodies"))
+			-annotation (uiRes("m_ModObjectsMenu.kRigidBodiesAnnot"))
+			-checkBox on
+			-command "EnableRigidBodies"
+			rigidbodyOnOff;
+		menuItem -label (uiRes("m_ModObjectsMenu.kSnapshots"))
+			-annotation (uiRes("m_ModObjectsMenu.kSnapshotsAnnot"))
+			-checkBox on
+			-command "EnableSnapshots"
+			snapshotOnOff;
+
+		// If no fx license, grey out the entries for those nodes.
+		//
+		if (!`licenseCheck -mode edit -type fx`)
+		{
+			menuItem -edit -enable false particleOnOff;
+		}
+		if (!`licenseCheck -mode edit -type complete`)
+		{
+			menuItem -edit -enable false rigidbodyOnOff;
+		}
+	setParent -menu ..;
+
+	menuItem -divider true;
+
+	menuItem -label (uiRes("m_ModObjectsMenu.kMakeLive3"))
+		-image "makeLive.xpm"
+		-ec true
+		-command "MakeLive" liveItem;
+
+	string $cpItem = `menuItem -label (uiRes("m_ModObjectsMenu.kCenterPivot"))
+		-annotation (uiRes("m_ModObjectsMenu.kCenterPivotAnnot"))
+		-command "CenterPivot" centrePivotItem`;
+   	if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" $cpItem;
+
+	string $prefItem = `menuItem -label (uiRes("m_ModObjectsMenu.kPrefixHierarchyNames"))
+		-annotation (uiRes("m_ModObjectsMenu.kPrefixHierarchyNamesAnnot"))
+		-command "PrefixHierarchyNames" prefixHierarchyItem`;
+   	if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" $prefItem;
+
+	string $searchItem = `menuItem -label (uiRes("m_ModObjectsMenu.kSearchAndReplaceNames"))
+		-annotation (uiRes("m_ModObjectsMenu.kSearchAndReplaceNamesAnnot"))
+		-command "performSearchReplaceNames 1" searchRepItem`;
+
+	menuItem -divider true;
+
+	string $addItem = `menuItem -label (uiRes("m_ModObjectsMenu.kAddAttribute"))
+		-annotation (uiRes("m_ModObjectsMenu.kAddAttributeAnnot"))
+		-command "AddAttribute" addAttrItem`;
+   	if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" $addItem;
+
+	string $renameItem = `menuItem -label (uiRes("m_ModObjectsMenu.kEditAttribute"))
+		-annotation (uiRes("m_ModObjectsMenu.kEditAttributeAnnot"))
+		-command "RenameAttribute" renameAttrItem`;
+   	if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" $renameItem;
+
+	string $deleteItem = `menuItem -label (uiRes("m_ModObjectsMenu.kDeleteAttribute"))
+		-annotation (uiRes("m_ModObjectsMenu.kDeleteAttributeAnnot"))
+		-command "DeleteAttribute" deleteAttrItem`;
+   	if( $dimWhenNoSelect )
+		dimWhen -false "SomethingSelected" $deleteItem;
+
+	menuItem -divider true;
+
+	// conversion operations
+	menuItem -label (uiRes("m_ModObjectsMenu.kConvert"))  -subMenu true -tearOff true -allowOptionBoxes true surfConvItem;
+
+
+	// NURBS to Polygons
+	if( `isTrue SurfaceUIExists` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kNURBSToPolygons"))
+			-command "NURBSToPolygons"
+			-dragMenuCommand "performnurbsToPoly 2"
+			-annotation (uiRes("m_ModObjectsMenu.kNURBSToPolygonsAnnot"))
+			-image "nurbsToPolygons.xpm"
+			nurbsToPolyItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kNURBSToPolygonsOptionsAnnot"))
+			-image "nurbsToPolygons.xpm"
+			-command "NURBSToPolygonsOptions"
+			nurbsToPolyDialogItem;
+	}
+
+	// NURBS to Subdivs
+	if( `isTrue SubdivUIExists` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kNURBSToSubdiv"))  -enableCommandRepeat true
+			-command "CreateSubdivSurface"
+			-annotation (uiRes("m_ModObjectsMenu.kNURBSToSubdivAnnot"))
+//			-image ""  // An icon needs to be created
+			-dragMenuCommand "performSubdivCreate 2"
+			subdivCreateItem;
+		menuItem -optionBox true
+			-command "CreateSubdivSurfaceOptions"
+			-annotation (uiRes("m_ModObjectsMenu.kNURBSToSubdivOptionsAnnot"))
+//			-image ""  // An icon needs to be created
+			-enableCommandRepeat false
+			subdivCreateOptionItem;
+	}
+
+	// Poly to Subdivs (same as NURBS to Subdiv)
+	if( `isTrue SubdivUIExists` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kPolygonsToSubdiv"))  -enableCommandRepeat true
+			-command "CreateSubdivSurface"
+			-annotation (uiRes("m_ModObjectsMenu.kPolygonsToSubdivAnnot"))
+			-image subdivCreate.xpm
+			-dragMenuCommand "performSubdivCreate 2"
+			subdivCreateItem2;
+		menuItem -optionBox true
+			-command "CreateSubdivSurfaceOptions"
+			-annotation (uiRes("m_ModObjectsMenu.kPolygonsToSubdivOptionsAnnot"))
+			-image subdivCreate.xpm
+			-enableCommandRepeat false
+			subdivCreateOptionItem2;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kMeshPreviewToPoly"))  -enableCommandRepeat true
+			-command "CreatePolyFromPreview"
+			-annotation (getRunTimeCommandAnnotation("CreatePolyFromPreview"))
+			-image subdivCreate.xpm;
+
+
+		// Poly Edges to Curve
+		menuItem -label (uiRes("m_ModObjectsMenu.kPolyEdgesToCurve"))  -enableCommandRepeat true
+			-command "CreateCurveFromPoly"
+			-annotation (getRunTimeCommandAnnotation("CreateCurveFromPoly"))
+			polyToCurveItem;
+
+		menuItem -optionBox true
+			-command "CreateCurveFromPolyOptions"
+			-annotation (getRunTimeCommandAnnotation("CreateCurveFromPolyOptions"))
+			-enableCommandRepeat false
+			polyToCurveItem2;
+
+	}
+
+
+	// Subdivs to Poly
+	if( `isTrue SubdivUIExists` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kSubdivToPolygons"))  -enableCommandRepeat true
+			-annotation (uiRes("m_ModObjectsMenu.kSubdivToPolygonsAnnot"))
+			-image subdivTessellate.xpm
+			-command "TesselateSubdivSurface"
+			subdivTessellateItem;
+		menuItem -optionBox true
+			// need to add -image option
+			-annotation (uiRes("m_ModObjectsMenu.kSubdivToPolygonsOptionsAnnot"))
+			-image subdivTessellate.xpm
+			-enableCommandRepeat false
+			-command "TesselateSubdivSurfaceOptions"
+			subdivTessellateOptionItem;
+	}
+
+	// Subdivs to NURBS
+	if( `isTrue SubdivUIExists` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kSubdivToNURBS"))  -enableCommandRepeat true
+			-command "SubdivToNURBS"
+			-annotation (uiRes("m_ModObjectsMenu.kSubdivToNURBSAnnot"))
+			-image subdivToNurbs.xpm
+			-dragMenuCommand "performSubdToNurbs 2"
+			subdivCreateItem3;
+		menuItem -optionBox true
+			// need to add -image option
+			-annotation (uiRes("m_ModObjectsMenu.kSubdivToNURBSOptionsAnnot"))
+			-image subdivToNurbs.xpm
+			-enableCommandRepeat false
+			-command "SubdivToNURBSOptions"
+			subdivToNurbsOptionItem;
+	}
+
+	// Paint Effects to Poly
+	if( `isTrue "MayaCreatorExists"` ) {
+		menuItem -label (uiRes("m_ModObjectsMenu.kPaintEffectsToPolygons"))  -enableCommandRepeat true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToPolygonsAnnot"))
+			-image paintFXtoPoly.xpm
+			-command "PaintEffectsToPoly"
+			paintEffectsToPolyItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToPolygonsOptionsAnnot"))
+			-image paintFXtoPoly.xpm
+			-enableCommandRepeat false
+			-command "PaintEffectsToPolyOptions"
+			paintEffectsToPolyOptionItem;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kPaintEffectsToNURBS"))  -enableCommandRepeat true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToNURBSAnnot"))
+			-image paintFXtoNurbs.xpm
+			-command "PaintEffectsToNurbs "
+			paintEffectsToNurbsItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToNURBSOptionsAnnot"))
+			-image paintFXtoNurbs.xpm
+			-enableCommandRepeat false
+			-command "PaintEffectsToNurbsOptions"
+			paintEffectsToNurbsOptionItem;
+
+		menuItem -label (uiRes("m_ModObjectsMenu.kPaintEffectsToCurves"))  -enableCommandRepeat true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToCurvesAnnot"))
+			-image paintFXtoCurve.xpm
+			-command "PaintEffectsToCurve"
+			paintEffectsToCurveItem;
+		menuItem -optionBox true
+			-annotation (uiRes("m_ModObjectsMenu.kPaintEffectsToCurvesOptionsAnnot"))
+			-image paintFXtoCurve.xpm
+			-enableCommandRepeat false
+			-command "PaintEffectsToCurveOptions"
+			paintEffectsToCurveOptionItem;
+	}
+
+	menuItem
+		-label (uiRes("m_ModObjectsMenu.kTextureToGeometry"))
+		-annotation (uiRes("m_ModObjectsMenu.kTextureToGeometryAnnot"))
+		-command "performTextureToGeom 0";
+	menuItem -optionBox true
+		-annotation (uiRes("m_ModObjectsMenu.kTextureToGeometryOptionsAnnot"))
+		-command "performTextureToGeom 1";
+
+	// Displacement to Poly
+    menuItem -label (uiRes("m_ModObjectsMenu.kDisplacementToPolygons"))
+        -annotation (uiRes("m_ModObjectsMenu.kDisplacementToPolygonsAnnot"))
+        -command "DisplacementToPolygon"
+        dispPolyItem;
+
+	if( fluidEditLicenseFound() )
+		{
+			menuItem -label (uiRes("m_ModObjectsMenu.kFluidsToPolygons"))
+				-annotation (uiRes("m_ModObjectsMenu.kFluidsToPolygonsAnnot"))
+				-image "fluidtoPoly.xpm"
+				-command "performFluids 1 FluidToPoly 0"
+				fluidToPolygonsItem;
+
+			menuItem -label (uiRes("m_ModObjectsMenu.kNParticleToPolygons"))
+				-annotation (uiRes("m_ModObjectsMenu.kNParticleToPolygonsAnnot"))
+				//-image "nParticletoPoly.xpm"
+				-command "doParticleToPoly"
+				nParticleToPolygonsItem;
+		}
+	// Instance to Object
+    menuItem
+    	-label (uiRes("m_ModObjectsMenu.kInstanceToObject"))
+        -annotation (getRunTimeCommandAnnotation("ConvertInstanceToObject"))
+        -command "ConvertInstanceToObject"
+        instanceToObjectItem;
+
+	setParent -menu ..;
+
+	// Replace Object
+	menuItem
+		-annotation (getRunTimeCommandAnnotation("ReplaceObjects"))
+		-label (uiRes("m_ModObjectsMenu.kReplaceObjects"))
+		-command "ReplaceObjects"
+		replaceObjectsItem;
+	menuItem -optionBox true
+		-annotation (getRunTimeCommandAnnotation("ReplaceObjectsOptions"))
+		-command "ReplaceObjectsOptions"
+		replaceObjectsOptionsItem;
+
+	if (true || `licenseCheck -menu "edit" -typ "artisan"` ) {
+		menuItem -divider true;
+
+ 		menuItem -label (uiRes("m_ModObjectsMenu.kPaintScriptsTool"))
+ 			-image "userPaint.xpm"
+ 			-annotation (uiRes("m_ModObjectsMenu.kPaintScriptsToolAnnot"))
+ 			-command "ScriptPaintTool" userPaintItem;
+ 			menuItem -optionBox true -image "userPaint.xpm"
+ 				-annotation (uiRes("m_ModObjectsMenu.kPaintScriptsToolOptionsAnnot"))
+ 				-command "ScriptPaintToolOptions"
+ 				userPaintDialogItem;
+
+		// Attribute Paint Tool
+		menuItem -label (uiRes("m_ModObjectsMenu.kPaintAttributesTool"))
+            -image "artAttr.xpm"
+            -annotation (uiRes("m_ModObjectsMenu.kPaintAttributesToolAnnot"))
+            -command "ArtPaintAttrTool" artisanPaintAttrItem;
+            menuItem -optionBox true -image "artAttr.xpm"
+                -annotation (uiRes("m_ModObjectsMenu.kPaintAttributesToolOptionsAnnot"))
+                -command "ArtPaintAttrToolOptions"
+                artisanPaintAttrDialogItem;
+
+	}
+
+	updateModObjectsMenu ($parent);
+}

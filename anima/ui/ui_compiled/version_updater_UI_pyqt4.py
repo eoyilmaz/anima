@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file './ui_files/version_updater.ui'
+# Form implementation generated from reading ui file 'ui_files\version_updater.ui'
 #
-# Created: Tue May  6 17:38:32 2014
-#      by: PyQt4 UI code generator 4.10.2
+# Created: Thu May 04 11:01:53 2017
+#      by: PyQt4 UI code generator 4.9.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,16 +12,7 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
-    def _fromUtf8(s):
-        return s
-
-try:
-    _encoding = QtGui.QApplication.UnicodeUTF8
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig, _encoding)
-except AttributeError:
-    def _translate(context, text, disambig):
-        return QtGui.QApplication.translate(context, text, disambig)
+    _fromUtf8 = lambda s: s
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -66,10 +57,10 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(_translate("Dialog", "Version Updater", None))
-        self.label.setText(_translate("Dialog", "<html><head/><body><p><span style=\" color:#c00000;\">Red Versions need update,</span><span style=\" color:#00c000;\">Greens are OK</span>, check the Versions that you want to trigger an update.</p></body></html>", None))
-        self.selectNone_pushButton.setText(_translate("Dialog", "Select None", None))
-        self.selectAll_pushButton.setText(_translate("Dialog", "Select All", None))
-        self.update_pushButton.setText(_translate("Dialog", "Update", None))
-        self.cancel_pushButton.setText(_translate("Dialog", "Cancel", None))
+        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Version Updater", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("Dialog", "<html><head/><body><p><span style=\" color:#c00000;\">Red Versions need update,</span><span style=\" color:#00c000;\">Greens are OK</span>, check the Versions that you want to trigger an update.</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.selectNone_pushButton.setText(QtGui.QApplication.translate("Dialog", "Select None", None, QtGui.QApplication.UnicodeUTF8))
+        self.selectAll_pushButton.setText(QtGui.QApplication.translate("Dialog", "Select All", None, QtGui.QApplication.UnicodeUTF8))
+        self.update_pushButton.setText(QtGui.QApplication.translate("Dialog", "Update", None, QtGui.QApplication.UnicodeUTF8))
+        self.cancel_pushButton.setText(QtGui.QApplication.translate("Dialog", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
 

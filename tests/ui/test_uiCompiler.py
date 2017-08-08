@@ -68,8 +68,8 @@ class UIFileTestCase(unittest.TestCase):
     def test_pyqt4_filename_attribute_initialized_correctly(self):
         """testing if the pyqt4_filename attribute is initialized correctly
         """
-        expected_value = os.path.basename(self.test_uicFile_path)[:-4] + \
-                         '_UI_pyqt4.py'
+        expected_value = "%s_UI_pyqt4.py" % \
+            os.path.basename(self.test_uicFile_path)[:-4]
         self.assertEqual(expected_value, self.test_uicFile.pyqt4_filename)
 
     def test_pyqt4_full_path_attribute_initialized_correctly(self):
@@ -83,8 +83,8 @@ class UIFileTestCase(unittest.TestCase):
     def test_pyside_filename_attribute_initialized_correctly(self):
         """testing if the pyside_filename attribute is initialized correctly
         """
-        expected_value = os.path.basename(self.test_uicFile_path)[:-4] + \
-                         '_UI_pyside.py'
+        expected_value = '%s_UI_pyside.py' % \
+                         os.path.basename(self.test_uicFile_path)[:-4]
         self.assertEqual(expected_value, self.test_uicFile.pyside_filename)
 
     def test_pyside_full_path_attribute_initialized_correctly(self):
@@ -115,14 +115,14 @@ class UIFileTestCase(unittest.TestCase):
         os.remove(self.test_uicFile.md5_file_full_path)
 
     def test_isNew_method_is_working_correctly(self):
-        """testing if the isNew() method is working properly
+        """testing if the is_new() method is working properly
         """
         self.assertTrue(
-            self.test_uicFile.isNew()
+            self.test_uicFile.is_new()
         )
 
         # but not new if the md5 file is stored in the md5 file
         self.test_uicFile.update_md5_file()
         self.assertFalse(
-            self.test_uicFile.isNew()
+            self.test_uicFile.is_new()
         )

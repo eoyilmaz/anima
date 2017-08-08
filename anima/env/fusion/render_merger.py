@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -10,6 +10,8 @@ import PeyeonScript
 
 fusion = PeyeonScript.scriptapp("Fusion")
 comp = fusion.GetCurrentComp()
+
+fusion_version = float(fusion.GetAttrs("FUSIONS_Version"))
 
 
 class RenderMerger(object):
@@ -123,7 +125,14 @@ class RenderMerger(object):
                 h_offset = 0.5 / self.slices_in_x + j * 1.0 / self.slices_in_x
                 v_offset = 0.5 / self.slices_in_y + i * 1.0 / self.slices_in_y
                 # set center offset
-                merge.GetInputList()[29][0] = {
+
+                # center input id is 29 for fusion 6
+                # and .. for fusion 7+
+                center_id = 29
+                if fusion_version > 7:
+                    center_id = 33
+                
+                merge.GetInputList()[center_id][0] = {
                     1.0: h_offset,
                     2.0: v_offset,
                     3.0: 0.0

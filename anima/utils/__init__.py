@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -77,10 +77,6 @@ def open_browser_in_location(path):
 
     :param path: The path that the browser should be opened at.
     """
-    import os
-    import subprocess
-    import platform
-
     command = []
 
     platform_info = platform.platform()
@@ -133,20 +129,20 @@ class StalkerThumbnailCache(object):
     def get(cls, thumbnail_full_path, login=None, password=None):
         """returns the file either from cache or from stalker server
         """
-        import anima
+        from anima import defaults
 
         # look up in the cache first
         filename = os.path.basename(thumbnail_full_path)
         logger.debug('filename : %s' % filename)
 
-        cache_path = os.path.expanduser(anima.local_cache_folder)
+        cache_path = os.path.expanduser(defaults.local_cache_folder)
         cached_file_full_path = os.path.join(cache_path, filename)
 
         url = '%s/%s' % (
-            anima.stalker_server_internal_address,
+            defaults.stalker_server_internal_address,
             thumbnail_full_path
         )
-        login_url = '%s/login' % anima.stalker_server_internal_address
+        login_url = '%s/login' % defaults.stalker_server_internal_address
 
         logger.debug('cache_path            : %s' % cache_path)
         logger.debug('cached_file_full_path : %s' % cached_file_full_path)
@@ -240,23 +236,20 @@ def do_db_setup():
     """the common routing for setting up the database
     """
     from sqlalchemy.exc import UnboundExecutionError
-
-    from stalker import db
-    from stalker.db import DBSession
-
-    DBSession.remove()
-    DBSession.close()
-
+    from stalker.db.session import DBSession
     try:
         DBSession.connection()
         logger.debug('already connected, not creating any new connections')
     except UnboundExecutionError:
+        # DBSession.remove()
+        # DBSession.close()
         # no connection do setup
         logger.debug('doing a new connection with NullPool')
-        from stalker import defaults
+        from anima import defaults
         from sqlalchemy.pool import NullPool
         settings = defaults.database_engine_settings
         settings['sqlalchemy.poolclass'] = NullPool
+        from stalker import db
         db.setup(settings)
 
 
@@ -269,7 +262,6 @@ def utc_to_local(utc_dt):
     # get integer timestamp to avoid precision lost
     timestamp = calendar.timegm(utc_dt.timetuple())
     local_dt = datetime.datetime.fromtimestamp(timestamp)
-    assert utc_dt.resolution >= datetime.timedelta(microseconds=1)
     return local_dt.replace(microsecond=utc_dt.microsecond)
 
 
@@ -281,135 +273,7 @@ def local_to_utc(local_dt):
     """
     # get the utc_dt as if the local_dt is utc and calculate the timezone
     # difference and add it to the local dt object
-    logger.debug('utc_to_local(local_dt) : %s' % utc_to_local(local_dt))
-    logger.debug('utc - local            : %s' % (utc_to_local(local_dt) - local_dt))
-    logger.debug('local - (utc - local)  : %s' % (local_dt - (utc_to_local(local_dt) - local_dt)))
     return local_dt - (utc_to_local(local_dt) - local_dt)
-
-
-def kelvin_to_rgb2(kelvin):
-    """converts the given kelvin to rgb color
-
-    :param float kelvin:
-    :return:
-    """
-    if kelvin < 1000:
-        kelvin = 1000
-    elif kelvin > 29800:
-        kelvin = 29800
-
-    # LUT data coming from http://www.vendian.org/mncharity/dir3/blackbody
-    lut = {
-        1000: 0xff3800, 1200: 0xff5300, 1400: 0xff6500, 1600: 0xff7300,
-        1800: 0xff7e00, 2000: 0xff8912, 2200: 0xff932c, 2400: 0xff9d3f,
-        2600: 0xffa54f, 2800: 0xffad5e, 3000: 0xffb46b, 3200: 0xffbb78,
-        3400: 0xffc184, 3600: 0xffc78f, 3800: 0xffcc99, 4000: 0xffd1a3,
-        4200: 0xffd5ad, 4400: 0xffd9b6, 4600: 0xffddbe, 4800: 0xffe1c6,
-        5000: 0xffe4ce, 5200: 0xffe8d5, 5400: 0xffebdc, 5600: 0xffeee3,
-        5800: 0xfff0e9, 6000: 0xfff3ef, 6200: 0xfff5f5, 6400: 0xfff8fb,
-        6600: 0xfef9ff, 6800: 0xf9f6ff, 7000: 0xf5f3ff, 7200: 0xf0f1ff,
-        7400: 0xedefff, 7600: 0xe9edff, 7800: 0xe6ebff, 8000: 0xe3e9ff,
-        8200: 0xe0e7ff, 8400: 0xdde6ff, 8600: 0xdae4ff, 8800: 0xd8e3ff,
-        9000: 0xd6e1ff, 9200: 0xd3e0ff, 9400: 0xd1dfff, 9600: 0xcfddff,
-        9800: 0xcedcff, 10000: 0xccdbff, 10200: 0xcadaff, 10400: 0xc9d9ff,
-        10600: 0xc7d8ff, 10800: 0xc6d8ff, 11000: 0xc4d7ff, 11200: 0xc3d6ff,
-        11400: 0xc2d5ff, 11600: 0xc1d4ff, 11800: 0xc0d4ff, 12000: 0xbfd3ff,
-        12200: 0xbed2ff, 12400: 0xbdd2ff, 12600: 0xbcd1ff, 12800: 0xbbd1ff,
-        13000: 0xbad0ff, 13200: 0xb9d0ff, 13400: 0xb8cfff, 13600: 0xb7cfff,
-        13800: 0xb7ceff, 14000: 0xb6ceff, 14200: 0xb5cdff, 14400: 0xb5cdff,
-        14600: 0xb4ccff, 14800: 0xb3ccff, 15000: 0xb3ccff, 15200: 0xb2cbff,
-        15400: 0xb2cbff, 15600: 0xb1caff, 15800: 0xb1caff, 16000: 0xb0caff,
-        16200: 0xafc9ff, 16400: 0xafc9ff, 16600: 0xafc9ff, 16800: 0xaec9ff,
-        17000: 0xaec8ff, 17200: 0xadc8ff, 17400: 0xadc8ff, 17600: 0xacc7ff,
-        17800: 0xacc7ff, 18000: 0xacc7ff, 18200: 0xabc7ff, 18400: 0xabc6ff,
-        18600: 0xaac6ff, 18800: 0xaac6ff, 19000: 0xaac6ff, 19200: 0xa9c6ff,
-        19400: 0xa9c5ff, 19600: 0xa9c5ff, 19800: 0xa9c5ff, 20000: 0xa8c5ff,
-        20200: 0xa8c5ff, 20400: 0xa8c4ff, 20600: 0xa7c4ff, 20800: 0xa7c4ff,
-        21000: 0xa7c4ff, 21200: 0xa7c4ff, 21400: 0xa6c3ff, 21600: 0xa6c3ff,
-        21800: 0xa6c3ff, 22000: 0xa6c3ff, 22200: 0xa5c3ff, 22400: 0xa5c3ff,
-        22600: 0xa5c3ff, 22800: 0xa5c2ff, 23000: 0xa4c2ff, 23200: 0xa4c2ff,
-        23400: 0xa4c2ff, 23600: 0xa4c2ff, 23800: 0xa4c2ff, 24000: 0xa3c2ff,
-        24200: 0xa3c1ff, 24400: 0xa3c1ff, 24600: 0xa3c1ff, 24800: 0xa3c1ff,
-        25000: 0xa3c1ff, 25200: 0xa2c1ff, 25400: 0xa2c1ff, 25600: 0xa2c1ff,
-        25800: 0xa2c1ff, 26000: 0xa2c0ff, 26200: 0xa2c0ff, 26400: 0xa1c0ff,
-        26600: 0xa1c0ff, 26800: 0xa1c0ff, 27000: 0xa1c0ff, 27200: 0xa1c0ff,
-        27400: 0xa1c0ff, 27600: 0xa1c0ff, 27800: 0xa0c0ff, 28000: 0xa0bfff,
-        28200: 0xa0bfff, 28400: 0xa0bfff, 28600: 0xa0bfff, 28800: 0xa0bfff,
-        29000: 0xa0bfff, 29200: 0xa0bfff, 29400: 0x9fbfff, 29600: 0x9fbfff,
-        29800: 0x9fbfff,
-    }
-    import math
-
-    # get the lower and upper kelvin values
-    fmin = int(math.floor(float(kelvin) / 200.0) * 200)
-    fmax = fmin + 200
-
-    # get the RGB values from the lut
-    hex_min = lut[fmin]
-    hex_max = lut[fmax]
-
-    rgb_min = [
-        float(int(bin(hex_min)[2:10], 2)) / 255.0,
-        float(int(bin(hex_min)[10:18], 2)) / 255.0,
-        float(int(bin(hex_min)[18:26], 2)) / 255.0,
-    ]
-    rgb_max = [
-        float(int(bin(hex_max)[2:10], 2)) / 255.0,
-        float(int(bin(hex_max)[10:18], 2)) / 255.0,
-        float(int(bin(hex_max)[18:26], 2)) / 255.0,
-    ]
-
-    # interpolate the RGB values from the list
-    residual = kelvin - fmin
-    ratio = residual / 200.0
-
-    rgb = [
-        (rgb_max[0] - rgb_min[0]) * ratio + rgb_min[0],
-        (rgb_max[1] - rgb_min[1]) * ratio + rgb_min[1],
-        (rgb_max[2] - rgb_min[2]) * ratio + rgb_min[2],
-    ]
-
-    return rgb
-
-
-def kelvin_to_rgb(kelvin):
-    """converts the given kelvin to rgb color
-
-    :param kelvin:
-    :return:
-    """
-    # algorithm from:
-    # http://www.tannerhelland.com/4435/convert-temperature-rgb-algorithm-code/
-
-    import math
-    kelvin /= 100.0
-
-    # red and green
-    if kelvin <= 66:
-        red = 255
-        green = kelvin
-        green = 99.4708025861 * math.log(green, math.e) - 161.1195681661
-        if kelvin <= 19:
-            blue = 0
-        else:
-            blue = kelvin - 10
-            blue = 138.5177312231 * math.log(blue, math.e) - 305.0447927307
-    else:
-        blue = 255
-        red = kelvin - 60
-        red = 329.698727446 * (math.pow(red, -0.1332047592))
-        green = kelvin - 60
-        green = 288.1221695283 * (math.pow(green, -0.0755148492))
-
-    red = min(max(red, 0), 255)
-    green = min(max(green, 0), 255)
-    blue = min(max(blue, 0), 255)
-
-    return [
-        float(red) / 255.0,
-        float(green) / 255.0,
-        float(blue) / 255.0
-    ]
 
 
 class MediaManager(object):
@@ -471,9 +335,9 @@ class MediaManager(object):
         self.web_video_bitrate = 4096  # in kBits/sec
 
         # commands
-        import anima
-        self.ffmpeg_command_path = anima.ffmpeg_command_path
-        self.ffprobe_command_path = anima.ffprobe_command_path
+        from anima import defaults
+        self.ffmpeg_command_path = defaults.ffmpeg_command_path
+        self.ffprobe_command_path = defaults.ffprobe_command_path
 
     @classmethod
     def reorient_image(cls, img):
@@ -489,6 +353,7 @@ class MediaManager(object):
 
         orientation_string = tags.get('Image Orientation')
 
+        from PIL import Image
         if orientation_string:
             orientation = orientation_string.values[0]
             if orientation == 1:
@@ -523,6 +388,7 @@ class MediaManager(object):
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
 
+        from PIL import Image
         img = Image.open(file_full_path)
         # do a double scale
         img.thumbnail((2 * self.thumbnail_width, 2 * self.thumbnail_height))
@@ -554,6 +420,7 @@ class MediaManager(object):
         # generate thumbnail for the image and save it to a tmp folder
         suffix = self.thumbnail_format
 
+        from PIL import Image
         img = Image.open(file_full_path)
         if img.size[0] > self.web_image_width \
            or img.size[1] > self.web_image_height:
@@ -783,7 +650,7 @@ class MediaManager(object):
         first_folder = new_filename[:2]
         second_folder = new_filename[2:4]
 
-        from stalker import defaults
+        from anima import defaults
         file_path = os.path.join(
             defaults.server_side_storage_path,
             first_folder,
@@ -907,7 +774,14 @@ class MediaManager(object):
 
         logger.debug('calling ffmpeg with args: %s' % args)
 
-        process = subprocess.Popen(args, stderr=subprocess.PIPE)
+
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(args, stderr=subprocess.PIPE,
+                                   startupinfo=startupinfo)
 
         # loop until process finishes and capture stderr output
         stderr_buffer = []
@@ -950,7 +824,13 @@ class MediaManager(object):
 
         logger.debug('calling ffprobe with args: %s' % args)
 
-        process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        process = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                   startupinfo=startupinfo)
 
         # loop until process finishes and capture stderr output
         stdout_buffer = []
@@ -1221,7 +1101,6 @@ class MediaManager(object):
         filename = ''.join(filename_buffer)
 
         # replace ' ' with '_'
-        import re
         basename, extension = os.path.splitext(filename)
         filename = '%s%s' % (
             re.sub(r'[\s\.\\/:\*\?"<>|=,+]+', '_', basename),
@@ -1413,7 +1292,8 @@ class MediaManager(object):
         :param str extension: The file extension of the version.
         :returns: :class:`.Version` instance.
         """
-        from stalker import defaults, Version
+        from anima import defaults
+        from stalker import Version
         if take_name is None:
             take_name = defaults.version_take_name
 
@@ -1554,3 +1434,318 @@ class MediaManager(object):
                 web_version_link.thumbnail = thumbnail_link
 
         return link
+
+
+class Exposure(object):
+    """A class for photo exposure calculation
+    """
+
+    def __init__(self, shutter=None, fstop=None, iso=None):
+        self.shutter = shutter
+        self.fstop = fstop
+        self.iso = iso
+
+    def to(self, other_exp):
+        """calculate the exposure to equalize this exposure to the the given
+        exposure
+
+        :param other_exp: An exposure instance
+        :return:
+        """
+        assert isinstance(other_exp, Exposure)
+
+        import math
+
+        shuter = math.log(other_exp.shutter / self.shutter, 2)
+        fstop = math.log(
+            (float(self.fstop) * float(self.fstop)) /
+            (float(other_exp.fstop) * float(other_exp.fstop)), 2)
+        iso = math.log(float(other_exp.iso) / float(self.iso), 2)
+        return shuter + fstop + iso
+
+    def from_(self, other_exp):
+        """calculate the exposure to equalize the other exposure to this
+        exposure
+
+        :param other_exp:
+        :return:
+        """
+        return -self.to(other_exp)
+
+
+class C3DEqualizerPointManager(object):
+    """Manages 3DEqualizer points
+
+    :param str data: Textual data that contains points
+    """
+
+    def __init__(self):
+        self.points = []
+
+    def read(self, file_path):
+        """Read data from file
+
+        :param file_path:
+        :return:
+        """
+        with open(file_path, 'r') as f:
+            data = f.readlines()
+        self.reads(data)
+
+    def reads(self, data):
+        """Reads the data from textual input
+
+        :param data: lines of data
+        """
+        number_of_points = int(data[0])
+        cursor = 1
+        for i in range(number_of_points):
+            # gather individual point data
+            point_name = data[cursor]
+            cursor += 1
+            start = int(data[cursor])
+            cursor += 1
+            end = int(data[cursor])
+            length = end - start
+            cursor += 1
+            point_data = data[cursor: cursor+length]
+            # generate point
+            point = C3DEqualizerTrackPoint(point_name, point_data)
+            cursor += length
+            self.points.append(point)
+
+
+class C3DEqualizerTrackPoint(object):
+    """represents a 3DEqualizer track point
+    """
+
+    def __init__(self, name, data):
+        self.data = {}
+        self.parse_data(data)
+        self.name = name
+
+    def parse_data(self, data):
+        """Loads data from the given text
+
+        :param data: The data as text which is exported directly from
+          3DEqualizer
+        :return:
+        """
+        for i, pos in enumerate(data):
+            pos = map(float, pos.split(' '))
+            self.data[i] = pos[1:]
+
+
+def create_project_structure(project):
+    """Creates the project structure of the given project
+
+    :param project: A Stalker Project instance
+    :return:
+    """
+    from stalker import Project
+    if not isinstance(project, Project):
+        raise TypeError('Please supply a Stalker Project instance!')
+
+    import jinja2
+    t = jinja2.Template(project.structure.custom_template)
+    for line in t.render(project=project):
+        line = line.strip()
+        if line != '':
+            try:
+                os.makedirs(line)
+            except OSError:
+                # path already exist
+                pass
+
+    # Generate folders for tasks
+    for t in project.tasks:
+        try:
+            os.makedirs(t.absolute_path)
+        except OSError:
+            # path already exist
+            pass
+
+
+def file_browser_name():
+    """returns the file browser name of the current OS
+    """
+    import platform
+    file_browsers = {
+        'windows': 'Explorer',  # All windows versions
+        'darwin': 'Finder',  # OSX
+        'linux': 'File Browser'  # Gnome: Files, Ubuntu: Nautilus
+    }
+    return file_browsers[platform.system().lower()]
+
+
+def duplicate_task(task, user):
+    """Duplicates the given task without children.
+
+    :param task: a stalker.models.task.Task instance
+    :return: stalker.models.task.Task
+    """
+    # TODO: Update this to pytz
+    utc_now = local_to_utc(
+        datetime.datetime.now()
+    )
+
+    # create a new task and change its attributes
+    from stalker import Task
+    class_ = Task
+    extra_kwargs = {}
+    if task.entity_type == 'Asset':
+        from stalker import Asset
+        class_ = Asset
+        extra_kwargs = {
+            'code': task.code
+        }
+    elif task.entity_type == 'Shot':
+        from stalker import Shot
+        class_ = Shot
+        extra_kwargs = {
+            'code': task.code + 'dup'
+        }
+    elif task.entity_type == 'Sequence':
+        from stalker import Sequence
+        class_ = Sequence
+        extra_kwargs = {
+            'code': task.code
+        }
+
+    # all duplicated tasks are new tasks
+    from stalker import Status
+    new = Status.query.filter(Status.code == 'WFD').first()
+
+    dup_task = class_(
+        name=task.name,
+        project=task.project,
+        bid_timing=task.bid_timing,
+        bid_unit=task.bid_unit,
+        computed_end=task.computed_end,
+        computed_start=task.computed_start,
+        created_by=user,
+        description=task.description,
+        is_milestone=task.is_milestone,
+        resources=task.resources,
+        priority=task.priority,
+        schedule_constraint=task.schedule_constraint,
+        schedule_model=task.schedule_model,
+        schedule_timing=task.schedule_timing,
+        schedule_unit=task.schedule_unit,
+        status=new,
+        status_list=task.status_list,
+        tags=task.tags,
+        responsible=task.responsible,
+        start=task.start,
+        end=task.end,
+        # thumbnail=task.thumbnail,
+        type=task.type,
+        watchers=task.watchers,
+        date_created=utc_now,
+        **extra_kwargs
+    )
+    dup_task.generic_data = task.generic_data
+
+    return dup_task
+
+
+def walk_and_duplicate_task_hierarchy(task, user):
+    """Walks through task hierarchy and creates duplicates of all the tasks
+    it finds
+
+    :param task: task
+    :param user: stalker.models.auth.User instance that does this action.
+    :return:
+    """
+    # start from the given task
+    logger.debug('duplicating task : %s' % task)
+    logger.debug('task.children    : %s' % task.children)
+    dup_task = duplicate_task(task, user)
+    task.duplicate = dup_task
+    for child in task.children:
+        logger.debug('duplicating child : %s' % child)
+        duplicated_child = walk_and_duplicate_task_hierarchy(child, user)
+        duplicated_child.parent = dup_task
+    return dup_task
+
+
+def update_dependencies_in_duplicated_hierarchy(task):
+    """Updates the dependencies in the given task. Uses the task.duplicate
+    attribute to find the duplicate
+
+    :param task: The top most task of the hierarchy
+    :return: None
+    """
+    try:
+        duplicated_task = task.duplicate
+    except AttributeError:
+        # not a duplicated task
+        logger.debug('task has no duplicate: %s' % task)
+        return
+
+    for dependent_task in task.depends:
+        if hasattr(dependent_task, 'duplicate'):
+            logger.debug('there is a duplicate!')
+            logger.debug('dependent_task.duplicate : %s' %
+                         dependent_task.duplicate)
+            duplicated_task.depends.append(dependent_task.duplicate)
+        else:
+            logger.debug('there is no duplicate!')
+            duplicated_task.depends.append(dependent_task)
+
+    for child in task.children:
+        # check child dependencies
+        # loop through children
+        update_dependencies_in_duplicated_hierarchy(child)
+
+
+def cleanup_duplicate_residuals(task):
+    """Cleans the duplicate attributes in the hierarchy
+
+    :param task: The top task in the hierarchy
+    :return:
+    """
+    try:
+        delattr(task, 'duplicate')
+    except AttributeError:
+        pass
+
+    for child in task.children:
+        cleanup_duplicate_residuals(child)
+
+
+def duplicate_task_hierarchy(task, parent, name, description, user):
+    """Duplicates the given task hierarchy.
+
+    Walks through the hierarchy of the given task and duplicates every
+    instance it finds in a new task.
+
+    task: The task that wanted to be duplicated
+
+    :return: A list of stalker.models.task.Task
+    """
+    # TODO: update this to pytz
+    # import pytz
+    utc_now = local_to_utc(
+        datetime.datetime.now()
+    )
+
+    dup_task = walk_and_duplicate_task_hierarchy(task, user)
+    update_dependencies_in_duplicated_hierarchy(task)
+
+    cleanup_duplicate_residuals(task)
+    # update the parent
+    if parent is None and task.parent is not None:
+        parent = task.parent
+
+    dup_task.parent = parent
+    # just rename the dup_task
+
+    dup_task.name = name
+    dup_task.code = name
+    dup_task.description = description
+
+    from stalker.db.session import DBSession
+    DBSession.add(dup_task)
+
+    return dup_task

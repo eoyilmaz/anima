@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -362,11 +362,11 @@ def UI():
                 pm.checkBoxGrp(
                     'generate_repr_types_checkbox_grp',
                     label='Reprs',
-                    numberOfCheckBoxes=2,
-                    labelArray2=['GPU', 'ASS'],
-                    cl3=['left', 'left', 'left'],
-                    cw3=[67, 67, 67],
-                    valueArray2=[1, 1]
+                    numberOfCheckBoxes=3,
+                    labelArray3=['GPU', 'ASS', 'RS'],
+                    cl4=['left', 'left', 'left', 'left'],
+                    cw4=[51, 50, 50, 50],
+                    valueArray3=[1, 1, 1]
                 )
 
             pm.checkBox(
@@ -450,12 +450,6 @@ def UI():
                       c=RepeatedCallback(Modeling.fix_normals),
                       ann="applies setToFace then conform and then "
                           "soften edge to all selected objects",
-                      bgc=color.color)
-
-            color.change()
-            pm.button('oyUVTools_button', l="oyUVTools",
-                      c=RepeatedCallback(Modeling.uvTools),
-                      ann="opens oyUVTools",
                       bgc=color.color)
 
             color.change()
@@ -568,6 +562,58 @@ def UI():
                         6
                     ),
                     bgc=(0.500, 0.666, 1.000)
+                )
+
+            color.change()
+            with pm.rowLayout(nc=7, rat=(1, "both", 0), adj=1):
+                pm.text(l='Text. Res', bgc=color.color)
+                pm.button(
+                    l="128",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        128
+                    ),
+                    bgc=Color.colors[0]
+                )
+                pm.button(
+                    l="256",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        256
+                    ),
+                    bgc=Color.colors[1]
+                )
+                pm.button(
+                    l="512",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        512
+                    ),
+                    bgc=Color.colors[2]
+                )
+                pm.button(
+                    l="1024",
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        1024
+                    ),
+                    bgc=Color.colors[3]
+                )
+                pm.button(
+                    l='2048',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        2048
+                    ),
+                    bgc=Color.colors[4]
+                )
+                pm.button(
+                    l='4096',
+                    c=RepeatedCallback(
+                        Modeling.set_texture_res,
+                        4096
+                    ),
+                    bgc=Color.colors[5]
                 )
 
         # ----- RIGGING ------
@@ -744,6 +790,12 @@ def UI():
                       ann="reset tweaks",
                       bgc=color.color)
 
+            color.change()
+            pm.button('add_cacheable_attr_button', l="add `cacheable` attribute",
+                      c=RepeatedCallback(Rigging.add_cacheable_attribute),
+                      ann="add <b>cacheable</b> attribute",
+                      bgc=color.color)
+
         # ----- RENDER ------
         render_columnLayout = pm.columnLayout(
             'render_columnLayout',
@@ -760,6 +812,21 @@ def UI():
                 ann="Open node in browser",
                 bgc=color.color
             )
+
+            color.change()
+            pm.button('auto_convert_to_redshift_button',
+                      l="Auto Convert Scene To RedShift (BETA)",
+                      c=RepeatedCallback(Render.auto_convert_to_redshift),
+                      ann="Automatically converts the scene from Arnold to "
+                          "Redshift, including materials and lights",
+                      bgc=color.color)
+
+            pm.button('convert_nodes_to_redshift_button',
+                      l="Convert Selected To RedShift (BETA)",
+                      c=RepeatedCallback(Render.convert_nodes_to_redshift),
+                      ann="Automatically converts the selected node from "
+                          "Arnold to Redshift",
+                      bgc=color.color)
 
             color.change()
             pm.button(
@@ -1061,6 +1128,13 @@ def UI():
                 ann=Render.setup_window_glass_render_attributes.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'setup_dummy_window_light_button',
+                l='Setup/Update **Dummy Window** Light Plane',
+                c=RepeatedCallback(Render.dummy_window_light_plane),
+                ann=Render.dummy_window_light_plane.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button(
@@ -1075,6 +1149,13 @@ def UI():
                 l='Create Generic GUM Shader',
                 c=RepeatedCallback(Render.create_generic_gum_shader),
                 ann=Render.create_generic_gum_shader.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'create_generic_tongue_shader_button',
+                l='Create Generic TONGUE Shader',
+                c=RepeatedCallback(Render.create_generic_tongue_shader),
+                ann=Render.create_generic_tongue_shader.__doc__,
                 bgc=color.color
             )
 
@@ -1970,7 +2051,9 @@ class Reference(object):
         # Create LookDev for Current Model Task
         #
 
-        from stalker import db, Task, Version, Type, LocalSession, defaults
+        from stalker import Task, Version, Type, LocalSession
+        from stalker.db.session import DBSession
+        from anima import defaults
         from anima.env import mayaEnv
 
         do_db_setup()
@@ -2039,7 +2122,7 @@ class Reference(object):
             )
 
             pm.saveFile()
-            db.DBSession.add(new_version)
+            DBSession.add(new_version)
 
         else:
             latest_look_dev_version = previous_look_dev_version.latest_version
@@ -2110,7 +2193,7 @@ class Reference(object):
             if not result:
                 return
 
-        from stalker import db, LocalSession
+        from stalker import LocalSession
         from anima.env import mayaEnv
         m = mayaEnv.Maya()
 
@@ -2124,7 +2207,8 @@ class Reference(object):
         for version in versions:
             version.created_by = logged_in_user
 
-        db.DBSession.commit()
+        from stalker.db.session import DBSession
+        DBSession.commit()
 
     @classmethod
     def fix_reference_paths(cls):
@@ -2192,8 +2276,8 @@ class Reference(object):
             project_path = arch.flatten(path, project_name=project_name)
 
             # append link file
-            stalker_link_file_path = os.path.join(project_path,
-                                                  'scenes/stalker_links.txt')
+            stalker_link_file_path = \
+                os.path.join(project_path, 'scenes/stalker_links.txt')
             version_upload_link = '%s/tasks/%s/versions/list' % (
                 anima.stalker_server_external_address,
                 task.id
@@ -2343,6 +2427,7 @@ class Reference(object):
         """
         generate_gpu = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1) else 0
         generate_ass = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1) else 0
+        generate_rs = 1 if pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1) else 0
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -2350,6 +2435,7 @@ class Reference(object):
         cls.generate_repr_of_scene(
             generate_gpu,
             generate_ass,
+            generate_rs,
             skip_existing
         )
 
@@ -2357,6 +2443,7 @@ class Reference(object):
     def generate_repr_of_scene(cls,
                                generate_gpu=True,
                                generate_ass=True,
+                               generate_rs=True,
                                skip_existing=False):
         """generates desired representations of this scene
         """
@@ -2377,7 +2464,9 @@ class Reference(object):
             return
 
         # register a new caller
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -2397,7 +2486,10 @@ class Reference(object):
                 if generate_ass is True and '@ASS' in cv.take_name:
                     generate_ass = False
 
-        total_number_of_reprs = generate_gpu + generate_ass
+                if generate_rs is True and '@RS' in cv.take_name:
+                    generate_rs = False
+
+        total_number_of_reprs = generate_gpu + generate_ass + generate_rs
         caller = pdm.register(total_number_of_reprs, title='Generate Reprs')
 
         gen.version = source_version
@@ -2408,6 +2500,10 @@ class Reference(object):
 
         if generate_ass:
             gen.generate_ass()
+            caller.step()
+
+        if generate_rs:
+            gen.generate_rs()
             caller.step()
 
         # now open the source version again
@@ -2421,6 +2517,7 @@ class Reference(object):
         """
         generate_gpu = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v1=1)
         generate_ass = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v2=1)
+        generate_rs = pm.checkBoxGrp('generate_repr_types_checkbox_grp', q=1, v3=1)
 
         skip_existing = \
             pm.checkBox('generate_repr_skip_existing_checkBox', q=1, v=1)
@@ -2428,6 +2525,7 @@ class Reference(object):
         cls.generate_repr_of_all_references(
             generate_gpu,
             generate_ass,
+            generate_rs,
             skip_existing
         )
 
@@ -2435,6 +2533,7 @@ class Reference(object):
     def generate_repr_of_all_references(cls,
                                         generate_gpu=True,
                                         generate_ass=True,
+                                        generate_rs=True,
                                         skip_existing=False):
         """generates all representations of all references of this scene
         """
@@ -2449,7 +2548,9 @@ class Reference(object):
 
         # generate a sorted version list
         # and visit each reference only once
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         use_progress_window = False
         if not pm.general.about(batch=1):
@@ -2494,6 +2595,7 @@ class Reference(object):
         for v in versions_to_visit:
             local_generate_gpu = generate_gpu
             local_generate_ass = generate_ass
+            local_generate_rs = generate_rs
 
             # check if this is a repr
             if '@' in v.take_name:
@@ -2513,6 +2615,9 @@ class Reference(object):
                     if local_generate_ass is True and '@ASS' in cv.take_name:
                         local_generate_ass = False
 
+                    if local_generate_rs is True and '@RS' in cv.take_name:
+                        local_generate_rs = False
+
             gen.version = v
             # generate representations
             if local_generate_gpu:
@@ -2525,6 +2630,13 @@ class Reference(object):
             if local_generate_ass:
                 try:
                     gen.generate_ass()
+                except RuntimeError:
+                    if v not in versions_cannot_be_published:
+                        versions_cannot_be_published.append(v)
+
+            if local_generate_rs:
+                try:
+                    gen.generate_rs()
                 except RuntimeError:
                     if v not in versions_cannot_be_published:
                         versions_cannot_be_published.append(v)
@@ -2543,6 +2655,8 @@ class Reference(object):
                 gen.generate_gpu()
             if generate_ass:
                 gen.generate_ass()
+            if generate_rs:
+                gen.generate_rs()
         else:
             pm.confirmDialog(
                 title='Error',
@@ -2635,12 +2749,6 @@ class Modeling(object):
     def relax_vertices(cls):
         from anima.env.mayaEnv import relax_vertices
         relax_vertices.relax()
-
-    @classmethod
-    def uvTools(cls):
-        """opens the mel script oyUVTools
-        """
-        pm.mel.eval('oyUVTools;')
 
     @classmethod
     def create_curve_from_mesh_edges(cls):
@@ -2787,8 +2895,10 @@ class Modeling(object):
 
         mesh_count = len(all_meshes)
 
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         if not pm.general.about(batch=1) and mesh_count:
             pdm.use_ui = True
@@ -2885,10 +2995,60 @@ class Modeling(object):
             pm.xform(node, ws=1, rp=piv)
             pm.xform(node, ws=1, sp=piv)
 
+    @classmethod
+    def set_texture_res(cls, res):
+        """sets the texture resolution
+        :param res:
+        :return:
+        """
+        selection_list = pm.ls(sl=1)
+
+        if not len(selection_list):
+            return
+
+        node = selection_list[0]
+
+        # if the selection is a material
+        try:
+            node.resolution.set(res)
+        except AttributeError:
+            # not a material
+            # try it as a DAG object
+            try:
+                shape = node.getShape()
+            except RuntimeError:
+                # not a DAG object with shape
+                return
+
+            shading_engines = shape.outputs(type='shadingEngine')
+            if not len(shading_engines):
+                # not an object either
+                # so what the fuck are you amk
+                return
+
+            # consider the first material
+            conn = shading_engines[0].surfaceShader.listConnections()
+
+            if len(conn):
+                material = conn[0]
+                # now we can set the resolution
+                material.resolution.set(res)
+
 
 class Rigging(object):
     """Rigging tools
     """
+
+    @classmethod
+    def add_cacheable_attribute(cls):
+        """adds the cacheable attribute to the selected node
+        """
+        selection = pm.selected()
+        if selection:
+            node = selection[0]
+            if not node.hasAttr('cacheable'):
+                node.addAttr('cacheable', dt='string')
+                node.setAttr('cacheable', node.name().lower())
 
     @classmethod
     def setup_stretchy_spline_IKCurve(cls):
@@ -3086,6 +3246,23 @@ class Render(object):
     """
 
     @classmethod
+    def auto_convert_to_redshift(cls):
+        """converts the current scene to Redshift
+        """
+        from anima.env.mayaEnv import ai2rs
+        cm = ai2rs.ConversionManager()
+        cm.auto_convert()
+
+    @classmethod
+    def convert_nodes_to_redshift(cls):
+        """converts the selected nodes to Redshift
+        """
+        from anima.env.mayaEnv import ai2rs
+        cm = ai2rs.ConversionManager()
+        for node in pm.selected():
+            cm.convert(node)
+
+    @classmethod
     def standin_to_bbox(cls):
         """convert the selected stand-in nodes to bbox
         """
@@ -3157,7 +3334,9 @@ class Render(object):
             override_attr_name = None
 
         # register a caller
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.use_ui = True if len(objects) > 3 else False
         caller = pdm.register(len(objects), 'Setting Shape Attribute')
 
@@ -3508,9 +3687,28 @@ class Render(object):
             'aiDispPadding',
             'aiDispZeroValue',
             'aiDispAutobump',
-            'aiStepSize'
+            'aiStepSize',
+
+            'rsEnableSubdivision',
+            'rsSubdivisionRule',
+            'rsScreenSpaceAdaptive',
+            'rsDoSmoothSubdivision',
+            'rsMinTessellationLength',
+            'rsMaxTessellationSubdivs',
+            'rsOutOfFrustumTessellationFactor',
+
+            'rsEnableDisplacement',
+            'rsMaxDisplacement',
+            'rsDisplacementScale',
+            'rsAutoBumpMap',
         ]
 
+        # from anima.ui import progress_dialog
+        # from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        # wrp = MayaMainProgressBarWrapper()
+        # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
+
+        # caller = pdm.register(2, title='Transferring materials')
         for source_node, target_node in lut['match']:
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes
@@ -3522,6 +3720,8 @@ class Render(object):
                     )
                 except pm.MayaAttributeError:
                     pass
+            # caller.step()
+        # caller.end_progress()
 
         if len(lut['no_match']):
             pm.select(lut['no_match'])
@@ -4027,7 +4227,7 @@ class Render(object):
         char.eyeSpecularWeight >> ks_image.attr('multiplyB')
 
         for eye in eyes:
-            shading_engine = eye.getShape().outputs()[0]
+            shading_engine = eye.getShape().outputs(type='shadingEngine')[0]
             shader = pm.ls(shading_engine.inputs(), mat=1)[0]
 
             # connect the diffuse shader input to the emissionColor
@@ -4180,6 +4380,18 @@ class Render(object):
             pm.hyperShade(assign=shader)
 
     @classmethod
+    def dummy_window_light_plane(cls):
+        """creates or updates the dummy window plane for the given area light
+        """
+        area_light_list = pm.selected()
+        from anima.env.mayaEnv import auxiliary
+        reload(auxiliary)
+        for light in area_light_list:
+            dwl = auxiliary.DummyWindowLight()
+            dwl.light = light
+            dwl.update()
+
+    @classmethod
     def setup_z_limiter(cls):
         """creates z limiter setup
         """
@@ -4311,6 +4523,54 @@ class Render(object):
                 'specularRoughness': 0.2,
                 'enableInternalReflections': 0,
                 'KsssColor': [1, 0.6, 0.6],
+                'Ksss': 0.5,
+                'sssRadius': [0.5, 0.5, 0.5],
+                'normalCamera': {
+                    'output': 'outNormal',
+                    'type': 'bump2d',
+                    'class': 'asTexture',
+                    'attr': {
+                        'bumpDepth': 0.1,
+                        'bumpValue': {
+                            'output': 'outValue',
+                            'type': 'aiNoise',
+                            'class': 'asUtility',
+                            'attr': {
+                                'scaleX': 4,
+                                'scaleY': 1,
+                                'scaleZ': 4,
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        shader = auxiliary.create_shader(shader_tree, shader_name)
+
+        for node in selection:
+            # assign it to the stand in
+            pm.select(node)
+            pm.hyperShade(assign=shader)
+
+    @classmethod
+    def create_generic_tongue_shader(self):
+        """set ups generic tongue shader for selected objects
+        """
+        shader_name = 'toolbox_generic_tongue_shader#'
+        selection = pm.ls(sl=1)
+
+        shader_tree = {
+            'type': 'aiStandard',
+            'class': 'asShader',
+            'attr': {
+                'color': [0.675, 0.174, 0.194],
+                'Kd': 0.35,
+                'KsColor': [1, 1, 1],
+                'Ks': 0.010,
+                'specularRoughness': 0.2,
+                'enableInternalReflections': 0,
+                'KsssColor': [1, 0.3, 0.3],
                 'Ksss': 0.5,
                 'sssRadius': [0.5, 0.5, 0.5],
                 'normalCamera': {
@@ -4562,17 +4822,23 @@ class Render(object):
         import shutil
         import glob
 
-        from maya import OpenMayaUI
-        from shiboken import wrapInstance
-
-        from anima.ui import progress_dialog
-
-        maya_main_window = wrapInstance(
-            long(OpenMayaUI.MQtUtil.mainWindow()),
-            progress_dialog.QtGui.QWidget
-        )
-
-        pdm = ProgressDialogManager(parent=maya_main_window)
+        # from maya import OpenMayaUI
+        #
+        # try:
+        #     from shiboken import wrapInstance
+        # except ImportError:
+        #     from shiboken2 import wrapInstance
+        #
+        # from anima.ui import progress_dialog
+        #
+        # maya_main_window = wrapInstance(
+        #     long(OpenMayaUI.MQtUtil.mainWindow()),
+        #     progress_dialog.QtWidgets.QWidget
+        # )
+        #
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
 
         selected_nodes = pm.ls(sl=1)
         caller = pdm.register(len(selected_nodes), title='Moving Cache Files')
@@ -4886,19 +5152,45 @@ class Animation(object):
     def set_range_from_shot(cls):
         """sets the playback range from a shot node in the scene
         """
-        shot = pm.ls(type='shot')[0]
-        if not shot:
-            return
+        shots = pm.ls(type='shot')
+        min_frame = None
+        max_frame = None
+        if shots:
+            # use the available shot node
+            shot = shots[0]
+            min_frame = shot.getAttr('startFrame')
+            max_frame = shot.getAttr('endFrame')
+        else:
+            # check if this is a shot related scene
+            from anima.env import mayaEnv
+            m = mayaEnv.Maya()
+            v = m.get_current_version()
+            if v:
+                t = v.task
+                from stalker import Shot
+                parents = t.parents
+                parents.reverse()
+                for p in parents:
+                    if isinstance(p, Shot):
+                        pm.warning(
+                            'No shot node in the scene, '
+                            'using the Shot task!!!'
+                        )
+                        min_frame = p.cut_in
+                        max_frame = p.cut_out
+                        break
 
-        min_frame = shot.getAttr('startFrame')
-        max_frame = shot.getAttr('endFrame')
-
-        pm.playbackOptions(
-            ast=min_frame,
-            aet=max_frame,
-            min=min_frame,
-            max=max_frame
-        )
+        if min_frame is not None and max_frame is not None:
+            pm.playbackOptions(
+                ast=min_frame,
+                aet=max_frame,
+                min=min_frame,
+                max=max_frame
+            )
+        else:
+            pm.error(
+                'No shot node in the scene, nor the task is related to a Shot!'
+            )
 
 
 def fur_map_unlocker(furD, lock=False):

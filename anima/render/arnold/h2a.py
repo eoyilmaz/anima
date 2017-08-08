@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -478,25 +478,37 @@ points
 
     point_count = intrinsic_values['pointcount']
 
-    i = 0
-    j = 0
-    combined_vertex_ids = []
-    # combined_vertex_normals = []
-    combined_number_of_points_per_primitive = []
+    # i = 0
+    # j = 0
+    # combined_vertex_ids = []
+    # # combined_vertex_normals = []
+    # combined_number_of_points_per_primitive = []
 
+    #
+    # Point Positions
+    #
     point_positions = geo.pointFloatAttribValuesAsString('P')
-
     if export_motion:
         point_prime_positions = geo.pointFloatAttribValuesAsString('pprime')
         point_positions = '%s%s' % (point_positions, point_prime_positions)
+        del point_prime_positions
 
-    try:
-        point_colors = geo.pointFloatAttribValuesAsString('particle_color')
-    except hou.OperationFailed:
-       # no color attribute skip it
-        skip_colors = True
-        point_colors = ''
+    encode_start = time.time()
+    # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
+    encoded_point_positions = base85.arnold_b85_encode(point_positions)
+    encode_end = time.time()
+    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
+    del point_positions
 
+    split_start = time.time()
+    splitted_point_positions = split_data(encoded_point_positions, 500)
+    split_end = time.time()
+    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
+    del encoded_point_positions
+
+    #
+    # Point Radius
+    #
     try:
         point_radius = geo.pointFloatAttribValuesAsString('pscale')
     except hou.OperationFailed:
@@ -504,57 +516,50 @@ points
         skip_radius = True
         point_radius = ''
 
-    #
-    # Point Positions
-    #
-    encode_start = time.time()
-    # encoded_point_positions = base85.arnold_b85_encode_multithreaded(point_positions)
-    encoded_point_positions = base85.arnold_b85_encode(point_positions)
-    encode_end = time.time()
-    print('Encoding Point Position    : %3.3f' % (encode_end - encode_start))
-
-    split_start = time.time()
-    splitted_point_positions = split_data(encoded_point_positions, 500)
-    split_end = time.time()
-    print('Splitting Point Positions : %3.3f' % (split_end - split_start))
-
-
-
-    #
-    # Point Radius
-    #
     encode_start = time.time()
     encoded_point_radius = base85.arnold_b85_encode(point_radius)
     encode_end = time.time()
     print('Encoding Point Radius    : %3.3f' % (encode_end - encode_start))
+    del point_radius
 
     split_start = time.time()
     splitted_point_radius = split_data(encoded_point_radius, 500)
     split_end = time.time()
     print('Splitting Point Radius : %3.3f' % (split_end - split_start))
-
+    del encoded_point_radius
 
     render_type = render_type
     render_as = "disk"
 
-    if render_type == 1: render_as = "sphere"
-    elif render_type == 2: render_as = "quad"
+    if render_type == 1:
+        render_as = "sphere"
+    elif render_type == 2:
+        render_as = "quad"
 
     # #
     # # Vertex Colors
     # #
+    color_template = ''
     if export_color:
+        try:
+            point_colors = geo.pointFloatAttribValuesAsString('particle_color')
+        except hou.OperationFailed:
+           # no color attribute skip it
+            skip_colors = True
+            point_colors = ''
+
         encode_start = time.time()
         encoded_point_colors = base85.arnold_b85_encode(point_colors)
         encode_end = time.time()
         print('Encoding Point colors     : %3.3f' % (encode_end - encode_start))
+        del point_colors
 
         split_start = time.time()
         splitted_point_colors = split_data(encoded_point_colors, 100)
         split_end = time.time()
+        print('Splitting Point Colors : %3.3f' % (split_end - split_start))
+        del encoded_point_colors
 
-    color_template = ''
-    if export_color:
         color_template = """
             declare rgbPP uniform RGB
             rgbPP %(point_count)s 1 b85RGB
@@ -563,7 +568,7 @@ points
 
         color_template = color_template % {
             'point_count': point_count,
-            'splitted_point_colors':splitted_point_colors
+            'splitted_point_colors': splitted_point_colors
         }
 
     data = base_template % {
@@ -575,6 +580,8 @@ points
         'point_positions': splitted_point_positions,
         'color_template': color_template,
     }
+    del splitted_point_radius
+    del splitted_point_positions
     return data
 
 

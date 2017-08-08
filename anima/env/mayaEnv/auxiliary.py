@@ -1,15 +1,44 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import os
-import shutil
-import copy
 
 import pymel.core as pm
-import maya.mel as mel
-import tempfile
+
+import re
+FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
+ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
+
+
+def kill_all_torn_off_panels():
+    """deletes all torn off panels
+    """
+    panel_list = pm.getPanel(type='modelPanel')
+
+    # remove all torn off panels
+    for panel in panel_list:
+        if panel.getTearOff():
+            panel.delete(pnl=1)
+
+
+def maximize_first_model_panel():
+    """maximizes the first model panel it can find
+
+    :return:
+    """
+    panel_list = pm.getPanel(type='modelPanel')
+    if len(panel_list) == 0:
+        return
+
+    # maximize one panel in default layout
+    g_main_pane = pm.melGlobals['gMainPane']
+
+    pane_config = pm.paneLayout(g_main_pane, q=1, configuration=1)
+    if pane_config != 'single':
+        # call mel here
+        pm.mel.eval('doSwitchPanes(1, { "single", "%s"})' % panel_list[0])
+        pm.mel.eval('updateToolbox();')
 
 
 def get_valid_dag_node(node):
@@ -379,6 +408,8 @@ def hair_from_curves():
         pm.rename(hair_dag, new_name)
 
     pm.select(hair_system, r=True)
+
+    import maya.mel as mel
     mel.eval('displayHairCurves("current", true')
 
     pm.delete(cpom)
@@ -475,7 +506,8 @@ def transfer_shaders(source, target):
         if target.instanceCount() > 1:
             for i in range(1, target.instanceCount()):
                 target.attr('instObjGroups[%s]' % i).disconnect()
-                target.attr('instObjGroups[%s]' % i) >> shading_engines[0].attr('dagSetMembers').next_available
+                target.attr('instObjGroups[%s]' % i) >> \
+                shading_engines[0].attr('dagSetMembers').next_available
 
 
 def benchmark(iter_cnt):
@@ -505,6 +537,7 @@ def load_shelf_tab(shelf_path):
     """loads the given shelf tab
     """
     # look in to the shelf mel file from user folders
+    import os
     if os.path.exists(shelf_path):
         try:
             pm.mel.eval('loadNewShelf "%s"' % shelf_path)
@@ -566,6 +599,7 @@ def delete_shelf_tab(shelf_name, confirm=True):
     pm.windows.deleteUI('%s|%s' % (shelf_top_level_path, shelf_name), layout=1)
 
     # remove the shelf mel file from user folders
+    import os
     for path in pm.internalVar(userShelfDir=1).split(os.path.pathsep):
         shelf_file_name = 'shelf_%s.mel' % shelf_name
         shelf_file_full_path = os.path.join(path, shelf_file_name)
@@ -714,6 +748,20 @@ def create_arnold_stand_in(path=None):
     return stand_in
 
 
+def create_rs_proxy_node(path=None):
+    """Creates Redshift Proxies showing a proxy object
+    """
+    proxy_mesh_node = pm.createNode('RedshiftProxyMesh')
+    proxy_mesh_node.fileName.set(path)
+    proxy_mesh_shape = pm.createNode('mesh')
+    proxy_mesh_node.outMesh >> proxy_mesh_shape.inMesh
+
+    # assign default material
+    pm.sets('initialShadingGroup', fe=proxy_mesh_shape)
+
+    return proxy_mesh_node, proxy_mesh_shape
+
+
 def run_pre_publishers():
     """runs pre publishers if the current scene is a published version
 
@@ -798,12 +846,41 @@ def run_post_publishers():
         staging.clear()
 
 
+def get_default_render_layer():
+    """Returns the default render layer
+    :return:
+    """
+    return pm.ls(type='renderLayer')[0].defaultRenderLayer()
+
+
+def switch_to_default_render_layer():
+    """sets the current layer to defaultRenderLayer
+    """
+    try:
+        default_render_layer = get_default_render_layer()
+        current_layer = get_current_render_layer()
+        if current_layer != default_render_layer:
+            default_render_layer.setCurrent()
+    except (NameError, RuntimeError):
+        pass
+
+
+def get_current_render_layer():
+    """Returns the current render layer
+
+    :return:
+    """
+    default_render_layer = get_default_render_layer()
+    return default_render_layer.currentLayer()
+
+
 def fix_external_paths():
     """fixes external paths in a maya scene
     """
     from anima.env import mayaEnv
     m_env = mayaEnv.Maya()
-    m_env.replace_external_paths()
+    if m_env.get_current_version():
+        m_env.replace_external_paths()
 
 
 def has_shape(node):
@@ -901,9 +978,13 @@ def perform_playblast(action):
         pb = Playblaster()
 
         # ask resolution
+        resolution = ask_playblast_resolution()
+        if resolution is None:
+            return
+
         extra_playblast_options = {
             'viewer': 1,
-            'percent': ask_playblast_resolution()
+            'percent': resolution
         }
 
         outputs = pb.playblast(
@@ -950,7 +1031,7 @@ def ask_playblast_resolution():
     response = pm.confirmDialog(
         title='Resolution?',
         message='Resolution?',
-        button=['Default', 'Full', 'Half', 'Quarter'],
+        button=['Default', 'Full', 'Half', 'Quarter', 'Cancel'],
         defaultButton='Default',
         cancelButton='Default',
         dismissString='Default'
@@ -963,6 +1044,8 @@ def ask_playblast_resolution():
         return 50
     elif response == 'Quarter':
         return 25
+    elif response == 'Cancel':
+        return None
 
     return 50
 
@@ -987,9 +1070,13 @@ def perform_playblast_shot(shot_name):
         return
 
     # ask resolution
+    resolution = ask_playblast_resolution()
+    if resolution is None:
+        return
+
     extra_playblast_options = {
         'viewer': 1,
-        'percent': ask_playblast_resolution()
+        'percent': resolution
     }
 
     shot = pm.PyNode(shot_name)
@@ -1021,11 +1108,11 @@ class Playblaster(object):
     display_flags = [
         'nurbsCurves', 'nurbsSurfaces', 'cv', 'hulls', 'polymeshes',
         'subdivSurfaces', 'planes', 'lights', 'cameras', 'imagePlane',
-        'joints', 'ikHandles', 'deformers', 'dynamics', 'fluids',
-        'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
+        'joints', 'ikHandles', 'deformers', 'dynamics', 'particleInstancers',
+        'fluids', 'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
         'dynamicConstraints', 'locators', 'dimensions', 'pivots',
         'handles', 'textures', 'strokes', 'motionTrails', 'pluginShapes',
-        'clipGhosts', 'greasePencils', 'manipulators', 'grid'
+        'clipGhosts', 'greasePencils', 'manipulators', 'grid',
     ]
 
     cam_attribute_names = [
@@ -1103,22 +1190,36 @@ class Playblaster(object):
     def get_hud_data(self):
         """
         """
+        # try to get the shot from sequencer
         current_shot = pm.sequenceManager(q=1, currentShot=1)
 
-        if not current_shot:
-            return ''
+        if current_shot:
+            shot_name = pm.getAttr('%s.shotName' % current_shot)
+            current_cam_name = pm.shot(current_shot, q=1, cc=1)
+            current_cam = pm.PyNode(current_cam_name)
+        else:
+            # then try to get the shot name from the file name
+            import os
+            shot_name = os.path.split(pm.sceneName())[1].split('_')[0]
+            # use the active panel camera
+            active_panel = self.get_active_panel()
+            current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+            current_cam_name = current_cam.name()
 
-        shot_name = pm.getAttr('%s.shotName' % current_shot)
-        current_cam_name = pm.shot(current_shot, q=1, cc=1)
-        current_cam = pm.PyNode(current_cam_name)
         if isinstance(current_cam, pm.nt.Transform):
             current_cam = current_cam.getShape()
+
         focal_length = current_cam.getAttr('focalLength')
-        sequencer = pm.ls(type='sequencer')[0]
-        if sequencer.getAttr('sequence_name') != '':
-            shot_info = sequencer.getAttr('sequence_name')
+
+        sequencers = pm.ls(type='sequencer')
+        if sequencers:
+            sequencer = sequencers[0]
+            if sequencer.getAttr('sequence_name') != '':
+                shot_info = sequencer.getAttr('sequence_name')
+            else:
+                shot_info = 'INVALID'
         else:
-            shot_info = 'INVALID'
+            shot_info = shot_name
 
         cf = pm.currentTime(q=1) + 1
 
@@ -1126,14 +1227,27 @@ class Playblaster(object):
         # TODO: This should use project frame rate
         tc = timecode.Timecode('24', frames=cf)
 
-        start_time = pm.shot(current_shot, q=1, st=1)
-        end_time = pm.shot(current_shot, q=1, et=1)
+        if current_shot:
+            start_time = pm.shot(current_shot, q=1, st=1)
+            end_time = pm.shot(current_shot, q=1, et=1)
+        else:
+            # no shot node use the current playback range
+            start_time = pm.playbackOptions(q=1, min=1)
+            end_time = pm.playbackOptions(q=1, max=1)
 
         cs_frame = int(cf - start_time)
 
         length = int(end_time - start_time) + 1
 
-        user_name = self.version.updated_by.name
+        if self.version:
+            user_name = self.version.updated_by.name
+        else:
+            # get the user name from the login info
+            if self.logged_in_user:
+                user_name = self.logged_in_user.name
+            else:
+                # ok try to use the filename
+                user_name = pm.sceneName().split('_')[-1]
 
         hud_string = \
             '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
@@ -1237,8 +1351,11 @@ class Playblaster(object):
         self.reset_user_view_options_storage()
 
         for flag in self.display_flags:
-            val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
-            self.user_view_options['display_flags'][flag] = val
+            try:
+                val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
+                self.user_view_options['display_flags'][flag] = val
+            except TypeError:
+                pass
 
         # store hud display options
         hud_names = pm.headsUpDisplay(lh=1)
@@ -1270,6 +1387,10 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
         pm.modelEditor(active_panel, e=1, dynamics=True)
+
+        if int(pm.about(v=1)) > 2014:
+            pm.modelEditor(active_panel, e=1, particleInstancers=True)
+
         pm.modelEditor(active_panel, e=1, nParticles=True)
         pm.modelEditor(active_panel, e=1, nCloths=True)
         pm.modelEditor(active_panel, e=1, fluids=True)
@@ -1304,12 +1425,17 @@ class Playblaster(object):
             except RuntimeError:
                 pass
 
+        # pm.mel.eval('displayStyle("-ss")')
+
     def restore_user_options(self):
         """restores user options
         """
         active_panel = self.get_active_panel()
         for flag, value in self.user_view_options['display_flags'].items():
-            pm.modelEditor(active_panel, **{'e': 1, flag: value})
+            try:
+                pm.modelEditor(active_panel, **{'e': 1, flag: value})
+            except TypeError:
+                pass
 
         # reassign original hud display options
         for hud, value in self.user_view_options['huds'].items():
@@ -1319,7 +1445,13 @@ class Playblaster(object):
         # reassign original camera options
         for camera in pm.ls(type='camera'):
             camera_name = camera.name()
-            camera_flags = self.user_view_options['camera_flags'][camera_name]
+
+            try:
+                camera_flags = \
+                    self.user_view_options['camera_flags'][camera_name]
+            except KeyError:
+                continue
+
             for attr, value in camera_flags.items():
                 try:
                     camera.setAttr(attr, value)
@@ -1385,6 +1517,7 @@ class Playblaster(object):
           options.
         :return: A string showing the path of the resultant movie file
         """
+        import copy
         playblast_options = copy.copy(self.global_playblast_options)
         playblast_options['sequenceTime'] = False
         playblast_options['percent'] = 50
@@ -1416,6 +1549,7 @@ class Playblaster(object):
             playblast_options['wh'] = (width, height)
 
         # output path
+        import os
         if 'filename' not in playblast_options:
             if self.version:
                 # use version.base_name
@@ -1428,6 +1562,7 @@ class Playblaster(object):
                     )
                 )[0]
             # also render to temp
+            import tempfile
             playblast_options['filename'] = \
                 os.path.join(tempfile.gettempdir(), filename)
 
@@ -1447,7 +1582,7 @@ class Playblaster(object):
                         float(playblast_options['wh'][1]) /
                         float(playblast_options['wh'][0])
                     )
-                except AttributeError:
+                except (AttributeError, RuntimeError) as e:
                     pass
 
             result = [pm.playblast(**playblast_options)]
@@ -1459,6 +1594,7 @@ class Playblaster(object):
     def playblast_shot(self, shot, extra_playblast_options=None):
         """does the real thing
         """
+        import copy
         shot_playblast_options = copy.copy(self.global_playblast_options)
 
         shot_playblast_options.update({
@@ -1510,7 +1646,9 @@ class Playblaster(object):
             raise RuntimeError('There are no Shots in your Camera Sequencer.')
 
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.close()
 
         caller = pdm.register(len(shots), 'Generating Playblasts...')
@@ -1540,6 +1678,7 @@ class Playblaster(object):
             generic_playblast_options['useTraxSounds'] = True
 
         temp_video_file_full_paths = []
+        import copy
         for shot in shots:
             per_shot_playblast_options = copy.copy(generic_playblast_options)
 
@@ -1572,7 +1711,9 @@ class Playblaster(object):
         :return:
         """
         from anima.ui.progress_dialog import ProgressDialogManager
-        pdm = ProgressDialogManager()
+        from anima.env.mayaEnv import MayaMainProgressBarWrapper
+        wrp = MayaMainProgressBarWrapper()
+        pdm = ProgressDialogManager(dialog=wrp)
         pdm.close()
 
         outputs = []
@@ -1609,6 +1750,7 @@ class Playblaster(object):
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
+        import os
         output_file_name = os.path.basename(output_file_full_path)
 
         hires_output_file_name = '%s%s' % (
@@ -1657,6 +1799,7 @@ class Playblaster(object):
         except OSError:
             pass
 
+        import shutil
         shutil.copy(output_file_full_path, hires_path)
 
         # generate the web version
@@ -1681,7 +1824,8 @@ class Playblaster(object):
         project = task.project
         repo = project.repository
 
-        from stalker import db, Link
+        from stalker import Link
+        from stalker.db.session import DBSession
 
         # try to find a file with the same name assigned to the version as
         # output
@@ -1714,8 +1858,8 @@ class Playblaster(object):
             )
             l_for_web.thumbnail = l_thumb
 
-            db.DBSession.add_all([l_hires, l_for_web, l_thumb])
-            db.DBSession.commit()
+            DBSession.add_all([l_hires, l_for_web, l_thumb])
+            DBSession.commit()
 
         return hires_path
 
@@ -1726,7 +1870,9 @@ def get_cacheable_nodes():
     :return:
     """
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
     pdm.close()
 
     # list all cacheable nodes
@@ -1744,13 +1890,13 @@ def get_cacheable_nodes():
 
             if not has_cacheable_parent:
                 # only include direct references
-                # ref = tr.referenceFile()
-                # if ref is not None and ref.parent() is None:
-                #     # skip cacheable nodes coming from layout
-                #     if ref.version and ref.version.task.type \
-                #             and ref.version.task.type.name.lower() == 'layout':
-                #         caller.step()
-                #         continue
+                ref = tr.referenceFile()
+                if ref is not None and ref.parent() is None:
+                    # skip cacheable nodes coming from layout
+                    if ref.version and ref.version.task.type \
+                            and ref.version.task.type.name.lower() == 'layout':
+                        caller.step()
+                        continue
                 cacheable_nodes.append(tr)
 
         caller.step()
@@ -1779,7 +1925,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
         pm.loadPlugin('AbcExport')
 
     from anima.ui.progress_dialog import ProgressDialogManager
-    pdm = ProgressDialogManager()
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    wrp = MayaMainProgressBarWrapper()
+    pdm = ProgressDialogManager(dialog=wrp)
 
     cacheable_nodes.sort(key=lambda x: x.getAttr('cacheable'))
 
@@ -1799,11 +1947,16 @@ def export_alembic_from_cache_node(handles=0, step=1):
     # isolate none to speed things up
     pm.select(None)
 
-    # isolate in all panels
-    panel_list = pm.getPanel(type='modelPanel')
-    for panel in panel_list:
-        pm.isolateSelect(panel, state=1)
+    wrong_node_names = ['_rig', '_proxy']
 
+    default_playback_option = pm.playbackOptions(q=1, v=True)
+
+    # leave off only one panel in the viewport
+    kill_all_torn_off_panels()
+    maximize_first_model_panel()
+
+    import tempfile
+    import shutil
     for cacheable_node in cacheable_nodes:
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         if cacheable_attr_value == previous_cacheable_attr_value:
@@ -1811,15 +1964,29 @@ def export_alembic_from_cache_node(handles=0, step=1):
         else:
             i = 1
 
-        # hide any child node that has "rig" or "proxy" or "low" in its name
-        # wrong_node_names = ['rig', 'proxy', 'low']
-        wrong_node_names = ['rig', 'proxy',]
+        # isolate in all panels
+        panel_list = pm.getPanel(type='modelPanel')
+        for panel in panel_list:
+            pm.isolateSelect(panel, state=1)
+            pm.isolateSelect(panel, ado=cacheable_node)
+
         hidden_nodes = []
-        for child in pm.ls(cacheable_node.getChildren(), type='transform'):
-            if any([n in child.name().split(':')[-1].lower() for n in wrong_node_names]):
-                if child.v.get() is True and not child.v.isLocked():
-                    child.v.set(False)
-                    hidden_nodes.append(child)
+        nodes_to_consider = cacheable_node.getChildren(type='transform')
+        while len(nodes_to_consider):
+            current_node = nodes_to_consider.pop(0)
+            underscored_name = \
+                camel_case_to_underscore(current_node.name().split(':')[-1])
+
+            if any([n in underscored_name
+                    for n in wrong_node_names]):
+                    if current_node.v.get() is True \
+                       and not current_node.v.isLocked():
+                        current_node.v.set(False)
+                        hidden_nodes.append(current_node)
+            else:
+                nodes_to_consider.extend(
+                    current_node.getChildren(type='transform')
+                )
 
         output_path = os.path.join(
             current_file_path,
@@ -1839,8 +2006,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
             pass
 
         command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
-                  '-stripNamespaces -uvWrite -worldSpace -eulerFilter ' \
-                  '-writeVisibility -root %s -file %s";'
+                  '-stripNamespaces -uvWrite -worldSpace ' \
+                  '-writeVisibility -eulerFilter ' \
+                  '-root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
@@ -1865,12 +2033,15 @@ def export_alembic_from_cache_node(handles=0, step=1):
         for node in hidden_nodes:
             node.v.set(True)
 
+        # restore isolation in all panels
+        panel_list = pm.getPanel(type='modelPanel')
+        for panel in panel_list:
+            pm.isolateSelect(panel, state=0)
+
         caller.step()
 
-    # restore isolation in all panels
-    panel_list = pm.getPanel(type='modelPanel')
-    for panel in panel_list:
-        pm.isolateSelect(panel, state=0)
+    # restore playback option
+    pm.playbackOptions(v=default_playback_option)
 
 
 # noinspection PyStatementEffect
@@ -2257,14 +2428,23 @@ def match_hierarchy(source, target):
     Returns a dictionary where you can look up for matches by using the object
     name.
     """
+    from anima.ui import progress_dialog
+    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    # wrp = MayaMainProgressBarWrapper()
+    # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
+
+    # caller = pdm.register(2, title='Getting source and target nodes')
     source_nodes = source.listRelatives(
         ad=1,
         type=(pm.nt.Mesh, pm.nt.NurbsSurface)
     )
+    # caller.step()
     target_nodes = target.listRelatives(
         ad=1,
         type=(pm.nt.Mesh, pm.nt.NurbsSurface)
     )
+    # caller.step()
+    # caller.end_progress()
 
     source_node_names = []
     target_node_names = []
@@ -2273,14 +2453,22 @@ def match_hierarchy(source, target):
         'match': [],
         'no_match': []
     }
+
+    # caller = pdm.register(len(source_nodes), title='Getting source node names')
     for node in source_nodes:
         name = node.name().split(':')[-1].split('|')[-1]
         source_node_names.append(name)
+        # caller.step()
+    # caller.end_progress()
 
+    # caller = pdm.register(len(target_nodes), title='Getting target node names')
     for node in target_nodes:
         name = node.name().split(':')[-1].split('|')[-1]
         target_node_names.append(name)
+        # caller.step()
+    # caller.end_progress()
 
+    # caller = pdm.register(len(target_nodes), title='Matching nodes')
     for i, target_node in enumerate(target_nodes):
         target_node_name = target_node_names[i]
         try:
@@ -2294,8 +2482,21 @@ def match_hierarchy(source, target):
             lut['no_match'].append(target_node)
         else:
             lut['match'].append((source_nodes[index], target_nodes[i]))
+        # caller.step()
+    # caller.end_progress()
 
     return lut
+
+
+def camel_case_to_underscore(name):
+    """Converts the given CamelCase formatted string to underscore formatted
+    one
+
+    :param name:
+    :return:
+    """
+    name = FIRST_CAP_RE.sub(r'\1_\2', name)
+    return ALL_CAP_RE.sub(r'\1_\2', name).lower()
 
 
 class Cell(object):
@@ -2345,3 +2546,248 @@ class Grid(object):
         """
         raise NotImplementedError()
 
+
+class DummyWindowLight(object):
+    """generates dummy plane for given lights
+    """
+
+    shader_name = 'oyToolbox_dummy_window_light_shader'
+    shading_engine_name = 'oyToolbox_dummy_window_light_shaderSG'
+
+    kelvin_min = 1000
+    kelvin_max = 30000
+
+    def __init__(self, light=None):
+        self.light = light
+        self._shader = None
+        self._shading_engine = None
+        self._plane = None
+
+    def update(self):
+        """updates the node
+        """
+        plane = self.plane
+        self._update_plane_color()
+        self._set_light_attributes()
+
+    def _set_light_attributes(self):
+        """sets the default light attributes
+        """
+        light_shape = self.light.getShape()
+        light_shape.aiIndirect.set(0)
+        light_shape.aiSamples.set(1)
+
+    @property
+    def shader(self):
+        """returns the shader
+        """
+        if self._shader:
+            return self._shader
+        else:
+            shader = pm.ls(self.shader_name)
+            if not shader:
+                self._create_shader()
+                return self._shader
+            else:
+                self._shader = shader[0]
+                shading_engine = self._shader.outColor.outputs(
+                    type=pm.nt.ShadingEngine
+                )
+                if shading_engine:
+                    self._shading_engine = shading_engine[0]
+                else:
+                    self._create_shading_engine()
+                return shader[0]
+
+    @property
+    def shading_engine(self):
+        """returns the shading engine
+        """
+        if self._shading_engine:
+            return self._shading_engine
+        else:
+            self._shading_engine = self._create_shading_engine()
+            return self._shading_engine
+
+    @property
+    def plane(self):
+        """returns the plane
+        """
+        self._validate_light(self.light)
+
+        # get the first polygon object under the light
+        children_shapes = [
+            n.getShape()
+            for n in self.light.getChildren(type=pm.nt.Transform)
+            if n is not None
+        ]
+
+        if children_shapes:
+            while children_shapes:
+                plane_shape = children_shapes.pop(0)
+                if plane_shape is not None:
+                    break
+
+            if plane_shape:
+                self._plane = plane_shape.getParent()
+                return self._plane
+            else:
+                return self._create_plane()
+        else:
+            # create the plane
+            return self._create_plane()
+
+    def _create_shading_engine(self):
+        """creates the shading engine
+        """
+        if self.shader:
+            # get the shading engine from shader
+            shading_engines = self.shader.outputs(type=pm.nt.ShadingEngine)
+            if shading_engines:
+                self._shading_engine = shading_engines[0]
+
+        if not self._shading_engine:
+            self._shading_engine = pm.sets(
+                renderable=True,
+                noSurfaceShader=True,
+                empty=True,
+                name=self.shading_engine_name
+            )
+
+        return self._shading_engine
+
+    def _create_shader(self):
+        self._shader = pm.shadingNode('surfaceShader', asShader=1)
+        self._shader.rename(self.shader_name)
+
+        self._shader.outColor >> self.shading_engine.surfaceShader
+
+        # create the ramp
+        import maya.cmds as cmds
+
+        kelvin_ramp = pm.shadingNode('ramp', asTexture=1)
+        intensity_ramp = pm.shadingNode('ramp', asTexture=1)
+        intensity_ramp.attr('type').set(1)
+        intensity_ramp.interpolation.set(2)
+
+        intensity_ramp.colorEntryList[0].color.set(0, 0, 0)
+        intensity_ramp.colorEntryList[0].position.set(0)
+
+        kelvin_ramp.outColor >> intensity_ramp.colorEntryList[1].color
+        intensity_ramp.colorEntryList[1].position.set(0.707)
+
+        intensity_ramp.colorEntryList[2].color.set(1, 1, 1)
+        intensity_ramp.colorEntryList[2].position.set(1)
+
+        # set the colors of the ramp
+        kelvin_range = range(self.kelvin_min, self.kelvin_max, 1000)
+        total_colors = len(kelvin_range)
+        for i, kelvin in enumerate(kelvin_range):
+            color = cmds.arnoldTemperatureToColor(kelvin)
+            kelvin_ramp.colorEntryList[i].color.set(color)
+            kelvin_ramp.colorEntryList[i].position.set(float(i) / float(total_colors))
+
+        # connect ramp to the surfaceShaders.outColor
+        intensity_ramp.outColor >> self.shader.outColor
+
+    def _validate_light(self, light):
+        if light is None:
+            raise RuntimeError('No Light specified')
+
+        return light
+
+    def _create_plane(self):
+        """there should be a light
+        """
+        self._validate_light(self.light)
+
+        trans, pplane = pm.polyPlane()
+        shape = trans.getShape()
+        self._plane = trans
+
+        # parent it under the light
+        pm.parent(self._plane, self.light, r=1)
+        self._plane.t.set(0, 0, 0.05)
+        self._plane.r.set(90, 0, 0)
+        self._plane.s.set(2, 2, 2)
+
+        # close any indirect rays
+        shape.aiVisibleInDiffuse.set(0)
+        shape.aiVisibleInGlossy.set(0)
+
+        # ask the shader to create it
+        a = self.shader
+
+        # assign the shader
+        pm.sets(self.shading_engine, fe=[self._plane])
+        self._update_plane_color()
+
+    def _update_plane_color(self):
+        """updates the plane uv according to the light color
+        """
+        self._validate_light(self.light)
+
+        # assign the shader
+        pm.sets(self.shading_engine, fe=[self._plane])
+
+        # set the uv's of the plane according to the light color
+        kelvin = self.light.getShape().aiColorTemperature.get()
+
+        min_exp = 0
+        max_exp = 20
+
+        u = (min(max_exp, self.light.aiExposure.get()) - min_exp) / \
+            (max_exp - min_exp)
+        v = float(min(max(kelvin - self.kelvin_min, 0), self.kelvin_max)) / \
+            float((self.kelvin_max - self.kelvin_min))
+
+        shape = self.plane.getShape()
+        # close any indirect rays
+        shape.aiVisibleInDiffuse.set(0)
+        shape.aiVisibleInGlossy.set(0)
+
+        pm.polyEditUV(
+            '%s.map[0:10000]' % shape.name(),
+            u=u, v=v, r=False
+        )
+
+        # update the texture
+        try:
+            self.shader.resolution.set(1024)
+        except AttributeError:
+            pass
+
+
+def fix_joint_hierarchy_scale(source_joint):
+    """Duplicates the given joint hierarchy
+
+    :param source_joint: A maya joint
+    """
+    data = {}
+    joints = [source_joint]
+    while joints:
+        joint = joints.pop(0)
+        data[joint.name()] = {
+            't': pm.xform(joint, q=1, ws=1, t=1),
+            'r': pm.xform(joint, q=1, ws=1, ro=1)
+        }
+        # add children to list
+        joints.extend(joint.getChildren(type='joint'))
+
+    # fix parent scale
+    pm.selected()[0].getParent().s.set(1, 1, 1)
+
+    joints = pm.selected()
+    while joints:
+        joint = joints.pop(0)
+        j_data = data[joint.name()]
+        # add children to list
+        joints.extend(joint.getChildren(type='joint'))
+        pm.general.transformLimits(
+            joint,
+            etx=(False, False),
+            ety=(False, False),
+            etz=(False, False)
+        )
+        pm.xform(joint, ws=1, t=j_data['t'])
+        # pm.xform(joint, ws=1, t=j_data['r'])

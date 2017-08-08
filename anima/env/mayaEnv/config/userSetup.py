@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-import os
 import sys
-import platform
+import os
 import traceback
+import maya.cmds as cmds
 
-__version__ = "1.0.0"
+
+def logprint(log):
+    """wrapper for printing data inside userSetup.py
+
+    :param log: The string to pring
+    :return:
+    """
+    print('userSetup.py: %s' % log)
 
 # ----------------------------------------------------------------------------
 # add environment variables relative to this path
@@ -24,7 +31,7 @@ env_paths = [
     '../../../',
     '../../../mayaEnv',
     '../../../mayaEnv/config',
-    '../../../mayaEnv/config/2014',
+    '../../../mayaEnv/config/%s' % cmds.about(v=1),
     '../../../mayaEnv/plugins'
 ]
 
@@ -32,46 +39,34 @@ for path in env_paths:
     resolved_path = os.path.normpath(
         os.path.join(here, path)
     )
+
+    logprint('appending : %s' % resolved_path)
     sys.path.append(resolved_path)
+
+# add path from os.environ['PYTHONPATH']
+for path in os.environ['PYTHONPATH'].split(os.path.pathsep):
+    path = os.path.normpath(path)
+    if path not in os.sys.path:
+        os.sys.path.append(path)
 
 # now we can import pymel and others
 import pymel
 import pymel.core as pm
 from pymel import mayautils
-import maya.cmds as cmds
-
-from stalker import db
-
-try:
-    pm.Mel.source("HKLocalTools")
-except pm.MelError:
-    pass
 
 
-def __pluginLoader(pluginName):
-    if not pm.pluginInfo(pluginName, q=1, loaded=1):
-        pm.loadPlugin(pluginName)
+def __plugin_loader(plugin_name):
+    if not pm.pluginInfo(plugin_name, q=1, loaded=1):
+        logprint('loading %s!' % plugin_name)
+        pm.loadPlugin(plugin_name)
+        logprint('%s loaded!' % plugin_name)
 
 
-def __pluginUnloader(pluginName):
-    if not pm.pluginInfo(pluginName, q=1, loaded=1):
-        pm.unloadPlugin(pluginName)
-
-
-if 'ANIMA_TEST_SETUP' not in os.environ.keys():
-    #
-    __pluginUnloader('Mayatomr')
-    __pluginLoader('objExport')
-    __pluginLoader('closestPointOnCurve.py')
-    __pluginLoader('fbxmaya')
-    __pluginLoader('OpenEXRLoader')
-    __pluginLoader('tiffFloatReader')
-    __pluginLoader('tiffFloatReader')
-
-    mayautils.executeDeferred(__pluginLoader, 'mtoa')
-    mayautils.executeDeferred(__pluginLoader, 'AbcExport')
-    mayautils.executeDeferred(__pluginLoader, 'AbcImport')
-    mayautils.executeDeferred(__pluginLoader, 'gpuCache')
+def __plugin_unloader(plugin_name):
+    if not pm.pluginInfo(plugin_name, q=1, loaded=1):
+        logprint('unloading %s!' % plugin_name)
+        pm.unloadPlugin(plugin_name)
+        logprint('%s unloaded!' % plugin_name)
 
 
 # set the optionVar that enables hidden mentalray shaders
@@ -90,22 +85,89 @@ try:
 except pm.MayaNodeError:
     pass
 
-# create environment variables for each Repository
-db.setup()
+# set ui to PySide2 for maya2017
+if pymel.versions.current() > 201500:
+    logprint('setting QtLib to PySide2 inside userSetup.py')
+    from anima import ui
+    ui.SET_PYSIDE2()
+    logprint('successfully set QtLib to PySide2 inside userSetup.py')
+else:
+    logprint('setting QtLib to PySide inside userSetup.py')
+    from anima import ui
+    ui.SET_PYSIDE()
+    logprint('successfully QtLib to PySide inside userSetup.py')
+
 
 if not pm.general.about(batch=1):
     # load shelves
+    # DO NOT DELETE THE FOLLOWING LINE
     from anima.env.mayaEnv import auxiliary
 
-    shelves_path = '../../../../shelves'
-    shelf_names = ['kks_Tools', 'kks_Animation']
+    custom_shelves_env_var_name = 'ANIMA_MAYA_SHELVES_PATH'
+    if custom_shelves_env_var_name in os.environ:
+        logprint(
+            '**%s**: %s' % (
+                custom_shelves_env_var_name,
+                os.environ[custom_shelves_env_var_name]
+            )
+        )
+        shelves_paths = \
+            os.environ[custom_shelves_env_var_name].split(os.path.pathsep)
 
-    for shelf_name in shelf_names:
-        shelf_path = os.path.normpath(
-            os.path.join(here, shelves_path, 'shelf_%s.mel' % shelf_name)
-        ).replace('\\', '/')
+        for shelves_path in shelves_paths:
+            logprint('current shelves_path: %s' % shelves_path)
+            import glob
 
-        pm.evalDeferred('auxiliary.delete_shelf_tab("%s", confirm=False)' % shelf_name)
-        pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
+            shelf_paths = glob.glob('%s/shelf_*.mel' % shelves_path)
+            logprint('shelf_paths: %s' % shelf_paths)
+            for shelf_path in shelf_paths:
+                shelf_path = shelf_path.replace('\\', '/')
+                logprint('loading shelf: %s' % shelf_path)
+                shelf_name = \
+                    os.path.splitext(os.path.basename(shelf_path))[0][6:]
+                pm.evalDeferred(
+                    'auxiliary.delete_shelf_tab("%s", confirm=False)' %
+                    shelf_name
+                )
+                pm.evalDeferred('auxiliary.load_shelf_tab("%s")' % shelf_path)
+    else:
+        logprint('no **%s** env var for shelves' % custom_shelves_env_var_name)
 
-        print('shelf_path: %s' % shelf_path)
+    if 'ANIMA_TEST_SETUP' not in os.environ.keys():
+        def load_arnold():
+            try:
+                __plugin_loader('mtoa')
+
+                # patch auto-tx option in arnold for Maya 2017
+                if pymel.versions.current() >= 201700:
+                    from anima.env.mayaEnv.config import arnold_patches
+                    from mtoa.ui.globals import settings
+                    settings.createArnoldTextureSettings = \
+                        arnold_patches.createArnoldTextureSettings
+
+            except RuntimeError:
+                pass
+
+        def load_redshift():
+            try:
+                __plugin_loader('redshift4maya')
+            except RuntimeError:
+                pass
+
+        mayautils.executeDeferred(load_arnold)
+        mayautils.executeDeferred(load_redshift)
+        mayautils.executeDeferred(__plugin_loader, 'AbcExport')
+        mayautils.executeDeferred(__plugin_loader, 'AbcImport')
+        mayautils.executeDeferred(__plugin_loader, 'gpuCache')
+        mayautils.executeDeferred(__plugin_loader, 'objExport')
+        mayautils.executeDeferred(__plugin_loader, 'closestPointOnCurve.py')
+        mayautils.executeDeferred(__plugin_loader, 'fbxmaya')
+        mayautils.executeDeferred(__plugin_loader, 'OpenEXRLoader')
+        mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
+        mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
+
+# set CMD_EXTENSION for Afanasy
+os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
+
+# create environment variables for each Repository
+pm.evalDeferred("from anima import utils; utils.do_db_setup();")

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -9,7 +9,7 @@ import os
 import shutil
 
 from anima import logger
-from anima.ui.lib import QtCore, QtGui
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 def get_icon(icon_name):
@@ -33,7 +33,7 @@ def clear_thumbnail(gview):
     # clear the graphics scene in case there is no thumbnail
     scene = gview.scene()
     if not scene:
-        scene = QtGui.QGraphicsScene(gview)
+        scene = QtWidgets.QGraphicsScene(gview)
         gview.setScene(scene)
 
     scene.clear()
@@ -50,7 +50,7 @@ def update_gview_with_task_thumbnail(task, gview):
     from stalker import Task
 
     if not isinstance(task, Task) or \
-       not isinstance(gview, QtGui.QGraphicsView):
+       not isinstance(gview, QtWidgets.QGraphicsView):
         # do nothing
         logger.debug('task is not a stalker.models.task.Task instance')
         return
@@ -90,7 +90,7 @@ def update_gview_with_image_file(image_full_path, gview):
     """updates the QGraphicsView with the given image
     """
 
-    if not isinstance(gview, QtGui.QGraphicsView):
+    if not isinstance(gview, QtWidgets.QGraphicsView):
         return
 
     clear_thumbnail(gview)
@@ -144,9 +144,18 @@ def upload_thumbnail(task, thumbnail_full_path):
     except OSError:
         pass
 
+    # # convert the thumbnail to jpg if it is a format that is not supported by
+    # # browsers
+    # ext_not_supported_by_browsers = ['.bmp', '.tga', '.tif', '.tiff', '.exr']
+    # if extension in ext_not_supported_by_browsers:
+    #     # use MediaManager to convert them
+    #     from anima.utils import MediaManager
+    #     mm = MediaManager()
+    #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
+
     shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
 
-    from stalker import db, Link, Version, Repository
+    from stalker import Link, Version, Repository
 
     thumbnail_os_independent_path = \
         Repository.to_os_independent_path(thumbnail_final_full_path)
@@ -162,24 +171,26 @@ def upload_thumbnail(task, thumbnail_full_path):
     task.thumbnail = l_thumb
 
     # get a version of this Task
+    from stalker.db.session import DBSession
     v = Version.query.filter(Version.task == task).first()
     if v:
         for naming_parent in v.naming_parents:
             if not naming_parent.thumbnail:
                 naming_parent.thumbnail = l_thumb
-                db.DBSession.add(naming_parent)
+                DBSession.add(naming_parent)
 
-    db.DBSession.add(l_thumb)
-    db.DBSession.commit()
+    DBSession.add(l_thumb)
+    DBSession.commit()
 
 
 def choose_thumbnail(parent):
     """shows a dialog for thumbnail upload
     """
     # get a file from a FileDialog
-    thumbnail_full_path = QtGui.QFileDialog.getOpenFileName(
+    thumbnail_full_path = QtWidgets.QFileDialog.getOpenFileName(
         parent, "Choose Thumbnail",
         os.path.expanduser("~"),
+        # "Image Files (*.png *.jpg *.bmp *.tga *.tif *.tiff *.exr)"
         "Image Files (*.png *.jpg *.bmp)"
     )
 
@@ -192,7 +203,7 @@ def choose_thumbnail(parent):
 def render_image_from_gview(gview, image_full_path):
     """renders the gview scene to an image at the given full path
     """
-    assert isinstance(gview, QtGui.QGraphicsView)
+    assert isinstance(gview, QtWidgets.QGraphicsView)
     scene = gview.scene()
     # there should be only one item
     items = scene.items()
@@ -208,3 +219,14 @@ def render_image_from_gview(gview, image_full_path):
         pixmap.save(
             image_full_path
         )
+
+
+def load_font(font_filename):
+    """loads extra fonts from the fonts folder
+    """
+    here = os.path.dirname(os.path.realpath(__file__))
+    font_id = QtGui.QFontDatabase.addApplicationFont(
+        os.path.join(here, 'fonts', font_filename)
+    )
+    loaded_font_families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+    return loaded_font_families

@@ -1,6 +1,6 @@
 /*******************************************************************************
 * -*- coding: utf-8 -*-
-* Copyright (c) 2012-2016, Anima Istanbul
+* Copyright (c) 2012-2017, Anima Istanbul
 *
 * This module is part of anima-tools and is released under the BSD 2
 * License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -57,7 +57,7 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 	GA_ROHandleV3 cd_h(gdp,GA_ATTRIB_POINT,"Cd");
 	UT_Vector3F cd_val(1,1,1);
 
-	GA_ROHandleV3 uv_h(gdp,GA_ATTRIB_POINT,"uv");
+	GA_ROHandleV3 uv_h(gdp,GA_ATTRIB_PRIMITIVE,"uv");
 	UT_Vector3F uv_val(0,0,0);
 
 	GA_ROHandleV3 v_h(gdp,GA_ATTRIB_POINT,"v");
@@ -78,7 +78,7 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 
 	ass_file<<"\n points "<<point_count<<" "<<sample_count<<" POINT\n";
 
-	GA_Offset	lcl_start, lcl_end, ptoff;
+	GA_Offset	lcl_start, lcl_end, ptoff, primoff;
 
 	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
@@ -125,27 +125,22 @@ bool curve_write_normal_file(const GU_Detail *gdp,
 	ass_file<<"opaque on";
 
 
-	if(uv_h.isValid()){
-		ass_file<<"\n declare uparamcoord uniform FLOAT\n uparamcoord "<<number_of_curves<<" 1 FLOAT\n";
-		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-				ass_file<<uv_val.x()<<" ";
-				if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
-			}
+	if (uv_h.isValid()) {
+		ass_file << "\n declare uparamcoord uniform FLOAT\n uparamcoord " << number_of_curves << " 1 FLOAT\n";
+		for (GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd(); ++p_it) {
+			primoff = p_it.getOffset();
+			if (uv_h.isValid()) uv_val = uv_h.get(primoff);
+			ass_file << uv_val.x() << " ";
+			if ((primoff + 1) % 300 == 0) ass_file << "\n";
 		}
-
-		ass_file<<"\n declare vparamcoord uniform FLOAT\n vparamcoord "<<number_of_curves<<" 1 FLOAT\n";
-		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-				ass_file<<uv_val.y()<<" ";
-				if((ptoff+1) % 300 == 0) ass_file<<"\n"; 
-			}
+		ass_file << "\n declare vparamcoord uniform FLOAT\n vparamcoord " << number_of_curves << " 1 FLOAT\n";
+		for (GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd(); ++p_it) {
+			primoff = p_it.getOffset();
+			if (uv_h.isValid()) uv_val = uv_h.get(primoff);
+			ass_file << uv_val.y() << " ";
+			if ((primoff + 1) % 300 == 0) ass_file << "\n";
 		}
 	}
-
-
 
 	ass_file<<"\n declare curve_id uniform UINT\n curve_id "<<number_of_curves<<" 1 UINT\n";
 
@@ -203,7 +198,7 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 	GA_ROHandleV3 cd_h(gdp,GA_ATTRIB_POINT,"Cd");
 	UT_Vector3F cd_val(1,1,1);
 
-	GA_ROHandleV3 uv_h(gdp,GA_ATTRIB_POINT,"uv");
+	GA_ROHandleV3 uv_h(gdp, GA_ATTRIB_PRIMITIVE, "uv");
 	UT_Vector3F uv_val(0,0,0);
 
 	GA_ROHandleV3 v_h(gdp,GA_ATTRIB_POINT,"v");
@@ -225,7 +220,7 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 
 	gzprintf(ass_file,"\n points %d %d b85POINT\n",point_count,sample_count);
 
-	GA_Offset	lcl_start, lcl_end, ptoff;
+	GA_Offset	lcl_start, lcl_end, ptoff, primoff;
 
 	for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
 		for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
@@ -272,27 +267,22 @@ bool curve_write_gz_file(const GU_Detail *gdp,
 	gzprintf(ass_file,"opaque on");
 
 
-	if(uv_h.isValid()){
-		gzprintf(ass_file,"\n declare uparamcoord uniform FLOAT\n uparamcoord %d 1 b85FLOAT\n",number_of_curves);
-		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-				gzprintf(ass_file,"%s",encode(uv_val.x()));
-				if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
-			}
+	if (uv_h.isValid()) {
+		gzprintf(ass_file, "\n declare uparamcoord uniform FLOAT\n uparamcoord %d 1 b85FLOAT\n", number_of_curves);
+		for (GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd(); ++p_it) {
+			primoff = p_it.getOffset();
+			if (uv_h.isValid()) uv_val = uv_h.get(primoff);
+			gzprintf(ass_file, "%s", encode(uv_val.x()));
+			if ((primoff + 1) % 300 == 0) gzprintf(ass_file, "\n");
 		}
-
-		gzprintf(ass_file,"\n declare vparamcoord uniform FLOAT\n vparamcoord %d 1 b85FLOAT\n",number_of_curves);
-		for (GA_Iterator lcl_it((gdp)->getPointRange()); lcl_it.blockAdvance(lcl_start, lcl_end); ){
-			for (ptoff = lcl_start; ptoff < lcl_end; ++ptoff){
-				if(uv_h.isValid()) uv_val = uv_h.get(ptoff);
-				gzprintf(ass_file,"%s",encode(uv_val.y()));
-				if((ptoff+1) % 300 == 0) gzprintf(ass_file,"\n");
-			}
+		gzprintf(ass_file, "\n declare vparamcoord uniform FLOAT\n vparamcoord %d 1 b85FLOAT\n", number_of_curves);
+		for (GA_Iterator p_it(gdp->getPrimitiveRange()); !p_it.atEnd(); ++p_it) {
+			primoff = p_it.getOffset();
+			if (uv_h.isValid()) uv_val = uv_h.get(primoff);
+			gzprintf(ass_file, "%s", encode(uv_val.y()));
+			if ((primoff + 1) % 300 == 0) gzprintf(ass_file, "\n");
 		}
 	}
-
-
 
 	gzprintf(ass_file,"\n declare curve_id uniform UINT\n curve_id %d 1 UINT\n",number_of_curves);
 

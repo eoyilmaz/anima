@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2017, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -20,7 +20,7 @@ from anima.extension import extends
 from anima.repr import Representation
 
 
-default_handle_count = 15
+default_handle_count = 0
 
 
 class MayaExtension(object):
