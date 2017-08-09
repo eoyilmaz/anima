@@ -3,15 +3,17 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from _ctypes import COMError
+
 
 import os
+from _ctypes import COMError
+
 import comtypes.client
 
 from anima import logger
 from anima.env import empty_reference_resolution
-from anima.recent import RecentFileManager
 from anima.env.base import EnvironmentBase
+from anima.recent import RecentFileManager
 
 
 class Photoshop(EnvironmentBase):
