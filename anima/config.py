@@ -11,7 +11,7 @@ class Config(ConfigBase):
     """configurator
     """
 
-    default_config_values = dict(
+    extra_config_values = dict(
         # stalker_server_internal_address=
         # defaults.stalker_server_internal_address
         # if 'stalker_server_internal_address' in defaults else None,
@@ -171,7 +171,7 @@ class Config(ConfigBase):
 
     def __init__(self):
         super(Config, self).__init__()
-        self.config_values.update(self.default_config_values.copy())
+        self.config_values.update(self.extra_config_values.copy())
         self.user_config = {}
 
         # the priority order is
