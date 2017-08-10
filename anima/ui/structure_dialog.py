@@ -69,6 +69,15 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
             primary_label_text='Templates From DB',
             secondary_label_text='Selected Templates'
         )
+        # set the tooltip
+        self.filename_templates_double_list_widget\
+            .primary_list_widget.setToolTip(
+                "Right Click to Create/Update FilenameTemplates"
+            )
+        self.filename_templates_double_list_widget\
+            .secondary_list_widget.setToolTip(
+                "Right Click to Create/Update FilenameTemplates"
+            )
 
         self._setup_signals()
 
