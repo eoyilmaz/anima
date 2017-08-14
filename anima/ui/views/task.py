@@ -461,11 +461,11 @@ class TaskTreeView(QtWidgets.QTreeView):
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item
         """
-        import time
-        start = time.time()
+        # import time
+        # start = time.time()
         if not task:
-            print ('TaskTreeView.find_and_select_entity_item returned early '
-                   '(1) and took: %0.2f seconds' % (time.time() - start))
+            # print ('TaskTreeView.find_and_select_entity_item returned early '
+            #        '(1) and took: %0.2f seconds' % (time.time() - start))
             return
 
         if not tree_view:
@@ -476,8 +476,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         selection_model = self.selectionModel()
         if not item:
             selection_model.clearSelection()
-            print ('TaskTreeView.find_and_select_entity_item returned early '
-                   '(2) and took: %0.2f seconds' % (time.time() - start))
+            # print ('TaskTreeView.find_and_select_entity_item returned early '
+            #        '(2) and took: %0.2f seconds' % (time.time() - start))
             return
 
         try:
@@ -496,8 +496,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.scrollTo(
             item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
         )
-        print ('TaskTreeView.find_and_select_entity_item took: '
-               '%0.2f seconds' % (time.time() - start))
+        # print ('TaskTreeView.find_and_select_entity_item took: '
+        #        '%0.2f seconds' % (time.time() - start))
         return item
 
     def load_task_item_hierarchy(self, task, tree_view):
