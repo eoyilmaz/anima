@@ -1,10 +1,10 @@
-import PeyeonScript
+import BlackmagicFusion
 
 
 class form():
 	def __init__(self):
 		self.dialog = {}
-		self.fusion = PeyeonScript.scriptapp("Fusion")
+		self.fusion = BlackmagicFusion.scriptapp("Fusion")
 		self.comp = self.fusion.GetCurrentComp()
 
 	def AskUser(self, name, value,whichDialog):

@@ -5,7 +5,7 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import PeyeonScript
+import BlackmagicFusion
 import uuid
 
 from anima import logger
@@ -230,7 +230,7 @@ class Fusion(EnvironmentBase):
         super(Fusion, self).__init__(name=name, version=version,
                                      extensions=extensions)
         # and add you own modifications to __init__
-        self.fusion = PeyeonScript.scriptapp("Fusion")
+        self.fusion = BlackmagicFusion.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
 
         self.comp = self.fusion.GetCurrentComp()

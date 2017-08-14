@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import threading
 import time
-import PeyeonScript
+import BlackmagicFusion
 from multiprocessing import Pool, TimeoutError
 
 
@@ -12,7 +12,7 @@ def server_connect(ip):
     :return:
     """
     basla2 = time.clock()
-    fusion = PeyeonScript.scriptapp("Fusion", ip)
+    fusion = BlackmagicFusion.scriptapp("Fusion", ip)
     if fusion is not None:
         comp = fusion.GetCurrentComp()
         try:
@@ -30,7 +30,7 @@ def server_connect(ip):
 if __name__ == "__main__":
     gorev = list()
     pool = Pool()
-    
+
     for i in range(200):
         ip = "192.168.0.%s" % i
         mp = pool.apply_async(server_connect, args=(ip,))
