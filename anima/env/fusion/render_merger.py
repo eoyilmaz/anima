@@ -6,9 +6,14 @@
 """Merges sliced renders in to one big plate
 """
 
-import PeyeonScript
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 
-fusion = PeyeonScript.scriptapp("Fusion")
+fusion = bmf.scriptapp("Fusion")
 comp = fusion.GetCurrentComp()
 
 fusion_version = float(fusion.GetAttrs("FUSIONS_Version"))
@@ -131,7 +136,7 @@ class RenderMerger(object):
                 center_id = 29
                 if fusion_version > 7:
                     center_id = 33
-                
+
                 merge.GetInputList()[center_id][0] = {
                     1.0: h_offset,
                     2.0: v_offset,
