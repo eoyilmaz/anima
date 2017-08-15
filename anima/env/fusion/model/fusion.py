@@ -1,4 +1,9 @@
-import BlackmagicFusion
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 
 
 class fusion(object):
@@ -6,7 +11,7 @@ class fusion(object):
 		self.sumshot = 0.0
 		self.offset = 0
 
-		self.fusion = BlackmagicFusion.scriptapp("Fusion")
+		self.fusion = bmf.scriptapp("Fusion")
 		self.comp = self.fusion.GetCurrentComp()
 
 	def loader(self, name, clip, x, y):

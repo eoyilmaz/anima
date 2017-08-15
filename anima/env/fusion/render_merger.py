@@ -6,9 +6,14 @@
 """Merges sliced renders in to one big plate
 """
 
-import BlackmagicFusion
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 
-fusion = BlackmagicFusion.scriptapp("Fusion")
+fusion = bmf.scriptapp("Fusion")
 comp = fusion.GetCurrentComp()
 
 fusion_version = float(fusion.GetAttrs("FUSIONS_Version"))

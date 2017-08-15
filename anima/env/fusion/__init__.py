@@ -5,8 +5,14 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-import BlackmagicFusion
+#import BlackmagicFusion
 import uuid
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 
 from anima import logger
 from anima.env import empty_reference_resolution
@@ -230,7 +236,7 @@ class Fusion(EnvironmentBase):
         super(Fusion, self).__init__(name=name, version=version,
                                      extensions=extensions)
         # and add you own modifications to __init__
-        self.fusion = BlackmagicFusion.scriptapp("Fusion")
+        self.fusion = bmf.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
 
         self.comp = self.fusion.GetCurrentComp()

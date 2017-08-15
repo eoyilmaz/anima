@@ -1,7 +1,12 @@
 # -*- coding: utf-8 -*-
 import threading
 import time
-import BlackmagicFusion
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 from multiprocessing import Pool, TimeoutError
 
 
@@ -12,7 +17,7 @@ def server_connect(ip):
     :return:
     """
     basla2 = time.clock()
-    fusion = BlackmagicFusion.scriptapp("Fusion", ip)
+    fusion = bmf.scriptapp("Fusion", ip)
     if fusion is not None:
         comp = fusion.GetCurrentComp()
         try:
