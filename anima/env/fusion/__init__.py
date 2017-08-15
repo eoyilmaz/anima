@@ -5,7 +5,6 @@
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
 import os
-#import BlackmagicFusion
 import uuid
 try:
     # for Fusion 6 and 7
