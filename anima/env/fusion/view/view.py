@@ -1,10 +1,15 @@
-import PeyeonScript
+try:
+    # for Fusion 6 and 7
+    import PeyeonScript as bmf
+except ImportError:
+    # for Fusion 8+
+    import BlackmagicFusion as bmf
 
 
 class form():
 	def __init__(self):
 		self.dialog = {}
-		self.fusion = PeyeonScript.scriptapp("Fusion")
+		self.fusion = bmf.scriptapp("Fusion")
 		self.comp = self.fusion.GetCurrentComp()
 
 	def AskUser(self, name, value,whichDialog):
