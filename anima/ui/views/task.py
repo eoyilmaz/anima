@@ -391,6 +391,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                             from stalker.db.session import DBSession
                             DBSession.commit()
                             item.parent.reload()
+                            self.find_and_select_entity_item(new_task)
 
                 elif selected_item is delete_task_action:
                     answer = QtWidgets.QMessageBox.question(
