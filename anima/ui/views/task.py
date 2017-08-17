@@ -147,6 +147,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         delete_task_action = None
         no_deps_action = None
         create_project_structure_action = None
+        create_task_structure_action = None
         update_project_action = None
         open_in_web_browser_action = None
         open_in_file_browser_action = None
@@ -191,6 +192,9 @@ class TaskTreeView(QtWidgets.QTreeView):
 
             if isinstance(entity, Task):
                 # this is a task
+                create_task_structure_action = \
+                    menu.addAction(u'\uf115 Create Task Structure')
+
                 task = entity
                 from stalker import Status
                 status_wfd = Status.query.filter(Status.code == 'WFD').first()
@@ -428,6 +432,29 @@ class TaskTreeView(QtWidgets.QTreeView):
                                 self,
                                 'Project Structure is created!',
                                 'Project Structure is created!',
+                            )
+                    else:
+                        return
+
+                elif selected_item == create_task_structure_action:
+                    answer = QtWidgets.QMessageBox.question(
+                        self,
+                        'Create Task Structure?',
+                        "This will create task folders, OK?",
+                        QtWidgets.QMessageBox.Yes,
+                        QtWidgets.QMessageBox.No
+                    )
+                    if answer == QtWidgets.QMessageBox.Yes:
+                        from anima import utils
+                        try:
+                            utils.create_task_structure(entity)
+                        except Exception as e:
+                            pass
+                        finally:
+                            QtWidgets.QMessageBox.information(
+                                self,
+                                'Task Structure is created!',
+                                'Task Structure is created!',
                             )
                     else:
                         return
