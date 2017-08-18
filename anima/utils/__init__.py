@@ -1566,6 +1566,24 @@ def create_project_structure(project):
             pass
 
 
+def create_task_structure(task):
+    """Creates the task structure of the given task
+
+    :param task: A Stalker Project instance
+    :return:
+    """
+    from stalker import Task
+    if not isinstance(task, Task):
+        raise TypeError('Please supply a Stalker Task instance!')
+
+    for t in task.walk_hierarchy():
+        try:
+            os.makedirs(t.absolute_path)
+        except OSError:
+            # path already exist
+            pass
+
+
 def file_browser_name():
     """returns the file browser name of the current OS
     """

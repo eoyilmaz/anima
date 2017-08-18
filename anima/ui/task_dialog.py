@@ -181,17 +181,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_field_verticalLayout = QtWidgets.QVBoxLayout()
         self.name_validator_label = QtWidgets.QLabel("Validator Message", self)
         self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
-        self.name_field_verticalLayout.addWidget(self.name_validator_label)
-        self.form_layout.setLayout(
-            3,
-            QtWidgets.QFormLayout.FieldRole,
-            self.name_field_verticalLayout
-        )
 
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
         self.name_field_verticalLayout.addWidget(self.name_lineEdit)
+        self.name_field_verticalLayout.addWidget(self.name_validator_label)
+
+        self.form_layout.setLayout(
+            3,
+            QtWidgets.QFormLayout.FieldRole,
+            self.name_field_verticalLayout
+        )
 
         # ----------------------------------------------
         # Code Fields
@@ -438,13 +439,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ----------------------------------------------
         # Set Tab Order
-        self.setTabOrder(self.entity_type_comboBox, self.projects_comboBox)
+        self.setTabOrder(self.projects_comboBox, self.entity_type_comboBox)
         self.setTabOrder(
-            self.projects_comboBox, self.pick_parent_task_pushButton
+            self.entity_type_comboBox, self.pick_parent_task_pushButton
         )
         self.setTabOrder(
-            self.pick_parent_task_pushButton, self.task_type_comboBox
+            self.pick_parent_task_pushButton, self.name_lineEdit
         )
+        self.setTabOrder(
+            self.name_lineEdit, self.code_lineEdit
+        )
+        self.setTabOrder(
+            self.code_lineEdit, self.task_type_comboBox
+        )
+
         self.setTabOrder(self.task_type_comboBox, self.asset_type_comboBox)
         self.setTabOrder(self.asset_type_comboBox, self.sequence_comboBox)
         self.setTabOrder(self.sequence_comboBox, self.fps_spinBox)
