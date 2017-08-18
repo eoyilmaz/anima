@@ -196,10 +196,7 @@ def check_node_names_with_bad_characters(progress_controller=None):
             'There are nodes with <b>unknown characters</b> in their names:'
             '<br><br>'
             '%s' %
-            '<br>'.join(
-                map(lambda x: x.name(),
-                    nodes_with_bad_name)[:MAX_NODE_DISPLAY]
-            )
+            '<br>'.join(nodes_with_bad_name[:MAX_NODE_DISPLAY])
         )
 
 

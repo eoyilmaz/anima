@@ -35,7 +35,8 @@ class Houdini(EnvironmentBase):
         from stalker import Version
         assert isinstance(version, Version)
 
-        # get the current version, and store it as the parent of the new version
+        # get the current version,
+        # and store it as the parent of the new version
         current_version = self.get_current_version()
 
         # initialize path variables by using update_paths()
