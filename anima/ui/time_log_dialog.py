@@ -328,7 +328,9 @@ order by cast("TimeLogs".start as date)
         from anima.utils import utc_to_local
         time_shifter = utc_to_local
         import stalker
-        if int(stalker.__version__.replace('.', '')) >= 218:
+
+        from distutils.version import LooseVersion
+        if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
             def time_shifter(x):
                 return x
 
