@@ -1763,6 +1763,10 @@ def duplicate_task_hierarchy(task, parent, name, description, user):
     dup_task.code = name
     dup_task.description = description
 
+    from stalker import Shot
+    if isinstance(task, Shot):
+        dup_task.sequences = task.sequences
+
     from stalker.db.session import DBSession
     DBSession.add(dup_task)
 
