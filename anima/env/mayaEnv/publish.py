@@ -2548,7 +2548,7 @@ def export_fbx(progress_controll=None):
     pm.exportAll(
         output_fbx_path,
         force=1,
-        options="v=0;",
+        options="v=0;mo=1;lo=0",
         typ="FBX export",
         pr=True,
         es=True

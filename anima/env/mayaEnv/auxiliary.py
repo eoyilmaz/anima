@@ -810,6 +810,15 @@ def run_pre_publishers():
             )
             raise e
 
+        # update updated_by field of the current version
+        from stalker import LocalSession
+        ls = LocalSession()
+        logged_in_user = ls.logged_in_user
+        if logged_in_user:
+            version.updated_by = logged_in_user
+            from stalker.db.session import DBSession
+            DBSession.commit()
+
 
 def run_post_publishers():
     """runs post publishers if the current scene is a published version
