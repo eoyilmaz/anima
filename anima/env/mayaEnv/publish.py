@@ -2551,5 +2551,5 @@ def export_fbx(progress_controll=None):
         options="v=0;mo=1;lo=0",
         typ="FBX export",
         pr=True,
-        es=True
+        # es=True
     )
