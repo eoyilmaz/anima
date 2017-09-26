@@ -273,9 +273,12 @@ class Houdini(EnvironmentBase):
         output_nodes = self.get_output_nodes()
 
         for output_node in output_nodes:
-            output_node.setParms(
-                {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
-            )
+            try:
+                output_node.setParms(
+                    {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
+                )
+            except hou.OperationFailed:
+                pass
 
     def get_output_nodes(self):
         """returns the rop nodes in the scene
