@@ -273,9 +273,12 @@ class Houdini(EnvironmentBase):
         output_nodes = self.get_output_nodes()
 
         for output_node in output_nodes:
-            output_node.setParms(
-                {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
-            )
+            try:
+                output_node.setParms(
+                    {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
+                )
+            except hou.OperationFailed:
+                pass
 
     def get_output_nodes(self):
         """returns the rop nodes in the scene
@@ -307,7 +310,7 @@ class Houdini(EnvironmentBase):
         output_filename = \
             '{version.absolute_path}/Outputs/`$OS`/' \
             '{version.task.project.code}_{version.nice_name}_' \
-            'v{version.version_number:03d}.$F4.exr'
+            'v{version.version_number:03d}_`$OS`.$F4.exr'
 
         output_filename = \
             output_filename.format(version=version).replace('\\', '/')
@@ -345,6 +348,38 @@ class Houdini(EnvironmentBase):
 
                 # also create the folders
                 output_file_full_path = output_node.evalParm('vm_picture')
+                output_file_path = os.path.dirname(output_file_full_path)
+
+                flat_output_file_path = output_file_path
+                while "$" in flat_output_file_path:
+                    flat_output_file_path = os.path.expandvars(
+                        flat_output_file_path
+                    )
+
+                try:
+                    os.makedirs(flat_output_file_path)
+                except OSError:
+                    # dirs exists
+                    pass
+            elif output_node.type().name() == 'Redshift_ROP':
+                # set the file name
+                try:
+                    output_node.setParms(
+                        {
+                            'RS_outputFileNamePrefix':
+                                str(job_relative_output_file_path)
+                        }
+                    )
+                except hou.PermissionError:
+                    # node is locked
+                    pass
+
+                # # set the compression to zips (zip, single scanline)
+                # output_node.setParms({"vm_image_exr_compression": "zips"})
+
+                # also create the folders
+                output_file_full_path = \
+                    output_node.evalParm('RS_outputFileNamePrefix')
                 output_file_path = os.path.dirname(output_file_full_path)
 
                 flat_output_file_path = output_file_path
