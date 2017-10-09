@@ -270,15 +270,15 @@ class Houdini(EnvironmentBase):
         # --------------------------------------------
         # Set the render nodes frame ranges if any
         # get the out nodes
-        output_nodes = self.get_output_nodes()
-
-        for output_node in output_nodes:
-            try:
-                output_node.setParms(
-                    {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
-                )
-            except hou.OperationFailed:
-                pass
+        # output_nodes = self.get_output_nodes()
+        #
+        # for output_node in output_nodes:
+        #     try:
+        #         output_node.setParms(
+        #             {'trange': 0, 'f1': start_frame, 'f2': end_frame, 'f3': 1}
+        #         )
+        #     except hou.OperationFailed:
+        #         pass
 
     def get_output_nodes(self):
         """returns the rop nodes in the scene
@@ -307,6 +307,11 @@ class Houdini(EnvironmentBase):
     def set_render_filename(self, version):
         """sets the render file name
         """
+        # go to the Main take before doing anything
+        # store the current take
+        current_take = hou.takes.currentTake()
+        hou.takes.setCurrentTake(hou.takes.rootTake())
+
         output_filename = \
             '{version.absolute_path}/Outputs/`$OS`/' \
             '{version.task.project.code}_{version.nice_name}_' \
@@ -393,6 +398,9 @@ class Houdini(EnvironmentBase):
                 except OSError:
                     # dirs exists
                     pass
+
+        # restore the current take
+        hou.takes.setCurrentTake(current_take)
 
     def set_fps(self, fps=25):
         """sets the time unit of the environment
