@@ -1566,6 +1566,24 @@ def create_project_structure(project):
             pass
 
 
+def create_task_structure(task):
+    """Creates the task structure of the given task
+
+    :param task: A Stalker Project instance
+    :return:
+    """
+    from stalker import Task
+    if not isinstance(task, Task):
+        raise TypeError('Please supply a Stalker Task instance!')
+
+    for t in task.walk_hierarchy():
+        try:
+            os.makedirs(t.absolute_path)
+        except OSError:
+            # path already exist
+            pass
+
+
 def file_browser_name():
     """returns the file browser name of the current OS
     """
@@ -1744,6 +1762,10 @@ def duplicate_task_hierarchy(task, parent, name, description, user):
     dup_task.name = name
     dup_task.code = name
     dup_task.description = description
+
+    from stalker import Shot
+    if isinstance(task, Shot):
+        dup_task.sequences = task.sequences
 
     from stalker.db.session import DBSession
     DBSession.add(dup_task)

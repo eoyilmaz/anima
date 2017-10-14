@@ -196,10 +196,7 @@ def check_node_names_with_bad_characters(progress_controller=None):
             'There are nodes with <b>unknown characters</b> in their names:'
             '<br><br>'
             '%s' %
-            '<br>'.join(
-                map(lambda x: x.name(),
-                    nodes_with_bad_name)[:MAX_NODE_DISPLAY]
-            )
+            '<br>'.join(nodes_with_bad_name[:MAX_NODE_DISPLAY])
         )
 
 
@@ -2551,8 +2548,8 @@ def export_fbx(progress_controll=None):
     pm.exportAll(
         output_fbx_path,
         force=1,
-        options="v=0;",
+        options="v=0;mo=1;lo=0",
         typ="FBX export",
         pr=True,
-        es=True
+        # es=True
     )
