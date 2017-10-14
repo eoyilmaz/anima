@@ -2007,6 +2007,7 @@ class Reference(object):
             if ref not in all_selected_refs:
                 all_selected_refs.append(ref)
 
+        select_list = []
         for ref in all_selected_refs:
             # get the highest parent ref
             if ref.parent():
@@ -2039,7 +2040,9 @@ class Reference(object):
                     pm.parent(new_top_parent_node, group)
 
                 # select the top node
-                pm.select(new_top_parent_node)
+                select_list.append(new_top_parent_node)
+        pm.select(select_list)
+        return select_list
 
     @classmethod
     def publish_model_as_look_dev(cls):
@@ -2272,18 +2275,23 @@ class Reference(object):
                 from stalker import Version, Task
                 assert(isinstance(version, Version))
                 assert(isinstance(task, Task))
-            project_name = version.nice_name
+            # project_name = version.nice_name
+            project_name = os.path.splitext(
+                os.path.basename(
+                    version.absolute_full_path
+                )
+            )[0]
             project_path = arch.flatten(path, project_name=project_name)
 
             # append link file
             stalker_link_file_path = \
                 os.path.join(project_path, 'scenes/stalker_links.txt')
             version_upload_link = '%s/tasks/%s/versions/list' % (
-                anima.stalker_server_external_address,
+                anima.defaults.stalker_server_external_address,
                 task.id
             )
             request_review_link = '%s/tasks/%s/view' % (
-                anima.stalker_server_external_address,
+                anima.defaults.stalker_server_external_address,
                 task.id
             )
             with open(stalker_link_file_path, 'w+') as f:
@@ -2699,7 +2707,7 @@ class Modeling(object):
         pm.polySetToFaceNormal()
         for item in selection:
             pm.polyNormal(item, normalMode=2, userNormalMode=0, ch=1)
-            pm.polySoftEdge(item, a=180, ch=1)
+            pm.polySoftEdge(item, a=30, ch=1)
         pm.delete(ch=1)
         pm.select(selection)
 
