@@ -855,7 +855,7 @@ def check_uv_existence(progress_controller=None):
     nodes_with_no_uvs = []
     for node in all_meshes:
         if not node.getAttr('intermediateObject'):
-            if not len(node.getUVs(uvSet='map1')[0]):
+            if not len(node.getUVs()[0]):
                 nodes_with_no_uvs.append(node)
         progress_controller.increment()
 
@@ -1316,6 +1316,13 @@ def check_multiple_connections_for_textures(progress_controller=None):
 
     v = staging.get('version')
     if not v:
+        progress_controller.complete()
+        return
+
+    # check if the current renderer is Arnold
+    current_renderer = pm.PyNode('defaultRenderGlobals').currentRenderer.get()
+    if current_renderer != 'arnold':
+        # skip it
         progress_controller.complete()
         return
 
