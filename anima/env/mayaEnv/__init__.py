@@ -260,11 +260,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             logger.debug('version.version_number: %s' % version.version_number)
             if version.version_number == 1 \
                and Representation.repr_separator not in version.take_name:
-                # it is not allowed to publish the first version (desdur)
+                # it is not allowed to publish the first version
                 raise RuntimeError(
-                    'Ilk versiyonu publish etmek yasak!!!'
+                    'Can not publish the FIRST version!!!'
                     '<br><br>'
-                    'Once bi normal save et.'
+                    'Save it normally first.'
                 )
 
             if run_pre_publishers:

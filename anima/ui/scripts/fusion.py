@@ -9,7 +9,7 @@ from anima import logger
 from anima.utils import do_db_setup
 
 
-def version_creator(lib='PyQt4', logging_level=logging.WARNING):
+def version_creator(lib='PySide', logging_level=logging.WARNING):
     """Helper function for version_creator UI for Fusion
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting

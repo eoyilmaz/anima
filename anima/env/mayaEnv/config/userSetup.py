@@ -18,6 +18,7 @@ def logprint(log):
     """
     print('userSetup.py: %s' % log)
 
+
 # ----------------------------------------------------------------------------
 # add environment variables relative to this path
 here = ""
@@ -74,14 +75,13 @@ if pymel.versions.current() <= pymel.versions.v2012:
     pm.optionVar['MIP_SHD_EXPOSE'] = 1
     pm.runtime.SavePreferences()
 
-
 # Change the default camera to Alexa
 try:
     persp = pm.PyNode("persp")
     perspShape = persp.getShape()
 
-    perspShape.horizontalFilmAperture.set(23.76/25.4)
-    perspShape.verticalFilmAperture.set(13.365/25.4)
+    perspShape.horizontalFilmAperture.set(23.76 / 25.4)
+    perspShape.verticalFilmAperture.set(13.365 / 25.4)
 except pm.MayaNodeError:
     pass
 
@@ -89,14 +89,15 @@ except pm.MayaNodeError:
 if pymel.versions.current() > 201650:
     logprint('setting QtLib to PySide2 inside userSetup.py')
     from anima import ui
+
     ui.SET_PYSIDE2()
     logprint('successfully set QtLib to PySide2 inside userSetup.py')
 else:
     logprint('setting QtLib to PySide inside userSetup.py')
     from anima import ui
+
     ui.SET_PYSIDE()
     logprint('successfully QtLib to PySide inside userSetup.py')
-
 
 if not pm.general.about(batch=1):
     # load shelves
@@ -148,11 +149,13 @@ if not pm.general.about(batch=1):
             except RuntimeError:
                 pass
 
+
         def load_redshift():
             try:
                 __plugin_loader('redshift4maya')
             except RuntimeError:
                 pass
+
 
         mayautils.executeDeferred(load_arnold)
         mayautils.executeDeferred(load_redshift)
