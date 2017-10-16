@@ -70,7 +70,12 @@ class SelectionSet(object):
             pm.rename(self.__selectionSet__, new_name)
 
     def replace(self):
-        pm.select(self.__storedSelList__, replace=True)
+        try:
+            pm.select(self.__storedSelList__, replace=True)
+        except pm.MayaNodeError:
+            # nodes should have been deleted
+            # remove anything that doesn't exist
+            pass
 
     def add(self):
         """adds the given list of objects to the set

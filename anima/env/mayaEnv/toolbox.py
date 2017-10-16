@@ -230,6 +230,23 @@ def UI():
 
             color.change()
             pm.button(
+                'export_global_transform_info_button',
+                l='Export Global Transform Info',
+                c=RepeatedCallback(General.export_transform_info, True),
+                ann='exports global transform info',
+                bgc=color.color
+            )
+
+            pm.button(
+                'import_global_transform_info_button',
+                l='Import Global Transform Info',
+                c=RepeatedCallback(General.import_transform_info, True),
+                ann='imports global transform info',
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'export_component_transform_info_button',
                 l='Export Component Transform Info',
                 c=RepeatedCallback(General.export_component_transform_info),
@@ -1745,19 +1762,25 @@ class General(object):
     )
 
     @classmethod
-    def export_transform_info(cls):
+    def export_transform_info(cls, use_global_pos=False):
         """exports the transformation data in to a temp file
         """
         data = []
         for node in pm.ls(sl=1, type='transform'):
 
-            tra = node.t.get()
-            rot = node.r.get()
-            sca = node.s.get()
-
-            # tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
-            # rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
-            # sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
+            if use_global_pos:
+                print('using global position')
+                tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
+                rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
+                sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
+            else:
+                print('using local position')
+                tra = node.t.get()
+                rot = node.r.get()
+                sca = node.s.get()
+            print('tra: %0.3f %0.3f %0.3f' % (tra[0], tra[1], tra[2]))
+            print('rot: %0.3f %0.3f %0.3f' % (rot[0], rot[1], rot[2]))
+            print('sca: %0.3f %0.3f %0.3f' % (sca[0], sca[1], sca[2]))
 
             data.append('%s' % tra[0])
             data.append('%s' % tra[1])
@@ -1775,7 +1798,7 @@ class General(object):
             f.write('\n'.join(data))
 
     @classmethod
-    def import_transform_info(cls):
+    def import_transform_info(cls, use_global_pos=False):
         """imports the transform info from the temp file
         """
 
@@ -1784,12 +1807,43 @@ class General(object):
 
         for i, node in enumerate(pm.ls(sl=1, type='transform')):
             j = i * 9
-            node.t.set(float(data[j]), float(data[j + 1]), float(data[j + 2]))
-            node.r.set(float(data[j + 3]), float(data[j + 4]), float(data[j + 5]))
-            node.s.set(float(data[j + 6]), float(data[j + 7]), float(data[j + 8]))
-            # pm.xform(node, ws=1, t=(float(data[j]), float(data[j + 1]), float(data[j + 2])))
-            # pm.xform(node, ws=1, ro=(float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
-            # pm.xform(node, ws=1, s=(float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+            if use_global_pos:
+                print('using global position')
+                pm.xform(
+                    node, ws=1,
+                    t=(float(data[j]),
+                       float(data[j + 1]),
+                       float(data[j + 2]))
+                )
+                pm.xform(
+                    node, ws=1,
+                    ro=(float(data[j + 3]),
+                        float(data[j + 4]),
+                        float(data[j + 5]))
+                )
+                pm.xform(
+                    node, ws=1,
+                    s=(float(data[j + 6]),
+                       float(data[j + 7]),
+                       float(data[j + 8]))
+                )
+            else:
+                print('using local position')
+                node.t.set(
+                    float(data[j]), float(data[j + 1]), float(data[j + 2])
+                )
+                node.r.set(
+                    float(data[j + 3]), float(data[j + 4]), float(data[j + 5])
+                )
+                node.s.set(
+                    float(data[j + 6]), float(data[j + 7]), float(data[j + 8])
+                )
+            print('tra: %0.3f %0.3f %0.3f' %
+                  (float(data[j]), float(data[j + 1]), float(data[j + 2])))
+            print('rot: %0.3f %0.3f %0.3f' %
+                  (float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
+            print('sca: %0.3f %0.3f %0.3f' %
+                  (float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
 
     @classmethod
     def export_component_transform_info(cls):

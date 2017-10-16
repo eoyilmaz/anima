@@ -570,7 +570,7 @@ def check_if_default_shader(progress_controller=None):
     progress_controller.complete()
 
 
-@publisher('model')
+@publisher(['model'] + LOOK_DEV_TYPES)
 def check_if_root_nodes_have_no_transformation(progress_controller=None):
     """Root nodes have no transformation
 

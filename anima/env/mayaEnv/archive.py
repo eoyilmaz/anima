@@ -130,8 +130,8 @@ sourceimages/3dPaintTextures"""
         """Flattens the given maya scene in to a new default project externally
         that is without opening it and returns the project path.
 
-        It will also flatten all the referenced files, textures, image planes
-        and Arnold Scene Source files.
+        It will also flatten all the referenced files, textures, image planes,
+        Arnold Scene Source and Redshift Proxy files.
 
         :param path: The path to the file which wanted to be flattened
         :return:
@@ -257,6 +257,17 @@ sourceimages/3dPaintTextures"""
         # so we have all the data
         # extract references
         ref_paths = re.findall(path_regex, data)
+
+        # also check for any paths that is starting with any of the $REPO
+        # variable value
+        for k in os.environ.keys():
+            if k.startswith('REPO'):
+                # consider this as a repository path and find all of the paths
+                # starting with this value
+                repo_path = os.environ[k]
+                path_regex = r'\%s[\w\d\/_\.@]+' % repo_path
+                temp_ref_paths = re.findall(path_regex, data)
+                ref_paths += temp_ref_paths
 
         new_ref_paths = []
         for ref_path in ref_paths:
