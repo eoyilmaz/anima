@@ -412,7 +412,8 @@ def delete_empty_namespaces(progress_controller=None):
         recurse=True,
         listOnlyNamespaces=True,
         internal=False
-    )
+    ) or []
+
     progress_controller.maximum = len(all_namespaces)
     for ns in all_namespaces:
         if ns not in ['UI', 'shared']:
@@ -965,25 +966,35 @@ def check_uv_border_crossing(progress_controller=None):
 
     for node in all_meshes:
         all_uvs = node.getUVs()
+        # before doing anything get all the uvs and skip if non of them is
+        # bigger than 1.0
+        if not (any(map(lambda x: x > 1.0, all_uvs[0])) or
+                any(map(lambda x: x > 1.0, all_uvs[1]))):
+            # skip this mesh
+            continue
+
         uv_shell_ids = node.getUvShellsIds()
 
         # prepare an empty dict of lists
         uvs_per_shell = {}
         for shell_id in range(uv_shell_ids[1]):
-            uvs_per_shell[shell_id] = [[], []]
+            uvs_per_shell[shell_id] = {
+                'u': [],
+                'v': []
+            }
 
         for uv_id in range(len(uv_shell_ids[0])):
             u = all_uvs[0][uv_id]
             v = all_uvs[1][uv_id]
             shell_id = uv_shell_ids[0][uv_id]
 
-            uvs_per_shell[shell_id][0].append(u)
-            uvs_per_shell[shell_id][1].append(v)
+            uvs_per_shell[shell_id]['u'].append(u)
+            uvs_per_shell[shell_id]['v'].append(v)
 
         # now check all uvs per shell
         for shell_id in range(uv_shell_ids[1]):
-            us = sorted(uvs_per_shell[shell_id][0])
-            vs = sorted(uvs_per_shell[shell_id][1])
+            us = sorted(uvs_per_shell[shell_id]['u'])
+            vs = sorted(uvs_per_shell[shell_id]['v'])
 
             # check first and last u and v values
             if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):

@@ -2098,6 +2098,27 @@ class Reference(object):
         pm.select(select_list)
         return select_list
 
+    # @classmethod
+    # def duplicate_rs_proxy(cls):
+    #     """duplicates the given rs proxy object
+    #     """
+    #     for node in pm.selected(type='transform'):
+    #         shape = node.getShape()
+    #         if not shape:
+    #             continue
+    #         # get the rs proxy node
+    #         shape_inputs = shape.inMesh.inputs()
+    #         proxy_node = None
+    #         for n in shape_inputs:
+    #             if isinstance(n, pm.nt.RedshiftProxyMesh):
+    #                 proxy_node = n
+    #                 break
+    #         # now duplicate the hierarchy
+    #         dup = pm.duplicate(node)
+    #         # this will create the shape but will not create the proxy
+    #         new_proxy_node = pm.nt.RedshiftProxyMesh()
+    #         new_proxy_node.
+
     @classmethod
     def publish_model_as_look_dev(cls):
         """Publishes Model versions as LookDev versions of the same task.

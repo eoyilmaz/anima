@@ -201,8 +201,23 @@ sourceimages/3dPaintTextures"""
         new_file_path = \
             os.path.join(project_path, scenes_folder, original_file_name)
 
-        ref_paths = []
+        scenes_folder_lut = {
+            '.ma': 'scenes/refs',
 
+            # image files
+            '.jpg': 'sourceimages',
+            '.png': 'sourceimages',
+            '.tif': 'sourceimages',
+            '.tga': 'sourceimages',
+            '.exr': 'sourceimages',
+            '.hdr': 'sourceimages',
+
+            # RSProxy and arnold proxies
+            '.rs': 'sourceimages',
+            '.ass': 'sourceimages',
+        }
+
+        ref_paths = []
         # only get new ref paths for '.ma' files
         if path.endswith('.ma'):
             # read the data of the original file
@@ -212,9 +227,13 @@ sourceimages/3dPaintTextures"""
             ref_paths = self._extract_references(data)
             # fix all reference paths
             for ref_path in ref_paths:
+                ref_ext = os.path.splitext(ref_path)[-1]
                 data = data.replace(
                     ref_path,
-                    '%s/%s' % (refs_folder, os.path.basename(ref_path))
+                    '%s/%s' % (
+                        scenes_folder_lut.get(ref_ext, refs_folder),
+                        os.path.basename(ref_path)
+                    )
                 )
 
             # now write all the data back to a new temp scene
@@ -224,6 +243,22 @@ sourceimages/3dPaintTextures"""
             # fix for UDIM texture paths
             # if the path contains 1001 or u1_v1 than find the other
             # textures
+
+            # dirty patch
+            # move image files in to the sourceimages folder
+            # along with the RedshiftProxy files
+            file_extension = os.path.splitext(path)[1]
+
+            new_file_path = \
+                os.path.join(
+                    project_path,
+                    scenes_folder_lut.get(
+                        file_extension,
+                        refs_folder
+                    ),
+                    original_file_name
+                )
+
             import glob
             new_file_paths = [new_file_path]
             if '1001' in new_file_path or 'u1_v1' in new_file_path.lower():
@@ -306,7 +341,8 @@ sourceimages/3dPaintTextures"""
 
         parent_path = os.path.dirname(path) + '/'
 
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as z:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED,
+                             allowZip64=True) as z:
             for current_dir_path, dir_names, file_names in os.walk(path):
                 for dir_name in dir_names:
                     dir_path = os.path.join(current_dir_path, dir_name)

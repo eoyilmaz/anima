@@ -1602,14 +1602,14 @@ class RepresentationGenerator(object):
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
-            all_render_related_nodes = [
-                node for node in pm.ls()
-                if node.type() in RENDER_RELATED_NODE_TYPES
-            ]
-            for node in all_render_related_nodes:
-                if node.referenceFile() is None and \
-                   node.name() not in READ_ONLY_NODE_NAMES:
-                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+            # all_render_related_nodes = [
+            #     node for node in pm.ls()
+            #     if node.type() in RENDER_RELATED_NODE_TYPES
+            # ]
+            # for node in all_render_related_nodes:
+            #     if node.referenceFile() is None and \
+            #        node.name() not in READ_ONLY_NODE_NAMES:
+            #         node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
 
             # find the _pfxPolygons node
             pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
