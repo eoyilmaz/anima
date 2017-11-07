@@ -8,8 +8,8 @@ It is also an example of how to use
 [Stalker](https://github.com/eoyilmaz/stalker) and build a pipeline on top of
 it.
 
-Anima, supplies PyQt4/PySide/PySide2 UI's for Maya, Houdini, Nuke, Fusion and
-Photoshop and the UIs can be used in standalone mode where users can upload
+Anima, supplies PyQt4/PySide/PySide2 UI's for Maya, Houdini, Max, Nuke, Fusion
+and Photoshop and the UIs can be used in standalone mode where users can upload
 their files to server and automatically version them.
 
 

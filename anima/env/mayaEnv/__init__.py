@@ -359,13 +359,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # 12 FPS set for the shot and the intended fps is 25 which we will
         # newer know.
         if is_shot_related_task:
-            # TODO: Remove this next line when the shitty "Sizinkiler" project
-            #       is finished
-            if version.version_number != 1:
-                if version.task.project_id != 373116:
-                    self.set_fps(shot.fps)
-            else:
-                self.set_fps(shot.fps)
+            self.set_fps(shot.fps)
 
             # set render resolution
             self.set_resolution(shot.image_format.width,
