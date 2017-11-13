@@ -6,6 +6,7 @@
 
 import os
 import nuke
+from nukescripts import *
 from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 
@@ -376,7 +377,7 @@ class Nuke(EnvironmentBase):
         root = self.get_root_node()
 
         # TODO: root node gets lost, fix it
-        # there is a bug in Nuke, the root node get lost time to time find 
+        # there is a bug in Nuke, the root node get lost time to time find
         # the source and fix it.
         #        if root is None:
         #            # there is a bug about Nuke,

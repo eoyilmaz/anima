@@ -3,8 +3,20 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-from anima.utils import do_db_setup
+#import nuke
 
+import nuke
+from nukescripts import *
+
+def set_qt_lib():
+    if nuke.NUKE_VERSION_MAJOR < 10 or (nuke.NUKE_VERSION_MAJOR == 11):
+        from anima.ui import SET_PYSIDE2
+        SET_PYSIDE2()
+    else:
+        from anima.ui import SET_PYSIDE
+        SET_PYSIDE()
+
+from anima.utils import do_db_setup
 
 def version_creator():
     """Helper function for version_creator UI for Nuke
@@ -12,9 +24,8 @@ def version_creator():
     # connect to db
     do_db_setup()
 
-    # use PySide
-    from anima import ui
-    ui.SET_PYSIDE()
+    # set PySide or PySide2
+    set_qt_lib()
 
     from anima.ui import version_creator
     from anima.env import nukeEnv
