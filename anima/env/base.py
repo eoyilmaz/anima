@@ -354,7 +354,7 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def set_frame_range(self, start_frame=1, end_frame=100,
+    def set_frame_range(self, start_frame=0, end_frame=100,
                         adjust_frame_range=False):
         """Sets the frame range in the environment to the given start and end
         frames

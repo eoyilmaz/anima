@@ -1,4 +1,4 @@
-#!-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """Installs photoshop scripts
 """
 
@@ -24,7 +24,7 @@ def install_scripts():
             install_path, 'Presets', 'Scripts'
         )
     )
-    print photoshop_scripts_path
+    print(photoshop_scripts_path)
 
     here = os.path.dirname(__file__)
     scripts_folder = os.path.join(here, 'scripts')
@@ -36,6 +36,7 @@ def install_scripts():
                 os.path.normpath(file_path),
                 photoshop_scripts_path + '\\'
             )
+
 
 if __name__ == "__main__":
     install_scripts()

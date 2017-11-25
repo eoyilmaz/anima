@@ -57,9 +57,15 @@ class Max(EnvironmentBase):
           (Not Implemented)
         :param reference_depth: (Not Implemented)
         :param skip_update_check: (Not Implemented)
-        :return:
+        :return: Returns a reference resolution that shows what to update.
         """
+        # set the project dir
+        self.set_project(version)
+
+        # then open the file
         MaxPlus.FileManager.Open(version.absolute_full_path, True)
+        from anima.env import empty_reference_resolution
+        return empty_reference_resolution()
 
     def save_as(self, version, run_pre_publishers=True):
         """Saves the current scene under the given version.
@@ -80,6 +86,9 @@ class Max(EnvironmentBase):
         version.created_with = self.name
 
         project = version.task.project
+
+        # set the project dir
+        self.set_project(version)
 
         # check if this is a shot related task
         is_shot_related_task = False
@@ -164,14 +173,92 @@ class Max(EnvironmentBase):
         rs.SetPixelAspectRatio(pixel_aspect)
         rs.UpdateDialogParameters()
 
-    @classmethod
-    def set_render_filename(cls, version):
+    def set_render_filename(self, version):
         """sets the render file name
         """
-        pass
+        import os
+        render_output_folder = os.path.join(
+            version.absolute_path,
+            'Outputs'
+        ).replace("\\", "/")
+        version_sig_name = self.get_significant_name(version)
+
+        render_file_full_path = \
+            '%(render_output_folder)s/masterLayer/%(version_sig_name)s_' \
+            '<RenderLayer>_<RenderPass>.exr' % {
+                'render_output_folder': render_output_folder,
+                'version_sig_name': version_sig_name
+            }
+
+        rs = MaxPlus.RenderSettings
+        # rs.SetTimeType(1)  # Active Time Segment
+        rs.SetTimeType(2)  # Range
+
+        rs.SetUseImageSequence(True)
+        rs.SetSaveFile(True)
+        rs.SetOutputFile(render_file_full_path)
+
+        rs.UpdateDialogParameters()
+
+    def set_frame_range(self, start_frame=0, end_frame=100,
+                        adjust_frame_range=False):
+        """sets the start and end frame range
+        """
+        # set the playback range
+        anim = MaxPlus.Animation
+        ticks_per_frame = anim.GetTicksPerFrame()
+        anim.SetStartTime(start_frame * ticks_per_frame)
+        anim.SetEndTime(end_frame * ticks_per_frame)
+
+        # and set the render range
+        rs = MaxPlus.RenderSettings
+        rs.SetTimeType(2)  # Range
+        rs.SetStart(start_frame)
+        rs.SetEnd(end_frame)
+
+    def get_fps(self):
+        """returns the fps of this environment
+        """
+        anim = MaxPlus.Animation
+        return anim.GetFrameRate()
 
     @classmethod
     def set_fps(cls, fps=25.0):
         """sets the fps of the environment
         """
-        pass
+        anim = MaxPlus.Animation
+        anim.SetFrameRate(int(fps))
+
+    def set_project(self, version):
+        """Sets the project to the given Versions project.
+
+        :param version: A :class:`~stalker.models.version.Version`.
+        """
+        project_dir = version.absolute_path
+        pm = MaxPlus.PathManager
+        pm.SetProjectFolderDir(project_dir)
+
+        # Set all the auxiliary paths
+        project_structure = {
+            'Animation': 'Outputs/sceneassets/animations',
+            'Archives': 'Outputs/archives',
+            'Autoback': 'Outputs/autoback',
+            'CFD': 'Outputs/sceneassets/CFD',
+            'Download': 'Outputs/downloads',
+            'Export': 'Outputs/export',
+            'Expression': 'Outputs/express',
+            'Image': 'Outputs/sceneassets/images',
+            'Import': 'Outputs/import',
+            'Matlib': 'Outputs/materiallibraries',
+            'Photometric': 'Outputs/sceneassets/photometric',
+            'Preview': 'Outputs/previews',
+            'ProjectFolder': '',
+            'Proxies': 'Outputs/proxies',
+            'RenderAssets': 'Outputs/sceneassets/renderassets',
+            'RenderOutput': 'Outputs/renderoutput',
+            'RenderPresets': 'Outputs/renderpresets',
+            'Scene': '',
+            'Sound': 'Outputs/sceneassets/sounds',
+            'UserStartupTemplates': 'Outputs/startuptemplates',
+            'Vpost': 'Outputs/vpost',
+        }
