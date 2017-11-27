@@ -794,6 +794,10 @@ def check_empty_groups(progress_controller=None):
     all_transforms = pm.ls(type='transform')
     progress_controller.maximum = len(all_transforms)
     for node in all_transforms:
+        # skip any instancer nodes
+        if isinstance(node, pm.nt.Instancer):
+            continue
+
         if len(node.listRelatives(children=1)) == 0:
             empty_groups.append(node)
         progress_controller.increment()
