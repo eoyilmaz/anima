@@ -70,7 +70,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         """
         self.resizeColumnToContents(0)
 
-    def fill(self):
+    def fill(self, show_completed_projects=False):
         """fills the tree view with data
         """
         logger.debug('start filling tasks_treeView')
@@ -88,8 +88,14 @@ class TaskTreeView(QtWidgets.QTreeView):
                     Project.id, Project.name, Project.entity_type,
                     Project.status_id,
                     subquery.exists().label('has_children')
-                )\
-                .order_by(Project.name)
+                )
+            if not show_completed_projects:
+                from stalker import Status
+                status_cmpl = \
+                    Status.query.filter(Status.code == 'CMPL').first()
+                query = query.filter(Project.status != status_cmpl)
+
+            query = query.order_by(Project.name)
             projects = query.all()
         else:
             self.project.has_children = bool(self.project.tasks)
@@ -105,6 +111,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         task_tree_model.populateTree(projects)
         self.setModel(task_tree_model)
         self.is_updating = False
+
         logger.debug('finished filling tasks_treeView')
 
     def show_context_menu(self, position):

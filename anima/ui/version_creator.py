@@ -190,11 +190,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                                            QtWidgets.QSizePolicy.Expanding,
                                            QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_11.addItem(spacerItem)
+
+        # Logged in As Label
         self.logged_in_as_label = QtWidgets.QLabel(self.verticalWidget)
+        self.logged_in_as_label.setText("<b>Logged In As:</b>")
         self.logged_in_as_label.setTextFormat(QtCore.Qt.AutoText)
         self.horizontalLayout_11.addWidget(self.logged_in_as_label)
+
+        # Logged in User Label
         self.logged_in_user_label = QtWidgets.QLabel(self.verticalWidget)
         self.horizontalLayout_11.addWidget(self.logged_in_user_label)
+
         self.logout_pushButton = QtWidgets.QPushButton(self.verticalWidget)
         self.horizontalLayout_11.addWidget(self.logout_pushButton)
         self.verticalLayout.addLayout(self.horizontalLayout_11)
@@ -206,24 +212,35 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.tasks_groupBox = QtWidgets.QGroupBox(self.verticalWidget)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tasks_groupBox)
         self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
-        self.my_tasks_only_checkBox = QtWidgets.QCheckBox(
-            self.tasks_groupBox)
+
+        # Show My Tasks Only CheckBox
+        self.my_tasks_only_checkBox =\
+            QtWidgets.QCheckBox(self.tasks_groupBox)
         self.my_tasks_only_checkBox.setChecked(False)
         self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
+
+        # Show Completed Projects
+        self.show_completed_checkBox =\
+            QtWidgets.QCheckBox(self.tasks_groupBox)
+        self.show_completed_checkBox.setText('Show Completed Projects')
+        self.show_completed_checkBox.setChecked(False)
+        self.verticalLayout_2.addWidget(self.show_completed_checkBox)
+
+
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.search_task_lineEdit = QtWidgets.QLineEdit(
             self.tasks_groupBox)
         self.horizontalLayout_4.addWidget(self.search_task_lineEdit)
         self.verticalLayout_2.addLayout(self.horizontalLayout_4)
 
-        # self.tasks_treeView = QtWidgets.QTreeView()
-        self.tasks_treeView = TaskTreeView(self.tasks_groupBox)
-        self.tasks_treeView.setEditTriggers(
+        # self.tasks_tree_view = QtWidgets.QTreeView()
+        self.tasks_tree_view = TaskTreeView(self.tasks_groupBox)
+        self.tasks_tree_view.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.tasks_treeView.setAlternatingRowColors(True)
-        self.tasks_treeView.setUniformRowHeights(True)
-        self.tasks_treeView.header().setCascadingSectionResizes(True)
-        self.verticalLayout_2.addWidget(self.tasks_treeView)
+        self.tasks_tree_view.setAlternatingRowColors(True)
+        self.tasks_tree_view.setUniformRowHeights(True)
+        self.tasks_tree_view.header().setCascadingSectionResizes(True)
+        self.verticalLayout_2.addWidget(self.tasks_tree_view)
 
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
 
@@ -461,11 +478,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontalLayout.addWidget(self.verticalWidget)
 
         self.setWindowTitle("Version Creator - Stalker")
-        self.logged_in_as_label.setText("<b>Logged In As:</b>")
         self.logout_pushButton.setText("Logout")
         self.tasks_groupBox.setTitle("Tasks")
         self.my_tasks_only_checkBox.setText("Show my tasks only")
-        self.tasks_treeView.setToolTip(
+        self.tasks_tree_view.setToolTip(
             "<html><head/><body><p>Right Click:</p><ul style=\""
             "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
             "margin-right: 0px; -qt-list-indent: 1; "
@@ -786,6 +802,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.clear_recent_files_pushButton,
             QtCore.SIGNAL("clicked()"),
             self.clear_recent_file_push_button_clicked
+        )
+
+        QtCore.QObject.connect(
+            self.show_completed_checkBox,
+            QtCore.SIGNAL("stateChanged(int)"),
+            self.fill_tasks_tree_view
         )
 
         logger.debug("finished setting up interface signals")
@@ -1133,20 +1155,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     :param state:
     #     :return:
     #     """
-    #     # self.tasks_treeView.user_tasks_only = bool(state)
+    #     # self.tasks_tree_view.user_tasks_only = bool(state)
     #     # self.fill_tasks_tree_view()
 
-    def fill_tasks_tree_view(self, user=None):
+    def fill_tasks_tree_view(self, show_completed_projects=False):
         """wrapper for the tasks_treeView.fill() method
         """
-        # if user is None:
-        #     user = self.get_logged_in_user()
+        self.tasks_tree_view.fill(
+            show_completed_projects=show_completed_projects
+        )
 
-        self.tasks_treeView.fill()
-
+        # also setup the signal
         logger.debug('setting up signals for tasks_treeView_changed')
         QtCore.QObject.connect(
-            self.tasks_treeView.selectionModel(),
+            self.tasks_tree_view.selectionModel(),
             QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
                           'const QItemSelection &)'),
             self.tasks_tree_view_changed
@@ -1156,11 +1178,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the tasks_treeView item is changed
         """
         logger.debug('tasks_tree_view_changed running')
-        if self.tasks_treeView.is_updating:
+        if self.tasks_tree_view.is_updating:
             logger.debug('tasks_treeView is updating, so returning early')
             return
 
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
         logger.debug('task_id : %s' % task_id)
 
         # update the thumbnail
@@ -1253,8 +1275,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # clear the thumbnail area
         self.clear_thumbnail()
 
-        # fill the tasks
-        self.fill_tasks_tree_view()
+        # fill the tasks and show completed projects if check box is checked
+        self.fill_tasks_tree_view(
+            self.show_completed_checkBox.isChecked()
+        )
 
         # reconnect signals
         # takes_listWidget
@@ -1399,7 +1423,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # set the task
         task = version.task
 
-        found_task_item = self.tasks_treeView.find_and_select_entity_item(task)
+        found_task_item = self.tasks_tree_view.find_and_select_entity_item(task)
         if not found_task_item:
             return
 
@@ -1443,7 +1467,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_tableWidget.clear()
 
         from stalker import Task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
         if not task_id:  # or not isinstance(task, Task):
             return
 
@@ -1527,7 +1551,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # create a new version
         from stalker import Task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
 
         if not task_id:
             return None
@@ -2025,7 +2049,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """updates the thumbnail for the selected task
         """
         # get the current task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
         if task_id:
             from anima.ui import utils as ui_utils
             # TODO: Update this too
@@ -2047,7 +2071,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # get the current task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
 
         if task_id:
             # TODO: Update this too
@@ -2061,7 +2085,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clear_thumbnail_push_button_clicked(self):
         """clears the thumbnail of the current task if it has one
         """
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = self.tasks_tree_view.get_task_id()
 
         if not task_id:
             return
@@ -2121,11 +2145,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     # load all the tasks and their parents so we are going to be able to
     #     # find them later on
     #     # for task in tasks:
-    #     #     self.load_task_item_hierarchy(task, self.tasks_treeView)
+    #     #     self.load_task_item_hierarchy(task, self.tasks_tree_view)
     #     #
     #     # # now get the indices
     #     # indices = self.get_item_indices_containing_text(text,
-    #     #                                                 self.tasks_treeView)
+    #     #                                                 self.tasks_tree_view)
     #     # logger.debug('indices containing the given text are : %s' % indices)
     #
     #     # self.search_task_comboBox.addItems(
