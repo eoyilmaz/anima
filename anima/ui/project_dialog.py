@@ -659,6 +659,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.project.structure = structure
             self.project.image_format = image_format
             self.project.fps = fps
+            self.project.status = status
             DBSession.add(self.project)
             try:
                 DBSession.commit()
