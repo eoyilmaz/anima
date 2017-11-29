@@ -7,19 +7,7 @@ import re
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtCore, QtWidgets, QtGui
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyside \
-        as image_format_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyside2 \
-        as image_format_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import image_format_dialog_UI_pyqt4 \
-        as image_format_dialog_UI
+from anima.ui.lib import QtCore, QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -34,13 +22,30 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The ImageFormat Dialog
     """
 
     def __init__(self, parent=None, image_format=None):
         super(MainDialog, self).__init__(parent=parent)
-        self.setupUi(self)
+
+        self.vertical_layout = None
+        self.dialog_label = None
+        self.line = None
+        self.form_layout = None
+        self.name_fields_vertical_layout = None
+        self.name_validator_label = None
+        self.width_height_label = None
+        self.horizontal_layout = None
+        self.width_spin_box = None
+        self.label = None
+        self.height_spin_box = None
+        self.pixel_aspect_label = None
+        self.pixel_aspect_double_spin_box = None
+        self.name_label = None
+        self.button_box = None
+
+        self.setup_ui()
 
         self.image_format = image_format
         self.mode = 'Create'
@@ -51,12 +56,12 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
 
         # create name_lineEdit
         from anima.ui.widgets import ValidatedLineEdit
-        self.name_lineEdit = ValidatedLineEdit(
+        self.name_line_edit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
-        self.name_lineEdit.setPlaceholderText('Enter Name')
-        self.name_fields_verticalLayout.insertWidget(
-            0, self.name_lineEdit
+        self.name_line_edit.setPlaceholderText('Enter Name')
+        self.name_fields_vertical_layout.insertWidget(
+            0, self.name_line_edit
         )
 
         self._setup_signals()
@@ -66,12 +71,108 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
         if self.image_format:
             self.fill_ui_with_image_format(self.image_format)
 
+    def setup_ui(self):
+        self.resize(328, 184)
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.dialog_label = QtWidgets.QLabel(self)
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n"
+                                        "font: 18pt;")
+        self.vertical_layout.addWidget(self.dialog_label)
+        self.line = QtWidgets.QFrame(self)
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.vertical_layout.addWidget(self.line)
+        self.form_layout = QtWidgets.QFormLayout()
+        self.form_layout.setLabelAlignment(
+            QtCore.Qt.AlignRight |
+            QtCore.Qt.AlignTrailing |
+            QtCore.Qt.AlignVCenter
+        )
+        self.name_fields_vertical_layout = QtWidgets.QVBoxLayout()
+        self.name_validator_label = QtWidgets.QLabel(self)
+        self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
+        self.name_fields_vertical_layout.addWidget(
+            self.name_validator_label)
+        self.form_layout.setLayout(
+            0,
+            QtWidgets.QFormLayout.FieldRole,
+            self.name_fields_vertical_layout
+        )
+        self.width_height_label = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(
+            1,
+            QtWidgets.QFormLayout.LabelRole,
+            self.width_height_label
+        )
+        self.horizontal_layout = QtWidgets.QHBoxLayout()
+        self.width_spin_box = QtWidgets.QSpinBox(self)
+        self.width_spin_box.setMaximum(99999)
+        self.horizontal_layout.addWidget(self.width_spin_box)
+        self.label = QtWidgets.QLabel(self)
+        self.horizontal_layout.addWidget(self.label)
+        self.height_spin_box = QtWidgets.QSpinBox(self)
+        self.height_spin_box.setMaximum(99999)
+        self.horizontal_layout.addWidget(self.height_spin_box)
+        self.horizontal_layout.setStretch(0, 1)
+        self.horizontal_layout.setStretch(2, 1)
+        self.form_layout.setLayout(
+            1,
+            QtWidgets.QFormLayout.FieldRole,
+            self.horizontal_layout
+        )
+        self.pixel_aspect_label = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(
+            2,
+            QtWidgets.QFormLayout.LabelRole,
+            self.pixel_aspect_label
+        )
+        self.pixel_aspect_double_spin_box = QtWidgets.QDoubleSpinBox(self)
+        self.pixel_aspect_double_spin_box.setProperty("value", 1.0)
+        self.form_layout.setWidget(
+            2,
+            QtWidgets.QFormLayout.FieldRole,
+            self.pixel_aspect_double_spin_box
+        )
+        self.name_label = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(
+            0,
+            QtWidgets.QFormLayout.LabelRole,
+            self.name_label
+        )
+        self.vertical_layout.addLayout(self.form_layout)
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.vertical_layout.addWidget(self.button_box)
+        self.vertical_layout.setStretch(2, 1)
+
+        QtCore.QObject.connect(
+            self.button_box,
+            QtCore.SIGNAL("accepted()"),
+            self.accept
+        )
+        QtCore.QObject.connect(
+            self.button_box,
+            QtCore.SIGNAL("rejected()"),
+            self.reject
+        )
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+        self.setWindowTitle("Image Format Dialog")
+        self.dialog_label.setText("Create Image Format")
+        self.name_validator_label.setText("Validator Message")
+        self.width_height_label.setText("Width x Height")
+        self.label.setText("x")
+        self.pixel_aspect_label.setText("Pixel Aspect")
+        self.name_label.setText("Name")
+
     def _setup_signals(self):
         """create the signals
         """
         # name_lineEdit is changed
         QtCore.QObject.connect(
-            self.name_lineEdit,
+            self.name_line_edit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.name_line_edit_changed
         )
@@ -85,12 +186,12 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
         """runs when the name_lineEdit text has changed
         """
         if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
-            self.name_lineEdit.set_invalid('Invalid character')
+            self.name_line_edit.set_invalid('Invalid character')
         else:
             if text == '':
-                self.name_lineEdit.set_invalid('Enter a name')
+                self.name_line_edit.set_invalid('Enter a name')
             else:
-                self.name_lineEdit.set_valid()
+                self.name_line_edit.set_valid()
 
     def fill_ui_with_image_format(self, image_format):
         """fills the UI with the given image_format
@@ -103,30 +204,30 @@ class MainDialog(QtWidgets.QDialog, image_format_dialog_UI.Ui_Dialog, AnimaDialo
             assert isinstance(image_format, ImageFormat)
 
         self.image_format = image_format
-        self.name_lineEdit.setText(self.image_format.name)
-        self.name_lineEdit.set_valid()
+        self.name_line_edit.setText(self.image_format.name)
+        self.name_line_edit.set_valid()
 
-        self.width_spinBox.setValue(self.image_format.width)
-        self.height_spinBox.setValue(self.image_format.height)
-        self.pixel_aspect_doubleSpinBox.setValue(
+        self.width_spin_box.setValue(self.image_format.width)
+        self.height_spin_box.setValue(self.image_format.height)
+        self.pixel_aspect_double_spin_box.setValue(
             self.image_format.pixel_aspect
         )
 
     def accept(self):
         """overridden accept method
         """
-        if not self.name_lineEdit.is_valid:
+        if not self.name_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please fix <b>name</b> field!'
             )
             return
-        name = self.name_lineEdit.text()
+        name = self.name_line_edit.text()
 
-        width = self.width_spinBox.value()
-        height = self.height_spinBox.value()
-        pixel_aspect = self.pixel_aspect_doubleSpinBox.value()
+        width = self.width_spin_box.value()
+        height = self.height_spin_box.value()
+        pixel_aspect = self.pixel_aspect_double_spin_box.value()
 
         from stalker import ImageFormat
         from stalker.db.session import DBSession
