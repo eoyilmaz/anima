@@ -7,16 +7,7 @@ import re
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtCore, QtWidgets, QtGui
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import project_dialog_UI_pyside as project_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import project_dialog_UI_pyside2 as project_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import project_dialog_UI_pyqt4 as project_dialog_UI
+from anima.ui.lib import QtCore, QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -31,33 +22,103 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Project Dialog
     """
 
     def __init__(self, parent=None, project=None):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
 
         # store the logged in user
         self.logged_in_user = None
-
         self.project = project
-
         self.mode = 'Create'
         if self.project:
             self.mode = 'Update'
+        self.image_format = None
 
+        self._setup_ui()
+        self._setup_signals()
+        self._set_defaults()
+
+        if self.project:
+            self.fill_ui_with_project(self.project)
+
+    def _setup_ui(self):
+        """create UI elements
+        """
+        self.resize(517, 545)
+        self.verticalLayout = QtWidgets.QVBoxLayout(self)
+
+        self.setWindowTitle("Project Dialog")
+
+        # ----------------------
+        # Dialog Label
+        self.dialog_label = QtWidgets.QLabel(self)
         self.dialog_label.setText('%s Project' % self.mode)
+        self.dialog_label.setStyleSheet(
+            "color: rgb(71, 143, 202);\nfont: 18pt;"
+        )
+        self.verticalLayout.addWidget(self.dialog_label)
+        self.line = QtWidgets.QFrame(self)
+        self.line.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line)
 
-        from anima.ui.widgets import ValidatedLineEdit
+        self.project_info_formLayout = QtWidgets.QFormLayout()
+        self.project_info_formLayout.setLabelAlignment(
+            QtCore.Qt.AlignRight |
+            QtCore.Qt.AlignTrailing |
+            QtCore.Qt.AlignVCenter
+        )
+
+        # ----------------------
+        # Name Fields
+        self.name_label = QtWidgets.QLabel(self)
+        self.name_label.setText("Name")
+        self.project_info_formLayout.setWidget(
+            0, QtWidgets.QFormLayout.LabelRole, self.name_label
+        )
+
+        self.name_fields_verticalLayout = QtWidgets.QVBoxLayout()
+        self.name_validator_label = QtWidgets.QLabel(self)
+        self.name_validator_label.setText("Validator Message")
+        self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
+        self.name_fields_verticalLayout.addWidget(self.name_validator_label)
+        self.project_info_formLayout.setLayout(
+            0,
+            QtWidgets.QFormLayout.FieldRole,
+            self.name_fields_verticalLayout
+        )
+
         # add name_lineEdit
+        from anima.ui.widgets import ValidatedLineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
         self.name_fields_verticalLayout.insertWidget(
             0, self.name_lineEdit
+        )
+
+        # ----------------------
+        # Code Fields
+        self.code_label = QtWidgets.QLabel(self)
+        self.code_label.setText("Code")
+        self.project_info_formLayout.setWidget(
+            1,
+            QtWidgets.QFormLayout.LabelRole,
+            self.code_label
+        )
+        self.code_fields_verticalLayout = QtWidgets.QVBoxLayout()
+        self.code_validator_label = QtWidgets.QLabel(self)
+        self.code_validator_label.setText("Validator Message")
+        self.code_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
+        self.code_fields_verticalLayout.addWidget(self.code_validator_label)
+        self.project_info_formLayout.setLayout(
+            1,
+            QtWidgets.QFormLayout.FieldRole,
+            self.code_fields_verticalLayout
         )
 
         # add code_lineEdit
@@ -68,30 +129,245 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             0, self.code_lineEdit
         )
 
-        self._setup_signals()
+        # ----------------------
+        # Type Fields
+        self.type_label = QtWidgets.QLabel(self)
+        self.type_label.setText("Type")
+        self.project_info_formLayout.setWidget(
+            2,
+            QtWidgets.QFormLayout.LabelRole,
+            self.type_label
+        )
+        self.type_comboBox = QtWidgets.QComboBox(self)
+        self.type_comboBox.setEditable(True)
+        self.project_info_formLayout.setWidget(
+            2,
+            QtWidgets.QFormLayout.FieldRole,
+            self.type_comboBox
+        )
 
-        self._set_defaults()
+        # ----------------------
+        # Date Fields
+        self.date_label = QtWidgets.QLabel(self)
+        self.date_label.setText("Date")
+        self.project_info_formLayout.setWidget(
+            3,
+            QtWidgets.QFormLayout.LabelRole,
+            self.date_label
+        )
+        self.date_dateEdit = QtWidgets.QDateEdit(self)
+        self.project_info_formLayout.setWidget(
+            3,
+            QtWidgets.QFormLayout.FieldRole,
+            self.date_dateEdit
+        )
 
-        if self.project:
-            self.fill_ui_with_project(self.project)
+        # ----------------------
+        # Image Format Fields
+        from anima.ui.widgets.image_format import ImageFormatWidget
+        self.image_format = ImageFormatWidget(
+            parent=self,
+            parent_form_layout=self.project_info_formLayout,
+            parent_form_layout_index=4
+        )
 
-    def show(self):
-        """overridden show method
-        """
-        logger.debug('MainDialog.show is started')
-        self.logged_in_user = self.get_logged_in_user()
-        if not self.logged_in_user:
-            self.reject()
-            return_val = None
-        else:
-            return_val = super(MainDialog, self).show()
+        # ----------------------
+        # FPS Fields
+        self.fps_label = QtWidgets.QLabel(self)
+        self.fps_label.setText("FPS")
+        self.project_info_formLayout.setWidget(
+            5,
+            QtWidgets.QFormLayout.LabelRole,
+            self.fps_label
+        )
+        self.fps_spinBox = QtWidgets.QSpinBox(self)
+        self.fps_spinBox.setMinimum(1)
+        self.fps_spinBox.setProperty("value", 25)
+        self.project_info_formLayout.setWidget(
+            5,
+            QtWidgets.QFormLayout.FieldRole,
+            self.fps_spinBox
+        )
 
-        logger.debug('MainDialog.show is finished')
-        return return_val
+        # ----------------------
+        # Repository Fields
+        self.repository_label = QtWidgets.QLabel(self)
+        self.repository_label.setText("Repository")
+        self.project_info_formLayout.setWidget(
+            6,
+            QtWidgets.QFormLayout.LabelRole,
+            self.repository_label
+        )
+        self.repository_horizontalLayout = QtWidgets.QHBoxLayout()
+        self.repository_comboBox = QtWidgets.QComboBox(self)
+        self.repository_horizontalLayout.addWidget(
+            self.repository_comboBox)
+
+        # Update Repository Push Button
+        self.update_repository_pushButton = QtWidgets.QPushButton(self)
+        self.update_repository_pushButton.setText("Update...")
+        self.repository_horizontalLayout.addWidget(
+            self.update_repository_pushButton
+        )
+
+        # Create Repository Push Button
+        self.create_repository_pushButton = QtWidgets.QPushButton(self)
+        self.create_repository_pushButton.setText("New...")
+        self.repository_horizontalLayout.addWidget(
+            self.create_repository_pushButton
+        )
+
+        self.repository_horizontalLayout.setStretch(0, 1)
+        self.project_info_formLayout.setLayout(
+            6,
+            QtWidgets.QFormLayout.FieldRole,
+            self.repository_horizontalLayout
+        )
+
+        # ----------------------
+        self.structure_label = QtWidgets.QLabel(self)
+        self.structure_label.setText("Structure")
+
+        self.project_info_formLayout.setWidget(
+            7,
+            QtWidgets.QFormLayout.LabelRole,
+            self.structure_label
+        )
+        self.structure_horizontalLayout = QtWidgets.QHBoxLayout()
+        self.structure_comboBox = QtWidgets.QComboBox(self)
+        self.structure_horizontalLayout.addWidget(self.structure_comboBox)
+
+        # Update Structure Push Button
+        self.update_structure_pushButton = QtWidgets.QPushButton(self)
+        self.update_structure_pushButton.setText("Update...")
+        self.structure_horizontalLayout.addWidget(
+            self.update_structure_pushButton
+        )
+
+        # Create Structure Push Button
+        self.create_structure_pushButton = QtWidgets.QPushButton(self)
+        self.create_structure_pushButton.setText("New...")
+        self.structure_horizontalLayout.addWidget(
+            self.create_structure_pushButton
+        )
+
+        self.structure_horizontalLayout.setStretch(0, 1)
+        self.project_info_formLayout.setLayout(
+            7,
+            QtWidgets.QFormLayout.FieldRole,
+            self.structure_horizontalLayout
+        )
+
+        # ----------------------
+        # Status Fields
+        self.status_label = QtWidgets.QLabel(self)
+        self.status_label.setText("Status")
+        self.project_info_formLayout.setWidget(
+            8,
+            QtWidgets.QFormLayout.LabelRole,
+            self.status_label
+        )
+        self.status_comboBox = QtWidgets.QComboBox(self)
+        self.project_info_formLayout.setWidget(
+            8,
+            QtWidgets.QFormLayout.FieldRole,
+            self.status_comboBox
+        )
+        self.verticalLayout.addLayout(self.project_info_formLayout)
+
+        # ----------------------
+        # Client Fields
+        self.client_info_label = QtWidgets.QLabel(self)
+        self.client_info_label.setText("Client Info")
+        self.client_info_label.setStyleSheet(
+            "color: rgb(71, 143, 202);\nfont: 18pt;"
+        )
+        self.verticalLayout.addWidget(self.client_info_label)
+        self.line_2 = QtWidgets.QFrame(self)
+        self.line_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.line_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_2)
+        self.client_info_formLayout = QtWidgets.QFormLayout()
+        self.client_info_formLayout.setLabelAlignment(
+            QtCore.Qt.AlignRight |
+            QtCore.Qt.AlignTrailing |
+            QtCore.Qt.AlignVCenter
+        )
+
+        # Client Fields
+        self.client_label = QtWidgets.QLabel(self)
+        self.client_label.setText("Client")
+        self.client_info_formLayout.setWidget(
+            0,
+            QtWidgets.QFormLayout.LabelRole,
+            self.client_label
+        )
+        self.client_comboBox = QtWidgets.QComboBox(self)
+        self.client_comboBox.setEditable(True)
+        self.client_info_formLayout.setWidget(
+            0,
+            QtWidgets.QFormLayout.FieldRole,
+            self.client_comboBox
+        )
+
+        # Agency Fields
+        self.agency_label = QtWidgets.QLabel(self)
+        self.agency_label.setText("Agency")
+        self.client_info_formLayout.setWidget(
+            1,
+            QtWidgets.QFormLayout.LabelRole,
+            self.agency_label
+        )
+        self.agency_comboBox = QtWidgets.QComboBox(self)
+        self.agency_comboBox.setEditable(True)
+        self.client_info_formLayout.setWidget(
+            1,
+            QtWidgets.QFormLayout.FieldRole,
+            self.agency_comboBox
+        )
+
+        # Production Company Fields
+        self.production_company_label = QtWidgets.QLabel(self)
+        self.production_company_label.setText(
+            "<html><head/><body><p align=\"right\">Production<br/>"
+            "Company</p></body></html>"
+        )
+
+        self.client_info_formLayout.setWidget(
+            2,
+            QtWidgets.QFormLayout.LabelRole,
+            self.production_company_label
+        )
+        self.production_company_comboBox = QtWidgets.QComboBox(self)
+        self.production_company_comboBox.setEditable(True)
+        self.client_info_formLayout.setWidget(
+            2,
+            QtWidgets.QFormLayout.FieldRole,
+            self.production_company_comboBox
+        )
+        self.verticalLayout.addLayout(self.client_info_formLayout)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.verticalLayout.addWidget(self.buttonBox)
+        self.verticalLayout.setStretch(2, 2)
+        self.verticalLayout.setStretch(5, 1)
 
     def _setup_signals(self):
         """creates the signals
         """
+        QtCore.QObject.connect(
+            self.buttonBox,
+            QtCore.SIGNAL("accepted()"),
+            self.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox,
+            QtCore.SIGNAL("rejected()"),
+            self.reject
+        )
+
         # name_lineEdit is changed
         QtCore.QObject.connect(
             self.name_lineEdit,
@@ -104,20 +380,6 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.code_lineEdit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.code_line_edit_changed
-        )
-
-        # create_image_format_pushButton
-        QtCore.QObject.connect(
-            self.create_image_format_pushButton,
-            QtCore.SIGNAL('clicked()'),
-            self.create_image_format_push_button_clicked
-        )
-
-        # update_image_format_pushButton
-        QtCore.QObject.connect(
-            self.update_image_format_pushButton,
-            QtCore.SIGNAL('clicked()'),
-            self.update_image_format_push_button_clicked
         )
 
         # create_repository_pushButton
@@ -197,7 +459,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         for type_id, type_name in project_types:
             self.type_comboBox.addItem(type_name, type_id)
 
-        self.fill_image_format_combo_box()
+        self.image_format.fill_combo_box()
         self.fill_repository_combo_box()
         self.fill_structure_combo_box()
 
@@ -216,6 +478,20 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         for st_id, st_name in all_project_statuses:
             self.status_comboBox.addItem(st_name, st_id)
+
+    def show(self):
+        """overridden show method
+        """
+        logger.debug('MainDialog.show is started')
+        self.logged_in_user = self.get_logged_in_user()
+        if not self.logged_in_user:
+            self.reject()
+            return_val = None
+        else:
+            return_val = super(MainDialog, self).show()
+
+        logger.debug('MainDialog.show is finished')
+        return return_val
 
     def fill_repository_combo_box(self):
         """fills the repository_comboBox with Repository instances
@@ -244,22 +520,6 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         self.structure_comboBox.clear()
         for st_id, st_name in all_structures:
             self.structure_comboBox.addItem(st_name, st_id)
-
-    def fill_image_format_combo_box(self):
-        """fills the image_format_comboBox
-        """
-        # fill the image format field
-        from stalker import ImageFormat
-        from stalker.db.session import DBSession
-        all_image_formats = DBSession \
-            .query(ImageFormat.id, ImageFormat.name, ImageFormat.width,
-                   ImageFormat.height) \
-            .order_by(ImageFormat.name) \
-            .all()
-        self.image_format_comboBox.clear()
-        for imf_id, imf_name, imf_width, imf_height in all_image_formats:
-            imf_text = '%s (%s x %s)' % (imf_name, imf_width, imf_height)
-            self.image_format_comboBox.addItem(imf_text, imf_id)
 
     def name_line_edit_changed(self, text):
         """runs when the name_lineEdit text has changed
@@ -311,11 +571,11 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
                 self.type_comboBox.setCurrentIndex(index)
 
         if project.image_format:
-            index = self.image_format_comboBox.findData(
+            index = self.image_format.combo_box.findData(
                 project.image_format.id
             )
             if index:
-                self.image_format_comboBox.setCurrentIndex(index)
+                self.image_format.combo_box.setCurrentIndex(index)
 
         self.fps_spinBox.setValue(project.fps)
 
@@ -343,63 +603,6 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             )
             if index:
                 self.status_comboBox.setCurrentIndex(index)
-
-    def create_image_format_push_button_clicked(self):
-        """runs when create_image_format_pushButton is clicked
-        """
-        try:
-            # PySide
-            accepted = QtWidgets.QDialog.DialogCode.Accepted
-        except AttributeError:
-            # PyQt4
-            accepted = QtWidgets.QDialog.Accepted
-
-        from anima.ui import image_format_dialog
-        create_image_format_dialog = \
-            image_format_dialog.MainDialog(parent=self)
-        create_image_format_dialog.exec_()
-        result = create_image_format_dialog.result()
-
-        if result == accepted:
-            image_format = create_image_format_dialog.image_format
-
-            # select the created image format
-            self.fill_image_format_combo_box()
-            index = self.image_format_comboBox.findData(image_format.id)
-            if index:
-                self.image_format_comboBox.setCurrentIndex(index)
-
-        create_image_format_dialog.deleteLater()
-
-    def update_image_format_push_button_clicked(self):
-        """runs when update_image_format_pushButton is clicked
-        """
-        try:
-            # PySide
-            accepted = QtWidgets.QDialog.DialogCode.Accepted
-        except AttributeError:
-            # PyQt4
-            accepted = QtWidgets.QDialog.Accepted
-
-        image_format = self.get_current_image_format()
-
-        from anima.ui import image_format_dialog
-        update_image_format_dialog = \
-            image_format_dialog.MainDialog(parent=self,
-                                           image_format=image_format)
-        update_image_format_dialog.exec_()
-        result = update_image_format_dialog.result()
-
-        if result == accepted:
-            image_format = update_image_format_dialog.image_format
-
-            # select the created image format
-            self.fill_image_format_combo_box()
-            index = self.image_format_comboBox.findData(image_format.id)
-            if index:
-                self.image_format_comboBox.setCurrentIndex(index)
-
-        update_image_format_dialog.deleteLater()
 
     def create_repository_push_button_clicked(self):
         """runs when create_repository_pushButton is clicked
@@ -517,15 +720,6 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
 
         update_structure_dialog.deleteLater()
 
-    def get_current_image_format(self):
-        """returns the currently selected image format instance from the UI
-        """
-        from stalker import ImageFormat
-        index = self.image_format_comboBox.currentIndex()
-        image_format_id = self.image_format_comboBox.itemData(index)
-        image_format = ImageFormat.query.get(image_format_id)
-        return image_format
-
     def get_current_repository(self):
         """returns the currently selected repository instance from the UI
         """
@@ -574,7 +768,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         type_ = Type.query.get(type_id)  # None type is ok
 
         # Image Format
-        image_format = self.get_current_image_format()
+        image_format = self.image_format.get_current_image_format()
         if not image_format:
             QtWidgets.QMessageBox.critical(
                 self,
