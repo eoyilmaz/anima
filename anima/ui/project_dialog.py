@@ -571,7 +571,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
         from stalker import Type
         index = self.type_comboBox.currentIndex()
         type_id = self.type_comboBox.itemData(index)
-        type = Type.query.get(type_id)  # None type is ok
+        type_ = Type.query.get(type_id)  # None type is ok
 
         # Image Format
         image_format = self.get_current_image_format()
@@ -630,7 +630,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             new_project = Project(
                 name=name,
                 code=code,
-                type=type,
+                type=type_,
                 repositories=[repo],
                 structure=structure,
                 image_format=image_format,
@@ -654,7 +654,7 @@ class MainDialog(QtWidgets.QDialog, project_dialog_UI.Ui_Dialog, AnimaDialogBase
             self.project.updated_by = logged_in_user
             self.project.name = name
             self.project.code = code
-            self.project.type = type
+            self.project.type = type_
             self.project.repositories = [repo]
             self.project.structure = structure
             self.project.image_format = image_format
