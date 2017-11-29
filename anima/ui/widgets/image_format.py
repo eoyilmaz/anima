@@ -109,9 +109,7 @@ class ImageFormatWidget(object):
 
             # select the created image format
             self.fill_combo_box()
-            index = self.combo_box.findData(image_format.id)
-            if index:
-                self.combo_box.setCurrentIndex(index)
+            self.set_current_image_format(image_format.id)
 
         create_image_format_dialog.deleteLater()
 
@@ -126,6 +124,8 @@ class ImageFormatWidget(object):
             accepted = QtWidgets.QDialog.Accepted
 
         image_format = self.get_current_image_format()
+        if not image_format:
+            return
 
         from anima.ui import image_format_dialog
         update_image_format_dialog = \
@@ -139,9 +139,7 @@ class ImageFormatWidget(object):
 
             # select the created image format
             self.fill_combo_box()
-            index = self.combo_box.findData(image_format.id)
-            if index:
-                self.combo_box.setCurrentIndex(index)
+            self.set_current_image_format(image_format.id)
 
         update_image_format_dialog.deleteLater()
 
@@ -153,3 +151,19 @@ class ImageFormatWidget(object):
         image_format_id = self.combo_box.itemData(index)
         image_format = ImageFormat.query.get(image_format_id)
         return image_format
+
+    def set_current_image_format(self, image_format):
+        """Sets the current selected image format
+
+        :param image_format: Either the id of the ImageFormat instance or the
+          instance itself.
+        :return:
+        """
+        image_format_id = image_format
+        from stalker import ImageFormat
+        if isinstance(image_format, ImageFormat):
+            image_format_id = image_format.id
+
+        index = self.combo_box.findData(image_format_id)
+        if index:
+            self.combo_box.setCurrentIndex(index)

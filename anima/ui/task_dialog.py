@@ -84,16 +84,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.Qt.AlignVCenter
         )
 
+        form_field_index = 0
+
         # ----------------------------------------------
         # Project Field
         self.project_label = QtWidgets.QLabel("Project", self)
         self.form_layout.setWidget(
-            0, QtWidgets.QFormLayout.LabelRole, self.project_label
+            form_field_index,
+            QtWidgets.QFormLayout.LabelRole,
+            self.project_label
         )
         self.projects_comboBox = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
-            0, QtWidgets.QFormLayout.FieldRole, self.projects_comboBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.projects_comboBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Entity Type Field
@@ -101,7 +108,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # label
         self.entity_type_label = QtWidgets.QLabel("Entity Type", self)
         self.form_layout.setWidget(
-            1, QtWidgets.QFormLayout.LabelRole, self.entity_type_label
+            form_field_index,
+            QtWidgets.QFormLayout.LabelRole,
+            self.entity_type_label
         )
 
         # field
@@ -113,17 +122,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.entity_type_comboBox.addItem("Sequence")
 
         self.form_layout.setWidget(
-            1,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.entity_type_comboBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Parent Task Field
         self.parent_label = QtWidgets.QLabel("Parent", self)
         self.parent_label.setObjectName("parent_label")
         self.form_layout.setWidget(
-            2,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.parent_label
         )
@@ -165,16 +175,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.parent_task_validator_label
         )
         self.form_layout.setLayout(
-            2,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.parent_task_fields_verticalLayout
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Name Fields
         self.name_label = QtWidgets.QLabel("Name", self)
         self.form_layout.setWidget(
-            3,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.name_label
         )
@@ -189,16 +200,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_field_verticalLayout.addWidget(self.name_validator_label)
 
         self.form_layout.setLayout(
-            3,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.name_field_verticalLayout
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Code Fields
         self.code_label = QtWidgets.QLabel("Code", self)
         self.form_layout.setWidget(
-            4,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.code_label
         )
@@ -216,16 +228,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.code_field_verticalLayout.addWidget(self.code_validator_label)
 
         self.form_layout.setLayout(
-            4,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.code_field_verticalLayout
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Task Type Fields
         self.task_type_label = QtWidgets.QLabel("Task Type", self)
         self.form_layout.setWidget(
-            5,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.task_type_label
         )
@@ -233,14 +246,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.task_type_comboBox = QtWidgets.QComboBox(self)
         self.task_type_comboBox.setEditable(True)
         self.form_layout.setWidget(
-            5, QtWidgets.QFormLayout.FieldRole, self.task_type_comboBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.task_type_comboBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Asset Type Fields
         self.asset_type_label = QtWidgets.QLabel("Asset Type", self)
         self.form_layout.setWidget(
-            6,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.asset_type_label
         )
@@ -248,41 +264,50 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.asset_type_comboBox = QtWidgets.QComboBox(self)
         self.asset_type_comboBox.setEditable(True)
         self.form_layout.setWidget(
-            6, QtWidgets.QFormLayout.FieldRole, self.asset_type_comboBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.asset_type_comboBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Sequence Fields
         self.sequence_label = QtWidgets.QLabel("Sequence", self)
         self.form_layout.setWidget(
-            7, QtWidgets.QFormLayout.LabelRole, self.sequence_label
+            form_field_index,
+            QtWidgets.QFormLayout.LabelRole,
+            self.sequence_label
         )
         self.sequence_comboBox = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
-            7, QtWidgets.QFormLayout.FieldRole, self.sequence_comboBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.sequence_comboBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # FPS Fields
         self.fps_label = QtWidgets.QLabel("FPS", self)
         self.form_layout.setWidget(
-            8,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.fps_label
         )
         self.fps_spinBox = QtWidgets.QSpinBox(self)
         self.fps_spinBox.setMinimum(1)
         self.form_layout.setWidget(
-            8,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.fps_spinBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # CutIn & CutOut Fields
         self.cutIn_cutOut_label = QtWidgets.QLabel("Cut In & Out", self)
         self.form_layout.setWidget(
-            9,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.cutIn_cutOut_label
         )
@@ -294,16 +319,27 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.horizontalLayout_4.addWidget(self.cutOut_spinBox)
         self.form_layout.setLayout(
-            9,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.horizontalLayout_4
         )
+        form_field_index += 1
+
+        # ----------------------------------------------
+        # Image Format Fields
+        from anima.ui.widgets.image_format import ImageFormatWidget
+        self.image_format = ImageFormatWidget(
+            parent=self,
+            parent_form_layout=self.form_layout,
+            parent_form_layout_index=form_field_index
+        )
+        form_field_index += 1
 
         # ----------------------------------------------
         # DependsTo Fields
         self.depends_to_label = QtWidgets.QLabel("Depends To", self)
         self.form_layout.setWidget(
-            10,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.depends_to_label
         )
@@ -324,24 +360,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.QSize(25, 16777215))
         self.verticalLayout_3.addWidget(
             self.remove_depending_task_pushButton)
-        spacerItem = QtWidgets.QSpacerItem(
+        spacer_item = QtWidgets.QSpacerItem(
             20, 40,
             QtWidgets.QSizePolicy.Minimum,
             QtWidgets.QSizePolicy.Expanding
         )
-        self.verticalLayout_3.addItem(spacerItem)
+        self.verticalLayout_3.addItem(spacer_item)
         self.horizontalLayout_3.addLayout(self.verticalLayout_3)
         self.form_layout.setLayout(
-            10,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.horizontalLayout_3
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Resources Fields
         self.resources_label = QtWidgets.QLabel("Resources", self)
         self.form_layout.setWidget(
-            11,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.resources_label
         )
@@ -354,16 +391,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.resources_listWidget.setToolTip("Double click to remove")
         self.verticalLayout_2.addWidget(self.resources_listWidget)
         self.form_layout.setLayout(
-            11,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.verticalLayout_2
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Responsible Fields
         self.responsible_label = QtWidgets.QLabel("Responsible", self)
         self.form_layout.setWidget(
-            12,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.responsible_label
         )
@@ -374,16 +412,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.responsible_listWidget = QtWidgets.QListWidget(self)
         self.verticalLayout_4.addWidget(self.responsible_listWidget)
         self.form_layout.setLayout(
-            12,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.verticalLayout_4
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Schedule Timing Fields
         self.schedule_timing_label = QtWidgets.QLabel("Schedule Timing", self)
         self.form_layout.setWidget(
-            13,
+            form_field_index,
             QtWidgets.QFormLayout.LabelRole,
             self.schedule_timing_label
         )
@@ -396,37 +435,48 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.schedule_model_comboBox = QtWidgets.QComboBox(self)
         self.horizontalLayout_2.addWidget(self.schedule_model_comboBox)
         self.form_layout.setLayout(
-            13,
+            form_field_index,
             QtWidgets.QFormLayout.FieldRole,
             self.horizontalLayout_2
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Update Bid Fields
         self.update_bid_label = QtWidgets.QLabel("Update Bid", self)
         self.form_layout.setWidget(
-            14, QtWidgets.QFormLayout.LabelRole, self.update_bid_label
+            form_field_index,
+            QtWidgets.QFormLayout.LabelRole,
+            self.update_bid_label
         )
         self.update_bid_checkBox = QtWidgets.QCheckBox(self)
         self.update_bid_checkBox.setText("")
         self.form_layout.setWidget(
-            14, QtWidgets.QFormLayout.FieldRole, self.update_bid_checkBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.update_bid_checkBox
         )
+        form_field_index += 1
 
         # ----------------------------------------------
         # Priority Fields
         self.priority_label = QtWidgets.QLabel("Priority", self)
         self.form_layout.setWidget(
-            15, QtWidgets.QFormLayout.LabelRole, self.priority_label
+            form_field_index,
+            QtWidgets.QFormLayout.LabelRole,
+            self.priority_label
         )
         self.priority_spinBox = QtWidgets.QSpinBox(self)
         self.priority_spinBox.setMaximum(1000)
         self.priority_spinBox.setProperty("value", 500)
         self.form_layout.setWidget(
-            15, QtWidgets.QFormLayout.FieldRole, self.priority_spinBox
+            form_field_index,
+            QtWidgets.QFormLayout.FieldRole,
+            self.priority_spinBox
         )
 
         self.vertical_layout.addLayout(self.form_layout)
+        form_field_index += 1
 
         # ----------------------------------------------
         # Button Box
@@ -629,6 +679,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.cutIn_cutOut_label.setVisible(False)
         self.cutIn_spinBox.setVisible(False)
         self.cutOut_spinBox.setVisible(False)
+        self.image_format.label.setVisible(False)
+        self.image_format.combo_box.setVisible(False)
 
         # hide update bid fields
         self.update_bid_label.setVisible(False)
@@ -640,6 +692,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.projects_comboBox.addItems(
             sorted([p.name for p in Project.query.all()])
         )
+
+        # fill image_format combo_box
+        self.image_format.fill_combo_box()
 
         self.fps_spinBox.setValue(25)
 
@@ -789,6 +844,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.cutIn_spinBox.setValue(self.task.cut_in)
             self.cutOut_spinBox.setValue(self.task.cut_out)
 
+            # select correct image format
+            self.image_format.set_current_image_format(
+                self.task.image_format.id
+            )
+
         for dep_task in self.task.depends:
             self.add_dependent_task(dep_task)
 
@@ -842,6 +902,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.cutIn_cutOut_label.setVisible(False)
             self.cutIn_spinBox.setVisible(False)
             self.cutOut_spinBox.setVisible(False)
+            self.image_format.label.setVisible(False)
+            self.image_format.combo_box.setVisible(False)
 
             # resources field
             self.resources_label.setVisible(True)
@@ -887,6 +949,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.cutIn_cutOut_label.setVisible(False)
             self.cutIn_spinBox.setVisible(False)
             self.cutOut_spinBox.setVisible(False)
+            self.image_format.label.setVisible(False)
+            self.image_format.combo_box.setVisible(False)
 
             # resources field
             self.resources_label.setVisible(False)
@@ -928,6 +992,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.cutIn_cutOut_label.setVisible(True)
             self.cutIn_spinBox.setVisible(True)
             self.cutOut_spinBox.setVisible(True)
+            self.image_format.label.setVisible(True)
+            self.image_format.combo_box.setVisible(True)
 
             # resources field
             self.resources_label.setVisible(False)
@@ -969,6 +1035,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.cutIn_cutOut_label.setVisible(False)
             self.cutIn_spinBox.setVisible(False)
             self.cutOut_spinBox.setVisible(False)
+            self.image_format.label.setVisible(False)
+            self.image_format.combo_box.setVisible(False)
 
             # resources field
             self.resources_label.setVisible(False)
@@ -1501,6 +1569,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         fps = self.fps_spinBox.value()
         cut_in = self.cutIn_spinBox.value()
         cut_out = self.cutOut_spinBox.value()
+        image_format = self.image_format.get_current_image_format()
 
         depends = self.get_tasks_from_list_widget(self.depends_to_listWidget)
         resources = self.get_users_from_list_widget(self.resources_listWidget)
@@ -1550,6 +1619,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             kwargs['fps'] = fps
             kwargs['cut_in'] = cut_in
             kwargs['cut_out'] = cut_out
+
+            # only set the image format if it is different than the one used
+            # for the Project
+            if project.image_format != image_format:
+                kwargs['image_format'] = image_format
+
         elif entity_type == 'Sequence':
             entity_class = Sequence
         else:
@@ -1582,6 +1657,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 self.task.sequences = [sequence]
                 self.task.cut_in = cut_in
                 self.task.cut_out = cut_out
+
+                # only set the image format if it is different than the one
+                # used for the Project
+                if self.task.project.image_format != image_format:
+                    self.task.image_format = image_format
+                else:
+                    # or check if the shot is updated to use the Project image
+                    # format so set the shot.image_format to None
+                    self.task.image_format = None
 
             from stalker.exceptions import CircularDependencyError
             try:
