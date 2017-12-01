@@ -1529,19 +1529,20 @@ class RepresentationGenerator(object):
                         pass
 
                     # run the mel command with temp file path
-                    pm.mel.eval(
-                        export_command % {
-                            'path': temp_full_path.replace('\\', '/')
-                        }
-                    )
-                    # then move it to the original place
-                    shutil.move(temp_full_path, output_full_path)
+                    try:
+                        pm.mel.eval(
+                            export_command % {
+                                'path': temp_full_path.replace('\\', '/')
+                            }
+                        )
+                        # then move it to the original place
+                        shutil.move(temp_full_path, output_full_path)
 
-                    nodes_to_rs_files[child_node_full_path] = output_full_path
-                    # print('%s -> %s' % (
-                    #     child_node_full_path,
-                    #     output_full_path)
-                    # )
+                        nodes_to_rs_files[child_node_full_path] = \
+                            output_full_path
+                    except pm.MelError:
+                        # not exportable group
+                        pass
 
             # reload the scene
             pm.newFile(force=True)
