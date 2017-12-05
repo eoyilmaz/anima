@@ -1995,16 +1995,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 else:
                     return
 
-            self.environment.reference(previous_version, use_namespace)
+            try:
+                self.environment.reference(previous_version, use_namespace)
 
-            # inform the user about what happened
-            if logger.level != logging.DEBUG:
-                QtWidgets.QMessageBox.information(
+                # inform the user about what happened
+                if logger.level != logging.DEBUG:
+                    QtWidgets.QMessageBox.information(
+                        self,
+                        "Reference",
+                        "%s\n\n has been referenced correctly!" %
+                        previous_version.filename,
+                        QtWidgets.QMessageBox.Ok
+                    )
+            except RuntimeError as e:
+                QtWidgets.QMessageBox.critical(
                     self,
-                    "Reference",
-                    "%s\n\n has been referenced correctly!" %
-                    previous_version.filename,
-                    QtWidgets.QMessageBox.Ok
+                    "Error",
+                    e.message
                 )
 
     def import_pushButton_clicked(self):

@@ -667,6 +667,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
           referenced.
         :return: :class:`~pm.system.FileReference`
         """
+
+        # do not reference anything if this scene is not saved yet
+        if pm.sceneName() == '':
+            raise RuntimeError('Please save your scene first!!!')
+
         # use the file name without extension as the namespace
         namespace = os.path.basename(version.nice_name)
 
