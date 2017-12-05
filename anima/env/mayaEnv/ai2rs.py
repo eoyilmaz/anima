@@ -7,6 +7,7 @@
 """
 import os
 import pymel.core as pm
+from anima.render.mat_converter import ConversionManagerBase
 
 CONVERSION_SPEC_SHEET = {
     'aiStandard': {
@@ -101,11 +102,108 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
+    'aiStandardSurface': {
+        # rsMaterial
+        'node_type': 'RedshiftMaterial',
+        'secondary_type': 'shader',
+
+        'call_after': lambda x, y: y.outColor >>
+                                   x.outputs(type='shadingEngine', p=1)[0]
+        if x.outputs(type='shadingEngine', p=1) else None,
+
+        # aiStandard material attributes
+        'attributes': {
+            'baseColor': [
+                'diffuse_color',
+                'transl_color',  # backlight color should be same with the
+            ],  # diffuse color
+            'base': 'diffuse_weight',
+            'diffuseRoughness': 'diffuse_roughness',
+
+            # # BackLight
+            # 'Kb': 'transl_weight',
+
+            # Extended Controls for Diffuse
+            # 'directDiffuse': 'diffuse_direct',
+            'indirectDiffuse': 'diffuse_indirect',
+
+            # Specular
+            'specular': 'refl_weight',
+            'specularColor': 'refl_color',
+            'specularRoughness': 'refl_roughness',
+            'specularIOR': 'refl_ior',
+            'specularAnisotropy': {
+                'refl_aniso': lambda x: (x - 0.5) * 2,
+            },
+            'specularRotation': 'refl_aniso_rotation',
+            # 'specularDistribution': 'refl_brdf',
+            # 'specularFresnel': {
+            #     # set it do "Color + Edge Tint"
+            #     'refl_fresnel_mode': lambda x: 1 if x == 1 else 3
+            # },
+            # 'Ksn': {
+            #     # setting the ref_reflectivity to 0 kills all the
+            #     # reflection, so set it to a very small number instead
+            #     # to mimic Arnold's fresnel
+            #     'refl_reflectivity':
+            #         lambda x: (x, x, x) if x > 0 else (0.001, 0.001, 0.001),
+            #     'refl_edge_tint': (1, 1, 1)
+            # },
+
+            # Extended Controls for Specular
+            # 'directSpecular': 'refl_direct',
+            'indirectSpecular': 'refl_indirect',
+
+            # Just skip any Reflection attribute
+            # KrColor, Kr, enableInternalReflections, Fresnel, Krn,
+            # reflectionExitUseEnvironment, reflectionExitColor
+
+            # Refraction
+            'transmission': 'refr_weight',
+            'transmissionColor': 'refr_color',
+            # 'IOR': {
+            #     'refr_ior': lambda x: x if x >= 1.0 else 1.0
+            # },
+            'transmissionScatter': 'ss_scatter_coeff',
+            'transmissionDispersion': 'refr_abbe',
+            'thinWalled': 'refr_thin_walled',
+
+            # For now skip SSS attributes
+            # 'subsurface': 'ss_amount',
+            # 'subsurfaceColor': 'ss_scatter_coeff',
+            # 'subsurfaceScale': ''
+
+
+            # Skip refractionExitUseEnvironment, refractionExitColor
+
+            # Bump
+            'normalCamera': 'bump_input',
+
+            # SSS
+            # Use the first layer of RSMaterial for the SSS
+            'subsurface': 'ms_amount',
+            'subsurfaceColor': 'ms_color0',
+            'subsurfaceRadius': {
+                # set to the mean value of the sssRadius which is a color in
+                # Arnold
+                'ms_radius0': lambda x: (x[0] + x[1] + x[2]) / 3.0
+            },
+            # skip sssProfile
+
+            'emissionColor': 'emission_color',
+            'emission': 'emission_weight',
+
+            # skip caustics attributes
+            # enableGlossyCaustics, enableReflectiveCaustics,
+            # enableRefractiveCaustics
+        }
+    },
+
     'aiSkin': {
         # rsMaterial
         'node_type': 'RedshiftSkin',
         'secondary_type': 'shader',
-    
+
         'call_after': lambda x, y: y.outColor >>
                                    x.outputs(type='shadingEngine', p=1)[0]
                         if x.outputs(type='shadingEngine', p=1) else None,
@@ -148,7 +246,7 @@ CONVERSION_SPEC_SHEET = {
     'aiAmbientOcclusion': {
         'node_type': 'RedshiftAmbientOcclusion',
         'secondary_type': 'utility',
-    
+
         'call_after': lambda x, y: y.outColor >> x.outColor.outputs(p=1)[0],
 
         'attributes': {
@@ -169,7 +267,7 @@ CONVERSION_SPEC_SHEET = {
             os.path.expandvars(x.computedFileTextureNamePattern.get())
         ).convert()
     },
-    
+
     'aiImage': {
         # A dirty one liner that converts textures to rstexbin files
         'call_before': lambda x: RedShiftTextureProcessor(
@@ -268,95 +366,77 @@ CONVERSION_SPEC_SHEET = {
 }
 
 
-class ConversionManager(object):
+class ConversionManager(ConversionManagerBase):
     """Manages the conversion from Arnold to RedShift
     """
 
-    def auto_convert(self):
-        """finds and converts all the nodes in the current scene
+    def get_node_type(self, node):
+        """overridden get_node_type method
         """
-        nodes_converted = []
-        for node_type in CONVERSION_SPEC_SHEET:
-            for node in pm.ls(type=node_type):
-                self.convert(node)
-                nodes_converted.append(node)
+        return pm.nodeType(node)
 
-        return nodes_converted
-
-    def convert(self, node):
-        """converts the given node to redShift counterpart
+    def list_nodes(self, type_):
         """
-        # get the conversion lut
-        node_type = pm.nodeType(node)
-        conversion_specs = CONVERSION_SPEC_SHEET.get(node_type)
-        if not conversion_specs:
-            return
 
-        # call any call_before
-        call_before = conversion_specs.get('call_before')
-        if call_before and callable(call_before):
-            call_before(node)
+        :param type_:
+        :return:
+        """
+        return pm.ls(type=type_)
 
-        node_creator = NodeCreator(conversion_specs)
-        rs_node = node_creator.create()
+    def rename_node(self, node, new_name):
+        """renames the node to new_name
 
-        # rename the material to have a similar name with the original
-        if rs_node:
-            rs_node.rename(
-                node.name().replace(
-                    node_type, conversion_specs['node_type']
-                )
-            )
+        :param node:
+        :param new_name:
+        :return:
+        """
+        node.rename(new_name)
+
+    def get_node_name(self, node):
+        """returns the node name
+        """
+        return node.name()
+
+    def get_node_inputs(self, node, attr=None):
+        """
+
+        :param node:
+        :param attr:
+        :return:
+        """
+        if attr:
+            return node.attr(attr).inputs(p=1)
         else:
-            rs_node = node
+            return node.inputs(p=1)
 
-        # set attributes
-        attributes = conversion_specs.get('attributes')
-        if attributes:
-            for source_attr, target_attr in attributes.items():
-                # value can be a string
-                if isinstance(target_attr, basestring):
-                    # check incoming connections
-                    incoming_connections = node.attr(source_attr).inputs(p=1)
-                    if incoming_connections:
-                        # connect any textures to the target node
-                        for input_ in node.attr(source_attr).inputs(p=1):
-                            input_ >> rs_node.attr(target_attr)
-                    else:
-                        # just read and set the value directly
-                        rs_node.setAttr(target_attr, node.getAttr(source_attr))
+    def connect_attr(self, source_attr, target_node, target_attr):
+        """creates a connection from source_Attr
 
-                elif isinstance(target_attr, list):
-                    # or a list
-                    # where we set multiple attributes in the rs_node to the
-                    # same value
-                    source_attr_value = node.getAttr(source_attr)
-                    for attr in target_attr:
-                        rs_node.setAttr(attr, source_attr_value)
-                        for input_ in node.attr(source_attr).inputs(p=1):
-                            input_ >> rs_node.attr(attr)
-                elif isinstance(target_attr, dict):
-                    # or another dictionary
-                    # where we have a converter
-                    source_attr_value = node.getAttr(source_attr)
-                    for attr, converter in target_attr.items():
-                        if callable(converter):
-                            try:
-                                attr_value = converter(source_attr_value)
-                            except TypeError:
-                                # it should use two parameters, also include
-                                # the node itself
-                                attr_value = converter(source_attr_value, node)
-                        else:
-                            attr_value = converter
-                        rs_node.setAttr(attr, attr_value)
+        :param source_attr:
+        :param target_node:
+        :param target_attr:
+        :return:
+        """
+        source_attr >> target_node.attr(target_attr)
 
-        # call any call_after
-        call_after = conversion_specs.get('call_after')
-        if call_after and callable(call_after):
-            call_after(node, rs_node)
+    def get_attr(self, node, attr):
+        """gets node.attr
 
-        return rs_node
+        :param node:
+        :param attr:
+        :return:
+        """
+        return node.getAttr(attr)
+
+    def set_attr(self, node, attr, value):
+        """sets node.attr to value
+
+        :param node:
+        :param attr:
+        :param value:
+        :return:
+        """
+        node.setAttr(attr, value)
 
 
 class NodeCreator(object):
