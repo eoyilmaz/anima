@@ -7,7 +7,7 @@
 """
 import os
 import pymel.core as pm
-from anima.render.mat_converter import ConversionManagerBase
+from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
 CONVERSION_SPEC_SHEET = {
     'aiStandard': {
@@ -370,6 +370,11 @@ class ConversionManager(ConversionManagerBase):
     """Manages the conversion from Arnold to RedShift
     """
 
+    def __init__(self):
+        super(ConversionManager, self).__init__()
+        self.conversion_spec_sheet = CONVERSION_SPEC_SHEET
+        self.node_creator_factory = NodeCreator
+
     def get_node_type(self, node):
         """overridden get_node_type method
         """
@@ -439,12 +444,9 @@ class ConversionManager(ConversionManagerBase):
         node.setAttr(attr, value)
 
 
-class NodeCreator(object):
+class NodeCreator(NodeCreatorBase):
     """Creates nodes according to the given specs
     """
-
-    def __init__(self, specs):
-        self.specs = specs
 
     def create(self):
         """creates the node

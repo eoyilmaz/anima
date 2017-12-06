@@ -7,14 +7,27 @@
 """
 
 
+class NodeCreatorBase(object):
+    """Creates nodes according to the given specs
+    """
+
+    def __init__(self, specs=None):
+        self.specs = specs
+
+    def create(self):
+        """override this method
+        """
+        raise NotImplementedError()
+
+
 class ConversionManagerBase(object):
     """The base class for material conversion managers for different
     environments
     """
 
-    def __init__(self, conversion_spec_sheet, node_creator_factory):
-        self.conversion_spec_sheet = conversion_spec_sheet
-        self.node_creator_factory = node_creator_factory
+    def __init__(self):
+        self.conversion_spec_sheet = None
+        self.node_creator_factory = None
 
     def get_node_type(self, node):
         """Returns the node type for this environment
@@ -116,11 +129,15 @@ class ConversionManagerBase(object):
         rs_node = node_creator.create()
 
         # rename the material to have a similar name with the original
-        if rs_node:
+        if rs_node is not None:
+            node_type_name = conversion_specs['node_type'] \
+                if isinstance(conversion_specs['node_type'], str) else \
+                conversion_specs['secondary_type'].replace(' ', '_')
+
             self.rename_node(
                 rs_node,
                 self.get_node_name(node).replace(
-                    node_type, conversion_specs['node_type']
+                    node_type, node_type_name
                 )
             )
         else:
