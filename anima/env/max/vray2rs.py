@@ -10,7 +10,6 @@ from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
 CONVERSION_SPEC_SHEET = {
     'VRayMtl': {
-        # RedShitt Material
         'node_type': MaxPlus.Mtl,
         'secondary_type': 'Redshift Material',
 
@@ -68,7 +67,7 @@ CONVERSION_SPEC_SHEET = {
             # 'refraction_dispersion': 'refr_abbe',
             'refraction_dispersion_on': {
                 'refr_abbe': lambda x, y:
-                y.ParameterBlock.GetParamByName('refraction_dispersion').GetValue()
+                y.ParameterBlock.refraction_dispersion.Value
                 if ((x - 1.0) / 149.0) else 0  # VRay uses a value between 1-150
                                                # fit it in to 0-100 range
             },
@@ -191,7 +190,8 @@ CONVERSION_SPEC_SHEET = {
 
             'texmap_anisotropy_rotation': 'refl_aniso_rotation_map',
             'texmap_anisotropy_rotation_on': 'refl_aniso_rotation_mapenable',
-            'texmap_anisotropy_rotation_multiplier': 'refl_aniso_rotation_mapamount',
+            'texmap_anisotropy_rotation_multiplier':
+                'refl_aniso_rotation_mapamount',
 
             # 'texmap_refraction_fog': '',
             # 'texmap_refraction_fog_on': '',
@@ -213,7 +213,175 @@ CONVERSION_SPEC_SHEET = {
             # 'refract_normalThreshold': '',
         }
 
-    }
+    },
+    'VRayBlendMtl': {
+        'node_type': MaxPlus.Mtl,
+        'secondary_type': 'Redshift Material Blender',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'baseMtl': 'baseColor_map',
+            'coatMtl_enable': {
+                'layerColor1_mapenable': lambda x: x[0],
+                'layerColor2_mapenable': lambda x: x[1],
+                'layerColor3_mapenable': lambda x: x[2],
+                'layerColor4_mapenable': lambda x: x[3],
+                'layerColor5_mapenable': lambda x: x[4],
+                'layerColor6_mapenable': lambda x: x[5],
+            },
+            'coatMtl': {
+                'layerColor1_map': lambda x: x[0],
+                'layerColor2_map': lambda x: x[1],
+                'layerColor3_map': lambda x: x[2],
+                'layerColor4_map': lambda x: x[3],
+                'layerColor5_map': lambda x: x[4],
+                'layerColor6_map': lambda x: x[5],
+            },
+            'blend': {
+                'blendColor1': lambda x: x[0],
+                'blendColor2': lambda x: x[1],
+                'blendColor3': lambda x: x[2],
+                'blendColor4': lambda x: x[3],
+                'blendColor5': lambda x: x[4],
+                'blendColor6': lambda x: x[5],
+            },
+            'texmap_blend': {
+                'blendColor1_map': lambda x: x[0],
+                'blendColor2_map': lambda x: x[1],
+                'blendColor3_map': lambda x: x[2],
+                'blendColor4_map': lambda x: x[3],
+                'blendColor5_map': lambda x: x[4],
+                'blendColor6_map': lambda x: x[5],
+            },
+            # 'texmap_blend_multiplier': '',
+            'additiveMode': [
+                'additiveMode1',
+                'additiveMode2',
+                'additiveMode3',
+                'additiveMode4',
+                'additiveMode5',
+                'additiveMode6',
+            ]
+        }
+    },
+
+    'VRayColor': {
+        # Convert it to 3ds Max's Color Correction node
+        'node_type': MaxPlus.Texmap,
+        'secondary_type': 'Color Correction',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'red': {
+                'lightnessMode': 1,
+                'exposureMode': 0,
+                'enableR': True,
+                'gainR': lambda x: x * 100,
+            },
+            'green': {
+                'lightnessMode': 1,
+                'exposureMode': 0,
+                'enableG': True,
+                'gainG': lambda x: x * 100,
+            },
+            'blue': {
+                'lightnessMode': 1,
+                'exposureMode': 0,
+                'enableB': True,
+                'gainB': lambda x: x * 100,
+            },
+            'rgb_multiplier': {
+                'gammaRGB': lambda x: x * 100,
+            },
+            # 'alpha', # can do nothing
+            'color': 'color',
+            'color_gamma': 'gammaRGB'
+
+        }
+    },
+
+    'VRayDirt': {
+        # Convert it to 3ds Max's Color Correction node
+        'node_type': MaxPlus.Texmap,
+        'secondary_type': 'Redshift Ambient Occlusion',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'radius': 'maxDistance',
+            'occluded_color': 'dark',
+            'unoccluded_color': 'bright',
+            'distribution': 'spread',
+            'falloff': 'fallOff',
+            'subdivs': {
+                'numSamples': lambda x: pow(2, x),
+            },
+            'bias': 'bias',
+            'affect_alpha': 'occlusionInAlpha',
+            # ignore_for_gi
+            'consider_same_object_only': 'sameObjectOnly',
+            # double_sided
+            'invert_normal': 'invert',
+            # work_with_transparency
+            # environment_occlusion
+            'mode': {
+                'reflective': lambda x: min(1, x),
+            },
+            # reflection_glossiness
+            # affect_reflection_elements
+            'texmap_radius': 'maxDistance_map',
+            'texmap_radius_on': 'maxDistance_mapenable',
+            # texmap_radius_multiplier
+            'texmap_occluded_color': 'dark_map',
+            'texmap_occluded_color_on': 'dark_mapenable',
+            # texmap_occluded_color_multiplier
+            'texmap_unoccluded_color': 'bright_map',
+            'texmap_unoccluded_color_on': 'bright_mapenable',
+            # texmap_unoccluded_color_multiplier
+            # texmap_reflection_glossiness
+            # texmap_reflection_glossiness_on
+            # texmap_reflection_glossiness_multiplier
+            # subdivs_as_samples
+        }
+    },
+
+    'VRayLightMtl': {
+        # Convert it to 3ds Max's Color Correction node
+        'node_type': MaxPlus.MtlBase,
+        'secondary_type': 'Redshift Incandescent',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'color': 'color',
+            'multiplier': 'intensity',
+            'texmap': 'color_map',
+            'texmap_on': 'color_mapenable',
+            'twoSided': 'doublesided',
+            'compensate_exposure': 'applyExposureCompensation',
+            # 'opacity_multiplyColor'
+            'opacity_texmap': 'alpha_map',
+            'opacity_texmap_on': 'alpha_mapenable',
+
+            # directLight_on
+            # directLight_subdivs
+            # directLight_cutoffThreshold
+
+            # displacement_multiplier
+            # displacement_texmap
+            # displacement_texmap_on
+
+            # texmap_resolution
+            # texmap_adaptiveness
+        }
+    },
+
 }
 
 
@@ -315,9 +483,6 @@ class ConversionManager(ConversionManagerBase):
         :param target_attr:
         :return:
         """
-        print('source_attr: %s' % source_attr)
-        print('target_node: %s' % target_node)
-        print('target_attr: %s' % target_attr)
         param = target_node.ParameterBlock.GetParamByName(target_attr)
         param.Value = source_attr
 
@@ -380,16 +545,70 @@ class ConversionManager(ConversionManagerBase):
         # just return materials for now
         mat_lib = MaxPlus.MaterialLibrary.GetSceneMaterialLibrary()
 
-        nodes_to_return = []
+        # nodes_to_return = []
+        nodes_to_return = {}
 
         num_materials = mat_lib.GetNumMaterials()
         for i in range(num_materials):
             mat = mat_lib.GetMaterial(i)
-            # print('mat.GetFullName: %s' % mat.GetFullName())
-            if self.get_node_type(mat) == type_:
-                nodes_to_return.append(mat)
+            class_name = mat.GetClassName()
+            if class_name == type_:
+                nodes_to_return[mat.GetFullName()] = mat
+            elif class_name == 'Multi/Sub-Object':
+                # expand this multi material
+                mtl_list = mat.ParameterBlock.materialList.GetValue()
+                for sub_mat in mtl_list:
+                    try:
+                        class_name = sub_mat.GetClassName()
+                    except RuntimeError:
+                        # no material for this node
+                        continue
 
-        return nodes_to_return
+                    if class_name == type_:
+                        nodes_to_return[sub_mat.GetFullName()] = sub_mat
+
+            elif class_name == 'VRayBlendMtl':
+                # we can go over the parameters
+                base_material = mat.ParameterBlock.baseMtl.GetValue()
+                if base_material.GetClassName() == type_:
+                    nodes_to_return[base_material.GetFullName()] = \
+                        base_material
+
+                # now go over coats
+                for m in mat.ParameterBlock.coatMtl.GetValue():
+                    try:
+                        class_name = m.GetClassName()
+                    except RuntimeError:
+                        continue
+
+                    if class_name == type_:
+                        nodes_to_return[m.GetFullName()] = m
+
+        # For a final trick, also look at each of the INode's material slot to
+        # catch the materials
+        root_node = MaxPlus.Core.GetRootNode()
+        for inode in self.walk_hierarchy(root_node):
+            mat = inode.Material
+            try:
+                class_name = mat.GetClassName()
+            except RuntimeError:
+                pass
+            else:
+                if class_name == type_:
+                    nodes_to_return[mat.GetFullName()] = mat
+                else:
+                    # try to get it from the material hierarchy
+                    for parent_mat, param, sub_mat, index in \
+                            self.walk_material_hierarchy(mat):
+                        try:
+                            class_name = sub_mat.GetClassName()
+                        except RuntimeError:
+                            pass
+                        else:
+                            if class_name == type_:
+                                nodes_to_return[sub_mat.GetFullName()] = mat
+
+        return nodes_to_return.values()
 
     def get_attr(self, node, attr):
         """returns node attribute value
@@ -408,5 +627,122 @@ class ConversionManager(ConversionManagerBase):
         :param value:
         :return:
         """
-        node.ParameterBlock.GetParamByName(attr).SetValue(value)
+        if str(value) != 'None':
+            node.ParameterBlock.GetParamByName(attr).SetValue(value)
 
+    def walk_hierarchy(self, node):
+        """this is a generator that yields all dag nodes in the current scene
+        """
+        for c in node.Children:
+            yield c
+            for gc in self.walk_hierarchy(c):
+                yield gc
+
+    @classmethod
+    def walk_material_hierarchy(cls, node):
+        """Walks through the material hierarchy through their parameters
+
+        :param node:
+        :return:
+        """
+        for p in node.ParameterBlock.Parameters:
+            # decide what to do by looking at the parameter type of the p param
+            param_type_name = MaxPlus.FPTypeGetName(p.GetParamType())
+            value = p.Value
+            if param_type_name in ['MtlTab', 'TexmapTab']:
+                # it contains multiple materials
+                for i, v in enumerate(value):
+                    yield (node, p, v, i)
+            else:
+                try:
+                    value.GetName()
+                    yield (node, p, value, -1)
+                    if isinstance(value, MaxPlus.MtlBase):
+                        for pp in cls.walk_material_hierarchy(value):
+                            yield pp
+                except (RuntimeError, AttributeError):
+                    pass
+
+    @classmethod
+    def outputs(cls, node):
+        """return the node and the parameter that this node is connected to
+
+        :param node:
+        :return:
+        """
+        inode = node.FindDependentNode()
+        top_mat = inode.Material
+        for parent, param, child, i in cls.walk_material_hierarchy(top_mat):
+            try:
+                if child.GetFullName() == node.GetFullName():
+                    # we found our material but where did we come here
+                    yield parent, param, i
+            except RuntimeError:
+                # This is not what you think it is...
+                # so pass
+                pass
+
+    def clean_up(self, new_nodes):
+        """A clean up stage for assigning materials to objects in the scene
+
+        :param new_nodes: a list of lists of
+            [[old_node, new_node], [old_node, new_node]...] style
+        :return:
+        """
+
+        for old_node, new_node in new_nodes:
+            # get the INodes using directly the old_node as material
+            inode = old_node.FindDependentNode()
+            try:
+                inode_mat = inode.Material
+            except RuntimeError:
+                continue
+            if inode_mat.GetFullName() == old_node.GetFullName():
+                # directly assign the new_node as the material
+                try:
+                    inode.Material = new_node
+                except (TypeError, ValueError):
+                    # the new_node is None
+                    pass
+                # and fuck off
+            else:
+                # then this node is used in a material network
+                # so update the referencing nodes to use the new node instead
+                for parent, param, i in self.outputs(old_node):
+                    if i == -1:
+                        param.Value = new_node
+                    else:
+                        param.Value[i] = new_node
+
+    @classmethod
+    def get_all_material_types_in_current_scene(self):
+        """returns all the material types in the current scene
+        """
+        mat_types = {}
+        mat_lib = MaxPlus.MaterialLibrary.GetSceneMaterialLibrary()
+        mat_count = mat_lib.GetNumMaterials()
+        for i in range(mat_count):
+            mat = mat_lib.GetMaterial(i)
+            mat_class_name = mat.GetClassName()
+            if mat_class_name not in mat_types:
+                mat_types[mat_class_name] = {
+                    'count': 0,
+                    'nodes': []
+                }
+            mat_types[mat_class_name]['count'] += 1
+            mat_types[mat_class_name]['nodes'].append(mat)
+
+            for parent, parameter, sub_mat, index in self.walk_material_hierarchy(mat):
+                try:
+                    sub_mat_class_name = sub_mat.GetClassName()
+                except RuntimeError:
+                    continue
+                if sub_mat_class_name not in mat_types:
+                    mat_types[sub_mat_class_name] = {
+                        'count': 0,
+                        'nodes': []
+                    }
+                mat_types[sub_mat_class_name]['count'] += 1
+                mat_types[sub_mat_class_name]['nodes'].append(sub_mat)
+
+        return mat_types

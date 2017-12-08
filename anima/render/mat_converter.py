@@ -106,8 +106,8 @@ class ConversionManagerBase(object):
         nodes_converted = []
         for node_type in self.conversion_spec_sheet:
             for node in self.list_nodes(node_type):
-                self.convert(node)
-                nodes_converted.append(node)
+                new_node = self.convert(node)
+                nodes_converted.append([node, new_node])
 
         return nodes_converted
 
