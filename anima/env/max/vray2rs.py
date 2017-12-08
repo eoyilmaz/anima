@@ -715,7 +715,7 @@ class ConversionManager(ConversionManagerBase):
                         param.Value[i] = new_node
 
     @classmethod
-    def get_all_material_types_in_current_scene(self):
+    def get_all_material_types_in_current_scene(cls):
         """returns all the material types in the current scene
         """
         mat_types = {}
@@ -732,7 +732,8 @@ class ConversionManager(ConversionManagerBase):
             mat_types[mat_class_name]['count'] += 1
             mat_types[mat_class_name]['nodes'].append(mat)
 
-            for parent, parameter, sub_mat, index in self.walk_material_hierarchy(mat):
+            for parent, parameter, sub_mat, index in \
+                    cls.walk_material_hierarchy(mat):
                 try:
                     sub_mat_class_name = sub_mat.GetClassName()
                 except RuntimeError:
