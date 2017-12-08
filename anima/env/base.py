@@ -124,12 +124,12 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def import_(self, asset):
+    def import_(self, version):
         """the import action
         """
         raise NotImplementedError
 
-    def reference(self, asset):
+    def reference(self, version):
         """the reference action
         """
         raise NotImplementedError
