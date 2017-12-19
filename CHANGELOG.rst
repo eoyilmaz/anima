@@ -2,6 +2,12 @@
 Changes
 =======
 
+0.3.0
+=====
+
+* [Max] Added 3ds Max support. It is now possible to fully use UIs like Version
+  Creator through 3ds Max.
+
 0.2.1
 =====
 
