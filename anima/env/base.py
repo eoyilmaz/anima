@@ -129,7 +129,7 @@ class EnvironmentBase(object):
         """
         raise NotImplementedError
 
-    def reference(self, version):
+    def reference(self, version, use_namespace=True):
         """the reference action
         """
         raise NotImplementedError

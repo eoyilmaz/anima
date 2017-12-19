@@ -75,7 +75,8 @@ def ui_caller(app_in, executor, DialogClass, **kwargs):
     global app
     global mainDialog
     self_quit = False
-    if QtWidgets.QApplication.instance() is None:
+    app = QtWidgets.QApplication.instance()
+    if app is None:
         if not app_in:
             try:
                 app = QtWidgets.QApplication(sys.argv)
@@ -84,8 +85,6 @@ def ui_caller(app_in, executor, DialogClass, **kwargs):
         else:
             app = app_in
         self_quit = True
-    else:
-        app = QtWidgets.QApplication.instance()
 
     mainDialog = DialogClass(**kwargs)
     mainDialog.show()

@@ -3,6 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+
 import MaxPlus
 from anima.env.base import EnvironmentBase
 
@@ -157,6 +158,43 @@ class Max(EnvironmentBase):
         )
 
         DBSession.commit()
+
+    def reference(self, version, use_namespace=True):
+        """Creates an XRef for the given version in the current scene.
+
+        :param version: The Stalker Verison instance.
+        :param bool use_namespace: Use a namespace or not.
+        :return:
+        """
+        import os
+        from anima.repr import Representation
+        import pymxs
+        rt = pymxs.runtime
+
+        file_full_path = version.absolute_full_path
+        namespace = os.path.basename(version.nice_name)
+
+        namespace = namespace.split(Representation.repr_separator)[0]
+
+        xref_objects = rt.getMAXFileObjectNames(file_full_path)
+        xref = rt.xrefs.addNewXRefObject(
+            file_full_path,
+            xref_objects,
+            # dupMtlNameAction='#autoRename'
+        )
+
+        # append the referenced version to the current versions references
+        # attribute
+        current_version = self.get_current_version()
+        if current_version:
+            current_version.inputs.append(version)
+            from stalker.db.session import DBSession
+            DBSession.commit()
+
+        # append it to reference path
+        self.append_to_recent_files(file_full_path)
+
+        return xref
 
     @classmethod
     def set_resolution(cls, width, height, pixel_aspect=1.0):
