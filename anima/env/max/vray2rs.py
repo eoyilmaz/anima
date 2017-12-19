@@ -4,6 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
+import pymxs
 import MaxPlus
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
@@ -77,7 +78,10 @@ CONVERSION_SPEC_SHEET = {
             # 'translucency_scatterCoeff': '',
             # 'translucency_fbCoeff': '',
 
-            'translucency_multiplier': 'transl_weight',
+            'translucency_scatterCoeff': {
+                'transl_weight': lambda x, y: \
+                    (1 if y.ParameterBlock.translucency_on.Value else 0) * x
+            },
             'translucency_color': 'transl_color',
 
             'brdf_type': {
@@ -141,7 +145,9 @@ CONVERSION_SPEC_SHEET = {
             'texmap_refraction_on': 'refr_color_mapenable',
             'texmap_refraction_multiplier': 'refr_color_mapamount',
 
-            'texmap_bump': 'bump_input_map',
+            'texmap_bump': {
+                'bump_input_map': lambda x: create_bump_node(x),
+            },
             'texmap_bump_on': 'bump_input_mapenable',
             'texmap_bump_multiplier': 'bump_input_mapamount',
 
@@ -157,7 +163,10 @@ CONVERSION_SPEC_SHEET = {
             'texmap_refractionIOR_on': 'refr_ior_mapenable',
             'texmap_refractionIOR_multiplier': 'refr_ior_mapamount',
 
-            'texmap_displacement': 'displacement_input_map',
+            'texmap_displacement': {
+                'displacement_input_map':
+                    lambda x: create_displacement_node(x),
+            },
             'texmap_displacement_on': 'displacement_input_mapenable',
             'texmap_displacement_multiplier': 'displacement_input_mapamount',
 
@@ -352,7 +361,7 @@ CONVERSION_SPEC_SHEET = {
 
     'VRayLightMtl': {
         # Convert it to 3ds Max's Color Correction node
-        'node_type': MaxPlus.MtlBase,
+        'node_type': MaxPlus.Mtl,
         'secondary_type': 'Redshift Incandescent',
 
         # 'call_after': # write the code here to assign this material to
@@ -382,7 +391,98 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
+    'Normal Bump': {
+        # Convert it to 3ds Max's Color Correction node
+        'node_type': MaxPlus.Texmap,
+        'secondary_type': 'Redshift Normal Map',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'mult_spin': 'scale',
+            # 'bump_spin': '',
+            'normal_map': {
+                # write down the code that assigns the bitmap to the path
+                # tex0
+                # I couldn't find any reasonable method of setting the tex0
+                # attribute
+                #
+                # so instead of setting it by using the code, I'll excuse the
+                # the user to do it by hand
+                #
+                # sorry!
+                'tex0': lambda x, y, z: print_out_node_info(
+                    x.ParameterBlock.fileName.Value, y.GetName(), z.GetName(),
+                    'Please set {target_node}.tex0 -> {source_value}'
+                )
+            },
+            # 'bump_map': '',
+            # 'map1on': '',
+            # 'map2on': '',
+            'method': {
+                'tspace_id': lambda x: x + 1,
+            },
+            # 'flipred': '',
+            'flipgreen': 'flipY',
+            # 'swap_rg': '',
+        }
+    },
 }
+
+
+def create_bump_node(source_value):
+    """Creates a bump map
+
+    :param source_value:
+    :return:
+    """
+    try:
+        source_value.GetName()
+        rs_bump_map = NodeCreator.create_node_by_type(
+            MaxPlus.Texmap,
+            'Redshift Bump Map'
+        )
+        rs_bump_map.ParameterBlock.input_map.Value = source_value
+        return rs_bump_map
+    except RuntimeError:
+        return None
+
+
+def create_displacement_node(source_value):
+    """Creates a bump map
+
+    :param source_value:
+    :return:
+    """
+    try:
+        source_value.GetName()
+        rs_displacement_map = NodeCreator.create_node_by_type(
+            MaxPlus.Texmap,
+            'Redshift Displacement Map'
+        )
+        rs_displacement_map.ParameterBlock.texMap_map.Value = source_value
+        return rs_displacement_map
+    except RuntimeError:
+        return None
+
+
+def print_out_node_info(source_value, source_node, target_node, template=''):
+    """prints out node info
+
+    :param source_value:
+    :param source_node:
+    :param target_node:
+    :param str template:
+    :return:
+    """
+    print(
+        template.format(
+            source_value=source_value,
+            source_node=source_node,
+            target_node=target_node
+        )
+    )
 
 
 class NodeCreator(NodeCreatorBase):
@@ -402,15 +502,15 @@ class NodeCreator(NodeCreatorBase):
         return new_node
 
     @classmethod
-    def create_node_by_type(cls, node_class, secondary_class):
+    def create_node_by_type(cls, node_class, secondary_class_name):
         """Creates nodes by type name
 
         :param node_class: The MaxPlus class object (ex: MaxPlus.MtlBase)
-        :param str secondary_class: A string for the node type name
+        :param str secondary_class_name: A string for the node type name
         :return:
         """
         # get the class, its id and its super class id
-        class_ = ConversionManager.get_class_by_name(secondary_class)
+        class_ = ConversionManager.get_class_by_name(secondary_class_name)
 
         class_id = class_.ClassId
         super_class_id = class_.SuperClassId
@@ -462,29 +562,49 @@ class ConversionManager(ConversionManagerBase):
         inputs = []
         if attr is None:
             # return all connected nodes
-            for i in range(node.ParameterBlock.Count()):
-                param = node.ParameterBlock[i]
+            for param in node.ParameterBlock.Parameters:
                 value = param.GetValue()
+                # TODO: This one doesn't consider that the parameter is a multi
+                # parameter.
                 if isinstance(value, MaxPlus.Animatable) \
                    and str(value) != 'None':
                     inputs.append(value)
         else:
             param = node.ParameterBlock.GetParamByName(attr)
             value = param.GetValue()
-            inputs.append(value)
+            if isinstance(value, MaxPlus.Animatable) and str(value) != 'None':
+                inputs.append(value)
 
         return inputs
 
-    def connect_attr(self, source_attr, target_node, target_attr):
+    def connect_attr(self, source_node, target_node, target_parameter):
         """creates a connection from source_attr to target_attr target_node
 
-        :param source_attr:
+        :param source_node:
         :param target_node:
-        :param target_attr:
+        :param str target_parameter:
         :return:
         """
-        param = target_node.ParameterBlock.GetParamByName(target_attr)
-        param.Value = source_attr
+        # param = target_node.ParameterBlock.GetParamByName(target_attr)
+        # param.Value = source_attr
+
+        # do it with pymxs
+        MaxPlus.MaterialManager.PutMtlToMtlEditor(
+            source_node, 0
+        )
+        source_node_pymxs = \
+            pymxs.runtime.getMEditMaterial(1)
+
+        # get the parent node
+        MaxPlus.MaterialManager.PutMtlToMtlEditor(
+            target_node, 1
+        )
+        target_node_pymxs = \
+            pymxs.runtime.getMEditMaterial(2)
+
+        # Then execute the connection script
+        exec('target_node_pymxs.%s = source_node_pymxs' % target_parameter)
+        # This should've worked!
 
     @classmethod
     def get_class_by_name(cls, class_name):
@@ -554,61 +674,48 @@ class ConversionManager(ConversionManagerBase):
             class_name = mat.GetClassName()
             if class_name == type_:
                 nodes_to_return[mat.GetFullName()] = mat
-            elif class_name == 'Multi/Sub-Object':
-                # expand this multi material
-                mtl_list = mat.ParameterBlock.materialList.GetValue()
-                for sub_mat in mtl_list:
-                    try:
-                        class_name = sub_mat.GetClassName()
-                    except RuntimeError:
-                        # no material for this node
-                        continue
 
+            # try to get it from the material hierarchy
+            for parent_mat, param, sub_mat, index in \
+                    self.walk_material_hierarchy(mat):
+                try:
+                    class_name = sub_mat.GetClassName()
+                except RuntimeError:
+                    pass
+                else:
                     if class_name == type_:
                         nodes_to_return[sub_mat.GetFullName()] = sub_mat
 
-            elif class_name == 'VRayBlendMtl':
-                # we can go over the parameters
-                base_material = mat.ParameterBlock.baseMtl.GetValue()
-                if base_material.GetClassName() == type_:
-                    nodes_to_return[base_material.GetFullName()] = \
-                        base_material
-
-                # now go over coats
-                for m in mat.ParameterBlock.coatMtl.GetValue():
-                    try:
-                        class_name = m.GetClassName()
-                    except RuntimeError:
-                        continue
-
-                    if class_name == type_:
-                        nodes_to_return[m.GetFullName()] = m
-
-        # For a final trick, also look at each of the INode's material slot to
-        # catch the materials
-        root_node = MaxPlus.Core.GetRootNode()
-        for inode in self.walk_hierarchy(root_node):
-            mat = inode.Material
-            try:
-                class_name = mat.GetClassName()
-            except RuntimeError:
-                pass
-            else:
-                if class_name == type_:
-                    nodes_to_return[mat.GetFullName()] = mat
-                else:
-                    # try to get it from the material hierarchy
-                    for parent_mat, param, sub_mat, index in \
-                            self.walk_material_hierarchy(mat):
-                        try:
-                            class_name = sub_mat.GetClassName()
-                        except RuntimeError:
-                            pass
-                        else:
-                            if class_name == type_:
-                                nodes_to_return[sub_mat.GetFullName()] = mat
-
         return nodes_to_return.values()
+
+    def get_node_by_name(self, node_name):
+        """Finds and returns the node with the given name
+
+        :param node_name:
+        :return:
+        """
+        # just return materials for now
+        mat_lib = MaxPlus.MaterialLibrary.GetSceneMaterialLibrary()
+
+        num_materials = mat_lib.GetNumMaterials()
+        nodes_to_return = []
+        for i in range(num_materials):
+            mat = mat_lib.GetMaterial(i)
+            if mat.GetName() == node_name:
+                nodes_to_return.append(mat)
+                return nodes_to_return
+
+            # try to get it from the material hierarchy
+            for parent_mat, param, sub_mat, index in \
+                    self.walk_material_hierarchy(mat):
+                try:
+                    sub_mat_name = sub_mat.GetName()
+                except RuntimeError:
+                    pass
+                else:
+                    if sub_mat_name == node_name:
+                        nodes_to_return.append(sub_mat)
+        return nodes_to_return
 
     def get_attr(self, node, attr):
         """returns node attribute value
@@ -653,6 +760,12 @@ class ConversionManager(ConversionManagerBase):
                 # it contains multiple materials
                 for i, v in enumerate(value):
                     yield (node, p, v, i)
+                    try:
+                        v.GetName()
+                        for pp in cls.walk_material_hierarchy(v):
+                            yield pp
+                    except (RuntimeError, AttributeError):
+                        pass
             else:
                 try:
                     value.GetName()
@@ -662,6 +775,16 @@ class ConversionManager(ConversionManagerBase):
                             yield pp
                 except (RuntimeError, AttributeError):
                     pass
+
+    # @classmethod
+    # def inputs(cls, node):
+    #     """return the inputs of the given node
+    #     :param node:
+    #     :return:
+    #     """
+    #     # traverse parameters
+    #     for p in node.ParameterBlock.Parameters:
+    #         if p.GetParamType()
 
     @classmethod
     def outputs(cls, node):
@@ -689,30 +812,102 @@ class ConversionManager(ConversionManagerBase):
             [[old_node, new_node], [old_node, new_node]...] style
         :return:
         """
-
         for old_node, new_node in new_nodes:
             # get the INodes using directly the old_node as material
-            inode = old_node.FindDependentNode()
-            try:
-                inode_mat = inode.Material
-            except RuntimeError:
-                continue
-            if inode_mat.GetFullName() == old_node.GetFullName():
-                # directly assign the new_node as the material
+            # Recursively assign the new material to the objects
+            print('cleaning up: %s' % old_node.GetName())
+            iteration = 0
+            while True:
+                iteration += 1
+                inode = old_node.FindDependentNode()
                 try:
-                    inode.Material = new_node
-                except (TypeError, ValueError):
-                    # the new_node is None
-                    pass
-                # and fuck off
-            else:
-                # then this node is used in a material network
-                # so update the referencing nodes to use the new node instead
-                for parent, param, i in self.outputs(old_node):
-                    if i == -1:
-                        param.Value = new_node
-                    else:
-                        param.Value[i] = new_node
+                    inode_name = inode.GetName()
+                    inode_mat = inode.GetMaterial()
+                    print('updating material of (%i): %s' %
+                          (iteration, inode_name))
+                except RuntimeError:
+                    break
+                if inode_mat.GetName() == old_node.GetName():
+                    # directly assign the new_node as the material
+                    try:
+                        inode.SetMaterial(new_node)
+                    except (TypeError, ValueError):
+                        # the new_node is None
+                        pass
+                    # and fuck off
+                else:
+                    # then this node is used in a material network
+                    # so update the referencing nodes to use the new node
+                    # instead
+                    for parent, param, i in self.outputs(old_node):
+                        if i == -1:
+                            param.Value = new_node
+                        else:
+                            try:
+                                # unless this is is a Multi/Sub-Object node
+                                # do it directly
+                                if parent.GetClassName() == 'Multi/Sub-Object':
+                                    # convert it to a MaxPlus.Mtl object
+                                    print('using Mtl instead of MtlBase for '
+                                          'Multi/Sub-Object')
+                                    # parent = MaxPlus.Mtl._CastFrom(parent)
+                                    # # then use the SetSubMtl() method
+                                    # parent.SetSubMtl(i, new_node)
+                                    self.connect_attr(
+                                        new_node, parent,
+                                        '%s[%i]' % (param.GetName(), i)
+                                    )
+                                else:
+                                    # do it with pymxs
+                                    # I don't know any other way to pass the
+                                    # Python material/texture to pymxs
+                                    # so the best way I found was to use the
+                                    # material editor
+                                    print(
+                                        'using pymxs for complex connection!'
+                                    )
+                                    print(
+                                        '%s --> %s.%s[%s]' % (
+                                            new_node.GetFullName(),
+                                            parent.GetName(),
+                                            param.GetName(),
+                                            i
+                                        )
+                                    )
+
+                                    self.connect_attr(
+                                        new_node, parent,
+                                        '%s[%i]' % (param.GetName(), i)
+                                    )
+
+                                    # # put the material to slot 1. which is slot
+                                    # # 0 in Python by the way
+                                    # MaxPlus.MaterialManager.PutMtlToMtlEditor(
+                                    #     new_node, 0
+                                    # )
+                                    # new_node_pymxs = \
+                                    #     pymxs.runtime.getMEditMaterial(1)
+                                    #
+                                    # # get the parent node
+                                    # MaxPlus.MaterialManager.PutMtlToMtlEditor(
+                                    #     parent, 1
+                                    # )
+                                    # parent_pymxs = \
+                                    #     pymxs.runtime.getMEditMaterial(2)
+                                    #
+                                    # # Then execute the connection script
+                                    # exec(
+                                    #     'parent_pymxs.%s[%i] = '
+                                    #     'new_node_pymxs' % (param.GetName(), i)
+                                    # )
+                                    # # This should've worked!
+
+                            except TypeError:
+                                print('Could not connect: %s --> %s.%s[%s]' %
+                                      (new_node.GetFullName(),
+                                       parent.GetName(), param.GetName(), i))
+                    # # do this only once
+                    # break
 
     @classmethod
     def get_all_material_types_in_current_scene(cls):
@@ -747,3 +942,28 @@ class ConversionManager(ConversionManagerBase):
                 mat_types[sub_mat_class_name]['nodes'].append(sub_mat)
 
         return mat_types
+
+    def export_basic_material_attibutes(self, node):
+        """exports basic material attributes to a json file.
+
+        :return:
+        """
+        import os
+        import tempfile
+        json_file_path = os.path.join(
+            tempfile.gettempdir(),
+            'basic_material.json'
+        )
+
+        data = {}
+
+        exportable_types = ['Texmap', 'Int', 'PercentFraction', 'Float',
+                            'FRgb', 'Rgb', 'Point3', 'BOOL', 'World']
+        param_types = []
+        for p in node.ParameterBlock.Parameters:
+            param_type_name = MaxPlus.FPTypeGetName(p.GetParamType())
+            #print(p.GetName(), )
+            # data[p.GetName()] = p.Value;
+            param_types.append(param_type_name)
+
+        print(set(param_types))

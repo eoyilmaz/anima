@@ -105,7 +105,10 @@ class ConversionManagerBase(object):
         """
         nodes_converted = []
         for node_type in self.conversion_spec_sheet:
-            for node in self.list_nodes(node_type):
+            print('searching for: %s' % node_type)
+            found_nodes = self.list_nodes(node_type)
+            print('found: %s nodes' % len(found_nodes))
+            for node in found_nodes:
                 new_node = self.convert(node)
                 nodes_converted.append([node, new_node])
 
@@ -118,6 +121,7 @@ class ConversionManagerBase(object):
         node_type = self.get_node_type(node)
         conversion_specs = self.conversion_spec_sheet.get(node_type)
         if not conversion_specs:
+            print('No conversion_specs for: %s' % node_type)
             return
 
         # call any call_before
@@ -191,7 +195,19 @@ class ConversionManagerBase(object):
                             except TypeError:
                                 # it should use two parameters, also include
                                 # the node itself
-                                attr_value = converter(source_attr_value, node)
+                                try:
+                                    attr_value = converter(
+                                        source_attr_value,
+                                        node
+                                    )
+                                except TypeError:
+                                    # so this is the third form that also
+                                    # includes the rs node
+                                    attr_value = converter(
+                                        source_attr_value,
+                                        node,
+                                        rs_node
+                                    )
                         else:
                             attr_value = converter
                         self.set_attr(rs_node, attr, attr_value)
