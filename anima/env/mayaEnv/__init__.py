@@ -665,6 +665,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         :param version: The desired
           :class:`~stalker.models.version.Version` instance to be
           referenced.
+        :param bool use_namespace: Use namespaces for the referenced versions.
         :return: :class:`~pm.system.FileReference`
         """
 

@@ -280,7 +280,8 @@ class Houdini(EnvironmentBase):
         #     except hou.OperationFailed:
         #         pass
 
-    def get_output_nodes(self):
+    @classmethod
+    def get_output_nodes(cls):
         """returns the rop nodes in the scene
         """
         rop_context = hou.node('/out')
