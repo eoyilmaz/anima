@@ -46,3 +46,27 @@ def version_creator():
         executor=Executor(),
         parent=max_window
     )
+
+
+def version_updater():
+    """Helper function for version_updater UI for Max
+    """
+    from anima.utils import do_db_setup
+    do_db_setup()
+
+    from anima import ui
+    ui.SET_PYSIDE()
+
+    from anima.ui import version_updater
+    from anima.env import max as max_env
+
+    m = max_env.Max()
+
+    import MaxPlus
+    max_window = MaxPlus.GetQMaxWindow()
+
+    version_updater.UI(
+        environment=m,
+        executor=Executor(),
+        parent=max_window
+    )

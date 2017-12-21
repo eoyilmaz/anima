@@ -327,9 +327,7 @@ CONVERSION_SPEC_SHEET = {
             'unoccluded_color': 'bright',
             'distribution': 'spread',
             'falloff': 'fallOff',
-            'subdivs': {
-                'numSamples': lambda x: pow(2, x),
-            },
+            'subdivs': 'numSamples',
             'bias': 'bias',
             'affect_alpha': 'occlusionInAlpha',
             # ignore_for_gi
@@ -714,6 +712,35 @@ class ConversionManager(ConversionManagerBase):
                     pass
                 else:
                     if sub_mat_name == node_name:
+                        nodes_to_return.append(sub_mat)
+        return nodes_to_return
+
+    def get_node_by_class(self, node_class_name):
+        """Finds and returns the node with the given name
+
+        :param string node_class_name:
+        :return:
+        """
+        # just return materials for now
+        mat_lib = MaxPlus.MaterialLibrary.GetSceneMaterialLibrary()
+
+        num_materials = mat_lib.GetNumMaterials()
+        nodes_to_return = []
+        for i in range(num_materials):
+            mat = mat_lib.GetMaterial(i)
+            if mat.GetClassName() == node_class_name:
+                nodes_to_return.append(mat)
+                return nodes_to_return
+
+            # try to get it from the material hierarchy
+            for parent_mat, param, sub_mat, index in \
+                    self.walk_material_hierarchy(mat):
+                try:
+                    sub_mat_class_name = sub_mat.GetClassName()
+                except RuntimeError:
+                    pass
+                else:
+                    if sub_mat_class_name == node_class_name:
                         nodes_to_return.append(sub_mat)
         return nodes_to_return
 
