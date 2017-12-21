@@ -213,22 +213,13 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         self.set_arnold_texture_search_path()
 
-        self.allow_publish_on_export = False
-
-    def set_arnold_texture_search_path(self):
+    @classmethod
+    def set_arnold_texture_search_path(cls):
         """sets environment defaults
         """
         start = time.time()
         from stalker import Repository
 
-        # try to get a version from current scene
-        # v = self.get_current_version()
-
-        # if v:
-        #     # just append the project repo
-        #     all_repos = [v.task.project.repository]
-        # else:
-        #    # no version append all repositories
         all_repos = Repository.query.all()
 
         try:
@@ -538,9 +529,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         related with a list of Version instances. These Version instances are
         gathered from all the references in the opened scene no matter how
         deeply they've been referenced. So passing this dictionary to
-        :meth:`.update_verions` will update or create new versions as
+
+        :param version: The Stalker Version instance to open.
+        :meth:`.update_versions` will update or create new versions as
         necessary. You can also modify this dictionary before passing it to
-        :meth:`.update_verions`, so only desired version instances are updated
+        :meth:`.update_versions`, so only desired version instances are updated
         or a new version is created for them.
 
         :param bool force: Force open the file.
@@ -1141,7 +1134,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         logger.debug('check_external_files took %f seconds' % (end - start))
 
     def get_referenced_versions(self, parent_ref=None):
-        """Returns the versions those been referenced to the current scene.
+        """Returns the versions those are referenced to the current scene.
 
         :param parent_ref: The parent ref to start from. So the final list will
           be gathered from the references that are sub references of this
@@ -1198,47 +1191,6 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         logger.debug('result: %s' % versions)
         return versions
-
-    def update_version_inputs(self, parent_ref=None):
-        """updates the references list of the current version
-
-        :param parent_ref: the parent ref, if given will override the given
-          version argument and a Version instance will be get from the given
-          parent_ref.path.
-        """
-        logger.debug('parent_ref: %s' % parent_ref)
-        start = time.time()
-
-        logger.debug('get a version')
-        if not parent_ref:
-            logger.debug('got no parent_ref')
-            version = self.get_current_version()
-        else:
-            logger.debug('have a parent_ref')
-            version = self.get_version_from_full_path(parent_ref.path)
-
-        if version:
-            logger.debug('got a version: %s' % version.absolute_full_path)
-            # use the original version if it is a Repr version
-            if Representation.repr_separator in version.take_name \
-               and version.parent:
-                version = version.parent
-                logger.debug(
-                    'this is a representation switching to its parent: %s' %
-                    version
-                )
-
-            # update the reference list
-            referenced_versions = self.get_referenced_versions(parent_ref)
-            version.inputs = referenced_versions
-
-            # commit data to the database
-            from stalker.db.session import DBSession
-            DBSession.add(version)
-            DBSession.commit()
-
-        end = time.time()
-        logger.debug('update_version_inputs() took %f seconds' % (end - start))
 
     def update_first_level_versions(self, reference_resolution):
         """Updates the versions to the latest version.
@@ -1552,7 +1504,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # first update with data from first level references
         self.update_version_inputs()
 
-        # the go to the references
+        # then go to the references
         references_list = pm.listReferences()
 
         prev_ref_path = None
@@ -1578,7 +1530,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             prev_ref_path = None
             logger.debug('advancing to next ref')
 
-    def check_referenced_versions(self):
+    def check_referenced_versions(self, pdm=None):
         """Deeply checks all the references in the scene and returns a
         dictionary which has three keys called 'leave', 'update' and 'create'.
 
@@ -1606,99 +1558,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         wrp = MayaMainProgressBarWrapper()
         pdm = ProgressDialogManager(dialog=wrp)
         pdm.use_ui = self.use_progress_window
-        caller = \
-            pdm.register(3, 'Maya.check_referenced_versions() prepare data')
-
-        # deeply get which maya file is referencing which other files
-        self.deep_version_inputs_update()
-        caller.step()
-
-        reference_resolution = \
-            empty_reference_resolution(root=self.get_referenced_versions())
-        caller.step()
-
-        # reverse walk in DFS
-        dfs_version_references = []
-
-        version = self.get_current_version()
-        if not version:
-            return reference_resolution
-
-        for v in version.walk_inputs():
-            dfs_version_references.append(v)
-        caller.step()
-
-        # pop the first element which is the current scene
-        dfs_version_references.pop(0)
-
-        caller.end_progress()
-
-        # register a new caller
-        caller = pdm.register(
-            len(dfs_version_references),
-            'Maya.check_referenced_versions()'
-        )
-
-        # iterate back in the list
-        for v in reversed(dfs_version_references):
-            # check inputs first
-            to_be_updated_list = []
-            for ref_v in v.inputs:
-                if not ref_v.is_latest_published_version():
-                    to_be_updated_list.append(ref_v)
-
-            if to_be_updated_list:
-                action = 'create'
-                # check if there is a new published version of this version
-                # that is using all the updated versions of the references
-                latest_published_version = v.latest_published_version
-                if latest_published_version and \
-                   not v.is_latest_published_version():
-                    # so there is a new published version
-                    # check if its children needs any update
-                    # and the updated child versions are already
-                    # referenced to the this published version
-                    if all([ref_v.latest_published_version
-                            in latest_published_version.inputs
-                            for ref_v in to_be_updated_list]):
-                        # so all new versions are referenced to this published
-                        # version, just update to this latest published version
-                        action = 'update'
-                    else:
-                        # not all references are in the inputs
-                        # so we need to create a new version as usual
-                        # and update the references to the latest versions
-                        action = 'create'
-            else:
-                # nothing needs to be updated,
-                # so check if this version has a new version,
-                # also there could be no reference under this referenced
-                # version
-                if v.is_latest_published_version():
-                    # do nothing
-                    action = 'leave'
-                else:
-                    # update to latest published version
-                    action = 'update'
-
-                # before setting the action check all the inputs in
-                # resolution_dictionary, if any of them are update, or create
-                # then set this one to 'create'
-                if any(rev_v in reference_resolution['update'] or
-                       rev_v in reference_resolution['create']
-                       for rev_v in v.inputs):
-                    action = 'create'
-
-            # so append this v to the related action list
-            reference_resolution[action].append(v)
-
-            # from stalker import Version
-            # assert isinstance(v, Version)
-            caller.step(message=v.nice_name)
-
-        caller.end_progress()
-
-        return reference_resolution
+        return super(Maya, self).check_referenced_versions(pdm=pdm)
 
     def update_versions(self, reference_resolution):
         """Updates maya versions with the given reference_resolution.

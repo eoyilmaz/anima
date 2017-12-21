@@ -1629,15 +1629,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 from stalker.db.session import DBSession
                 DBSession.rollback()
                 return
+            finally:
+                self.update_previous_versions_table_widget()
 
-            # inform the user about what has happened
-            if logger.level != logging.DEBUG:
-                QtWidgets.QMessageBox.information(
-                    self,
-                    "Export",
-                    "%s\n\n has been exported correctly!" %
-                    new_version.filename
-                )
+                # inform the user about what has happened
+                if logger.level != logging.DEBUG:
+                    QtWidgets.QMessageBox.information(
+                        self,
+                        "Export",
+                        "%s\n\n has been exported correctly!" %
+                        new_version.filename
+                    )
 
     def save_as_push_button_clicked(self):
         """runs when the save_as_pushButton clicked

@@ -11,17 +11,17 @@ class Executor(object):
 
     def __init__(self):
         self.application = None
-        from anima.ui.lib import QtCore
-        self.event_loop = QtCore.QEventLoop()
+        # from anima.ui.lib import QtCore
+        # self.event_loop = QtCore.QEventLoop()
 
     def exec_(self, app, dialog):
         self.application = app
         # add event loop callback to processEvents
         dialog.exec_()
 
-    def processEvents(self):
-        self.event_loop.processEvents()
-        self.application.sendPostedEvents(None, 0)
+    # def processEvents(self):
+    #     self.event_loop.processEvents()
+    #     self.application.sendPostedEvents(None, 0)
 
 
 def version_creator():
