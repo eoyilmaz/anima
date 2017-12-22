@@ -638,6 +638,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         :param version: The desired
           :class:`~stalker.models.version.Version` to be imported
+        :param bool use_namespace: use namespace or not. Default is True.
         """
         if use_namespace:
             namespace = os.path.basename(version.filename)

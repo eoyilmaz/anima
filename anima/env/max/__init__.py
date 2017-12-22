@@ -227,6 +227,18 @@ class Max(EnvironmentBase):
 
         return True
 
+    def import_(self, version, use_namespace=True):
+        """Imports the content of the given Version instance to the current
+        scene.
+
+        :param version: The desired
+          :class:`~stalker.models.version.Version` to be imported
+        :param bool use_namespace: use namespace or not.
+        """
+        from pymxs import runtime as rt
+        rt.mergeMAXFile(version.absolute_full_path)
+        return True
+
     def reference(self, version, use_namespace=True):
         """Creates an XRef for the given version in the current scene.
 
@@ -439,8 +451,9 @@ class Max(EnvironmentBase):
         version_sig_name = self.get_significant_name(version)
 
         render_file_full_path = \
-            '%(render_output_folder)s/masterLayer/%(version_sig_name)s_' \
-            '<RenderLayer>_<RenderPass>.exr' % {
+            '%(render_output_folder)s/masterLayer/' \
+            '%(version_sig_name)s.0000.exr' % \
+            {
                 'render_output_folder': render_output_folder,
                 'version_sig_name': version_sig_name
             }
@@ -449,11 +462,21 @@ class Max(EnvironmentBase):
         # rs.SetTimeType(1)  # Active Time Segment
         rs.SetTimeType(2)  # Range
 
-        rs.SetUseImageSequence(True)
+        # rs.SetUseImageSequence(True)
         rs.SetSaveFile(True)
         rs.SetOutputFile(render_file_full_path)
 
         rs.UpdateDialogParameters()
+
+        # create the output folder
+        import os
+        try:
+            os.makedirs(
+                os.path.dirname(render_file_full_path)
+            )
+        except OSError:
+            # folder already exists
+            pass
 
     def set_frame_range(self, start_frame=0, end_frame=100,
                         adjust_frame_range=False):
