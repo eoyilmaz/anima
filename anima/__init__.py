@@ -30,7 +30,7 @@ import tempfile
 import logging
 from anima.config import Config
 
-__version__ = "0.3.1.dev"
+__version__ = "0.3.1"
 
 # create logger
 # logging.basicConfig()
