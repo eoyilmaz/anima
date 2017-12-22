@@ -466,6 +466,14 @@ class Max(EnvironmentBase):
         rs.SetSaveFile(True)
         rs.SetOutputFile(render_file_full_path)
 
+        # also set any RenderElement to the same path so a MultiPart OpenEXR
+        # file is written (saving to a different file is not working for now)
+        from pymxs import runtime as rt
+        rem = rt.maxOps.GetCurRenderElementMgr()
+        num_res = rem.NumRenderElements()
+        for i in range(num_res):
+            rem.SetRenderElementFilename(i, render_file_full_path)
+
         rs.UpdateDialogParameters()
 
         # create the output folder
