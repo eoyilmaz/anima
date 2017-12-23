@@ -129,6 +129,11 @@ class ConversionManagerBase(object):
         if call_before and callable(call_before):
             call_before(node)
 
+        # some conversion specs doesn't require a new node to be created
+        # so return early if this is the case
+        if 'node_type' not in conversion_specs:
+            return node
+
         node_creator = self.node_creator_factory(conversion_specs)
         rs_node = node_creator.create()
 

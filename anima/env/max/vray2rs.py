@@ -314,7 +314,6 @@ CONVERSION_SPEC_SHEET = {
     },
 
     'VRayDirt': {
-        # Convert it to 3ds Max's Color Correction node
         'node_type': MaxPlus.Texmap,
         'secondary_type': 'Redshift Ambient Occlusion',
 
@@ -358,7 +357,6 @@ CONVERSION_SPEC_SHEET = {
     },
 
     'VRayLightMtl': {
-        # Convert it to 3ds Max's Color Correction node
         'node_type': MaxPlus.Mtl,
         'secondary_type': 'Redshift Incandescent',
 
@@ -389,8 +387,102 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
+    'VRayFastSSS2': {
+        'node_type': MaxPlus.Mtl,
+        'secondary_type': 'Redshift Sub-Surface Scatter',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            # 'preset': '',
+            'scale': 'scale',
+            'IOR': 'ior',
+            # 'multiple_scattering': '',
+            # 'prepass_rate': '',
+            # 'prepass_id': '',
+            # 'auto_calculate_density': '',
+            # 'samples_per_unit_area': '',
+            # 'surface_offset': '',
+            # 'preview_samples': '',
+            # 'max_distance': '',
+            # 'background_color': '',
+            # 'samples_color': '',
+            # 'overall_color': '',
+            # 'diffuse_color': '',
+            'diffuse_amount': 'diffuse_amount',
+            # 'color_mode': '',
+            'sub_surface_color': 'sub_surface_color',
+            'scatter_color': 'scatter_color',
+            'scatter_radius': 'scatter_radius',
+            'phase_function': 'phase',
+            'specular_color': 'refl_color',
+            'specular_amount': 'reflectivity',
+            'specular_glossiness': 'refl_gloss',
+            'specular_subdivs': 'refl_gloss_samples',
+            'trace_reflections': {
+                'refl_hl_only': lambda x: not x,
+            },
+            'reflection_depth': 'refl_depth',
+            'single_scatter': {
+                'singleScatter_on': lambda x: True if x > 0 else False,
+            },
+            'single_scatter_subdivs': 'ss_samples',
+            'refraction_depth': 'refr_depth',
+            # 'front_lighting': '',
+            # 'back_lighting': '',
+            # 'scatter_gi': '',
+            # 'prepass_LOD_threshold': '',
+            # 'interpolation_accuracy': '',
+            # 'legacy_mode': '',
+            # 'prepass_blur': '',
+            'cutoff_threshold': ['refl_cutoff', 'refr_cutoff'],
+            # 'prepass_mode': '',
+            # 'prepass_fileName': '',
+            'texmap_bump': {
+                'bump_input_map': lambda x: create_bump_node(x),
+            },
+            'texmap_bump_on': 'bump_input_mapenable',
+            'texmap_bump_multiplier': 'bump_input_mapamount',
+            # 'texmap_opacity': '',
+            # 'texmap_opacity_on': '',
+            # 'texmap_opacity_multiplier': '',
+            # 'texmap_overall_color': '',
+            # 'texmap_overall_color_on': '',
+            # 'texmap_overall_color_multiplier': '',
+            # 'texmap_diffuse_color': '',
+            # 'texmap_diffuse_color_on': '',
+            # 'texmap_diffuse_color_multiplier': '',
+            'texmap_diffuse_amount': 'diffuse_amount_map',
+            'texmap_diffuse_amount_on': 'diffuse_amount_mapenable',
+            'texmap_diffuse_amount_multiplier': 'diffuse_amount_mapamount',
+            'texmap_specular_color': 'refl_color_map',
+            'texmap_specular_color_on': 'refl_color_mapenable',
+            'texmap_specular_color_multiplier': 'refl_color_mapamount',
+            'texmap_specular_amount': 'reflectivity_map',
+            'texmap_specular_amount_on': 'reflectivity_mapenable',
+            'texmap_specular_amount_multiplier': 'reflectivity_mapamount',
+            'texmap_specular_glossiness': 'refl_gloss_map',
+            'texmap_specular_glossiness_on': 'refl_gloss_mapenable',
+            'texmap_specular_glossiness_multiplier': 'refl_gloss_mapamount',
+            'texmap_sss_color': 'sub_surface_color_map',
+            'texmap_sss_color_on': 'sub_surface_color_mapenable',
+            'texmap_sss_color_multiplier': 'sub_surface_color_mapamount',
+            'texmap_scatter_color': 'scatter_color_map',
+            'texmap_scatter_color_on': 'scatter_color_mapenable',
+            'texmap_scatter_color_multiplier': 'scatter_color_mapamount',
+            'texmap_scatter_radius': 'scatter_radius_map',
+            'texmap_scatter_radius_on': 'scatter_radius_mapenable',
+            'texmap_scatter_radius_multiplier': 'scatter_radius_mapamount',
+            'texmap_displacement': {
+                'displacement_input_map': lambda x: create_displacement_node(x)
+            },
+            'texmap_displacement_on': 'displacement_input_mapenable',
+            'texmap_displacement_multiplier': 'displacement_input_mapamount',
+        }
+    },
+
     'Normal Bump': {
-        # Convert it to 3ds Max's Color Correction node
         'node_type': MaxPlus.Texmap,
         'secondary_type': 'Redshift Normal Map',
 
@@ -401,19 +493,7 @@ CONVERSION_SPEC_SHEET = {
             'mult_spin': 'scale',
             # 'bump_spin': '',
             'normal_map': {
-                # write down the code that assigns the bitmap to the path
-                # tex0
-                # I couldn't find any reasonable method of setting the tex0
-                # attribute
-                #
-                # so instead of setting it by using the code, I'll excuse the
-                # the user to do it by hand
-                #
-                # sorry!
-                'tex0': lambda x, y, z: print_out_node_info(
-                    x.ParameterBlock.fileName.Value, y.GetName(), z.GetName(),
-                    'Please set {target_node}.tex0 -> {source_value}'
-                )
+                'tex0': lambda x: set_bitmap_value(x),
             },
             # 'bump_map': '',
             # 'map1on': '',
@@ -426,7 +506,67 @@ CONVERSION_SPEC_SHEET = {
             # 'swap_rg': '',
         }
     },
+
+    'VRayNormalMap': {
+        'node_type': MaxPlus.Texmap,
+        'secondary_type': 'Redshift Normal Map',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'normal_map': {
+                'tex0': lambda x: set_bitmap_value(x),
+                # 'unbiasedNormalMap': ,
+                # 'eccmax': ,
+                # 'alt_x': ,
+                # 'alt_y': ,
+                # 'repeats_x': ,
+                # 'repeats_y': ,
+                # 'wrapU': ,
+                # 'wrapV': ,
+                # 'min_uv_x': ,
+                # 'min_uv_y': ,
+                # 'max_uv_x': ,
+                # 'max_uv_y': ,
+            },
+            # 'normal_map_on': '',
+            'normal_map_multiplier': 'scale',
+            # 'bump_map': '',
+            # 'bump_map_on': '',
+            # 'bump_map_multiplier': '',
+            'map_channel': 'tspace_id',
+            # 'flip_red': '',
+            'flip_green': 'flipY',
+            # 'swap_red_and_green': '',
+            # 'map_rotation': '',
+        }
+    },
+
+    'VRay2SidedMtl': {
+        # do not convert it
+        # just connect the front material to the node
+        'call_before': lambda x: use_front_material(x)
+    }
+
 }
+
+
+def set_bitmap_value(value, y=None, z=None):
+    """sets bitmap value
+
+    :param value:
+    :param y:
+    :param z:
+    :return:
+    """
+    value_class_name = value.GetClassName()
+    if value_class_name == 'VRayNormalMap':
+        value = value.ParameterBlock.normal_map.Value
+    elif value_class_name == 'Redshift Normal Map':
+        return value.ParameterBlock.tex0.Value
+
+    return value.ParameterBlock.bitmap.Value
 
 
 def create_bump_node(source_value):
@@ -463,6 +603,23 @@ def create_displacement_node(source_value):
         return rs_displacement_map
     except RuntimeError:
         return None
+
+
+def use_front_material(source_node):
+    """A helper function for VRay2SidedMtl. It will assign the front material
+    to the nodes using this material.
+
+    :param source_node:
+    :return:
+    """
+    front_material = source_node.ParameterBlock.frontMtl.Value
+
+    while True:
+        # assign the front material to all of the dependencies.
+        try:
+            source_node.FindDependentNode().Material = front_material
+        except RuntimeError:
+            break
 
 
 def print_out_node_info(source_value, source_node, target_node, template=''):
