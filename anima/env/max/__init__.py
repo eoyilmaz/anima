@@ -470,9 +470,10 @@ class Max(EnvironmentBase):
         # file is written (saving to a different file is not working for now)
         from pymxs import runtime as rt
         rem = rt.maxOps.GetCurRenderElementMgr()
-        num_res = rem.NumRenderElements()
-        for i in range(num_res):
-            rem.SetRenderElementFilename(i, render_file_full_path)
+        if rem:
+            num_res = rem.NumRenderElements()
+            for i in range(num_res):
+                rem.SetRenderElementFilename(i, render_file_full_path)
 
         rs.UpdateDialogParameters()
 

@@ -23,7 +23,11 @@ CONVERSION_SPEC_SHEET = {
             'selfIllumination': 'emission_color',
             # 'selfIllumination_gi': '',
             'selfIllumination_multiplier': 'emission_weight',
-            'reflection': 'refl_color',
+            'reflection': {
+                'refl_color': lambda x: x,
+                'refl_weight':
+                    lambda x: 1.0 if x.GetIntensity() > 0.0 else 0.0,
+            },
             'reflection_glossiness': 'refl_roughness',
             # 'hilight_glossiness': '',
             # 'reflection_subdivs': {
@@ -46,7 +50,11 @@ CONVERSION_SPEC_SHEET = {
 
             # 'reflection_affectAlpha': '',
 
-            'refraction': 'refr_color',
+            'refraction': {
+                'refr_color': lambda x: x,
+                'refr_weight':
+                    lambda x: 1.0 if x.GetIntensity() > 0.0 else 0.0,
+            },
             'refraction_glossiness': {
                 'refr_roughness': lambda x: x,
                 'refr_isGlossiness': True,
