@@ -25,8 +25,7 @@ CONVERSION_SPEC_SHEET = {
             'selfIllumination_multiplier': 'emission_weight',
             'reflection': {
                 'refl_color': lambda x: x,
-                'refl_weight':
-                    lambda x: 1.0 if x.GetIntensity() > 0.0 else 0.0,
+                'refl_weight': lambda x, y: get_refl_weight(x, y),
             },
             'reflection_glossiness': 'refl_roughness',
             # 'hilight_glossiness': '',
@@ -52,8 +51,7 @@ CONVERSION_SPEC_SHEET = {
 
             'refraction': {
                 'refr_color': lambda x: x,
-                'refr_weight':
-                    lambda x: 1.0 if x.GetIntensity() > 0.0 else 0.0,
+                'refr_weight': lambda x, y: get_refr_weight(x, y),
             },
             'refraction_glossiness': {
                 'refr_roughness': lambda x: x,
@@ -558,6 +556,46 @@ CONVERSION_SPEC_SHEET = {
     }
 
 }
+
+
+def get_refl_weight(value, source_node):
+    """Returns the reflection weight for Redshift Material
+
+    :param value:
+    :param source_node:
+    :return:
+    """
+    refl_color_map = source_node.ParameterBlock.refl_color_map.Value
+    refl_color_map_name = None
+    try:
+        refl_color_map_name = refl_color_map.GetName()
+    except RuntimeError:
+        pass
+
+    if value.GetIntensity() > 0.0 or refl_color_map_name is not None:
+        return 1.0
+    else:
+        return 0.0
+
+
+def get_refr_weight(value, source_node):
+    """Returns the refraction weight for Redshift Material
+
+    :param value:
+    :param source_node:
+    :return:
+    """
+    refr_color_map = source_node.ParameterBlock.refr_color_map.Value
+    refr_color_map_name = None
+    try:
+        refr_color_map_name = refr_color_map.GetName()
+    except RuntimeError:
+        pass
+
+    if value.GetIntensity() > 0.0 or refr_color_map_name is not None:
+        return 1.0
+    else:
+        return 0.0
 
 
 def set_bitmap_value(value, y=None, z=None):
