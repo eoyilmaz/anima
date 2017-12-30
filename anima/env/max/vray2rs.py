@@ -553,7 +553,28 @@ CONVERSION_SPEC_SHEET = {
         # do not convert it
         # just connect the front material to the node
         'call_before': lambda x: use_front_material(x)
-    }
+    },
+
+    'VRayOverrideMtl': {
+        'node_type': MaxPlus.Mtl,
+        'secondary_type': 'Redshift Ray Switch',
+
+        # 'call_after': # write the code here to assign this material to
+        # all of the objects that is using the VRayMtl
+
+        'attributes': {
+            'baseMtl': 'cameraColor_map',
+            'baseMtl_on': 'cameraColor_mapenable',
+            'giMtl': 'giColor_map',
+            'giMtl_on': 'giColor_mapenable',
+            'reflectMtl': 'reflectionColor_map',
+            'reflectMtl_on': 'reflectionColor_mapenable',
+            'refractMtl': 'refractionColor_map',
+            'refractMtl_on': 'refractionColor_mapenable',
+            # 'shadowMtl':
+            # 'shadowMtl_on'
+        },
+    },
 
 }
 
@@ -565,7 +586,7 @@ def get_refl_weight(value, source_node):
     :param source_node:
     :return:
     """
-    refl_color_map = source_node.ParameterBlock.refl_color_map.Value
+    refl_color_map = source_node.ParameterBlock.texmap_reflection.Value
     refl_color_map_name = None
     try:
         refl_color_map_name = refl_color_map.GetName()
@@ -585,7 +606,7 @@ def get_refr_weight(value, source_node):
     :param source_node:
     :return:
     """
-    refr_color_map = source_node.ParameterBlock.refr_color_map.Value
+    refr_color_map = source_node.ParameterBlock.texmap_refraction.Value
     refr_color_map_name = None
     try:
         refr_color_map_name = refr_color_map.GetName()
