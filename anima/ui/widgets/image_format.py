@@ -167,3 +167,14 @@ class ImageFormatWidget(object):
         index = self.combo_box.findData(image_format_id)
         if index:
             self.combo_box.setCurrentIndex(index)
+
+    def set_visible(self, visible):
+        """sets the visibility of this widget
+
+        :param visible:
+        :return:
+        """
+        self.label.setVisible(visible)
+        self.combo_box.setVisible(visible)
+        self.update_push_button.setVisible(visible)
+        self.create_push_button.setVisible(visible)
