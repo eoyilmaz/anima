@@ -2120,14 +2120,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
-            from stalker import Link
+            from stalker import Task, Link
             t = Link.query.filter(Link.id == thumb_id).first()
-            DBSession.delete(t)
+            task = Task.query.get(task_id)
+            task.thumbnail = None
             if t.thumbnail:
-                DBSession.delete(t.thumbnail)
                 if t.thumbnail.thumbnail:
                     DBSession.delete(t.thumbnail.thumbnail)
+                    t.thumbnail = None
+                DBSession.delete(t.thumbnail)
             # leave the files there
+            DBSession.delete(t)
             DBSession.commit()
 
             # update the thumbnail
