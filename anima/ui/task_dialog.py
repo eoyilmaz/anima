@@ -313,6 +313,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.cutIn_spinBox = QtWidgets.QSpinBox(self)
+        self.cutIn_spinBox.setMaximum(999999)
         self.horizontalLayout_4.addWidget(self.cutIn_spinBox)
         self.cutOut_spinBox = QtWidgets.QSpinBox(self)
         self.cutOut_spinBox.setMaximum(999999)
