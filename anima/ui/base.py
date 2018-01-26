@@ -71,9 +71,9 @@ class MultiLineInputDialog(QtWidgets.QDialog):
     pass
 
 
-def ui_caller(app_in, executor, DialogClass, **kwargs):
+def ui_caller(app_in, executor, ui_class, **kwargs):
     global app
-    global mainDialog
+    global ui_instance
     self_quit = False
     app = QtWidgets.QApplication.instance()
     if app is None:
@@ -86,8 +86,8 @@ def ui_caller(app_in, executor, DialogClass, **kwargs):
             app = app_in
         self_quit = True
 
-    mainDialog = DialogClass(**kwargs)
-    mainDialog.show()
+    ui_instance = ui_class(**kwargs)
+    ui_instance.show()
     if executor is None:
         app.exec_()
         if self_quit:
@@ -98,5 +98,5 @@ def ui_caller(app_in, executor, DialogClass, **kwargs):
                 QtCore.SLOT("quit()")
             )
     else:
-        executor.exec_(app, mainDialog)
-    return mainDialog
+        executor.exec_(app, ui_instance)
+    return ui_instance
