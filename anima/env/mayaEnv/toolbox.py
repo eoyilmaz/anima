@@ -165,6 +165,14 @@ def UI():
 
             color.change()
             pm.button(
+                'rename_unique_button',
+                l='Rename Unique',
+                c=RepeatedCallback(General.rename_unique),
+                ann=General.rename_unique.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
                 'removeColonFromNames_button',
                 l="remove colon(:) from node names",
                 c=RepeatedCallback(General.remove_colon_from_names),
@@ -2024,6 +2032,14 @@ class General(object):
                 cameras_to_delete.extend(cameras)
 
         pm.delete(cameras_to_delete)
+
+    @classmethod
+    def rename_unique(cls):
+        """renames the selected nodes with unique names
+        """
+        import re
+        [node.rename(re.sub('[\d]+', '#', node.name()))
+         for node in pm.selected()]
 
 
 class Reference(object):
