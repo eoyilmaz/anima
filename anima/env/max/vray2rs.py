@@ -549,12 +549,6 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
-    'VRay2SidedMtl': {
-        # do not convert it
-        # just connect the front material to the node
-        'call_before': lambda x: use_front_material(x)
-    },
-
     'VRayOverrideMtl': {
         'node_type': MaxPlus.Mtl,
         'secondary_type': 'Redshift Ray Switch',
@@ -681,8 +675,16 @@ def use_front_material(source_node):
     """
     front_material = source_node.ParameterBlock.frontMtl.Value
 
+    # connect to the outputs of the source_node
+    for parent, param, i in ConversionManager.outputs(source_node):
+        # param.Value = front_material
+        ConversionManager.connect_attr(
+            front_material, parent,
+            '%s[%i]' % (param.GetName(), i)
+        )
+
+    # also assign the front material to all of the dependencies.
     while True:
-        # assign the front material to all of the dependencies.
         try:
             source_node.FindDependentNode().Material = front_material
         except RuntimeError:
@@ -757,6 +759,19 @@ class ConversionManager(ConversionManagerBase):
         self.conversion_spec_sheet = CONVERSION_SPEC_SHEET
         self.node_creator_factory = NodeCreator
 
+    def auto_convert(self):
+        """finds and converts all the nodes in the current scene
+        """
+        # pre condition the scene
+        #
+        # First run the conversion script only for VRay2SidedMtl
+        # because it is causing a problem
+        for node in self.get_node_by_class('VRay2SidedMtl'):
+            use_front_material(node)
+
+        # then call the super
+        return super(ConversionManager, self).auto_convert()
+
     def rename_node(self, node, new_name):
         """Renames the node
 
@@ -799,7 +814,8 @@ class ConversionManager(ConversionManagerBase):
 
         return inputs
 
-    def connect_attr(self, source_node, target_node, target_parameter):
+    @classmethod
+    def connect_attr(cls, source_node, target_node, target_parameter):
         """creates a connection from source_attr to target_attr target_node
 
         :param source_node:
@@ -1045,7 +1061,12 @@ class ConversionManager(ConversionManagerBase):
         :return:
         """
         inode = node.FindDependentNode()
-        top_mat = inode.Material
+        try:
+            top_mat = inode.Material
+        except RuntimeError:
+            # No inode just return
+            return
+
         for parent, param, child, i in cls.walk_material_hierarchy(top_mat):
             try:
                 if child.GetFullName() == node.GetFullName():
