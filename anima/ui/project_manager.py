@@ -18,17 +18,21 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        import qdarkgraystyle
-        app = QtWidgets.QApplication.instance()
+        self.setup_db()
 
-        from anima.ui.lib import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
+        self.project_dock_widget = None
 
-        if IS_PYSIDE():
-            app.setStyleSheet(qdarkgraystyle.load_stylesheet())
-        elif IS_PYQT4():
-            app.setStyleSheet(qdarkgraystyle.load_stylesheet(pyside=False))
-        elif IS_PYSIDE2():
-            app.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
+        # import qdarkgraystyle
+        # app = QtWidgets.QApplication.instance()
+        #
+        # from anima.ui.lib import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
+        #
+        # if IS_PYSIDE():
+        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet())
+        # elif IS_PYQT4():
+        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet(pyside=False))
+        # elif IS_PYSIDE2():
+        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
 
         self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
         self.settings = QtCore.QSettings(
@@ -37,6 +41,13 @@ class MainWindow(QtWidgets.QMainWindow):
         )
         self.setup_ui()
 
+    @classmethod
+    def setup_db(cls):
+        """setup the db
+        """
+        from anima.utils import do_db_setup
+        do_db_setup()
+
     def setup_ui(self):
         """creates the UI widgets
         """
@@ -44,6 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.create_main_menu()
         self.create_toolbars()
+        self.create_dock_widgets()
 
         self.read_settings()
 
@@ -96,6 +108,53 @@ class MainWindow(QtWidgets.QMainWindow):
         file_toolbar.setObjectName('file_toolbar')
         file_toolbar.addAction('Create Project')
 
+    def create_dock_widgets(self):
+        """creates the dock widgets
+        """
+        # ----------------------------------------
+        # create the Project Dock Widget
+        self.project_dock_widget = QtWidgets.QDockWidget('Projects', self)
+        self.project_dock_widget.setObjectName('project_dock_widget')
+        # create the TaskTreeView as the main widget
+        from anima.ui.views.task import TaskTreeView
+        tasks_tree_view = TaskTreeView(parent=self)
+        tasks_tree_view.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
+        tasks_tree_view.setAlternatingRowColors(True)
+        tasks_tree_view.setUniformRowHeights(True)
+        tasks_tree_view.header().setCascadingSectionResizes(True)
+
+        tasks_tree_view.fill(show_completed_projects=True)
+
+        # also setup the signal
+        QtCore.QObject.connect(
+            tasks_tree_view.selectionModel(),
+            QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
+                          'const QItemSelection &)'),
+            self.tasks_tree_view_changed
+        )
+
+        self.project_dock_widget.setWidget(tasks_tree_view)
+
+        # and set the left dock widget
+        self.addDockWidget(
+            QtCore.Qt.LeftDockWidgetArea,
+            self.project_dock_widget
+        )
+
+        # ----------------------------------------
+        # create the Central Widget
+        from anima.ui.widgets.task_dashboard import TaskDashboardWidget
+        task_dashboard_widget = TaskDashboardWidget(parent=self)
+        self.setCentralWidget(task_dashboard_widget)
+
+    def tasks_tree_view_changed(self):
+        """runs when the tasks tree view changed
+        """
+        # do nothing for now
+        return
+
     def show_and_raise(self):
         """
         """
@@ -120,4 +179,4 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 if __name__ == "__main__":
-    app = ui_caller(None, None, MainWindow)
+    ui_caller(None, None, MainWindow)
