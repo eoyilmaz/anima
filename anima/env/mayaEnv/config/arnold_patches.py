@@ -91,9 +91,9 @@ def createArnoldTextureSettings():
                         label="Diffuse Blur",
                         attribute='defaultArnoldRenderOptions.textureDiffuseBlur')
 
-    cmds.attrControlGrp('texture_glossy_blur',
-                        label="Glossy Blur",
-                        attribute='defaultArnoldRenderOptions.textureGlossyBlur')
+    # cmds.attrControlGrp('texture_glossy_blur',
+    #                     label="Glossy Blur",
+    #                     attribute='defaultArnoldRenderOptions.textureGlossyBlur')
 
     pm.setParent('..')
 
