@@ -203,9 +203,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         'osx': 'maya'
     }
 
-    def __init__(self, extensions=None, version=None):
-        #super(Maya, self).__init__(self.name, extensions, version)
-        EnvironmentBase.__init__(self, self.name, extensions, version)
+    extensions = ['.ma', '.mb']
+
+    def __init__(self, version=None):
+        # super(Maya, self).__init__(self.name, version)
+        EnvironmentBase.__init__(self, self.name, version)
 
         self.use_progress_window = False
         if not pm.general.about(batch=1):
@@ -285,7 +287,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         version.update_paths()
 
         # set version extension to ma
-        version.extension = '.ma'
+        version.extension = self.extensions[0]
 
         # do not save if there are local files
         self.check_external_files(version)
@@ -483,7 +485,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # set the extension to ma by default
         version.update_paths()
-        version.extension = '.ma'
+        version.extension = self.extensions[0]
         version.created_with = self.name
 
         # create the folder if it doesn't exists

@@ -13,9 +13,10 @@ class Houdini(EnvironmentBase):
     """the houdini environment class
     """
     name = 'Houdini'
+    extensions = ['.hip', '.hipnc', '.hiplc']
 
-    def __init__(self, name="", extensions=None, version=None):
-        super(Houdini, self).__init__(name, extensions, version)
+    def __init__(self, name="", version=None):
+        super(Houdini, self).__init__(name, version)
 
         from stalker import Repository
         # re initialize repo vars
@@ -44,9 +45,9 @@ class Houdini(EnvironmentBase):
 
         # set the extension to hip
         if not hou.isApprentice():
-            version.extension = '.hip'
+            version.extension = self.extensions[0]
         else:
-            version.extension = '.hipnc'
+            version.extension = self.extensions[1]
 
         # define that this version is created with Houdini
         version.created_with = self.name
@@ -195,7 +196,11 @@ class Houdini(EnvironmentBase):
         )
         job = str(version.absolute_path)
         hip = job
-        hip_name = os.path.basename(str(version.absolute_full_path))
+        hip_name = os.path.splitext(
+            os.path.basename(
+                str(version.absolute_full_path)
+            )
+        )[0]
 
         logger.debug('job     : %s' % job)
         logger.debug('hip     : %s' % hip)
@@ -313,28 +318,7 @@ class Houdini(EnvironmentBase):
         current_take = hou.takes.currentTake()
         hou.takes.setCurrentTake(hou.takes.rootTake())
 
-        output_filename = \
-            '{version.absolute_path}/Outputs/`$OS`/' \
-            '{version.task.project.code}_{version.nice_name}_' \
-            'v{version.version_number:03d}_`$OS`.$F4.exr'
-
-        output_filename = \
-            output_filename.format(version=version).replace('\\', '/')
-
-        # compute a $JOB relative file path
-        # which is much safer if the file is going to be render in multiple OSes
-        # $HIP = the current asset path
-        # $JOB = the current sequence path
-        #hip = self._asset.path
-        #hip = hou.getenv("HIP")
-        job = hou.getenv("JOB")
-        # eliminate environment vars
-        while "$" in job:
-            job = os.path.expandvars(job)
-
-        from anima import utils
-        job_relative_output_file_path = \
-            "$JOB/%s" % utils.relpath(job, output_filename, "/", "..")
+        output_filename = '$HIP/Outputs/$OS/`$HIPNAME`_$OS.$F4.exr'
 
         output_nodes = self.get_output_nodes()
         for output_node in output_nodes:
@@ -343,7 +327,7 @@ class Houdini(EnvironmentBase):
                 # set the file name
                 try:
                     output_node.setParms(
-                        {'vm_picture': str(job_relative_output_file_path)}
+                        {'vm_picture': str(output_filename)}
                     )
                 except hou.PermissionError:
                     # node is locked
@@ -373,7 +357,7 @@ class Houdini(EnvironmentBase):
                     output_node.setParms(
                         {
                             'RS_outputFileNamePrefix':
-                                str(job_relative_output_file_path)
+                                str(output_filename)
                         }
                     )
                 except hou.PermissionError:

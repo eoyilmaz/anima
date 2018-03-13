@@ -835,13 +835,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.previous_versions_tableWidget.mapToGlobal(position)
 
         item = self.previous_versions_tableWidget.itemAt(position)
-        if not item:
-            return
+        # if not item:
+        #     return
 
-        index = item.row()
-        version = self.previous_versions_tableWidget.versions[index]
-        from stalker import Version
-        version = Version.query.get(version.id)
+        index = None
+        version = None
+        if item:
+            index = item.row()
+            version = self.previous_versions_tableWidget.versions[index]
+            from stalker import Version
+            version = Version.query.get(version.id)
 
         # create the menu
         menu = QtWidgets.QMenu()
@@ -849,27 +852,44 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logged_in_user = self.get_logged_in_user()
 
         # add Browse Outputs
-        menu.addAction("Browse Path...")
-        menu.addAction("Browse Outputs...")
-        menu.addAction("Upload Output...")
-        menu.addAction("Copy Path")
+        browse_path_action = menu.addAction("Browse Path...")
+        browse_outputs_action = menu.addAction("Browse Outputs...")
+        upload_output_action = menu.addAction("Upload Output...")
+        copy_path_action = menu.addAction("Copy Path")
+        menu.addSeparator()
+        change_description_action = menu.addAction("Change Description...")
         menu.addSeparator()
 
-        if not self.mode:
-            menu.addAction("Change Description...")
-            menu.addSeparator()
+        if not item:
+            browse_path_action.setEnabled(False)
+            browse_outputs_action.setEnabled(False)
+            upload_output_action.setEnabled(False)
+            copy_path_action.setEnabled(False)
+            change_description_action.setEnabled(False)
+
+        if self.mode:
+            change_description_action.setEnabled(False)
 
         # Create power menu
-        from anima import defaults
-        if logged_in_user in version.task.responsible \
-           or logged_in_user not in version.task.resources \
-           or defaults.is_power_user(logged_in_user):
-            if version.is_published:
-                menu.addAction('Un-Publish')
+        publish_action = menu.addAction('Publish')
+        menu.addSeparator()
+        create_version_action = menu.addAction('Create Dummy Version')
+        delete_action = menu.addAction('Delete')
+
+        if version:
+            from anima import defaults
+            if logged_in_user in version.task.responsible \
+               or logged_in_user not in version.task.resources \
+               or defaults.is_power_user(logged_in_user):
+
+                if version.is_published:
+                    publish_action.setText('Un-Publish')
             else:
-                menu.addAction('Publish')
-            menu.addSeparator()
-            menu.addAction('Delete')
+                publish_action.setEnabled(False)
+                delete_action.setEnabled(False)
+        else:
+            publish_action.setEnabled(False)
+            delete_action.setEnabled(False)
 
         selected_item = menu.exec_(global_position)
 
@@ -1056,12 +1076,30 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         )
                     )
                 )
+            elif selected_item == create_version_action:
+                # create a new version with the currently selected data
+                version = self.get_new_version()
 
+                # update version info
+                # set to the base extension
+                version.update_paths()
+                version.extension = self.environment.extensions[0]
+                version.created_with = self.environment.name
 
-    def get_item_indices_containing_text(self, text, treeView):
+                from stalker.db.session import DBSession
+                try:
+                    DBSession.commit()
+                except BaseException:
+                    DBSession.rollback()
+
+                # now reload the UI
+                self.update_previous_versions_table_widget()
+
+    @classmethod
+    def get_item_indices_containing_text(cls, text, tree_view):
         """returns the indexes of the item indices containing the given text
         """
-        model = treeView.model()
+        model = tree_view.model()
         logger.debug('searching for text : %s' % text)
         return model.match(
             model.index(0, 0),
@@ -1071,15 +1109,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.Qt.MatchRecursive
         )
 
-    def find_entity_item_in_tree_view(self, entity, treeView):
+    def find_entity_item_in_tree_view(self, entity, tree_view):
         """finds the item related to the stalker entity in the given
         QtTreeView
         """
         if not entity:
             return None
 
-        indexes = self.get_item_indices_containing_text(entity.name, treeView)
-        model = treeView.model()
+        indexes = self.get_item_indices_containing_text(entity.name, tree_view)
+        model = tree_view.model()
         logger.debug('items matching name : %s' % indexes)
         for index in indexes:
             item = model.itemFromIndex(index)
@@ -1159,14 +1197,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     # self.fill_tasks_tree_view()
 
     def fill_tasks_tree_view(self, show_completed_projects=False):
-        """wrapper for the tasks_treeView.fill() method
+        """wrapper for the tasks_tree_view.fill() method
         """
         self.tasks_tree_view.fill(
             show_completed_projects=show_completed_projects
         )
 
         # also setup the signal
-        logger.debug('setting up signals for tasks_treeView_changed')
+        logger.debug('setting up signals for tasks_tree_view_changed')
         QtCore.QObject.connect(
             self.tasks_tree_view.selectionModel(),
             QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
@@ -1175,11 +1213,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
     def tasks_tree_view_changed(self):
-        """runs when the tasks_treeView item is changed
+        """runs when the tasks_tree_view item is changed
         """
         logger.debug('tasks_tree_view_changed running')
         if self.tasks_tree_view.is_updating:
-            logger.debug('tasks_treeView is updating, so returning early')
+            logger.debug('tasks_tree_view is updating, so returning early')
             return
 
         task_id = self.tasks_tree_view.get_task_id()

@@ -229,11 +229,10 @@ class Fusion(EnvironmentBase):
         },
     }
 
-    def __init__(self, name='', version=None, extensions=None):
+    def __init__(self, name='', version=None):
         """fusion specific init
         """
-        super(Fusion, self).__init__(name=name, version=version,
-                                     extensions=extensions)
+        super(Fusion, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
         self.fusion = bmf.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
@@ -253,7 +252,7 @@ class Fusion(EnvironmentBase):
         assert isinstance(version, Version)
         # its a new version please update the paths
         version.update_paths()
-        version.extension = '.comp'
+        version.extension = self.extensions[0]
         version.created_with = self.name
 
         # set project_directory
@@ -292,7 +291,7 @@ class Fusion(EnvironmentBase):
         # its a new version please update the paths
         version.update_paths()
         # set the extension to '.comp'
-        version.extension = '.comp'
+        version.extension = self.extensions[0]
         version.created_with = self.name
 
         raise NotImplementedError(

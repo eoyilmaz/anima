@@ -31,6 +31,7 @@ class Max(EnvironmentBase):
     """
 
     name = "3dsMax%s" % get_max_version()
+    extensions = ['.max']
 
     def get_current_version(self):
         """Returns the current Stalker version from the open scene
@@ -91,7 +92,7 @@ class Max(EnvironmentBase):
         current_version = self.get_current_version()
 
         version.update_paths()
-        version.extension = '.max'
+        version.extension = self.extensions[0]
 
         # define that this version is created with Max
         version.created_with = self.name
@@ -195,7 +196,7 @@ class Max(EnvironmentBase):
 
         # set the extension to max by default
         version.update_paths()
-        version.extension = '.max'
+        version.extension = self.extensions[0]
 
         # define that this version is created with Max
         version.created_with = self.name

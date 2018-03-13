@@ -53,7 +53,7 @@ class ExternalEnv(EnvironmentBase):
     environment by setting its file extension etc.
     """
 
-    def __init__(self, name, extensions, structure=None, **kwargs):
+    def __init__(self, name, structure=None, **kwargs):
         """
 
         :param name: The name of this environment
@@ -61,13 +61,11 @@ class ExternalEnv(EnvironmentBase):
         :param structure: The folder structure of this environment
         :return:
         """
-        super(ExternalEnv, self).__init__(name=name, extensions=extensions)
+        super(ExternalEnv, self).__init__(name=name)
         self._name = None
-        self._extensions = None
         self._structure = None
 
         self.name = self._validate_name(name)
-        self.extensions = self._validate_extensions(extensions)
         self.structure = self._validate_structure(structure)
 
     def _validate_name(self, name):
@@ -102,60 +100,6 @@ class ExternalEnv(EnvironmentBase):
         :return: None
         """
         self._name = self._validate_name(name)
-
-    def _validate_extensions(self, extensions):
-        """validates the given extensions value
-
-        :param extensions: the desired extensions
-        :return: str
-        """
-        if not hasattr(extensions, '__getitem__'):
-            raise TypeError(
-                '%s.extensions should be a list like object, not %s' % (
-                    self.__class__.__name__,
-                    extensions.__class__.__name__
-                )
-            )
-
-        for extension in extensions:
-            if not isinstance(extension, str):
-                raise TypeError(
-                    'All elements in %s.extensions should be a str, not %s' % (
-                        self.__class__.__name__,
-                        extensions.__class__.__name__
-                    )
-                )
-            return self._format_extensions(extensions)
-
-    @classmethod
-    def _format_extensions(cls, extensions):
-        """formats the given extension
-
-        :param extensions: a list of strings containing the desired extensions
-        :return:
-        """
-        for i, extension in enumerate(extensions):
-            if not extension.startswith('.'):
-                extensions[i] = '.' + extension
-        return extensions
-
-    @property
-    def extensions(self):
-        """the extension property getter
-
-        :return: str
-        """
-        return self._extensions
-
-    @extensions.setter
-    def extensions(self, extensions):
-        """the extension property setter
-
-        :param list extensions: A list of string value for desired extension
-          should contain a value which starts with "."
-        :return: None
-        """
-        self._extensions = self._validate_extensions(extensions)
 
     def _validate_structure(self, structure):
         """validates the given structure value

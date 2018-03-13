@@ -28,6 +28,7 @@ class MotionBuilder(EnvironmentBase):
 
     name = "MotionBuilder"
     has_publishers = False
+    extensions = ['.fbx']
 
     def __init__(self, **kwargs):
         super(MotionBuilder, self).__init__(**kwargs)
@@ -68,7 +69,7 @@ class MotionBuilder(EnvironmentBase):
         :return:
         """
         version.update_paths()
-        version.extension = '.fbx'
+        version.extension = self.extensions[0]
 
         # create the dirs first
         import os

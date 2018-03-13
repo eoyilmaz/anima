@@ -69,12 +69,10 @@ class EnvironmentBase(object):
     representations = ['Base']
     has_publishers = False
     allow_publish_on_export = False
+    extensions = []
 
-    def __init__(self, name="", extensions=None, version=None):
+    def __init__(self, name="", version=None):
         self._name = name
-        if extensions is None:
-            extensions = []
-        self._extensions = extensions
         self._version = version
 
     def __str__(self):
@@ -552,23 +550,6 @@ class EnvironmentBase(object):
         """Sets the frame rate of the environment. The default value is 25.
         """
         raise NotImplementedError
-
-    @property
-    def extensions(self):
-        """Returns the valid native extensions for this environment.
-
-        :returns: a list of strings
-        """
-        return self._extensions
-
-    @extensions.setter
-    def extensions(self, extensions):
-        """Sets the valid native extensions of this environment.
-
-        :param extensions: A list of strings holding the extensions. Ex:
-            ["ma", "mb"] for Maya
-        """
-        self._extensions = extensions
 
     def has_extension(self, filename):
         """Returns True if the given file names extension is in the extensions

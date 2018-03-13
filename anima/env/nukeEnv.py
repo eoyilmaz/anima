@@ -16,12 +16,12 @@ class Nuke(EnvironmentBase):
     """
 
     name = "Nuke"
+    extensions = ['.nk']
 
-    def __init__(self, name='', version=None, extensions=None):
+    def __init__(self, name='', version=None):
         """nuke specific init
         """
-        super(Nuke, self).__init__(name=name, version=version,
-                                 extensions=extensions)
+        super(Nuke, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
         # get the root node
         self._root = self.get_root_node()
@@ -46,7 +46,7 @@ class Nuke(EnvironmentBase):
         version.update_paths()
 
         # set the extension to '.nk'
-        version.extension = '.nk'
+        version.extension = self.extensions[0]
 
         # set created_with to let the UI show Nuke icon in versions list
         version.created_with = self.name
@@ -118,7 +118,7 @@ class Nuke(EnvironmentBase):
         """
         # set the extension to '.nk'
         version.update_paths()
-        version.extension = '.nk'
+        version.extension = self.extensions[0]
         nuke.nodeCopy(version.absolute_full_path)
         return True
 

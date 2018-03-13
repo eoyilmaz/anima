@@ -46,7 +46,7 @@ class Photoshop(EnvironmentBase):
             )
 
         version.update_paths()
-        version.extension = '.psd'
+        version.extension = self.extensions[0]
         version.created_with = self.name
 
         # Define PSD save options
@@ -97,7 +97,7 @@ class Photoshop(EnvironmentBase):
             )
 
         version.update_paths()
-        version.extension = '.psd'
+        version.extension = self.extensions[0]
         version.created_with = self.name
 
         # Define PSD save options
