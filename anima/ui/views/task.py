@@ -489,16 +489,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                     project_main_dialog.deleteLater()
 
                 elif selected_item == assign_users_action:
-                    from anima.ui import project_resources_dialog
-                    project_resources_main_dialog = \
-                        project_resources_dialog.MainDialog(
+                    from anima.ui import project_users_dialog
+                    project_users_main_dialog = \
+                        project_users_dialog.MainDialog(
                             parent=self,
                             project=entity
                         )
-                    project_resources_main_dialog.exec_()
-                    result = project_resources_main_dialog.result()
+                    project_users_main_dialog.exec_()
+                    result = project_users_main_dialog.result()
 
-                    project_resources_main_dialog.deleteLater()
+                    project_users_main_dialog.deleteLater()
 
                 else:
                     # go to the dependencies
