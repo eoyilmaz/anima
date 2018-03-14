@@ -318,7 +318,7 @@ class Houdini(EnvironmentBase):
         current_take = hou.takes.currentTake()
         hou.takes.setCurrentTake(hou.takes.rootTake())
 
-        output_filename = '$HIP/Outputs/$OS/`$HIPNAME`_$OS.$F4.exr'
+        output_filename = '$HIP/Outputs/renders/$OS/`$HIPNAME`_$OS.$F4.exr'
 
         output_nodes = self.get_output_nodes()
         for output_node in output_nodes:

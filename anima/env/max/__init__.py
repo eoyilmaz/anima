@@ -447,7 +447,8 @@ class Max(EnvironmentBase):
         import os
         render_output_folder = os.path.join(
             version.absolute_path,
-            'Outputs'
+            'Outputs',
+            'renders'
         ).replace("\\", "/")
         version_sig_name = self.get_significant_name(version)
 

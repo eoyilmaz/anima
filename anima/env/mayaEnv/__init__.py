@@ -801,7 +801,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         """
         render_output_folder = os.path.join(
             version.absolute_path,
-            'Outputs'
+            'Outputs',
+            'renders'
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
