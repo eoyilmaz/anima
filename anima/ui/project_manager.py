@@ -20,6 +20,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setup_db()
 
+        # Authentication Storage
+        self.login_action = None
+        self.logout_action = None
+        self.logged_in_user = self.get_logged_in_user()
+
         self.project_dock_widget = None
 
         # import qdarkgraystyle
@@ -33,6 +38,10 @@ class MainWindow(QtWidgets.QMainWindow):
         #     app.setStyleSheet(qdarkgraystyle.load_stylesheet(pyside=False))
         # elif IS_PYSIDE2():
         #     app.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
+
+        # storage for UI stuff
+        self.task_dashboard_widget = None
+        self.tasks_tree_view = None
 
         self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
         self.settings = QtCore.QSettings(
@@ -81,10 +90,44 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.settings.endGroup()
 
+    def reset_window_state(self):
+        """reset window states
+        """
+        self.project_dock_widget.setVisible(True)
+
     def create_main_menu(self):
         """creates the main application menu
         """
         file_menu = self.menuBar().addMenu(self.tr("&File"))
+
+        # -------------------------
+        # Authentication Actions
+        self.login_action = file_menu.addAction("&Login...")
+        self.logout_action = file_menu.addAction("&Logout...")
+
+        if self.logged_in_user:
+            # hide login_action
+            self.login_action.setVisible(False)
+        else:
+            # hide logout_action
+            self.login_action.setVisible(False)
+
+        QtCore.QObject.connect(
+            self.login_action,
+            QtCore.SIGNAL('triggered()'),
+            self.login
+        )
+
+        QtCore.QObject.connect(
+            self.logout_action,
+            QtCore.SIGNAL('triggered()'),
+            self.logout
+        )
+
+        file_menu.addSeparator()
+
+        # ---------------------------
+        # Standard File menu actions
 
         new_action = file_menu.addAction('&New...')
         open_action = file_menu.addAction('&Open...')
@@ -99,7 +142,62 @@ class MainWindow(QtWidgets.QMainWindow):
             self.close
         )
 
+        view_menu = self.menuBar().addMenu(self.tr("&View"))
+
+        reset_action = view_menu.addAction("&Reset Window States")
+        QtCore.QObject.connect(
+            reset_action,
+            QtCore.SIGNAL('triggered()'),
+            self.reset_window_state
+        )
+
         # QtWidgets.QAction.
+
+    def login(self):
+        """returns the logged in user
+        """
+        from stalker import LocalSession
+        local_session = LocalSession()
+        from stalker.db.session import DBSession
+        with DBSession.no_autoflush:
+            logged_in_user = local_session.logged_in_user
+
+        if not logged_in_user:
+            from anima.ui import login_dialog
+            dialog = login_dialog.MainDialog(parent=self)
+            # dialog.deleteLater()
+            dialog.exec_()
+            result = dialog.result()
+
+            try:
+                # PySide
+                accepted = QtWidgets.QDialog.DialogCode.Accepted
+            except AttributeError:
+                # PyQt4
+                accepted = QtWidgets.QDialog.Accepted
+
+            if result == accepted:
+                local_session = LocalSession()
+                logged_in_user = local_session.logged_in_user
+            else:
+                # close the ui
+                # logged_in_user = self.get_logged_in_user()
+                self.close()
+
+        return logged_in_user
+
+    def logout(self):
+        """log the current user out
+        """
+        from stalker import LocalSession
+        session = LocalSession()
+        session.delete()
+
+        self.logged_in_user = None
+        # update file menu actions
+        # self.logout_action.setVisible(False)
+        # self.login_action.setVisible(True)
+        self.close()
 
     def create_toolbars(self):
         """creates the toolbars
@@ -117,25 +215,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.project_dock_widget.setObjectName('project_dock_widget')
         # create the TaskTreeView as the main widget
         from anima.ui.views.task import TaskTreeView
-        tasks_tree_view = TaskTreeView(parent=self)
-        tasks_tree_view.setEditTriggers(
+        self.tasks_tree_view = TaskTreeView(parent=self)
+        self.tasks_tree_view.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers
         )
-        tasks_tree_view.setAlternatingRowColors(True)
-        tasks_tree_view.setUniformRowHeights(True)
-        tasks_tree_view.header().setCascadingSectionResizes(True)
+        self.tasks_tree_view.setAlternatingRowColors(True)
+        self.tasks_tree_view.setUniformRowHeights(True)
+        self.tasks_tree_view.header().setCascadingSectionResizes(True)
 
-        tasks_tree_view.fill(show_completed_projects=True)
+        self.tasks_tree_view.fill(show_completed_projects=True)
 
         # also setup the signal
         QtCore.QObject.connect(
-            tasks_tree_view.selectionModel(),
+            self.tasks_tree_view.selectionModel(),
             QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
                           'const QItemSelection &)'),
             self.tasks_tree_view_changed
         )
 
-        self.project_dock_widget.setWidget(tasks_tree_view)
+        self.project_dock_widget.setWidget(self.tasks_tree_view)
 
         # and set the left dock widget
         self.addDockWidget(
@@ -146,14 +244,20 @@ class MainWindow(QtWidgets.QMainWindow):
         # ----------------------------------------
         # create the Central Widget
         from anima.ui.widgets.task_dashboard import TaskDashboardWidget
-        task_dashboard_widget = TaskDashboardWidget(parent=self)
-        self.setCentralWidget(task_dashboard_widget)
+        self.task_dashboard_widget = TaskDashboardWidget(parent=self)
+        self.setCentralWidget(self.task_dashboard_widget)
 
     def tasks_tree_view_changed(self):
         """runs when the tasks tree view changed
         """
-        # do nothing for now
-        return
+        # get the currently selected task
+        task_id = self.tasks_tree_view.get_task_id()
+        from stalker import Task
+        task = Task.query.get(task_id)
+
+        # update the task dashboard widget
+        self.task_dashboard_widget.task = task
+        self.task_dashboard_widget.fill_ui()
 
     def show_and_raise(self):
         """

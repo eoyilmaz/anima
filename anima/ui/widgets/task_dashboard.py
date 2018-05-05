@@ -33,8 +33,10 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.fix_task_status_button = None
         self.task_status_label = None
         self.task_progress = None
+        self.task_notes_widget = None
 
         self.setup_ui()
+        self.fill_ui()
 
     def setup_ui(self):
         """create the UI widgets
@@ -191,3 +193,38 @@ class TaskDashboardWidget(QtWidgets.QWidget):
 
         horizontal_layout1.setStretch(0, 2)
         horizontal_layout1.setStretch(1, 1)
+
+        # ---------------------------
+        # Task Notes
+        from anima.ui.widgets.entity_notes import EntityNotesWidgets
+        self.task_notes_widget = \
+            EntityNotesWidgets(entity=self.task, parent=self)
+        self.vertical_layout.addWidget(self.task_notes_widget)
+
+    def fill_ui(self):
+        """fills the ui
+        """
+        self.widget_label.setText(
+            self.task.name if self.task else 'Task Name'
+        )
+
+        # self.task_thumbnail = None
+        self.task_detail_widget.task = self.task
+        self.task_detail_widget.fill_ui()
+
+        self.task_timing_widget.task = self.task
+        self.task_timing_widget.fill_ui()
+
+        # self.description_label = None
+        # self.description_field = None
+        # self.responsible_info_widget = None
+        # self.resource_info_widget = None
+        # self.task_versions_usage_info_widget = None
+        # self.watch_task_button = None
+        # self.fix_task_status_button = None
+        # self.task_status_label = None
+        # self.task_progress = None
+
+        self.task_notes_widget.task = self.task
+        self.task_notes_widget.fill_ui()
+

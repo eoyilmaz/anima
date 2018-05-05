@@ -33,6 +33,7 @@ class TaskTimingWidget(QtWidgets.QWidget):
         self.schedule_model_field = None
 
         self.setup_ui()
+        self.fill_ui()
 
     def setup_ui(self):
         """creates the UI widgets
@@ -193,3 +194,27 @@ class TaskTimingWidget(QtWidgets.QWidget):
             self.schedule_model_field
         )
 
+    def fill_ui(self):
+        """fills the UI item with data
+        """
+        if self.task is None:
+            return
+
+        self.bid_field.setText(
+            '%s %s' % (self.task.bid_timing, self.task.bid_unit)
+        )
+        self.schedule_timing_field.setText(
+            '%s %s' % (self.task.schedule_timing, self.task.schedule_unit)
+        )
+        self.total_time_logs_field.setText(
+            '%s %s' % self.task.least_meaningful_time_unit(
+                self.task.total_logged_seconds
+            )
+        )
+        self.time_to_complete_field.setText(
+            '%s %s' % self.task.least_meaningful_time_unit(
+                self.task.total_seconds - self.task.total_logged_seconds
+            )
+        )
+
+        self.schedule_model_field.setText(self.task.schedule_model)

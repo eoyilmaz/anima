@@ -7,7 +7,7 @@ import re
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtWidgets, QtGui
+from anima.ui.lib import QtCore, QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -352,11 +352,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontalLayout_3.addWidget(self.depends_to_listWidget)
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.add_depending_task_pushButton = QtWidgets.QPushButton("+", self)
+        self.add_depending_task_pushButton.setToolTip("Add depending task...")
         self.add_depending_task_pushButton.setMaximumSize(
             QtCore.QSize(25, 16777215))
         self.verticalLayout_3.addWidget(self.add_depending_task_pushButton)
         self.remove_depending_task_pushButton =\
             QtWidgets.QPushButton("-", self)
+        self.remove_depending_task_pushButton.setToolTip(
+            "Remove depending task..."
+        )
         self.remove_depending_task_pushButton.setMaximumSize(
             QtCore.QSize(25, 16777215))
         self.verticalLayout_3.addWidget(

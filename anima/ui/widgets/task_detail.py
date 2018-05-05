@@ -24,6 +24,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.name_field = None
         self.type_label = None
         self.type_field = None
+        self.type_field_is_updating = False
         self.created_by_label = None
         self.created_by_field = None
         self.updated_by_label = None
@@ -34,6 +35,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.priority_field = None
 
         self.setup_ui()
+        self.fill_ui()
 
     def setup_ui(self):
         """creates the UI widgets
@@ -179,3 +181,81 @@ class TaskDetailWidget(QtWidgets.QWidget):
             QtWidgets.QFormLayout.FieldRole,
             self.priority_field
         )
+
+        # Create signals
+        QtCore.QObject.connect(
+            self.type_field,
+            QtCore.SIGNAL('currentIndexChanged(QString)'),
+            self.type_field_changed
+        )
+
+    def fill_ui(self):
+        """fill the ui with the data
+        """
+        if self.task:
+            self.name_field.setText(self.task.name)
+
+            self._fill_task_type_widget()
+
+            if self.task.created_by:
+                self.created_by_field.setText(self.task.created_by.name)
+
+            if self.task.updated_by:
+                self.updated_by_field.setText(self.task.updated_by.name)
+
+            self.timing_field.setText(
+                '%s - %s' % (
+                    self.task.start.strftime('%d-%m-%Y %H:%M'),
+                    self.task.end.strftime('%d-%m-%Y %H:%M')
+                )
+            )
+
+            self.priority_field.setText('%s' % self.task.priority)
+
+    def _fill_task_type_widget(self):
+        """fills the task type widget
+        """
+        if self.task is None:
+            return
+
+        # get the types
+        from stalker import Type
+        from stalker.db.session import DBSession
+        all_types = \
+            DBSession.query(Type.id, Type.name)\
+                .filter(Type.target_entity_type == self.task.entity_type)\
+                .all()
+
+        self.type_field_is_updating = True
+        self.type_field.clear()
+        self.type_field.addItem('-- No Type --', -1)
+        for type_data in all_types:
+            self.type_field.addItem(type_data.name, type_data.id)
+
+        # and select the corresponding type
+        if self.task.type:
+            index = self.type_field.findData(self.task.type.id)
+            if index != -1:
+                self.type_field.setCurrentIndex(index)
+        self.type_field_is_updating = False
+
+    def type_field_changed(self):
+        """runs when the type field has changed
+        """
+        if self.task is None:
+            return
+
+        if self.type_field_is_updating:
+            return
+
+        # get the type
+        assert isinstance(self.type_field, QtWidgets.QComboBox)
+        index = self.type_field.currentIndex()
+        type_id = self.type_field.itemData(index)
+
+        if type_id != -1:
+            from stalker import Type
+            type_ = Type.query.get(type_id)
+            self.task.type = type_
+            from stalker.db.session import DBSession
+            DBSession.save(self.task)
