@@ -215,6 +215,9 @@ class Config(ConfigBase):
     def is_power_user(self, user):
         """A predicate that returns if the user is a power user
         """
+        if not user:
+            return False
+
         from stalker import Group
         power_users_groups = Group.query \
             .filter(Group.name.in_(self.power_users_group_names)) \
