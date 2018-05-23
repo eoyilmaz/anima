@@ -1080,9 +1080,9 @@ def UI():
             color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
-                l='Enable Arnold Subdiv',
+                l='Enable Subdiv',
                 c=RepeatedCallback(Render.enable_subdiv),
-                ann='Enables Arnold Subdiv (catclark 2) on selected objects',
+                ann='Enables Arnold/RedShift Subdiv (catclark) on selected objects',
                 bgc=color.color
             )
 
@@ -3969,6 +3969,11 @@ class Render(object):
                 shape.aiSubdivIterations.set(2)
                 shape.aiSubdivType.set(1)
                 shape.aiSubdivPixelError.set(0)
+            except AttributeError:
+                pass
+
+            try:
+                shape.rsEnableSubdivision.set(1)
             except AttributeError:
                 pass
 
