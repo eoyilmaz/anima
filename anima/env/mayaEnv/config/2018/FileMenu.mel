@@ -1,0 +1,679 @@
+// ===========================================================================
+// Copyright 2017 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+//
+// Creation Date:  Nov 17 1996
+//
+//  Procedure Name:
+//      FileMenu
+//
+//  Description:
+//		This procedure creates the main menubar File menu.
+//
+//  Input Arguments:
+//      None
+//
+//  Return Value:
+//      None.
+//
+global proc forceSavePreferences()
+// Removed for Maya 3.0 but could still be on people's shelves
+{
+	warning (uiRes("m_FileMenu.kForceSavePrefs"));
+}
+
+global proc run_pre_publishers()
+{
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_pre_publishers();");
+}
+
+global proc run_post_publishers()
+{
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.run_post_publishers();");
+}
+
+global proc fix_external_paths()
+{
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.fix_external_paths();");
+}
+
+global proc switch_to_default_render_layer()
+{
+    python("from anima.env.mayaEnv import auxiliary; reload(auxiliary); auxiliary.switch_to_default_render_layer();");
+}
+
+global proc FileMenu_SaveItem()
+//
+// If the current file is named, save it.  If it
+// is still untitled, then bring up the Save As
+// dialog.
+//
+{
+    // fix external paths
+    fix_external_paths();
+
+    // go to the defaultRenderLayer to fix Maya bug that creates "_untitled_" collection
+    switch_to_default_render_layer();
+
+    // before doing anything check if it is a published version and run
+    // publishers again
+    run_pre_publishers();
+
+	string $sceneName = `file -q -sceneName`;
+
+	// Get the name of the scene File.
+	int $updateThumbnailCapture = false;
+	if ( size($sceneName) == 0 ) {
+		// Then the name can't be set.
+		projectViewerInitSelectedFileName SaveAs "" `thumbnailCaptureComponent -q -fileDialogProcessing`;
+	// bug fix 89970 file save
+	} else if ((`file -q -mf`) || (`file -q -ex` == 0)) {
+		int $incrementalSave = false;
+		if(`optionVar -exists isIncrementalSaveEnabled`)
+			$incrementalSave = `optionVar -q isIncrementalSaveEnabled`;
+		if ( $incrementalSave ) {
+			// Save the scene using the Incremental Save feature.
+			//
+			incrementalSaveScene;
+		} else {
+			string $compressedSave = 0;
+			string $preserveName = 0;
+
+			string $cmd = "file -save";
+			if(`optionVar -exists isCompressedSaveEnabled`)
+				$compressedSave = `optionVar -q isCompressedSaveEnabled`;
+		
+			if ($compressedSave == 1 )
+			{
+				$cmd = $cmd + " -compress";
+			}
+	
+			if(`optionVar -exists isCompressedPreserveNameEnabled`)
+				$preserveName = `optionVar -q isCompressedPreserveNameEnabled`;
+		
+			if ($preserveName == 1 )
+			{
+				$cmd = $cmd + " -preserveName";
+			}
+			if(catch(evalEcho($cmd))) 
+				thumbnailCaptureComponent -closeCurrentSession;
+		}
+		$updateThumbnailCapture = true;
+	} else {
+		warning (uiRes("m_FileMenu.kNoChangesToSave"));
+		$updateThumbnailCapture = true;
+	}
+
+    // run post publishers
+    run_post_publishers();
+	
+	if ($updateThumbnailCapture &&
+	   		`optionVar -exists useSavePlayblast` && 
+	   		`optionVar -query useSavePlayblast`)
+		thumbnailCaptureComponent -save $sceneName;
+}
+
+global proc buildRecentProjectsMenu()
+{
+	string $RecentProjectsList[];
+	string $localList[];
+	int $i;
+	int $nNumItems;
+	int $nNumItemsToBeRemoved;
+	int $RecentProjectsMaxSize;
+
+	if (!`optionVar -exists "RecentProjectsList"`) return;
+
+	// get the list
+	$RecentProjectsList = `optionVar -query "RecentProjectsList"`;
+	$nNumItems = size($RecentProjectsList);
+	$RecentProjectsMaxSize = `optionVar -query "RecentProjectsMaxSize"`;
+
+	// check if there are too many items in the list
+	if ($RecentProjectsMaxSize < $nNumItems)
+	{
+		//if so, truncate the list
+		$nNumItemsToBeRemoved = $nNumItems - $RecentProjectsMaxSize;
+
+		//Begin removing items from the head of the array (least recent project in the list)
+		for ($i = 0; $i < $nNumItemsToBeRemoved; $i++)
+		{
+			optionVar -removeFromArray "RecentProjectsList" 0;
+		}
+		$RecentProjectsList = `optionVar -query "RecentProjectsList"`;
+		$nNumItems = size($RecentProjectsList);
+	}
+
+	// first, check if we are the same.
+	$localList = `menu -query -itemArray FileMenuRecentProjectItems`;
+	if ($nNumItems == size($localList))
+	{
+		for ($i = 0; $i < $nNumItems; $i++)
+		{
+			string $label = `menuItem -query -label $localList[$i]`;
+			if ($label != toNativePath($RecentProjectsList[$nNumItems-$i-1]))
+				break;
+		}
+		if ($i == $nNumItems) return;
+	}
+
+	// we are not the same, so start over.
+	menu -edit -deleteAllItems  FileMenuRecentProjectItems;
+	setParent -menu FileMenuRecentProjectItems;
+	for ($i = 0; $i < $nNumItems; $i++)
+	{
+		string $cmd = "setProject \"" + $RecentProjectsList[$nNumItems-$i-1] + "\"";
+		string $label = toNativePath($RecentProjectsList[$nNumItems-$i-1]);
+		menuItem -label $label -command $cmd;
+	}
+}
+
+global proc openRecentFile( string $file, string $fileType )
+{
+	global string $gv_operationMode; 
+	$gv_operationMode = "Open";
+	pv_performAction($file, $fileType); 
+	checkForUnknownNodes();
+
+	// ADSK_CLR_MGT_BEGIN
+	checkColorManagementAllSettings();
+	// ADSK_CLR_MGT_END
+}
+
+global proc  buildRecentFileMenu(string $parentMenu)
+{
+	string $RecentFilesList[];
+	string $RecentFilesTypeList[];
+	string $localList[];
+	int $i;
+	int $nNumItems;
+	int $nNumItemsToBeRemoved;
+	int $RecentFilesMaxSize;
+
+	if (!`optionVar -exists "RecentFilesList"`) return;
+
+	// get the list
+	$RecentFilesList = `optionVar -query "RecentFilesList"`;
+	$nNumItems = size($RecentFilesList);
+	$RecentFilesMaxSize = `optionVar -query "RecentFilesMaxSize"`;
+
+	// check if there are too many items in the list
+	if ($RecentFilesMaxSize < $nNumItems)
+	{
+		//if so, truncate the list
+		$nNumItemsToBeRemoved = $nNumItems - $RecentFilesMaxSize;
+
+		//Begin removing items from the head of the array (least recent file in the list)
+		for ($i = 0; $i < $nNumItemsToBeRemoved; $i++)
+		{
+			optionVar -removeFromArray "RecentFilesList" 0;
+		}
+		$RecentFilesList = `optionVar -query "RecentFilesList"`;
+		$nNumItems = size($RecentFilesList);
+	}
+
+	// The RecentFilesTypeList optionVar may not exist since it was
+	// added after the RecentFilesList optionVar. If it doesn't exist,
+	// we create it and initialize it with a guest at the file type
+	if ($nNumItems > 0 )
+	{
+		if ( !`optionVar -exists "RecentFilesTypeList"`)
+		{
+			initRecentFilesTypeList( $RecentFilesList );
+		}
+		$RecentFilesTypeList = `optionVar -query "RecentFilesTypeList"`;
+	}
+		
+
+	// first, check if we are the same.
+	$localList = `menu -query -itemArray $parentMenu`;
+	if ($nNumItems == size($localList))
+	{
+		for ($i = 0; $i < $nNumItems; $i++)
+		{
+			string $label = `menuItem -query -label $localList[$i]`;
+			if ($label != toNativePath($RecentFilesList[$nNumItems-$i-1]))
+				break;
+		}
+		if ($i == $nNumItems) return;
+	}
+
+	// we are not the same, so start over.
+	menu -edit -deleteAllItems  $parentMenu;
+	setParent -menu $parentMenu;
+	for ($i = 0; $i < $nNumItems; $i++)
+	{
+		string $cmd = ( "openRecentFile(\"" + $RecentFilesList[$nNumItems-$i-1] + "\", " +
+						"\"" + $RecentFilesTypeList[$nNumItems-$i-1] + "\")" );
+
+		string $label = toNativePath($RecentFilesList[$nNumItems-$i-1]);
+		menuItem -label $label -command $cmd;
+	}
+}
+
+//
+//  Procedure Name:
+//		buildIncrementalSaveMenu
+//
+//  Description:
+//      Build the sub menu in the file menu that lists the recent incremental
+//		backups that exist for the current scene
+//
+//  Input Arguments:
+//	None.
+//
+//  Return Value:
+//	None.
+//
+global proc buildIncrementalSaveMenu() 
+{
+	string $scenePath = `file -q -sceneName`;
+
+	if ( size( $scenePath ) == 0 ) return; 
+
+	string $pathInfo[] = incrementalSaveProcessPath();
+	$scenePath = $pathInfo[0];
+	string $sceneExtension = $pathInfo[2];
+	string $sceneNamePrefix = $pathInfo[3];
+	string $incrementDirName = $pathInfo[5] + "/";
+
+	string $incrementDirPath = $scenePath + $incrementDirName;
+
+	// Get a list of all files in the backup directory
+	//
+	string $existingIncrements[] = `getFileList 
+		-folder $incrementDirPath 
+		-filespec ($sceneNamePrefix + ".*" + $sceneExtension)`;
+
+	// Make sure that they are sorted
+	//
+	$existingIncrements = sort( $existingIncrements );
+
+	int $numIncrementals = `optionVar -q "RecentBackupsMaxSize"`;
+
+	// Build the menu
+	//
+	int $last = size( $existingIncrements );
+	int $first = max( 0, $last - $numIncrementals );
+	menu -e -deleteAllItems FileMenuRecentBackupItems;
+	setParent -menu FileMenuRecentBackupItems;
+	for ( $i = $first; $i < $last; $i++ ) {
+		string $cmd = "file -f -open \"" + $incrementDirPath + $existingIncrements[$i] + "\"";
+		string $sceneName = `match "[^/]+$" $existingIncrements[$i]`;
+		menuItem -l $sceneName -c $cmd;
+	}
+}
+
+//
+//  Procedure Name:
+//		hasIncrementalSaves
+//
+//  Description:
+//      Returns true if the current file has some automatic backups
+//
+//  Input Arguments:
+//		None.
+//
+//  Return Value:
+//		None.
+//
+global proc int hasIncrementalSaves() 
+{
+	int $result = 0;
+
+	string $scenePath = `file -q -sceneName`;
+
+	if ( size( $scenePath ) > 0 ) { 
+		string $pathInfo[] = incrementalSaveProcessPath();
+		$scenePath = $pathInfo[0];
+		string $sceneExtension = $pathInfo[2];
+		string $sceneNamePrefix = $pathInfo[3];
+		string $incrementDirName = $pathInfo[5] + "/";
+		
+		string $incrementDirPath = $scenePath + $incrementDirName;
+
+		// Get a list of all files in the backup directory
+		//
+		string $existingIncrements[] = `getFileList 
+			-folder $incrementDirPath 
+			-filespec ($sceneNamePrefix + ".*" + $sceneExtension)`;
+
+		$result = ( size( $existingIncrements ) > 0 );
+	}
+
+	return $result;
+}
+
+//
+//  Procedure Name:
+//		checkMainFileMenu
+//
+//  Description:
+//      Disables or enables the recent files, backups, and projects
+//		menus depending on whether they have contents.
+//
+//  Input Arguments:
+//		None.
+//
+//  Return Value:
+//		None.
+//
+global proc checkMainFileMenu()
+{
+	$enable = false;
+	if (`optionVar -exists "RecentFilesList"`)
+	{
+		if (`optionVar -arraySize "RecentFilesList"` > 0) $enable = 1;		
+	}
+	menuItem -e -enable $enable FileMenuRecentFileItems;
+	
+	$enable = hasIncrementalSaves();
+	menuItem -e -enable $enable FileMenuRecentBackupItems;
+
+	$enable = false;
+	if (`optionVar -exists "RecentProjectsList"`)
+	{
+		if (`optionVar -arraySize "RecentProjectsList"` > 0) {
+			$enable = true;		
+		}
+	}
+	menuItem -e -enable $enable FileMenuRecentProjectItems;
+    
+	// Create "Send To" menu items for one-click
+	// interop with available applications.
+	//
+	buildSendToSubMenus;
+
+	callbacks -executeCallbacks -hook "addItemToFileMenu";
+}
+
+global proc buildFileMenu()
+{
+	global string $gMainFileMenu;
+	if( `menu -q -ni $gMainFileMenu` != 0 ) {
+		//
+		//	Menu is built already - just return
+		//
+		return;
+	}
+
+	menu -e -postMenuCommand checkMainFileMenu $gMainFileMenu;
+
+	int $dimWhenNoSelect = 0;
+
+	setParent -m $gMainFileMenu;
+		menuItem -label (uiRes("m_FileMenu.kNewScene"))
+			-annotation (getRunTimeCommandAnnotation("NewScene" ))
+			-command ("NewScene") newProject;
+            
+        menuItem -optionBox true 
+            -annotation (getRunTimeCommandAnnotation("NewSceneOptions"))
+            -command ("NewSceneOptions")
+            newFileOptions;
+
+		menuItem -label (uiRes("m_FileMenu.kOpenScene"))
+			-annotation (getRunTimeCommandAnnotation("OpenScene"))
+			-command ("OpenScene") openProject;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("OpenSceneOptions"))
+				-command ("OpenSceneOptions")
+				openFileOptions;
+
+		menuItem -divider true -longDivider false;
+
+		menuItem -label (uiRes("m_FileMenu.kSave"))
+			-annotation (getRunTimeCommandAnnotation("SaveScene"))
+			-command ("SaveScene") saveItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("SaveSceneOptions"))
+				-command ("SaveSceneOptions") 
+				saveOptions;
+
+		menuItem -l (uiRes("m_FileMenu.kSaveAs"))
+			-annotation (getRunTimeCommandAnnotation("SaveSceneAs"))
+			-command ("SaveSceneAs") saveAsItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("SaveSceneAsOptions"))
+				-command ("SaveSceneAsOptions") 
+				saveAsOptions;
+
+        // For the menu item label, QT takes "&&"  as the escape charaters of "&". 
+        // But this only works under Windows and Linux. On Mac, using one "&" is ok.
+        if (`about -mac`) {
+            menuItem -label (uiRes("m_FileMenu.kIncrementAndSaveMac"))
+		        -annotation (getRunTimeCommandAnnotation("IncrementAndSave"))
+	            -command ("IncrementAndSave")
+				-version "2014";
+        } else {
+            menuItem -label (uiRes("m_FileMenu.kIncrementAndSave"))
+		        -annotation (getRunTimeCommandAnnotation("IncrementAndSave"))
+	            -command ("IncrementAndSave")
+				-version "2014";
+        }
+
+		menuItem -label (uiRes("m_FileMenu.kArchive"))
+			-annotation (getRunTimeCommandAnnotation("ArchiveScene"))
+			-command ("ArchiveScene") archiveItem; 
+
+        // For Maya LT, we disable references.
+        // Currently, the archive option box contains only reference-related 
+        // options. So we disable what would be an empty option box.
+        // If non-referencing options are added for the archive command, then
+        // the option box should be re-enabled.
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("ArchiveSceneOptions"))
+				-command ("ArchiveSceneOptions") 
+				archiveSceneOptions;
+
+		menuItem -ecr false -label (uiRes("m_FileMenu.kSavePrefs"))
+			-annotation (getRunTimeCommandAnnotation("SavePreferences"))
+			-command ("SavePreferences");
+
+		menuItem -divider true -longDivider false;
+		
+		menuItem -l (uiRes("m_FileMenu.kOptimize"))
+			-annotation (getRunTimeCommandAnnotation("OptimizeScene"))
+			-command ("OptimizeScene") cleanUpProject;
+			menuItem -optionBox true
+				-annotation (getRunTimeCommandAnnotation("OptimizeSceneOptions"))
+				-command ("OptimizeSceneOptions") 
+				cleanUpSceneOptions;
+
+		menuItem -divider true -dividerLabel (uiRes("m_FileMenu.kFileImportExport"));
+
+		menuItem -label (uiRes("m_FileMenu.kImport"))
+			-annotation (getRunTimeCommandAnnotation("Import"))
+			-command ("Import") importFileItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("ImportOptions"))
+				-command ("ImportOptions") 
+				importFileOptions;
+
+		menuItem -label (uiRes("m_FileMenu.kExportAll"))
+			-annotation (getRunTimeCommandAnnotation("Export"))
+			-command ("Export") exportAllFileItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("ExportOptions"))
+				-command ("ExportOptions") 
+				exportAllFileOptions;
+
+		menuItem -label (uiRes("m_FileMenu.kExportSelection"))
+			-annotation (getRunTimeCommandAnnotation("ExportSelection"))
+			-command ("ExportSelection") exportActiveFileItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("ExportSelectionOptions"))
+				-command ("ExportSelectionOptions") 
+				exportActiveFileOptions;
+			if( $dimWhenNoSelect )
+				dimWhen -false SomethingSelected exportActiveFileItem;
+
+		menuItem -divider true -longDivider false;
+
+		menuItem -label (uiRes("m_FileMenu.kMASHToAEL"))
+			-annotation (uiRes("m_FileMenu.kMASHToAELAnnot"))
+			-command ("MASHexecuteProc(\"MayaToAEL\")")
+			-version "2017"
+			adobeAfterEffectsLiveLink;
+
+		menuItem -divider true -longDivider false;
+
+		// Can add the icon to the menu with: -image "PrintStudio.png"
+		// Looks distracting though since none of the other menu's have icons
+		menuItem -label (uiRes("m_FileMenu.kSendToPrintStudio")) 
+			-annotation (getRunTimeCommandAnnotation("SendAsNewScenePrintStudio"))
+			-command ("SendAsNewScenePrintStudio") 
+			-version "2017"
+			SendToPSItem;
+
+
+		menuItem -divider true -longDivider false;
+		
+		menuItem -label (uiRes("m_FileMenu.kExportOfflineFile"))
+			-annotation (getRunTimeCommandAnnotation("ExportOfflineFile"))			
+			-command ("ExportOfflineFile") exportEditsFileItem;
+			menuItem -optionBox true
+				-annotation (getRunTimeCommandAnnotation("ExportOfflineFileOptions"))				
+				-command ("ExportOfflineFileOptions") 
+				exportEditsFileOptions;
+			if( $dimWhenNoSelect )
+				dimWhen -false SomethingSelected exportEditsFileItem;
+
+		menuItem -label (uiRes("m_FileMenu.kAssignOfflineFile"))
+			-annotation (getRunTimeCommandAnnotation("AssignOfflineFile"))
+			-command ("AssignOfflineFile") assignOfflineFileItem;
+			menuItem -optionBox true
+				-annotation (getRunTimeCommandAnnotation("AssignOfflineFileOptions"))
+				-command ("AssignOfflineFileOptions") 
+				assignOfflineFileOptions;
+			if( $dimWhenNoSelect )
+				dimWhen -false SomethingSelected assignOfflineFileItem;
+
+		menuItem -divider true -longDivider false;
+
+		// ATOM
+		menuItem -label (uiRes("m_FileMenu.kATOMParent"))  -subMenu true -aob true -to true;
+	    		menuItem -label (uiRes("m_FileMenu.kExportAnimation"))
+				-annotation (getRunTimeCommandAnnotation("ExportAnimOptions"))
+				-command "ExportAnimOptions"
+				exportAnimItem;
+			  menuItem -label (uiRes("m_FileMenu.kImportAnimation"))
+				-annotation (getRunTimeCommandAnnotation("ImportAnimOptions"))
+				-command "ImportAnimOptions"
+				importAnimItem;
+			menuItem -label (uiRes("m_FileMenu.kCreateATOMTemplate"))
+				-annotation (getRunTimeCommandAnnotation("ATOMTemplateOptions"))
+				-command "ATOMTemplateOptions"
+				createAtomTemplateItem;
+			setParent -menu ..;
+
+		menuItem -divider true -dividerLabel (uiRes("m_FileMenu.kFileReferences"));
+
+		menuItem -label (uiRes("m_FileMenu.kCreateReference"))
+			-annotation (getRunTimeCommandAnnotation("CreateReference"))
+			-command ("CreateReference") referenceFileItem;
+			menuItem -optionBox true 
+				-annotation (getRunTimeCommandAnnotation("CreateReferenceOptions"))
+				-command ("CreateReferenceOptions")
+				referenceFileOptions;
+
+		menuItem -label (uiRes("m_FileMenu.kReferenceEditor"))
+			-annotation (getRunTimeCommandAnnotation("ReferenceEditor"))
+			-command ("ReferenceEditor")
+			residentFileItem;
+
+		menuItem -divider true -dividerLabel (uiRes("m_FileMenu.kFileView"));
+		
+		menuItem -label (uiRes("m_FileMenu.kViewImage"))
+			-annotation (getRunTimeCommandAnnotation ("ViewImage"))
+			-command ("ViewImage") 
+			viewFrameItem;
+
+		
+		menuItem -label (uiRes("m_FileMenu.kViewSequence"))
+			-annotation (getRunTimeCommandAnnotation ("ViewSequence"))
+			-command ("ViewSequence")  
+			viewSequenceItem;
+
+		menuItem -divider true -dividerLabel (uiRes("m_FileMenu.kFileProject"));
+		
+		menuItem -label (uiRes("m_FileMenu.kProjectWindow"))
+				-annotation (getRunTimeCommandAnnotation("ProjectWindow"))
+				-command ("ProjectWindow") projectWindowFileItem;
+		
+		menuItem -label (uiRes("m_FileMenu.kSet"))
+				-annotation (getRunTimeCommandAnnotation("SetProject"))
+				-command ("SetProject") setProjectFileItem;
+
+		menuItem -divider true -dividerLabel (uiRes("m_FileMenu.kFileRecent"));
+		
+		// add recent file and project lists
+		menuItem -subMenu true -l (uiRes("m_FileMenu.kRecentFiles"))
+		  -postMenuCommand "buildRecentFileMenu FileMenuRecentFileItems" FileMenuRecentFileItems;
+		setParent -m ..;
+
+		menuItem -subMenu true -l (uiRes("m_FileMenu.kRecentIncrements"))
+			-postMenuCommand "buildIncrementalSaveMenu" FileMenuRecentBackupItems;
+		setParent -m ..;
+
+		menuItem -subMenu true -l (uiRes("m_FileMenu.kRecentProjects"))
+			-postMenuCommand "buildRecentProjectsMenu" FileMenuRecentProjectItems;
+		setParent -m ..;
+
+        menuItem -divider true;
+        
+        // Do not add any other code to the quit or you will not
+        // have it executed for some types of quitting - like
+        // quitting through the command language or by double-clicking
+        // the main Maya window.
+        //
+		if (`about -mac`) {
+            menuItem -l (uiRes("m_FileMenu.kQuitMayaMac"))
+                -annotation (uiRes("m_FileMenu.kQuitMayaMacAnnot"))
+            -command ("Quit") quitItem;
+		} else {
+            menuItem -l (uiRes("m_FileMenu.kExit"))
+                -annotation (uiRes("m_FileMenu.kExitMayaAnnot"))
+            -command ("Quit") quitItem;
+		}
+
+        if (`about -nt`) {
+            menuItem -e -mn "O" openProject;
+            menuItem -e -mn "S" saveItem;
+            menuItem -e -mn "A" saveAsItem;
+            menuItem -e -mn	"x" quitItem;
+        }
+
+	checkMainFileMenu();
+	callbacks -executeCallbacks -hook "addItemToFileMenu";
+}
+
+// OneClick selection setting options
+//
+global proc int oneClickDefaultSendPreviousSelection()
+{
+	global int $gOneClickDefaultSendPreviousSelection = 0;
+	return $gOneClickDefaultSendPreviousSelection;
+}
+
+global proc int oneClickDefaultSendEntireScene()
+{
+	global int $gOneClickDefaultSendEntireScene = 0;
+	return $gOneClickDefaultSendEntireScene;
+}
+
+{
+	global string $gMainFileMenu;
+	global string $gMainWindow;
+
+	menu -p $gMainWindow -l (uiRes("m_FileMenu.kFile"))
+		-allowOptionBoxes true -tearOff true 
+		-postMenuCommand "buildFileMenu();"
+		-familyImage "menuIconFile.png" $gMainFileMenu;
+		
+	setParent -m ..;
+}
+

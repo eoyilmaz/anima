@@ -1,0 +1,682 @@
+// ===========================================================================
+// Copyright 2017 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+//
+//  Description:
+//      This script is for the playblast shot option box dialogs.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+
+source "sequencerUtils.mel";
+
+proc setOptionVars (int $forceFactorySettings)
+{
+	// Path
+	if ($forceFactorySettings || !`optionVar -exists playblastShotPath`) {
+		$defaultPlayblastDir = getDefaultPlayblastDirectory();
+		optionVar -stringValue playblastShotPath $defaultPlayblastDir;
+	}
+
+	// Template
+	if ($forceFactorySettings || !`optionVar -exists playblastShotTemplate`) {
+		optionVar -stringValue playblastShotTemplate "";
+	}
+
+	// Handles
+	if ($forceFactorySettings || !`optionVar -exists playblastShotHandles`) {
+		optionVar -intValue playblastShotHandles 0;
+	}
+
+	// Opaque
+    if ($forceFactorySettings || !`optionVar -exists playblastShotOpaque`) {
+		optionVar -intValue playblastShotOpaque 1;
+	}
+
+	// IP
+	if ($forceFactorySettings || !`optionVar -exists playblastShotIP`) {
+		optionVar -intValue playblastShotIP 1;
+	}
+
+	// Format
+    if ($forceFactorySettings || !`optionVar -exists playblastFormat`) {
+		if ( `about -nt` ) { 
+			optionVar -stringValue playblastFormat "avi";
+		}
+		else if ( `about -mac`) {
+			optionVar -stringValue playblastFormat "avfoundation";  
+		}
+		else {
+			optionVar -stringValue playblastFormat "qt";
+		}
+	}
+        
+    // Compression
+	if ($forceFactorySettings || !`optionVar -exists playblastCompression`) {
+		// on mac we want user use jpeg as default
+		if ( `about -mac` ) { 
+			optionVar -stringValue playblastCompression "jpeg";
+		}
+		else
+		{
+			optionVar -stringValue playblastCompression "none";
+		}
+	}
+
+    // Quality
+	if ($forceFactorySettings || !`optionVar -exists playblastQuality`) {
+		optionVar -intValue playblastQuality 70;
+	}
+	
+    // Show Ornaments
+	if ($forceFactorySettings || !`optionVar -exists playblastSequenceShowOrnaments`) {
+		optionVar -intValue playblastSequenceShowOrnaments 0;
+	}	    
+    
+    // Offscreen
+	if ($forceFactorySettings || !`optionVar -exists playblastSequenceOffscreen`) {
+		optionVar -intValue playblastSequenceOffscreen 1;
+	}	
+}
+
+
+//
+//  Procedure Name:
+//      playblastShotSetup
+//
+//  Description:
+//		Update the state of the option box UI to reflect the option values.
+//
+//  Input Arguments:
+//      parent               - Top level parent layout of the option box UI.
+//                             Required so that UI object names can be 
+//                             successfully resolved.
+//
+//	forceFactorySettings     - Whether the option values should be set to
+//                             default values.
+//
+//  Return Value:
+//      None.
+//
+global proc playblastShotSetup (string $parent, int $forceFactorySettings)
+{
+	// Retrieve the option settings.
+	setOptionVars( $forceFactorySettings );
+
+	setParent $parent;
+	
+	// Path.
+	string $name = `optionVar -query playblastShotPath`;
+	textFieldGrp -edit -text $name playblastShotPathWidget;
+	
+	// Template
+	string $template = `optionVar -query playblastShotTemplate`;
+	textFieldGrp -edit -text $template playblastShotTemplateWidget;
+	
+	// Handles
+	int $handles = `optionVar -query playblastShotHandles`;
+	intSliderGrp -edit -v $handles playblastShotHandlesWidget;
+	
+	// IP
+	int $ip = `optionVar -query playblastShotIP`;
+	checkBoxGrp -edit -v1 $ip playblastShotIPWidget;
+	
+	// Opaque
+	int $opaque = `optionVar -query playblastShotOpaque`;
+	checkBoxGrp -edit -v1 $opaque playblastShotOpaqueWidget;
+
+	// Encoding and Format
+	string $format = `optionVar -query playblastFormat`;
+	
+	if( !catchQuiet( `optionMenuGrp -edit -value $format playblastFormatWidget` ) ) {		
+		changePlayblastShotFormat( $parent ); // Manually trigger a refresh of the compression list
+	}
+	
+	// Quality
+	int $quality = `optionVar -query playblastQuality`;
+	intSliderGrp -edit -value $quality playblastQualityWidget;
+		
+	// show Ornaments
+	int $showOrnaments = `optionVar -query playblastSequenceShowOrnaments`;
+	checkBoxGrp -edit -value1 $showOrnaments showOrnamentsWidget;	
+    
+	// Offscreen
+	int $offscreen = `optionVar -query playblastSequenceOffscreen`;
+	checkBoxGrp -edit -value1 $offscreen playblastOffscreenWidget;		
+	
+}
+
+//
+//  Procedure Name:
+//      playblastShotCallback
+//
+//  Description:
+//		Update the option values with the current state of the option box UI.
+//
+//  Input Arguments:
+//      parent - Top level parent layout of the option box UI.  Required so
+//               that UI object names can be successfully resolved.
+//
+//	doIt       - Whether the command should execute.
+//
+//  Return Value:
+//      None.
+//
+global proc playblastShotCallback (string $parent, int $doIt, string $shots )
+{
+    setParent $parent;
+
+	// Path
+	//
+	optionVar -stringValue playblastShotPath `textFieldGrp -query -text playblastShotPathWidget`;
+
+	// Template
+	//
+	optionVar -stringValue playblastShotTemplate `textFieldGrp -query -text playblastShotTemplateWidget`;
+
+	// Handles
+	//
+	optionVar -intValue playblastShotHandles `intSliderGrp -query -v playblastShotHandlesWidget`;
+
+	// IP
+	//
+	optionVar -intValue playblastShotIP `checkBoxGrp -query -v1 playblastShotIPWidget`;
+
+	// Opaque
+	//
+	optionVar -intValue playblastShotOpaque `checkBoxGrp -query -v1 playblastShotOpaqueWidget`;
+
+	// Format
+	optionVar -stringValue playblastFormat `optionMenuGrp -query -value playblastFormatWidget`;
+        
+    // Compression
+	optionVar -stringValue playblastCompression `optionMenuGrp -query -value playblastCompressionWidget`;
+
+	// Quality
+	optionVar -intValue playblastQuality `intSliderGrp -query -value playblastQualityWidget`;
+	
+    // Show ornaments
+    int $isShowOrnaments = `checkBoxGrp -query -value1 showOrnamentsWidget`;
+	optionVar -intValue playblastSequenceShowOrnaments $isShowOrnaments;
+    
+	// Offscreen
+	int $offscreen = `checkBoxGrp -query -value1 playblastOffscreenWidget`;
+	optionVar -intValue playblastSequenceOffscreen $offscreen;
+
+	if ($doIt)
+	{
+		performPlayblastShot 0 ("\"" + $shots + "\"");
+	}
+}
+
+// Build the keyword menu
+global proc createPlayblastShotKeywordMenu(string $parent)
+{
+        popupMenu -edit -deleteAllItems $parent;
+
+        setParent -menu $parent;
+
+        menuItem -label (uiRes("m_performPlayblastShot.kFileNameKeywords")) -enable 0;
+        menuItem -divider true ;
+        menuItem -label (uiRes("m_performPlayblastShot.kKeywordScene"))
+                -command "textFieldGrp -e -insertText \"<Shot>\" -forceChangeCommand playblastShotTemplateWidget";
+        menuItem -label (uiRes("m_performPlayblastShot.kKeywordCamera"))
+                -command "textFieldGrp -e -insertText \"<Camera>\" -forceChangeCommand playblastShotTemplateWidget";
+        menuItem -label (uiRes("m_performPlayblastShot.kKeywordVersion"))
+                -command "textFieldGrp -e -insertText \"<Version>\" -forceChangeCommand playblastShotTemplateWidget";
+        string $date = `date -format "YY_MM_DD"`;
+        menuItem -label ((uiRes("m_performPlayblastShot.kKeywordDate")) + $date)
+                -command ("textFieldGrp -e -insertText \""+$date+"\" -forceChangeCommand playblastShotTemplateWidget");
+        string $time = `date -format "hh-mm-ss"`;
+        menuItem -label ((uiRes("m_performPlayblastShot.kKeywordTime")) + $time)
+                -command ("textFieldGrp -e -insertText \""+$time+"\" -forceChangeCommand playblastShotTemplateWidget");
+}
+
+// Validate the current template
+global proc changePlayblastShotTemplate()
+{
+	// Nothing to do right now, may be more sophisticated later
+}
+
+global proc changePlayblastShotEncoding (string $parent)
+{
+	setParent $parent;
+
+	string $selectedFormat = `optionMenuGrp -q -value playblastFormatWidget`;
+	string $encodingFormat = `optionMenuGrp -q -value playblastCompressionWidget`;
+
+	int $enableQuality = 1;
+	if ( $selectedFormat == "iff"  || 
+		 $selectedFormat == "image" || 
+		 ($selectedFormat == "avfoundation" && $encodingFormat == "H.264") ) {
+			$enableQuality = 0;
+	}
+
+	intSliderGrp -edit -enable $enableQuality playblastQualityWidget;
+}
+
+global proc changePlayblastShotFormat( string $parent)
+{
+	setParent $parent;
+
+	string $selectedFormat = `optionMenuGrp -q -value playblastFormatWidget`;
+    string $lEncodings[] = `playblast -format $selectedFormat -q -compression`;
+
+    string $lMenus[] = `optionMenuGrp -q -ils playblastCompressionWidget`;
+    for( $menu in $lMenus )
+    {
+		deleteUI -menuItem $menu;
+	}
+	
+	// make sure that this a "none" to work with. iff will not return anything currently
+	if (size($lEncodings) == 0) {
+		$lEncodings[0] = "none"; 
+	}   	
+	
+	// add new menuItem into optionMenuGrp
+	string $menuPath = `optionMenuGrp -q -fullPathName playblastCompressionWidget` + "|OptionMenu";
+    for( $encoding in $lEncodings ) {
+		menuItem -parent $menuPath -label $encoding;
+    }
+
+    // try the current compression type or set a default value
+    //
+	string $compression = `optionVar -query playblastCompression`;
+	if( $compression != "" ) 
+	{	
+		string $newMenu[] = `optionMenuGrp -q -ils  playblastCompressionWidget`;
+		for ($menu in $newMenu) {
+			string $label = `menuItem -q -label $menu`;
+			if ($label == $compression) {
+				// found it, so set it.
+				optionMenuGrp -edit -value $compression playblastCompressionWidget;
+	                        changePlayblastShotEncoding($parent);
+				return;
+			}
+		}	
+		
+		// set a default value 
+		if ($selectedFormat == "qt") {
+			if(`about -linux`){
+				catchQuiet( `optionMenuGrp -edit -value "png" playblastCompressionWidget`);
+			} else {		
+				catchQuiet( `optionMenuGrp -edit -value "PNG" playblastCompressionWidget`);
+			}
+		}
+		else {
+			catchQuiet( `optionMenuGrp -edit -value "none" playblastCompressionWidget`);
+		}
+	}
+
+	changePlayblastShotEncoding($parent);
+}
+
+global proc int playblastShotSetDirectory( string $dir, string $type )
+{
+	textFieldGrp -e -tx $dir playblastShotPathWidget;
+	optionVar -stringValue playblastShotPath $dir;
+	return 1;
+}
+
+
+global proc playblastShotBrowseForFolder()
+{
+	string $cmd = "playblastShotSetDirectory ";
+	string $action = (uiRes("m_performPlayblastShot.kSetDir"));
+	string $startInDir;
+	$startInDir = `textFieldGrp -q -tx playblastShotPathWidget`;
+	if ( size( $startInDir ) == 0 )
+	{
+		$startInDir = `internalVar -userTmpDir`;
+	}
+
+	if ( `file -q -ex $startInDir` ) {
+		string $expandedName = `file -q -expandName $startInDir`;
+		workspace -dir $expandedName;
+	}
+
+	fileBrowser( $cmd, $action, "", 4 );
+}
+
+
+proc string playblastShotWidgets( string $parent )
+{
+	setParent $parent;
+	
+	string $tabForm = `columnLayout -adjustableColumn true`;
+
+	$defaultPlayblastDir = getDefaultPlayblastDirectory();
+
+	// Directory name
+	//
+	rowLayout -nc 3
+		-cw3 400 5 50
+		-adjustableColumn 1
+		-cal 1 "both"
+		-cal 2 "both"
+		-cal 3 "left"
+		-ct3 "both" "both" "left";
+
+		textFieldGrp
+			-label (uiRes("m_performPlayblastShot.kPath"))
+			-tx $defaultPlayblastDir
+			-adjustableColumn 2
+			playblastShotPathWidget;
+		separator -w 5 -style "none";
+		symbolButton -image "navButtonBrowse.png" 
+			-c ( "playblastShotBrowseForFolder" )
+				shotDirBrowser;
+	setParent ..;
+
+        textFieldGrp
+                -label (uiRes("m_performPlayblastShot.kFileNamePrefix"))
+                -changeCommand ("changePlayblastShotTemplate")
+                -annotation (uiRes("m_performPlayblastShot.kFileNamePrefixAnn"))
+                playblastShotTemplateWidget;
+
+        string $popup = `popupMenu -parent playblastShotTemplateWidget`;
+        popupMenu -edit -postMenuCommand ("createPlayblastShotKeywordMenu "+$popup) $popup;
+
+	// Handles -- invisible for now -- there are bugs
+        intSliderGrp -field yes -min 0 -max 10 -label (uiRes("m_performPlayblastShot.kShotHandles")) playblastShotHandlesWidget;
+
+	checkBoxGrp -label (uiRes("m_performPlayblastShot.kConnectImagePlane"))
+                                -numberOfCheckBoxes 1
+                                -label1 ""
+                                playblastShotIPWidget;
+
+	checkBoxGrp -label (uiRes("m_performPlayblastShot.kImagePlaneOpaque"))
+                                -numberOfCheckBoxes 1
+                                -label1 ""
+                                playblastShotOpaqueWidget;
+
+	separator;
+
+	// Show ornaments
+	//
+	checkBoxGrp -label (uiRes("m_performPlayblastShot.kShowOrnaments")) 
+		-numberOfCheckBoxes 1
+		-label1 ""
+		showOrnamentsWidget;    
+    
+	// Offscreen rendering.
+	checkBoxGrp -label (uiRes("m_performPlayblastShot.kView")) 
+		-ncb 1 
+		-value1 on 
+		-label1 "" 
+		playblastOffscreenWidget;  
+
+	// Format and Compression
+    optionMenuGrp -label (uiRes("m_performPlayblastShot.kPlayblastFormat")) 
+			-changeCommand ( "changePlayblastShotFormat "+$parent ) 
+			playblastFormatWidget;
+
+    string $lFormats[] = `playblast -q -format`;
+    
+    for( $format in $lFormats ) 
+    {
+		menuItem -label $format;
+    }
+
+
+    optionMenuGrp -label (uiRes("m_performPlayblastShot.kPlayblastCompression")) 
+				-changeCommand ( "changePlayblastShotEncoding "+$parent )
+				playblastCompressionWidget;
+    
+    intSliderGrp -field true -label (uiRes("m_performPlayblastShot.kPlayblastQuality")) -min 0 -max 100 - step 20 playblastQualityWidget;
+                                
+	return $tabForm;
+}
+
+global proc playblastShotOptions ( string $shots )
+{
+	string $commandName = "playblastShot";
+
+	// Build the option box "methods"
+	//
+	string $callback = ($commandName + "Callback");
+	string $setup = ($commandName + "Setup");
+
+	//	Get the option box.
+	//
+	//  The value returned is the name of the layout to be used as
+	//	the parent for the option box UI.
+	//
+	string $layout = getOptionBox();
+	setParent $layout;
+
+	setOptionBoxCommandName("playblastShot");
+
+	setUITemplate -pushTemplate DefaultTemplate;
+	waitCursor -state 1;
+	tabLayout -scrollable true -tabsVisible false;	// To get the scroll bars
+
+	string $parent = `columnLayout -adjustableColumn 1`;
+
+	playblastShotWidgets $parent;
+
+	waitCursor -state 0;
+	setUITemplate -popTemplate;
+
+	//	'Apply' button.
+	//
+	string $applyBtn = getOptionBoxApplyBtn();
+	button -edit
+		-label (uiRes("m_performPlayblastShot.kPlayblastShot")) 
+		-command ($callback + " " + $parent + " " + 1 + " " + $shots )
+		$applyBtn;
+
+	//	'Save' button.
+	//
+	string $saveBtn = getOptionBoxSaveBtn();
+	button -edit 
+		-command ($callback + " " + $parent + " " + 0 + " " + $shots + "; hideOptionBox")
+		$saveBtn;
+
+	//	'Reset' button.
+	//
+	string $resetBtn = getOptionBoxResetBtn();
+	button -edit 
+		-command ($setup + " " + $parent + " " + 1)
+		$resetBtn;
+
+	//	Set the option box title.
+	//
+	setOptionBoxTitle((uiRes("m_performPlayblastShot.kPlayblastShotOptions")));
+
+	//	Customize the 'Help' menu item text.
+	//
+	setOptionBoxHelpTag( "PlayblastShot" );
+
+	//	Set the current values of the option box.
+	//
+	eval ($setup + " " + $parent + " " + 0);	
+	
+	//	Show the option box.
+	//
+	showOptionBox();
+}
+
+
+//
+//  Procedure Name:
+//      assembleCmd
+//
+//  Description:
+//		Construct the command that will apply the option box values.
+//
+//  Input Arguments:
+//      None.
+//
+//  Return Value:
+//      None.
+//
+proc string assembleCmd( string $shots )
+{
+	string $cmd;
+
+	setOptionVars(false);
+
+	// Path
+	$path = `internalVar -userTmpDir`;	// Use temp dir as a default
+	if (`optionVar -exists playblastShotPath`) {
+		$path = `optionVar -query playblastShotPath`;
+	}
+
+	// Template
+	string $template = "";
+	if (`optionVar -exists playblastShotTemplate`) {
+		$template = `optionVar -query playblastShotTemplate`;
+	}
+	
+	//Check if the template is legal.
+	string $tokens[];
+	tokenize($shots," ",$tokens);
+	if(size($tokens) > 1)
+	{
+		if($template != "")
+		{
+			if(`match "<Shot>" $template` == "")
+			{
+				error((uiRes("m_performPlayblastShot.kIllegalTemplate")));
+				return "";
+			}
+		}
+	}
+
+	// Handles length
+	int $handles = 0;
+	if (`optionVar -exists playblastShotHandles`) {
+		$handles = `optionVar -query playblastShotHandles`;
+	}
+
+	// IP
+	int $ip = 1;
+	if (`optionVar -exists playblastShotIP`) {
+		$ip = `optionVar -query playblastShotIP`;
+	}
+
+	// Opaque
+	int $opaque = 1;
+	if (`optionVar -exists playblastShotOpaque`) {
+		$opaque = `optionVar -query playblastShotOpaque`;
+	}
+
+	// Format
+	string $format = "qt";
+	if (`optionVar -exists playblastFormat`) {
+		$format = `optionVar -query playblastFormat`;
+	}
+
+	// Compression
+	string $compression = "";
+	if (`optionVar -exists playblastCompression`) {
+		$compression = `optionVar -query playblastCompression`;
+	}
+	
+	// Quality
+	int $quality = 50;
+
+	if (`optionVar -exists playblastQuality`) {
+		$quality = `optionVar -query playblastQuality`;
+	}
+	
+	// Show Ornaments control
+	int $showOrnaments = 1;
+	if (`optionVar -exists playblastSequenceShowOrnaments`) {
+		$showOrnaments = `optionVar -query playblastSequenceShowOrnaments`;
+	}    
+    
+	// Offscreen control
+	int $offscreen = 1;
+	if (`optionVar -exists playblastSequenceOffscreen`) {
+		$offscreen = `optionVar -query playblastSequenceOffscreen`;
+	}
+		
+	// Go!
+	$cmd =	"doPlayblastShotArgList 3 { " +
+				"\"" + $path + "\"" +
+				",\"" + $template + "\"" +
+				",\"" + $ip + "\"" +
+				",\"" + $opaque + "\"" +
+				",\"" + $handles + "\"" +
+				",\"" + $format + "\"" +
+				",\"" + $compression + "\"" +
+				",\"" + $quality + "\"" +
+				",\"" + $offscreen + "\"" +
+				",\"" + $showOrnaments + "\"" +
+			" } " + $shots;
+
+	return $cmd;
+}
+
+//
+//  Procedure Name:
+//      performPlayblastShot
+//
+//  Description:
+//		Playblast a shot and add the animatable attributes from the 
+//      selected nodes.  This procedure will also show the option box
+//		window if necessary as well as construct the command string
+//		that will playblast a shot with the current option box values.
+//
+//  Input Arguments:
+//      0 - Execute the command.
+//      1 - Show the option box dialog.
+//      2 - Return the command.
+//
+//  Return Value:
+//      None.
+//
+global proc string performPlayblastShot (int $action, string $shots )
+{
+        string $cmd = "";
+
+        switch ($action) {
+
+                //      Execute the command.
+                //
+                case 0:
+                        //      Retrieve the option settings
+                        //
+                        setOptionVars(false);
+
+                        //      Get the command.
+                        //
+                        $cmd = assembleCmd ($shots);
+
+                        //      Execute the command with the option settings.
+                        //
+                        eval($cmd);
+
+                        break;
+
+                //      Show the option box.
+                //
+                case 1:
+                        playblastShotOptions ($shots);
+                        break;
+
+                //      Return the command string.
+                //
+                case 2:
+                        //      Retrieve the option settings.
+                        //
+                        setOptionVars (false);
+
+                        //      Get the command.
+                        //
+                        $cmd = assembleCmd ($shots);
+                        break;
+        }
+        return $cmd;
+}
+

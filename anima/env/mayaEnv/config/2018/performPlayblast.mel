@@ -1,0 +1,937 @@
+// ===========================================================================
+// Copyright 2017 Autodesk, Inc. All rights reserved.
+//
+// Use of this software is subject to the terms of the Autodesk license
+// agreement provided at the time of installation or download, or which
+// otherwise accompanies this software in either electronic or hard copy form.
+// ===========================================================================
+//  Description:
+//	  This script is a template script for option box dialogs.
+//
+
+proc setOptionVars (int $forceFactorySettings)
+{
+	if( $forceFactorySettings || !`optionVar -exists playblastUseStartEnd`) {
+		optionVar -intValue playblastUseStartEnd 0;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastStartTime`) {
+		optionVar -floatValue playblastStartTime 1.0;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastEndTime`) {
+		optionVar -floatValue playblastEndTime 10.0;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastViewerOn`) {
+		optionVar -intValue playblastViewerOn 1;
+	}
+
+	// MultiCamera output. False by default
+	if( $forceFactorySettings || !`optionVar -exists playblastMultiCamera`) {
+		optionVar -intValue playblastMultiCamera 0;
+	}
+
+	// Format
+	if ($forceFactorySettings || !`optionVar -exists playblastFormat`) {
+		if ( `about -nt` ) { 
+			optionVar -stringValue playblastFormat "avi";
+		}
+		else if ( `about -mac` ) { 
+			optionVar -stringValue playblastFormat "avfoundation";
+		}
+		else {
+			optionVar -stringValue playblastFormat "qt";
+		}
+	}
+
+	// Compression
+	if ($forceFactorySettings || !`optionVar -exists playblastCompression`) {
+		// on mac we want user use jpeg as default
+		if ( `about -mac` ) { 
+			optionVar -stringValue playblastCompression "jpeg";
+		}
+		else
+		{
+			optionVar -stringValue playblastCompression "none";
+		}
+	}
+
+	// Quality
+	if ($forceFactorySettings || !`optionVar -exists playblastQuality`) {
+		optionVar -intValue playblastQuality 70;
+	}
+	
+	if( $forceFactorySettings || !`optionVar -exists playblastScale` ) {
+		optionVar -floatValue
+		 playblastScale .5;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastSaveToFile` ) {
+		optionVar -intValue playblastSaveToFile 0;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastFile` ) {
+		string $filename = `file -q -sn`;
+		if ($filename != "") {
+
+			// extract the filename from the path
+			//
+			string $tokens[];
+			tokenize($filename,"/",$tokens);
+			$filename = $tokens[size($tokens)-1];
+
+			// remove the extension from the filename
+			//
+			clear $tokens;
+			tokenize($filename,".",$tokens);
+			$filename = $tokens[0];
+
+		} else {
+			// no filename, use "playblast" as the default
+			// playblast file name
+			$filename = "playblast";
+		}
+		optionVar -stringValue playblastFile $filename;
+	}
+
+	if( $forceFactorySettings || !`optionVar -exists playblastUseSequenceTime` ) {
+		optionVar -intValue playblastUseSequenceTime 0;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastShowOrnaments` ) {
+		optionVar -intValue playblastShowOrnaments 1;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastDisplaySizeSource` ) {
+		optionVar -intValue playblastDisplaySizeSource 1;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastWidth` ) {
+		optionVar -intValue playblastWidth 256;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastHeight` ) {
+		optionVar -intValue playblastHeight 256;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastClearCache` ) {
+		optionVar -intValue playblastClearCache 1;
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastOffscreen` ) {
+		optionVar -intValue playblastOffscreen 0; 
+	}
+	if( $forceFactorySettings || !`optionVar -exists playblastPadding`) {
+		optionVar -intValue playblastPadding 4;
+	}
+}
+
+global proc playblastSetup (string $parent, int $forceFactorySettings)
+{
+	// Retrieve the option settings
+	//
+	setOptionVars( $forceFactorySettings );
+	setParent $parent;
+	
+	// time range 
+	//
+	int $useStartEnd = `optionVar -query playblastUseStartEnd`;
+	radioButtonGrp -edit -select ($useStartEnd + 1) useStartEnd;
+
+	float $startTime = `optionVar -query playblastStartTime`;
+	floatFieldGrp -enable $useStartEnd -edit -value1 $startTime startTime;
+
+	float $endTime = `optionVar -query playblastEndTime`;
+	floatFieldGrp -enable $useStartEnd -edit -value1 $endTime endTime;
+
+	// Sequence Time
+	//
+	int $isSequenceTime = `optionVar -query playblastUseSequenceTime`;
+	checkBoxGrp -edit -value1 $isSequenceTime useSequenceTimeWidget;
+
+	// Offscreen
+	int $isOffscreen = `optionVar -query playblastOffscreen`;
+	checkBoxGrp -edit -value1 $isOffscreen offscreen;
+
+	// viewer 
+	//
+	int $isViewer = `optionVar -query playblastViewerOn`;
+	checkBoxGrp -edit -value1 $isViewer viewerOn;
+
+	// Show ornaments
+	//
+	int $isShowOrnaments = `optionVar -query playblastShowOrnaments`;
+	checkBoxGrp -edit -value1 $isShowOrnaments showOrnaments;
+
+	// MultiCamera
+	int $multicamera = `optionVar -query playblastMultiCamera`;
+	checkBoxGrp -edit -value1 $multicamera multiCameraOutput;
+
+	// Encoding and Format
+	string $format = `optionVar -query playblastFormat`;
+
+	// Ensure that the format saved in the optionVar is available.
+	// If not, default to the first available format.
+	string $formats[] = `playblast -q -format`;
+	if (stringArrayContains($format, $formats) == false)
+		$format = (size($formats))? $formats[0] : "";
+
+	if(!catchQuiet( `optionMenuGrp -edit -value $format playblastFormatWidget` ) )
+		changePlayblastFormat( $parent ); // Manually trigger a refresh of the compression list
+
+	// Quality
+	int $quality = `optionVar -query playblastQuality`;
+	intSliderGrp -edit -value $quality playblastQualityWidget;
+
+	// scale
+	// 
+	float $percent = `optionVar -query playblastScale`;
+	floatSliderGrp -e -value $percent percent;
+
+	// pad
+	// 
+	float $pad = `optionVar -query playblastPadding`;
+	intSliderGrp -e -value $pad pad;
+
+	// Display size
+	//
+	int $displayWidth = `optionVar -query playblastWidth`;
+	int $displayHeight = `optionVar -query playblastHeight`;
+	int $displaySource = `optionVar -query playblastDisplaySizeSource`;
+	intFieldGrp -edit
+		-value1 $displayWidth
+		-value2 $displayHeight
+		displaySizeField;
+	optionMenuGrp -edit -select $displaySource displaySizeMenu;
+	switch ($displaySource) {
+	case 1:
+	case 2:
+		intFieldGrp -edit
+			-enable false
+			displaySizeField;
+		break;
+	case 3:
+		intFieldGrp -edit
+			-enable true
+			displaySizeField;
+		break;
+	}
+
+	// Save to file?
+	//
+	int $saveToFile = `optionVar -query playblastSaveToFile`;
+	checkBoxGrp -e -value1 $saveToFile saveToFile;
+	playblastSaveToFile( $saveToFile );
+
+	// filename (note that optionVars should *not* be set
+	// in this proc, setOptionVars() does that)
+	// 
+	string $filename = `optionVar -query playblastFile`;
+	textFieldGrp -e -fileName $filename movieFileName;
+
+	// Clear Cache
+	//
+	int $isClearCache = `optionVar -query playblastClearCache`;
+	checkBoxGrp -edit -value1 $isClearCache clearCache;
+
+}
+
+global proc playblastCallback( string $parent, int $doIt )
+//
+// Description:
+//	Set the optionVar's from the control values, and then perform
+//	the command
+//
+{
+	setParent $parent;
+	
+	// Time Range. 
+	//
+	int $useStartEnd = `radioButtonGrp -query -select useStartEnd`;
+	optionVar -intValue playblastUseStartEnd ($useStartEnd - 1);
+
+	float $startTime = `floatFieldGrp -query -value1 startTime`;
+	optionVar -floatValue playblastStartTime $startTime;
+
+	float $endTime = `floatFieldGrp -query -value1 endTime`;
+	optionVar -floatValue playblastEndTime $endTime;
+
+	int $isSequenceTime = `checkBoxGrp -query -value1 useSequenceTimeWidget`;
+	optionVar -intValue playblastUseSequenceTime $isSequenceTime;
+
+	// Viewer
+	//
+	int $isViewer = `checkBoxGrp -query -value1 viewerOn`;
+	optionVar -intValue playblastViewerOn $isViewer;
+
+	// Show ornaments
+	//
+	int $isShowOrnaments = `checkBoxGrp -query -value1 showOrnaments`;
+	optionVar -intValue playblastShowOrnaments $isShowOrnaments;
+
+	// MultiCamera
+	int $multicamera = `checkBoxGrp -query -value1 multiCameraOutput`;
+	optionVar -intValue playblastMultiCamera $multicamera;
+
+	// Format
+	optionVar -stringValue playblastFormat `optionMenuGrp -query -value playblastFormatWidget`;
+
+	// Compression
+	optionVar -stringValue playblastCompression `optionMenuGrp -query -value playblastCompressWidget`;
+
+	// Quality
+	optionVar -intValue playblastQuality `intSliderGrp -query -value playblastQualityWidget`;
+
+	// Scale
+	// 
+	float $scale = `floatSliderGrp -q -value percent`;
+	optionVar -floatValue playblastScale $scale;
+
+	// Pad
+	// 
+	int $pad = `intSliderGrp -q -value pad`;
+	optionVar -intValue playblastPadding $pad;
+
+	// Display size
+	//
+	int $displaySource = `optionMenuGrp -query -select displaySizeMenu`;
+	optionVar -intValue playblastDisplaySizeSource $displaySource;
+	if ($displaySource == 3) {
+		int $displayWidth = `intFieldGrp -query -value1 displaySizeField`;
+		int $displayHeight = `intFieldGrp -query -value2 displaySizeField`;
+		optionVar -intValue playblastWidth $displayWidth;
+		optionVar -intValue playblastHeight $displayHeight;
+	}
+
+	// Save to file
+	//
+	int $saveToFile = `checkBoxGrp -q -value1 saveToFile`;
+	optionVar -intValue playblastSaveToFile $saveToFile;
+
+	// filename
+	// 
+	string $filename = `textFieldGrp -q -fileName movieFileName`;
+	optionVar -stringValue playblastFile $filename;
+
+
+
+	// Depends on where the callback comes from
+	// From the Time Slider, $doIt is 2.
+	//
+	if( $doIt == 1 ) {
+		performPlayblast 0;
+		addToRecentCommandQueue "performPlayblast 0" "PlayBlast";
+	} else if( $doIt == 2 ) {
+		performPlayblast 3;
+		addToRecentCommandQueue "performPlayblast 3" "PlayBlast";
+	}
+
+	// Clear cache
+	//
+	int $isClearCache = `checkBoxGrp -query -value1 clearCache`;
+	optionVar -intValue playblastClearCache $isClearCache;
+	
+}
+
+global proc int playblastUpdateMovieName( string $filename, string $fileType )
+{
+	// strip extensions
+	string $extension = fileExtension($filename);
+	if (size($extension) > 0) {
+		$filename =  substring($filename,1,size($filename)-size($extension)-1);
+	}
+	
+	textFieldGrp -e -fileName $filename movieFileName;
+	optionVar -stringValue playblastFile $filename;
+	return 1;
+}
+
+global proc changePlayblastEncoding (string $parent)
+{
+	setParent $parent;
+
+	string $selectedFormat = `optionMenuGrp -q -value playblastFormatWidget`;
+	string $encodingFormat = `optionMenuGrp -q -value playblastCompressWidget`;
+
+	int $enableQuality = 1;
+	if ( $selectedFormat == "image" || 
+		 ($selectedFormat == "avfoundation" && $encodingFormat == "H.264") ) {
+			$enableQuality = 0;
+	}
+
+	intSliderGrp -edit -enable $enableQuality playblastQualityWidget;
+}
+
+global proc changePlayblastFormat(string $parent)
+{
+	setParent $parent;
+
+	if ( `optionMenuGrp -exists playblastCompressWidget` == false)
+		return;
+
+	string $selectedFormat = `optionMenuGrp -q -value playblastFormatWidget`;
+	string $lEncodings[]   = `playblast -format $selectedFormat -q -compression`;
+
+	// Update the option var for the export format
+	optionVar -stringValue playblastFormat $selectedFormat;
+
+	// "none" = no compression for AVI and QT. For "image" compression flag
+	// sets the type of image format to use. So none shouldn't be used in this 
+	// case.
+	// Make sure that this a "none" to work with for AVI and QT 
+	if ($selectedFormat != "image" && size($lEncodings) == 0)
+		$lEncodings[0] = "none"; 
+	
+
+	// delete the older elements
+	string $lMenus[] = `optionMenuGrp -q -ils playblastCompressWidget`;
+	
+	for( $menu in $lMenus )
+		deleteUI -menuItem $menu;
+
+	if ($selectedFormat == "image") {
+		$lGlobal = "global";
+		// TODO internationalization this string. We will need to add translation of
+		// string back to "global" for internal mel scripts.
+		// Note this is likely to change to "From render setting" in the future
+		// for the UI interface itself.
+		menuItem -parent "playblastCompressWidget|OptionMenu" -label $lGlobal;
+
+	}
+	
+	for( $encoding in $lEncodings )
+		menuItem -parent "playblastCompressWidget|OptionMenu" -label $encoding;
+
+	string $compression = `optionVar -query playblastCompression`;
+	int $inx = stringArrayFind($compression, 0, $lEncodings);
+	if ($inx != -1)
+		optionMenuGrp -edit -value $compression playblastCompressWidget;
+	else
+	{
+		// Set default codec value
+		string $codec = "none";
+		if ($selectedFormat == "qt")
+			$codec = (`about -linux`) ? "png" : "PNG";
+		else if ($selectedFormat == "image")
+			$codec = "global";
+		
+		if (stringArrayContains($codec, $lEncodings) == false && size($lEncodings))
+			$codec = $lEncodings[0];
+
+		catchQuiet( `optionMenuGrp -edit -value $codec playblastCompressWidget`);
+	}
+
+	changePlayblastEncoding($parent);
+}
+
+global proc playblastOffscreenChange()
+{
+	int $isOffscreen = `checkBoxGrp -query -value1 offscreen`;
+	optionVar -intValue playblastOffscreen $isOffscreen;
+}
+
+global proc playblastSaveToFile( int $i )
+{
+	if( $i ) {
+		checkBoxGrp -e -value1 on saveToFile;
+		textFieldGrp -e -enable true movieFileName;
+		button -e -enable true browser;
+	} else {
+		checkBoxGrp -e -value1 on viewerOn;
+		checkBoxGrp -e -value1 off saveToFile;
+		textFieldGrp -e -enable false movieFileName;
+		button -e -enable false browser;
+	}
+}
+
+global proc playblastDisplaySizeMenuCB (string $tabLayout)
+{
+	setParent $tabLayout;
+
+	int $option = `optionMenuGrp -query -select displaySizeMenu`;
+	switch ($option) {
+	case 1:	// From window
+	case 2:	// From render globals
+		intFieldGrp -edit -enable false displaySizeField;
+		break;
+	case 3:	// Custom
+		intFieldGrp -edit -enable true displaySizeField;
+		break;
+	}
+}
+
+global proc playblastFileBrowser()
+{
+	// only set the working directory if the
+	// playblastFile optionVar is not an absolute
+	// path
+	//
+	string $pathname;
+	int	$isAbsolute = false;
+	if ( `optionVar -exists playblastFile` ) {
+		string $filename = `optionVar -q playblastFile`;
+		if ( $filename != "" &&
+			(substring($filename,1,1) == "/"
+			||substring($filename,1,1) == "$") )
+		{
+			$isAbsolute = true;
+		}
+	}
+
+	string $format = `optionMenuGrp -query -value playblastFormatWidget`;	
+	if ( !$isAbsolute ) {
+
+		// get the workspace
+		//
+		string	$workspace = `workspace -q -fn`;
+
+		string $formatType;
+		string $imageDir = ""; // default is current dir
+		if ($format == "image") {
+			$imageDir = `workspace -q -fre images`;
+			$formatType = "image";
+		} else {
+			$imageDir = `workspace -q -fre movie`;
+			$formatType = "movie";
+		}
+
+		if ( $imageDir != "" ) {
+			// set the current working directory
+			//
+			setWorkingDirectory $workspace $formatType $imageDir;
+		}
+	}
+
+	$format = `optionMenuGrp -query -value playblastFormatWidget`;
+	if ($format != "image")
+		$format = "movie";
+	
+	fileBrowser("playblastUpdateMovieName", (uiRes("m_performPlayblast.kBrowse")), $format, 1);
+
+}
+
+
+proc string playblastBasic( string $parent, int $hideTimeRange )
+{
+	setParent $parent;
+
+	string $tabForm = `columnLayout -adjustableColumn true`;
+
+	// Time Range
+	//
+	frameLayout -bv no -lv no -collapsable yes -collapse $hideTimeRange
+		startEndFrame;
+		columnLayout -adjustableColumn true;
+			radioButtonGrp -label (uiRes("m_performPlayblast.kTimeRange"))  -nrb 2 
+				-changeCommand ( "floatFieldGrp -e -enable (`radioButtonGrp -q -sl useStartEnd` == 2) startTime; floatFieldGrp -e -enable (`radioButtonGrp -q -sl useStartEnd` == 2) endTime; ")
+				-select 1
+				-label1 (localizedUIComponentLabel("Time Slider"))
+				-label2 (uiRes("m_performPlayblast.kStartEnd"))  
+				useStartEnd;
+
+			floatFieldGrp -enable 0 -label (uiRes("m_performPlayblast.kStartTime"))  -value1 0.0 startTime;
+			floatFieldGrp -enable 0 -label (uiRes("m_performPlayblast.kEndTime"))  -value1 10.0 endTime;
+
+			int $isSequenceTime = `optionVar -query playblastUseSequenceTime`;
+			checkBoxGrp -label (uiRes("m_performPlayblast.kUseSequenceTime")) 
+				-numberOfCheckBoxes 1
+				-label1 ""
+				useSequenceTimeWidget;
+			// separator;
+
+		setParent ..;
+	setParent ..;
+
+	// Make viewer on/off button.
+	//
+	checkBoxGrp -label (uiRes("m_performPlayblast.kView"))  -ncb 1 -value1 on -label1 "" 
+		-offCommand "playblastSaveToFile true" viewerOn;
+
+	// Show ornaments
+	//
+	int $isShowOrnaments = `optionVar -query playblastShowOrnaments`;
+	checkBoxGrp -label (uiRes("m_performPlayblast.kShowOrnaments")) 
+		-numberOfCheckBoxes 1
+		-label1 ""
+		showOrnaments;
+
+	// Offscreen option
+	checkBoxGrp -label (uiRes("m_performPlayblast.kRenderOffscreen")) 
+		-changeCommand( "playblastOffscreenChange" )
+		-numberOfCheckBoxes 1
+		-label1 ""
+		offscreen;
+
+	// MultiCamera output
+	checkBoxGrp -label (uiRes("m_performPlayblast.kMultiCameraOuput")) 
+		-numberOfCheckBoxes 1
+		-label1 ""
+		-visible 1
+		multiCameraOutput;
+
+	separator;
+
+	// Format and Compression
+	optionMenuGrp -label (uiRes("m_performPlayblast.kPlayblastFormat")) 
+			-changeCommand ( "changePlayblastFormat " + $tabForm ) 
+			playblastFormatWidget;
+
+	string $lFormats[] = `playblast -q -format`;
+	for( $format in $lFormats )
+		menuItem -label $format;
+
+	optionMenuGrp -label (uiRes("m_performPlayblast.kPlayblastCompression")) 
+			-changeCommand ( "changePlayblastEncoding " + $tabForm )
+			playblastCompressWidget;
+	menuItem -label (uiRes("m_performPlayblast.kPlayblastNone"));
+
+	intSliderGrp -field true 
+		-label (uiRes("m_performPlayblast.kPlayblastQuality")) 
+		-min 0 -max 100 - step 20 
+		playblastQualityWidget;
+
+	separator;
+
+	// Display size
+	//
+	optionMenuGrp -label (uiRes("m_performPlayblast.kDisplaySize")) 
+		-changeCommand ("playblastDisplaySizeMenuCB " + $parent)
+		displaySizeMenu;
+		menuItem -label (uiRes("m_performPlayblast.kFromWindow")) ;
+		menuItem -label (uiRes("m_performPlayblast.kFromRenderSettings")) ;
+		menuItem -label (uiRes("m_performPlayblast.kCustom")) ;
+		setParent -menu ..;
+	intFieldGrp -label ""
+		-numberOfFields 2
+		displaySizeField;
+
+	// Scale
+	//
+	floatSliderGrp -field yes -min .1 -max 1.0 -pre 2 -label (uiRes("m_performPlayblast.kScale"))  percent;
+
+	// Padding
+	intSliderGrp -field yes -min 0 -max 4 -label (uiRes("m_performPlayblast.kFramePadding"))  pad;
+
+	separator;
+
+	// Clear cache
+	//
+	int $isClearCache = `optionVar -query playblastClearCache`;
+	checkBoxGrp -label (uiRes("m_performPlayblast.kRemoveTemporaryFiles")) 
+		-numberOfCheckBoxes 1
+		-label1 ""
+		clearCache;
+
+	// Save to file
+	//
+	checkBoxGrp -label (uiRes("m_performPlayblast.kSaveToFile"))  -ncb 1 -value1 off -label1 "" -cc1 "playblastSaveToFile #1" 
+		saveToFile;
+
+	// Filename
+	//
+	if(`about -linux`){
+		textFieldGrp -label (uiRes("m_performPlayblast.kImageFilePrefix2"))  -enable false movieFileName;
+	}else{
+		textFieldGrp -label (uiRes("m_performPlayblast.kMovieFileValue"))  -enable false movieFileName;
+	}
+
+	// Browser
+	//
+	rowLayout -nc 2 -cw 1 160 -cw 2 240 -cal 2 "center";
+		text -label "";
+		string $caption = uiRes("m_performPlayblast.kBrowse");
+		button -label $caption -enable false -c 
+			"playblastFileBrowser" browser;
+	setParent ..;
+
+	return $tabForm;
+}
+
+global proc playblastOptions( int $hideTimeRange )
+{
+	// Name of the command for this option box 
+	//
+	string $commandName = "playblast";
+
+	// Title for the option box window
+	//
+	string $optionBoxTitle = (uiRes("m_performPlayblast.kPlayblastOptions"));
+
+	// Title for the apply button
+	// 
+	string $applyTitle = (uiRes("m_performPlayblast.kPlayblast"));
+	
+	// Build the option box "methods"
+	//
+	string $callback = ($commandName + "Callback");
+	string $setup = ($commandName + "Setup");
+
+	//	Get the option box.
+	//
+	//  The value returned is the name of the layout to be used as
+	//	the parent for the option box UI.
+	//
+	string $layout = getOptionBox();
+	setParent $layout;
+
+	setOptionBoxCommandName($commandName);
+	
+	// Build the window, with a tab layout
+	//
+	string $widgetList[] = `getStandardWindow $optionBoxTitle 0 "noOptions"`;
+	setUITemplate -pushTemplate DefaultTemplate;
+
+	// Make the form invisible while we create the widgets in the window
+	//
+	formLayout -e -vis false $widgetList[1];
+
+	// Put the widgets in the layout
+	//
+	playblastBasic $widgetList[2] $hideTimeRange;
+
+	// Attach the standard buttons
+	//
+	string $buttonList[] = `addStandardButtons $commandName $applyTitle $widgetList[1] $widgetList[2] "noOptions"`;
+	
+	// attach commands to the standard buttons
+	//
+	// Save
+	//
+	button -e -c ($callback + " " + $widgetList[0] + " false" +
+				  "; hideOptionBox()") $buttonList[3];
+	
+	// Close
+	//
+	button -edit -command hideOptionBox $buttonList[2];
+
+	// Reset
+	//
+	button -edit -command ($setup + " " + $widgetList[0] + " true") 
+		$buttonList[1];
+
+	// Do It
+	// Note: JUST for the Playblast option box, when you do the Playblast,
+	// it will delete the option box window. This is because the Playblast
+	// operation pushes the Maya window to the front to do the screen grabs,
+	// and the option box would remain open but unseen by the user.
+	//
+	button -edit -command ("window -edit -i true " + $widgetList[0] + "; " +
+					$callback + " " + $widgetList[0] + " " + 
+						   ( 1 + $hideTimeRange ) + " " +
+					"; hideOptionBox()") 
+		$buttonList[0];
+
+	// Make the form layout visible so we can see what we built, and
+	// reset the template
+	//
+	formLayout -e -vis true $widgetList[1];
+	setUITemplate -popTemplate;
+
+	//	Customize the 'Help' menu item text.
+	//
+	setOptionBoxHelpTag( "Playblast" );
+
+	// Call the setup "method" to fill in the current settings
+	//
+	eval (($setup + " " + $widgetList[0] + " false"));
+	showOptionBox();
+			
+	showWindow $widgetList[0];
+}
+
+
+proc string assembleCmd( int $useTimeSliderHighlight, string $cameraSetups[],
+						 string $cameraIds[] )
+//
+// Description:
+//	
+//	
+{
+	int $useStartEnd;
+
+	// This makes sure that when we're called from the time slider, we
+	// _never_ look at the start/end values in the option box, since they're
+	// not displayed in that version of the option box anyway.
+	// 
+	if( $useTimeSliderHighlight ) {
+		$useStartEnd = 0;
+	} else {
+		$useStartEnd = `optionVar -query playblastUseStartEnd`;
+	}
+	
+	string $cmd;
+	string $blastFile = (`optionVar -query playblastFile`);
+	string $compression = `optionVar -query playblastCompression`;
+	string $format = `optionVar -query playblastFormat`;
+	
+	string $dirname = dirname($blastFile);
+	if ($dirname == "") {
+		string $fileRule = ($format == "image") ? 
+			`workspace -q -fileRuleEntry image` :
+			`workspace -q -fileRuleEntry movie` ;
+		string $buffer[];
+		tokenize($fileRule,";",$buffer);
+		if (size($buffer[0]) > 0) {
+			$blastFile = ($buffer[0]+"/"+$blastFile);
+		}
+	}
+
+	$cmd = "doPlayblastArgList 5 {";		// version 5
+	for ($i=0; $i<size($cameraSetups); $i++)
+	{
+		$cmd += " \"" + $cameraSetups[$i] + "\"";
+		if ($i+1 < size($cameraSetups))
+			$cmd += ",";
+	}
+	$cmd += " } ";
+
+	$cmd += "{ ";
+	for ($i=0; $i<size($cameraIds); $i++)
+	{
+		$cmd += " \"" + $cameraIds[$i] + "\"";
+		if ($i+1 < size($cameraIds))
+			$cmd += ",";
+	}	
+	$cmd += " }";
+
+	$cmd += 
+		" { " +
+		"\"" + `optionVar -query playblastSaveToFile` + " \"" +
+		",\"" + $blastFile + "\"" +
+		",\"" + `optionVar -query playblastViewerOn` + "\"" +
+		",\"" + $format + "\"" +
+		",\"" + `optionVar -query playblastShowOrnaments` + "\"" +
+		",\"" + `optionVar -query playblastScale` + "\"" +
+		",\"" + $compression+ "\"" +
+		",\"" + `optionVar -query playblastDisplaySizeSource` + "\"" +
+		",\"" + `optionVar -query playblastWidth` + "\"" +
+		",\"" + `optionVar -query playblastHeight` + "\"" +
+		",\"" + $useStartEnd + "\"" +
+		",\"" + `optionVar -query playblastStartTime` + "\"" +
+		",\"" + `optionVar -query playblastEndTime` + "\"" +
+		",\"" + `optionVar -query playblastClearCache` + "\"" +
+		",\"" + `optionVar -query playblastOffscreen` + "\"" +
+		",\"" + `optionVar -query playblastPadding` + "\"" +
+		",\"" + `optionVar -query playblastUseSequenceTime` + "\"" +
+		",\"" + `optionVar -query playblastQuality` + "\"" +	
+		"};";
+
+
+	return $cmd;
+}
+
+
+global proc string performPlayblast( int $action )
+{
+    // The patched version of the original perform playblast
+    // directly call our own playblaster
+    print("calling anima.env.mayaEnv.auxiliary.perform_playblast(" + $action +  ")");
+    python("from anima.env.mayaEnv import auxiliary; auxiliary.perform_playblast(" + $action + ");");
+    return "";
+}
+
+
+global proc string performPlayblast_orig( int $action )
+{
+	string $cmd = "";
+	int $multicamera = `optionVar -query playblastMultiCamera`;
+	int $useTimeSliderHighlight = 0;
+	int $evaluateCommand = 0;
+
+	switch( $action ) {
+		case 0:
+			$useTimeSliderHighlight = 0;
+			$evaluateCommand = 1;
+			break;
+		case 1:
+			playblastOptions 0;
+			break;
+		case 2:
+			$useTimeSliderHighlight = 0;
+			$evaluateCommand = 0;
+			break;
+		case 3:
+			$useTimeSliderHighlight = 1;
+			$evaluateCommand = 1;
+			break;
+		case 4:
+			playblastOptions 1;
+			break;
+	}
+
+	if ($action ==0 || $action == 2 || $action == 3)
+	{
+		setOptionVars( false );
+		
+		string $editor = `playblast -ae`;
+		int $stereoDrawMode = 0;
+		if (size($editor))
+		{
+			$stereoDrawMode = `modelEditor -q -sdm $editor`;
+		}
+		
+		// If in stereo / "active" draw mode. Switch to using multiple camera
+		// output. Send out a message to let the user know we are doing this.
+		string $cachedDisplayMode = "";
+		
+		if ($stereoDrawMode)
+		{
+			warning((uiRes("m_performPlayblast.kForceToMulti")));
+			$multicamera = 1;
+		}
+		
+		if ($multicamera)			
+		{
+			// This can be changed later on to add more cameras. For now we just
+			// do two.
+			string $cameraSetups[];
+			string $cameraIds[];			
+			
+			string $currentEditor = eval("playblast -ae");
+			if (size($currentEditor))
+			{
+				string $setupStrings[] = eval( ("modelEditor -q -cs " + $currentEditor) );
+				int $numStrings = size($setupStrings) / 2;
+				if ($numStrings > 0)
+				{
+					if (($numStrings %2) != 0)
+					{
+						warning((uiRes("m_performPlayblast.kBadCameraSetup")));
+					}
+					else
+					{
+						// Cache display mode. Not nice for now as it knows about a specific view.
+						$cachedDisplayMode = `stereoCameraView -q -displayMode $editor`;
+					
+						$j = 0;
+						for ($i=0; $i<$numStrings; $i++)
+						{
+							string $tempStr = $setupStrings[$i*2];
+							$cameraIds[$j] = $tempStr;
+							$cameraSetups[$j] = $setupStrings[$i*2+1];
+							$j++;
+						}
+					}
+				}
+				else
+				{
+					warning((uiRes("m_performPlayblast.kNoMultiCamera1")));
+				}				
+			}
+			else
+			{
+				warning((uiRes("m_performPlayblast.kNoMultiCamera")));
+			}
+
+			$cmd = `assembleCmd $useTimeSliderHighlight $cameraSetups $cameraIds`;
+			if ($evaluateCommand)
+				eval( $cmd );
+			 
+			// Restore display mode.	
+			if (size($cachedDisplayMode))
+			{
+				stereoCameraView -e -displayMode $cachedDisplayMode $editor;			
+			}	
+		}
+		else
+		{
+			string $cameraSetups[];
+			string $cameraIds[];
+			$cmd = `assembleCmd $useTimeSliderHighlight $cameraSetups $cameraIds`;
+			if ($evaluateCommand)			
+				eval( $cmd );
+		}
+	}
+
+	return $cmd;
+}
