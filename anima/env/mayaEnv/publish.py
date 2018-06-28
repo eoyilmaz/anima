@@ -1857,26 +1857,30 @@ def check_sequence_name_format(progress_controller=None):
 
     # SEQ001_003_TNGI
     # SEQ001_003A_TNGI
+    # EP001_001
 
     parts = sequence_name.split('_')
-    if len(parts) != 3:
+    if len(parts) not in [2, 3]:
         progress_controller.complete()
         raise PublishError(
             'Sequence name format is not correct!!!<br>'
             '<br>'
             'It should be in the following format:<br>'
             '<br>'
-            'SEQXXX_XXX_XXXX'
+            'SEQXXX_XXX_XXXX or EPXXX_XXX'
             '<br>'
-            'ex: SEQ001_003_TNGI'
+            'ex: SEQ001_003_TNGI or EP001_001'
         )
 
     sequence_code = parts[0]
     scene_number = parts[1]
-    scene_code = parts[2]
+    if len(parts) > 2:
+        scene_code = parts[2]
+    else:
+        scene_code = ""
 
     # sequence_code should start with SEQ
-    if not (sequence_code.startswith('SEQ') or sequence_code.startswith('EP')):
+    if not (sequence_code.upper().startswith('SEQ') or sequence_code.upper().startswith('EP')):
         progress_controller.complete()
         raise PublishError(
             'Sequence name should start with "SEQ" or "EP"!!!<br>'
@@ -1912,7 +1916,7 @@ def check_sequence_name_format(progress_controller=None):
     progress_controller.increment()
 
     # scene code should be all upper case letters
-    if scene_code != scene_code.upper():
+    if scene_code != '' and scene_code != scene_code.upper():
         progress_controller.complete()
         raise PublishError(
             'Scene code in sequence name should be all upper case letters!!!'
