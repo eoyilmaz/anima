@@ -347,7 +347,7 @@ class PickedObject(object):
         self.save_settings()
 
         # create DAGMenu default commands
-        self.add_default_options_to_DAG_menu()
+        # self.add_default_options_to_DAG_menu()
 
     def explode_setup(self):
         """breaks all the setup objects
@@ -660,10 +660,10 @@ class PickedObject(object):
         python(\"import oyObjectPicker as oyOP; oyOP.set_objects_parent( '%s', '\"+$parentName+\"')\");\n \
         }"
 
-        pm.mel.source("oyAddDAGMenuCommands")
-        pm.mel.oyADMC_addSpecialCommandsToObject(
-            self._object.name(), commandLabel, commandString
-        )
+        # pm.mel.source("oyAddDAGMenuCommands")
+        # pm.mel.oyADMC_addSpecialCommandsToObject(
+        #     self._object.name(), commandLabel, commandString
+        # )
 
     def add_default_options_to_DAG_menu(self):
         """adds the default menu options to the DAG menu
