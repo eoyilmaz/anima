@@ -179,7 +179,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def project_changed(self, project_name):
         """runs when the project in the combo box changed
         """
-        project_id = self.projects_combo_box.currentData()
+        try:
+            project_id = self.projects_combo_box.currentData()
+        except AttributeError:
+            index = self.projects_combo_box.currentIndex()
+            project_id = self.projects_combo_box.itemData(index)
 
         # refresh the items on the double list widget
         self.users_double_list_widget.clear()
@@ -223,7 +227,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """overridden accept method
         """
         # get the project
-        project_id = self.projects_combo_box.currentData()
+        try:
+            project_id = self.projects_combo_box.currentData()
+        except AttributeError:
+            index = self.projects_combo_box.currentIndex()
+            project_id = self.projects_combo_box.itemData(index)
 
         from stalker import Project
         project = Project.query.get(project_id)

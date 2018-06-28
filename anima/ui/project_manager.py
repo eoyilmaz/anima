@@ -23,7 +23,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Authentication Storage
         self.login_action = None
         self.logout_action = None
-        self.logged_in_user = self.get_logged_in_user()
+        self.logged_in_user = self.login()
 
         self.project_dock_widget = None
 

@@ -1651,6 +1651,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.task.name = name
             if isinstance(self.task, (Asset, Shot, Sequence)):
                 self.task.code = code
+                if isinstance(self.task, Asset):
+                    self.task.type = asset_type
 
             if isinstance(self.task, Shot):
                 self.task.fps = fps
