@@ -366,65 +366,22 @@ class Houdini(EnvironmentBase):
 
                 # also set any AOVs to use the same output name prefixed with
                 # the AOV name
-                aov_abbr_lut = {
-                    'World': 'P',
-                    'Depth': 'Z',
-                    'MotionVectors': 'V',
-                    'Puzzle': 'puzzleMatte',
-                    'ObjectID': 'objectID',
-                    'DIRECTLIGHTING_DIFFUSE': 'diffuse',
-                    'DIRECTLIGHTING_DIFFUSE_RAW': 'diffuseRAW',
-                    'DIFFUSE_TINT': 'diffuseFilter',
-                    'DIRECTLIGHTING_REFLECTIONS': 'specular',
-                    'SSS': 'sss',
-                    'SSS_RAW': 'sssRAW',
-                    'INDIRECTLIGHTING_REFLECTIONS': 'reflection',
-                    'INDIRECTLIGHTING_REFLECTIONS_RAW': 'reflectionRAW',
-                    'REFLECTIONS_TINT': 'reflectionFilter',
-                    'INDIRECTLIGHTING_REFRACTIONS': 'refraction',
-                    'INDIRECTLIGHTING_REFRACTIONS_RAW': 'refractionRAW',
-                    'REFRACTIONS_TINT': 'refractionFilter',
-                    'EMISSION': 'emission',
-                    'GI': 'gi',
-                    'GI_RAW': 'giRAW',
-                    'CAUSTICS': 'caustics',
-                    'CAUSTICS_RAW': 'causticsRAW',
-                    'AO_RAW': 'ao',
-                    'SHADOWS': 'shadows',
-                    'NORMALS': 'N',
-                    'BUMPNORMALS': 'bN',
-                    'MATTE': 'matte',
-                    'VOLUMELIGHTING': 'volume',
-                    'VOLUMEFOGTINT': ' fog',
-                    'VOLUMEFOGEMISSION': 'fogEmission',
-                    'INDIRECTLIGHTING_TRANS_RAW': 'transGI',
-                    'TRANS_TINT': 'transFilter',
-                    'DIRECTLIGHTING_TRANS_RAW': 'transRAW',
-                    'LIGHTING_DIFFUSE_RAW': 'totalDiffuseRAW',
-                    'LIGHTING_TRANS_RAW': 'totalTransRAW',
-                    'OBJECTPOSITION': 'oP',
-                    'OBJECTBUMPEDNORMAL': 'obN',
-                    'BACKGROUND': 'background'
-                }
+
                 # get AOVs
                 aov_count = output_node.evalParm('RS_aov')
                 if aov_count:
                     for i in range(aov_count):
                         aov_index = i + 1
-                        aov_id_parm = 'RS_aovID_%s' % aov_index
                         aov_custom_prefix_parm = \
                             'RS_aovCustomPrefix_%s' % aov_index
                         aov_custom_suffix_parm = \
                             'RS_aovSuffix_%s' % aov_index
-                        aov_name = output_node.parm(aov_id_parm).evalAsString()
-                        aov_abbr = aov_abbr_lut.get(aov_name, aov_name)
                         try:
                             output_node.parm(aov_custom_prefix_parm).set(
                                 '`strreplace(chs("RS_outputFileNamePrefix"), '
-                                '".$F4.exr", "_%s.$F4.exr")`' % aov_abbr
+                                '".$F4.exr", "_" + chs("%s") + ".$F4.exr")`' %
+                                aov_custom_suffix_parm
                             )
-                            # and clear the suffix part
-                            output_node.parm(aov_custom_suffix_parm).set('')
                         except hou.PermissionError:
                             # node is locked
                             pass
