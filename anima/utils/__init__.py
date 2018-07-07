@@ -740,6 +740,26 @@ class MediaManager(object):
 
         # generate args
         args = [self.ffmpeg_command_path]
+
+        # first process the -i flag
+        if 'i' in kwargs:
+            key = 'i'
+            flag = '-' + key
+            # use pop to remove the key
+            value = kwargs.pop(key)
+            if not isinstance(value, list):
+                # append the flag
+                args.append(flag)
+                # append the value
+                args.append(str(value))
+            else:
+                # it is a multi flag
+                # so append the flag every time you append the key
+                for v in value:
+                    args.append(flag)
+                    args.append(str(v))
+
+        # then include the other flags
         for key in kwargs:
             flag = '-' + key
             value = kwargs[key]
@@ -754,8 +774,6 @@ class MediaManager(object):
                 for v in value:
                     args.append(flag)
                     args.append(str(v))
-
-            # overwrite output
 
         # if output format is not a jpg or png
         if output.split('.')[-1] not in ['jpg', 'jpeg', 'png', 'tga']:
@@ -774,14 +792,16 @@ class MediaManager(object):
 
         logger.debug('calling ffmpeg with args: %s' % args)
 
-
         startupinfo = None
         if os.name == 'nt':
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        process = subprocess.Popen(args, stderr=subprocess.PIPE,
-                                   startupinfo=startupinfo)
+        process = subprocess.Popen(
+            args,
+            stderr=subprocess.PIPE,
+            startupinfo=startupinfo
+        )
 
         # loop until process finishes and capture stderr output
         stderr_buffer = []
@@ -851,8 +871,7 @@ class MediaManager(object):
         logger.debug('process completed!')
         return stdout_buffer
 
-    @classmethod
-    def convert_to_h264(cls, input_path, output_path, options=None):
+    def convert_to_h264(self, input_path, output_path, options=None):
         """converts the given input to h264
         """
         if options is None:
@@ -864,14 +883,14 @@ class MediaManager(object):
         conversion_options = {
             'i': input_path,
             'vcodec': 'libx264',
-            'profile:v': 'main',
+            # 'profile:v': 'main',
             'g': 1,  # key frame every 1 frame
             'b:v': '4096k',
             'o': output_path
         }
         conversion_options.update(options)
 
-        cls.ffmpeg(**conversion_options)
+        self.ffmpeg(**conversion_options)
 
         return output_path
 
