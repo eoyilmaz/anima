@@ -1319,6 +1319,30 @@ def UI():
                     bgc=color.color
                 )
 
+        # ----- PREVIS ------
+        previs_columnLayout = pm.columnLayout(
+            'previs_columnLayout',
+            adj=True,
+            cal="center",
+            rs=row_spacing
+        )
+        with previs_columnLayout:
+            color.reset()
+
+            color.change()
+
+            pm.button('split_camera_button',
+                      l="Split Camera",
+                      c=RepeatedCallback(Previs.split_camera),
+                      ann=Previs.split_camera.__doc__,
+                      bgc=color.color)
+
+            pm.button('shots_from_camera_button',
+                      l="Shots From Camera",
+                      c=RepeatedCallback(Previs.shots_from_cams),
+                      ann=Previs.shots_from_cams.__doc__,
+                      bgc=color.color)
+
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
             'animation_columnLayout',
@@ -1719,6 +1743,7 @@ def UI():
             (modeling_columnLayout, "Mod"),
             (rigging_columnLayout, "Rig"),
             (render_columnLayout, "Ren"),
+            (previs_columnLayout, "Prev"),
             (animation_columnLayout, "Ani"),
             (obsolete_columnLayout, "Obs")
         ],
@@ -2040,6 +2065,93 @@ class General(object):
         import re
         [node.rename(re.sub('[\d]+', '#', node.name()))
          for node in pm.selected()]
+
+
+class Previs(object):
+    """tools for Previs
+    """
+
+    @classmethod
+    def split_camera(cls):
+        """splits one camera to multiple cameras
+        """
+        selection = pm.ls(sl=1, type=pm.nt.Transform)
+        if not selection:
+            raise RuntimeError("Please select at least one camera")
+
+        new_cameras = []
+
+        from anima.env.mayaEnv import camera_tools
+        for cam in selection:
+            cut_info = camera_tools.find_cut_info(cam)
+
+            for cut_in, cut_out in cut_info:
+                print cut_in, cut_out
+                # duplicate the original camera with input graph
+                dup_cam = pm.duplicate(cam, un=1)[0]
+
+                # remove all keyframes out of the cut range
+                # remove befor
+                pm.cutKey(dup_cam, time=(-1000, cut_in - 1))
+                # # remove after
+                pm.cutKey(dup_cam, time=(cut_out + 1, 100000))
+
+                # rename the new cam
+                dup_cam.rename("%s_#" % cam.name())
+
+                new_cameras.append(dup_cam)
+
+            # remove original camera
+            pm.delete(cam)
+
+        # select all new cameras
+        pm.select(new_cameras)
+
+    @classmethod
+    def shots_from_cams(cls):
+        """creates shot nodes from selected cameras
+        """
+        # get sequencer
+        seqs = pm.ls(type="sequencer")
+        if not seqs:
+            raise RuntimeError("No Sequencer found!")
+
+        seq = seqs[0]
+
+        # get cameras
+        cams = pm.ls(sl=1, type=pm.nt.Transform)
+        real_cams = []
+
+        # filter cameras
+        for cam in cams:
+            cam_shape = cam.getShape()
+            if isinstance(cam_shape, pm.nt.Camera):
+                real_cams.append(cam)
+
+        cams = real_cams
+
+        # create shot nodes from cameras
+        for cam in cams:
+            # read camera keyframes
+            keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
+
+            if not keyframes:
+                continue
+
+            start_frame = keyframes[0]
+            end_frame = keyframes[-1]
+
+            # create a shot node
+            shot = pm.nt.Shot()
+            shot.startFrame.set(start_frame)
+            shot.endFrame.set(end_frame)
+            shot.setSequenceStartTime(start_frame)
+
+            seq.add_shot(shot)
+            shot.set_camera(cam)
+
+            # TODO: write this properly
+            shot.track.set(1)
 
 
 class Reference(object):

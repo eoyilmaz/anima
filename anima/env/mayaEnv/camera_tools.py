@@ -269,3 +269,50 @@ def create_3dequalizer_points(width, height):
             loc.ty.set(local_y)
             loc.tx.setKey()
             loc.ty.setKey()
+
+
+def find_cut_info(cam):
+    """Finds cuts of the given camera.
+
+    This tool works only for
+
+    :param cam: A Maya cameras transform node
+    :return:
+    """
+    # check if this is really a camera
+    cam_shape = cam.getShape()
+
+    if not isinstance(cam_shape, pm.nt.Camera):
+        raise RuntimeError("Please supply a camera")
+
+    # find cuts
+    # for now use the tx attribute to find the cuts
+    keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
+
+    cut_info = []
+
+    i = 0
+    iter_count = 0
+    while i < range(len(keyframes) - 2) and iter_count < 100:
+        iter_count += 1
+        print iter_count
+        start_frame = keyframes[i]
+
+        try:
+            end_frame = keyframes[i + 1]
+        except IndexError:
+            break
+
+        j = 2
+        while (i + j) < len(keyframes):
+            start_frame_of_next_cam = keyframes[i + j]
+            if int(start_frame_of_next_cam - end_frame) == 1:
+                cut_info.append([start_frame, end_frame])
+                print i, start_frame, end_frame
+                i += j
+                break
+
+            end_frame = start_frame_of_next_cam
+            j += 1
+
+    return cut_info
