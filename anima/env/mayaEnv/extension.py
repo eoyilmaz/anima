@@ -291,8 +291,10 @@ class SequenceManagerExtension(object):
         :return: pm.nodetypes.Sequence
         """
         sequencer = pm.createNode('sequencer')
-        if name:
-            sequencer.set_sequence_name(name)
+        if not name:
+            name = ''
+
+        sequencer.set_sequence_name(name)
 
         sequencer.message >> self.sequences.next_available
         return sequencer

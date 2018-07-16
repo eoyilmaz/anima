@@ -2144,8 +2144,6 @@ class Previs(object):
 
         cams = real_cams
 
-        print('cams: %s' % cams)
-
         # get sequencer
         seqs = pm.ls(type="sequencer")
         seq = None
@@ -2160,7 +2158,6 @@ class Previs(object):
         for cam in cams:
             # read camera keyframes
             keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
-            print(keyframes)
 
             if not keyframes:
                 continue
