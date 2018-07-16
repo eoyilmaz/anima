@@ -1782,6 +1782,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     DBSession.rollback()
                     return
 
+        if version.is_published:
+            # check if this is the first version
+            logger.debug('version.version_number: %s' % version.version_number)
+            if version.version_number == 1:
+                # it is not allowed to publish the first version
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    'Error',
+                    'Can not publish the FIRST version!!!'
+                    '<br><br>'
+                    'Save it normally first.'
+                )
+
+                DBSession.rollback()
+                return
+
         from anima.exc import PublishError
         try:
             environment.save_as(new_version, **kwargs)

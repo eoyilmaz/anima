@@ -249,17 +249,6 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         """
         start = time.time()
         if version.is_published:
-            # check if this is the first version
-            logger.debug('version.version_number: %s' % version.version_number)
-            if version.version_number == 1 \
-               and Representation.repr_separator not in version.take_name:
-                # it is not allowed to publish the first version
-                raise RuntimeError(
-                    'Can not publish the FIRST version!!!'
-                    '<br><br>'
-                    'Save it normally first.'
-                )
-
             if run_pre_publishers:
                 # before doing anything run all publishers
                 type_name = ''
