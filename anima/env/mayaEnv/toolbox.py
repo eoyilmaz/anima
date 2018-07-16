@@ -456,11 +456,20 @@ def UI():
             )
 
         # ----- MODELING ------
-        modeling_columnLayout = pm.columnLayout(
-            'modeling_columnLayout',
+        modeling_column_layout = pm.columnLayout(
+            'modeling_column_layout',
             adj=True, cal="center", rs=row_spacing)
-        with modeling_columnLayout:
+        with modeling_column_layout:
             color.reset()
+            pm.button(
+                'delete_render_and_display_layers_button',
+                l="Delete Render and Display Layers",
+                c=RepeatedCallback(Modeling.delete_render_and_display_layers),
+                ann=Modeling.delete_render_and_display_layers.__docs__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button('toggleFaceNormalDisplay_button',
                       l="toggle face normal display",
                       c=RepeatedCallback(
@@ -830,6 +839,17 @@ def UI():
         )
         with render_columnLayout:
             color.reset()
+
+            color.change()
+            pm.button(
+                'submit_afanasy_button',
+                l="Afanasy Job Submitter",
+                c=RepeatedCallback(Render.afanasy_job_sumitter),
+                ann=Render.afanasy_job_submitter.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button(
                 'open_node_in_browser_button',
                 l="Open node in browser",
@@ -1740,7 +1760,7 @@ def UI():
         tabLabel=[
             (general_columnLayout, "Gen"),
             (reference_columnLayout, "Ref"),
-            (modeling_columnLayout, "Mod"),
+            (modeling_column_layout, "Mod"),
             (rigging_columnLayout, "Rig"),
             (render_columnLayout, "Ren"),
             (previs_columnLayout, "Prev"),
@@ -2897,6 +2917,12 @@ class Modeling(object):
     """
 
     @classmethod
+    def delete_render_and_display_layers(cls):
+        """Deletes the display and render layers in the current scene
+        """
+        pm.delete(pm.ls(type=['displayLayer', 'renderLayer']))
+
+    @classmethod
     def reverse_normals(cls):
         selection = pm.ls(sl=1)
         for item in selection:
@@ -3455,6 +3481,14 @@ class Rigging(object):
 class Render(object):
     """Tools for render
     """
+
+    @classmethod
+    def afanasy_job_submitter(cls):
+        """Opens the Afanasy job sumitter UI
+        """
+        from anima.env.mayaEnv import afanasy
+        ui = afanasy.UI()
+        ui.show()
 
     @classmethod
     def auto_convert_to_redshift(cls):
