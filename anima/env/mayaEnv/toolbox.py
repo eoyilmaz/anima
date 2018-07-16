@@ -2131,15 +2131,9 @@ class Previs(object):
     def shots_from_cams(cls):
         """creates shot nodes from selected cameras
         """
-        # get sequencer
-        seqs = pm.ls(type="sequencer")
-        if not seqs:
-            raise RuntimeError("No Sequencer found!")
-
-        seq = seqs[0]
-
         # get cameras
         cams = pm.ls(sl=1, type=pm.nt.Transform)
+
         real_cams = []
 
         # filter cameras
@@ -2150,10 +2144,23 @@ class Previs(object):
 
         cams = real_cams
 
+        print('cams: %s' % cams)
+
+        # get sequencer
+        seqs = pm.ls(type="sequencer")
+        seq = None
+        if not seqs:
+            # create a sequencer
+            sm = pm.ls(type='sequenceManager')[0]
+            seq = sm.create_sequence()
+        else:
+            seq = seqs[0]
+
         # create shot nodes from cameras
         for cam in cams:
             # read camera keyframes
             keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
+            print(keyframes)
 
             if not keyframes:
                 continue
@@ -2162,12 +2169,10 @@ class Previs(object):
             end_frame = keyframes[-1]
 
             # create a shot node
-            shot = pm.nt.Shot()
+            shot = seq.create_shot()
             shot.startFrame.set(start_frame)
             shot.endFrame.set(end_frame)
             shot.setSequenceStartTime(start_frame)
-
-            seq.add_shot(shot)
             shot.set_camera(cam)
 
             # TODO: write this properly
