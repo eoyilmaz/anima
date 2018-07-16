@@ -465,7 +465,7 @@ def UI():
                 'delete_render_and_display_layers_button',
                 l="Delete Render and Display Layers",
                 c=RepeatedCallback(Modeling.delete_render_and_display_layers),
-                ann=Modeling.delete_render_and_display_layers.__docs__,
+                ann=Modeling.delete_render_and_display_layers.__doc__,
                 bgc=color.color
             )
 
