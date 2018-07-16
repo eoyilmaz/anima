@@ -844,7 +844,7 @@ def UI():
             pm.button(
                 'submit_afanasy_button',
                 l="Afanasy Job Submitter",
-                c=RepeatedCallback(Render.afanasy_job_sumitter),
+                c=RepeatedCallback(Render.afanasy_job_submitter),
                 ann=Render.afanasy_job_submitter.__doc__,
                 bgc=color.color
             )
