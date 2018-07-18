@@ -455,11 +455,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         QtWidgets.qApp.processEvents()
         for publisher in self.publishers:
-            publisher.run_publisher()
             # move the view to this publisher
             self.scroll_area.ensureWidgetVisible(
                 publisher.check_push_button
             )
+            publisher.run_publisher()
             self.update_publisher_total_duration_info()
             QtWidgets.qApp.sendPostedEvents()
 
