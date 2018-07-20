@@ -2992,6 +2992,10 @@ class Modeling(object):
     def delete_render_and_display_layers(cls):
         """Deletes the display and render layers in the current scene
         """
+        # switch to default render layer before deleting anything
+        # this will prevent layers to be non-deletable
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.switch_to_default_render_layer()
         pm.delete(pm.ls(type=['displayLayer', 'renderLayer']))
 
     @classmethod
