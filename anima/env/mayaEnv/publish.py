@@ -518,6 +518,9 @@ def check_history(progress_controller=None):
     excluded_types = ['mesh', 'shadingEngine', 'groupId', 'RedshiftProxyMesh']
     nodes_with_history = []
 
+    # delete any objectSets with name textureEditorIsolateSelectSet for Maya 2018
+    pm.delete(pm.ls('textureEditorIsolateSelectSet*'))
+
     # get all shapes
     all_shapes = pm.ls(type='mesh')
     progress_controller.maximum = len(all_shapes)

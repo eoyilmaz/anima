@@ -488,6 +488,15 @@ def UI():
 
             color.change()
             pm.button(
+                'fix_uvsets_button',
+                l="Fix UVSets (DiffuseUV -> map1)",
+                c=RepeatedCallback(Modeling.fix_uvsets),
+                ann=Modeling.fix_uvsets,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'oyHierarchyInstancer_button',
                 l="hierarchy_instancer on selected",
                 c=RepeatedCallback(Modeling.hierarchy_instancer),
@@ -1349,18 +1358,31 @@ def UI():
         with previs_columnLayout:
             color.reset()
 
-            color.change()
-
             pm.button('split_camera_button',
                       l="Split Camera",
                       c=RepeatedCallback(Previs.split_camera),
                       ann=Previs.split_camera.__doc__,
                       bgc=color.color)
 
+            color.change()
             pm.button('shots_from_camera_button',
                       l="Shots From Camera",
                       c=RepeatedCallback(Previs.shots_from_cams),
                       ann=Previs.shots_from_cams.__doc__,
+                      bgc=color.color)
+
+            color.change()
+            pm.button('auto_rename_shots_button',
+                      l="Auto Rename Shots",
+                      c=RepeatedCallback(Previs.auto_rename_shots),
+                      ann=Previs.auto_rename_shots.__doc__,
+                      bgc=color.color)
+
+            color.change()
+            pm.button('save_previs_to_shots_button',
+                      l="Save Previs To Shots",
+                      c=RepeatedCallback(Previs.save_previs_to_shots),
+                      ann=Previs.save_previs_to_shots.__doc__,
                       bgc=color.color)
 
         # ----- ANIMATION ------
@@ -2092,6 +2114,14 @@ class Previs(object):
     """
 
     @classmethod
+    def auto_rename_shots(cls):
+        """Auto rename shots in the camera sequencer
+        """
+        for i, shot in enumerate(sorted(pm.ls(type="shot"), key=lambda x: x.startFrame.get())):
+            shot_name = str((i + 1) * 10).zfill(4)
+            shot.shotName.set(shot_name)
+
+    @classmethod
     def split_camera(cls):
         """splits one camera to multiple cameras
         """
@@ -2174,6 +2204,14 @@ class Previs(object):
 
             # TODO: write this properly
             shot.track.set(1)
+
+    @classmethod
+    def save_previs_to_shots(cls):
+        """exports previs to animation shots
+        """
+        from anima.env.mayaEnv import previs
+        se = previs.ShotExporter()
+        se.save_previs_to_shots("Main")
 
 
 class Reference(object):
@@ -2917,6 +2955,35 @@ class Reference(object):
 class Modeling(object):
     """Modeling tools
     """
+
+    @classmethod
+    def fix_uvsets(cls):
+        """Fixes uvSets (DiffuseUV -> map1)
+        """
+        for node in pm.selected():
+            shape = node.getShape()
+
+            # get current uvset
+            uvset_names = pm.polyUVSet(shape, query=True, allUVSets=True)
+
+            if 'DiffuseUV' in uvset_names:
+                if len(uvset_names) == 1:
+                    # Copy values of uvset "DiffuseUV" to "map1"
+                    pm.polyUVSet(shape, copy=True, nuv='map1', uvSet='DiffuseUV')
+
+                    # set current uvset to map1
+                    pm.polyUVSet(shape, currentUVSet=True, uvSet='map1')
+
+                    # delete uv set
+                    # pm.polyUVSet( shape, delete=True, uvSet='DiffuseUV')
+                else:
+                    if 'map1' in uvset_names:
+                        # set current uvset to map1
+                        uvs = shape.getUVs(uvSet='map1')
+
+                        if len(uvs[0]) == 0:
+                            # Copy values of uvset "DiffuseUV" to "map1"
+                            pm.polyUVSet(shape, copy=True, nuv='map1', uvSet='DiffuseUV')
 
     @classmethod
     def delete_render_and_display_layers(cls):
