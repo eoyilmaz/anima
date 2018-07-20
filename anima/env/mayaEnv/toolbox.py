@@ -2184,6 +2184,9 @@ class Previs(object):
         else:
             seq = seqs[0]
 
+        # try to automatically crate the sequence name attribute
+        seq.get_sequence_name()
+
         # create shot nodes from cameras
         for cam in cams:
             # read camera keyframes
