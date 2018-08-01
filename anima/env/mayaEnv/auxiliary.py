@@ -1013,7 +1013,7 @@ def perform_playblast(action):
                 pb.upload_output(pb.version, output)
 
     else:
-        # call the original playblasoutputst
+        # call the original playblast
         return pm.mel.eval('performPlayblast_orig(%s);' % action)
 
 
@@ -1138,15 +1138,14 @@ class Playblaster(object):
     ]
 
     global_playblast_options = {
-        'fmt': 'qt',
+        'fmt': 'image',
         'forceOverwrite': 1,
         'clearCache': 1,
         'showOrnaments': 1,
         'percent': 100,
         'offScreen': 1,
         'viewer': 0,
-        'compression': 'MPEG-4 Video',
-        'quality': 85,
+        'compression': 'png',
         'sequenceTime': 1
     }
 
@@ -1598,7 +1597,35 @@ class Playblaster(object):
         finally:
             self.restore_user_options()
 
-        return result
+        return self.convert_image_sequence_to_video(result)
+
+    @classmethod
+    def convert_image_sequence_to_video(cls, result):
+        """converts image sequence to video
+        """
+        # convert image sequences to h264
+        new_result = []
+        for output in result:
+            # convert each output to a mp4 if the output is a frame
+            # sequence
+            if '#' in output:
+                # convert to mp4
+                # first convert the #'s to %03d format
+                temp_str = output.replace('#', '')
+                hash_count = len(output) - len(temp_str)
+                splits = output.split('#')
+                output = '%s%s%s' % (
+                    splits[0],
+                    '%0{hash_count}d'.format(hash_count=hash_count),
+                    splits[-1]
+                )
+                output_h264 = splits[0]
+
+                from anima.utils import MediaManager
+                mm = MediaManager()
+                output = mm.convert_to_h264(output, output_h264)
+            new_result.append(output)
+        return new_result
 
     def playblast_shot(self, shot, extra_playblast_options=None):
         """does the real thing
@@ -1709,7 +1736,7 @@ class Playblaster(object):
 
             caller.step()
 
-        return temp_video_file_full_paths
+        return self.convert_image_sequence_to_video(temp_video_file_full_paths)
 
     @classmethod
     def upload_outputs(cls, version, video_file_full_paths):
