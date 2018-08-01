@@ -21,7 +21,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setShowGrid(False)
         self.setColumnCount(5)
-        self.setObjectName("previous_versions_tableWidget")
+        self.setObjectName("previous_versions_table_widget")
         self.setColumnCount(5)
         self.setRowCount(0)
         self.setHorizontalHeaderItem(0, QtWidgets.QTableWidgetItem())

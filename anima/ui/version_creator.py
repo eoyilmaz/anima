@@ -143,7 +143,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.environment = environment
         if not self.environment.has_publishers:
-            self.publish_pushButton.setText('Publish')
+            self.publish_push_button.setText('Publish')
 
         # create the project attribute in projects_comboBox
         self.current_dialog = None
@@ -359,15 +359,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.new_version_groupBox
         )
         self.horizontalLayout_2.addWidget(self.export_as_pushButton)
-        self.publish_pushButton = QtWidgets.QPushButton(
+        self.publish_push_button = QtWidgets.QPushButton(
             self.new_version_groupBox
         )
-        self.horizontalLayout_2.addWidget(self.publish_pushButton)
-        self.save_as_pushButton = QtWidgets.QPushButton(
+        self.horizontalLayout_2.addWidget(self.publish_push_button)
+        self.save_as_push_button = QtWidgets.QPushButton(
             self.new_version_groupBox
         )
-        self.save_as_pushButton.setDefault(False)
-        self.horizontalLayout_2.addWidget(self.save_as_pushButton)
+        self.save_as_push_button.setDefault(False)
+        self.horizontalLayout_2.addWidget(self.save_as_push_button)
         self.verticalLayout_6.addLayout(self.horizontalLayout_2)
         self.horizontalLayout_14.addWidget(self.new_version_groupBox)
         self.previous_versions_groupBox = QtWidgets.QGroupBox(
@@ -387,51 +387,51 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.line.setFrameShape(QtWidgets.QFrame.VLine)
         self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.horizontalLayout_10.addWidget(self.line)
-        self.show_published_only_checkBox = \
+        self.show_published_only_check_box = \
             QtWidgets.QCheckBox(self.previous_versions_groupBox)
-        self.horizontalLayout_10.addWidget(self.show_published_only_checkBox)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20,
+        self.horizontalLayout_10.addWidget(self.show_published_only_check_box)
+        spacer_item2 = QtWidgets.QSpacerItem(40, 20,
                                             QtWidgets.QSizePolicy.Expanding,
                                             QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacerItem2)
+        self.horizontalLayout_10.addItem(spacer_item2)
         self.verticalLayout_7.addLayout(self.horizontalLayout_10)
 
-        # previous_versions_tableWidget
-        self.previous_versions_tableWidget = VersionsTableWidget(
+        # previous_versions_table_widget
+        self.previous_versions_table_widget = VersionsTableWidget(
             self.previous_versions_groupBox
         )
 
-        self.previous_versions_tableWidget.setEditTriggers(
+        self.previous_versions_table_widget.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.previous_versions_tableWidget.setAlternatingRowColors(True)
-        self.previous_versions_tableWidget.setSelectionMode(
+        self.previous_versions_table_widget.setAlternatingRowColors(True)
+        self.previous_versions_table_widget.setSelectionMode(
             QtWidgets.QAbstractItemView.SingleSelection)
-        self.previous_versions_tableWidget.setSelectionBehavior(
+        self.previous_versions_table_widget.setSelectionBehavior(
             QtWidgets.QAbstractItemView.SelectRows)
-        self.previous_versions_tableWidget.setShowGrid(False)
-        self.previous_versions_tableWidget.setColumnCount(7)
-        self.previous_versions_tableWidget.setRowCount(0)
+        self.previous_versions_table_widget.setShowGrid(False)
+        self.previous_versions_table_widget.setColumnCount(7)
+        self.previous_versions_table_widget.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(0, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(0, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(1, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(1, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(2, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(2, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(3, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(3, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(4, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(4, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(5, item)
+        self.previous_versions_table_widget.setHorizontalHeaderItem(5, item)
         item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_tableWidget.setHorizontalHeaderItem(6, item)
-        self.previous_versions_tableWidget\
+        self.previous_versions_table_widget.setHorizontalHeaderItem(6, item)
+        self.previous_versions_table_widget\
             .horizontalHeader()\
             .setStretchLastSection(True)
-        self.previous_versions_tableWidget\
+        self.previous_versions_table_widget\
             .verticalHeader()\
             .setStretchLastSection(False)
-        self.verticalLayout_7.addWidget(self.previous_versions_tableWidget)
+        self.verticalLayout_7.addWidget(self.previous_versions_table_widget)
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.label = QtWidgets.QLabel(self.previous_versions_groupBox)
         self.horizontalLayout_5.addWidget(self.label)
@@ -525,12 +525,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             "font-size:9pt;\"><br /></p></body></html>",
         )
         self.export_as_pushButton.setText("Export Selection As")
-        self.save_as_pushButton.setText("Save As")
-        self.publish_pushButton.setText("Publish Checker")
+        self.save_as_push_button.setText("Save As")
+        self.publish_push_button.setText("Publish Checker")
         self.previous_versions_groupBox.setTitle("Previous Versions")
         self.show_only_label.setText("Show Only")
-        self.show_published_only_checkBox.setText("Show Published Only")
-        self.previous_versions_tableWidget.setToolTip(
+        self.show_published_only_check_box.setText("Show Published Only")
+        self.previous_versions_table_widget.setToolTip(
             """
             <html>
             <head/>
@@ -572,19 +572,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             </html>
             """
         )
-        self.previous_versions_tableWidget.horizontalHeaderItem(0).setText(
+        self.previous_versions_table_widget.horizontalHeaderItem(0).setText(
             "Version"
         )
-        self.previous_versions_tableWidget.horizontalHeaderItem(1).setText(
+        self.previous_versions_table_widget.horizontalHeaderItem(1).setText(
             "User"
         )
-        self.previous_versions_tableWidget.horizontalHeaderItem(2).setText(
+        self.previous_versions_table_widget.horizontalHeaderItem(2).setText(
             "File Size"
         )
-        self.previous_versions_tableWidget.horizontalHeaderItem(3).setText(
+        self.previous_versions_table_widget.horizontalHeaderItem(3).setText(
             "Date"
         )
-        self.previous_versions_tableWidget.horizontalHeaderItem(4).setText(
+        self.previous_versions_table_widget.horizontalHeaderItem(4).setText(
             "Description"
         )
         self.label.setText("Repr")
@@ -618,10 +618,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.setTabOrder(self.description_textEdit, self.export_as_pushButton)
-        self.setTabOrder(self.export_as_pushButton, self.save_as_pushButton)
-        self.setTabOrder(self.save_as_pushButton,
-                         self.previous_versions_tableWidget)
-        self.setTabOrder(self.previous_versions_tableWidget,
+        self.setTabOrder(self.export_as_pushButton, self.save_as_push_button)
+        self.setTabOrder(self.save_as_push_button,
+                         self.previous_versions_table_widget)
+        self.setTabOrder(self.previous_versions_table_widget,
                          self.open_pushButton)
         self.setTabOrder(self.open_pushButton, self.reference_pushButton)
         self.setTabOrder(self.reference_pushButton, self.import_pushButton)
@@ -729,14 +729,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # save_as
         QtCore.QObject.connect(
-            self.save_as_pushButton,
+            self.save_as_push_button,
             QtCore.SIGNAL("clicked()"),
             self.save_as_push_button_clicked
         )
 
         # publish
         QtCore.QObject.connect(
-            self.publish_pushButton,
+            self.publish_push_button,
             QtCore.SIGNAL("clicked()"),
             self.publish_push_button_clicked
         )
@@ -771,7 +771,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # show_only_published_checkBox
         QtCore.QObject.connect(
-            self.show_published_only_checkBox,
+            self.show_published_only_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
             self.update_previous_versions_table_widget
         )
@@ -828,13 +828,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.close()
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
-        """the custom context menu for the previous_versions_tableWidget
+        """the custom context menu for the previous_versions_table_widget
         """
         # convert the position to global screen position
         global_position = \
-            self.previous_versions_tableWidget.mapToGlobal(position)
+            self.previous_versions_table_widget.mapToGlobal(position)
 
-        item = self.previous_versions_tableWidget.itemAt(position)
+        item = self.previous_versions_table_widget.itemAt(position)
         # if not item:
         #     return
 
@@ -842,7 +842,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         version = None
         if item:
             index = item.row()
-            version = self.previous_versions_tableWidget.versions[index]
+            version = self.previous_versions_table_widget.versions[index]
             from stalker import Version
             version = Version.query.get(version.id)
 
@@ -1064,7 +1064,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         DBSession.add(version)
                         DBSession.commit()
 
-                        # update the previous_versions_tableWidget
+                        # update the previous_versions_table_widget
                         self.update_previous_versions_table_widget()
             elif choice == 'Copy Path':
                 # just set the clipboard to the version.absolute_full_path
@@ -1335,30 +1335,30 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         # *********************************************************************
 
-        # custom context menu for the previous_versions_tableWidget
-        self.previous_versions_tableWidget.setContextMenuPolicy(
+        # custom context menu for the previous_versions_table_widget
+        self.previous_versions_table_widget.setContextMenuPolicy(
             QtCore.Qt.CustomContextMenu
         )
 
         QtCore.QObject.connect(
-            self.previous_versions_tableWidget,
+            self.previous_versions_table_widget,
             QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
             self._show_previous_versions_tableWidget_context_menu
         )
 
         if self.mode:
             # Read-Only mode, Choose the version
-            # add double clicking to previous_versions_tableWidget
+            # add double clicking to previous_versions_table_widget
             QtCore.QObject.connect(
-                self.previous_versions_tableWidget,
+                self.previous_versions_table_widget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
                 self.chose_push_button_clicked
             )
         else:
             # Read-Write mode, Open the version
-            # add double clicking to previous_versions_tableWidget
+            # add double clicking to previous_versions_table_widget
             QtCore.QObject.connect(
-                self.previous_versions_tableWidget,
+                self.previous_versions_table_widget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
                 self.open_push_button_clicked
             )
@@ -1422,8 +1422,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.description_label.setVisible(False)
             self.description_textEdit.setVisible(False)
             self.export_as_pushButton.setVisible(False)
-            self.save_as_pushButton.setVisible(False)
-            self.publish_pushButton.setVisible(False)
+            self.save_as_push_button.setVisible(False)
+            self.publish_push_button.setVisible(False)
             self.open_pushButton.setVisible(False)
             self.reference_pushButton.setVisible(False)
             self.import_pushButton.setVisible(False)
@@ -1470,7 +1470,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.takes_listWidget.current_take_name = take_name
 
         # select the version in the previous version list
-        self.previous_versions_tableWidget.select_version(version)
+        self.previous_versions_table_widget.select_version(version)
 
         if not self.environment:
             # set the environment_comboBox
@@ -1494,15 +1494,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the takes_listWidget has changed
         """
         logger.debug('takes_listWidget_changed started')
-        # update the previous_versions_tableWidget
+        # update the previous_versions_table_widget
         self.update_previous_versions_table_widget()
         logger.debug('takes_listWidget_changed finished')
 
     def update_previous_versions_table_widget(self):
-        """updates the previous_versions_tableWidget
+        """updates the previous_versions_table_widget
         """
         logger.debug('update_previous_versions_table_widget is started')
-        self.previous_versions_tableWidget.clear()
+        self.previous_versions_table_widget.clear()
 
         from stalker import Task
         task_id = self.tasks_tree_view.get_task_id()
@@ -1517,7 +1517,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .count()
         if children_count > 0:
             # clear the versions list
-            self.previous_versions_tableWidget.clear()
+            self.previous_versions_table_widget.clear()
             return
 
         # take name
@@ -1542,7 +1542,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .filter(Version.take_name == take_name)
 
         # get the published only
-        if self.show_published_only_checkBox.isChecked():
+        if self.show_published_only_check_box.isChecked():
             query = query.filter(Version.is_published == True)
 
         # show how many
@@ -1553,7 +1553,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         versions = map(lambda x: VersionNT(*x), data_from_db)
         versions.reverse()
 
-        self.previous_versions_tableWidget.update_content(versions)
+        self.previous_versions_table_widget.update_content(versions)
         logger.debug('update_previous_versions_table_widget is finished')
 
     def add_take_push_button_clicked(self):
@@ -1680,14 +1680,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     )
 
     def save_as_push_button_clicked(self):
-        """runs when the save_as_pushButton clicked
+        """runs when the save_as_push_button clicked
         """
         logger.debug("saving the data as a new version")
         new_version = self.get_new_version()
         self.save_as_wrapper(new_version)
 
     def publish_push_button_clicked(self):
-        """runs when the publish_pushButton clicked
+        """runs when the publish_push_button clicked
         """
         logger.debug("saving the data as a new published version")
         answer = QtWidgets.QMessageBox.question(
@@ -1712,7 +1712,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 dialog = publish_checker.UI(
                     environment=self.environment,
                     publish_callback=callback,
-                    version=new_version
+                    version=new_version,
+                    parent=self.parent()
                 )
                 dialog.show()
                 dialog.check_all_publishers()
@@ -1864,7 +1865,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def chose_push_button_clicked(self):
         """runs when the chose_pushButton clicked
         """
-        version = self.previous_versions_tableWidget.current_version
+        version = self.previous_versions_table_widget.current_version
         if not version:
             return
 
@@ -1883,7 +1884,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the open_pushButton clicked
         """
         # get the new version
-        old_version = self.previous_versions_tableWidget.current_version
+        old_version = self.previous_versions_table_widget.current_version
         skip_update_check = not self.checkUpdates_checkBox.isChecked()
 
         from stalker import Version
@@ -1973,7 +1974,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the reference_pushButton clicked
         """
         # get the new version
-        previous_version = self.previous_versions_tableWidget.current_version
+        previous_version = self.previous_versions_table_widget.current_version
 
         # allow only published versions to be referenced
         if not previous_version.is_published:
@@ -2075,7 +2076,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # get the previous version
         previous_version_id = \
-            self.previous_versions_tableWidget.current_version.id
+            self.previous_versions_table_widget.current_version.id
 
         from stalker import Version
         previous_version = Version.query.get(previous_version_id)

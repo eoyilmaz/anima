@@ -28,6 +28,29 @@ from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
 reload(publish_scripts)
 
 
+def get_maya_main_window():
+    """Get the main Maya window as a QtGui.QMainWindow instance
+    @return: QtGui.QMainWindow instance of the top level Maya windows
+
+    ref: https://stackoverflow.com/questions/22331337/how-to-get-maya-main-window-pointer-using-pyside
+    """
+    from anima.ui.lib import QtWidgets, QtCore
+    from maya import OpenMayaUI
+
+    ptr = OpenMayaUI.MQtUtil.mainWindow()
+    if ptr is not None:
+        from anima.ui.lib import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, IS_QTPY
+        if IS_PYSIDE():
+            import shiboken
+            return shiboken.wrapInstance(long(ptr), QtWidgets.QWidget)
+        elif IS_PYSIDE2():
+            import shiboken2
+            return shiboken2.wrapInstance(long(ptr), QtWidgets.QWidget)
+        elif IS_PYQT4():
+            import sip
+            return sip.wrapinstance(long(ptr), QtCore.QObject)
+
+
 class MayaMainProgressBarWrapper(object):
     """wraps main progress bar dialog to be ProgressDialogManager compliant
     """

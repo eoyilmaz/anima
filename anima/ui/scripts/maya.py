@@ -50,7 +50,9 @@ def version_creator(logging_level=logging.WARNING):
     #     version_creator_dialog = version_creator.UI(environment=m)
     # else:
     #     version_creator_dialog.show()
-    version_creator.UI(environment=m)
+
+    # set the parent object to the maya main window
+    version_creator.UI(environment=m, parent=mayaEnv.get_maya_main_window())
 
 
 def version_updater(logging_level=logging.WARNING):
@@ -68,7 +70,7 @@ def version_updater(logging_level=logging.WARNING):
     m = mayaEnv.Maya()
 
     import pymel
-    m.name = "Maya" + str(pymel.versions.current())[0:4]
+    m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     logger.setLevel(logging_level)
 
@@ -78,7 +80,9 @@ def version_updater(logging_level=logging.WARNING):
     #     version_updater_dialog = version_updater.UI(environment=m)
     # else:
     #     version_updater_dialog.show()
-    version_updater.UI(environment=m)
+
+    # set the parent object to the maya main window
+    version_updater.UI(environment=m, parent=mayaEnv.get_maya_main_window())
 
 
 def version_mover():

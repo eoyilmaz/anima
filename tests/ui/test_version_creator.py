@@ -536,7 +536,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_creator.MainDialog()
 
     def test_previous_versions_tableWidget_is_filled_with_proper_info(self):
-        """testing if the previous_versions_tableWidget is filled with proper
+        """testing if the previous_versions_table_widget is filled with proper
         information
         """
         # select the t1
@@ -562,7 +562,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         # the row count should be 2
         self.assertEqual(
-            self.dialog.previous_versions_tableWidget.rowCount(),
+            self.dialog.previous_versions_table_widget.rowCount(),
             3
         )
 
@@ -570,17 +570,17 @@ class VersionCreatorTester(unittest.TestCase):
         versions = [self.test_version1, self.test_version2, self.test_version3]
         for i in range(len(versions)):
             self.assertEqual(
-                int(self.dialog.previous_versions_tableWidget.item(i, 0).text()),
+                int(self.dialog.previous_versions_table_widget.item(i, 0).text()),
                 versions[i].version_number
             )
 
             self.assertEqual(
-                self.dialog.previous_versions_tableWidget.item(i, 2).text(),
+                self.dialog.previous_versions_table_widget.item(i, 2).text(),
                 versions[i].created_by.name
             )
 
             self.assertEqual(
-                self.dialog.previous_versions_tableWidget.item(i, 6).text(),
+                self.dialog.previous_versions_table_widget.item(i, 6).text(),
                 versions[i].description
             )
 
