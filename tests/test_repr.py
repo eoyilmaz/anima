@@ -10,7 +10,7 @@ import unittest
 import os
 from stalker import (db, User, Repository, Status, FilenameTemplate, Structure,
                      StatusList, ImageFormat, Project, Type, Task, Version)
-from anima.repr import Representation
+from anima.representation import Representation
 
 
 class RepresentationTestCase(unittest.TestCase):

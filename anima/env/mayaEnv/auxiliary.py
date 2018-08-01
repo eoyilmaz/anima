@@ -778,7 +778,7 @@ def run_pre_publishers():
         return
 
     # check if it is a Representation
-    from anima.repr import Representation
+    from anima.representation import Representation
     if Representation.repr_separator in version.take_name:
         return
 
@@ -836,7 +836,7 @@ def run_post_publishers():
         return
 
     # check if it is a Representation
-    from anima.repr import Representation
+    from anima.representation import Representation
     if Representation.repr_separator in version.take_name:
         return
 

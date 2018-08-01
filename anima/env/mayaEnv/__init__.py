@@ -17,7 +17,7 @@ from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 from anima.env.mayaEnv import extension  # register extensions
 from anima.exc import PublishError
-from anima.repr import Representation
+from anima.representation import Representation
 from anima.ui.progress_dialog import ProgressDialogManager
 
 # empty publishers first

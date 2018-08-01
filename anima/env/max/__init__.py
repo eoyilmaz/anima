@@ -248,7 +248,7 @@ class Max(EnvironmentBase):
         :return:
         """
         import os
-        from anima.repr import Representation
+        from anima.representation import Representation
         import pymxs
         rt = pymxs.runtime
 

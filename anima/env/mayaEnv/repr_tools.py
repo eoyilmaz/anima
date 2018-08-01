@@ -14,7 +14,7 @@ import pymel.core as pm
 from stalker import LocalSession, Repository
 
 from anima.env.mayaEnv import ai2rs
-from anima.repr import Representation
+from anima.representation import Representation
 from anima.env.mayaEnv import auxiliary
 from anima import logger
 

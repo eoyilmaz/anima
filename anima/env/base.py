@@ -350,7 +350,7 @@ class EnvironmentBase(object):
         if version:
             logger.debug('got a version: %s' % version.absolute_full_path)
             # use the original version if it is a Repr version
-            from anima.repr import Representation
+            from anima.representation import Representation
             if Representation.repr_separator in version.take_name \
                and version.parent:
                 version = version.parent

@@ -17,7 +17,7 @@ from pymel.core.system import FileReference
 
 from anima.edit import Sequence, Media, Video, Track, Clip, File, Rate
 from anima.extension import extends
-from anima.repr import Representation
+from anima.representation import Representation
 
 
 default_handle_count = 0

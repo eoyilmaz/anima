@@ -14,7 +14,7 @@ import tempfile
 from anima.publish import (clear_publishers, publisher, staging,
                            POST_PUBLISHER_TYPE, ProgressControllerBase)
 from anima.exc import PublishError
-from anima.repr import Representation
+from anima.representation import Representation
 from anima.utils import utc_to_local
 from anima.env.mayaEnv import auxiliary
 

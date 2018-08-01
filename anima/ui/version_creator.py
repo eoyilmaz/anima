@@ -1268,7 +1268,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 if not self.repr_as_separate_takes_checkBox.isChecked():
                     # filter representations
-                    from anima.repr import Representation
+                    from anima.representation import Representation
                     takes = [take for take in takes
                              if Representation.repr_separator not in take]
                 takes = sorted(takes, key=lambda x: x.lower())
@@ -2010,7 +2010,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText('Which Repr.?')
-                from anima.repr import Representation
+                from anima.representation import Representation
                 base_button = \
                     repr_message_box.addButton(
                         Representation.base_repr_name,
