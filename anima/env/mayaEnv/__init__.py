@@ -823,7 +823,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         except KeyError:
             # there is a problem with the workspace file
             # just skip this step for now
-            return
+            image_folder_from_ws = 'images'
 
         image_folder_from_ws_full_path = os.path.join(
             version.absolute_path,
