@@ -819,11 +819,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # image folder from the workspace.mel
         try:
-        	image_folder_from_ws = pm.workspace.fileRules['images']
-    	except KeyError:
-    		# there is a problem with the workspace file
-    		# just skip this step for now
-    		return
+            image_folder_from_ws = pm.workspace.fileRules['images']
+        except KeyError:
+            # there is a problem with the workspace file
+            # just skip this step for now
+            return
 
         image_folder_from_ws_full_path = os.path.join(
             version.absolute_path,
