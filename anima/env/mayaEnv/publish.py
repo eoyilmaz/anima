@@ -205,7 +205,7 @@ def check_node_names_with_bad_characters(progress_controller=None):
 def check_file_texture_paths_with_bad_characters(progress_controller=None):
     """No bad characters in file texture paths
 
-    checks file texture and ensures that there are no nodes with ord(c) > 127
+    checks file textures and ensures that there are no nodes with ord(c) > 127
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
