@@ -179,10 +179,11 @@ def check_node_names_with_bad_characters(progress_controller=None):
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
-    progress_controller.maximum = len(mc.ls())
+    nodes_to_check = mc.ls()
+    progress_controller.maximum = len(nodes_to_check)
 
     nodes_with_bad_name = []
-    for node_name in mc.ls():
+    for node_name in nodes_to_check:
         if ':' not in node_name \
            and any(map(lambda x: x == '?' or ord(x) > 127, node_name)):
             nodes_with_bad_name.append(node_name)
@@ -190,13 +191,44 @@ def check_node_names_with_bad_characters(progress_controller=None):
 
     progress_controller.complete()
 
-    if len(nodes_with_bad_name) > 0:
+    if nodes_with_bad_name:
         pm.select(nodes_with_bad_name)
         raise PublishError(
             'There are nodes with <b>unknown characters</b> in their names:'
             '<br><br>'
             '%s' %
             '<br>'.join(nodes_with_bad_name[:MAX_NODE_DISPLAY])
+        )
+
+
+@publisher(LOOK_DEV_TYPES)
+def check_file_texture_paths_with_bad_characters(progress_controller=None):
+    """No bad characters in file texture paths
+
+    checks file texture and ensures that there are no nodes with ord(c) > 127
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    nodes_to_check = pm.ls(type='file')
+    progress_controller.maximum = len(nodes_to_check)
+
+    bad_nodes = []
+    for node in nodes_to_check:
+        if node.referenceFile() is None \
+           and any(map(lambda x: x == '?' or ord(x) > 127, node.fileTextureName.get())):
+            bad_nodes.append(node)
+        progress_controller.increment()
+
+    progress_controller.complete()
+
+    if bad_nodes:
+        pm.select(bad_nodes)
+        raise PublishError(
+            'There are FileTexture nodes with <b>unknown characters</b> in their texture paths:'
+            '<br><br>'
+            '%s' %
+            '<br>'.join(bad_nodes[:MAX_NODE_DISPLAY])
         )
 
 
