@@ -494,6 +494,8 @@ class RepresentationGenerator(object):
         # validate the version first
         self.version = self._validate_version(self.version)
 
+        if not os.path.exists(self.version.absolute_full_path):
+            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
         self.open_version(self.version)
 
         task = self.version.task
@@ -586,6 +588,8 @@ class RepresentationGenerator(object):
         # validate the version first
         self.version = self._validate_version(self.version)
 
+        if not os.path.exists(self.version.absolute_full_path):
+            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
         self.open_version(self.version)
 
         # load necessary plugins
@@ -979,6 +983,8 @@ class RepresentationGenerator(object):
         # validate the version first
         self.version = self._validate_version(self.version)
 
+        if not os.path.exists(self.version.absolute_full_path):
+            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
         self.open_version(self.version)
 
         task = self.version.task
@@ -1414,6 +1420,8 @@ class RepresentationGenerator(object):
         # validate the version first
         self.version = self._validate_version(self.version)
 
+        if not os.path.exists(self.version.absolute_full_path):
+            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
         self.open_version(self.version)
 
         task = self.version.task

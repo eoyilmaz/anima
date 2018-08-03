@@ -7,7 +7,11 @@
 import sys
 import os
 import traceback
+import time
 import maya.cmds as cmds
+
+
+user_setup_start = time.time()
 
 
 def logprint(log):
@@ -51,16 +55,23 @@ for path in os.environ['PYTHONPATH'].split(os.path.pathsep):
         os.sys.path.append(path)
 
 # now we can import pymel and others
+start = time.time()
 import pymel
 import pymel.core as pm
 from pymel import mayautils
+end = time.time()
+duration = end - start
+logprint('pymel loaded in %0.3f sec' % duration)
 
 
 def __plugin_loader(plugin_name):
     if not pm.pluginInfo(plugin_name, q=1, loaded=1):
+        start_time = time.time()
         logprint('loading %s!' % plugin_name)
         pm.loadPlugin(plugin_name)
-        logprint('%s loaded!' % plugin_name)
+        end_time = time.time()
+        duration = end_time - start_time
+        logprint('%s loaded! in %0.3f sec' % (plugin_name, duration))
 
 
 def __plugin_unloader(plugin_name):
@@ -174,3 +185,7 @@ os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
 
 # create environment variables for each Repository
 pm.evalDeferred("from anima import utils; utils.do_db_setup();")
+
+user_setup_end = time.time()
+user_setup_duration = user_setup_end - user_setup_start
+logprint('UserSetup.py run in %0.3f sec' % user_setup_duration)
