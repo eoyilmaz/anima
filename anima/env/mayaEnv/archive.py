@@ -16,7 +16,7 @@ class Archiver(object):
 
     This utility class can flatten a maya scene including all its references in
     to a default maya project folder structure and can retrieve and connect the
-    references to the original ones when the files is returned back.
+    references to the original ones when the original file is returned back.
     """
 
     default_workspace_content = """// Anima Archiver Default Project Definition
@@ -218,6 +218,11 @@ sourceimages/3dPaintTextures"""
         }
 
         ref_paths = []
+        # skip the file if it doesn't exist
+        if not os.path.exists(path):
+            # return early
+            return ref_paths
+
         # only get new ref paths for '.ma' files
         if path.endswith('.ma'):
             # read the data of the original file
