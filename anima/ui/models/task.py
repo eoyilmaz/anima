@@ -344,6 +344,20 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             my_font.setBold(True)
             project_item.setFont(my_font)
 
+            # color with task status
+            from anima import defaults
+            project_item.setData(
+                QtGui.QColor(
+                    *defaults.status_colors_by_id.get(project.status_id)
+                ),
+                QtCore.Qt.BackgroundRole
+            )
+
+            # use black text
+            project_item.setForeground(
+                QtGui.QBrush(QtGui.QColor(0, 0, 0))
+            )
+
             self.appendRow(project_item)
 
         logger.debug('TaskTreeModel.populateTree() is finished')
