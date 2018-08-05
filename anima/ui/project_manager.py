@@ -223,7 +223,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tasks_tree_view.setUniformRowHeights(True)
         self.tasks_tree_view.header().setCascadingSectionResizes(True)
 
-        self.tasks_tree_view.fill(show_completed_projects=True)
+        self.tasks_tree_view.show_completed_projects = True
+        self.tasks_tree_view.fill()
 
         # also setup the signal
         QtCore.QObject.connect(

@@ -1199,9 +1199,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def fill_tasks_tree_view(self, show_completed_projects=False):
         """wrapper for the tasks_tree_view.fill() method
         """
-        self.tasks_tree_view.fill(
-            show_completed_projects=show_completed_projects
-        )
+        self.tasks_tree_view.show_completed_projects = show_completed_projects
+        self.tasks_tree_view.fill()
 
         # also setup the signal
         logger.debug('setting up signals for tasks_tree_view_changed')
