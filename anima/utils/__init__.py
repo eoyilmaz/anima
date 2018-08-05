@@ -1792,6 +1792,20 @@ def duplicate_task_hierarchy(task, parent, name, description, user):
     return dup_task
 
 
+def fix_task_statuses(task):
+    """fixes task statuses
+    """
+    from stalker import Task
+    if task:
+        assert isinstance(task, Task)
+        task.update_status_with_dependent_statuses()
+        task.update_status_with_children_statuses()
+        task.update_schedule_info()
+
+        check_task_status_by_schedule_model(task)
+        fix_task_computed_time(task)
+
+
 def check_task_status_by_schedule_model(task):
     """after scheduling project checks the task statuses
     """
