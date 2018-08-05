@@ -161,6 +161,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         open_in_file_browser_action = None
         copy_url_action = None
         copy_id_to_clipboard = None
+        fix_task_status_action = None
 
         from anima import defaults
         from stalker import LocalSession
@@ -204,6 +205,9 @@ class TaskTreeView(QtWidgets.QTreeView):
                 # this is a task
                 create_task_structure_action = \
                     menu.addAction(u'\uf115 Create Task Structure')
+
+                fix_task_status_action = \
+                    menu.addAction(u'\uf0e8 Fix Task Status')
 
                 task = entity
                 from stalker import Status
@@ -469,6 +473,24 @@ class TaskTreeView(QtWidgets.QTreeView):
                             )
                     else:
                         return
+
+                elif selected_item == fix_task_status_action:
+                    from stalker import Task
+                    if isinstance(entity, Task):
+                        entity.update_status_with_dependent_statuses()
+                        entity.update_status_with_children_statuses()
+                        entity.update_schedule_info()
+
+                        from anima import utils
+                        utils.check_task_status_by_schedule_model(entity)
+                        utils.fix_task_computed_time(entity)
+
+                        from stalker.db.session import DBSession
+                        DBSession.add(entity)
+                        DBSession.commit()
+
+                        if item.parent:
+                            item.parent.reload()
 
                 elif selected_item == update_project_action:
                     from anima.ui import project_dialog
