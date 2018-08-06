@@ -219,7 +219,9 @@ class TaskItem(QtGui.QStandardItem):
 
         if self.canFetchMore():
             from sqlalchemy import alias
-            from stalker import Task
+            from sqlalchemy.dialects.postgresql import array_agg
+            from stalker import Task, User
+            from stalker.models.task import Task_Resources
             from stalker.db.session import DBSession
 
             inner_tasks = alias(Task.__table__)
@@ -230,8 +232,18 @@ class TaskItem(QtGui.QStandardItem):
                 Task.name,
                 Task.entity_type,
                 Task.status_id,
-                subquery.exists().label('has_children')
-            )
+                subquery.exists().label('has_children'),
+                array_agg(User.name).label('resources')
+            )\
+                .outerjoin(Task_Resources, Task.id == Task_Resources.c.task_id)\
+                .outerjoin(User, Task_Resources.c.resource_id == User.id) \
+                .group_by(
+                    Task.id,
+                    Task.name,
+                    Task.entity_type,
+                    Task.status_id,
+                    subquery.exists().label('has_children')
+                )
 
             if self.task.entity_type != 'Project':
                 # query child tasks
@@ -250,7 +262,7 @@ class TaskItem(QtGui.QStandardItem):
             from anima import defaults
             task_items = []
             for task in tasks:
-                task_item = TaskItem(0, 3, entity=task)
+                task_item = TaskItem(0, 4, entity=task)
                 task_item.parent = self
 
                 # color with task status
@@ -269,7 +281,17 @@ class TaskItem(QtGui.QStandardItem):
                 task_items.append(task_item)
 
             if task_items:
-                self.appendRows(task_items)
+                # self.appendRows(task_items)
+                for task_item in task_items:
+                    # TODO: Create a custom QStandardItem for each data type in different columns
+                    entity_type_item = QtGui.QStandardItem()
+                    entity_type_item.setData(task_item.task.entity_type, QtCore.Qt.DisplayRole)
+
+                    resources_item = QtGui.QStandardItem()
+                    if task_item.task.resources != [None]:
+                        resources_item.setData(', '.join(map(str, task_item.task.resources)), QtCore.Qt.DisplayRole)
+
+                    self.appendRow([task_item, entity_type_item, resources_item])
 
             self.fetched_all = True
 
@@ -329,15 +351,15 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         """populates tree with user projects
         """
         logger.debug('TaskTreeModel.populateTree() is started')
-        self.setColumnCount(3)
+        self.setColumnCount(4)
         self.setHorizontalHeaderLabels(
-            ['Name', 'Type', 'Dependencies']
+            ['Name', 'Type', 'Resources', 'Dependencies']
         )
 
         for project in projects:
-            project_item = TaskItem(0, 3, entity=project)
+            project_item = TaskItem(0, 4, entity=project)
             project_item.parent = None
-            project_item.setColumnCount(3)
+            project_item.setColumnCount(4)
 
             # Set Font
             my_font = project_item.font()
