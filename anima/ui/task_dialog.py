@@ -1690,7 +1690,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 return
 
             try:
-                self.task.depends = depends
+                from stalker.exceptions import StatusError
+                try:
+                    if self.task.depends != depends:
+                        self.task.depends = depends
+                except StatusError as e:
+                    DBSession.rollback()
+                    QtWidgets.QMessageBox.critical(
+                        self,
+                        'Error',
+                        str(e)
+                    )
+                    return
             except CircularDependencyError as e:
                 DBSession.rollback()
                 QtWidgets.QMessageBox.critical(
