@@ -2175,7 +2175,8 @@ class Previs(object):
         cams = real_cams
 
         # get sequencer
-        seqs = pm.ls(type="sequencer")
+        seqs = [seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None]
+
         seq = None
         if not seqs:
             # create a sequencer
