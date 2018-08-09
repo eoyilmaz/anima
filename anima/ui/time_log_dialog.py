@@ -601,7 +601,7 @@ order by cast("TimeLogs".start as date)
         # now if we are not using extra time just create the TimeLog
         from stalker import TimeLog
         from stalker.db.session import DBSession
-        from stalker.exceptions import OverBookedError
+        from stalker.exceptions import OverBookedError, DependencyViolationError
         utc_now = local_to_utc(datetime.datetime.now())
 
         import stalker
@@ -624,12 +624,12 @@ order by cast("TimeLogs".start as date)
                     description=description,
                     date_created=utc_now
                 )
-            except OverBookedError:
+            except (OverBookedError, DependencyViolationError) as e:
                 # inform the user that it can not do that
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
-                    'O saatte baska time log var!!!'
+                    '%s' % e
                 )
                 DBSession.rollback()
                 return
