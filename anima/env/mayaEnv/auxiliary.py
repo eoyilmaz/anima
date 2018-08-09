@@ -1524,6 +1524,9 @@ class Playblaster(object):
                 return []
             return self.playblast_all_shots(extra_playblast_options)
         else:
+            if time_range_selected:
+                extra_playblast_options['startTime'] = start
+                extra_playblast_options['endTime'] = end
             return self.playblast_simple(extra_playblast_options)
 
     def playblast_simple(self, extra_playblast_options=None):
