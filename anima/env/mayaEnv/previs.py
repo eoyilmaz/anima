@@ -1065,16 +1065,14 @@ class ShotExporter(object):
 
                 # save it
                 m_env.save_as(versions[ind])
-                # print versions[ind]
-                ind += 1
             except:
                 errored_shots.append(shot_info[2])
-                ind += 1
             else:
                 # store information to database
                 DBSession.add(shot_task)
                 DBSession.add(versions[ind])
                 DBSession.commit()
+            ind += 1
 
             caller.step()
 
