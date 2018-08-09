@@ -1495,7 +1495,15 @@ class Playblaster(object):
         if not extra_playblast_options:
             extra_playblast_options = {}
 
-        if len(shots):
+        # if a time range is selected do a simple playblast
+        start, end = pm.timeControl(
+            pm.melGlobals['$gPlayBackSlider'],
+            q=1,
+            rangeArray=True
+        )
+        time_range_selected = (end - start) > 1
+
+        if len(shots) and not time_range_selected:
             if not self.batch_mode:
                 response = pm.confirmDialog(
                     title='Which Camera?',
