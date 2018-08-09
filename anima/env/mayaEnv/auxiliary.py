@@ -985,16 +985,22 @@ def perform_playblast(action):
     if v:
         # do playblaster
         pb = Playblaster()
+        extra_playblast_options = {
+            'viewer': 1
+        }
+
+        # ask playblast format
+        playblast_format = ask_playblast_format()
+        if playblast_format == 'png':
+            extra_playblast_options['fmt'] = 'image'
+            extra_playblast_options['compression'] = 'png'
 
         # ask resolution
         resolution = ask_playblast_resolution()
         if resolution is None:
             return
 
-        extra_playblast_options = {
-            'viewer': 1,
-            'percent': resolution
-        }
+        extra_playblast_options['percent'] = resolution
 
         outputs = pb.playblast(
             extra_playblast_options=extra_playblast_options
@@ -1057,6 +1063,25 @@ def ask_playblast_resolution():
         return None
 
     return 50
+
+
+def ask_playblast_format():
+    """asks the user the playblast format
+    """
+    # ask resolution
+    response = pm.confirmDialog(
+        title='Format?',
+        message='Format?',
+        button=['QuickTime', 'PNG'],
+        defaultButton='QuickTime',
+        cancelButton='QuickTime',
+        dismissString='QuickTime'
+    )
+
+    if response == 'QuickTime':
+        return 'qt'
+    elif response == 'PNG':
+        return 'image'
 
 
 def perform_playblast_shot(shot_name):
@@ -1138,14 +1163,17 @@ class Playblaster(object):
     ]
 
     global_playblast_options = {
-        'fmt': 'image',
+        # 'fmt': 'image',
+        'fmt': 'qt',
         'forceOverwrite': 1,
         'clearCache': 1,
         'showOrnaments': 1,
         'percent': 100,
         'offScreen': 1,
         'viewer': 0,
-        'compression': 'png',
+        # 'compression': 'png',
+        'compression': 'MPEG-4 Video',
+        'quality': 85,
         'sequenceTime': 1
     }
 
