@@ -773,6 +773,7 @@ class ShotExporter(object):
     def set_sequencer_name(self):
         """set sequencer name for publish
         """
+        from anima.exc import PublishError
         import anima.env.mayaEnv.publish as oy_publish
 
         try:
@@ -793,18 +794,28 @@ class ShotExporter(object):
             message += 'EP001_001_TEMP  or SEQ001_001_TEMP\n'
             message += '<Episode Num>_<Scene Num>_<Env>'
             pd = pm.promptDialog(title='Error', message=message, button='SET Seq Name')
+
             if pd == 'SET Seq Name':
                 seq_name = pm.promptDialog(q=1, text=1)
                 self.sequencer.set_sequence_name(seq_name)
-                try:
-                    oy_publish.check_sequence_name_format()
-                except:
-                    self.set_sequencer_name()
-            else:
-                try:
-                    oy_publish.check_sequence_name_format()
-                except:
-                    self.set_sequencer_name()
+
+            try:
+                oy_publish.check_sequence_name_format()
+            except PublishError as e:
+                raise RuntimeError(e)
+
+            # if pd == 'SET Seq Name':
+            #     seq_name = pm.promptDialog(q=1, text=1)
+            #     self.sequencer.set_sequence_name(seq_name)
+            #     try:
+            #         oy_publish.check_sequence_name_format()
+            #     except:
+            #         self.set_sequencer_name()
+            # else:
+            #     try:
+            #         oy_publish.check_sequence_name_format()
+            #     except:
+            #         self.set_sequencer_name()
 
     def clear_scene(self, keep_shot):
         # delete all other shot nodes
