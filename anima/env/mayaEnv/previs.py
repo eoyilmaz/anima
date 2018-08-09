@@ -279,9 +279,11 @@ def create_shots_from_scratch():
         while pm.textField('%s%s' % (shot_name_name, str(cnt)), ex=1):
             cnt += 1
 
+        seqs = [seq for seq in pm.ls(type='sequencer') if seq.referenceFile() is None]
         if len(pm.ls(type='sequencer')) != 1:
             raise RuntimeError('There must be 1 sequencer in a scene.')
-        seq = pm.ls(type='sequencer')[0]
+
+        seq = seqs[0]
         for i in range(0, cnt):
             shot_node_name = pm.textField('%s%s' % (shot_name_name, str(i)), q=1, text=1)
             start_frame = pm.intField('%s%s' % (start_frame_name, str(i)), q=1, v=1)
@@ -490,8 +492,10 @@ class ShotExporter(object):
         self.sm = pm.ls('sequenceManager1')[0]
 
         # query sequencer
-        if len(pm.ls(type='sequencer')) is not 1:
+        seqs = [seq for seq in pm.ls(type='sequencer') if seq.referenceFile() is None]
+        if len(seqs) is not 1:
             raise RuntimeError('There must be just 1 sequencer.')
+
         self.sequencer = self.sm.sequences.get()[0]
 
         # query all shots in sequencer
