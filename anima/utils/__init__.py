@@ -741,10 +741,21 @@ class MediaManager(object):
         # generate args
         args = [self.ffmpeg_command_path]
 
+        # first process the -start_number flag
+        if 'start_number' in kwargs:
+            key = 'start_number'
+            flag = '-%s' % key
+            # use pop to remove the key
+            value = kwargs.pop(key)
+            # append the flag
+            args.append(flag)
+            # append the value
+            args.append(str(value))
+
         # first process the -i flag
         if 'i' in kwargs:
             key = 'i'
-            flag = '-' + key
+            flag = '-%s' % key
             # use pop to remove the key
             value = kwargs.pop(key)
             if not isinstance(value, list):
