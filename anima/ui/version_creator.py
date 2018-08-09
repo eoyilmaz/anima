@@ -1892,6 +1892,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.check_version_file_exists(old_version):
             return
 
+        # close the dialog
+        self.close()
+
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
@@ -1949,7 +1952,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 version_updater_main_dialog.exec_()
 
         # close the dialog
-        self.close()
+        # self.close()
 
     def check_version_file_exists(self, version):
         """Checks if the version file exists in the file system
