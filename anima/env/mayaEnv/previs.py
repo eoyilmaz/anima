@@ -1045,6 +1045,7 @@ class ShotExporter(object):
         reload(toolbox)
         from stalker.db.session import DBSession
         for shot_info in shots_to_export:
+            shot_task = versions[ind].task.parent
             try:
                 # open previs version
                 m_env.open(previs_version, force=True, reference_depth=3, skip_update_check=True)
@@ -1059,8 +1060,8 @@ class ShotExporter(object):
                 # update shot.cut_in and shot.cut_out info
                 cut_in = pm.playbackOptions(q=1, min=1)
                 cut_out = pm.playbackOptions(q=1, max=1)
-                versions[ind].cut_in = int(cut_in)
-                versions[ind].cut_out = int(cut_out)
+                shot_task.cut_in = int(cut_in)
+                shot_task.cut_out = int(cut_out)
 
                 # save it
                 m_env.save_as(versions[ind])
@@ -1071,7 +1072,9 @@ class ShotExporter(object):
                 ind += 1
             else:
                 # store information to database
-                DBSession.save(versions[ind])
+                DBSession.add(shot_task)
+                DBSession.add(versions[ind])
+                DBSession.commit()
 
             caller.step()
 
