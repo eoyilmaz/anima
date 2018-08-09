@@ -1059,8 +1059,8 @@ class ShotExporter(object):
                 # update shot.cut_in and shot.cut_out info
                 cut_in = pm.playbackOptions(q=1, min=1)
                 cut_out = pm.playbackOptions(q=1, max=1)
-                versions[ind].cut_int = cut_in
-                versions[ind].cut_out = cut_out
+                versions[ind].cut_in = int(cut_in)
+                versions[ind].cut_out = int(cut_out)
 
                 # save it
                 m_env.save_as(versions[ind])
