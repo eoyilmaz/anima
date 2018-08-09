@@ -890,6 +890,9 @@ class MediaManager(object):
         }
         conversion_options.update(options)
 
+        import pprint
+        pprint.pprint(conversion_options)
+
         self.ffmpeg(**conversion_options)
 
         return output_path

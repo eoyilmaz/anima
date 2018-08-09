@@ -1614,6 +1614,8 @@ class Playblaster(object):
     def convert_image_sequence_to_video(cls, result):
         """converts image sequence to video
         """
+        import os
+        import glob
         # convert image sequences to h264
         new_result = []
         for output in result:
@@ -1621,6 +1623,21 @@ class Playblaster(object):
             # sequence
             if '#' in output:
                 # convert to mp4
+
+                # add start_number option
+                temp_str = output.replace('#', '*')
+                sequence = sorted(glob.glob(temp_str))
+                options = {
+                    '-y': ''  # overwrite previous playblast
+                }
+                if sequence:
+                    filename = os.path.basename(sequence[0])
+                    start_number = int(filename.split('.')[1])
+
+                    options = {
+                        'start_number': start_number
+                    }
+
                 # first convert the #'s to %03d format
                 temp_str = output.replace('#', '')
                 hash_count = len(output) - len(temp_str)
@@ -1634,7 +1651,8 @@ class Playblaster(object):
 
                 from anima.utils import MediaManager
                 mm = MediaManager()
-                output = mm.convert_to_h264(output, output_h264)
+                output = mm.convert_to_h264(output, output_h264, options=options)
+
             new_result.append(output)
         return new_result
 
