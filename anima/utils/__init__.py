@@ -1677,7 +1677,7 @@ def duplicate_task(task, user):
         created_by=user,
         description=task.description,
         is_milestone=task.is_milestone,
-        resources=task.resources,
+        # resources=task.resources,
         priority=task.priority,
         schedule_constraint=task.schedule_constraint,
         schedule_model=task.schedule_model,
