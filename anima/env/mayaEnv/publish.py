@@ -224,12 +224,7 @@ def check_all_geometry_is_referenced(progress_controller=None):
     progress_controller.complete()
     if non_referenced_model_exists:
         pm.select(bad_nodes)
-        raise PublishError(
-            'Please use REFERENCEs only'
-            '<br><br>'
-            '%s' %
-            '<br>'.join(bad_nodes[:MAX_NODE_DISPLAY])
-        )
+        raise PublishError('Please use REFERENCES only!')
 
 
 @publisher(LOOK_DEV_TYPES)
