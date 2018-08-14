@@ -202,6 +202,37 @@ def check_node_names_with_bad_characters(progress_controller=None):
 
 
 @publisher(LOOK_DEV_TYPES)
+def check_all_geometry_is_referenced(progress_controller=None):
+    """All geometry should be referenced
+
+    checks if all geometry in LookDev files are references to Model versions
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    nodes_to_check = pm.ls(type='mesh')
+    progress_controller.maximum = len(nodes_to_check)
+
+    non_referenced_model_exists = False
+    bad_nodes = []
+    for node in nodes_to_check:
+        if node.referenceFile() is None:
+            non_referenced_model_exists = True
+            bad_nodes.append(node)
+        progress_controller.increment()
+
+    progress_controller.complete()
+    if non_referenced_model_exists:
+        pm.select(bad_nodes)
+        raise PublishError(
+            'Please use REFERENCEs only'
+            '<br><br>'
+            '%s' %
+            '<br>'.join(bad_nodes[:MAX_NODE_DISPLAY])
+        )
+
+
+@publisher(LOOK_DEV_TYPES)
 def check_file_texture_paths_with_bad_characters(progress_controller=None):
     """No bad characters in file texture paths
 
