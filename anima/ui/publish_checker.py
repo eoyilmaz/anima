@@ -283,6 +283,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.publishers = []
         self.publish_callback = publish_callback
         self.version = version
+        self.last_run_date = 0
 
         self._setup_ui()
         self._fill_ui()
@@ -454,14 +455,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         one
         """
         QtWidgets.qApp.processEvents()
-        for publisher in self.publishers:
-            # move the view to this publisher
-            self.scroll_area.ensureWidgetVisible(
-                publisher.check_push_button
-            )
-            publisher.run_publisher()
-            self.update_publisher_total_duration_info()
-            QtWidgets.qApp.sendPostedEvents()
+        import time
+        current_time = time.time()
+        # do not run publishers if they ran less than 5 seconds ago
+        if current_time - self.last_run_date > 5:
+            for publisher in self.publishers:
+                # move the view to this publisher
+                self.scroll_area.ensureWidgetVisible(
+                    publisher.check_push_button
+                )
+                publisher.run_publisher()
+                self.update_publisher_total_duration_info()
+                QtWidgets.qApp.sendPostedEvents()
+            self.last_run_date = time.time()
 
         return self.check_publisher_states()
 
