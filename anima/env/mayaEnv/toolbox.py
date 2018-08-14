@@ -353,6 +353,15 @@ def UI():
             )
 
             pm.button(
+                'fix_student_license_button',
+                l='Fix Student License Error',
+                c=RepeatedCallback(Reference.fix_student_license),
+                ann=Reference.fix_student_license.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'archive_button',
                 l='Archive Current Scene',
                 c=RepeatedCallback(Reference.archive_current_scene),
@@ -2507,6 +2516,28 @@ class Reference(object):
 
         if pm.env.sceneName() != current_version.absolute_full_path:
             m_env.open(current_version, force=True, skip_update_check=True)
+
+    @classmethod
+    def fix_student_license(cls):
+        """fixes the student license error
+        """
+        import shutil
+
+        for ref in pm.listReferences():
+            with open(ref.path, 'r') as f:
+                data = f.readlines()
+
+            for i in range(50):
+                if 'student' in data[i].lower():
+                    # backup the file
+                    shutil.copy(ref.path, '%s.orig' % ref.path)
+                    data.pop(i)
+                    print('Fixed: %s' % ref.path)
+                    with open(ref.path, 'w') as f:
+                        f.writelines(data)
+                    ref.unload()
+                    ref.load()
+                    break
 
     @classmethod
     def archive_current_scene(cls):
