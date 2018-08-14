@@ -3,12 +3,7 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
-import glob
-import os
-from edl import Parser
 import re
-from pyseq import pyseq
-import timecode
 
 
 class Avid2Resolve(object):
@@ -25,6 +20,7 @@ class Avid2Resolve(object):
         """
         """
         self.fps = fps
+        from edl import Parser
         p = Parser(fps)
         with open(avid_eld_path) as f:
             self.events = p.parse(f)
@@ -77,6 +73,9 @@ class Avid2Resolve(object):
             # get the task folder
             output_path = '%s/Outputs/Main' % task.absolute_path
 
+            import os
+            import glob
+            import pyseq
             # check the folder and get the latest output folder
             version_folders = reversed(
                 sorted(
@@ -115,6 +114,7 @@ class Avid2Resolve(object):
         """converts event paths with proper ones
         """
         from stalker import Shot
+        import timecode
         # do a db connection
         for e in self.events:
             # get the reel which shows the shot name
