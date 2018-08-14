@@ -84,6 +84,11 @@ class ProgressDialogManager(object):
         # also set the Manager to in progress
         self.in_progress = True
 
+    def was_cancelled(self):
+        if self.dialog:
+            return self.dialog.wasCanceled()
+        return False
+
     def close(self):
         """kills the progressWindow
         """
@@ -107,6 +112,8 @@ class ProgressDialogManager(object):
                 self.create_dialog()
             else:
                 # update the maximum
+                if self.dialog:
+                    self.create_dialog()
                 self.dialog.setRange(0, self.max_steps)
                 self.dialog.setValue(self.current_step)
             # self. center_window()
@@ -143,6 +150,7 @@ class ProgressDialogManager(object):
         :param caller: A :class:`.ProgressCaller` instance, generally returned
           by the :meth:`.register` method.
         :param step: The step size to increment, the default value is 1.
+        :param str message: The progress message as string.
         """
         caller.current_step += step
         self.current_step += step

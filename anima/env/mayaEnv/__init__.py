@@ -59,6 +59,16 @@ class MayaMainProgressBarWrapper(object):
         self.progress_bar = pm.windows.getMainProgressBar()
         self.progress_bar.beginProgress()
 
+    def end_progress(self):
+        """wrapper for end_progress
+        """
+        self.progress_bar.endProgress()
+
+    def was_cancelled(self):
+        """wrapper for was_canceled method
+        """
+        return self.progress_bar.getIsCancelled()
+
     def close(self):
         self.progress_bar.endProgress()
 
