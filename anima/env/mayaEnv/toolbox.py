@@ -859,6 +859,16 @@ def UI():
             color.reset()
 
             color.change()
+            color.change()
+            pm.button(
+                'update_render_settings_button',
+                l="Update Render Settings",
+                c=RepeatedCallback(Render.update_render_settings),
+                ann=Render.update_render_settings.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button(
                 'submit_afanasy_button',
                 l="Afanasy Job Submitter",
@@ -891,32 +901,6 @@ def UI():
                           "Arnold to Redshift",
                       bgc=color.color)
 
-            color.change()
-            pm.button(
-                'fix_render_layer_out_adjustment_errors_button',
-                l="fixRenderLayerOutAdjustmentErrors",
-                c='pm.mel.eval("fixRenderLayerOutAdjustmentErrors();")',
-                ann="fixRenderLayerOutAdjustmentErrors",
-                bgc=color.color
-            )
-
-            pm.separator()
-            color.change()
-            with pm.rowLayout(nc=2, adj=2):
-                apply_to_hierarchy_checkBox = pm.checkBox(
-                    'apply_to_hierarchy_checkBox',
-                    l="Apply to Hierarchy",
-                    value=True,
-                    bgc=color.color
-                )
-
-                disable_undo_queue_check_box = pm.checkBox(
-                    'disable_undo_queue_checkBox',
-                    l="Disable Undo",
-                    value=False,
-                    bgc=color.color
-                )
-
             def set_shape_attribute_wrapper(attr_name, value):
                 """a wrapper function for set_shape_attribute
                 """
@@ -937,51 +921,6 @@ def UI():
                     apply_to_hierarchy,
                     disable_undo
                 )
-
-            attr_names = [
-                'castsShadows', 'receiveShadows', 'motionBlur',
-                'primaryVisibility', 'visibleInReflections',
-                'visibleInRefractions', 'aiSelfShadows', 'aiOpaque',
-                'aiVisibleInDiffuse', 'aiVisibleInGlossy', 'aiMatte',
-                'overrideShaders'
-            ]
-            for attr_name in attr_names:
-                with pm.rowLayout(nc=4, rat=(1, "both", 0), adj=1):
-                    pm.text('%s_text' % attr_name, l=attr_name, bgc=color.color)
-                    pm.button(
-                        'set_%s_ON_button' % attr_name,
-                        l="ON",
-                        c=RepeatedCallback(
-                            set_shape_attribute_wrapper,
-                            attr_name,
-                            1,
-                        ),
-                        bgc=(0, 1, 0)
-                    )
-                    pm.button(
-                        'set_%s_OFF_button' % attr_name,
-                        l="OFF",
-                        c=RepeatedCallback(
-                            set_shape_attribute_wrapper,
-                            attr_name,
-                            0
-                        ),
-                        bgc=(1, 0, 0)
-                    )
-                    pm.button(
-                        'set_%s_REMOVE_button' % attr_name,
-                        l="REM",
-                        ann='Remove Override',
-                        c=RepeatedCallback(
-                            set_shape_attribute_wrapper,
-                            attr_name,
-                            -1
-                        ),
-                        bgc=(0, 0.5, 1)
-                    )
-
-            pm.separator()
-            color.change()
 
             with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
                 pm.text('renderThumbnailUpdate_text',
@@ -1065,107 +1004,11 @@ def UI():
                       bgc=color.color)
 
             color.change()
-            enable_matte_row_layout = pm.rowLayout(nc=6, adj=1)
-            with enable_matte_row_layout:
-                pm.text(
-                    l='Enable Arnold Matte',
-                )
-                pm.button(
-                    l='Default',
-                    c=RepeatedCallback(Render.enable_matte, 0),
-                    ann='Enables Arnold Matte on selected objects with <b>No Color</b>',
-                    bgc=color.color
-                )
-                pm.button(
-                    l='R',
-                    c=RepeatedCallback(Render.enable_matte, 1),
-                    ann='Enables Arnold Matte on selected objects with <b>Red</b>',
-                    bgc=[1, 0, 0]
-                )
-                pm.button(
-                    l='G',
-                    c=RepeatedCallback(Render.enable_matte, 2),
-                    ann='Enables Arnold Matte on selected objects with <b>Green</b>',
-                    bgc=[0, 1, 0]
-                )
-                pm.button(
-                    l='B',
-                    c=RepeatedCallback(Render.enable_matte, 3),
-                    ann='Enables Arnold Matte on selected objects with <b>Blue</b>',
-                    bgc=[0, 0, 1]
-                )
-                pm.button(
-                    l='A',
-                    c=RepeatedCallback(Render.enable_matte, 4),
-                    ann='Enables Arnold Matte on selected objects with <b>Alpha</b>',
-                    bgc=[0.5, 0.5, 0.5]
-                )
-
-            pm.button(
-                l='Setup Z-Layer',
-                c=RepeatedCallback(Render.create_z_layer),
-                ann=Render.create_z_layer.__doc__,
-                bgc=color.color
-            )
-
-            pm.button(
-                l='Setup EA Matte',
-                c=RepeatedCallback(Render.create_ea_matte),
-                ann=Render.create_ea_matte.__doc__,
-                bgc=color.color
-            )
-
-            color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
                 l='Enable Subdiv',
                 c=RepeatedCallback(Render.enable_subdiv),
                 ann='Enables Arnold/RedShift Subdiv (catclark) on selected objects',
-                bgc=color.color
-            )
-
-            color.change()
-            pm.text(l='===== BarnDoor Simulator =====')
-
-            pm.button(
-                'barn_door_simulator_setup_button',
-                l='Setup',
-                c=RepeatedCallback(Render.barndoor_simulator_setup),
-                ann='Creates a arnold barn door simulator to the selected '
-                    'light',
-                bgc=color.color
-            )
-
-            pm.button(
-                'barn_door_simulator_unsetup_button',
-                l='Un-Setup',
-                c=RepeatedCallback(Render.barndoor_simulator_unsetup),
-                ann='Removes the barn door simulator nodes from the selected '
-                    'light',
-                bgc=color.color
-            )
-
-            pm.button(
-                'fix_barndoors_button',
-                l='Fix BarnDoors',
-                c=RepeatedCallback(Render.fix_barndoors),
-                ann=Render.fix_barndoors.__doc__,
-                bgc=color.color
-            )
-
-            color.change()
-            pm.button(
-                'ai_skin_sss_to_ai_skin_button',
-                l='aiSkinSSS --> aiSkin',
-                c=RepeatedCallback(Render.convert_aiSkinSSS_to_aiSkin),
-                ann=Render.convert_aiSkinSSS_to_aiSkin.__doc__,
-                bgc=color.color
-            )
-            pm.button(
-                'normalize_sss_weights_button',
-                l='Normalize SSS Weights',
-                c=RepeatedCallback(Render.normalize_sss_weights),
-                ann=Render.normalize_sss_weights.__doc__,
                 bgc=color.color
             )
 
@@ -1782,6 +1625,173 @@ def UI():
                 'oyDeReferencer_button', l="dereferencer",
                 c=RepeatedCallback(General.dereferencer),
                 ann="sets all objects display override  to normal",
+                bgc=color.color
+            )
+
+            color.change()
+            enable_matte_row_layout = pm.rowLayout(nc=6, adj=1)
+            with enable_matte_row_layout:
+                pm.text(
+                    l='Enable Arnold Matte',
+                )
+                pm.button(
+                    l='Default',
+                    c=RepeatedCallback(Render.enable_matte, 0),
+                    ann='Enables Arnold Matte on selected objects with <b>No Color</b>',
+                    bgc=color.color
+                )
+                pm.button(
+                    l='R',
+                    c=RepeatedCallback(Render.enable_matte, 1),
+                    ann='Enables Arnold Matte on selected objects with <b>Red</b>',
+                    bgc=[1, 0, 0]
+                )
+                pm.button(
+                    l='G',
+                    c=RepeatedCallback(Render.enable_matte, 2),
+                    ann='Enables Arnold Matte on selected objects with <b>Green</b>',
+                    bgc=[0, 1, 0]
+                )
+                pm.button(
+                    l='B',
+                    c=RepeatedCallback(Render.enable_matte, 3),
+                    ann='Enables Arnold Matte on selected objects with <b>Blue</b>',
+                    bgc=[0, 0, 1]
+                )
+                pm.button(
+                    l='A',
+                    c=RepeatedCallback(Render.enable_matte, 4),
+                    ann='Enables Arnold Matte on selected objects with <b>Alpha</b>',
+                    bgc=[0.5, 0.5, 0.5]
+                )
+
+            color.change()
+            pm.button(
+                'fix_render_layer_out_adjustment_errors_button',
+                l="fixRenderLayerOutAdjustmentErrors",
+                c='pm.mel.eval("fixRenderLayerOutAdjustmentErrors();")',
+                ann="fixRenderLayerOutAdjustmentErrors",
+                bgc=color.color
+            )
+
+            pm.separator()
+            color.change()
+            with pm.rowLayout(nc=2, adj=2):
+                apply_to_hierarchy_checkBox = pm.checkBox(
+                    'apply_to_hierarchy_checkBox',
+                    l="Apply to Hierarchy",
+                    value=True,
+                    bgc=color.color
+                )
+
+                disable_undo_queue_check_box = pm.checkBox(
+                    'disable_undo_queue_checkBox',
+                    l="Disable Undo",
+                    value=False,
+                    bgc=color.color
+                )
+
+            attr_names = [
+                'castsShadows', 'receiveShadows', 'motionBlur',
+                'primaryVisibility', 'visibleInReflections',
+                'visibleInRefractions', 'aiSelfShadows', 'aiOpaque',
+                'aiVisibleInDiffuse', 'aiVisibleInGlossy', 'aiMatte',
+                'overrideShaders'
+            ]
+            for attr_name in attr_names:
+                with pm.rowLayout(nc=4, rat=(1, "both", 0), adj=1):
+                    pm.text('%s_text' % attr_name, l=attr_name, bgc=color.color)
+                    pm.button(
+                        'set_%s_ON_button' % attr_name,
+                        l="ON",
+                        c=RepeatedCallback(
+                            set_shape_attribute_wrapper,
+                            attr_name,
+                            1,
+                        ),
+                        bgc=(0, 1, 0)
+                    )
+                    pm.button(
+                        'set_%s_OFF_button' % attr_name,
+                        l="OFF",
+                        c=RepeatedCallback(
+                            set_shape_attribute_wrapper,
+                            attr_name,
+                            0
+                        ),
+                        bgc=(1, 0, 0)
+                    )
+                    pm.button(
+                        'set_%s_REMOVE_button' % attr_name,
+                        l="REM",
+                        ann='Remove Override',
+                        c=RepeatedCallback(
+                            set_shape_attribute_wrapper,
+                            attr_name,
+                            -1
+                        ),
+                        bgc=(0, 0.5, 1)
+                    )
+
+            pm.separator()
+            color.change()
+
+            pm.button(
+                l='Setup Z-Layer',
+                c=RepeatedCallback(Render.create_z_layer),
+                ann=Render.create_z_layer.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
+                l='Setup EA Matte',
+                c=RepeatedCallback(Render.create_ea_matte),
+                ann=Render.create_ea_matte.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.text(l='===== BarnDoor Simulator =====')
+
+            pm.button(
+                'barn_door_simulator_setup_button',
+                l='Setup',
+                c=RepeatedCallback(Render.barndoor_simulator_setup),
+                ann='Creates a arnold barn door simulator to the selected '
+                    'light',
+                bgc=color.color
+            )
+
+            pm.button(
+                'barn_door_simulator_unsetup_button',
+                l='Un-Setup',
+                c=RepeatedCallback(Render.barndoor_simulator_unsetup),
+                ann='Removes the barn door simulator nodes from the selected '
+                    'light',
+                bgc=color.color
+            )
+
+            pm.button(
+                'fix_barndoors_button',
+                l='Fix BarnDoors',
+                c=RepeatedCallback(Render.fix_barndoors),
+                ann=Render.fix_barndoors.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'ai_skin_sss_to_ai_skin_button',
+                l='aiSkinSSS --> aiSkin',
+                c=RepeatedCallback(Render.convert_aiSkinSSS_to_aiSkin),
+                ann=Render.convert_aiSkinSSS_to_aiSkin.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'normalize_sss_weights_button',
+                l='Normalize SSS Weights',
+                c=RepeatedCallback(Render.normalize_sss_weights),
+                ann=Render.normalize_sss_weights.__doc__,
                 bgc=color.color
             )
 
@@ -3589,6 +3599,16 @@ class Rigging(object):
 class Render(object):
     """Tools for render
     """
+
+    @classmethod
+    def update_render_settings(cls):
+        """updates render settings for current renderer
+        """
+        from anima.env import mayaEnv
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+        if v:
+            m.set_render_filename(version=v)
 
     @classmethod
     def afanasy_job_submitter(cls):
