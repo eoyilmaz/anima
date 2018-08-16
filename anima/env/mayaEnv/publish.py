@@ -2168,18 +2168,20 @@ def set_frame_range(progress_controller=None):
 
 @publisher('layout')
 def check_reference_types(progress_controller=None):
-    """No "ActiveProps" in the scene
+    """Only LookDev and Layout types are referenced
 
-    It is not allowed to publish a layout that contains:
+    It is not allowed to publish a layout that contains anything other than:
 
-    Active Prop
+    LookDev
+    Layout
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
-    allowed_types = \
-        ['bg-building', 'building', 'building part', 'layout', 'prop',
-         'interior', 'exterior']
+    # allowed_types = \
+    #     ['bg-building', 'building', 'building part', 'layout', 'prop',
+    #      'interior', 'exterior']
+    allowed_types = ['layout'] + LOOK_DEV_TYPES
     wrong_refs = []
     all_references = pm.listReferences(recursive=True)
     progress_controller.maximum = len(all_references)
@@ -2189,12 +2191,13 @@ def check_reference_types(progress_controller=None):
             progress_controller.increment()
             continue
         t = v.task
-        t_parent = t.parent
-        if not t_parent:
-            progress_controller.increment()
-            continue
+        # t_parent = t.parent
+        # if not t_parent:
+        #     progress_controller.increment()
+        #     continue
 
-        task_type = t_parent.type
+        # task_type = t_parent.type
+        task_type = t.type
         if not task_type or task_type.name.lower() not in allowed_types:
             wrong_refs.append(ref)
         progress_controller.increment()
@@ -2303,8 +2306,8 @@ def create_representations(progress_controller=None):
         return
     progress_controller.increment()
 
-    # skip if it is a Character
-    skip_types = ['character', 'animation', 'previs', 'vehicle']
+    # skip if it is an animation or previs task
+    skip_types = ['animation', 'previs']
     for t in v.naming_parents:
         for st in skip_types:
             if t.type and t.type.name.lower().startswith(st):

@@ -38,6 +38,7 @@ env_paths = [
     '../../../mayaEnv/config',
     '../../../mayaEnv/config/%s' % cmds.about(v=1),
     '../../../mayaEnv/plugins'
+    '../../../mayaEnv/plugins/%s' % cmds.about(v=1),
 ]
 
 for path in env_paths:
