@@ -101,7 +101,6 @@ VALID_MATERIALS = {
 }
 
 
-
 LOOK_DEV_TYPES = ['LookDev', 'Look Dev', 'LookDevelopment', 'Look Development']
 REALTIME_RIG_TYPES = ['RealtimeRig', 'Realtime Rig']
 
@@ -2181,7 +2180,7 @@ def check_reference_types(progress_controller=None):
     # allowed_types = \
     #     ['bg-building', 'building', 'building part', 'layout', 'prop',
     #      'interior', 'exterior']
-    allowed_types = ['layout'] + LOOK_DEV_TYPES
+    allowed_types = ['layout'] + map(str.lower, LOOK_DEV_TYPES)
     wrong_refs = []
     all_references = pm.listReferences(recursive=True)
     progress_controller.maximum = len(all_references)
