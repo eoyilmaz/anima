@@ -2182,7 +2182,7 @@ def check_reference_types(progress_controller=None):
     #      'interior', 'exterior']
     allowed_types = ['layout'] + map(str.lower, LOOK_DEV_TYPES)
     wrong_refs = []
-    all_references = pm.listReferences(recursive=True)
+    all_references = pm.listReferences()
     progress_controller.maximum = len(all_references)
     for ref in all_references:
         v = ref.version
