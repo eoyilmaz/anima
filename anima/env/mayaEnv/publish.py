@@ -1325,7 +1325,9 @@ def check_lights(progress_controller=None):
     progress_controller.maximum = 2
 
     all_lights = pm.ls(
-        type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight']
+        type=['light', 'aiAreaLight', 'aiSkyDomeLight', 'aiPhotometricLight',
+              'RedshiftPhysicalSun', 'RedshiftPhysicalLight', 'RedshiftIESLight',
+              'RedshiftPortalLight', 'RedshiftDomeLight']
     )
     progress_controller.increment()
 
