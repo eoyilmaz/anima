@@ -1884,14 +1884,23 @@ class General(object):
                 tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
                 rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
                 sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
+                pivr = pm.xform(node, q=1, ws=1, rp=1)
+                pivs = pm.xform(node, q=1, ws=1, sp=1)
+
             else:
                 print('using local position')
                 tra = node.t.get()
                 rot = node.r.get()
                 sca = node.s.get()
+                pivr = node.rotatePivot.get()
+                pivs = node.scalePivot.get()
+
             print('tra: %0.3f %0.3f %0.3f' % (tra[0], tra[1], tra[2]))
             print('rot: %0.3f %0.3f %0.3f' % (rot[0], rot[1], rot[2]))
             print('sca: %0.3f %0.3f %0.3f' % (sca[0], sca[1], sca[2]))
+
+            print('rotpiv: %0.3f %0.3f %0.3f' % (pivr[0], pivr[1], pivr[2]))
+            print('scapiv: %0.3f %0.3f %0.3f' % (pivs[0], pivs[1], pivs[2]))
 
             data.append('%s' % tra[0])
             data.append('%s' % tra[1])
@@ -1905,6 +1914,14 @@ class General(object):
             data.append('%s' % sca[1])
             data.append('%s' % sca[2])
 
+            data.append('%s' % pivr[0])
+            data.append('%s' % pivr[1])
+            data.append('%s' % pivr[2])
+
+            data.append('%s' % pivs[0])
+            data.append('%s' % pivs[1])
+            data.append('%s' % pivs[2])
+
         with open(cls.transform_info_temp_file_path, 'w') as f:
             f.write('\n'.join(data))
 
@@ -1917,9 +1934,27 @@ class General(object):
             data = f.readlines()
 
         for i, node in enumerate(pm.ls(sl=1, type='transform')):
-            j = i * 9
+            j = i * 15
             if use_global_pos:
                 print('using global position')
+
+                # import pivots first
+                # rotatePivot
+                pm.xform(
+                    node, ws=1,
+                    rp=(float(data[j + 9]),
+                       float(data[j + 10]),
+                       float(data[j + 11]))
+                )
+
+                # scalePivot
+                pm.xform(
+                    node, ws=1,
+                    sp=(float(data[j + 12]),
+                       float(data[j + 13]),
+                       float(data[j + 14]))
+                )
+
                 pm.xform(
                     node, ws=1,
                     t=(float(data[j]),
@@ -1938,8 +1973,21 @@ class General(object):
                        float(data[j + 7]),
                        float(data[j + 8]))
                 )
+
             else:
                 print('using local position')
+
+                # set pivots first
+                # rotatePivot
+                node.rotatePivot.set(
+                    float(data[j + 9]), float(data[j + 10]), float(data[j + 11])
+                )
+
+                # scalePivot
+                node.scalePivot.set(
+                    float(data[j + 12]), float(data[j + 13]), float(data[j + 14])
+                )
+
                 node.t.set(
                     float(data[j]), float(data[j + 1]), float(data[j + 2])
                 )
@@ -1955,6 +2003,10 @@ class General(object):
                   (float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
             print('sca: %0.3f %0.3f %0.3f' %
                   (float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+            print('pivr: %0.3f %0.3f %0.3f' %
+                  (float(data[j + 9]), float(data[j + 10]), float(data[j + 11])))
+            print('pivs: %0.3f %0.3f %0.3f' %
+                  (float(data[j + 12]), float(data[j + 13]), float(data[j + 14])))
 
     @classmethod
     def export_component_transform_info(cls):
