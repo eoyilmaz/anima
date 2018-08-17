@@ -859,7 +859,6 @@ def UI():
             color.reset()
 
             color.change()
-            color.change()
             pm.button(
                 'update_render_settings_button',
                 l="Update Render Settings",
@@ -867,6 +866,24 @@ def UI():
                 ann=Render.update_render_settings.__doc__,
                 bgc=color.color
             )
+
+            color.change()
+            pm.text(l='===== RedShift IC + IPC Bake =====')
+            pm.button(
+                'redshift_ic_ipc_bake_button',
+                l="Do Bake",
+                c=RepeatedCallback(Render.redshift_ic_ipc_bake),
+                ann=Render.redshift_ic_ipc_bake.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'redshift_ic_ipc_bake_restore_button',
+                l="Restore Settings",
+                c=RepeatedCallback(Render.redshift_ic_ipc_bake_restore),
+                ann=Render.redshift_ic_ipc_bake_restore.__doc__,
+                bgc=color.color
+            )
+            pm.text(l='======================================')
 
             color.change()
             pm.button(
@@ -3599,6 +3616,82 @@ class Rigging(object):
 class Render(object):
     """Tools for render
     """
+    rso_options = {
+        'bake': {
+            # motion blur settings
+            'motionBlurEnable': 1,
+            'motionBlurDeformationEnable': 1,
+            'motionBlurNumTransformationSteps': 31,
+            'motionBlurFrameDuration': 100,
+            'motionBlurShutterStart': 0,
+            'motionBlurShutterEnd': 1,
+            'motionBlurShutterPosition': 1,
+
+            # set GI Engines
+            'primaryGIEngine': 3,
+            'secondaryGIEngine': 2,
+
+            # set file paths
+            'irradiancePointCloudMode': 2,  # Rebuild (prepass only)
+            'irradianceCacheMode': 2,  # Rebuild (prepass only)
+
+            'irradiancePointCloudFilename': 'Outputs/rs/ipc_baked.rsmap',
+            'irradianceCacheFilename': 'Outputs/rs/im_baked.rsmap'
+        },
+        'orig': {},
+        'current_frame': 1
+    }
+
+    @classmethod
+    def redshift_ic_ipc_bake(cls):
+        """Sets the render settings for IC + IPC bake
+        """
+        # set motion blur
+        start_frame = int(pm.playbackOptions(q=True, ast=True))
+        end_frame = int(pm.playbackOptions(q=True, aet=True))
+
+        cls.rso_options['bake']['motionBlurFrameDuration'] = end_frame - start_frame + 1
+
+        rso = pm.PyNode('redshiftOptions')
+
+        # store and set attributes
+        for attr in cls.rso_options['bake']:
+            cls.rso_options['orig'][attr] = rso.attr(attr).get()
+            rso.attr(attr).set(cls.rso_options['bake'][attr])
+
+        # go to the first frame
+        current_frame = pm.currentTime(q=1)
+        cls.rso_options['current_frame'] = current_frame
+        pm.currentTime(start_frame)
+
+        # do a render
+        pm.mel.eval('rsRender -render -rv -cam "<renderview>";')
+
+    @classmethod
+    def redshift_ic_ipc_bake_restore(cls):
+        """restores the previous render settings
+        """
+        rso = pm.PyNode('redshiftOptions')
+
+        # revert settings back
+        for attr in cls.rso_options['orig']:
+            rso.attr(attr).set(cls.rso_options['orig'][attr])
+
+        # set the GI engines
+        rso.primaryGIEngine.set(cls.rso_options['bake']['primaryGIEngine'])
+        rso.secondaryGIEngine.set(cls.rso_options['bake']['secondaryGIEngine'])
+
+        # set the irradiance method to load
+        rso.irradiancePointCloudMode.set(1)  # Load
+        rso.irradianceCacheMode.set(1)  # Load
+
+        # set the cache paths
+        rso.irradiancePointCloudFilename.set(cls.rso_options['bake']['irradiancePointCloudFilename'])
+        rso.irradianceCacheFilename.set(cls.rso_options['bake']['irradianceCacheFilename'])
+
+        # go to current frame
+        current_frame = cls.rso_options['current_frame']
+        pm.currentTime(current_frame)
 
     @classmethod
     def update_render_settings(cls):
