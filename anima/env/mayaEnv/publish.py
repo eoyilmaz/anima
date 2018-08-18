@@ -216,8 +216,17 @@ def check_all_geometry_is_referenced(progress_controller=None):
     bad_nodes = []
     for node in nodes_to_check:
         if node.referenceFile() is None:
-            non_referenced_model_exists = True
-            bad_nodes.append(node)
+            # check if it is a fur cache node
+            parent = node.getParent()
+            has_proxy = False
+            for n in parent.listHistory():
+                if isinstance(n, pm.nt.RedshiftProxyMesh):
+                    has_proxy = True
+                    break
+
+            if not has_proxy:
+                non_referenced_model_exists = True
+                bad_nodes.append(node)
         progress_controller.increment()
 
     progress_controller.complete()
