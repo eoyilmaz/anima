@@ -2176,12 +2176,13 @@ def set_frame_range(progress_controller=None):
 
 @publisher('layout')
 def check_reference_types(progress_controller=None):
-    """Only LookDev and Layout types are referenced
+    """Only LookDev, Layout and Vegetation types are referenced
 
     It is not allowed to publish a layout that contains anything other than:
 
     LookDev
     Layout
+    Vegetation
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
@@ -2189,7 +2190,7 @@ def check_reference_types(progress_controller=None):
     # allowed_types = \
     #     ['bg-building', 'building', 'building part', 'layout', 'prop',
     #      'interior', 'exterior']
-    allowed_types = ['layout'] + map(str.lower, LOOK_DEV_TYPES)
+    allowed_types = ['layout', 'vegetation'] + map(str.lower, LOOK_DEV_TYPES)
     wrong_refs = []
     all_references = pm.listReferences()
     progress_controller.maximum = len(all_references)
