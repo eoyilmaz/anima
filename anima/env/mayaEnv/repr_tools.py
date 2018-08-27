@@ -1676,6 +1676,10 @@ class RepresentationGenerator(object):
                     # give it the same name with the original
                     rs_proxy_tra.rename('%s' % child_node_name)
 
+                    # set the drawing overrides
+                    rs_proxy_tra.overrideEnabled.set(1)
+                    rs_proxy_tra.overrideShading.set(0)
+
             # clean up other nodes
             pm.delete('kks___vegetation_pfxStrokes')
             pm.delete('kks___vegetation_paintableGeos')
@@ -1703,6 +1707,10 @@ class RepresentationGenerator(object):
                     # set pivots
                     pm.xform(rs_proxy_tra, ws=1, rp=rp)
                     pm.xform(rs_proxy_tra, ws=1, sp=sp)
+
+                    # set the drawing overrides
+                    rs_proxy_tra.overrideEnabled.set(1)
+                    rs_proxy_tra.overrideShading.set(0)
 
         # convert all references to RS
         for ref in pm.listReferences():
