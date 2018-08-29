@@ -293,9 +293,8 @@ def find_cut_info(cam):
 
     i = 0
     iter_count = 0
-    while i < range(len(keyframes) - 2) and iter_count < 100:
+    while i < range(len(keyframes) - 2) and iter_count < 1000:
         iter_count += 1
-        print iter_count
         start_frame = keyframes[i]
 
         try:
@@ -308,7 +307,7 @@ def find_cut_info(cam):
             start_frame_of_next_cam = keyframes[i + j]
             if int(start_frame_of_next_cam - end_frame) == 1:
                 cut_info.append([start_frame, end_frame])
-                print i, start_frame, end_frame
+                # print(i, start_frame, end_frame)
                 i += j
                 break
 
