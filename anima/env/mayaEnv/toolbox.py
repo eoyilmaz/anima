@@ -1360,6 +1360,14 @@ def UI():
             #     bgc=color.color
             # )
 
+            pm.button(
+                'export_alembic_of_selected_cacheable_nodes_button',
+                l='Export Alembic Of Selected Cacheable Nodes',
+                c=RepeatedCallback(auxiliary.export_alembic_of_selected_cacheable_nodes),
+                ann=auxiliary.export_alembic_of_selected_cacheable_nodes.__doc__.split('\n')[0],
+                bgc=color.color
+            )
+
             pm.text(l='===== Exporters =====')
             color.change()
             rowLayout = pm.rowLayout(nc=3, adj=3, bgc=color.color)

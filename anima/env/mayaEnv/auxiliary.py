@@ -1997,19 +1997,16 @@ def get_cacheable_nodes():
     return cacheable_nodes
 
 
-def export_alembic_from_cache_node(handles=0, step=1):
-    """exports alembic caches by looking at the current scene and try to find
-    transform nodes which has an attribute called "cacheable"
+def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
+    """exports alembic caches of the given nodes
 
+    :param list cacheable_nodes: The top transform nodes
     :param int handles: An integer that shows the desired handles from start
       and end.
+    :param int step:
+    :return:
     """
-    import os
-
-    # get cacheable nodes in the current scene
-    cacheable_nodes = get_cacheable_nodes()
-
-    # stop if there are no cacheable nodes in the scene
+    # stop if there are no cacheable nodes given
     if not cacheable_nodes:
         return
 
@@ -2029,6 +2026,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
     start_frame = pm.playbackOptions(q=1, ast=1)
     end_frame = pm.playbackOptions(q=1, aet=1)
 
+    import os
     current_file_full_path = pm.sceneName()
     current_file_path = os.path.dirname(current_file_full_path)
     current_file_name = os.path.basename(current_file_full_path)
@@ -2041,6 +2039,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
     pm.select(None)
 
     wrong_node_names = ['_rig', '_proxy']
+    wrong_node_names_starts_with = ['rig']
 
     default_playback_option = pm.playbackOptions(q=1, v=True)
 
@@ -2071,7 +2070,9 @@ def export_alembic_from_cache_node(handles=0, step=1):
                 camel_case_to_underscore(current_node.name().split(':')[-1])
 
             if any([n in underscored_name
-                    for n in wrong_node_names]):
+                    for n in wrong_node_names]) or \
+               any([underscored_name.startswith(n)
+                    for n in wrong_node_names_starts_with]):
                     if current_node.v.get() is True \
                        and not current_node.v.isLocked():
                         current_node.v.set(False)
@@ -2135,6 +2136,36 @@ def export_alembic_from_cache_node(handles=0, step=1):
 
     # restore playback option
     pm.playbackOptions(v=default_playback_option)
+
+
+def export_alembic_of_selected_cacheable_nodes(handles=0, step=1):
+    """Exports alembic caches of the selected cacheable nodes
+
+    :param int handles: An integer that shows the desired handles from start
+      and end.
+    :param int step:
+    :return:
+    """
+    # get selected cacheable nodes in the current scene
+    cacheable_nodes = [
+        n
+        for n in pm.selected()
+        if n.hasAttr('cacheable') and n.getAttr('cacheable')
+    ]
+    export_alembic_of_nodes(cacheable_nodes, handles, step)
+
+
+def export_alembic_from_cache_node(handles=0, step=1):
+    """exports alembic caches by looking at the current scene and try to find
+    transform nodes which has an attribute called "cacheable"
+
+    :param int handles: An integer that shows the desired handles from start
+      and end.
+    :param int step: Frame step
+    """
+    # get cacheable nodes in the current scene
+    cacheable_nodes = get_cacheable_nodes()
+    export_alembic_of_nodes(cacheable_nodes, handles, step)
 
 
 # noinspection PyStatementEffect
