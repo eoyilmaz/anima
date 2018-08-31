@@ -2056,6 +2056,11 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         else:
             i = 1
 
+        # get cacheable_attributes | attributes that needs to be exported
+        cacheable_attrs = ''
+        if cacheable_node.hasAttr('cacheable_attrs'):
+            cacheable_attrs = cacheable_node.cacheable_attrs.get().strip().split(' ')
+
         # isolate in all panels
         panel_list = pm.getPanel(type='modelPanel')
         for panel in panel_list:
@@ -2101,8 +2106,17 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
 
         command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                   '-stripNamespaces -uvWrite -worldSpace ' \
-                  '-writeVisibility -eulerFilter ' \
-                  '-root %s -file %s";'
+                  '-writeVisibility -eulerFilter '
+
+        # add cacheable_attrs if any
+        if cacheable_attrs:
+            command = '%s %s' % (
+                command,
+                ' '.join(map(lambda x: '-attr %s' % x, cacheable_attrs))
+            )
+
+        # TODO: This is ugly!
+        command += ' -root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
