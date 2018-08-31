@@ -1057,6 +1057,24 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # TODO: make this one a publish script
         external_nodes = []
 
+        # check for audio files
+        for audio in pm.ls(type=pm.nt.Audio):
+            path = audio.filename.get()
+            logger.debug('checking path: %s' % path)
+            if path is not None \
+               and os.path.isabs(path) \
+               and not self.is_in_repo(path):
+                logger.debug('is not in repo: %s' % path)
+                new_path = self.move_to_local(version, path, 'Sound')
+                if not new_path:
+                    # it was not copied
+                    external_nodes.append(audio)
+                else:
+                    # successfully copied
+                    # update the path
+                    logger.debug('updating audio path to: %s' % new_path)
+                    audio.filename.set(new_path)
+
         # check for file textures
         for file_texture in pm.ls(type=pm.nt.File):
             path = file_texture.attr('fileTextureName').get()
