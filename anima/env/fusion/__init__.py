@@ -724,24 +724,7 @@ class Fusion(EnvironmentBase):
                         'QuickTimeMovies.KeyFrames': 10,
                     },
                     'connected_to': {
-                        'Input': {
-                            'type': 'ColorCurves',
-                            'ref_id': random_ref_id,
-                            'input_list': {
-                                'EditAlpha': 0.0,
-                            },
-                            'connected_to': {
-                                'Input': {
-                                    'type': 'CineonLog',
-                                    'input_list': {
-                                        'Mode': 1,
-                                        'RedBlackLevel': 0.0,
-                                        'RedWhiteLevel': 1023.0,
-                                        'RedFilmStockGamma': 1.0
-                                    },
-                                }
-                            }
-                        }
+                        'ref_id': random_ref_id
                     }
                 }
             },
