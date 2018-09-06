@@ -604,7 +604,7 @@ class Fusion(EnvironmentBase):
             # make the path Project: relative
             output_file_full_path = 'Project:%s' % os.path.relpath(
                 output_file_full_path,
-                self.project_directory
+                os.path.dirname(version.absolute_path)
             )
 
             # set the output path
