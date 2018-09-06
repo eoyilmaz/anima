@@ -237,6 +237,9 @@ class Fusion(EnvironmentBase):
         self.fusion = bmf.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
 
+        # update name with version
+        self.name = 'Fusion%s' % self.fusion.GetAttrs("FUSIONS_Version").split('.')[0]
+
         self.comp = self.fusion.GetCurrentComp()
         self.comp_prefs = self.comp.GetPrefs()['Comp']
 
@@ -558,6 +561,10 @@ class Fusion(EnvironmentBase):
         Creates the default saver nodes if there isn't any existing outputs,
         and updates the ones that is already created
         """
+        fps = 25
+        if version:
+            project = version.task.project
+            fps = project.fps
 
         def output_path_generator(file_format):
             """helper function to generate the output path
@@ -688,7 +695,50 @@ class Fusion(EnvironmentBase):
                         'ref_id': random_ref_id
                     }
                 }
-            }
+            },
+            {
+                'name': 'mp4',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': output_node_name_generator('mp4'),
+                    },
+                    'input_list': {
+                        'Clip': output_path_generator('mp4'),
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'QuickTimeMovies',
+                        'ProcessMode': 'Auto',
+                        'SaveFrames': 'Full',
+                        'QuickTimeMovies.Compression': 'H.264_avc',
+                        'QuickTimeMovies.Quality': 90.0,
+                        'QuickTimeMovies.FrameRateFps': fps,  # from project.fps
+                        'QuickTimeMovies.KeyFrames': 10,
+                    },
+                    'connected_to': {
+                        'Input': {
+                            'type': 'ColorCurves',
+                            'ref_id': random_ref_id,
+                            'input_list': {
+                                'EditAlpha': 0.0,
+                            },
+                            'connected_to': {
+                                'Input': {
+                                    'type': 'CineonLog',
+                                    'input_list': {
+                                        'Mode': 1,
+                                        'RedBlackLevel': 0.0,
+                                        'RedWhiteLevel': 1023.0,
+                                        'RedFilmStockGamma': 1.0
+                                    },
+                                }
+                            }
+                        }
+                    }
+                }
+            },
         ]
 
         # selectively generate output format
