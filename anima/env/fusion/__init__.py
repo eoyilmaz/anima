@@ -799,8 +799,14 @@ class Fusion(EnvironmentBase):
 
     @project_directory.setter
     def project_directory(self, project_directory_in):
+        """Sets project directory
+
+        :param str project_directory_in: the project directory
+        :return:
+        """
 
         project_directory_in = os.path.normpath(project_directory_in)
+        print('setting project directory to: %s' % project_directory_in)
 
         # set a path map
         self.comp.SetPrefs(
