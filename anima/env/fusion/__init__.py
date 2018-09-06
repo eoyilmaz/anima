@@ -718,7 +718,7 @@ class Fusion(EnvironmentBase):
                         'OutputFormat': 'QuickTimeMovies',
                         'ProcessMode': 'Auto',
                         'SaveFrames': 'Full',
-                        'QuickTimeMovies.Compression': 'H.264_avc',
+                        'QuickTimeMovies.Compression': 'H.264_avc1',
                         'QuickTimeMovies.Quality': 90.0,
                         'QuickTimeMovies.FrameRateFps': fps,  # from project.fps
                         'QuickTimeMovies.KeyFrames': 10,
