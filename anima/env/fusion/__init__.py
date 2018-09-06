@@ -601,6 +601,12 @@ class Fusion(EnvironmentBase):
                 output_file_name
             ).replace('\\', '/')
 
+            # make the path Project: relative
+            output_file_full_path = 'Project:%s' % os.path.relpath(
+                output_file_full_path,
+                self.project_directory
+            )
+
             # set the output path
             return '%s' % os.path.normpath(
                 output_file_full_path
