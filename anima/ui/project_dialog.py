@@ -851,8 +851,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.project.type = type_
             self.project.repositories = [repo]
             self.project.structure = structure
-            print('structure: %s' % structure)
-
             self.project.image_format = image_format
             self.project.fps = fps
             self.project.status = status
