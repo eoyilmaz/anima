@@ -634,7 +634,7 @@ class Fusion(EnvironmentBase):
                         'OutputFormat': 'PNGFormat',
                         'PNGFormat.SaveAlpha': 0,
                         'PNGFormat.Depth': 1,
-                        'PNGFormat.CompressionLevel': 9,
+                        'PNGFormat.CompressionLevel': 2,
                         'PNGFormat.GammaMode': 0,
                     },
                     'connected_to': {
