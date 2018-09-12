@@ -541,6 +541,7 @@ order by cast("TimeLogs".start as date)
             msg_box.setDefaultButton(cancel_button)
             msg_box.exec_()
             clicked_button = msg_box.clickedButton()
+            msg_box.deleteLater()
             if clicked_button == cancel_button:
                 return
 

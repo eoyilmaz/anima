@@ -184,6 +184,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 # logged_in_user = self.get_logged_in_user()
                 self.close()
 
+            dialog.deleteLater()
+
         return logged_in_user
 
     def logout(self):
