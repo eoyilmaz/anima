@@ -594,7 +594,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 QtCore.Qt.MatchExactly
             )
             if index:
-                self.repository_comboBox.setCurrentIndex(index)
+                self.structure_comboBox.setCurrentIndex(index)
 
         if project.status:
             index = self.status_comboBox.findText(
@@ -773,7 +773,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Please select an valid <b>Image Format</b>!'
+                'Please select a valid <b>Image Format</b>!'
             )
             return
 
@@ -786,7 +786,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Please select an valid <b>Repository</b>!'
+                'Please select a valid <b>Repository</b>!'
             )
             return
 
@@ -796,7 +796,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Please select an valid <b>Structure</b>!'
+                'Please select a valid <b>Structure</b>!'
             )
             return
 
@@ -809,7 +809,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Please select an valid <b>Status</b>!'
+                'Please select a valid <b>Status</b>!'
             )
             return
 

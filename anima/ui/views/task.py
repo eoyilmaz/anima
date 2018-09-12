@@ -523,12 +523,15 @@ class TaskTreeView(QtWidgets.QTreeView):
                     project_users_main_dialog.deleteLater()
 
                 else:
-                    # go to the dependencies
-                    dep_task = selected_item.task
-                    self.find_and_select_entity_item(
-                        dep_task,
-                        self
-                    )
+                    try:
+                        # go to the dependencies
+                        dep_task = selected_item.task
+                        self.find_and_select_entity_item(
+                            dep_task,
+                            self
+                        )
+                    except AttributeError:
+                        pass
 
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item
