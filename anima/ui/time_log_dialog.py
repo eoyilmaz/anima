@@ -528,10 +528,14 @@ order by cast("TimeLogs".start as date)
         # war the user if the resource is not the logged_in_user
         if resource != self.logged_in_user:
             msg_box = QtWidgets.QMessageBox(self)
-            msg_box.setWindowTitle('Baskasi Adina TimeLog Giriyorsun')
-            msg_box.setText('Baskasi adina TimeLog giriyorsun???')
+            msg_box.setWindowTitle(
+                'Entering TimeLog On Behalf of Somebody Else'
+            )
+            msg_box.setText(
+                "You're entering a TimeLog on behalf of somebody else???"
+            )
             accept_button = msg_box.addButton(
-                'Sorumlulugu Kabul Ediyorum',
+                'Accept the responsibility',
                 QtWidgets.QMessageBox.AcceptRole
             )
             cancel_button = msg_box.addButton(
