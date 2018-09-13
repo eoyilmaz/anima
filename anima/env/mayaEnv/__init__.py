@@ -111,7 +111,7 @@ class Maya(EnvironmentBase):
 
     """
 
-    name = "Maya%s" % str(pm.versions.current())[0:4]
+    name = "Maya%s" % pm.versions.shortName()
     representations = ['Base', 'GPU', 'ASS', 'RS']
     has_publishers = True
 

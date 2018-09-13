@@ -918,11 +918,11 @@ class ShotExtension(object):
         height = self.hResolution.get()
 
         extra_frame = 0
-
         if platform.system() == 'Windows':
-            # windows Maya version drops 1 frame from end where as Linux
-            # doesn't do that
-            extra_frame = 1
+            # windows version of Maya 2014 drops 1 frame from end whereas
+            # Linux doesn't do that
+            if pm.versions.shortName() == '2014':
+                extra_frame = 1
 
         # store track
         track = self.track.get()
