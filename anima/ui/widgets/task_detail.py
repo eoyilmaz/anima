@@ -33,6 +33,10 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.timing_field = None
         self.priority_label = None
         self.priority_field = None
+        self.cut_in_label = None
+        self.cut_in_field = None
+        self.cut_out_label = None
+        self.cut_out_field = None
 
         self.setup_ui()
         self.fill_ui()
@@ -182,6 +186,48 @@ class TaskDetailWidget(QtWidgets.QWidget):
             self.priority_field
         )
 
+        # -------------------------------------------------------------
+        # Cut In
+        i += 1
+        self.cut_in_label = QtWidgets.QLabel(self)
+        self.cut_in_label.setText("Cut In")
+        self.cut_in_label.setProperty("labelField", True)
+
+        self.cut_in_field = QtWidgets.QLabel(self)
+        self.cut_in_field.setText('1')
+
+        self.form_layout.setWidget(
+            i,
+            QtWidgets.QFormLayout.LabelRole,
+            self.cut_in_label
+        )
+        self.form_layout.setWidget(
+            i,
+            QtWidgets.QFormLayout.FieldRole,
+            self.cut_in_field
+        )
+
+        # -------------------------------------------------------------
+        # Cut Out
+        i += 1
+        self.cut_out_label = QtWidgets.QLabel(self)
+        self.cut_out_label.setText("Cut Out")
+        self.cut_out_label.setProperty("labelField", True)
+
+        self.cut_out_field = QtWidgets.QLabel(self)
+        self.cut_out_field.setText('1')
+
+        self.form_layout.setWidget(
+            i,
+            QtWidgets.QFormLayout.LabelRole,
+            self.cut_out_label
+        )
+        self.form_layout.setWidget(
+            i,
+            QtWidgets.QFormLayout.FieldRole,
+            self.cut_out_field
+        )
+
         # Create signals
         QtCore.QObject.connect(
             self.type_field,
@@ -211,6 +257,20 @@ class TaskDetailWidget(QtWidgets.QWidget):
             )
 
             self.priority_field.setText('%s' % self.task.priority)
+
+            from stalker import Shot
+            if isinstance(self.task, Shot):
+                self.cut_in_field.setText('%s' % self.task.cut_in)
+                self.cut_out_field.setText('%s' % self.task.cut_out)
+                self.cut_in_label.setVisible(True)
+                self.cut_in_field.setVisible(True)
+                self.cut_out_label.setVisible(True)
+                self.cut_out_field.setVisible(True)
+            else:
+                self.cut_in_label.setVisible(False)
+                self.cut_in_field.setVisible(False)
+                self.cut_out_label.setVisible(False)
+                self.cut_out_field.setVisible(False)
 
     def _fill_task_type_widget(self):
         """fills the task type widget
