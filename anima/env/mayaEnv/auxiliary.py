@@ -1344,9 +1344,14 @@ class Playblaster(object):
     def get_frame_range(cls):
         """returns the playback range
         """
-        start_frame = int(pm.playbackOptions(q=1, min=True))
-        end_frame = int(pm.playbackOptions(q=1, max=1))
-        return [start_frame, end_frame]
+        return map(
+            int,
+            pm.timeControl(
+                pm.melGlobals['$gPlayBackSlider'],
+                q=1,
+                rangeArray=True
+            )
+        )
 
     @classmethod
     def get_audio_node(cls):

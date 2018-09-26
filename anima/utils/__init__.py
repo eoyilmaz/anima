@@ -1629,17 +1629,54 @@ def file_browser_name():
     return file_browsers[platform.system().lower()]
 
 
+def generate_unique_shot_name(base_name, shot_name_increment=10):
+    """generates a unique shot name and code based of the base_name
+
+    :param base_name: The base shot name
+    :param int shot_name_increment: The increment amount
+    """
+    logger.debug('generating unique shot number based on: %s' % base_name)
+    logger.debug('shot_name_increment is: %s' % shot_name_increment)
+    import re
+    from stalker.db.session import DBSession
+    from stalker import Shot
+
+    regex = re.compile('[0-9]+')
+
+    # base_name: Ep001_001_0010
+    name_parts = base_name.split('_')
+
+    # find the shot number
+    shot_number_as_string = regex.findall(name_parts[-1])[-1]
+    padding = len(shot_number_as_string)
+    shot_number = int(shot_number_as_string)
+
+    # initialize from the given shot_number
+    i = shot_number
+
+    logger.debug('start shot_number: %s' % shot_number)
+
+    # initialize existing_shot variable with base_name
+    while True and i < 10000:
+        name_parts[-1] = str(i).zfill(padding)
+        shot_name = '_'.join(name_parts)
+        with DBSession.no_autoflush:
+            existing_shot = DBSession.query(Shot.name).filter(Shot.name==shot_name).first()
+        if not existing_shot:
+            logger.debug('generated unique shot name: %s' % shot_name)
+            return shot_name
+        i += shot_name_increment
+
+    raise RuntimeError("Can not generate a unique shot name!!!")
+
+
 def duplicate_task(task, user):
     """Duplicates the given task without children.
 
     :param task: a stalker.models.task.Task instance
+    :param user:
     :return: stalker.models.task.Task
     """
-    # TODO: Update this to pytz
-    utc_now = local_to_utc(
-        datetime.datetime.now()
-    )
-
     # create a new task and change its attributes
     from stalker import Task
     class_ = Task
@@ -1653,8 +1690,14 @@ def duplicate_task(task, user):
     elif task.entity_type == 'Shot':
         from stalker import Shot
         class_ = Shot
+
+        # generate a unique shot name based on task.name
+        logger.debug('generating unique shot name!')
+        shot_name = generate_unique_shot_name(task.name)
+
         extra_kwargs = {
-            'code': task.code + 'dup'
+            'name': shot_name,
+            'code': shot_name
         }
     elif task.entity_type == 'Sequence':
         from stalker import Sequence
@@ -1664,37 +1707,43 @@ def duplicate_task(task, user):
         }
 
     # all duplicated tasks are new tasks
+    from stalker.db.session import DBSession
     from stalker import Status
-    new = Status.query.filter(Status.code == 'WFD').first()
+    with DBSession.no_autoflush:
+        wfd = Status.query.filter(Status.code == 'WFD').first()
 
-    dup_task = class_(
-        name=task.name,
-        project=task.project,
-        bid_timing=task.bid_timing,
-        bid_unit=task.bid_unit,
-        computed_end=task.computed_end,
-        computed_start=task.computed_start,
-        created_by=user,
-        description=task.description,
-        is_milestone=task.is_milestone,
-        # resources=task.resources,
-        priority=task.priority,
-        schedule_constraint=task.schedule_constraint,
-        schedule_model=task.schedule_model,
-        schedule_timing=task.schedule_timing,
-        schedule_unit=task.schedule_unit,
-        status=new,
-        status_list=task.status_list,
-        tags=task.tags,
-        responsible=task.responsible,
-        start=task.start,
-        end=task.end,
-        # thumbnail=task.thumbnail,
-        type=task.type,
-        watchers=task.watchers,
-        date_created=utc_now,
-        **extra_kwargs
-    )
+    import pytz
+    utc_now = datetime.datetime.now(pytz.utc)
+
+    kwargs = {
+        'name': task.name,
+        'project': task.project,
+        'bid_timing': task.bid_timing,
+        'bid_unit': task.bid_unit,
+        'computed_end': task.computed_end,
+        'computed_start': task.computed_start,
+        'created_by': user,
+        'description': task.description,
+        'is_milestone': task.is_milestone,
+        'priority': task.priority,
+        'schedule_constraint': task.schedule_constraint,
+        'schedule_model': task.schedule_model,
+        'schedule_timing': task.schedule_timing,
+        'schedule_unit': task.schedule_unit,
+        'status': wfd,
+        'status_list': task.status_list,
+        'tags': task.tags,
+        'responsible': task.responsible,
+        'start': task.start,
+        'end': task.end,
+        'type': task.type,
+        'watchers': task.watchers,
+        'date_created': utc_now,
+    }
+
+    kwargs.update(extra_kwargs)
+
+    dup_task = class_(**kwargs)
     dup_task.generic_data = task.generic_data
 
     return dup_task
