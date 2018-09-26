@@ -4401,6 +4401,9 @@ class Render(object):
 
             try:
                 shape.rsEnableSubdivision.set(1)
+                shape.rsMaxTessellationSubdivs.set(3)
+                shape.rsLimitOutOfFrustumTessellation.set(1)
+                shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
             except AttributeError:
                 pass
 
