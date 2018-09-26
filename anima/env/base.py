@@ -607,16 +607,24 @@ class EnvironmentBase(object):
         pass
 
     @classmethod
-    def get_significant_name(cls, version, include_version_number=True):
+    def get_significant_name(cls, version, include_project_code=True,
+                             include_version_number=True):
         """returns a significant name starting from the closest parent which is
         an Asset, Shot or Sequence and includes the Project.code
 
+        :param version: The Stalker Version instance.
+        :param bool include_project_code: Include project code.
+        :param bool include_version_number: Include version number
+
         :rtype : basestring
         """
-        sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
+        if include_project_code:
+            sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
+        else:
+            sig_name = version.nice_name
 
         if include_version_number:
-           sig_name = '%s_v%03d' % (sig_name, version.version_number)
+            sig_name = '%s_v%03d' % (sig_name, version.version_number)
 
         return sig_name
 
