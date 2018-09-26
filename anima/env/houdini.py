@@ -74,12 +74,18 @@ class Houdini(EnvironmentBase):
 
         # set the fps
         from stalker import Shot
-        if version and isinstance(version.task.parent, Shot):
+        shot = version.task.parent
+        if version and isinstance(shot, Shot):
             # set to shot.fps if this is a shot related scene
-            self.set_fps(version.task.parent.fps)
+            self.set_fps(shot.fps)
+
+            # also set frame range if this is the first version
+            if version.version_number == 1:
+                self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             # set to project fps
             self.set_fps(version.task.project.fps)
+
 
         # houdini accepts only strings as file name, no unicode support as I
         # see
