@@ -209,6 +209,18 @@ def check_all_geometry_is_referenced(progress_controller=None):
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
+    # skip if it is an animation or previs task
+    skip_types = ['character']
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+
+    for t in v.naming_parents:
+        for st in skip_types:
+            if t.type and t.type.name.lower().startswith(st):
+                progress_controller.complete()
+                return
+
     nodes_to_check = pm.ls(type='mesh')
     progress_controller.maximum = len(nodes_to_check)
 
