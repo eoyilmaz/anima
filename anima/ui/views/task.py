@@ -21,6 +21,13 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         self.is_updating = False
 
+        self.setAlternatingRowColors(True)
+        self.setUniformRowHeights(True)
+        self.header().setCascadingSectionResizes(True)
+
+        # # allow multiple selection
+        # self.setSelectionMode(self.MultiSelection)
+
         # delegate = TaskItemDelegate(self)
         # self.setItemDelegate(delegate)
         self.setup_signals()
@@ -113,6 +120,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.setModel(task_tree_model)
         self.is_updating = False
 
+        self.auto_fit_column()
+
         logger.debug('finished filling tasks_treeView')
 
     def show_context_menu(self, position):
@@ -149,6 +158,11 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
+
+        # sub menus
+        create_sub_menu = menu.addMenu('Create')
+        update_sub_menu = menu.addMenu('Update')
+
         # -----------------------------------
         # actions created in different scopes
         create_time_log_action = None
@@ -180,19 +194,24 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         if defaults.is_power_user(logged_in_user):
             # create the Create Project menu item
-            create_project_action = menu.addAction(u'\uf0e8 Create Project...')
+            create_project_action = \
+                create_sub_menu.addAction(u'\uf0e8 Create Project...')
 
             if isinstance(entity, Project):
                 # this is a project!
                 if defaults.is_power_user(logged_in_user):
                     update_project_action = \
-                        menu.addAction(u'\uf044 Update Project...')
+                        update_sub_menu.addAction(u'\uf044 Update Project...')
                     assign_users_action = \
                         menu.addAction(u'\uf0c0 Assign Users...')
                     create_project_structure_action = \
-                        menu.addAction(u'\uf115 Create Project Structure')
+                        create_sub_menu.addAction(
+                            u'\uf115 Create Project Structure'
+                        )
                     create_child_task_action = \
-                        menu.addAction(u'\uf0ae Create Child Task...')
+                        create_sub_menu.addAction(
+                            u'\uf0ae Create Child Task...'
+                        )
 
         if entity:
             # separate the Project and Task related menu items
@@ -201,7 +220,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             open_in_web_browser_action = \
                 menu.addAction(u'\uf14c Open In Web Browser...')
             open_in_file_browser_action = \
-                menu.addAction(u'\uf07c Open In %s...' % file_browser_name)
+                menu.addAction(u'\uf07c Browse Folders...')
             copy_url_action = menu.addAction(u'\uf0c5 Copy URL')
             copy_id_to_clipboard = \
                 menu.addAction(u'\uf0c5 Copy ID to clipboard')
@@ -209,10 +228,9 @@ class TaskTreeView(QtWidgets.QTreeView):
             if isinstance(entity, Task):
                 # this is a task
                 create_task_structure_action = \
-                    menu.addAction(u'\uf115 Create Task Structure')
-
-                fix_task_status_action = \
-                    menu.addAction(u'\uf0e8 Fix Task Status')
+                    create_sub_menu.addAction(
+                        u'\uf115 Create Task Folder Structure'
+                    )
 
                 task = entity
                 from stalker import Status
@@ -224,25 +242,12 @@ class TaskTreeView(QtWidgets.QTreeView):
                 if logged_in_user in task.resources \
                         and task.status not in [status_wfd, status_prev,
                                                 status_cmpl]:
-                    menu.addSeparator()
+                    create_sub_menu.addSeparator()
                     create_time_log_action = \
-                        menu.addAction(u'\uf073 Create TimeLog...')
-
-                # update task and create child task menu items
-                if defaults.is_power_user(logged_in_user):
-                    menu.addSeparator()
-                    update_task_action = \
-                        menu.addAction(u'\uf044 Update Task...')
-                    create_child_task_action = \
-                        menu.addAction(u'\uf0ae Create Child Task...')
-                    duplicate_task_hierarchy_action = \
-                        menu.addAction(u'\uf0c5 Duplicate Task Hierarchy...')
-                    delete_task_action = \
-                        menu.addAction(u'\uf1f8 Delete Task...')
-
-                menu.addSeparator()
+                        create_sub_menu.addAction(u'\uf073 Create TimeLog...')
 
                 # Add Depends To menu
+                menu.addSeparator()
                 depends = task.depends
                 if depends:
                     depends_to_menu = menu.addMenu(u'\uf090 Depends To')
@@ -263,6 +268,48 @@ class TaskTreeView(QtWidgets.QTreeView):
                 if not depends and not dependent_of:
                     no_deps_action = menu.addAction(u'\uf00d No Dependencies')
                     no_deps_action.setEnabled(False)
+
+                # update task and create child task menu items
+                menu.addSeparator()
+                if defaults.is_power_user(logged_in_user):
+                    create_sub_menu.addSeparator()
+                    update_task_action = \
+                        update_sub_menu.addAction(u'\uf044 Update Task...')
+
+                    create_child_task_action = \
+                        create_sub_menu.addAction(
+                            u'\uf0ae Create Child Task...'
+                        )
+                    duplicate_task_hierarchy_action = \
+                        create_sub_menu.addAction(
+                            u'\uf0c5 Duplicate Task Hierarchy...'
+                        )
+                    delete_task_action = \
+                        menu.addAction(u'\uf1f8 Delete Task...')
+
+                # create the status_menu
+                status_menu = update_sub_menu.addMenu('Status')
+
+                fix_task_status_action = \
+                    status_menu.addAction(u'\uf0e8 Fix Task Status')
+
+                assert isinstance(status_menu, QtWidgets.QMenu)
+                status_menu.addSeparator()
+
+                # get all task statuses
+                change_status_menu_actions = []
+                from anima import defaults
+                for status_code in defaults.status_colors:
+                    change_status_menu_action = \
+                        status_menu.addAction(status_code)
+                    change_status_menu_actions.append(
+                        change_status_menu_action
+                    )
+
+                # set_task_status_to_on_hold_action = \
+                #     status_menu.addAction(u'\uf0e8 W')
+                # set_task_status_to_on_hold_action = \
+                #     status_menu.addAction(u'\uf0e8 On Hold')
 
         try:
             # PySide and PySide2
@@ -302,7 +349,15 @@ class TaskTreeView(QtWidgets.QTreeView):
                     webbrowser.open(url)
                 elif selected_item is open_in_file_browser_action:
                     from anima import utils
-                    utils.open_browser_in_location(entity.absolute_path)
+                    try:
+                        utils.open_browser_in_location(entity.absolute_path)
+                    except IOError as e:
+                        QtWidgets.QMessageBox.critical(
+                            self,
+                            "Error",
+                            "%s" % e,
+                            QtWidgets.QMessageBox.Ok
+                        )
                 elif selected_item is copy_url_action:
                     clipboard = QtWidgets.QApplication.clipboard()
                     clipboard.setText(url)
@@ -436,7 +491,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 elif selected_item == create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
-                        'Create Project Structure?',
+                        'Create Project Folder Structure?',
                         "This will create project folders, OK?",
                         QtWidgets.QMessageBox.Yes,
                         QtWidgets.QMessageBox.No
@@ -450,8 +505,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                         finally:
                             QtWidgets.QMessageBox.information(
                                 self,
-                                'Project Structure is created!',
-                                'Project Structure is created!',
+                                'Project Folder Structure is created!',
+                                'Project Folder Structure is created!',
                             )
                     else:
                         return
@@ -459,7 +514,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 elif selected_item == create_task_structure_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
-                        'Create Task Structure?',
+                        'Create Folder Structure?',
                         "This will create task folders, OK?",
                         QtWidgets.QMessageBox.Yes,
                         QtWidgets.QMessageBox.No
@@ -473,8 +528,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                         finally:
                             QtWidgets.QMessageBox.information(
                                 self,
-                                'Task Structure is created!',
-                                'Task Structure is created!',
+                                'Folder Structure is created!',
+                                'Folder Structure is created!',
                             )
                     else:
                         return

@@ -221,9 +221,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.tasks_tree_view.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers
         )
-        self.tasks_tree_view.setAlternatingRowColors(True)
-        self.tasks_tree_view.setUniformRowHeights(True)
-        self.tasks_tree_view.header().setCascadingSectionResizes(True)
 
         self.tasks_tree_view.show_completed_projects = True
         self.tasks_tree_view.fill()
@@ -271,18 +268,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event):
         """The overridden close event
         """
-        result = QtWidgets.QMessageBox.question(
-            self, self.__app_name__,
-            self.tr("Are you sure?\n"),
-            QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.No | QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.Yes
-        )
-
-        if result != QtWidgets.QMessageBox.Yes:
-            event.ignore()
-        else:
-            self.write_settings()
-            event.accept()
+        self.write_settings()
+        event.accept()
 
 
 if __name__ == "__main__":

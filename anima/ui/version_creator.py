@@ -236,10 +236,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # self.tasks_tree_view = QtWidgets.QTreeView()
         self.tasks_tree_view = TaskTreeView(self.tasks_groupBox)
         self.tasks_tree_view.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.tasks_tree_view.setAlternatingRowColors(True)
-        self.tasks_tree_view.setUniformRowHeights(True)
-        self.tasks_tree_view.header().setCascadingSectionResizes(True)
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
+        # self.tasks_tree_view.setAlternatingRowColors(True)
+        # self.tasks_tree_view.setUniformRowHeights(True)
+        # self.tasks_tree_view.header().setCascadingSectionResizes(True)
         self.verticalLayout_2.addWidget(self.tasks_tree_view)
 
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
