@@ -578,7 +578,14 @@ class Fusion(EnvironmentBase):
             template_kwargs = {}
 
             # if this is a shot related task set it to shots resolution
-            version_sig_name = self.get_significant_name(version)
+            include_project_code = True
+            if version.nice_name.startswith(version.task.project.code):
+                include_project_code = False
+
+            version_sig_name = self.get_significant_name(
+                version,
+                include_project_code=include_project_code
+            )
 
             file_name_buffer.append(
                 '%(version_sig_name)s.001.%(format)s'
@@ -719,9 +726,9 @@ class Fusion(EnvironmentBase):
                         'ProcessMode': 'Auto',
                         'SaveFrames': 'Full',
                         'QuickTimeMovies.Compression': 'H.264_avc1',
-                        'QuickTimeMovies.Quality': 90.0,
+                        'QuickTimeMovies.Quality': 95.0,
                         'QuickTimeMovies.FrameRateFps': fps,  # from project.fps
-                        'QuickTimeMovies.KeyFrames': 10,
+                        'QuickTimeMovies.KeyFrames': 5,
                     },
                     'connected_to': {
                         'ref_id': random_ref_id
