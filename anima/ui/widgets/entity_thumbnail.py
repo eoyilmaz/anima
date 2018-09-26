@@ -74,6 +74,18 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         )
         self.vertical_layout.addWidget(self.thumbnail_graphics_view)
 
+    def fill_ui(self):
+        """fills the ui with the given task thumbnail
+        """
+        # clear the thumbnail first
+        self.clear_thumbnail()
+
+        from anima.ui import utils
+        utils.update_gview_with_task_thumbnail(
+            self.task,
+            self.thumbnail_graphics_view
+        )
+
     def clear_thumbnail(self):
         """clears the content of the thumbnail
         """

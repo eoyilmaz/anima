@@ -20,7 +20,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # storage for UI stuff
         self.vertical_layout = None
         self.widget_label = None
-        self.task_thumbnail = None
+        self.task_thumbnail_widget = None
         self.schedule_info_form_layout = None
         self.task_detail_widget = None
         self.task_timing_widget = None
@@ -124,10 +124,10 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Task Thumbnail
         from anima.ui.widgets.entity_thumbnail import EntityThumbnailWidget
-        self.task_thumbnail = \
+        self.task_thumbnail_widget = \
             EntityThumbnailWidget(task=self.task, parent=self)
 
-        horizontal_layout2.addWidget(self.task_thumbnail)
+        horizontal_layout2.addWidget(self.task_thumbnail_widget)
 
         # --------------------------
         # Task Detail Info
@@ -208,7 +208,9 @@ class TaskDashboardWidget(QtWidgets.QWidget):
             self.task.name if self.task else 'Task Name'
         )
 
-        # self.task_thumbnail = None
+        self.task_thumbnail_widget.task = self.task
+        self.task_thumbnail_widget.fill_ui()
+
         self.task_detail_widget.task = self.task
         self.task_detail_widget.fill_ui()
 
