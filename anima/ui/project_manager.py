@@ -62,6 +62,18 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
 
+        # set application icon
+        from anima import ui
+        import os
+        print('ui.__path__: %s' % ui.__path__[0])
+
+        app_icon_path = os.path.join(
+            ui.__path__[0],
+            'images',
+            'app_icon.png'
+        )
+        self.setWindowIcon(QtWidgets.QIcon(app_icon_path))
+
         self.create_main_menu()
         self.create_toolbars()
         self.create_dock_widgets()
@@ -129,9 +141,16 @@ class MainWindow(QtWidgets.QMainWindow):
         # ---------------------------
         # Standard File menu actions
 
-        new_action = file_menu.addAction('&New...')
+        new_project_action = file_menu.addAction('&New Project...')
         open_action = file_menu.addAction('&Open...')
         save_action = file_menu.addAction('&Save...')
+
+        # run the new Project dialog
+        QtCore.QObject.connect(
+            new_project_action,
+            QtCore.SIGNAL("triggered()"),
+            self.new_project_action_clicked
+        )
 
         file_menu.addSeparator()
 
@@ -152,6 +171,28 @@ class MainWindow(QtWidgets.QMainWindow):
         )
 
         # QtWidgets.QAction.
+
+    def new_project_action_clicked(self):
+        """runs when new project menu action is clicked
+        """
+        # show the new project dialog
+        from anima.ui import project_dialog
+        dialog = project_dialog.MainDialog(parent=self)
+        dialog.exec_()
+
+        # and refresh the TaskTreeView
+        try:
+            # PySide and PySide2
+            accepted = QtWidgets.QDialog.DialogCode.Accepted
+        except AttributeError:
+            # PyQt4
+            accepted = QtWidgets.QDialog.Accepted
+
+        # refresh the task list
+        if dialog.result() == accepted:
+            self.tasks_tree_view.fill()
+
+        dialog.deleteLater()
 
     def login(self):
         """returns the logged in user
