@@ -6,17 +6,7 @@
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtCore, QtWidgets, QtGui
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import time_log_dialog_UI_pyside as time_log_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import time_log_dialog_UI_pyside2 as time_log_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import time_log_dialog_UI_pyqt4 as time_log_dialog_UI
-reload(time_log_dialog_UI)
+from anima.ui.lib import QtCore, QtWidgets
 
 
 timing_resolution = 10  # in minutes
@@ -34,12 +24,14 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The TimeLog Dialog
     """
 
     def __init__(self, parent=None, task=None, timelog=None):
         logger.debug("initializing the interface")
+        super(MainDialog, self).__init__(parent)
+
         # store the logged in user
         self.logged_in_user = None
         self.no_time_left = False
@@ -50,50 +42,267 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         self.timelog_created = False
         self.task = task
 
-        super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
+        # ui element storage
+        self.main_layout = None
+        self.form_layout = None
+        self.tasks_label = None
+        self.task_progress_bar = None
+        self.resources_label = None
+        self.resource_combo_box = None
+        self.date_label = None
+        self.calendar_widget = None
+        self.start_time_label = None
+        self.end_time_label = None
+        self.info_area_label = None
+        self.revision_label = None
+        self.revision_type_combo_box = None
+        self.description_label = None
+        self.description_plain_text_edit = None
+        self.status_label = None
+        self.not_finished_yet_radio_button = None
+        self.set_as_complete_radio_button = None
+        self.submit_for_final_review_radio_button = None
+        self.dialog_button_box = None
+        self.tasks_combo_box = None
+        self.start_time_edit = None
+        self.end_time_edit = None
 
-        # customize the ui elements
-        from anima.ui.widgets import TaskComboBox
-        self.tasks_comboBox = TaskComboBox(self)
-        self.tasks_comboBox.setObjectName("tasks_comboBox")
-        self.formLayout.setWidget(
+        self.setup_ui()
+
+    def setup_ui(self):
+        """create UI widgets
+        """
+        self.resize(447, 546)
+        self.setWindowTitle("TimeLog Dialog")
+
+        # -----------------------------
+        # Setup Main Layout
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+
+        # -----------------------------
+        # Setup Form Layout
+        self.form_layout = QtWidgets.QFormLayout()
+        self.form_layout.setFieldGrowthPolicy(
+            QtWidgets.QFormLayout.AllNonFixedFieldsGrow
+        )
+        self.main_layout.addLayout(self.form_layout)
+
+        # -----------------------------
+        # Tasks
+        self.tasks_label = QtWidgets.QLabel(self)
+        self.tasks_label.setText("Task")
+        self.form_layout.setWidget(
             0,
-            QtWidgets.QFormLayout.FieldRole,
-            self.tasks_comboBox
+            QtWidgets.QFormLayout.LabelRole,
+            self.tasks_label
         )
 
-        # self.start_timeEdit.deleteLater()
+        from anima.ui.widgets import TaskComboBox
+        self.tasks_combo_box = TaskComboBox(self)
+        self.tasks_combo_box.setObjectName("tasks_combo_box")
+        self.form_layout.setWidget(
+            0,
+            QtWidgets.QFormLayout.FieldRole,
+            self.tasks_combo_box
+        )
+
+        # -----------------------------
+        # Tasks Progress Bar
+        self.task_progress_bar = QtWidgets.QProgressBar(self)
+        self.task_progress_bar.setProperty("value", 24)
+        self.form_layout.setWidget(
+            1,
+            QtWidgets.QFormLayout.FieldRole,
+            self.task_progress_bar
+        )
+
+        # -----------------------------
+        # Resources
+        self.resources_label = QtWidgets.QLabel(self)
+        self.resources_label.setText("Resource")
+        self.form_layout.setWidget(
+            2,
+            QtWidgets.QFormLayout.LabelRole,
+            self.resources_label
+        )
+
+        self.resource_combo_box = QtWidgets.QComboBox(self)
+        self.form_layout.setWidget(
+            2,
+            QtWidgets.QFormLayout.FieldRole,
+            self.resource_combo_box
+        )
+
+        # -----------------------------
+        # Calendar, Start & End Time
+
+        # Label
+        self.date_label = QtWidgets.QLabel(self)
+        self.date_label.setText("Date")
+        self.form_layout.setWidget(
+            3,
+            QtWidgets.QFormLayout.LabelRole,
+            self.date_label
+        )
+
+        # Calendar Widget
+        self.calendar_widget = QtWidgets.QCalendarWidget(self)
+        self.calendar_widget.setFirstDayOfWeek(QtCore.Qt.Monday)
+        self.form_layout.setWidget(
+            3,
+            QtWidgets.QFormLayout.FieldRole,
+            self.calendar_widget
+        )
+
+        # Start Time
+        self.start_time_label = QtWidgets.QLabel(self)
+        self.start_time_label.setText("Start")
+        self.form_layout.setWidget(
+            4,
+            QtWidgets.QFormLayout.LabelRole,
+            self.start_time_label
+        )
+
         from anima.ui.widgets import TimeEdit
-        self.start_timeEdit = TimeEdit(self, resolution=timing_resolution)
-        self.start_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
-        self.start_timeEdit.setCalendarPopup(True)
-        self.start_timeEdit.setObjectName("start_timeEdit")
-        self.start_timeEdit.setWrapping(True)
-        self.formLayout.insertRow(4, self.label, self.start_timeEdit)
-        self.start_timeEdit.setDisplayFormat("HH:mm")
+        self.start_time_edit = TimeEdit(self, resolution=timing_resolution)
+        self.start_time_edit.setCurrentSection(
+            QtWidgets.QDateTimeEdit.MinuteSection
+        )
+        self.start_time_edit.setCalendarPopup(True)
+        self.start_time_edit.setObjectName("start_time_edit")
+        self.start_time_edit.setWrapping(True)
+        self.form_layout.setWidget(
+            4,
+            QtWidgets.QFormLayout.FieldRole,
+            self.start_time_edit
+        )
+        self.start_time_edit.setDisplayFormat("HH:mm")
 
-        # self.end_timeEdit.deleteLater()
-        self.end_timeEdit = TimeEdit(self, resolution=timing_resolution)
-        self.end_timeEdit.setCurrentSection(QtWidgets.QDateTimeEdit.MinuteSection)
-        self.end_timeEdit.setCalendarPopup(True)
-        self.end_timeEdit.setObjectName("end_timeEdit")
-        self.end_timeEdit.setWrapping(True)
-        self.formLayout.insertRow(5, self.label_2, self.end_timeEdit)
-        self.end_timeEdit.setDisplayFormat("HH:mm")
+        # End Time
+        self.end_time_label = QtWidgets.QLabel(self)
+        self.end_time_label.setText("End")
+        self.form_layout.setWidget(
+            5,
+            QtWidgets.QFormLayout.LabelRole,
+            self.end_time_label
+        )
 
-        current_time = QtCore.QTime.currentTime()
-        # round the minutes to the resolution
-        minute = current_time.minute()
-        hour = current_time.hour()
-        minute = int(minute / float(timing_resolution)) * timing_resolution
+        self.end_time_edit = TimeEdit(self, resolution=timing_resolution)
+        self.end_time_edit.setCurrentSection(
+            QtWidgets.QDateTimeEdit.MinuteSection
+        )
+        self.end_time_edit.setCalendarPopup(True)
+        self.end_time_edit.setObjectName("end_time_edit")
+        self.end_time_edit.setWrapping(True)
+        self.form_layout.setWidget(
+            5,
+            QtWidgets.QFormLayout.FieldRole,
+            self.end_time_edit
+        )
+        self.end_time_edit.setDisplayFormat("HH:mm")
 
-        current_time = QtCore.QTime(hour, minute)
+        # -----------------------------
+        # Time Left Info
+        self.info_area_label = QtWidgets.QLabel(self)
+        self.info_area_label.setText("INFO")
+        self.form_layout.setWidget(
+            6,
+            QtWidgets.QFormLayout.FieldRole,
+            self.info_area_label
+        )
 
-        self.start_timeEdit.setTime(current_time)
-        self.end_timeEdit.setTime(current_time.addSecs(timing_resolution * 60))
+        # -----------------------------
+        # Revision
+        self.revision_label = QtWidgets.QLabel(self)
+        self.revision_label.setText(
+            """<html>
+                <head/>
+                <body>
+                    <p align=\"right\">
+                        Revision
+                        <br/>
+                        Type
+                    </p>
+                </body>
+            </html>
+            """
+        )
+        self.form_layout.setWidget(
+            7,
+            QtWidgets.QFormLayout.LabelRole,
+            self.revision_label
+        )
 
-        self.calendarWidget.resource_id = -1
+        self.revision_type_combo_box = QtWidgets.QComboBox(self)
+        self.form_layout.setWidget(
+            7,
+            QtWidgets.QFormLayout.FieldRole,
+            self.revision_type_combo_box
+        )
+
+        # -----------------------------
+        # Description
+        self.description_label = QtWidgets.QLabel(self)
+        self.description_label.setText("Description")
+        self.form_layout.setWidget(
+            8,
+            QtWidgets.QFormLayout.LabelRole,
+            self.description_label
+        )
+
+        self.description_plain_text_edit = QtWidgets.QPlainTextEdit(self)
+        self.form_layout.setWidget(
+            8,
+            QtWidgets.QFormLayout.FieldRole,
+            self.description_plain_text_edit
+        )
+
+        # -----------------------------
+        # Status
+        self.status_label = QtWidgets.QLabel(self)
+        self.status_label.setText("Status")
+        self.form_layout.setWidget(
+            9,
+            QtWidgets.QFormLayout.LabelRole,
+            self.status_label
+        )
+
+        self.not_finished_yet_radio_button = QtWidgets.QRadioButton(self)
+        self.not_finished_yet_radio_button.setText("Not Finished Yet")
+        self.not_finished_yet_radio_button.setChecked(True)
+        self.form_layout.setWidget(
+            9,
+            QtWidgets.QFormLayout.FieldRole,
+            self.not_finished_yet_radio_button
+        )
+
+        self.set_as_complete_radio_button = QtWidgets.QRadioButton(self)
+        self.set_as_complete_radio_button.setText("Set As Complete")
+        self.form_layout.setWidget(
+            10,
+            QtWidgets.QFormLayout.FieldRole,
+            self.set_as_complete_radio_button
+        )
+
+        self.submit_for_final_review_radio_button = \
+            QtWidgets.QRadioButton(self)
+        self.submit_for_final_review_radio_button.setText(
+            "Submit For Final Review"
+        )
+        self.form_layout.setWidget(
+            11,
+            QtWidgets.QFormLayout.FieldRole,
+            self.submit_for_final_review_radio_button
+        )
+
+        # -----------------------------
+        # Dialog Button Box
+        self.dialog_button_box = QtWidgets.QDialogButtonBox(self)
+        self.dialog_button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.dialog_button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        self.main_layout.addWidget(self.dialog_button_box)
 
         # setup signals
         self._setup_signals()
@@ -127,30 +336,43 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         """
         logger.debug("start setting up interface signals")
 
-        # tasks_comboBox
+        # Dialog buttons
         QtCore.QObject.connect(
-            self.tasks_comboBox,
+            self.dialog_button_box,
+            QtCore.SIGNAL("accepted()"),
+            self.accept
+        )
+        QtCore.QObject.connect(
+            self.dialog_button_box,
+            QtCore.SIGNAL("rejected()"),
+            self.reject
+        )
+        # QtCore.QMetaObject.connectSlotsByName(Dialog)
+
+        # tasks_combo_box
+        QtCore.QObject.connect(
+            self.tasks_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.tasks_combo_box_index_changed
         )
 
-        # start_timeEdit
+        # start_time_edit
         QtCore.QObject.connect(
-            self.start_timeEdit,
+            self.start_time_edit,
             QtCore.SIGNAL('timeChanged(QTime)'),
             self.start_time_changed
         )
 
-        # end_timeEdit
+        # end_time_edit
         QtCore.QObject.connect(
-            self.end_timeEdit,
+            self.end_time_edit,
             QtCore.SIGNAL('timeChanged(QTime)'),
             self.end_time_changed
         )
 
         # resource changed
         QtCore.QObject.connect(
-            self.resource_comboBox,
+            self.resource_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.resource_changed
         )
@@ -160,6 +382,20 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         """
         logger.debug("started setting up interface defaults")
 
+        # Set Default Value for time
+        current_time = QtCore.QTime.currentTime()
+        # round the minutes to the resolution
+        minute = current_time.minute()
+        hour = current_time.hour()
+        minute = int(minute / float(timing_resolution)) * timing_resolution
+
+        current_time = QtCore.QTime(hour, minute)
+
+        self.start_time_edit.setTime(current_time)
+        self.end_time_edit.setTime(current_time.addSecs(timing_resolution * 60))
+
+        self.calendar_widget.resource_id = -1
+
         # enter revision types
         revision_types = [
             'Yetistiremedim',
@@ -168,7 +404,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             'Ic Revizyon',
         ]
 
-        self.revision_type_comboBox.addItems(revision_types)
+        self.revision_type_combo_box.addItems(revision_types)
 
         if not self.logged_in_user:
             self.logged_in_user = self.get_logged_in_user()
@@ -206,14 +442,14 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             # dialog is working in update TimeLog mode
             all_tasks = [self.timelog.task]
 
-        self.tasks_comboBox.setSizeAdjustPolicy(
+        self.tasks_combo_box.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToContentsOnFirstShow
         )
-        self.tasks_comboBox.setFixedWidth(360)
-        self.tasks_comboBox.clear()
-        self.tasks_comboBox.addTasks(all_tasks)
+        self.tasks_combo_box.setFixedWidth(360)
+        self.tasks_combo_box.clear()
+        self.tasks_combo_box.addTasks(all_tasks)
 
-        self.tasks_comboBox.setSizePolicy(
+        self.tasks_combo_box.setSizePolicy(
             QtWidgets.QSizePolicy.MinimumExpanding,
             QtWidgets.QSizePolicy.Minimum
         )
@@ -222,15 +458,15 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         if self.timelog:
             # first update Task
             try:
-                self.tasks_comboBox.setCurrentTask(self.timelog.task)
+                self.tasks_combo_box.setCurrentTask(self.timelog.task)
             except IndexError as e:
                 return
 
             # set the resource
 
-            # and disable the tasks_comboBox and resource_comboBox
-            self.tasks_comboBox.setEnabled(False)
-            self.resource_comboBox.setEnabled(False)
+            # and disable the tasks_combo_box and resource_combo_box
+            self.tasks_combo_box.setEnabled(False)
+            self.resource_combo_box.setEnabled(False)
 
             # set the start and end time
             from anima.utils import utc_to_local
@@ -238,22 +474,22 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
             end_date = utc_to_local(self.timelog.end)
 
             # set the date
-            self.calendarWidget.setSelectedDate(
+            self.calendar_widget.setSelectedDate(
                 QtCore.QDate(start_date.year, start_date.month, start_date.day)
             )
 
             # first reset the start and end time values
-            self.start_timeEdit.setTime(QtCore.QTime(0, 0))
-            self.end_timeEdit.setTime(QtCore.QTime(23, 50))
+            self.start_time_edit.setTime(QtCore.QTime(0, 0))
+            self.end_time_edit.setTime(QtCore.QTime(23, 50))
 
             # now set the timelog time
-            self.start_timeEdit.setTime(
+            self.start_time_edit.setTime(
                 QtCore.QTime(
                     start_date.hour,
                     start_date.minute
                 )
             )
-            self.end_timeEdit.setTime(
+            self.end_time_edit.setTime(
                 QtCore.QTime(
                     end_date.hour,
                     end_date.minute
@@ -267,7 +503,7 @@ class MainDialog(QtWidgets.QDialog, time_log_dialog_UI.Ui_Dialog, AnimaDialogBas
         """
         resource_id = self.get_current_resource_id()
         # do not update if the calendar is showing the same user
-        if self.calendarWidget.resource_id == resource_id or resource_id == -1:
+        if self.calendar_widget.resource_id == resource_id or resource_id == -1:
             return
 
         tool_tip_text_format = u'{start:%H:%M} - {end:%H:%M} | {task_name}'
@@ -361,10 +597,10 @@ order by cast("TimeLogs".start as date)
 
             merged_tool_tip = u'\n'.join(tool_tip_text_data)
 
-            date_format = QtGui.QTextCharFormat()
-            bg_brush = QtGui.QBrush()
+            date_format = QtWidgets.QTextCharFormat()
+            bg_brush = QtWidgets.QBrush()
             bg_brush.setColor(
-                QtGui.QColor(0, 255.0 / 86400.0 * daily_logged_seconds, 0)
+                QtWidgets.QColor(0, 255.0 / 86400.0 * daily_logged_seconds, 0)
             )
 
             date_format.setBackground(bg_brush)
@@ -372,13 +608,13 @@ order by cast("TimeLogs".start as date)
 
             date = QtCore.QDate(year, month, day)
 
-            self.calendarWidget.setDateTextFormat(date, date_format)
+            self.calendar_widget.setDateTextFormat(date, date_format)
 
     def tasks_combo_box_index_changed(self, task_label):
         """runs when another task has been selected
         """
         # task = self.get_current_task()
-        task = self.tasks_comboBox.currentTask()
+        task = self.tasks_combo_box.currentTask()
         self.update_percentage()
         self.update_info_text()
 
@@ -391,20 +627,20 @@ order by cast("TimeLogs".start as date)
             if r != self.logged_in_user:
                 resource_names.append(r.name)
 
-        self.resource_comboBox.clear()
-        self.resource_comboBox.addItems(resource_names)
+        self.resource_combo_box.clear()
+        self.resource_combo_box.addItems(resource_names)
 
     def get_current_resource(self):
         """returns the current resource
         """
-        resource_name = self.resource_comboBox.currentText()
+        resource_name = self.resource_combo_box.currentText()
         from stalker import User
         return User.query.filter(User.name == resource_name).first()
 
     def get_current_resource_id(self):
         """returns the current resource
         """
-        resource_name = self.resource_comboBox.currentText()
+        resource_name = self.resource_combo_box.currentText()
         from stalker import User
         from stalker.db.session import DBSession
         return DBSession.query(User.id)\
@@ -414,24 +650,24 @@ order by cast("TimeLogs".start as date)
     def start_time_changed(self, q_time):
         """validates the start time
         """
-        end_time = self.end_timeEdit.time()
+        end_time = self.end_time_edit.time()
         if q_time >= end_time:
-            self.end_timeEdit.setTime(q_time.addSecs(timing_resolution * 60))
+            self.end_time_edit.setTime(q_time.addSecs(timing_resolution * 60))
         self.update_percentage()
         self.update_info_text()
 
     def end_time_changed(self, q_time):
         """validates the end time
         """
-        start_time = self.start_timeEdit.time()
+        start_time = self.start_time_edit.time()
         if q_time <= start_time:
             if q_time.hour() == 0 and q_time.minute() == 0:
                 start_time = q_time
                 end_time = q_time.addSecs(timing_resolution * 60)
-                self.end_timeEdit.setTime(end_time)
+                self.end_time_edit.setTime(end_time)
             else:
                 start_time = q_time.addSecs(-timing_resolution * 60)
-            self.start_timeEdit.setTime(start_time)
+            self.start_time_edit.setTime(start_time)
 
         self.update_percentage()
         self.update_info_text()
@@ -443,11 +679,14 @@ order by cast("TimeLogs".start as date)
 
     def calculate_percentage(self):
         # task = self.get_current_task()
-        task = self.tasks_comboBox.currentTask()
+        task = self.tasks_combo_box.currentTask()
+        if not task:
+            return 0
+
         schedule_seconds = task.schedule_seconds
         logged_seconds = task.total_logged_seconds
-        start_time = self.start_timeEdit.time()
-        end_time = self.end_timeEdit.time()
+        start_time = self.start_time_edit.time()
+        end_time = self.end_time_edit.time()
         time_log_seconds = start_time.secsTo(end_time)
         percentage = \
             (logged_seconds + time_log_seconds) / float(schedule_seconds) * 100
@@ -457,19 +696,22 @@ order by cast("TimeLogs".start as date)
         """updates the percentage
         """
         percentage = self.calculate_percentage()
-        self.task_progressBar.setMinimum(0)
-        self.task_progressBar.setMaximum(100)
-        self.task_progressBar.setValue(percentage)
+        self.task_progress_bar.setMinimum(0)
+        self.task_progress_bar.setMaximum(100)
+        self.task_progress_bar.setValue(percentage)
 
     def update_info_text(self):
         """updated the info text
         """
         # task = self.get_current_task()
-        task = self.tasks_comboBox.currentTask()
+        task = self.tasks_combo_box.currentTask()
+        if not task:
+            return
+
         schedule_seconds = task.schedule_seconds
         logged_seconds = task.total_logged_seconds
-        start_time = self.start_timeEdit.time()
-        end_time = self.end_timeEdit.time()
+        start_time = self.start_time_edit.time()
+        end_time = self.end_time_edit.time()
         time_log_seconds = start_time.secsTo(end_time)
 
         remaining_seconds = \
@@ -510,19 +752,19 @@ order by cast("TimeLogs".start as date)
         """shows the revision fields
         """
         self.revision_label.show()
-        self.revision_type_comboBox.show()
+        self.revision_type_combo_box.show()
 
     def hide_revision_fields(self):
         """hides the revision fields
         """
         self.revision_label.hide()
-        self.revision_type_comboBox.hide()
+        self.revision_type_combo_box.hide()
 
     def accept(self):
         """overridden accept method
         """
         # get the info
-        task = self.tasks_comboBox.currentTask()
+        task = self.tasks_combo_box.currentTask()
         resource = self.get_current_resource()
 
         # war the user if the resource is not the logged_in_user
@@ -549,13 +791,13 @@ order by cast("TimeLogs".start as date)
             if clicked_button == cancel_button:
                 return
 
-        description = self.description_plainTextEdit.toPlainText()
+        description = self.description_plain_text_edit.toPlainText()
         revision_cause_text = \
-            self.revision_type_comboBox.currentText().replace(' ', '_')
+            self.revision_type_combo_box.currentText().replace(' ', '_')
 
-        is_complete = self.set_as_complete_radioButton.isChecked()
+        is_complete = self.set_as_complete_radio_button.isChecked()
         submit_to_final_review = \
-            self.submit_for_final_review_radioButton.isChecked()
+            self.submit_for_final_review_radio_button.isChecked()
 
         # get the revision Types
         from stalker import Type
@@ -564,9 +806,9 @@ order by cast("TimeLogs".start as date)
             .filter(Type.name == revision_cause_text)\
             .first()
 
-        date = self.calendarWidget.selectedDate()
-        start = self.start_timeEdit.time()
-        end = self.end_timeEdit.time()
+        date = self.calendar_widget.selectedDate()
+        start = self.start_time_edit.time()
+        end = self.end_time_edit.time()
 
         # construct proper datetime.DateTime instances
         import datetime
@@ -606,7 +848,8 @@ order by cast("TimeLogs".start as date)
         # now if we are not using extra time just create the TimeLog
         from stalker import TimeLog
         from stalker.db.session import DBSession
-        from stalker.exceptions import OverBookedError, DependencyViolationError
+        from stalker.exceptions import (OverBookedError,
+                                        DependencyViolationError)
         utc_now = local_to_utc(datetime.datetime.now())
 
         import stalker
@@ -648,7 +891,7 @@ order by cast("TimeLogs".start as date)
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
-                    'Database hatasi!!!'
+                    'Database Error!!!'
                     '<br>'
                     '%s' % e
                 )
@@ -693,7 +936,7 @@ order by cast("TimeLogs".start as date)
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
-                    'Database hatasi!!!'
+                    'Database Error!!!'
                     '<br>'
                     '%s' % e
                 )
@@ -740,7 +983,7 @@ order by cast("TimeLogs".start as date)
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
-                    'Database hatasi!!!'
+                    'Database Error!!!'
                     '<br>'
                     '%s' % e
                 )
@@ -779,7 +1022,7 @@ order by cast("TimeLogs".start as date)
                 QtWidgets.QMessageBox.critical(
                     self,
                     'Error',
-                    'Database hatasi!!!'
+                    'Database Error!!!'
                     '<br>'
                     '%s' % e
                 )
@@ -795,7 +1038,7 @@ order by cast("TimeLogs".start as date)
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Database hatasi!!!'
+                'Database Error!!!'
                 '<br>'
                 '%s' % e
             )
