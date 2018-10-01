@@ -141,15 +141,15 @@ class MainWindow(QtWidgets.QMainWindow):
         # ---------------------------
         # Standard File menu actions
 
-        new_project_action = file_menu.addAction('&New Project...')
-        open_action = file_menu.addAction('&Open...')
-        save_action = file_menu.addAction('&Save...')
+        create_project_action = file_menu.addAction('&Create Project...')
+        # open_action = file_menu.addAction('&Open...')
+        # save_action = file_menu.addAction('&Save...')
 
         # run the new Project dialog
         QtCore.QObject.connect(
-            new_project_action,
+            create_project_action,
             QtCore.SIGNAL("triggered()"),
-            self.new_project_action_clicked
+            self.create_project_action_clicked
         )
 
         file_menu.addSeparator()
@@ -172,7 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # QtWidgets.QAction.
 
-    def new_project_action_clicked(self):
+    def create_project_action_clicked(self):
         """runs when new project menu action is clicked
         """
         # show the new project dialog
@@ -247,7 +247,14 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         file_toolbar = self.addToolBar(self.tr("File"))
         file_toolbar.setObjectName('file_toolbar')
-        file_toolbar.addAction('Create Project')
+        create_project_action = file_toolbar.addAction('Create Project')
+
+        # Create signals
+        QtCore.QObject.connect(
+            create_project_action,
+            QtCore.SIGNAL('triggered()'),
+            self.create_project_action_clicked
+        )
 
     def create_dock_widgets(self):
         """creates the dock widgets
