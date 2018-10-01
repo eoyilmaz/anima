@@ -6,7 +6,7 @@
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtWidgets, QtGui
 
 
 timing_resolution = 10  # in minutes
@@ -597,10 +597,10 @@ order by cast("TimeLogs".start as date)
 
             merged_tool_tip = u'\n'.join(tool_tip_text_data)
 
-            date_format = QtWidgets.QTextCharFormat()
-            bg_brush = QtWidgets.QBrush()
+            date_format = QtGui.QTextCharFormat()
+            bg_brush = QtGui.QBrush()
             bg_brush.setColor(
-                QtWidgets.QColor(0, 255.0 / 86400.0 * daily_logged_seconds, 0)
+                QtGui.QColor(0, 255.0 / 86400.0 * daily_logged_seconds, 0)
             )
 
             date_format.setBackground(bg_brush)
