@@ -410,7 +410,10 @@ class ConversionManager(ConversionManagerBase):
         :return:
         """
         if attr:
-            return node.attr(attr).inputs(p=1)
+            if node.hasAttr(attr):
+                return node.attr(attr).inputs(p=1)
+            else:
+                return []
         else:
             return node.inputs(p=1)
 
@@ -431,7 +434,11 @@ class ConversionManager(ConversionManagerBase):
         :param attr:
         :return:
         """
-        return node.getAttr(attr)
+        from pymel.core import MayaAttributeError
+        try:
+            return node.getAttr(attr)
+        except MayaAttributeError:
+            return
 
     def set_attr(self, node, attr, value):
         """sets node.attr to value
@@ -441,8 +448,10 @@ class ConversionManager(ConversionManagerBase):
         :param value:
         :return:
         """
-        node.setAttr(attr, value)
-
+        try:
+            node.setAttr(attr, value)
+        except Exception as e:
+            print(e)
 
 class NodeCreator(NodeCreatorBase):
     """Creates nodes according to the given specs
