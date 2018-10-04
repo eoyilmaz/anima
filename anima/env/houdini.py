@@ -25,7 +25,9 @@ class Houdini(EnvironmentBase):
             value = repo.path
             self.set_environment_variable(env_var_name, value)
 
-        self.name = '%s%s' % (self.name, hou.applicationVersion()[0])
+        self.name = '%s%s.%s' % (
+            self.name, hou.applicationVersion()[0], hou.applicationVersion()[1]
+        )
 
     def save_as(self, version, run_pre_publishers=True):
         """the save action for houdini environment
