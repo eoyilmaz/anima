@@ -1061,7 +1061,8 @@ class MediaManager(object):
 
         return uploaded_file_info
 
-    def randomize_file_name(self, full_path):
+    @classmethod
+    def randomize_file_name(cls, full_path):
         """randomizes the file name by adding a the first 4 characters of a
         UUID4 sequence to it.
 
@@ -1090,7 +1091,8 @@ class MediaManager(object):
 
         return random_file_full_path
 
-    def format_filename(self, filename):
+    @classmethod
+    def format_filename(cls, filename):
         """formats the filename to comply with file naming rules of Stalker
         Pyramid
         """
@@ -1431,7 +1433,8 @@ class MediaManager(object):
         try:
             thumbnail_temp_full_path = \
                 self.generate_thumbnail(version_output_file_full_path)
-            thumbnail_extension = os.path.splitext(thumbnail_temp_full_path)[-1]
+            thumbnail_extension = \
+                os.path.splitext(thumbnail_temp_full_path)[-1]
 
             thumbnail_full_path = \
                 os.path.join(
@@ -1661,7 +1664,8 @@ def generate_unique_shot_name(base_name, shot_name_increment=10):
         name_parts[-1] = str(i).zfill(padding)
         shot_name = '_'.join(name_parts)
         with DBSession.no_autoflush:
-            existing_shot = DBSession.query(Shot.name).filter(Shot.name==shot_name).first()
+            existing_shot = \
+                DBSession.query(Shot.name).filter(Shot.name==shot_name).first()
         if not existing_shot:
             logger.debug('generated unique shot name: %s' % shot_name)
             return shot_name
@@ -1670,11 +1674,12 @@ def generate_unique_shot_name(base_name, shot_name_increment=10):
     raise RuntimeError("Can not generate a unique shot name!!!")
 
 
-def duplicate_task(task, user):
+def duplicate_task(task, user, keep_resources=False):
     """Duplicates the given task without children.
 
     :param task: a stalker.models.task.Task instance
     :param user:
+    :param bool keep_resources: Set this True if you want to keep the resources
     :return: stalker.models.task.Task
     """
     # create a new task and change its attributes
@@ -1741,6 +1746,9 @@ def duplicate_task(task, user):
         'date_created': utc_now,
     }
 
+    if keep_resources:
+        kwargs['resources'] = task.resources
+
     kwargs.update(extra_kwargs)
 
     dup_task = class_(**kwargs)
@@ -1749,22 +1757,25 @@ def duplicate_task(task, user):
     return dup_task
 
 
-def walk_and_duplicate_task_hierarchy(task, user):
+def walk_and_duplicate_task_hierarchy(task, user, keep_resources=False):
     """Walks through task hierarchy and creates duplicates of all the tasks
     it finds
 
     :param task: task
     :param user: stalker.models.auth.User instance that does this action.
+    :param bool keep_resources: Set this True to keep the resources
     :return:
     """
     # start from the given task
     logger.debug('duplicating task : %s' % task)
     logger.debug('task.children    : %s' % task.children)
-    dup_task = duplicate_task(task, user)
+    dup_task = duplicate_task(task, user, keep_resources=keep_resources)
     task.duplicate = dup_task
     for child in task.children:
         logger.debug('duplicating child : %s' % child)
-        duplicated_child = walk_and_duplicate_task_hierarchy(child, user)
+        duplicated_child = walk_and_duplicate_task_hierarchy(
+            child, user, keep_resources=keep_resources
+        )
         duplicated_child.parent = dup_task
     return dup_task
 
@@ -1814,23 +1825,25 @@ def cleanup_duplicate_residuals(task):
         cleanup_duplicate_residuals(child)
 
 
-def duplicate_task_hierarchy(task, parent, name, description, user):
+def duplicate_task_hierarchy(task, parent, name, description, user,
+                             keep_resources=False):
     """Duplicates the given task hierarchy.
 
     Walks through the hierarchy of the given task and duplicates every
     instance it finds in a new task.
 
-    task: The task that wanted to be duplicated
+    :param task: The task that wanted to be duplicated
+    :param parent:
+    :param name:
+    :param description:
+    :param user:
+    :param keep_resources:
 
     :return: A list of stalker.models.task.Task
     """
-    # TODO: update this to pytz
-    # import pytz
-    utc_now = local_to_utc(
-        datetime.datetime.now()
+    dup_task = walk_and_duplicate_task_hierarchy(
+        task, user, keep_resources=keep_resources
     )
-
-    dup_task = walk_and_duplicate_task_hierarchy(task, user)
     update_dependencies_in_duplicated_hierarchy(task)
 
     cleanup_duplicate_residuals(task)
@@ -1891,10 +1904,10 @@ def check_task_status_by_schedule_model(task):
         if depends_tasks_cmpl:
             task.status = status_cmpl
 
-            # if task.computed_end < utc_now:
-            #     task.status = status_cmpl
-            # elif task.computed_start < utc_now and task.computed_end > utc_now:
-            #     task.status = status_wip
+            if task.computed_end < utc_now:
+                task.status = status_cmpl
+            elif task.computed_start < utc_now < task.computed_end:
+                task.status = status_wip
 
 
 def get_actual_start_time(task):

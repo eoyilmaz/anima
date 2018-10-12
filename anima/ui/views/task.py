@@ -9,6 +9,77 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.models.task import TaskTreeModel
 
 
+class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
+    """custom dialog for duplicating task hierarchies
+    """
+
+    def __init__(self, parent=None, duplicated_task_name='', *args, **kwargs):
+        super(DuplicateTaskHierarchyDialog, self).__init__(
+            parent=parent, *args, **kwargs
+        )
+
+        self.duplicated_task_name = duplicated_task_name
+
+        # storage for widgets
+        self.main_layout = None
+        self.label = None
+        self.line_edit = None
+        self.check_box = None
+        self.button_box = None
+
+        # setup dialog
+        self._setup_dialog()
+
+    def _setup_dialog(self):
+        """create the UI elements
+        """
+        # set window title
+        self.setWindowTitle("Duplicate Task Hierarchy")
+
+        # set window size
+        self.resize(285, 118)
+
+        # create the main layout
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.setLayout(self.main_layout)
+
+        # the label
+        self.label = QtWidgets.QLabel(self)
+        self.label.setText('Duplicated Task Name:')
+        self.main_layout.addWidget(self.label)
+
+        # the line edit
+        self.line_edit = QtWidgets.QLineEdit(self)
+        self.line_edit.setText(self.duplicated_task_name)
+        self.main_layout.addWidget(self.line_edit)
+
+        # the check box
+        self.check_box = QtWidgets.QCheckBox(self)
+        self.check_box.setText('Keep resources')
+        self.main_layout.addWidget(self.check_box)
+
+        # the button box
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel |
+            QtWidgets.QDialogButtonBox.Ok
+        )
+        self.main_layout.addWidget(self.button_box)
+
+        # setup signals
+        QtCore.QObject.connect(
+            self.button_box,
+            QtCore.SIGNAL("accepted()"),
+            self.accept
+        )
+        QtCore.QObject.connect(
+            self.button_box,
+            QtCore.SIGNAL("rejected()"),
+            self.reject
+        )
+
+
 class TaskTreeView(QtWidgets.QTreeView):
     """A custom tree view to display Tasks info
     """
@@ -181,6 +252,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         copy_url_action = None
         copy_id_to_clipboard = None
         fix_task_status_action = None
+        change_status_menu_actions = []
 
         from anima import defaults
         from stalker import LocalSession
@@ -297,19 +369,35 @@ class TaskTreeView(QtWidgets.QTreeView):
                 status_menu.addSeparator()
 
                 # get all task statuses
-                change_status_menu_actions = []
                 from anima import defaults
+
+                menu_style_sheet = ''
+                defaults_status_colors = defaults.status_colors
                 for status_code in defaults.status_colors:
                     change_status_menu_action = \
                         status_menu.addAction(status_code)
+
+                    change_status_menu_action.setObjectName(
+                        'status_%s' % status_code
+                    )
+
                     change_status_menu_actions.append(
                         change_status_menu_action
                     )
 
-                # set_task_status_to_on_hold_action = \
-                #     status_menu.addAction(u'\uf0e8 W')
-                # set_task_status_to_on_hold_action = \
-                #     status_menu.addAction(u'\uf0e8 On Hold')
+                    menu_style_sheet = "%s %s" % (
+                        menu_style_sheet,
+                        "QMenu#status_%s { background: %s %s %s}" %
+                        (
+                            status_code,
+                            defaults_status_colors[status_code][0],
+                            defaults_status_colors[status_code][1],
+                            defaults_status_colors[status_code][2],
+                        )
+                    )
+
+                # change the BG Color of the status
+                status_menu.setStyleSheet(menu_style_sheet)
 
         try:
             # PySide and PySide2
@@ -444,13 +532,21 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(task)
 
                 elif selected_item is duplicate_task_hierarchy_action:
-                    new_task_name, result = QtWidgets.QInputDialog.getText(
-                        self,
-                        "Input Dialog", "Duplicated Task Name:",
-                        QtWidgets.QLineEdit.Normal,
-                        item.task.name
-                    )
-                    if result:
+                    duplicate_task_hierarchy_dialog = \
+                        DuplicateTaskHierarchyDialog(
+                            parent=self, duplicated_task_name=item.task.name
+                        )
+                    duplicate_task_hierarchy_dialog.exec_()
+
+                    result = duplicate_task_hierarchy_dialog.result()
+                    if result == accepted:
+                        new_task_name = \
+                            duplicate_task_hierarchy_dialog.line_edit.text()
+
+                        keep_resources = \
+                            duplicate_task_hierarchy_dialog\
+                                .check_box.checkState()
+
                         from anima import utils
                         from stalker import Task
                         task = Task.query.get(item.task.id)
@@ -459,7 +555,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                             None,
                             new_task_name,
                             description='Duplicated from Task(%s)' % task.id,
-                            user=logged_in_user
+                            user=logged_in_user,
+                            keep_resources=keep_resources
                         )
                         if new_task:
                             from stalker.db.session import DBSession
@@ -577,6 +674,37 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     project_users_main_dialog.deleteLater()
 
+                elif selected_item in change_status_menu_actions:
+                    # get the status code
+                    status_code = selected_item.text()
+
+                    from sqlalchemy import func
+                    status = \
+                        Status.query.filter(
+                            func.lower(Status.code) == func.lower(status_code)
+                        ).first()
+
+                    # change the status of the entity
+                    # if it is a leaf task
+                    # if it doesn't have any dependent_of
+                    # assert isinstance(entity, Task)
+                    if isinstance(entity, Task):
+                        if entity.is_leaf and not entity.dependent_of:
+                            # then we can update it
+                            entity.status = status
+
+                            # # fix other task statuses
+                            # from anima import utils
+                            # utils.fix_task_statuses(entity)
+
+                            # refresh the tree
+                            from stalker.db.session import DBSession
+                            DBSession.add(entity)
+                            DBSession.commit()
+
+                            if item.parent:
+                                item.parent.reload()
+                                self.find_and_select_entity_item(entity)
                 else:
                     try:
                         # go to the dependencies
