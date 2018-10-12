@@ -48,7 +48,8 @@ setup(
         "Topic :: Software Development",
         "Topic :: Utilities",
     ],
-    requires=['stalker', 'edl', 'timecode', 'sqlalchemy'],
+    requires=['stalker', 'edl', 'timecode', 'sqlalchemy', 'pillow', 'exifread',
+              'jinja2', 'pytz'],
     install_requires=['stalker', 'edl', 'timecode', 'sqlalchemy'],
     test_requires=['pytest', 'pytest-xdist', 'coverage', 'pytest-cov']
 )
