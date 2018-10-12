@@ -159,6 +159,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         logger.debug("finished initializing the interface")
 
+    def center_window(self):
+        """overridden method
+        """
+        if self.parent():
+            parent_geometry = self.parent().geometry()
+            size = self.geometry()
+
+            self.move(
+                (parent_geometry.width() - size.width()) * 0.5 + parent_geometry.left(),
+                (parent_geometry.height() - size.height()) * 0.5 + parent_geometry.top()
+            )
+        else:
+            return super(MainDialog, self).center_window()
+
     def _setup_ui(self):
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.resize(1753, 769)
