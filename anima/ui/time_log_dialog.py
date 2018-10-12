@@ -44,6 +44,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ui element storage
         self.main_layout = None
+        self.left_layout = None
+        self.right_layout = None
         self.form_layout = None
         self.tasks_label = None
         self.task_progress_bar = None
@@ -66,6 +68,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.tasks_combo_box = None
         self.start_time_edit = None
         self.end_time_edit = None
+        self.formatted_date_label = None
+        self.time_log_info_label = None
 
         self.setup_ui()
 
@@ -77,7 +81,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # -----------------------------
         # Setup Main Layout
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = QtWidgets.QHBoxLayout(self)
+
+        # create the left column
+        self.left_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addLayout(self.left_layout)
+
+        # create the right column
+        # this will list the previously entered time logs
+        self.right_layout = QtWidgets.QVBoxLayout()
+        self.main_layout.addLayout(self.right_layout)
 
         # -----------------------------
         # Setup Form Layout
@@ -85,7 +98,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setFieldGrowthPolicy(
             QtWidgets.QFormLayout.AllNonFixedFieldsGrow
         )
-        self.main_layout.addLayout(self.form_layout)
+        self.left_layout.addLayout(self.form_layout)
 
         # -----------------------------
         # Tasks
@@ -302,7 +315,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.dialog_button_box.setStandardButtons(
             QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
         )
-        self.main_layout.addWidget(self.dialog_button_box)
+        self.left_layout.addWidget(self.dialog_button_box)
+
+        # create the right column which is the current date details
+        self.formatted_date_label = QtWidgets.QLabel(self)
+        self.formatted_date_label.setText("")
+        self.right_layout.addWidget(self.formatted_date_label)
+
+        # create the right column which is the current date details
+        self.time_log_info_label = QtWidgets.QLabel(self)
+        self.time_log_info_label.setText("")
+        self.right_layout.addWidget(self.time_log_info_label)
+
+        # set stretch
+        self.main_layout.setStretchFactor(self.left_layout, 0)
+        self.main_layout.setStretchFactor(self.right_layout, 1)
 
         # setup signals
         self._setup_signals()
@@ -347,7 +374,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.SIGNAL("rejected()"),
             self.reject
         )
-        # QtCore.QMetaObject.connectSlotsByName(Dialog)
 
         # tasks_combo_box
         QtCore.QObject.connect(
@@ -375,6 +401,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.resource_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.resource_changed
+        )
+
+        # calendar day selected
+        QtCore.QObject.connect(
+            self.calendar_widget,
+            QtCore.SIGNAL("selectionChanged()"),
+            self.calendar_widget_selection_changed
         )
 
     def _set_defaults(self):
@@ -498,6 +531,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.fill_calendar_with_time_logs()
 
+        # also trigger an update to the side info bar
+        self.calendar_widget_selection_changed()
+
     def fill_calendar_with_time_logs(self):
         """fill the calendar with daily time log info
         """
@@ -565,6 +601,7 @@ order by cast("TimeLogs".start as date)
         time_shifter = utc_to_local
         import stalker
 
+        # TODO: Remove this in a later version
         from distutils.version import LooseVersion
         if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
             def time_shifter(x):
@@ -609,6 +646,42 @@ order by cast("TimeLogs".start as date)
             date = QtCore.QDate(year, month, day)
 
             self.calendar_widget.setDateTextFormat(date, date_format)
+
+    def calendar_widget_selection_changed(self):
+        """runs when selection changed
+        """
+        selected_date = self.calendar_widget.selectedDate()
+        assert isinstance(selected_date, QtCore.QDate)
+
+        date_format = u"""<div>
+    <div style="width: 100px; height: 100px; font-size: 60pt; float: initial">
+        <span><strong>{day_number}</strong></span>
+    </div>
+    <div style="position: relative; left: 60px; top: -95px;">
+        <div>
+            <span style="font-size: 24pt;"><strong>{month_name} {year}</strong></span>
+            <br>
+            <span style="font-size: 32pt;">{day_name}</span>
+        </div>
+    </div>
+</div>""".format(
+            day_number=selected_date.day(),
+            day_name=selected_date.longDayName(selected_date.dayOfWeek()),
+            month_name=selected_date.longMonthName(selected_date.month()),
+            year=selected_date.year()
+        )
+
+        assert isinstance(self.formatted_date_label, QtWidgets.QLabel)
+        self.formatted_date_label.setText(date_format)
+
+        # create new labels for time logs in that day
+        date = self.calendar_widget.selectedDate()
+        date_text_format = self.calendar_widget.dateTextFormat()
+        try:
+            time_log_data = date_text_format[date].toolTip()
+            self.time_log_info_label.setText(time_log_data)
+        except KeyError:
+            self.time_log_info_label.setText('')
 
     def tasks_combo_box_index_changed(self, task_label):
         """runs when another task has been selected
@@ -852,6 +925,7 @@ order by cast("TimeLogs".start as date)
                                         DependencyViolationError)
         utc_now = local_to_utc(datetime.datetime.now())
 
+        # TODO: Remove this in a later version
         import stalker
         from distutils.version import LooseVersion
         if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
