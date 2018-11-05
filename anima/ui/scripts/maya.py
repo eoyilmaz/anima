@@ -94,3 +94,21 @@ def version_mover():
 
     from anima.ui import version_mover as vm
     vm.UI()
+
+
+def project_manager(logging_level=logging.WARNING):
+    """Helper function for project_manager UI for Maya
+    """
+    # connect to db
+    from anima.utils import do_db_setup
+    do_db_setup()
+
+    # use PySide for Maya 2014
+    # and PySide2 for Maya 2017
+    set_qt_lib()
+
+    from anima.ui import project_manager
+    from anima.env import mayaEnv
+
+    # set the parent object to the maya main window
+    project_manager.ui_caller(None, None, project_manager.MainWindow)
