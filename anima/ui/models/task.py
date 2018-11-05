@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2017, Anima Istanbul
+# Copyright (c) 2012-2018, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -345,7 +345,8 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             return QtCore.Qt.ItemIsEnabled
 
         # super(TaskTreeModel, self).flags(model_index)
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable  # \
+               # | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDropEnabled
 
     def populateTree(self, projects):
         """populates tree with user projects
