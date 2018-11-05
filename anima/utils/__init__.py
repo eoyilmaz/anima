@@ -1476,9 +1476,9 @@ class Exposure(object):
     """A class for photo exposure calculation
     """
 
-    def __init__(self, shutter=None, fstop=None, iso=None):
+    def __init__(self, shutter=None, f_stop=None, iso=None):
         self.shutter = shutter
-        self.fstop = fstop
+        self.f_stop = f_stop
         self.iso = iso
 
     def to(self, other_exp):
@@ -1492,12 +1492,12 @@ class Exposure(object):
 
         import math
 
-        shuter = math.log(other_exp.shutter / self.shutter, 2)
-        fstop = math.log(
-            (float(self.fstop) * float(self.fstop)) /
-            (float(other_exp.fstop) * float(other_exp.fstop)), 2)
+        shutter = math.log(other_exp.shutter / self.shutter, 2)
+        f_stop = math.log(
+            (float(self.f_stop) * float(self.f_stop)) /
+            (float(other_exp.f_stop) * float(other_exp.f_stop)), 2)
         iso = math.log(float(other_exp.iso) / float(self.iso), 2)
-        return shuter + fstop + iso
+        return shutter + f_stop + iso
 
     def from_(self, other_exp):
         """calculate the exposure to equalize the other exposure to this
