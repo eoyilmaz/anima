@@ -47,6 +47,7 @@ VALID_MATERIALS = {
         'aiSkin',
         'aiSkinSss',
         'aiStandard',
+        'aiStandardSurface',
         'aiUtility',
         'aiWireframe',
     ],

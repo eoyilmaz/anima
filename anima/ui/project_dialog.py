@@ -26,6 +26,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Project Dialog
     """
 
+    max_project_name_length = 32
+
     def __init__(self, parent=None, project=None):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
@@ -545,8 +547,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if text == '':
                 self.code_lineEdit.set_invalid('Enter a code')
             else:
-                if len(text) > 16:
-                    self.code_lineEdit.set_invalid('Code is too long (>16)')
+                if len(text) > self.max_project_name_length:
+                    self.code_lineEdit.set_invalid(
+                        'Code is too long (>%s)' %
+                        self.max_project_name_length
+                    )
                 else:
                     self.code_lineEdit.set_valid()
 

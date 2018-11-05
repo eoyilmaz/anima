@@ -4,7 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 from anima.ui.base import ui_caller
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -72,7 +72,7 @@ class MainWindow(QtWidgets.QMainWindow):
             'images',
             'app_icon.png'
         )
-        self.setWindowIcon(QtWidgets.QIcon(app_icon_path))
+        self.setWindowIcon(QtGui.QIcon(app_icon_path))
 
         self.create_main_menu()
         self.create_toolbars()

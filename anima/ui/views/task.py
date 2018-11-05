@@ -215,8 +215,8 @@ class TaskTreeView(QtWidgets.QTreeView):
         #     return
 
         from anima.ui.models.task import TaskItem
-        if not isinstance(item, TaskItem):
-            return
+        #if not isinstance(item, TaskItem):
+        #    return
 
         if item and item.task:
             task_id = item.task.id

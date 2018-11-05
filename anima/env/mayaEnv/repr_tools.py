@@ -179,6 +179,7 @@ RENDER_RELATED_NODE_TYPES = [
     'aiShadowCatcher',
     'aiSkin',
     'aiStandard',
+    'aiStandardSurface',
     'aiUtility',
     'aiWireframe',
 
