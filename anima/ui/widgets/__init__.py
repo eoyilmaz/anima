@@ -64,7 +64,7 @@ class DoubleListWidget(object):
         self.primary_list_widget = QtWidgets.QListWidget(self.dialog)
         self.primary_widgets_layout.addWidget(self.primary_list_widget)
         self.main_layout.addLayout(self.primary_widgets_layout)
-        
+
         # ----------------------------------
         # Button Layout
         self.button_layout = QtWidgets.QVBoxLayout()
@@ -82,42 +82,54 @@ class DoubleListWidget(object):
         
         self.button_layout.insertStretch(3, 0)
         self.main_layout.addLayout(self.button_layout)
-        
+
         # ----------------------------------
         # Secondary Widgets Layout
         self.secondary_widgets_layout = QtWidgets.QVBoxLayout()
-        
+
         # label
         self.secondary_label = QtWidgets.QLabel(self.dialog)
         self.secondary_label.setText(self.secondary_label_text)
         self.secondary_label.setAlignment(QtCore.Qt.AlignCenter)
-        
+
         # list widget
         self.secondary_widgets_layout.addWidget(self.secondary_label)
-        
+
         self.secondary_list_widget = QtWidgets.QListWidget(self.dialog)
         self.secondary_widgets_layout.addWidget(self.secondary_list_widget)
         self.main_layout.addLayout(self.secondary_widgets_layout)
-        
+
         self.main_layout.setStretch(0, 1)
         self.main_layout.setStretch(1, 0)
         self.main_layout.setStretch(2, 1)
-        
+
         self.parent_layout.addLayout(self.main_layout)
-        
+
         # Create signals
         QtCore.QObject.connect(
             self.primary_to_secondary_push_button,
             QtCore.SIGNAL('clicked()'),
             self.primary_to_secondary_push_button_clicked
         )
-        
+
+        QtCore.QObject.connect(
+            self.primary_list_widget,
+            QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'),
+            self.primary_to_secondary_push_button_clicked
+        )
+
         QtCore.QObject.connect(
             self.secondary_to_primary_push_button,
             QtCore.SIGNAL('clicked()'),
             self.secondary_to_primary_push_button_clicked
         )
-    
+
+        QtCore.QObject.connect(
+            self.secondary_list_widget,
+            QtCore.SIGNAL('itemDoubleClicked(QListWidgetItem*)'),
+            self.secondary_to_primary_push_button_clicked
+        )
+
     def add_primary_items(self, items):
         """Adds the given items to the primary list
 
@@ -125,7 +137,7 @@ class DoubleListWidget(object):
         :return:
         """
         self.primary_list_widget.addItems(items)
-    
+
     def add_secondary_items(self, items):
         """Adds the given items to the secondary list
 
