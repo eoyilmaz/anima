@@ -56,6 +56,7 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         # the check box
         self.check_box = QtWidgets.QCheckBox(self)
         self.check_box.setText('Keep resources')
+        self.check_box.setChecked(True)
         self.main_layout.addWidget(self.check_box)
 
         # the button box
