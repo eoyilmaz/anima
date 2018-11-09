@@ -714,8 +714,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # set the default value of the fps
                 self.fps_spinBox.setValue(project.fps)
 
-            # if there is a parent task also set the responsible to the parent
-            # responsible
+        # if there is a parent task also set the responsible to the parent
+        # responsible
+        if self.parent_task:
             for responsible in self.parent_task.responsible:
                 self.responsible_combo_box_changed(responsible.name)
 
