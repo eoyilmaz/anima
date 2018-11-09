@@ -713,6 +713,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if project:
                 # set the default value of the fps
                 self.fps_spinBox.setValue(project.fps)
+
+            # if there is a parent task also set the responsible to the parent
+            # responsible
+            for responsible in self.parent_task.responsible:
+                self.responsible_combo_box_changed(responsible.name)
+
         self.set_project(project)
 
         # if a parent is given set it to the parent_task_lineEdit
@@ -925,8 +931,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.schedule_unit_comboBox.setVisible(True)
             self.schedule_model_comboBox.setVisible(True)
             if self.mode == 'Update':
-                self.update_bid_label.setVisible(True)
-                self.update_bid_checkBox.setVisible(True)
+                # if this is a parent task
+                # do not show resource and timing related fields
+                from stalker import Task
+                assert isinstance(self.task, Task)
+
+                if self.task.is_container:
+                    self.resources_label.setVisible(False)
+                    self.resources_comboBox.setVisible(False)
+                    self.resources_listWidget.setVisible(False)
+                    self.schedule_timing_label.setVisible(False)
+                    self.schedule_timing_spinBox.setVisible(False)
+                    self.schedule_unit_comboBox.setVisible(False)
+                    self.schedule_model_comboBox.setVisible(False)
+
+                    self.update_bid_label.setVisible(False)
+                    self.update_bid_checkBox.setVisible(False)
+                else:
+                    self.update_bid_label.setVisible(True)
+                    self.update_bid_checkBox.setVisible(True)
+
             else:
                 self.update_bid_label.setVisible(False)
                 self.update_bid_checkBox.setVisible(False)
