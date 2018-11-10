@@ -645,6 +645,7 @@ def check_if_default_shader(progress_controller=None):
         progress_controller.complete()
         return
 
+    delete_unused_shading_nodes(progress_controller)
     if len(pm.ls(mat=1)) > 2:
         progress_controller.complete()
         raise PublishError(
