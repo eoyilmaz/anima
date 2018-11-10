@@ -4,7 +4,7 @@
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
 
-from anima.ui.lib import QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class EntityThumbnailWidget(QtWidgets.QWidget):
@@ -12,7 +12,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
     thumbnail if the user clicks on it
     """
 
-    default_thumbnail_size = 128
+    default_thumbnail_size = [288, 162]
 
     def __init__(self, task=None, parent=None, **kwargs):
         self.task = task
@@ -23,6 +23,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         # storage for UI elements
         self.vertical_layout = None
         self.thumbnail_graphics_view = None
+        self.upload_thumbnail_button = None
 
         self.setup_ui()
 
@@ -30,8 +31,8 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         """create the UI widgets
         """
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.setLayout(self.vertical_layout)
 
-        from anima.ui.lib import QtCore, QtGui
         # the widget should consist of a QGraphic
         self.thumbnail_graphics_view = QtWidgets.QGraphicsView(self)
 
@@ -43,14 +44,12 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
         size_policy.setHeightForWidth(
-            self.thumbnail_graphics_view.sizePolicy().hasHeightForWidth())
+            self.thumbnail_graphics_view.sizePolicy().hasHeightForWidth()
+        )
         self.thumbnail_graphics_view.setSizePolicy(size_policy)
 
         # set size
-        default_size = QtCore.QSize(
-            self.default_thumbnail_size,
-            self.default_thumbnail_size
-        )
+        default_size = QtCore.QSize(*self.default_thumbnail_size)
 
         self.thumbnail_graphics_view.setMinimumSize(default_size)
         self.thumbnail_graphics_view.setMaximumSize(default_size)
@@ -74,6 +73,28 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         )
         self.vertical_layout.addWidget(self.thumbnail_graphics_view)
 
+        self.upload_thumbnail_button = QtWidgets.QPushButton(self)
+        self.upload_thumbnail_button.setText("Upload...")
+        self.upload_thumbnail_button.setGeometry(
+            self.thumbnail_graphics_view.geometry()
+        )
+        self.upload_thumbnail_button.setVisible(True)
+
+        self.vertical_layout.addWidget(self.upload_thumbnail_button)
+
+        # create signals
+        # QtCore.QObject.connect(
+        #     self.thumbnail_graphics_view,
+        #     QtCore.SIGNAL("clicked()"),
+        #     self.thumbnail_graphics_view_clicked
+        # )
+
+        QtCore.QObject.connect(
+            self.upload_thumbnail_button,
+            QtCore.SIGNAL("clicked()"),
+            self.upload_thumbnail_button_clicked
+        )
+
     def fill_ui(self):
         """fills the ui with the given task thumbnail
         """
@@ -91,3 +112,19 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         """
         from anima.ui import utils
         utils.clear_thumbnail(self.thumbnail_graphics_view)
+
+    # def thumbnail_graphics_view_clicked(self):
+    #     """show the update button
+    #     """
+    #     # print('thumbnail clicked')
+    #     # self.upload_thumbnail_button.setVisible(True)
+
+    def upload_thumbnail_button_clicked(self):
+        """replaces the thumbnail
+        """
+        # print('thumbnail button clicked')
+        # self.upload_thumbnail_button.setVisible(False)
+        from anima.ui import utils
+        thumbnail_full_path = utils.choose_thumbnail(self)
+        utils.upload_thumbnail(self.task, thumbnail_full_path)
+        self.fill_ui()
