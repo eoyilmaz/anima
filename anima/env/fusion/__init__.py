@@ -603,7 +603,7 @@ class Fusion(EnvironmentBase):
                 version.absolute_path,
                 'Outputs',
                 version.take_name,
-                'v%03d' % version.version_number,
+                # 'v%03d' % version.version_number,
                 file_format,
                 output_file_name
             ).replace('\\', '/')
@@ -634,6 +634,7 @@ class Fusion(EnvironmentBase):
                     },
                     'input_list': {
                         'Clip': output_path_generator('png'),
+                        'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
                         'ProcessBlue': 1,
@@ -675,6 +676,7 @@ class Fusion(EnvironmentBase):
                     },
                     'input_list': {
                         'Clip': output_path_generator('exr'),
+                        'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
                         'ProcessBlue': 1,
@@ -718,6 +720,7 @@ class Fusion(EnvironmentBase):
                     },
                     'input_list': {
                         'Clip': output_path_generator('mp4'),
+                        'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
                         'ProcessBlue': 1,
@@ -727,7 +730,7 @@ class Fusion(EnvironmentBase):
                         'SaveFrames': 'Full',
                         'QuickTimeMovies.Compression': 'H.264_avc1',
                         'QuickTimeMovies.Quality': 95.0,
-                        'QuickTimeMovies.FrameRateFps': fps,  # from project.fps
+                        'QuickTimeMovies.FrameRateFps': fps,
                         'QuickTimeMovies.KeyFrames': 5,
                     },
                     'connected_to': {
@@ -736,6 +739,54 @@ class Fusion(EnvironmentBase):
                 }
             },
         ]
+
+        if version.task.type and version.task.type.name == 'Plate':
+            # create a different type of outputs
+            output_format_data = [
+                {
+                    'name': 'jpg',
+                    'node_tree': {
+                        'type': 'Saver',
+                        'attr': {
+                            'TOOLS_Name': output_node_name_generator('jpg'),
+                        },
+                        'input_list': {
+                            'Clip': output_path_generator('jpg'),
+                            'CreateDir': 1,
+                            'ProcessRed': 1,
+                            'ProcessGreen': 1,
+                            'ProcessBlue': 1,
+                            'ProcessAlpha': 0,
+                            'OutputFormat': 'JPEGFormat',
+                            'JpegFormat.Quality': 85,
+                        },
+                    }
+                },
+                {
+                    'name': 'mp4',
+                    'node_tree': {
+                        'type': 'Saver',
+                        'attr': {
+                            'TOOLS_Name': output_node_name_generator('mp4'),
+                        },
+                        'input_list': {
+                            'Clip': output_path_generator('mp4'),
+                            'CreateDir': 1,
+                            'ProcessRed': 1,
+                            'ProcessGreen': 1,
+                            'ProcessBlue': 1,
+                            'ProcessAlpha': 0,
+                            'OutputFormat': 'QuickTimeMovies',
+                            'ProcessMode': 'Auto',
+                            'SaveFrames': 'Full',
+                            'QuickTimeMovies.Compression': 'H.264_avc1',
+                            'QuickTimeMovies.Quality': 95.0,
+                            'QuickTimeMovies.FrameRateFps': fps,
+                            'QuickTimeMovies.KeyFrames': 5,
+                        }
+                    }
+                },
+            ]
 
         # selectively generate output format
         saver_nodes = self.get_main_saver_node()
