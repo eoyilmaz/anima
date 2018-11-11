@@ -1260,8 +1260,13 @@ class Playblaster(object):
         cf = pm.currentTime(q=1) + 1
 
         import timecode
-        # TODO: This should use project frame rate
-        tc = timecode.Timecode('24', frames=cf)
+        frame_rate = 25
+        from anima.env import mayaEnv
+        maya_env = mayaEnv.Maya()
+        v = maya_env.get_current_version()
+        if v:
+            frame_rate = v.task.project.fps
+        tc = timecode.Timecode(frame_rate, frames=cf)
 
         if current_shot:
             start_time = pm.shot(current_shot, q=1, st=1)
