@@ -991,7 +991,7 @@ def perform_playblast(action):
 
         # ask playblast format
         playblast_format = ask_playblast_format()
-        if playblast_format == 'png':
+        if playblast_format == 'image':
             extra_playblast_options['fmt'] = 'image'
             extra_playblast_options['compression'] = 'png'
 
