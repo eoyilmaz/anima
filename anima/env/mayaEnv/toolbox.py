@@ -967,7 +967,13 @@ def UI():
                       bgc=color.color)
 
             color.change()
+            pm.button('assign_substance_textures_button',
+                      l="Assign Substance Textures",
+                      c=RepeatedCallback(Render.assign_substance_textures),
+                      ann=Render.assign_substance_textures.__doc__,
+                      bgc=color.color)
 
+            color.change()
             pm.button(
                 'CameraFilmOffsetTool_button',
                 l="Camera Film Offset Tool",
@@ -3701,6 +3707,149 @@ class Render(object):
         'orig': {},
         'current_frame': 1
     }
+
+    @classmethod
+    def assign_substance_textures(cls):
+        """auto assigns textures to selected materials.
+
+        Supports both Arnold and Redshift materials
+        """
+        #
+        # Substance Texture Assigner
+        #
+
+        # material_subfixes = {
+        #     "BaseColor": {
+        #         "aiStandardSurface": {
+        #             "attr": "baseColor"
+        #         },
+        #         "RedshiftMaterial": {
+        #             "attr": "diffuse_color"
+        #         },
+        #     },
+        #     "Height": {},
+        #     "Metalness": {
+        #         "aiStandarSurface": {
+        #             "attr": "metalness"
+        #         }
+        #     },
+        #     "Normal": {
+        #         "aiStandardSurface": {
+        #             "tree": {
+        #                 "type": "aiBump2D",
+        #                 "class": "asUtility",
+        #                 "attr": {
+        #                     "bumpMap": {
+        #                         "output": "outColorR"
+        #                         "type": "aiImage",
+        #                         "attr": {
+        #                             "filename": "%TEXTUREFILE%"
+        #                         }
+        #                     }
+        #                 }
+        #                 "target": "normalCamera"
+        #             }
+        #         }
+        #     },
+        #     "Roughness": {
+        #         "aiStandardSurface": {
+        #             "attr": "specularRoughness"
+        #         }
+        #     }
+        # }
+
+        import glob
+        materials = pm.selected()
+
+        # ask the texture folder
+        texture_path = pm.fileDialog2(cap="Choose Texture Folder", okc="Choose", fm=2)[0]
+
+        for material in materials:
+            # textures should start with the same name of the material
+            material_name = material.name()
+            print("material.name: %s" % material_name)
+
+            pattern = "%s/%s_*" % (texture_path, material_name)
+            print("pattern: %s" % pattern)
+
+            files = glob.glob(pattern)
+            print files
+
+            # TODO: Make it beautiful by using the auxiliary.create_shader()
+            # For now do it ugly!
+
+            # *********************************************
+            # BaseColor
+            # create a new aiImage
+            base_color_file_path =  glob.glob("%s/%s_BaseColor*" % (texture_path, material_name))
+            if base_color_file_path:
+                # fix diffuse weight
+                material.base.set(1)
+                base_color_file_path = base_color_file_path[0]
+
+                base_color_file = pm.shadingNode('file', asTexture=1)
+                base_color_file.fileTextureName.set(base_color_file_path)
+                base_color_file.colorSpace.set('sRGB')
+                base_color_file.outColor >> material.baseColor
+
+            # *********************************************
+            # Height
+            height_file_path = glob.glob("%s/%s_Height*" % (texture_path, material_name))
+            if height_file_path:
+                height_file_path = height_file_path[0]
+
+                # create a displacement node
+                shading_node = material.attr("outColor").outputs(type="shadingEngine")[0]
+                disp_shader = pm.shadingNode('displacementShader', asShader=1)
+                disp_shader.displacement >> shading_node.displacementShader
+
+                # create texture
+                disp_file = pm.shadingNode('file', asTexture=1)
+                disp_file.fileTextureName.set(height_file_path)
+                disp_file.colorSpace.set('Raw')
+                disp_file.alphaIsLuminance.set(1)
+                disp_file.outAlpha >> disp_shader.displacement
+
+            # *********************************************
+            # Metalness
+            metalness_file_path = glob.glob("%s/%s_Metalness*" % (texture_path, material_name))
+            if metalness_file_path:
+                metalness_file_path = metalness_file_path[0]
+
+                metalness_file = pm.shadingNode("file", asTexture=1)
+                metalness_file.fileTextureName.set(metalness_file_path)
+                metalness_file.colorSpace.set('Raw')
+                metalness_file.alphaIsLuminance.set(1)
+                metalness_file.outAlpha >> material.metalness
+
+            # *********************************************
+            # Normal
+            normal_file_path = glob.glob("%s/%s_Normal*" % (texture_path, material_name))
+            if normal_file_path:
+                normal_file_path = normal_file_path[0]
+
+                # normal_ai_bump2d = pm.nt.AiBump2d()
+                normal_ai_normalmap = pm.shadingNode("aiNormalMap", asUtility=1)
+                normal_file = pm.shadingNode("file", asTexture=1)
+
+                normal_file.fileTextureName.set(normal_file_path)
+                normal_file.colorSpace.set('Raw')
+                normal_file.outColor >> normal_ai_normalmap.input
+
+                normal_ai_normalmap.outValue >> material.normalCamera
+
+            # *********************************************
+            # Roughness
+            # specularRoughness
+            roughness_file_path = glob.glob("%s/%s_Roughness*" % (texture_path, material_name))
+            if roughness_file_path:
+                roughness_file_path = roughness_file_path[0]
+                roughness_file = pm.shadingNode("file", asTexture=1)
+                roughness_file.fileTextureName.set(roughness_file_path)
+                roughness_file.colorSpace.set('Raw')
+                roughness_file.alphaIsLuminance.set(1)
+                roughness_file.outAlpha >> material.specularRoughness
+
 
     @classmethod
     def redshift_ic_ipc_bake(cls):
