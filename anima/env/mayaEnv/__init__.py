@@ -1491,7 +1491,12 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     else:
                         try:
                             # do it normally
+                            # preserve colorSpace info
+                            if node.hasAttr('colorSpace'):
+                                color_space = node.colorSpace.get()
                             node.setAttr(attr_name, new_path)
+                            if node.hasAttr('colorSpace'):
+                                node.colorSpace.set(color_space)
                         except RuntimeError:
                             # it is locked or something
                             # skip it

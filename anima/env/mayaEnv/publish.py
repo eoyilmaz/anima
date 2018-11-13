@@ -774,7 +774,7 @@ def check_if_leaf_mesh_nodes_have_no_transformation(progress_controller=None):
         )
 
 
-@publisher('model')
+#@publisher('model')
 def check_model_quality(progress_controller=None):
     """Models have good quality
 
@@ -2422,9 +2422,12 @@ def generate_playblast(progress_controller=None):
 
     sp = auxiliary.Playblaster()
     sp.batch_mode = True
-    video_files = sp.playblast()
-    progress_controller.increment()
-    sp.upload_outputs(sp.version, video_files)
+    try:
+        video_files = sp.playblast()
+        progress_controller.increment()
+        sp.upload_outputs(sp.version, video_files)
+    except RuntimeError:  # Quicktime gives errors occosionaly
+        pass
     progress_controller.increment()
     progress_controller.complete()
 

@@ -868,6 +868,15 @@ def UI():
             )
 
             color.change()
+            pm.button(
+                'delete_unused_shading_nodes_button',
+                l="Delete Unused Shading Nodes",
+                c=RepeatedCallback(Render.delete_unused_shading_nodes),
+                ann=Render.delete_unused_shading_nodes.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.text(l='===== RedShift IC + IPC Bake =====')
             pm.button(
                 'redshift_ic_ipc_bake_button',
@@ -966,6 +975,8 @@ def UI():
                       ann="create texture ref. object",
                       bgc=color.color)
 
+            pm.text(l='========== Texture Tools =============')
+
             color.change()
             pm.button('assign_substance_textures_button',
                       l="Assign Substance Textures",
@@ -973,6 +984,20 @@ def UI():
                       ann=Render.assign_substance_textures.__doc__,
                       bgc=color.color)
 
+            color.change()
+            pm.button('normalize_texture_paths_button',
+                      l="Normalize Texture Paths (remove $)",
+                      c=RepeatedCallback(Render.normalize_texture_paths),
+                      ann=Render.normalize_texture_paths.__doc__,
+                      bgc=color.color)
+
+            pm.button('unnormalize_texture_paths_button',
+                      l="Unnormalize Texture Paths (add $)",
+                      c=RepeatedCallback(Render.unnormalize_texture_paths),
+                      ann=Render.unnormalize_texture_paths.__doc__,
+                      bgc=color.color)
+
+            pm.text(l='======================================')
             color.change()
             pm.button(
                 'CameraFilmOffsetTool_button',
@@ -3707,6 +3732,33 @@ class Render(object):
         'orig': {},
         'current_frame': 1
     }
+
+    @classmethod
+    def delete_unused_shading_nodes(cls):
+        """Deletes unused shading nodes
+        """
+        pm.mel.eval('MLdeleteUnused')
+
+    @classmethod
+    def normalize_texture_paths(cls):
+        """Expands the environment variables in texture paths
+        """
+        import os
+        for node in pm.ls(type='file'):
+            color_space = node.colorSpace.get()
+            node.fileTextureName.set(
+                os.path.expandvars(node.fileTextureName.get())
+            )
+            node.colorSpace.set(color_space)
+
+    @classmethod
+    def unnormalize_texture_paths(cls):
+        """Contracts the environment variables in texture paths bu adding
+        the repository environment variable to the file paths
+        """
+        from anima.env import mayaEnv
+        m = mayaEnv.Maya()
+        m.replace_external_paths()
 
     @classmethod
     def assign_substance_textures(cls):
