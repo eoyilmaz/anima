@@ -668,6 +668,28 @@ class Fusion(EnvironmentBase):
                 }
             },
             {
+                'name': 'jpg',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': output_node_name_generator('jpg'),
+                    },
+                    'input_list': {
+                        'Clip': output_path_generator('jpg'),
+                        'CreateDir': 1,
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'JPEGFormat',
+                        'JpegFormat.Quality': 85,
+                    },
+                    'connected_to': {
+                        'ref_id': random_ref_id
+                    }
+                },
+            },
+            {
                 'name': 'exr',
                 'node_tree': {
                     'type': 'Saver',
