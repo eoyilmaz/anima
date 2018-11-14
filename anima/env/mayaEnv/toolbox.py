@@ -3745,11 +3745,13 @@ class Render(object):
         """
         import os
         for node in pm.ls(type='file'):
-            color_space = node.colorSpace.get()
+            if node.hasAttr('colorSpace'):
+                color_space = node.colorSpace.get()
             node.fileTextureName.set(
                 os.path.expandvars(node.fileTextureName.get())
             )
-            node.colorSpace.set(color_space)
+            if node.hasAttr('colorSpace'):
+                node.colorSpace.set(color_space)
 
     @classmethod
     def unnormalize_texture_paths(cls):
