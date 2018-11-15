@@ -436,7 +436,10 @@ class UI(object):
 
             aa_samples = dAO.AASamples.get()
             diff_samples = dAO.GIDiffuseSamples.get()
-            glossy_samples = dAO.GIGlossySamples.get()
+            try:
+                glossy_samples = dAO.GIGlossySamples.get()
+            except AttributeError:
+                glossy_samples = dAO.GISpecularSamples.get()
             if int(pm.about(v=1)) >= 2017:
                 sss_samples = dAO.GISssSamples.get()
             else:

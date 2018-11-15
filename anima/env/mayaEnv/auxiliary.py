@@ -2109,9 +2109,15 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         except OSError:
             pass
 
-        command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
-                  '-stripNamespaces -uvWrite -worldSpace ' \
-                  '-writeVisibility -eulerFilter '
+        if int(pm.about(v=1)) >= 2017:
+            command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
+                      '-stripNamespaces -uvWrite -wholeFrameGeo ' \
+                      '-worldSpace -autoSubd -writeUVSets -dataFormat ' \
+                      ' ogawa -writeVisibility '
+        else:
+            command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
+                      '-stripNamespaces -uvWrite -wholeFrameGeo ' \
+                      '-worldSpace -writeUVSets -writeVisibility '
 
         # add cacheable_attrs if any
         if cacheable_attrs:

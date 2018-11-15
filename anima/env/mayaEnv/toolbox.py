@@ -470,15 +470,6 @@ def UI():
             adj=True, cal="center", rs=row_spacing)
         with modeling_column_layout:
             color.reset()
-            pm.button(
-                'delete_render_and_display_layers_button',
-                l="Delete Render and Display Layers",
-                c=RepeatedCallback(Modeling.delete_render_and_display_layers),
-                ann=Modeling.delete_render_and_display_layers.__doc__,
-                bgc=color.color
-            )
-
-            color.change()
             pm.button('toggleFaceNormalDisplay_button',
                       l="toggle face normal display",
                       c=RepeatedCallback(
@@ -864,6 +855,15 @@ def UI():
                 l="Update Render Settings",
                 c=RepeatedCallback(Render.update_render_settings),
                 ann=Render.update_render_settings.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'delete_render_and_display_layers_button',
+                l="Delete Render and Display Layers",
+                c=RepeatedCallback(Render.delete_render_and_display_layers),
+                ann=Render.delete_render_and_display_layers.__doc__,
                 bgc=color.color
             )
 
@@ -1366,6 +1366,19 @@ def UI():
 
             color.change()
             pm.text(l='===== Alembic Tools =====')
+
+            pm.button('bake_all_constraints_button',
+                      l="Bake All Constraints",
+                      c=RepeatedCallback(Animation.bake_all_constraints),
+                      ann=Animation.bake_all_constraints.__doc__,
+                      bgc=color.color)
+
+            pm.button('bake_alembic_animations_button',
+                      l="Bake Alembic Animations",
+                      c=RepeatedCallback(Animation.bake_alembic_animations),
+                      ann=Animation.bake_alembic_animations.__doc__,
+                      bgc=color.color)
+
             rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             with rowLayout:
                 pm.button(
@@ -1391,6 +1404,8 @@ def UI():
             #     bgc=color.color
             # )
 
+            #rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
+            #with rowLayout:
             pm.button(
                 'export_alembic_of_selected_cacheable_nodes_button',
                 l='Export Alembic Of Selected Cacheable Nodes',
@@ -1398,6 +1413,12 @@ def UI():
                 ann=auxiliary.export_alembic_of_selected_cacheable_nodes.__doc__.split('\n')[0],
                 bgc=color.color
             )
+                #alembic_cache_steps_int_field = pm.intField(
+                #    'alembic_cache_steps_inf_field',
+                #    value=1,
+                #    bgc=color.color
+                #)
+
 
             pm.text(l='===== Exporters =====')
             color.change()
@@ -3139,16 +3160,6 @@ class Modeling(object):
                             pm.polyUVSet(shape, copy=True, nuv='map1', uvSet='DiffuseUV')
 
     @classmethod
-    def delete_render_and_display_layers(cls):
-        """Deletes the display and render layers in the current scene
-        """
-        # switch to default render layer before deleting anything
-        # this will prevent layers to be non-deletable
-        from anima.env.mayaEnv import auxiliary
-        auxiliary.switch_to_default_render_layer()
-        pm.delete(pm.ls(type=['displayLayer', 'renderLayer']))
-
-    @classmethod
     def reverse_normals(cls):
         selection = pm.ls(sl=1)
         for item in selection:
@@ -3732,6 +3743,16 @@ class Render(object):
         'orig': {},
         'current_frame': 1
     }
+
+    @classmethod
+    def delete_render_and_display_layers(cls):
+        """Deletes the display and render layers in the current scene
+        """
+        # switch to default render layer before deleting anything
+        # this will prevent layers to be non-deletable
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.switch_to_default_render_layer()
+        pm.delete(pm.ls(type=['displayLayer', 'renderLayer']))
 
     @classmethod
     def delete_unused_shading_nodes(cls):
@@ -5648,6 +5669,65 @@ class Render(object):
 class Animation(object):
     """animation tools
     """
+
+    @classmethod
+    def bake_all_constraints(cls):
+        """Bakes all constraints in the current scene
+        """
+        # TODO: Bake selectively
+        command  = 'bakeResults -simulation true -t "{start}:{end}" ' \
+                   '-sampleBy 1 -oversamplingRate 1 ' \
+                   '-disableImplicitControl true -preserveOutsideKeys true ' \
+                   '-sparseAnimCurveBake false ' \
+                   '-removeBakedAttributeFromLayer false ' \
+                   '-removeBakedAnimFromLayer false ' \
+                   '-bakeOnOverrideLayer false -minimizeRotation true ' \
+                   '-at "tx" -at "ty" -at "tz" -at "rx" -at "ry" -at "rz" ' \
+                   '{objects};'
+
+        start_frame = int(pm.playbackOptions(q=1, min=1))
+        end_frame = int(pm.playbackOptions(q=1, max=1))
+
+        all_transforms = []
+        for node in pm.ls(type="constraint"):
+            all_transforms += node.outputs(type='transform')
+
+        object_names = ' '.join([node.longName() for node in all_transforms])
+        bake_command = command.format(
+            start=start_frame,
+            end=end_frame,
+            objects=object_names
+        )
+        pm.mel.eval(bake_command)
+
+    @classmethod
+    def bake_alembic_animations(cls):
+        """bakes all animations of transform nodes connected to an alembic node
+        """
+        command  = 'bakeResults -simulation true -t "{start}:{end}" ' \
+           '-sampleBy 1 -oversamplingRate 1 ' \
+           '-disableImplicitControl true -preserveOutsideKeys true ' \
+           '-sparseAnimCurveBake false ' \
+           '-removeBakedAttributeFromLayer false ' \
+           '-removeBakedAnimFromLayer false ' \
+           '-bakeOnOverrideLayer false -minimizeRotation true ' \
+           '-at "tx" -at "ty" -at "tz" -at "rx" -at "ry" -at "rz" ' \
+           '{objects};'
+
+        start_frame = int(pm.playbackOptions(q=1, min=1))
+        end_frame = int(pm.playbackOptions(q=1, max=1))
+
+        all_transforms = []
+        for node in pm.ls(type="AlembicNode"):
+            all_transforms += node.outputs(type='transform')
+
+        object_names = ' '.join([node.longName() for node in all_transforms])
+        bake_command = command.format(
+            start=start_frame,
+            end=end_frame,
+            objects=object_names
+        )
+        pm.mel.eval(bake_command)
 
     @classmethod
     def delete_base_anim_layer(cls):

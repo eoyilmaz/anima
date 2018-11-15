@@ -2391,9 +2391,25 @@ def cache_animations(progress_controller=None):
         progress_controller = ProgressControllerBase()
     progress_controller.maximum = 1
 
+    #from anima.env import mayaEnv
+    #m = mayaEnv.Maya()
+    #current_version = m.get_current_version()
+
+    # bake constraints
+    #from anima.env.mayaEnv import toolbox
+    #reload(toolbox)
+    #toolbox.Animation.bake_all_constraints()
+    #progress_controller.increment()
+
     reload(auxiliary)
     auxiliary.export_alembic_from_cache_node(handles=1)
     progress_controller.increment()
+
+    # this file is dirty
+    # reopen the published version again
+    #m.open(current_version, force=True, skip_update_check=True)
+    #progress_controller.increment()
+
     progress_controller.complete()
 
 
