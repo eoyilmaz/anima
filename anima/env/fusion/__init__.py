@@ -626,26 +626,24 @@ class Fusion(EnvironmentBase):
 
         output_format_data = [
             {
-                'name': 'png',
+                'name': 'jpg',
                 'node_tree': {
                     'type': 'Saver',
                     'attr': {
-                        'TOOLS_Name': output_node_name_generator('png'),
+                        'TOOLS_Name': output_node_name_generator('jpg'),
                     },
                     'input_list': {
-                        'Clip': output_path_generator('png'),
+                        'Clip': output_path_generator('jpg'),
                         'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
                         'ProcessBlue': 1,
                         'ProcessAlpha': 0,
-                        'OutputFormat': 'PNGFormat',
-                        'PNGFormat.SaveAlpha': 0,
-                        'PNGFormat.Depth': 1,
-                        'PNGFormat.CompressionLevel': 2,
-                        'PNGFormat.GammaMode': 0,
+                        'OutputFormat': 'JPEGFormat',
+                        'JpegFormat.Quality': 85,
                     },
                     'connected_to': {
+                        # 'ref_id': random_ref_id
                         'Input': {
                             'type': 'ColorCurves',
                             'ref_id': random_ref_id,
@@ -657,15 +655,15 @@ class Fusion(EnvironmentBase):
                                     'type': 'CineonLog',
                                     'input_list': {
                                         'Mode': 1,
-                                        'RedBlackLevel': 0.0,
-                                        'RedWhiteLevel': 1023.0,
+                                        # 'RedBlackLevel': 0.0,
+                                        # 'RedWhiteLevel': 1023.0,
                                         'RedFilmStockGamma': 1.0
                                     },
                                 }
                             }
                         }
                     }
-                }
+                },
             },
             {
                 'name': 'exr',
