@@ -4471,7 +4471,7 @@ class Render(object):
                         attr_name,
                         source_node.getAttr(attr_name)
                     )
-                except pm.MayaAttributeError:
+                except (pm.MayaAttributeError, RuntimeError):
                     pass
 
                 # input connections to attributes
