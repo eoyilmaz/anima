@@ -4406,6 +4406,8 @@ class Render(object):
             'aiExportRefNormals',
             'aiExportRefTangents',
             'color',
+            'interpolation',
+            'aiTranslator',
             'intensity',
             'aiExposure',
             'aiColorTemperature',
@@ -4439,6 +4441,7 @@ class Render(object):
             'aiDispAutobump',
             'aiStepSize',
 
+
             'rsEnableSubdivision',
             'rsSubdivisionRule',
             'rsScreenSpaceAdaptive',
@@ -4470,6 +4473,14 @@ class Render(object):
                     )
                 except pm.MayaAttributeError:
                     pass
+
+                # input connections to attributes
+                try:
+                    for plug in source_node.attr(attr_name).inputs(p=1):
+                        plug >> target_node.attr(attr_name)
+                except pm.MayaAttributeError:
+                    pass
+
             # caller.step()
         # caller.end_progress()
 
