@@ -132,10 +132,16 @@ CONVERSION_SPEC_SHEET = {
             'specularColor': 'refl_color',
             'specularRoughness': 'refl_roughness',
             'specularIOR': 'refl_ior',
-            'specularAnisotropy': {
-                'refl_aniso': lambda x: (x - 0.5) * 2,
-            },
+            'specularAnisotropy': 'refl_aniso',
             'specularRotation': 'refl_aniso_rotation',
+
+            'metalness': {
+                'refl_metalness': lambda x, y, z:
+                connect_input(y, 'metalness', z, 'refl_metalness'),
+                'refl_fresnel_mode': 2,
+                'refl_brdf': 1,  # set to GGX
+            },
+
             # 'specularDistribution': 'refl_brdf',
             # 'specularFresnel': {
             #     # set it do "Color + Edge Tint"
@@ -204,9 +210,9 @@ CONVERSION_SPEC_SHEET = {
         'node_type': 'RedshiftSkin',
         'secondary_type': 'shader',
 
-        'call_after': lambda x, y: y.outColor >>
-                                   x.outputs(type='shadingEngine', p=1)[0]
-                        if x.outputs(type='shadingEngine', p=1) else None,
+        'call_after': lambda x, y: y.outColor >> x.outputs(type='shadingEngine', p=1)[0]
+            if x.outputs(type='shadingEngine', p=1) else None,
+
         # aiSkin material attributes
         'attributes': {
             'sssWeight': 'overall_scale',
@@ -261,10 +267,45 @@ CONVERSION_SPEC_SHEET = {
         }
     },
 
+    'aiNormalMap': {
+        'node_type': 'RedshiftBumpMap',
+        'secondary_type': 'texture',
+
+        'call_after': lambda old_node, new_node:
+            connect_output(old_node, 'outValue', new_node, 'out'),
+
+        'attributes': {
+            'input': 'input',
+            'strength': {
+                'scale': lambda x: x,  # set the strength directly
+                'inputType': lambda x: 1,  # set to normal map
+            },
+        },
+    },
+
+    # 'aiColorCorrect': "",
+
+    'aiRoundCorners': {
+        'node_type': 'RedshiftRoundCorners',
+        'secondary_type': 'texture',
+
+        'call_after': lambda old_node, new_node:
+            connect_output(old_node, 'outValue', new_node, 'out'),
+
+        'attributes': {
+            'samples': 'numSamples',
+            'radius': 'radius',
+            'selfOnly': 'sameObjectOnly'
+        }
+
+    },
+
     'file': {
         # A dirty one liner that converts textures to rstexbin files
         'call_before': lambda x: RedShiftTextureProcessor(
             os.path.expandvars(x.computedFileTextureNamePattern.get())
+        ).convert() if int(pm.about(v=1)) > 2014 else RedShiftTextureProcessor(
+            os.path.expandvars(x.fileTextureName.get())
         ).convert()
     },
 
@@ -303,6 +344,8 @@ CONVERSION_SPEC_SHEET = {
             'color': {
                 'tex0': lambda x, y:
                 y.attr('color').inputs()[0].getAttr('fileTextureName')
+                if y.type() == 'file' else
+                y.attr('color').inputs()[0].getAttr('filename')
             }
         },
 
@@ -364,6 +407,41 @@ CONVERSION_SPEC_SHEET = {
         }
     }
 }
+
+
+def connect_input(source_node, source_attr_name, target_node, target_attr_name):
+    """Basic connection from source to target ndoe
+
+    :param source_node:
+    :param source_attr_name:
+    :param target_node:
+    :param target_attr_name:
+    :return:
+    """
+    inputs = source_node.attr(source_attr_name).inputs(p=1)
+    if inputs:
+        inputs[0] >> target_node.attr(target_attr_name)
+    else:
+        # or set it to the same value
+        target_node.attr(target_attr_name).set(
+            source_node.attr(source_attr_name).get()
+        )
+
+
+def connect_output(old_node, old_attr_name,
+                   new_node, new_attr_name):
+    """Connects the new_node.new_attr_name to the same inputs that the old_node
+    was connecting
+
+    :param old_node:
+    :param old_attr_name:
+    :param new_node:
+    :param new_attr_name:
+    :return:
+    """
+    new_plug = new_node.attr(new_attr_name)
+    for plug in old_node.attr(old_attr_name).outputs(p=1):
+        new_plug >> plug
 
 
 class ConversionManager(ConversionManagerBase):
@@ -453,6 +531,7 @@ class ConversionManager(ConversionManagerBase):
         except Exception as e:
             print(e)
 
+
 class NodeCreator(NodeCreatorBase):
     """Creates nodes according to the given specs
     """
@@ -466,12 +545,23 @@ class NodeCreator(NodeCreatorBase):
         if secondary_type == 'shader':
             shader, shading_engine = pm.createSurfaceShader(node_type)
             return shader
-        if secondary_type == 'utility':
+        elif secondary_type == 'utility':
             shader = pm.shadingNode(node_type, asUtility=1)
+            return shader
+        elif secondary_type == 'texture':
+            shader = pm.shadingNode(node_type, asTexture=1)
             return shader
         elif secondary_type == 'light':
             light_transform = pm.shadingNode(node_type, asLight=1)
             return light_transform.getShape()
+
+
+class TextureProcessorQueue(object):
+    """A queue to convert textures
+    """
+    queue = None
+
+
 
 
 class RedShiftTextureProcessor(object):
@@ -533,12 +623,35 @@ class RedShiftTextureProcessor(object):
         """converts the given input_file to an rstexbin
         """
         processed_files = []
+
+        import subprocess
+        from anima.ui.progress_dialog import ProgressDialogManager
+        pdm = ProgressDialogManager()
+        caller = pdm.register(
+            len(self.files_to_process),
+            title='Converting Textures'
+        )
         for file_path in self.files_to_process:
             command = '%s "%s"' % (self.executable, file_path)
             rsmap_full_path = \
                 '%s.rstexbin' % os.path.splitext(file_path)[0]
 
-            os.system(command)
+            # os.system(command)
+            if os.name == 'nt':
+                proc = subprocess.Popen(
+                    command,
+                    creationflags=subprocess.SW_HIDE,
+                    shell=True
+                )
+            else:
+                proc = subprocess.Popen(
+                    command,
+                    shell=True
+                )
+            proc.wait()
+
             processed_files.append(rsmap_full_path)
+            caller.step()
+        caller.end_progress()
 
         return processed_files

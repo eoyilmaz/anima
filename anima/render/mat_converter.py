@@ -115,7 +115,71 @@ class ConversionManagerBase(object):
         return nodes_converted
 
     def convert(self, node):
-        """converts the given node to redShift counterpart
+        """converts the given node to the other counterpart by looking at the
+        self.conversion_spec_sheet.
+
+        The conversion_spec_sheet is a dictionary in the following format:
+
+        {
+            "{SourceTypeName}": {
+                "node_type": "{TargetTypeName}",
+                "secondary_type": "shader",  # This is for Maya
+
+                "call_after": None,
+                    # a callable that accepts one or two arguments
+                    # where the first argument holds the source node
+                    # and the second holds the newly created target node
+
+                "attributes": {
+                    # this is a dictionary holding the attributes list
+
+                    "source_attr1": "target_attr1"
+                        # This directly sets the source value in the target
+                        # node
+
+                    "source_attr2": [
+                        "target_attr2a",
+                        "target_attr2b",
+                    ],
+                        # set multiple attributes at one in the target node
+
+                    "source_attr3": {
+                        "target_attr3": lambda x: x * 2,
+                            # this uses a lambda function to calculate the
+                            # target node attribute value
+                    },
+
+                    "source_attr4": {
+                        "target_attr4a": lambda x, y: x and y
+                            # you can use lambda function with two arguments
+                            # the first one is the
+                    },
+
+                    "source_attr5": {
+                        "target_attr6a": lambda x: x if x > 0 else 1 - x,
+                        "target_attr6b": lambda x: x,
+                            # it is possible to use more than one target
+                            # attribute
+                    },
+
+                    "source_attr7": {
+                        "target_attr_7": lambda x, y: x + y.getAttr("target_attr_8"),
+                            # it is possible to use two source attribute
+                            # to generate one target attribute value
+                    },
+
+                    "source_attr8": {
+                        "target_attr_8": lambda x, y, z: x
+                            # with three arguments
+                            # x: source attribute value
+                            # y: source_node
+                            # z: target_node
+                    }
+
+                }
+            }
+        }
+
         """
         # get the conversion lut
         node_type = self.get_node_type(node)
