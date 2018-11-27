@@ -3841,7 +3841,7 @@ class Render(object):
 
         for material in materials:
             # textures should start with the same name of the material
-            material_name = material.name()
+            material_name = material.name().split(':')[-1]  # strip namespaces
             print("material.name: %s" % material_name)
 
             pattern = "%s/%s_*" % (texture_path, material_name)
@@ -3853,78 +3853,180 @@ class Render(object):
             # TODO: Make it beautiful by using the auxiliary.create_shader()
             # For now do it ugly!
 
-            # *********************************************
-            # BaseColor
-            # create a new aiImage
-            base_color_file_path =  glob.glob("%s/%s_BaseColor*" % (texture_path, material_name))
-            if base_color_file_path:
-                # fix diffuse weight
-                material.base.set(1)
-                base_color_file_path = base_color_file_path[0]
+            if material.type() == "AiStandardSurface":
+                # *********************************************
+                # BaseColor
+                # create a new aiImage
+                base_color_file_path = glob.glob(
+                    "%s/%s_BaseColor*" % (texture_path, material_name)
+                )
+                if base_color_file_path:
+                    # fix diffuse weight
+                    material.base.set(1)
+                    base_color_file_path = base_color_file_path[0]
 
-                base_color_file = pm.shadingNode('file', asTexture=1)
-                base_color_file.fileTextureName.set(base_color_file_path)
-                base_color_file.colorSpace.set('sRGB')
-                base_color_file.outColor >> material.baseColor
+                    base_color_file = pm.shadingNode('file', asTexture=1)
+                    base_color_file.fileTextureName.set(base_color_file_path)
+                    base_color_file.colorSpace.set('sRGB')
+                    base_color_file.outColor >> material.baseColor
 
-            # *********************************************
-            # Height
-            height_file_path = glob.glob("%s/%s_Height*" % (texture_path, material_name))
-            if height_file_path:
-                height_file_path = height_file_path[0]
+                # *********************************************
+                # Height
+                height_file_path = glob.glob("%s/%s_Height*" % (texture_path, material_name))
+                if height_file_path:
+                    height_file_path = height_file_path[0]
 
-                # create a displacement node
-                shading_node = material.attr("outColor").outputs(type="shadingEngine")[0]
-                disp_shader = pm.shadingNode('displacementShader', asShader=1)
-                disp_shader.displacement >> shading_node.displacementShader
+                    # create a displacement node
+                    shading_node = material.attr("outColor").outputs(type="shadingEngine")[0]
+                    disp_shader = pm.shadingNode('displacementShader', asShader=1)
+                    disp_shader.displacement >> shading_node.displacementShader
 
-                # create texture
-                disp_file = pm.shadingNode('file', asTexture=1)
-                disp_file.fileTextureName.set(height_file_path)
-                disp_file.colorSpace.set('Raw')
-                disp_file.alphaIsLuminance.set(1)
-                disp_file.outAlpha >> disp_shader.displacement
+                    # create texture
+                    disp_file = pm.shadingNode('file', asTexture=1)
+                    disp_file.fileTextureName.set(height_file_path)
+                    disp_file.colorSpace.set('Raw')
+                    disp_file.alphaIsLuminance.set(1)
+                    disp_file.outAlpha >> disp_shader.displacement
 
-            # *********************************************
-            # Metalness
-            metalness_file_path = glob.glob("%s/%s_Metalness*" % (texture_path, material_name))
-            if metalness_file_path:
-                metalness_file_path = metalness_file_path[0]
+                # *********************************************
+                # Metalness
+                metalness_file_path = glob.glob("%s/%s_Metalness*" % (texture_path, material_name))
+                if metalness_file_path:
+                    metalness_file_path = metalness_file_path[0]
 
-                metalness_file = pm.shadingNode("file", asTexture=1)
-                metalness_file.fileTextureName.set(metalness_file_path)
-                metalness_file.colorSpace.set('Raw')
-                metalness_file.alphaIsLuminance.set(1)
-                metalness_file.outAlpha >> material.metalness
+                    metalness_file = pm.shadingNode("file", asTexture=1)
+                    metalness_file.fileTextureName.set(metalness_file_path)
+                    metalness_file.colorSpace.set('Raw')
+                    metalness_file.alphaIsLuminance.set(1)
+                    metalness_file.outAlpha >> material.metalness
 
-            # *********************************************
-            # Normal
-            normal_file_path = glob.glob("%s/%s_Normal*" % (texture_path, material_name))
-            if normal_file_path:
-                normal_file_path = normal_file_path[0]
+                # *********************************************
+                # Normal
+                normal_file_path = glob.glob("%s/%s_Normal*" % (texture_path, material_name))
+                if normal_file_path:
+                    normal_file_path = normal_file_path[0]
 
-                # normal_ai_bump2d = pm.nt.AiBump2d()
-                normal_ai_normalmap = pm.shadingNode("aiNormalMap", asUtility=1)
-                normal_file = pm.shadingNode("file", asTexture=1)
+                    # normal_ai_bump2d = pm.nt.AiBump2d()
+                    normal_ai_normalmap = pm.shadingNode("aiNormalMap", asUtility=1)
+                    normal_file = pm.shadingNode("file", asTexture=1)
 
-                normal_file.fileTextureName.set(normal_file_path)
-                normal_file.colorSpace.set('Raw')
-                normal_file.outColor >> normal_ai_normalmap.input
+                    normal_file.fileTextureName.set(normal_file_path)
+                    normal_file.colorSpace.set('Raw')
+                    normal_file.outColor >> normal_ai_normalmap.input
 
-                normal_ai_normalmap.outValue >> material.normalCamera
+                    normal_ai_normalmap.outValue >> material.normalCamera
 
-            # *********************************************
-            # Roughness
-            # specularRoughness
-            roughness_file_path = glob.glob("%s/%s_Roughness*" % (texture_path, material_name))
-            if roughness_file_path:
-                roughness_file_path = roughness_file_path[0]
-                roughness_file = pm.shadingNode("file", asTexture=1)
-                roughness_file.fileTextureName.set(roughness_file_path)
-                roughness_file.colorSpace.set('Raw')
-                roughness_file.alphaIsLuminance.set(1)
-                roughness_file.outAlpha >> material.specularRoughness
+                # *********************************************
+                # Roughness
+                # specularRoughness
+                roughness_file_path = glob.glob("%s/%s_Roughness*" % (texture_path, material_name))
+                if roughness_file_path:
+                    roughness_file_path = roughness_file_path[0]
+                    roughness_file = pm.shadingNode("file", asTexture=1)
+                    roughness_file.fileTextureName.set(roughness_file_path)
+                    roughness_file.colorSpace.set('Raw')
+                    roughness_file.alphaIsLuminance.set(1)
+                    roughness_file.outAlpha >> material.specularRoughness
+            elif material.type() == "RedshiftMaterial":
+                # *********************************************
+                # BaseColor
+                # create a new aiImage
+                diffuse_color_file_path = glob.glob(
+                    "%s/%s_Diffuse*" % (texture_path, material_name))
+                if diffuse_color_file_path:
+                    diffuse_color_file_path = diffuse_color_file_path[0]
 
+                    diffuse_color_file = pm.shadingNode('file', asTexture=1)
+                    diffuse_color_file.fileTextureName.set(
+                        diffuse_color_file_path
+                    )
+                    diffuse_color_file.colorSpace.set('sRGB')
+                    diffuse_color_file.outColor >> material.diffuse_color
+
+                # *********************************************
+                # Height
+                height_file_path = glob.glob(
+                    "%s/%s_Height*" % (texture_path, material_name))
+                if height_file_path:
+                    height_file_path = height_file_path[0]
+
+                    # create a displacement node
+                    shading_node = \
+                    material.attr("outColor").outputs(type="shadingEngine")[0]
+                    disp_shader = \
+                        pm.shadingNode('displacementShader', asShader=1)
+                    disp_shader.displacement >> shading_node.displacementShader
+
+                    # create texture
+                    disp_file = pm.shadingNode('file', asTexture=1)
+                    disp_file.fileTextureName.set(height_file_path)
+                    disp_file.colorSpace.set('Raw')
+                    disp_file.alphaIsLuminance.set(1)
+                    disp_file.outAlpha >> disp_shader.displacement
+
+                # *********************************************
+                # Metalness
+                # set material BRDF to GGX and set fresnel type to metalness
+                material.refl_brdf.set(1)
+                material.refl_fresnel_mode.set(2)
+
+                metalness_file_path = glob.glob(
+                    "%s/%s_Metalness*" % (texture_path, material_name))
+                if metalness_file_path:
+                    metalness_file_path = metalness_file_path[0]
+
+                    metalness_file = pm.shadingNode("file", asTexture=1)
+                    metalness_file.fileTextureName.set(metalness_file_path)
+                    metalness_file.colorSpace.set('Raw')
+                    metalness_file.alphaIsLuminance.set(1)
+                    metalness_file.outAlpha >> material.refl_metalness
+
+                # *********************************************
+                # Reflectivity
+                reflectivity_file_path = glob.glob(
+                    "%s/%s_Reflectivity*" % (texture_path, material_name))
+                if reflectivity_file_path:
+                    reflectivity_file_path = reflectivity_file_path[0]
+
+                    reflectivity_file = pm.shadingNode("file", asTexture=1)
+                    reflectivity_file.fileTextureName.set(
+                        reflectivity_file_path
+                    )
+                    reflectivity_file.colorSpace.set('sRGB')
+                    reflectivity_file.alphaIsLuminance.set(1)
+                    reflectivity_file.outColor >> material.refl_reflectivity
+
+                # *********************************************
+                # Normal
+                normal_file_path = glob.glob(
+                    "%s/%s_Normal*" % (texture_path, material_name))
+                if normal_file_path:
+                    normal_file_path = normal_file_path[0]
+
+                    rs_bump_map = \
+                        pm.shadingNode("RedshiftBumpMap", asUtility=1)
+                    # set to tangent-space normals
+                    rs_bump_map.inputType.set(1)
+                    normal_file = pm.shadingNode("file", asTexture=1)
+
+                    normal_file.fileTextureName.set(normal_file_path)
+                    normal_file.colorSpace.set('Raw')
+                    normal_file.outColor >> rs_bump_map.input
+                    rs_bump_map.out >> material.bump_input
+                    rs_bump_map.scale.set(1)
+
+                # *********************************************
+                # Roughness
+                # specularRoughness
+                roughness_file_path = glob.glob(
+                    "%s/%s_Roughness*" % (texture_path, material_name))
+                if roughness_file_path:
+                    roughness_file_path = roughness_file_path[0]
+                    roughness_file = pm.shadingNode("file", asTexture=1)
+                    roughness_file.fileTextureName.set(roughness_file_path)
+                    roughness_file.colorSpace.set('Raw')
+                    roughness_file.alphaIsLuminance.set(1)
+                    roughness_file.outAlpha >> material.refl_roughness
 
     @classmethod
     def redshift_ic_ipc_bake(cls):
