@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 # Copyright (c) 2012-2018, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
@@ -937,7 +937,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 # dRO.exrForceMultilayer.set(0)
                 dRO.exrMultipart.set(0)
                 dRO.noSaveImage.set(0)
-                dRO.skipExistingFrames.set(0)
+                # dRO.skipExistingFrames.set(1)  # do not change this setting
                 dRO.unifiedRandomizePattern.set(1)
             except pm.MayaNodeError:
                 pass
