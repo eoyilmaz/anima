@@ -636,7 +636,7 @@ class UI(object):
             # set the verbosity level to warning+info
             aro = pm.PyNode('defaultArnoldRenderOptions')
             stored_log_level = aro.getAttr('log_verbosity')
-            aro.setAttr('log_verbosity', 1)
+            aro.setAttr('log_verbosity', 2)
             # set output to console
             aro.setAttr("log_to_console", 1)
         elif render_engine == 'redshift':
