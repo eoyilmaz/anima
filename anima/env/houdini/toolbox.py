@@ -16,18 +16,22 @@ def ui():
     return root_widget
 
 
-def add_button(label, layout, callback):
+def add_button(label, layout, callback, tooltip=''):
     """A wrapper for button creation
 
-    :param label:
-    :param layout:
-    :param callback:
+    :param label: The label of the button
+    :param layout: The layout that the button is going to be placed under.
+    :param callback: The callable that will be called when the button is
+      clicked.
+    :param str tooltip: Optional tooltip for the button
     :return:
     """
     # button
     button = QtWidgets.QPushButton()
     button.setText(label)
     layout.addWidget(button)
+
+    button.setToolTip(tooltip)
 
     # Signal
     QtCore.QObject.connect(
@@ -64,18 +68,28 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Create tools for general tab
 
         # -------------------------------------------------------------------
+        # Version Creator
+        add_button(
+            'Version Creator',
+            general_tab_vertical_layout,
+            GenericTools.version_creator,
+            GenericTools.version_creator.__doc__
+        )
+
         # Copy Path
         add_button(
             'Copy Path',
             general_tab_vertical_layout,
-            GenericTools.copy_path
+            GenericTools.copy_path,
+            GenericTools.copy_path.__doc__
         )
 
         # Range from shot
         add_button(
             'Range From Shot',
             general_tab_vertical_layout,
-            GenericTools.range_from_shot
+            GenericTools.range_from_shot,
+            GenericTools.range_from_shot.__doc__
         )
 
         # -------------------------------------------------------------------
@@ -86,6 +100,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 class GenericTools(object):
     """Generic Tools
     """
+
+    @classmethod
+    def version_creator(cls):
+        """version creator
+        """
+        from anima.ui.scripts import houdini
+        houdini.version_creator()
 
     @classmethod
     def copy_path(cls):
