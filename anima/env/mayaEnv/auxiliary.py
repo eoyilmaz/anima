@@ -1423,7 +1423,7 @@ class Playblaster(object):
         pm.modelEditor(active_panel, e=1, grid=False)
 
         pm.modelEditor(active_panel, e=1, polymeshes=True)
-        pm.modelEditor(active_panel, e=1, nurbsSurfaces=True)
+        pm.modelEditor(active_panel, e=1, nurbsSurfaces=False)
         pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
         pm.modelEditor(active_panel, e=1,
                        pluginObjects=('gpuCacheDisplayFilter', True))
