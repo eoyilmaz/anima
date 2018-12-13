@@ -76,12 +76,19 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.version_creator.__doc__
         )
 
+        add_button(
+            'Browse $HIP',
+            general_tab_vertical_layout,
+            GenericTools.browse_hip,
+            GenericTools.browse_hip.__doc__
+        )
+
         # Copy Path
         add_button(
-            'Copy Path',
+            'Copy Node Path',
             general_tab_vertical_layout,
-            GenericTools.copy_path,
-            GenericTools.copy_path.__doc__
+            GenericTools.copy_node_path,
+            GenericTools.copy_node_path.__doc__
         )
 
         # Range from shot
@@ -109,7 +116,17 @@ class GenericTools(object):
         houdini.version_creator()
 
     @classmethod
-    def copy_path(cls):
+    def browse_hip(cls):
+        """browse HIP folder
+        """
+        from anima.utils import open_browser_in_location
+        import os
+        hip = os.environ.get('HIP')
+        if hip:
+            open_browser_in_location(hip)
+
+    @classmethod
+    def copy_node_path(cls):
         """copies path to clipboard
         """
         import hou
