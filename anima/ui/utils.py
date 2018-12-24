@@ -191,7 +191,7 @@ def choose_thumbnail(parent):
         parent, "Choose Thumbnail",
         os.path.expanduser("~"),
         # "Image Files (*.png *.jpg *.bmp *.tga *.tif *.tiff *.exr)"
-        "Image Files (*.png *.jpg *.bmp)"
+        "Image Files (*.png *.jpg *.bmp *.tif *.tiff)"
     )
 
     if isinstance(thumbnail_full_path, tuple):
