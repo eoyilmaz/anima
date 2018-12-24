@@ -1844,7 +1844,7 @@ class Playblaster(object):
         if not isinstance(version, Version):
             raise RuntimeError('version should be a stalker version instance!')
 
-        hires_extension = '.mov'
+        hires_extension = '.mp4'
         webres_extension = '.webm'
         thumbnail_extension = '.png'
 
