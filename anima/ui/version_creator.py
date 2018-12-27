@@ -1730,7 +1730,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     parent=self.parent()
                 )
                 dialog.show()
-                dialog.check_all_publishers()
+                if dialog.check_all_publishers():
+                    # auto run the publish button if all publishers are passing
+                    dialog.publish_push_button_clicked()
             else:
                 self.save_as_wrapper(new_version)
         else:
