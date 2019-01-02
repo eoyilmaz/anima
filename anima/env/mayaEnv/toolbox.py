@@ -3971,7 +3971,7 @@ class Render(object):
                 material.refl_fresnel_mode.set(2)
 
                 metalness_file_path = glob.glob(
-                    "%s/%s_Metalness*" % (texture_path, material_name))
+                    "%s/%s_Metal*" % (texture_path, material_name))
                 if metalness_file_path:
                     metalness_file_path = metalness_file_path[0]
 
