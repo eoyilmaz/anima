@@ -840,7 +840,10 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             image_folder_from_ws
         ).replace("\\", "/")
 
-        version_sig_name = self.get_significant_name(version)
+        version_sig_name = self.get_significant_name(
+            version,
+            include_project_code=False
+        )
 
         render_file_full_path = \
             '%(render_output_folder)s/<RenderLayer>/%(version_sig_name)s_' \
@@ -938,7 +941,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 dRO.exrMultipart.set(0)
                 dRO.noSaveImage.set(0)
                 # dRO.skipExistingFrames.set(1)  # do not change this setting
-                dRO.unifiedRandomizePattern.set(1)
+                # dRO.unifiedRandomizePattern.set(1)  # do not change this
             except pm.MayaNodeError:
                 pass
 
