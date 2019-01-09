@@ -373,23 +373,24 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # Let's hope that it will not break animators scenes, where we have
         # 12 FPS set for the shot and the intended fps is 25 which we will
         # newer know.
-        if is_shot_related_task:
-            self.set_fps(shot.fps)
 
-            # set render resolution
-            self.set_resolution(shot.image_format.width,
-                                shot.image_format.height,
-                                shot.image_format.pixel_aspect)
+        fps = None
+        imf = None
+        if is_shot_related_task:
+            fps = shot.fps
+            imf = shot.image_format
+
             # set the render range if it is the first version
             if version.version_number == 1:
                 self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             # set render resolution
-            if version.version_number == 1:
-                self.set_resolution(project.image_format.width,
-                                    project.image_format.height,
-                                    project.image_format.pixel_aspect)
-            self.set_fps(project.fps)
+            fps = project.fps
+            imf = project.image_format
+
+        # if version.version_number == 1:
+        self.set_resolution(imf.width, imf.height, imf.pixel_aspect)
+        self.set_fps(fps)
 
         # set arnold texture search paths
         self.set_arnold_texture_search_path()
