@@ -877,6 +877,15 @@ def UI():
             )
 
             color.change()
+            pm.button(
+                'duplicate_with_connections_button',
+                l="Duplicate With Connections To Network",
+                c=RepeatedCallback(Render.duplicate_with_connections),
+                ann=Render.duplicate_with_connections.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.text(l='===== RedShift IC + IPC Bake =====')
             pm.button(
                 'redshift_ic_ipc_bake_button',
@@ -3745,6 +3754,12 @@ class Render(object):
     }
 
     @classmethod
+    def duplicate_with_connections(cls):
+        """duplicates the selected nodes with connections to the network
+        """
+        pm.duplicate(inputConnections=1)
+
+    @classmethod
     def delete_render_and_display_layers(cls):
         """Deletes the display and render layers in the current scene
         """
@@ -4628,14 +4643,10 @@ class Render(object):
     @classmethod
     def fit_placement_to_UV(cls):
         selection = pm.ls(sl=1, fl=1)
-        uvs = []
-        placements = []
-        for uv in selection:
-            if isinstance(uv, pm.general.MeshUV):
-                uvs.append(uv)
-        for p in selection:
-            if isinstance(p, pm.nodetypes.Place2dTexture):
-                placements.append(p)
+        uvs = [n for n in selection if isinstance(n, pm.general.MeshUV)]
+        placements = \
+            [p for p in selection if isinstance(p, pm.nt.Place2dTexture)]
+
         minU = 1000
         minV = 1000
         maxU = -1000
@@ -4650,6 +4661,7 @@ class Render(object):
                 maxV = uvCoord[1]
             if uvCoord[1] < minV:
                 minV = uvCoord[1]
+
         for p in placements:
             p.setAttr('coverage', (maxU - minU, maxV - minV))
             p.setAttr('translateFrame', (minU, minV))
