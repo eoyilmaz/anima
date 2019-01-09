@@ -927,10 +927,39 @@ class ShotExtension(object):
         # store track
         track = self.track.get()
 
-        movie_full_path = os.path.join(
-            tempfile.gettempdir(),
-            '%s.mov' % self.full_shot_name
-        ).replace('\\', '/')
+        try:
+            movie_full_path = os.path.join(
+                tempfile.gettempdir(),
+                '%s.mov' % self.full_shot_name
+            ).replace('\\', '/')
+        except AttributeError:
+            # this is an error I keep getting, somehow the extension is not
+            # able to call full_shot_name
+            # so as a workaround copy & paste the full_shot_name code here
+            seq = self.sequence
+            sm = seq.manager
+            camera = self.currentCamera.get()
+            version = sm.get_version()
+            template = sm.get_shot_name_template()
+
+            # replace template variables
+            template = template \
+                .replace('<Sequence>', '%(sequence)s') \
+                .replace('<Shot>', '%(shot)s') \
+                .replace('<Version>', '%(version)s') \
+                .replace('<Camera>', '%(camera)s')
+
+            rendered_template = template % {
+                'shot': self.shotName.get(),
+                'sequence': seq.sequence_name.get(),
+                'version': version,
+                'camera': camera.name() if camera else None
+            }
+
+            movie_full_path = os.path.join(
+                tempfile.gettempdir(),
+                '%s.mov' % rendered_template
+            ).replace('\\', '/')
 
         # set the output of this shot
         self.set_output(movie_full_path)
