@@ -264,8 +264,47 @@ class Fusion(EnvironmentBase):
         # create the main write node
         self.create_main_saver_node(version)
 
+        # check if this is a shot related task
+        is_shot_related_task = False
+        shot = None
+        from stalker import Shot
+        for task in version.task.parents:
+            if isinstance(task, Shot):
+                is_shot_related_task = True
+                shot = task
+                break
+
+        fps = None
+        imf = None
+        if not is_shot_related_task:
+            # use the Project image_format
+            fps = version.task.project.fps
+            imf = version.task.project.image_format
+        else:
+            # use the shot image_format
+            if shot:
+                fps = shot.fps
+                imf = shot.image_format
+
+        # set comp resolution and fps
+        if imf:
+            self.comp.SetPrefs({
+                # Image Format
+                "Comp.FrameFormat.Width": imf.width,
+                "Comp.FrameFormat.Height": imf.height,
+                "Comp.FrameFormat.AspectY": imf.pixel_aspect,
+                "Comp.FrameFormat.AspectX": imf.pixel_aspect,
+
+                # FPS
+                "Comp.FrameFormat.Rate": fps,
+
+                # set project frame format to 16bit
+                "Comp.FrameFormat.DepthFull": 2.0,
+                "Comp.FrameFormat.DepthLock": True,
+            })
+
         # replace read and write node paths
-        #self.replace_external_paths()
+        # self.replace_external_paths()
 
         # create the path before saving
         try:
