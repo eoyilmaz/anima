@@ -99,6 +99,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.range_from_shot.__doc__
         )
 
+        # Update render settings
+        add_button(
+            'Update Render Settings',
+            general_tab_vertical_layout,
+            GenericTools.update_render_settings,
+            GenericTools.update_render_settings.__doc__
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -150,3 +158,17 @@ class GenericTools(object):
 
         shot = v.task.parent
         h.set_frame_range(shot.cut_in, shot.cut_out)
+
+    @classmethod
+    def update_render_settings(cls):
+        """updates the render settings (ex: fixes output path and AOV paths
+        etc.)
+        """
+        from anima.env import houdini
+        h = houdini.Houdini()
+        v = h.get_current_version()
+        if not v:
+            print('no v, returning!')
+            return
+
+        h.set_render_filename(version=v)
