@@ -797,7 +797,48 @@ class Fusion(EnvironmentBase):
                             'OutputFormat': 'JPEGFormat',
                             'JpegFormat.Quality': 85,
                         },
-                    }
+                    },
+                },
+                {
+                    'name': 'exr',
+                    'node_tree': {
+                        'type': 'Saver',
+                        'attr': {
+                            'TOOLS_Name': output_node_name_generator('exr'),
+                        },
+                        'input_list': {
+                            'Clip': output_path_generator('exr'),
+                            'CreateDir': 1,
+                            'ProcessRed': 1,
+                            'ProcessGreen': 1,
+                            'ProcessBlue': 1,
+                            'ProcessAlpha': 0,
+                            'OutputFormat': 'OpenEXRFormat',
+                            'OpenEXRFormat.Depth': 1,  # 16-bit float
+                            'OpenEXRFormat.RedEnable': 1,
+                            'OpenEXRFormat.GreenEnable': 1,
+                            'OpenEXRFormat.BlueEnable': 1,
+                            'OpenEXRFormat.AlphaEnable': 0,
+                            'OpenEXRFormat.ZEnable': 0,
+                            'OpenEXRFormat.CovEnable': 0,
+                            'OpenEXRFormat.ObjIDEnable': 0,
+                            'OpenEXRFormat.MatIDEnable': 0,
+                            'OpenEXRFormat.UEnable': 0,
+                            'OpenEXRFormat.VEnable': 0,
+                            'OpenEXRFormat.XNormEnable': 0,
+                            'OpenEXRFormat.YNormEnable': 0,
+                            'OpenEXRFormat.ZNormEnable': 0,
+                            'OpenEXRFormat.XVelEnable': 0,
+                            'OpenEXRFormat.YVelEnable': 0,
+                            'OpenEXRFormat.XRevVelEnable': 0,
+                            'OpenEXRFormat.YRevVelEnable': 0,
+                            'OpenEXRFormat.XPosEnable': 0,
+                            'OpenEXRFormat.YPosEnable': 0,
+                            'OpenEXRFormat.ZPosEnable': 0,
+                            'OpenEXRFormat.XDispEnable': 0,
+                            'OpenEXRFormat.YDispEnable': 0,
+                        },
+                    },
                 },
                 {
                     'name': 'mp4',
@@ -820,8 +861,8 @@ class Fusion(EnvironmentBase):
                             'QuickTimeMovies.Quality': 95.0,
                             'QuickTimeMovies.FrameRateFps': fps,
                             'QuickTimeMovies.KeyFrames': 5,
-                        }
-                    }
+                        },
+                    },
                 },
             ]
 
