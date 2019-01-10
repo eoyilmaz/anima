@@ -773,6 +773,14 @@ def UI():
                 ann="creates a rivet setup by using hair follicles",
                 bgc=color.color
             )
+            pm.button(
+                'rivet_per_face_button',
+                l="rivet per face (Follicle)",
+                c=RepeatedCallback(auxiliary.rivet_per_face),
+                ann="creates a rivet setup per selected face by using hair "
+                    "follicles",
+                bgc=color.color
+            )
             pm.button('create_hair_from_curves_button',
                       l="Create Hair From Curves",
                       c=RepeatedCallback(auxiliary.hair_from_curves),

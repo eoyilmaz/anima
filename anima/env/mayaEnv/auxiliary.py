@@ -283,6 +283,42 @@ def auto_rivet():
     return follicles
 
 
+def rivet_per_face():
+    """creates hair follicles per selected face
+    """
+    sel_list = pm.ls(sl=1, fl=1)
+
+    follicles = []
+    locators = []
+    for face in sel_list:
+        # use the center of the face as the follicle position
+        p = reduce(lambda x, y: x + y, face.getPoints()) / face.numVertices()
+        obj = pm.spaceLocator(p=p)
+        locators.append(obj)
+        uv = face.getUVAtPoint(p, space='world')
+
+        # create a hair follicle
+        follicle = pm.nt.Follicle()
+        follicles.append(follicle)
+        follicle.simulationMethod.set(0)
+
+        shape = face.node()
+        shape.worldMatrix >> follicle.inputWorldMatrix
+        shape.outMesh >> follicle.inputMesh
+        follicle.parameterU.set(uv[0])
+        follicle.parameterV.set(uv[1])
+
+        # parent the object to the follicles transform node
+        follicle_transform = follicle.getParent()
+
+        follicle.outTranslate >> follicle_transform.translate
+        follicle.outRotate >> follicle_transform.rotate
+
+        pm.parent(obj, follicle_transform)
+
+    return follicles, locators
+
+
 def hair_from_curves():
     """creates hairs from curves
     """
