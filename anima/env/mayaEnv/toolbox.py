@@ -1014,7 +1014,7 @@ def UI():
                       ann=Render.unnormalize_texture_paths.__doc__,
                       bgc=color.color)
 
-            pm.text(l='======================================')
+            pm.text(l='============ Camera Tools ============')
             color.change()
             pm.button(
                 'CameraFilmOffsetTool_button',
@@ -1034,6 +1034,26 @@ def UI():
                 ann="Camera Film Offset Tool",
                 bgc=color.color
             )
+
+            color.change()
+            pm.text(l='===== Vertigo =====')
+            pm.button('vertigo_setup_look_at_button',
+                      l="Setup -> Look At",
+                      c=RepeatedCallback(Render.vertigo_setup_look_at),
+                      ann="Setup Look At",
+                      bgc=color.color)
+            pm.button('vertigo_setup_vertigo_button',
+                      l="Setup -> Vertigo",
+                      c=RepeatedCallback(Render.vertigo_setup_vertigo),
+                      ann="Setup Vertigo",
+                      bgc=color.color)
+            pm.button('vertigo_delete_button',
+                      l="Delete",
+                      c=RepeatedCallback(Render.vertigo_delete),
+                      ann="Delete",
+                      bgc=color.color)
+            pm.text(l='===================')
+
             pm.button('oyTracker2Null_button', l="oyTracker2Null",
                       c=RepeatedCallback(mel.eval, 'oyTracker2Null'),
                       ann="Tracker2Null",
@@ -1361,24 +1381,6 @@ def UI():
                       l="Toggle",
                       c=RepeatedCallback(pivot_switcher.toggle_pivot),
                       ann="Toggle Pivot",
-                      bgc=color.color)
-
-            color.change()
-            pm.text(l='===== Vertigo =====')
-            pm.button('oyVertigo_setupLookAt_button',
-                      l="Setup -> Look At",
-                      c=RepeatedCallback(Animation.vertigo_setup_look_at),
-                      ann="Setup Look At",
-                      bgc=color.color)
-            pm.button('oyVertigo_setupVertigo_button',
-                      l="Setup -> Vertigo",
-                      c=RepeatedCallback(Animation.vertigo_setup_vertigo),
-                      ann="Setup Vertigo",
-                      bgc=color.color)
-            pm.button('oyVertigo_delete_button',
-                      l="Delete",
-                      c=RepeatedCallback(Animation.vertigo_delete),
-                      ann="Delete",
                       bgc=color.color)
 
             color.change()
@@ -2257,7 +2259,7 @@ class General(object):
         """Deletes all the light cameras in the current scene
         """
         cameras_to_delete = []
-        for node in pm.ls(type='light'):
+        for node in pm.ls(type=['light', 'RedshiftPhysicalLight']):
             parent = node.getParent()
             cameras = parent.listRelatives(ad=1, type='camera')
             if cameras:
@@ -3760,6 +3762,31 @@ class Render(object):
         'orig': {},
         'current_frame': 1
     }
+
+    @classmethod
+    def vertigo_setup_look_at(cls):
+        """sets up a the necessary locator for teh Vertigo effect for the selected
+        camera
+        """
+        from anima.env.mayaEnv import vertigo
+        cam = pm.ls(sl=1)[0]
+        vertigo.setup_look_at(cam)
+
+    @classmethod
+    def vertigo_setup_vertigo(cls):
+        """sets up a Vertigo effect for the selected camera
+        """
+        from anima.env.mayaEnv import vertigo
+        cam = pm.ls(sl=1)[0]
+        vertigo.setup_vertigo(cam)
+
+    @classmethod
+    def vertigo_delete(cls):
+        """deletes the Vertigo setup for the selected camera
+        """
+        from anima.env.mayaEnv import vertigo
+        cam = pm.ls(sl=1)[0]
+        vertigo.delete(cam)
 
     @classmethod
     def duplicate_with_connections(cls):
@@ -5881,31 +5908,6 @@ class Animation(object):
             ui_item, q=1, tx=1
         )
         pm.mel.eval('oySmoothComponentAnimation(%s)' % frame_range)
-
-    @classmethod
-    def vertigo_setup_look_at(cls):
-        """sets up a the necessary locator for teh Vertigo effect for the selected
-        camera
-        """
-        from anima.env.mayaEnv import vertigo
-        cam = pm.ls(sl=1)[0]
-        vertigo.setup_look_at(cam)
-
-    @classmethod
-    def vertigo_setup_vertigo(cls):
-        """sets up a Vertigo effect for the selected camera
-        """
-        from anima.env.mayaEnv import vertigo
-        cam = pm.ls(sl=1)[0]
-        vertigo.setup_vertigo(cam)
-
-    @classmethod
-    def vertigo_delete(cls):
-        """deletes the Vertigo setup for the selected camera
-        """
-        from anima.env.mayaEnv import vertigo
-        cam = pm.ls(sl=1)[0]
-        vertigo.delete(cam)
 
     @classmethod
     def cam_2_chan(cls, startButton, endButton):
