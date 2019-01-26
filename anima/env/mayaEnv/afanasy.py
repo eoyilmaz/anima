@@ -86,16 +86,23 @@ class UI(object):
         self.window = None
 
     def show(self):
+        # some default values
+        section_label_height = 30
+        labels_width = 140
+
         if pm.window(self.windows_name, exists=True):
             pm.deleteUI(self.windows_name)
 
-        self.window = pm.window(self.windows_name, t='Afanasy')
+        self.window = pm.window(self.windows_name, t='Afanasy Job Submission')
 
         with pm.columnLayout(adj=True):
-            labels_width = 140
-            pm.text(l='Job Parameters')
-            with pm.rowLayout(nc=4, adj=2, cw4=(labels_width, 40, 15, 15)):
-                pm.text(l='Start Frame')
+
+            pm.text(l='<h1><b>Job Parameters<b><h1>', h=section_label_height)
+            with pm.rowLayout(nc=4,
+                              adj=2,
+                              cl4=['right', 'left', 'center', 'center'],
+                              cw4=(labels_width, 40, 15, 15)):
+                pm.text(l='<div align="right"><b>Start Frame</b></div>')
                 start_time_int_field = pm.intField(
                     'cgru_afanasy__start_frame',
                     v=pm.optionVar.get('cgru_afanasy__start_frame_ov', 1)
@@ -128,7 +135,7 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=4, adj=2, cw4=(labels_width, 40, 15, 15)):
-                pm.text(l='End Frame')
+                pm.text(l='<b>End Frame</b>')
                 end_time_int_field = pm.intField(
                     'cgru_afanasy__end_frame',
                     v=pm.optionVar.get('cgru_afanasy__end_frame_ov', 1)
@@ -161,43 +168,51 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Frame Per Task')
+                pm.text(l='<b>Frame Per Task</b>')
                 pm.intField(
                     'cgru_afanasy__frames_per_task',
                     v=pm.optionVar.get('cgru_afanasy__frames_per_task_ov', 1)
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='By Frame')
+                pm.text(l='<b>By Frame</b>')
                 pm.intField(
                     'cgru_afanasy__by_frame',
                     v=pm.optionVar.get('cgru_afanasy__by_frame_ov', 1)
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Host Mask')
+                pm.text(l='<b>Host Mask</b>')
                 pm.textField(
                     'cgru_afanasy__hosts_mask',
                     text=pm.optionVar.get('cgru_afanasy__hosts_mask_ov', '')
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Host Exclude')
+                pm.text(l='<b>Host Exclude</b>')
                 pm.textField(
                     'cgru_afanasy__hosts_exclude',
                     text=pm.optionVar.get('cgru_afanasy__hosts_exclude_ov', '')
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Life Time (hours)')
+                pm.text(l='<b>Life Time (hours)</b>')
                 pm.intField(
                     'cgru_afanasy__life_time',
                     v=pm.optionVar.get('cgru_afanasy__life_time_ov', 240)
                 )
 
-            pm.text(l='Block Parameters')
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Errors Avoid Host')
+                pm.text(l='<b>Annotation</b>')
+                pm.textField(
+                    'cgru_afanasy__annotation',
+                    text=pm.optionVar.get('cgru_afanasy__annotation_ov', '')
+                )
+
+            pm.separator()
+            pm.text(l='<h1><b>Block Parameters<b><h1>', h=section_label_height)
+            with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
+                pm.text(l='<b>Errors Avoid Host</b>')
                 pm.intField(
                     'cgru_afanasy__errors_avoid_host',
                     v=pm.optionVar.get(
@@ -209,7 +224,7 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Errors Retries')
+                pm.text(l='<b>Errors Retries</b>')
                 pm.intField(
                     'cgru_afanasy__errors_retries',
                     v=pm.optionVar.get(
@@ -221,7 +236,7 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Errors Task Same Host')
+                pm.text(l='<b>Errors Task Same Host</b>')
                 pm.intField(
                     'cgru_afanasy__errors_task_same_host',
                     v=pm.optionVar.get(
@@ -233,9 +248,10 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                pm.text(l='Errors Forgive Time (sec.)')
+                pm.text(l='<b>Errors Forgive Time</b>', ann='in seconds')
                 pm.intField(
                     'cgru_afanasy__errors_forgive_time',
+                    ann='in seconds',
                     v=pm.optionVar.get(
                         'cgru_afanasy__errors_errors_forgive_time_ov',
                         18000
@@ -243,33 +259,16 @@ class UI(object):
                     min=0
                 )
 
-            pm.text(l='Submission Details')
-            with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
-                ann = """This is a weird hack! When used in conjunction with
-the <b>Skip Existence Frames<b> parameter of the maya render settings and the
-Frames Per Task parameters is equal or greater than the number of frames in the
-animation range, it allows the Maya scene to be loaded only once per farm
-machine. But then to be able to use all farmers there should be at least the
-same amount of Jobs that there are farm machines. So with this parameter it is
-possible to submit the same job multiple times.. But it is a bad hack.
-
-This system will be updated in Afanasy."""
-                pm.text(l='Submit Multiple Times', ann=ann)
-                pm.intField(
-                    'cgru_afanasy__submit_multiple_times',
-                    ann=ann,
-                    v=pm.optionVar.get(
-                        'cgru_afanasy__submit_multiple_times_ov',
-                        1
-                    )
-                )
-
-            pm.checkBox('cgru_afanasy__paused', l='Start Paused', v=0)
+            pm.separator()
+            pm.text(l='<h1><b>Submission Details<b><h1>', h=section_label_height)
+            with pm.rowLayout(nc=2, adj=2, cl2=('right', 'left'), cw2=(labels_width, 50)):
+                pm.text(l='<b>Start Paused</b>', al='right')
+                pm.checkBox('cgru_afanasy__paused', l='', v=0)
 
             pm.radioButtonGrp(
                 'cgru_afanasy__separate_layers',
                 numberOfRadioButtons=3,
-                label='Submit Render Layers\nas Separate:',
+                label='<b>Submit Render Layers<br>as Separate:</b>',
                 labelArray3=[
                     'None',
                     'Block',
@@ -280,16 +279,39 @@ This system will be updated in Afanasy."""
                 sl=pm.optionVar.get('cgru_afanasy__separate_layers_ov', 1)
             )
 
+            with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
+                ann = """This is a weird hack! When used in conjunction with
+the <b>Skip Existence Frames<b> parameter of the maya render settings and the
+Frames Per Task parameters is equal or greater than the number of frames in the
+animation range, it allows the Maya scene to be loaded only once per farm
+machine. But then to be able to use all farmers there should be at least the
+same amount of Jobs that there are farm machines. So with this parameter it is
+possible to submit the same job multiple times.. But it is a bad hack.
+
+This system will be updated in Afanasy."""
+                pm.text(l='<b>Submit Multiple Times</b>', ann=ann)
+                pm.intField(
+                    'cgru_afanasy__submit_multiple_times',
+                    ann=ann,
+                    v=pm.optionVar.get(
+                        'cgru_afanasy__submit_multiple_times_ov',
+                        1
+                    )
+                )
+
+            with pm.rowLayout(nc=2, adj=2, cl2=('right', 'left'), cw2=(labels_width, 40)):
+                pm.text(l='<b>Close After</b>', al='right')
+                pm.checkBox(
+                    'cgru_afanasy__close',
+                    l='',
+                    v=1
+                )
+
             pm.button(
                 l='SUBMIT',
                 c=self.launch
             )
 
-            pm.checkBox(
-                'cgru_afanasy__close',
-                l='Close After',
-                v=1
-            )
 
         pm.showWindow(self.window)
 
@@ -660,6 +682,7 @@ This system will be updated in Afanasy."""
             pm.radioButtonGrp('cgru_afanasy__separate_layers', q=1, sl=1)
         pause = pm.checkBox('cgru_afanasy__paused', q=1, v=1)
         life_time = pm.intField('cgru_afanasy__life_time', q=1, v=1)
+        annotation = pm.textField('cgru_afanasy__annotation', q=1, text=True)
         submit_multiple_times = pm.intField('cgru_afanasy__submit_multiple_times', q=1, v=1)
         errors_avoid_host = pm.intField('cgru_afanasy__errors_avoid_host', q=1, v=1)
         errors_retries = pm.intField('cgru_afanasy__errors_retries', q=1, v=1)
@@ -688,6 +711,7 @@ This system will be updated in Afanasy."""
         pm.optionVar['cgru_afanasy__hosts_exclude_ov'] = hosts_exclude
         pm.optionVar['cgru_afanasy__separate_layers_ov'] = separate_layers
         pm.optionVar['cgru_afanasy__life_time_ov'] = life_time
+        pm.optionVar['cgru_afanasy__annotation_ov'] = annotation
 
         pm.optionVar['cgru_afanasy__submit_multiple_times_ov'] = submit_multiple_times
         pm.optionVar['cgru_afanasy__errors_avoid_host_ov'] = errors_avoid_host
@@ -828,7 +852,7 @@ This system will be updated in Afanasy."""
                 if separate_layers == 1:
                     blocks.append(block)
                 else:
-                    job = af.Job(job_name)
+                    job = af.Job('%s - %s' % (job_name, layer_name))
                     # add blocks
                     job.blocks = [block]
                     jobs.append(job)
@@ -856,6 +880,7 @@ This system will be updated in Afanasy."""
             blocks.append(block)
 
         for job in jobs:
+            job.setAnnotation(annotation)
             job.setFolder('input', os.path.dirname(filename))
             job.setFolder('output', os.path.dirname(outputs[0]))
             job.setHostsMask(hosts_mask)
@@ -874,7 +899,12 @@ This system will be updated in Afanasy."""
                 job.blocks.extend(blocks)
 
             for i in range(submit_multiple_times):
+                orig_job_name = job.data['name']
+                job.setName('%s - %03i' % (orig_job_name, i + 1))
                 status, data = job.send()
+
+                # restore job name
+                job.setName(orig_job_name)
                 if not status:
                     pm.PopupError('Something went wrong!')
                 print('data: %s' % data)
