@@ -11,7 +11,7 @@ import pymel.core as pm
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 
 renderer_to_block_type = {
@@ -745,11 +745,17 @@ This system will be updated in Afanasy."""
         job_name = self.generate_job_name()
 
         logger.debug('%ss %se %sr' % (start_frame, end_frame, by_frame))
-        logger.debug('scene        = %s' % scene_name)
-        logger.debug('file         = %s' % filename)
-        logger.debug('job_name     = %s' % job_name)
-        logger.debug('project_path = %s' % project_path)
-        logger.debug('outputs      = %s' % outputs)
+        logger.debug('scene                 = %s' % scene_name)
+        logger.debug('file                  = %s' % filename)
+        logger.debug('job_name              = %s' % job_name)
+        logger.debug('project_path          = %s' % project_path)
+        logger.debug('outputs               = %s' % outputs)
+        logger.debug('annotation            = %s' % annotation)
+        logger.debug('separate_layers       = %s' % separate_layers)
+        logger.debug('errors_avoid_host     = %s' % errors_avoid_host)
+        logger.debug('errors_retries        = %s' % errors_retries)
+        logger.debug('errors_task_same_host = %s' % errors_task_same_host)
+        logger.debug('errors_forgive_time   = %s' % errors_forgive_time)
 
         if pm.checkBox('cgru_afanasy__close', q=1, v=1):
             pm.deleteUI(self.window)
@@ -790,6 +796,13 @@ This system will be updated in Afanasy."""
         # submit renders
         jobs = []
         blocks = []
+
+        #
+        # separate_layers:
+        # 1 -> None  -> submit one job with a single block with all layers
+        # 2 -> Block -> submit one job with multiple blocks
+        # 3 -> Job   -> submit multiple jobs with a single block per layer
+        #
         if separate_layers in [1, 2]:
             job = af.Job(job_name)
             jobs.append(job)
@@ -890,12 +903,12 @@ This system will be updated in Afanasy."""
             else:
                 job.setTimeLife(240 * 3600)
 
-            job.setCmdPost('deletefiles "%s"' % os.path.abspath(filename))
+            job.setCmdPost('deletefiles -s "%s"' % os.path.abspath(filename))
             if pause:
                 job.offline()
 
             # add blocks
-            if separate_layers in [1, 3]:
+            if separate_layers in [1, 2]:
                 job.blocks.extend(blocks)
 
             for i in range(submit_multiple_times):
@@ -907,7 +920,6 @@ This system will be updated in Afanasy."""
                 job.setName(orig_job_name)
                 if not status:
                     pm.PopupError('Something went wrong!')
-                print('data: %s' % data)
 
         # restore log level
         if render_engine == 'arnold':
