@@ -276,7 +276,7 @@ class UI(object):
                 ],
                 # adj=1,
                 cw4=[labels_width, 50, 50, 50],
-                sl=pm.optionVar.get('cgru_afanasy__separate_layers_ov', 1)
+                sl=pm.optionVar.get('cgru_afanasy__separate_layers_ov', 2)
             )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
@@ -790,11 +790,11 @@ This system will be updated in Afanasy."""
         # submit renders
         jobs = []
         blocks = []
-        if separate_layers == 0 or separate_layers == 1:
+        if separate_layers in [1, 2]:
             job = af.Job(job_name)
             jobs.append(job)
 
-        if separate_layers:
+        if separate_layers in [2, 3]:
             # render each layer separately
             rlm = pm.PyNode('renderLayerManager')
             layers = [layer for layer in rlm.connections()
@@ -849,7 +849,7 @@ This system will be updated in Afanasy."""
 
                 block.setCommand(command)
 
-                if separate_layers == 1:
+                if separate_layers == 2:
                     blocks.append(block)
                 else:
                     job = af.Job('%s - %s' % (job_name, layer_name))
@@ -895,7 +895,7 @@ This system will be updated in Afanasy."""
                 job.offline()
 
             # add blocks
-            if separate_layers == 2:
+            if separate_layers in [1, 3]:
                 job.blocks.extend(blocks)
 
             for i in range(submit_multiple_times):
