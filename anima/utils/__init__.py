@@ -896,7 +896,7 @@ class MediaManager(object):
             'vcodec': 'libx264',
             # 'profile:v': 'main',
             'g': 1,  # key frame every 1 frame
-            'b:v': '4096k',
+            'b:v': '20480k',
             'o': output_path
         }
         conversion_options.update(options)
