@@ -156,6 +156,15 @@ def UI():
         with general_columnLayout:
             color.change()
             pm.button(
+                'version_creator_button',
+                l="Version Creator",
+                c=RepeatedCallback(General.version_creator),
+                ann="Version Creator",
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'selectionManager_button',
                 l="Selection Manager",
                 c=RepeatedCallback(General.selection_manager),
@@ -178,6 +187,14 @@ def UI():
                 c=RepeatedCallback(General.remove_colon_from_names),
                 ann="removes the colon (:) character from all "
                     "selected object names",
+                bgc=color.color
+            )
+
+            pm.button(
+                'nsDelete_button',
+                l="nsDelete",
+                c=RepeatedCallback(General.namespace_deleter),
+                ann=General.namespace_deleter.__doc__,
                 bgc=color.color
             )
 
@@ -885,6 +902,13 @@ def UI():
             )
 
             color.change()
+            pm.button(
+                'duplicate_input_graph_button',
+                l="Duplicate Input Graph",
+                c=RepeatedCallback(Render.duplicate_input_graph),
+                ann=Render.duplicate_input_graph.__doc__,
+                bgc=color.color
+            )
             pm.button(
                 'duplicate_with_connections_button',
                 l="Duplicate With Connections To Network",
@@ -1950,6 +1974,69 @@ class General(object):
         tempfile.gettempdir(),
         'transform_info'
     )
+
+    @classmethod
+    def namespace_deleter(cls):
+        """the legendary namespace deleter from Mehmet Erer
+
+        finds and deletes unused namespaces
+        """
+        all_namespaces = pm.listNamespaces()
+        ref_namespaces = [ref.namespace for ref in pm.listReferences()]
+        missing_namespaces = []
+
+        from anima.ui.progress_dialog import ProgressDialogManager
+        if len(all_namespaces) > 0:
+            pdm = ProgressDialogManager()
+            pdm.close()
+
+            caller = pdm.register(len(all_namespaces),
+                                  'Locating Unused Namespaces...')
+            for nsa in all_namespaces:
+                i = 0
+                for nsr in ref_namespaces:
+                    i += 1
+                    if nsr == nsa:
+                        break
+                    if i == len(ref_namespaces):
+                        missing_namespaces.append(nsa)
+                caller.step()
+
+        if len(missing_namespaces) > 0:
+            caller = pdm.register(len(missing_namespaces),
+                                  'Deleting Unused Namespaces...')
+            for ns in missing_namespaces:
+                ns_info = pm.namespaceInfo(ns, lon=1, fn=1, r=1)
+                if len(ns_info) > 0:
+                    nsc = ns_info[len(ns_info) - 1]
+                    nsc_array = nsc.split(':')
+                    if len(nsc_array) > 0:
+                        for del_nsc in nsc_array:
+                            pm.namespace(rm=del_nsc, mnr=1)
+                else:
+                    pm.namespace(rm=ns, mnr=1)
+                print ('Deleted -> :' + ns)
+                caller.step()
+        else:
+            pm.warning(
+                'There are no first-level unused namespaces in this scene.'
+            )
+
+        if len(ref_namespaces) == 0 and len(all_namespaces) > 0:
+            for ns in all_namespaces:
+                pm.namespace(rm=ns, mnr=1)
+                print ('Deleted -> : %s' % ns)
+            pm.warning(
+                'There are no references in this scene. All empty namespaces '
+                'are deleted.'
+            )
+
+    @classmethod
+    def version_creator(cls):
+        """version creator
+        """
+        from anima.ui.scripts import maya
+        maya.version_creator()
 
     @classmethod
     def export_transform_info(cls, use_global_pos=False):
@@ -3792,7 +3879,13 @@ class Render(object):
     def duplicate_with_connections(cls):
         """duplicates the selected nodes with connections to the network
         """
-        pm.duplicate(inputConnections=1)
+        return pm.duplicate(ic=1, rr=1)
+
+    @classmethod
+    def duplicate_input_graph(cls):
+        """duplicates the selected nodes with all their inputs
+        """
+        return pm.duplicate(un=1, rr=1)
 
     @classmethod
     def delete_render_and_display_layers(cls):
