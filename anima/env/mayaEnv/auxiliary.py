@@ -2606,27 +2606,37 @@ def create_shader(shader_tree, name=None):
     return shader
 
 
-def match_hierarchy(source, target):
+def match_hierarchy(source, target, node_types=None, use_long_names=False):
     """Matches the objects in two different hierarchy by looking at their
     names.
 
     Returns a dictionary where you can look up for matches by using the object
     name.
+
+    :param source: The source node. It can be a parent node. So the match
+      includes the decendents.
+    :param target: The target node.
+    :param node_types: A tuple showing the node types to match. The default
+      value is (pm.nt.Mesh, pm.nt.NurbsSurface).
+    :param use_long_names: Precisely match the placement in the hierarchy.
     """
     from anima.ui import progress_dialog
     from anima.env.mayaEnv import MayaMainProgressBarWrapper
     # wrp = MayaMainProgressBarWrapper()
     # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
 
+    if node_types is None:
+        node_types = (pm.nt.Mesh, pm.nt.NurbsSurface)
+
     # caller = pdm.register(2, title='Getting source and target nodes')
     source_nodes = source.listRelatives(
         ad=1,
-        type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+        type=node_types
     )
     # caller.step()
     target_nodes = target.listRelatives(
         ad=1,
-        type=(pm.nt.Mesh, pm.nt.NurbsSurface)
+        type=node_types
     )
     # caller.step()
     # caller.end_progress()
@@ -2641,14 +2651,26 @@ def match_hierarchy(source, target):
 
     # caller = pdm.register(len(source_nodes), title='Getting source node names')
     for node in source_nodes:
-        name = node.name().split(':')[-1].split('|')[-1]
+        if not use_long_names:
+            name = node.name().split(':')[-1].split('|')[-1]
+        else:
+            # use the long name
+            name = '|'.join(
+                map(lambda x: x.split(':')[-1], node.longName().split('|'))
+            )
+
         source_node_names.append(name)
         # caller.step()
     # caller.end_progress()
 
     # caller = pdm.register(len(target_nodes), title='Getting target node names')
     for node in target_nodes:
-        name = node.name().split(':')[-1].split('|')[-1]
+        if not use_long_names:
+            name = node.name().split(':')[-1].split('|')[-1]
+        else:
+            name = '|'.join(
+                map(lambda x: x.split(':')[-1], node.longName().split('|'))
+            )
         target_node_names.append(name)
         # caller.step()
     # caller.end_progress()
