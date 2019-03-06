@@ -106,7 +106,7 @@ class Color(object):
 
 
 def UI():
-    #window setup
+    # window setup
     width = 260
     height = 650
     row_spacing = 3
@@ -125,7 +125,7 @@ def UI():
         title="Anima ToolBox"
     )
 
-    #the layout that holds the tabs
+    # the layout that holds the tabs
     main_formLayout = pm.formLayout(
         'main_formLayout', nd=100, parent=toolbox_window
     )
@@ -134,7 +134,7 @@ def UI():
         'main_tabLayout', scr=True, cr=True, parent=main_formLayout
     )
 
-    #attach the main_tabLayout to main_formLayout
+    # attach the main_tabLayout to main_formLayout
     pm.formLayout(
         main_formLayout, edit=True,
         attachForm=[
@@ -147,13 +147,13 @@ def UI():
 
     with main_tabLayout:
         # ----- GENERAL ------
-        general_columnLayout = pm.columnLayout(
-            'general_columnLayout',
+        general_column_layout = pm.columnLayout(
+            'general_column_layout',
             adj=True,
             cal="center",
             rs=row_spacing
         )
-        with general_columnLayout:
+        with general_column_layout:
             color.change()
             pm.button(
                 'version_creator_button',
@@ -302,6 +302,15 @@ def UI():
                 l='Cleanup Light Cameras',
                 c=RepeatedCallback(General.cleanup_light_cameras),
                 ann=General.cleanup_light_cameras.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
+                'unshape_parent_node_button',
+                l='Unshape Parent Nodes',
+                c=RepeatedCallback(General.unshape_parent_nodes),
+                ann=General.unshape_parent_nodes.__doc__,
                 bgc=color.color
             )
 
@@ -1036,6 +1045,19 @@ def UI():
                       l="Unnormalize Texture Paths (add $)",
                       c=RepeatedCallback(Render.unnormalize_texture_paths),
                       ann=Render.unnormalize_texture_paths.__doc__,
+                      bgc=color.color)
+
+            color.change()
+            pm.button('assign_random_material_color_button',
+                      l="Assign Material with Random Color",
+                      c=RepeatedCallback(Render.assign_random_material_color),
+                      ann=Render.assign_random_material_color.__doc__,
+                      bgc=color.color)
+
+            pm.button('randomize_material_color_button',
+                      l="Randomize Material Color",
+                      c=RepeatedCallback(Render.randomize_material_color),
+                      ann=Render.randomize_material_color.__doc__,
                       bgc=color.color)
 
             pm.text(l='============ Camera Tools ============')
@@ -1919,7 +1941,7 @@ def UI():
         main_tabLayout,
         edit=True,
         tabLabel=[
-            (general_columnLayout, "Gen"),
+            (general_column_layout, "Gen"),
             (reference_columnLayout, "Ref"),
             (modeling_column_layout, "Mod"),
             (rigging_columnLayout, "Rig"),
@@ -1974,6 +1996,41 @@ class General(object):
         tempfile.gettempdir(),
         'transform_info'
     )
+
+    @classmethod
+    def unshape_parent_nodes(cls):
+        """Moves the shape node of a mesh to another transform node as a
+        children if the mesh node has other meshes under it. Essentially
+        cleaning the scene.
+        """
+        mesh_nodes_with_transform_children = []
+        all_meshes = pm.ls(dag=1, type='mesh')
+
+        for node in all_meshes:
+            parent = node.getParent()
+            tra_under_shape = pm.ls(
+                parent.listRelatives(),
+                type='transform'
+            )
+            if len(tra_under_shape):
+                mesh_nodes_with_transform_children.append(parent)
+
+        for node in mesh_nodes_with_transform_children:
+            # duplicate the node
+            dup = pm.duplicate(node)[0]
+
+            # remove all descendents
+            all_descendents = dup.listRelatives(ad=1)
+            # remove the shape from the list
+            all_descendents.remove(dup.getShape())
+
+            pm.delete(all_descendents)
+
+            # parent under the original node
+            pm.parent(dup, node)
+
+            # remove the shape of the original node
+            pm.delete(node.getShape())
 
     @classmethod
     def namespace_deleter(cls):
@@ -3492,12 +3549,12 @@ class Modeling(object):
                 uvs = []
                 try:
                     for j in range(node.numPolygonVertices(i)):
-                        #uvs.append(node.getPolygonUV(i, j))
+                        # uvs.append(node.getPolygonUV(i, j))
                         uv_id = node.getPolygonUVid(i, j)
                         uvs.append((all_uvs[0][uv_id], all_uvs[1][uv_id]))
                     if area(uvs) == 0.0:
-                        #meshes_with_zero_uv_area.append(node)
-                        #break
+                        # meshes_with_zero_uv_area.append(node)
+                        # break
                         faces_with_zero_uv_area.append(
                             '%s.f[%s]' % (node.fullPath(), i)
                         )
@@ -3510,8 +3567,10 @@ class Modeling(object):
 
         if len(faces_with_zero_uv_area) == 0:
             pm.warning('No Zero UV area polys found!!!')
+            return []
         else:
             pm.select(faces_with_zero_uv_area)
+            return faces_with_zero_uv_area
 
     @classmethod
     def set_pivot(cls, axis=0):
@@ -3851,9 +3910,67 @@ class Render(object):
     }
 
     @classmethod
+    def assign_random_material_color(cls):
+        """assigns a lambert with a random color to the selected object
+        """
+        selected = pm.selected()
+
+        # create the lambert material
+        lambert = pm.shadingNode('lambert', asShader=1)
+
+        # create the shading engine
+        shading_engine = pm.nt.ShadingEngine()
+        lambert.outColor >> shading_engine.surfaceShader
+
+        # randomize the lambert color
+        import random
+        h = random.random()  # 0-1
+        s = random.random() * 0.5 + 0.25  # 0.25-0.75
+        v = random.random() * 0.5 + 0.5  # 0.5 - 1
+
+        from anima.utils import hsv_to_rgb
+        r, g, b = hsv_to_rgb(h, s, v)
+        lambert.color.set(r, g, b)
+
+        pm.sets(shading_engine, fe=selected)
+        pm.select(selected)
+
+    @classmethod
+    def randomize_material_color(cls):
+        """randomizes material color of selected nodes
+        """
+        selected = pm.selected()
+        all_materials = []
+        for node in selected:
+            shading_engines = node.listHistory(f=1, type='shadingEngine')
+            if not shading_engines:
+                continue
+            shading_engine = shading_engines[0]
+            materials = shading_engine.surfaceShader.inputs()
+            if not materials:
+                continue
+            else:
+                for material in materials:
+                    if material not in all_materials:
+                        all_materials.append(material)
+
+        import random
+        from anima.utils import hsv_to_rgb
+        attr_lut = {
+            'lambert': 'color',
+        }
+        for material in all_materials:
+            h = random.random()  # 0-1
+            s = random.random() * 0.5 + 0.25  # 0.25-0.75
+            v = random.random() * 0.5 + 0.5  # 0.5 - 1
+            r, g, b = hsv_to_rgb(h, s, v)
+            attr_name = attr_lut[material.type()]
+            material.attr(attr_name).set(r, g, b)
+
+    @classmethod
     def vertigo_setup_look_at(cls):
-        """sets up a the necessary locator for teh Vertigo effect for the selected
-        camera
+        """sets up a the necessary locator for teh Vertigo effect for the
+        selected camera
         """
         from anima.env.mayaEnv import vertigo
         cam = pm.ls(sl=1)[0]
