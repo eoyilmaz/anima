@@ -894,6 +894,7 @@ class MediaManager(object):
         conversion_options = {
             'i': input_path,
             'vcodec': 'libx264',
+            'pix_fmt': 'yuv420p', # to support whatsapp
             # 'profile:v': 'main',
             'g': 1,  # key frame every 1 frame
             'b:v': '20480k',
@@ -2017,3 +2018,39 @@ def fix_task_computed_time(task):
         task.computed_end = end_time
 
         logger.debug('Task computed time is fixed!')
+
+
+def hsv_to_rgb(h, s, v):
+    """Converts HSV to RGB values
+
+    :param h:
+    :param s:
+    :param v:
+    :return:
+    """
+    if s == 0.0:
+        return v, v, v
+
+    i = int(h * 6.)  # XXX assume int() truncates!
+
+    f = (h * 6.) - i
+    p, q, t = v * (1. - s), v * (1. - s * f), v * (1. - s * (1. - f))
+    i %= 6
+
+    if i == 0:
+        return v, t, p
+
+    if i == 1:
+        return q, v, p
+
+    if i == 2:
+        return p, v, t
+
+    if i == 3:
+        return p, q, v
+
+    if i == 4:
+        return t, p, v
+
+    if i == 5:
+        return v, p, q
