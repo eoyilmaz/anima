@@ -2648,6 +2648,13 @@ def match_hierarchy(source, target, node_types=None, use_long_names=False):
         'match': [],
         'no_match': []
     }
+    # exit early if there is only one source and one target
+    # match them in any case
+    if len(source_nodes) == 1 and len(target_nodes) == 1:
+        lut['match'] = [
+            (source_nodes[0], target_nodes[0])
+        ]
+        return lut
 
     # caller = pdm.register(len(source_nodes), title='Getting source node names')
     for node in source_nodes:
