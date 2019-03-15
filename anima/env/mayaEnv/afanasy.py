@@ -219,7 +219,7 @@ class UI(object):
                         'cgru_afanasy__errors_avoid_host_ov',
                         3
                     ),
-                    min=1,
+                    min=0,
                     max=127
                 )
 
@@ -231,7 +231,7 @@ class UI(object):
                         'cgru_afanasy__errors_retries_ov',
                         3
                     ),
-                    min=1,
+                    min=0,
                     max=127
                 )
 
@@ -243,7 +243,7 @@ class UI(object):
                         'cgru_afanasy__errors_task_same_host_ov',
                         3
                     ),
-                    min=1,
+                    min=0,
                     max=127
                 )
 
