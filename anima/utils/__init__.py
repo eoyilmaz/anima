@@ -2054,3 +2054,29 @@ def hsv_to_rgb(h, s, v):
 
     if i == 5:
         return v, p, q
+
+
+def smooth_array(data, iteration=1):
+    """Smooths the given list of data.
+
+    Derived from Maya MEL script: modifySelectedCurves.mel
+
+    :param data: A list of objects that can be multiplied of added to each
+      other like simple numbers to Vectors.
+    :return:
+    """
+
+    # keep te first and last position
+    for j in range(iteration):
+        prev = data[0]
+        current = data[1]
+        for i in range(1, len(data)-1):
+            next = data[i+1]
+            new_pos = current * 0.4 + (next + prev) * 0.3
+
+            data[i] = new_pos
+
+            prev = current
+            current = next
+
+    return data
