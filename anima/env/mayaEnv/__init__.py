@@ -846,9 +846,21 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             include_project_code=False
         )
 
+        # check the current renderer
+        dRG = pm.PyNode('defaultRenderGlobals')
+        current_renderer = dRG.currentRenderer.get()
+        if current_renderer == 'redshift':
+            # do not use <RenderPass> in Redshift
+            output_filename_template = \
+                '%(render_output_folder)s/<RenderLayer>/' \
+                '%(version_sig_name)s_<RenderLayer>'
+        else:
+            output_filename_template = \
+                '%(render_output_folder)s/<RenderLayer>/' \
+                '%(version_sig_name)s_<RenderLayer>_<RenderPass>'
+
         render_file_full_path = \
-            '%(render_output_folder)s/<RenderLayer>/%(version_sig_name)s_' \
-            '<RenderLayer>_<RenderPass>' % {
+            output_filename_template % {
                 'render_output_folder': render_output_folder,
                 'version_sig_name': version_sig_name
             }
