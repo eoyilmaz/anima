@@ -200,9 +200,12 @@ class GenericTools(object):
 
         import os
         import tempfile
-        path = os.path.join(
-            tempfile.gettempdir(),
-            'rsproxy_info.json'
+        path = os.path.normpath(
+            os.path.join(
+                tempfile.gettempdir(),
+                '..',
+                'rsproxy_info.json'
+            )
         )
 
         pos_data = []
