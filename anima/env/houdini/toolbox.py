@@ -107,6 +107,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.update_render_settings.__doc__
         )
 
+        # Export RSProxy Data As JSON
+        add_button(
+            'Export RSProxy Data As JSON',
+            general_tab_vertical_layout,
+            GenericTools.export_rsproxy_data_as_json,
+            GenericTools.export_rsproxy_data_as_json.__doc__
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -172,3 +180,45 @@ class GenericTools(object):
             return
 
         h.set_render_filename(version=v)
+
+    @classmethod
+    def export_rsproxy_data_as_json(cls):
+        """exports rsproxy data on points as json
+        """
+        node = hou.selectedNodes()[0]
+        geo = node.geometry()
+
+        # Add code to modify contents of geo.
+        # Use drop down menu to select examples.
+        pos = geo.pointFloatAttribValues("P")
+        rot = geo.pointFloatAttribValues("rot")
+        sca = geo.pointFloatAttribValues("pscale")
+        instancefile = geo.pointStringAttribValues("instancefile")
+        node_name = geo.pointStringAttribValues("node_name")
+        hierarchy_name = geo.pointStringAttribValues("hierarchy_name")
+
+        import os
+        import tempfile
+        path = os.path.join(
+            tempfile.gettempdir(),
+            'rsproxy_info.json'
+        )
+
+        pos_data = []
+        rot_data = []
+        for i in range(len(pos) / 3):
+            pos_data.append((pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]))
+            rot_data.append((rot[i * 3], rot[i * 3 + 1], rot[i * 3 + 2]))
+
+        json_data = {
+            "pos": pos_data,
+            "rot": rot_data,
+            "sca": sca,
+            "instancefile": instancefile,
+            "node_name": node_name,
+            "hierarchy_name": hierarchy_name
+        }
+
+        import json
+        with open(path, "w") as f:
+            f.write(json.dumps(json_data))
