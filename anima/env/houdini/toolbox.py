@@ -185,6 +185,7 @@ class GenericTools(object):
     def export_rsproxy_data_as_json(cls):
         """exports rsproxy data on points as json
         """
+        import hou
         node = hou.selectedNodes()[0]
         geo = node.geometry()
 
