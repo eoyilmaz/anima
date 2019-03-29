@@ -2562,8 +2562,10 @@ class General(object):
                     # create one
                     previous_parent = None
                     current_node = None
-                    for node_name in self.parent_name.split("|"):
-                        list_nodes = pm.ls(node_name)
+                    splits = self.parent_name.split("|")
+                    for i, node_name in enumerate(splits):
+                        full_node_name = '|' + '|'.join(splits[:i+1])
+                        list_nodes = pm.ls(full_node_name)
                         if list_nodes:
                             current_node = list_nodes[0]
                         else:
