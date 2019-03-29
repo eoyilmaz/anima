@@ -2553,14 +2553,27 @@ class General(object):
                 """gets the parent node or creates one
                 """
                 parent_node_name = self.parent_name
-                nodes_with_name = pm.ls(parent_node_name)
+                nodes_with_name = pm.ls('|%s' % parent_node_name)
                 parent_node = None
                 if nodes_with_name:
                     parent_node = nodes_with_name[0]
 
                 if not parent_node:
                     # create one
-                    parent_node = pm.nt.Transform(name=parent_node_name)
+                    previous_parent = None
+                    current_node = None
+                    for node_name in self.parent_name.split("|"):
+                        list_nodes = pm.ls(node_name)
+                        if list_nodes:
+                            current_node = list_nodes[0]
+                        else:
+                            current_node = pm.nt.Transform(name=node_name)
+                        if previous_parent:
+                            pm.parent(current_node, previous_parent, r=1)
+                        previous_parent = current_node
+
+                    # parent_node = pm.nt.Transform(name=parent_node_name)
+                    parent_node = current_node
 
                 return parent_node
 
