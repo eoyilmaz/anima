@@ -2523,7 +2523,7 @@ class General(object):
                     data_obj.pos = data['pos'][i]
                     data_obj.rot = data['rot'][i]
                     data_obj.sca = data['sca'][i]
-                    data_obj.hierarchy_name = data['hierarchy_name'][i]
+                    data_obj.parent_name = data['parent_name'][i]
                     data_obj.instancefile = data['instancefile'][i]
                     data_obj.node_name = data['node_name'][i]
 
@@ -2547,12 +2547,12 @@ class General(object):
                 self.transform_node = None
                 self.shape_node = None
                 self.rs_proxy_node = None
-                self.hierarchy_name = None
+                self.parent_name = None
 
             def get_parent(self):
                 """gets the parent node or creates one
                 """
-                parent_node_name = self.hierarchy_name
+                parent_node_name = self.parent_name
                 nodes_with_name = pm.ls(parent_node_name)
                 parent_node = None
                 if nodes_with_name:
@@ -3578,9 +3578,6 @@ class Modeling(object):
         """creates automatic uv maps for the selected objects and layouts the
         uvs. Fixes model problems along the way.
         """
-        from anima.env.mayaEnv import toolbox
-        reload(toolbox)
-
         for node in pm.selected():
             pm.polyAutoProjection(
                 node,
@@ -3588,7 +3585,7 @@ class Modeling(object):
             )
 
             pm.select(node)
-            f = toolbox.Modeling.select_zero_uv_area_faces()
+            f = Modeling.select_zero_uv_area_faces()
 
             if f:
                 print("DELETED Faces!")

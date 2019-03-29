@@ -196,7 +196,7 @@ class GenericTools(object):
         sca = geo.pointFloatAttribValues("pscale")
         instancefile = geo.pointStringAttribValues("instancefile")
         node_name = geo.pointStringAttribValues("node_name")
-        hierarchy_name = geo.pointStringAttribValues("hierarchy_name")
+        parent_name = geo.pointStringAttribValues("parent_name")
 
         import os
         import tempfile
@@ -220,7 +220,7 @@ class GenericTools(object):
             "sca": sca,
             "instancefile": instancefile,
             "node_name": node_name,
-            "hierarchy_name": hierarchy_name
+            "parent_name": parent_name
         }
 
         import json
