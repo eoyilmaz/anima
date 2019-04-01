@@ -663,100 +663,117 @@ class RepresentationGenerator(object):
                 except pm.MayaNodeError:
                     pfx_polygons_node = None
 
-                if pfx_polygons_node:
-                    for node in pfx_polygons_node.getChildren():
-                        for child_node in node.getChildren():
-                            child_node_name = \
-                                child_node.name().split('___')[-1]
-                            child_node_shape = child_node.getShape()
-                            child_node_shape_name = None
+                try:
+                    pfx_polygons_node = \
+                        pm.PyNode('kks___vegetation_pfxPolygons')
+                    pfx_polygons_node_children = \
+                        pfx_polygons_node.getChildren()
+                except pm.MayaNodeError:
+                    pfx_polygons_node_children = []
 
-                            if child_node_shape:
-                                child_node_shape_name = child_node_shape.name()
+                for node in pfx_polygons_node_children:
+                    for child_node in node.getChildren():
+                        child_node_name = \
+                            child_node.name().split('___')[-1]
+                        child_node_shape = child_node.getShape()
+                        child_node_shape_name = None
 
-                            pm.select(child_node)
-                            temp_output_fullpath = \
-                                tempfile.mktemp().replace('\\', '/')
-                            temp_output_path, temp_output_filename = \
-                                os.path.split(temp_output_fullpath)
+                        if child_node_shape:
+                            child_node_shape_name = child_node_shape.name()
 
-                            output_filename = '%s_%s' % (
-                                self.version.nice_name,
-                                child_node_name.split(':')[-1]
-                                .replace(':', '_')
-                                .replace('|', '_')
+                        pm.select(child_node)
+                        temp_output_fullpath = \
+                            tempfile.mktemp().replace('\\', '/')
+                        temp_output_path, temp_output_filename = \
+                            os.path.split(temp_output_fullpath)
+
+                        output_filename = '%s_%s' % (
+                            self.version.nice_name,
+                            child_node_name.split(':')[-1]
+                            .replace(':', '_')
+                            .replace('|', '_')
+                        )
+
+                        # run the mel command
+                        # check if file exists
+                        pm.mel.eval(
+                            gpu_command % {
+                                'start_frame': start_frame,
+                                'end_frame': start_frame,  # end_frame,
+                                'node': child_node.fullPath(),
+                                'path': temp_output_path,
+                                'filename': temp_output_filename
+                            }
+                        )
+
+                        cache_file_full_path = \
+                            os.path\
+                            .join(output_path, output_filename + '.abc')\
+                            .replace('\\', '/')
+
+                        # create the intermediate directories
+                        try:
+                            os.makedirs(
+                                os.path.dirname(cache_file_full_path)
                             )
+                        except OSError:
+                            # directory exists
+                            pass
 
-                            # run the mel command
-                            # check if file exists
-                            pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': start_frame,  # end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': temp_output_path,
-                                    'filename': temp_output_filename
-                                }
+                        # now move in to its place
+                        shutil.move(
+                            temp_output_fullpath + '.abc',
+                            cache_file_full_path
+                        )
+
+                        # set rotate and scale pivots
+                        rp = pm.xform(child_node, q=1, ws=1, rp=1)
+                        sp = pm.xform(child_node, q=1, ws=1, sp=1)
+                        # child_node.setRotatePivotTranslation([0, 0, 0])
+
+                        # delete the child and add a GPU node instead
+                        pm.delete(child_node)
+
+                        # check if file exists and create nodes
+                        if os.path.exists(cache_file_full_path):
+                            gpu_node = pm.createNode('gpuCache')
+                            gpu_node_tra = gpu_node.getParent()
+
+                            pm.parent(gpu_node_tra, node)
+                            gpu_node_tra.rename(child_node_name)
+
+                            if child_node_shape_name is not None:
+                                gpu_node.rename(child_node_shape_name)
+
+                            pm.xform(gpu_node_tra, ws=1, rp=rp)
+                            pm.xform(gpu_node_tra, ws=1, sp=sp)
+
+                            gpu_node.setAttr(
+                                'cacheFileName',
+                                cache_file_full_path,
+                                type="string"
                             )
-
-                            cache_file_full_path = \
-                                os.path\
-                                .join(output_path, output_filename + '.abc')\
-                                .replace('\\', '/')
-
-                            # create the intermediate directories
-                            try:
-                                os.makedirs(
-                                    os.path.dirname(cache_file_full_path)
-                                )
-                            except OSError:
-                                # directory exists
-                                pass
-
-                            # now move in to its place
-                            shutil.move(
-                                temp_output_fullpath + '.abc',
+                        else:
+                            print(
+                                'File not found!: %s' %
                                 cache_file_full_path
                             )
 
-                            # set rotate and scale pivots
-                            rp = pm.xform(child_node, q=1, ws=1, rp=1)
-                            sp = pm.xform(child_node, q=1, ws=1, sp=1)
-                            # child_node.setRotatePivotTranslation([0, 0, 0])
-
-                            # delete the child and add a GPU node instead
-                            pm.delete(child_node)
-
-                            # check if file exists and create nodes
-                            if os.path.exists(cache_file_full_path):
-                                gpu_node = pm.createNode('gpuCache')
-                                gpu_node_tra = gpu_node.getParent()
-
-                                pm.parent(gpu_node_tra, node)
-                                gpu_node_tra.rename(child_node_name)
-
-                                if child_node_shape_name is not None:
-                                    gpu_node.rename(child_node_shape_name)
-
-                                pm.xform(gpu_node_tra, ws=1, rp=rp)
-                                pm.xform(gpu_node_tra, ws=1, sp=sp)
-
-                                gpu_node.setAttr(
-                                    'cacheFileName',
-                                    cache_file_full_path,
-                                    type="string"
-                                )
-                            else:
-                                print(
-                                    'File not found!: %s' %
-                                    cache_file_full_path
-                                )
-
-                    # clean up other nodes
+                # clean up other nodes
+                try:
                     pm.delete('kks___vegetation_pfxStrokes')
-                    pm.delete('kks___vegetation_paintableGeos')
+                except pm.MayaNodeError:
+                    pass
 
-                else:
+                try:
+                    pm.delete('kks___vegetation_paintableGeos')
+                except pm.MayaNodeError:
+                    pass
+
+                # Check RedshiftProxyMesh nodes in the scene
+                rs_proxy_lut = {}
+                rs_proxy_meshes = pm.ls(type='RedshiftProxyMesh')
+                for rs_proxy_mesh in rs_proxy_meshes:
                     # this scene is not a regular Vegetation task
                     # it is the new Proxy file type that is converted from
                     # Houdini.
@@ -765,126 +782,119 @@ class RepresentationGenerator(object):
                     # rsProxyMesh'es in to preview nodes
 
                     # for the same rsproxy use the same gpuproxy
-                    rs_proxy_lut = {}
+                    rs_proxy_mesh_file_path = rs_proxy_mesh.fileName.get()
+                    rs_proxy_mesh_file_name = \
+                        os.path.basename(rs_proxy_mesh_file_path)
+                    cache_file_full_path = None
+                    if rs_proxy_mesh_file_path in rs_proxy_lut:
+                        cache_file_full_path = \
+                            rs_proxy_lut[rs_proxy_mesh_file_path]
 
-                    rs_proxy_meshes = pm.ls(type='RedshiftProxyMesh')
-                    for rs_proxy_mesh in rs_proxy_meshes:
-                        rs_proxy_mesh_file_path = rs_proxy_mesh.fileName.get()
-                        rs_proxy_mesh_file_name = \
-                            os.path.basename(rs_proxy_mesh_file_path)
-                        cache_file_full_path = None
-                        if rs_proxy_mesh_file_path in rs_proxy_lut:
-                            cache_file_full_path = \
-                                rs_proxy_lut[rs_proxy_mesh_file_path]
+                    child_node = \
+                        rs_proxy_mesh.outputs(type='mesh')[0]
+                    child_shape = \
+                        child_node.getShape()
+                    root_node = child_node.getParent()
+                    child_name = child_node.name()
+                    child_shape_name = None
+                    if child_shape:
+                        child_shape_name = child_shape.name()
 
-                        child_node = \
-                            rs_proxy_mesh.outputs(type='mesh')[0]
-                        child_shape = \
-                            child_node.getShape()
-                        root_node = child_node.getParent()
-                        child_name = child_node.name()
-                        child_shape_name = None
-                        if child_shape:
-                            child_shape_name = child_shape.name()
+                    # store local position
+                    tra = child_node.t.get()
+                    rot = child_node.r.get()
+                    sca = child_node.s.get()
 
-                        # store local position
-                        tra = child_node.t.get()
-                        rot = child_node.r.get()
-                        sca = child_node.s.get()
+                    # do not generate the cache_file_path if it exists
+                    if cache_file_full_path is None:
+                        temp_output_fullpath = \
+                            tempfile.mktemp().replace('\\', '/')
+                        temp_output_path, temp_output_filename = \
+                            os.path.split(temp_output_fullpath)
 
-                        # do not generate the cache_file_path if it exists
-                        if cache_file_full_path is None:
-                            child_full_path = \
-                                child_node.fullPath()[1:].replace('|', '_')
-
-                            temp_output_fullpath = \
-                                tempfile.mktemp().replace('\\', '/')
-                            temp_output_path, temp_output_filename = \
-                                os.path.split(temp_output_fullpath)
-
-                            output_filename = '%s.abc' % \
-                                os.path.splitext(
-                                    os.path.basename(
-                                        rs_proxy_mesh_file_name
-                                    )
-                                )[0]
-
-                            # generate at origin
-                            pm.parent(child_node, world=1)
-                            child_node.t.set(0, 0, 0)
-                            child_node.r.set(0, 0, 0)
-                            child_node.s.set(1, 1, 1)
-
-                            # set proxy mesh display to preview
-                            rs_proxy_mesh.displayMode.set(1)
-
-                            # run the mel command
-                            # check if file exists
-                            pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': temp_output_path,
-                                    'filename': temp_output_filename
-                                }
-                            )
-
-                            # restore local position
-                            pm.parent(child_node, root_node)
-                            child_node.t.set(tra)
-                            child_node.r.set(rot)
-                            child_node.s.set(sca)
-
-                            cache_file_full_path = \
-                                os.path.join(
-                                    output_path,
-                                    output_filename
-                                ).replace('\\', '/')
-
-                            # store the cache_file_full_path
-                            rs_proxy_lut[rs_proxy_mesh_file_path] = \
-                                cache_file_full_path
-
-                            # create the intermediate directories
-                            try:
-                                os.makedirs(
-                                    os.path.dirname(cache_file_full_path)
+                        output_filename = '%s.abc' % \
+                            os.path.splitext(
+                                os.path.basename(
+                                    rs_proxy_mesh_file_name
                                 )
-                            except OSError:
-                                # directory exists
-                                pass
+                            )[0]
 
-                            # now move in to its place
-                            shutil.move(
-                                temp_output_fullpath + '.abc',
-                                cache_file_full_path
-                            )
+                        # generate at origin
+                        pm.parent(child_node, world=1)
+                        child_node.t.set(0, 0, 0)
+                        child_node.r.set(0, 0, 0)
+                        child_node.s.set(1, 1, 1)
 
-                        # delete the child and add a GPU node instead
-                        pm.delete(child_node)
+                        # set proxy mesh display to preview
+                        rs_proxy_mesh.displayMode.set(1)
 
+                        # run the mel command
                         # check if file exists
-                        if os.path.exists(cache_file_full_path):
-                            gpu_node = pm.createNode('gpuCache')
-                            gpu_node_tra = gpu_node.getParent()
+                        pm.mel.eval(
+                            gpu_command % {
+                                'start_frame': start_frame,
+                                'end_frame': end_frame,
+                                'node': child_node.fullPath(),
+                                'path': temp_output_path,
+                                'filename': temp_output_filename
+                            }
+                        )
 
-                            pm.parent(gpu_node_tra, root_node)
-                            gpu_node_tra.rename(child_name)
+                        # restore local position
+                        pm.parent(child_node, root_node)
+                        child_node.t.set(tra)
+                        child_node.r.set(rot)
+                        child_node.s.set(sca)
 
-                            if child_shape_name is not None:
-                                gpu_node.rename(child_shape_name)
+                        cache_file_full_path = \
+                            os.path.join(
+                                output_path,
+                                output_filename
+                            ).replace('\\', '/')
 
-                            # restore local transform
-                            gpu_node_tra.t.set(tra)
-                            gpu_node_tra.r.set(rot)
-                            gpu_node_tra.s.set(sca)
+                        # store the cache_file_full_path
+                        rs_proxy_lut[rs_proxy_mesh_file_path] = \
+                            cache_file_full_path
 
-                            gpu_node.setAttr(
-                                'cacheFileName',
-                                cache_file_full_path,
-                                type="string"
+                        # create the intermediate directories
+                        try:
+                            os.makedirs(
+                                os.path.dirname(cache_file_full_path)
                             )
+                        except OSError:
+                            # directory exists
+                            pass
+
+                        # now move in to its place
+                        shutil.move(
+                            temp_output_fullpath + '.abc',
+                            cache_file_full_path
+                        )
+
+                    # delete the child and add a GPU node instead
+                    pm.delete(child_node)
+
+                    # check if file exists
+                    if os.path.exists(cache_file_full_path):
+                        gpu_node = pm.createNode('gpuCache')
+                        gpu_node_tra = gpu_node.getParent()
+
+                        pm.parent(gpu_node_tra, root_node)
+                        gpu_node_tra.rename(child_name)
+
+                        if child_shape_name is not None:
+                            gpu_node.rename(child_shape_name)
+
+                        # restore local transform
+                        gpu_node_tra.t.set(tra)
+                        gpu_node_tra.r.set(rot)
+                        gpu_node_tra.s.set(sca)
+
+                        gpu_node.setAttr(
+                            'cacheFileName',
+                            cache_file_full_path,
+                            type="string"
+                        )
             else:
                 root_nodes = self.get_local_root_nodes()
                 if len(root_nodes):
