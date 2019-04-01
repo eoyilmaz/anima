@@ -499,6 +499,14 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'to_rs_button',
+                l='To RS',
+                c=RepeatedCallback(Reference.to_rs),
+                ann='Convert selected to RS representation',
+                bgc=color.color
+            )
+
         # ----- MODELING ------
         modeling_column_layout = pm.columnLayout(
             'modeling_column_layout',
@@ -1005,6 +1013,24 @@ def UI():
                 l="Duplicate With Connections To Network",
                 c=RepeatedCallback(Render.duplicate_with_connections),
                 ann=Render.duplicate_with_connections.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.text(l='=========== RedShift Tools ===========')
+            pm.button(
+                'generate_rs_from_selection_button',
+                l='Generate RS From Selection',
+                c=RepeatedCallback(Render.generate_rs_from_selection),
+                ann=Render.generate_rs_from_selection.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
+                'generate_rs_from_selection_per_selection_button',
+                l='Generate RS From Selection (Per Selection)',
+                c=RepeatedCallback(Render.generate_rs_from_selection, True),
+                ann=Render.generate_rs_from_selection.__doc__,
                 bgc=color.color
             )
 
@@ -3178,6 +3204,12 @@ class Reference(object):
         """replaces the related references with the ASS representation
         """
         cls.to_repr('ASS')
+
+    @classmethod
+    def to_rs(cls):
+        """replaces the related references with the RS representation
+        """
+        cls.to_repr('RS')
 
     @classmethod
     def to_repr(cls, repr_name):
@@ -6335,6 +6367,75 @@ class Render(object):
 
             caller.step()
         caller.end_progress()
+
+    @classmethod
+    def generate_rs_from_selection(cls, per_selection=False):
+        """generates a temp rs file from selected nodes and hides the selected
+        nodes
+
+        :param bool per_selection: Generates one rs file per selected objects
+          if True. Default is False.
+        """
+        import os
+        import tempfile
+        import shutil
+        from anima.env.mayaEnv import auxiliary
+        from anima.env import mayaEnv
+
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+
+        nodes = pm.ls(sl=1)
+
+        temp_rs_proxies_grp = None
+        if pm.ls('temp_rs_proxies_grp'):
+            temp_rs_proxies_grp = pm.ls('temp_rs_proxies_grp')[0]
+        else:
+            temp_rs_proxies_grp = pm.nt.Transform(name='temp_rs_proxies_grp')
+
+        rs_output_folder_path = os.path.join(
+            v.absolute_path,
+            'Outputs/rs'
+        ).replace('\\', '/')
+        try:
+            os.makedirs(rs_output_folder_path)
+        except OSError:
+            pass
+
+        def _generate_rs():
+            export_command = 'rsProxy -fp "%(path)s" -c -z -sl;'
+            temp_rs_full_path = tempfile.mktemp(suffix='.rs')
+            rs_full_path = os.path.join(
+                rs_output_folder_path,
+                os.path.basename(temp_rs_full_path)
+            ).replace('\\', '/')
+
+            pm.mel.eval(
+                export_command % {
+                    'path': temp_rs_full_path.replace('\\', '/')
+                }
+            )
+
+            shutil.move(
+                temp_rs_full_path,
+                rs_full_path
+            )
+
+            [n.v.set(0) for n in pm.ls(sl=1)]
+            rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(
+                path=rs_full_path)
+            rs_proxy_tra = rs_proxy_mesh.getParent()
+
+            rs_proxy_tra.rename('temp_rs_proxy#')
+            pm.parent(rs_proxy_tra, temp_rs_proxies_grp)
+
+        if per_selection:
+            for node in nodes:
+                pm.select(node)
+                _generate_rs()
+        else:
+            pm.select(nodes)
+            _generate_rs()
 
 
 class Animation(object):
