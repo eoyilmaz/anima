@@ -6393,12 +6393,20 @@ class Render(object):
         else:
             temp_rs_proxies_grp = pm.nt.Transform(name='temp_rs_proxies_grp')
 
+        rs_output_folder_path = os.path.join(
+            v.absolute_path,
+            'Outputs/rs'
+        ).replace('\\', '/')
+        try:
+            os.makedirs(rs_output_folder_path)
+        except OSError:
+            pass
+
         def _generate_rs():
             export_command = 'rsProxy -fp "%(path)s" -c -z -sl;'
             temp_rs_full_path = tempfile.mktemp(suffix='.rs')
             rs_full_path = os.path.join(
-                v.absolute_path,
-                'Outputs/rs',
+                rs_output_folder_path,
                 os.path.basename(temp_rs_full_path)
             ).replace('\\', '/')
 
