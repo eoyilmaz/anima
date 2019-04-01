@@ -251,6 +251,8 @@ class Fusion(EnvironmentBase):
         uses Fusions own python binding
         """
         # set the extension to '.comp'
+        # refresh the current comp
+        self.comp = self.fusion.GetCurrentComp()
         from stalker import Version
         assert isinstance(version, Version)
         # its a new version please update the paths
