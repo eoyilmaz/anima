@@ -6370,8 +6370,11 @@ class Render(object):
 
     @classmethod
     def generate_rs_from_selection(cls, per_selection=False):
-        """generates an temp rs file from selected nodes and hides the selected
+        """generates a temp rs file from selected nodes and hides the selected
         nodes
+
+        :param bool per_selection: Generates one rs file per selected objects
+          if True. Default is False.
         """
         import os
         import tempfile
