@@ -473,12 +473,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QCheckBox(self.previous_versions_groupBox)
         self.checkUpdates_checkBox.setChecked(True)
         self.horizontalLayout_5.addWidget(self.checkUpdates_checkBox)
-        self.open_pushButton = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.open_pushButton)
+
+        # Open As New Version Push Button
         self.open_as_new_version_push_button = \
             QtWidgets.QPushButton(self.previous_versions_groupBox)
         self.horizontalLayout_5.addWidget(self.open_as_new_version_push_button)
+        self.open_as_new_version_push_button.setText("Open As\nNew Version")
+        self.open_as_new_version_push_button.setToolTip(
+            "Opens the selected version and immediately creates a new version."
+        )
+
+        # Open Push Button
+        self.open_pushButton = QtWidgets.QPushButton(
+            self.previous_versions_groupBox
+        )
+        self.horizontalLayout_5.addWidget(self.open_pushButton)
+        self.open_pushButton.setText("Open")
+
         self.reference_pushButton = \
             QtWidgets.QPushButton(self.previous_versions_groupBox)
         self.horizontalLayout_5.addWidget(self.reference_pushButton)
@@ -629,11 +640,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.chose_pushButton.setText("Choose")
         self.checkUpdates_checkBox.setToolTip("Disable update check (faster)")
         self.checkUpdates_checkBox.setText("Check Updates")
-        self.open_pushButton.setText("Open")
-        self.open_as_new_version_push_button.setText("Open As\nNew Version")
-        self.open_as_new_version_push_button.setToolTip(
-            "Opens the selected version and immediately creates a new version."
-        )
 
         self.reference_pushButton.setText("Reference")
         self.import_pushButton.setText("Import")
