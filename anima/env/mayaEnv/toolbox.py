@@ -499,6 +499,14 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'to_rs_button',
+                l='To RS',
+                c=RepeatedCallback(Reference.to_rs),
+                ann='Convert selected to RS representation',
+                bgc=color.color
+            )
+
         # ----- MODELING ------
         modeling_column_layout = pm.columnLayout(
             'modeling_column_layout',
@@ -3178,6 +3186,12 @@ class Reference(object):
         """replaces the related references with the ASS representation
         """
         cls.to_repr('ASS')
+
+    @classmethod
+    def to_rs(cls):
+        """replaces the related references with the RS representation
+        """
+        cls.to_repr('RS')
 
     @classmethod
     def to_repr(cls, repr_name):
