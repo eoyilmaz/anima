@@ -476,6 +476,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.open_pushButton = \
             QtWidgets.QPushButton(self.previous_versions_groupBox)
         self.horizontalLayout_5.addWidget(self.open_pushButton)
+        self.open_as_new_version_push_button = \
+            QtWidgets.QPushButton(self.previous_versions_groupBox)
+        self.horizontalLayout_5.addWidget(self.open_as_new_version_push_button)
         self.reference_pushButton = \
             QtWidgets.QPushButton(self.previous_versions_groupBox)
         self.horizontalLayout_5.addWidget(self.reference_pushButton)
@@ -627,6 +630,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.checkUpdates_checkBox.setToolTip("Disable update check (faster)")
         self.checkUpdates_checkBox.setText("Check Updates")
         self.open_pushButton.setText("Open")
+        self.open_as_new_version_push_button.setText("Open As\nNew Version")
+        self.open_as_new_version_push_button.setToolTip(
+            "Opens the selected version and immediately creates a new version."
+        )
+
         self.reference_pushButton.setText("Reference")
         self.import_pushButton.setText("Import")
         self.close_pushButton.setText("Close")
@@ -638,7 +646,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                          self.previous_versions_table_widget)
         self.setTabOrder(self.previous_versions_table_widget,
                          self.open_pushButton)
-        self.setTabOrder(self.open_pushButton, self.reference_pushButton)
+        self.setTabOrder(self.open_pushButton,
+                         self.open_as_new_version_push_button)
+        self.setTabOrder(self.open_as_new_version_push_button,
+                         self.reference_pushButton)
         self.setTabOrder(self.reference_pushButton, self.import_pushButton)
 
     # def close(self):
@@ -761,6 +772,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.open_pushButton,
             QtCore.SIGNAL("clicked()"),
             self.open_push_button_clicked
+        )
+
+        # open as
+        QtCore.QObject.connect(
+            self.open_as_new_version_push_button,
+            QtCore.SIGNAL("clicked()"),
+            self.open_as_new_version_push_button_clicked
         )
 
         # chose
@@ -1750,6 +1768,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # if we still don't have a version just return without doing anything
         if not new_version:
+            logger.debug('no new_version, returning back!')
             return
 
         # call the environments save_as method
@@ -1777,7 +1796,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # same task
             current_version = environment.get_current_version()
             if current_version and current_version.task != new_version.task:
-            # ask to the user if he/she is sure about that
+                # ask to the user if he/she is sure about that
                 answer = QtWidgets.QMessageBox.question(
                     self,
                     'Possible Mistake?',
@@ -1971,8 +1990,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # delete the dialog when it is done
                 version_updater_main_dialog.deleteLater()
 
-        # close the dialog
-        # self.close()
+    def open_as_new_version_push_button_clicked(self):
+        """Opens the selected version and immediately saves it as a new version
+        """
+        new_version = self.get_new_version()
+        self.open_push_button_clicked()
+        logger.debug("opening the data as a new version")
+        self.save_as_wrapper(new_version)
 
     def check_version_file_exists(self, version):
         """Checks if the version file exists in the file system
