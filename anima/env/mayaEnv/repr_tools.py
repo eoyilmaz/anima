@@ -1762,9 +1762,13 @@ class RepresentationGenerator(object):
             #         node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
 
             # find the _pfxPolygons node
-            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+            try:
+                pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+                pfx_polygons_node_children = pfx_polygons_node.getChildren()
+            except pm.MayaNodeError:
+                pfx_polygons_node_children = []
 
-            for node in pfx_polygons_node.getChildren():
+            for node in pfx_polygons_node_children:
                 for child_node in node.getChildren():
                     # print('processing %s' % child_node.name())
                     child_node_name = child_node.name().split('___')[-1]
@@ -1822,8 +1826,15 @@ class RepresentationGenerator(object):
                     rs_proxy_tra.overrideShading.set(0)
 
             # clean up other nodes
-            pm.delete('kks___vegetation_pfxStrokes')
-            pm.delete('kks___vegetation_paintableGeos')
+            try:
+                pm.delete('kks___vegetation_pfxStrokes')
+            except pm.MayaNodeError:
+                pass
+
+            try:
+                pm.delete('kks___vegetation_paintableGeos')
+            except pm.MayaNodeError:
+                pass
 
         elif self.is_model_task(task):
             # convert all children of the root node
