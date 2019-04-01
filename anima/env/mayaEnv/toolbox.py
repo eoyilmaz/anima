@@ -6386,7 +6386,7 @@ class Render(object):
 
         temp_rs_proxies_grp = None
         if pm.ls('temp_rs_proxies_grp'):
-            temp_rs_group = pm.ls('temp_rs_proxies_grp')[0]
+            temp_rs_proxies_grp = pm.ls('temp_rs_proxies_grp')[0]
         else:
             temp_rs_proxies_grp = pm.nt.Transform(name='temp_rs_proxies_grp')
 
@@ -6423,6 +6423,7 @@ class Render(object):
                 pm.select(node)
                 _generate_rs()
         else:
+            pm.select(nodes)
             _generate_rs()
 
 
