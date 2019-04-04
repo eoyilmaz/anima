@@ -182,31 +182,33 @@ class GenericTools(object):
         h.set_render_filename(version=v)
 
     @classmethod
-    def export_rsproxy_data_as_json(cls):
-        """exports rsproxy data on points as json
+    def export_rsproxy_data_as_json(cls, geo=None, path=''):
+        """exports RSProxy Data on points as json
         """
         import hou
-        node = hou.selectedNodes()[0]
-        geo = node.geometry()
+        if geo is None:
+            node = hou.selectedNodes()[0]
+            geo = node.geometry()
 
         # Add code to modify contents of geo.
         # Use drop down menu to select examples.
         pos = geo.pointFloatAttribValues("P")
         rot = geo.pointFloatAttribValues("rot")
         sca = geo.pointFloatAttribValues("pscale")
-        instancefile = geo.pointStringAttribValues("instancefile")
+        instance_file = geo.pointStringAttribValues("instancefile")
         node_name = geo.pointStringAttribValues("node_name")
         parent_name = geo.pointStringAttribValues("parent_name")
 
         import os
         import tempfile
-        path = os.path.normpath(
-            os.path.join(
-                tempfile.gettempdir(),
-                '..',
-                'rsproxy_info.json'
+        if path == '':
+            path = os.path.normpath(
+                os.path.join(
+                    tempfile.gettempdir(),
+                    '..',
+                    'rsproxy_info.json'
+                )
             )
-        )
 
         pos_data = []
         rot_data = []
@@ -218,7 +220,7 @@ class GenericTools(object):
             "pos": pos_data,
             "rot": rot_data,
             "sca": sca,
-            "instancefile": instancefile,
+            "instance_file": instance_file,
             "node_name": node_name,
             "parent_name": parent_name
         }
