@@ -16,6 +16,7 @@ def version_creator(lib='PySide', logging_level=logging.WARNING):
     the ``lib`` argument to "PyQt4".
 
     :param str lib: choose a lib, one of ["PySide", "PyQt4"]
+    :param logging_level:
     :return: None
     """
     # connect to db
