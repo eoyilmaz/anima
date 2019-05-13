@@ -984,6 +984,22 @@ def UI():
 
             color.change()
             pm.button(
+                'delete_render_layers_button',
+                l="Delete Render Layers",
+                c=RepeatedCallback(Render.delete_render_layers),
+                ann=Render.delete_render_layers.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
+                'delete_display_layers_button',
+                l="Delete Display Layers",
+                c=RepeatedCallback(Render.delete_display_layers),
+                ann=Render.delete_display_layers.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
                 'delete_render_and_display_layers_button',
                 l="Delete Render and Display Layers",
                 c=RepeatedCallback(Render.delete_render_and_display_layers),
@@ -4368,11 +4384,28 @@ class Render(object):
     def delete_render_and_display_layers(cls):
         """Deletes the display and render layers in the current scene
         """
+        cls.delete_display_layers()
+        cls.delete_render_layers()
+
+    @classmethod
+    def delete_display_layers(cls):
+        """Deletes the display layers in the current scene
+        """
         # switch to default render layer before deleting anything
         # this will prevent layers to be non-deletable
         from anima.env.mayaEnv import auxiliary
         auxiliary.switch_to_default_render_layer()
-        pm.delete(pm.ls(type=['displayLayer', 'renderLayer']))
+        pm.delete(pm.ls(type=['displayLayer']))
+
+    @classmethod
+    def delete_render_layers(cls):
+        """Deletes the render layers in the current scene
+        """
+        # switch to default render layer before deleting anything
+        # this will prevent layers to be non-deletable
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.switch_to_default_render_layer()
+        pm.delete(pm.ls(type=['renderLayer']))
 
     @classmethod
     def delete_unused_shading_nodes(cls):
@@ -5171,6 +5204,8 @@ class Render(object):
             'rsMinTessellationLength',
             'rsMaxTessellationSubdivs',
             'rsOutOfFrustumTessellationFactor',
+            'rsLimitOutOfFrustumTessellation',
+            'rsMaxOutOfFrustumTessellationSubdivs',
 
             'rsEnableDisplacement',
             'rsMaxDisplacement',
