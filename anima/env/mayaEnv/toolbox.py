@@ -2664,9 +2664,14 @@ class Previs(object):
     def save_previs_to_shots(cls):
         """exports previs to animation shots
         """
+        from anima.env import mayaEnv
         from anima.env.mayaEnv import previs
         se = previs.ShotExporter()
-        se.save_previs_to_shots("Main")
+
+        # use previs scene take_name
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+        se.save_previs_to_shots(v.take_name)
 
 
 class Reference(object):
