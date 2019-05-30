@@ -1651,7 +1651,13 @@ def generate_unique_shot_name(base_name, shot_name_increment=10):
     name_parts = base_name.split('_')
 
     # find the shot number
-    shot_number_as_string = regex.findall(name_parts[-1])[-1]
+    try:
+        shot_number_as_string = regex.findall(name_parts[-1])[-1]
+    except IndexError:
+        # no number in name
+        name_parts = [name_parts[0], "000"]
+        shot_number_as_string = "000"
+
     padding = len(shot_number_as_string)
     shot_number = int(shot_number_as_string)
 
