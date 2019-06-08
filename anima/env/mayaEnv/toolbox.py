@@ -25,6 +25,9 @@ __last_commands__ = []  # list of dictionaries
 __last_tab__ = 'ANIMA_TOOLBOX_LAST_TAB_INDEX'
 
 
+__commands__ = []
+
+
 def repeater(index):
     """repeats the last command with the given index
     """
@@ -105,6 +108,35 @@ class Color(object):
         return self.colors[self.index]
 
 
+def filter_tools(search_text):
+    """filters toolbox
+    :param str search_text: The search_text
+    """
+    for command in __commands__:
+        uitype = command.type()
+        if uitype == 'button':
+            label = command.getLabel()
+            if search_text.lower() not in label.lower():
+                command.setVisible(False)
+            else:
+                command.setVisible(True)
+        elif uitype == 'rowLayout':
+            # get the children
+            children = command.children()
+            matched_children = False
+            for c in children:
+                c_uitype = c.type()
+                if c_uitype in ['button', 'staticText'] and \
+                    search_text in c.getLabel().lower():
+                    matched_children = True
+                    break
+
+            if not matched_children:
+                command.setVisible(False)
+            else:
+                command.setVisible(True)
+
+
 def UI():
     # window setup
     width = 260
@@ -129,6 +161,12 @@ def UI():
     main_formLayout = pm.formLayout(
         'main_formLayout', nd=100, parent=toolbox_window
     )
+    search_field = pm.textField(
+        'search_text_field',
+        tcc=filter_tools,
+        placeholderText='Search...',
+        parent=main_formLayout
+    )
 
     main_tabLayout = pm.tabLayout(
         'main_tabLayout', scr=True, cr=True, parent=main_formLayout
@@ -138,10 +176,20 @@ def UI():
     pm.formLayout(
         main_formLayout, edit=True,
         attachForm=[
-            (main_tabLayout, "top", 0),
+            (search_field, "top", 0),
+            (search_field, "left", 0),
+            (search_field, "right", 0),
+
+            # (main_tabLayout, "top", 0),
             (main_tabLayout, "bottom", 0),
             (main_tabLayout, "left", 0),
             (main_tabLayout, "right", 0)
+        ],
+        attachNone=[
+            (search_field, "bottom")
+        ],
+        attachControl=[
+            (main_tabLayout, "top", 0, search_field)
         ]
     )
 
@@ -322,6 +370,10 @@ def UI():
                 ann=General.unshape_parent_nodes.__doc__,
                 bgc=color.color
             )
+
+        # store commands
+        __commands__.extend(general_column_layout.children())
+
 
         # ----- REFERENCE ------
         reference_columnLayout = pm.columnLayout(
@@ -506,6 +558,10 @@ def UI():
                 ann='Convert selected to RS representation',
                 bgc=color.color
             )
+
+        # store commands
+        __commands__.extend(reference_columnLayout.children())
+
 
         # ----- MODELING ------
         modeling_column_layout = pm.columnLayout(
@@ -775,6 +831,10 @@ def UI():
                     'T', w=button_with, al='left', ann='Topology'
                 )
 
+        # store commands
+        __commands__.extend(modeling_column_layout.children())
+
+
         # ----- RIGGING ------
         rigging_columnLayout = pm.columnLayout(
             'rigging_columnLayout',
@@ -962,6 +1022,10 @@ def UI():
                       c=RepeatedCallback(Rigging.add_cacheable_attribute),
                       ann="add <b>cacheable</b> attribute",
                       bgc=color.color)
+
+        # store commands
+        __commands__.extend(rigging_columnLayout.children())
+
 
         # ----- RENDER ------
         render_columnLayout = pm.columnLayout(
@@ -1448,6 +1512,10 @@ def UI():
                     bgc=color.color
                 )
 
+        # store commands
+        __commands__.extend(render_columnLayout.children())
+
+
         # ----- PREVIS ------
         previs_columnLayout = pm.columnLayout(
             'previs_columnLayout',
@@ -1484,6 +1552,10 @@ def UI():
                       c=RepeatedCallback(Previs.save_previs_to_shots),
                       ann=Previs.save_previs_to_shots.__doc__,
                       bgc=color.color)
+
+        # store commands
+        __commands__.extend(previs_columnLayout.children())
+
 
         # ----- ANIMATION ------
         animation_columnLayout = pm.columnLayout(
@@ -1677,6 +1749,10 @@ def UI():
                 ann=Animation.delete_base_anim_layer.__doc__,
                 bgc=color.color
             )
+
+        # store commands
+        __commands__.extend(animation_columnLayout.children())
+
 
         # Obsolete
         obsolete_columnLayout = pm.columnLayout(
@@ -2053,6 +2129,10 @@ def UI():
                 ann=Render.normalize_sss_weights.__doc__,
                 bgc=color.color
             )
+
+        # store commands
+        __commands__.extend(obsolete_columnLayout.children())
+
 
     pm.tabLayout(
         main_tabLayout,
