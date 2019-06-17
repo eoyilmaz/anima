@@ -2572,9 +2572,18 @@ class General(object):
     def delete_unused_intermediate_shapes(cls):
         """clears unused intermediate shape nodes
         """
+        ignored_node_types = [
+            'nodeGraphEditorInfo',
+            'shadingEngine',
+        ]
+
+        def filter_funct(x):
+            return x.type() not in ignored_node_types
+
         unused_nodes = []
         for node in pm.ls(type=pm.nt.Mesh):
-            if len(node.inputs()) == 0 and len(node.outputs()) == 0 \
+            if len(filter(filter_funct, node.inputs())) == 0 and \
+               len(filter(filter_funct, node.outputs())) == 0 \
                and node.attr('intermediateObject').get():
                 unused_nodes.append(node)
         pm.delete(unused_nodes)
