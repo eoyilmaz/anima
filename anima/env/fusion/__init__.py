@@ -771,6 +771,8 @@ class Fusion(EnvironmentBase):
                         'QuickTimeMovies.Quality': 95.0,
                         'QuickTimeMovies.FrameRateFps': fps,
                         'QuickTimeMovies.KeyFrames': 5,
+                        'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                        'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                     },
                     'connected_to': {
                         'ref_id': random_ref_id
@@ -863,6 +865,8 @@ class Fusion(EnvironmentBase):
                             'QuickTimeMovies.Quality': 95.0,
                             'QuickTimeMovies.FrameRateFps': fps,
                             'QuickTimeMovies.KeyFrames': 5,
+                            'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                            'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)'
                         },
                     },
                 },
