@@ -1732,6 +1732,16 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'equalize_node_speed_button',
+                l='Equalize Node Speed',
+                c=RepeatedCallback(Animation.equalize_node_speed),
+                ann=Animation.equalize_node_speed.__doc__,
+                bgc=color.color
+            )
+
+            pm.text(l='===== Generic Tools =====')
+
             color.change()
             pm.button(
                 'set_range_from_shot_node_button',
@@ -6470,6 +6480,76 @@ class Render(object):
 class Animation(object):
     """animation tools
     """
+
+    @classmethod
+    def equalize_node_speed(cls):
+        """Equalizes the node animation to keep the speed constant
+        """
+        #
+        # This only works for position
+        #
+        # To make it also work with Rotation you need to do some nasty stuff,
+        # like creating the camera transformation frame with two locators, one
+        # showing the up or the local y-axis and other showing the z-axis of
+        # the camera, trace them with a curve, smooth them as you did with the
+        # position, then read them back create local y and z axis and set the
+        # euler rotations.
+        #
+        # For now I don't need it. So I'll code it later on.
+        #
+        start_frame = int(pm.playbackOptions(q=1, min=1))
+        end_frame = int(pm.playbackOptions(q=1, max=1))
+
+        selected_node = pm.selected()[0]
+
+        # duplicate the input graph
+        node = pm.duplicate(selected_node, un=1, rr=1)[0]
+        node.rename("%s_Equalized#" % selected_node.name())
+
+        # create speed attribute
+        if not node.hasAttr("speed"):
+            node.addAttr("speed", at="double")
+        pm.currentTime(start_frame)
+        pm.setKeyframe(node.speed)
+
+        prev_pos = node.t.get()
+
+        pos_data = []
+        rot_data = []
+
+        for i in range(start_frame, end_frame + 1):
+            pm.currentTime(i)
+            current_pos = node.t.get()
+            pos_data.append(current_pos)
+            rot_data.append(node.r.get())
+            speed = (current_pos - prev_pos).length()
+            prev_pos = current_pos
+            node.speed.set(speed)
+            pm.setKeyframe(node.speed)
+
+        camera_path = pm.curve(d=3, p=pos_data)
+        camera_path_curve = camera_path.getShape()
+
+        pm.rebuildCurve(
+            camera_path_curve,
+            ch=1, rpo=1, rt=0, end=1, kr=0, kcp=0, kep=1, kt=0,
+            s=end_frame - start_frame + 1, d=3, tol=0.01
+        )
+
+        curve_cv_positions = camera_path_curve.getCVs()
+
+        # pop the unnecessary CVs
+        curve_cv_positions.pop(1)
+        curve_cv_positions.pop(-2)
+
+        prev_pos = curve_cv_positions[0]
+        for i, j in enumerate(range(start_frame, end_frame)):
+            pm.currentTime(j)
+            current_pos = curve_cv_positions[i]
+            node.t.set(curve_cv_positions[i])
+            node.speed.set((current_pos - prev_pos).length())
+            pm.setKeyframe(node.speed)
+            prev_pos = current_pos
 
     @classmethod
     def bake_all_constraints(cls):
