@@ -14,6 +14,7 @@ class Houdini(EnvironmentBase):
     """
     name = 'Houdini'
     extensions = {
+        0: '.hiplc',
         hou.licenseCategoryType.Commercial: '.hip',
         hou.licenseCategoryType.Apprentice: '.hipnc',
         hou.licenseCategoryType.Indie: '.hiplc'
