@@ -392,6 +392,17 @@ def UI():
 
             color.change()
             pm.button(
+                'select_reference_in_reference_editor_button',
+                l='Select Reference In Reference Editor',
+                c=RepeatedCallback(
+                    Reference.select_reference_in_reference_editor
+                ),
+                ann=Reference.select_reference_in_reference_editor.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'get_selected_reference_path_button',
                 l='Get Selected Reference Path',
                 c=RepeatedCallback(Reference.get_selected_reference_path),
@@ -2776,6 +2787,44 @@ class Previs(object):
 class Reference(object):
     """supplies reference related tools
     """
+
+    @classmethod
+    def select_reference_in_reference_editor(cls):
+        """selects the reference node in the reference editor related to the
+        scene selection
+        """
+        selection = pm.selected()
+        if not selection:
+            return
+
+        node = selection[0]
+        ref_file = node.referenceFile()
+
+        if ref_file is None:
+            return
+
+        ref_node = ref_file.refNode
+
+        # gather reference editor data
+        ref_editor_panel = pm.mel.globals['gReferenceEditorPanel']
+        ref_editor_data = {}
+
+        i = 0  # be safe
+        while True and i < 1000:
+            try:
+                pm.sceneEditor(ref_editor_panel, e=1, selectItem=i)
+            except RuntimeError:
+                break
+
+            sel_ref_node_name = \
+            pm.sceneEditor(ref_editor_panel, q=1, selectReference=1)[0]
+
+            ref_editor_data[i] = pm.PyNode(sel_ref_node_name)
+            i += 1
+
+        for i, ref_editor_ref_node in ref_editor_data.items():
+            if ref_editor_ref_node == ref_node:
+                pm.sceneEditor(ref_editor_panel, e=1, selectItem=i)
 
     @classmethod
     def get_no_parent_transform(cls, ref):
