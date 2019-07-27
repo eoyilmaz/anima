@@ -555,7 +555,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.export_as_pushButton.setText("Export Selection As")
         self.save_as_push_button.setText("Save As")
-        self.publish_push_button.setText("Publish Checker")
+        self.publish_push_button.setText("Publish")
         self.previous_versions_groupBox.setTitle("Previous Versions")
         self.show_only_label.setText("Show Only")
         self.show_published_only_check_box.setText("Show Published Only")
