@@ -856,7 +856,10 @@ class ShotExtension(object):
     def sequence(self):
         """returns the current sequencer
         """
-        return self.message.get()
+        sequencers = self.message.outputs(type=pm.nt.Sequencer)
+        if sequencers:
+            return sequencers[0]
+        return
 
     @extends(pm.nodetypes.Shot)
     @property

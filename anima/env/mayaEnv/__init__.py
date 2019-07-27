@@ -575,6 +575,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         :param bool skip_update_check: Skip update check if True.
 
+        :param bool prompt: prompts for missing references
+
         :returns: (Bool, Dictionary)
         """
         reference_depth_res = [None, 'all', 'topOnly', 'none']

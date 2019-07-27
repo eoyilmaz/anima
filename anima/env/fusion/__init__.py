@@ -866,7 +866,7 @@ class Fusion(EnvironmentBase):
                             'QuickTimeMovies.FrameRateFps': fps,
                             'QuickTimeMovies.KeyFrames': 5,
                             'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
-                            'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)'
+                            'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                         },
                     },
                 },
