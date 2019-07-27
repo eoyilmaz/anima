@@ -2321,7 +2321,7 @@ class General(object):
         for node in pm.ls(sl=1, type='transform'):
 
             if use_global_pos:
-                print('using global position')
+                # print('using global position')
                 tra = pm.xform(node, q=1, ws=1, t=1)  # node.t.get()
                 rot = pm.xform(node, q=1, ws=1, ro=1)  # node.r.get()
                 sca = pm.xform(node, q=1, ws=1, s=1)  # node.s.get()
@@ -2329,19 +2329,19 @@ class General(object):
                 pivs = pm.xform(node, q=1, ws=1, sp=1)
 
             else:
-                print('using local position')
+                # print('using local position')
                 tra = node.t.get()
                 rot = node.r.get()
                 sca = node.s.get()
                 pivr = node.rotatePivot.get()
                 pivs = node.scalePivot.get()
 
-            print('tra: %0.3f %0.3f %0.3f' % (tra[0], tra[1], tra[2]))
-            print('rot: %0.3f %0.3f %0.3f' % (rot[0], rot[1], rot[2]))
-            print('sca: %0.3f %0.3f %0.3f' % (sca[0], sca[1], sca[2]))
-
-            print('rotpiv: %0.3f %0.3f %0.3f' % (pivr[0], pivr[1], pivr[2]))
-            print('scapiv: %0.3f %0.3f %0.3f' % (pivs[0], pivs[1], pivs[2]))
+            # print('tra: %0.3f %0.3f %0.3f' % (tra[0], tra[1], tra[2]))
+            # print('rot: %0.3f %0.3f %0.3f' % (rot[0], rot[1], rot[2]))
+            # print('sca: %0.3f %0.3f %0.3f' % (sca[0], sca[1], sca[2]))
+            #
+            # print('rotpiv: %0.3f %0.3f %0.3f' % (pivr[0], pivr[1], pivr[2]))
+            # print('scapiv: %0.3f %0.3f %0.3f' % (pivs[0], pivs[1], pivs[2]))
 
             data.append('%s' % tra[0])
             data.append('%s' % tra[1])
@@ -2377,7 +2377,7 @@ class General(object):
         for i, node in enumerate(pm.ls(sl=1, type='transform')):
             j = i * 15
             if use_global_pos:
-                print('using global position')
+                # print('using global position')
 
                 # import pivots first
                 # rotatePivot
@@ -2429,25 +2429,37 @@ class General(object):
                     float(data[j + 12]), float(data[j + 13]), float(data[j + 14])
                 )
 
-                node.t.set(
-                    float(data[j]), float(data[j + 1]), float(data[j + 2])
-                )
-                node.r.set(
-                    float(data[j + 3]), float(data[j + 4]), float(data[j + 5])
-                )
-                node.s.set(
-                    float(data[j + 6]), float(data[j + 7]), float(data[j + 8])
-                )
-            print('tra: %0.3f %0.3f %0.3f' %
-                  (float(data[j]), float(data[j + 1]), float(data[j + 2])))
-            print('rot: %0.3f %0.3f %0.3f' %
-                  (float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
-            print('sca: %0.3f %0.3f %0.3f' %
-                  (float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
-            print('pivr: %0.3f %0.3f %0.3f' %
-                  (float(data[j + 9]), float(data[j + 10]), float(data[j + 11])))
-            print('pivs: %0.3f %0.3f %0.3f' %
-                  (float(data[j + 12]), float(data[j + 13]), float(data[j + 14])))
+                try:
+                    node.t.set(
+                        float(data[j]), float(data[j + 1]), float(data[j + 2])
+                    )
+                except RuntimeError:
+                    pass
+
+                try:
+                    node.r.set(
+                        float(data[j + 3]), float(data[j + 4]), float(data[j + 5])
+                    )
+                except RuntimeError:
+                    pass
+
+                try:
+                    node.s.set(
+                        float(data[j + 6]), float(data[j + 7]), float(data[j + 8])
+                    )
+                except RuntimeError:
+                    pass
+
+            # print('tra: %0.3f %0.3f %0.3f' %
+            #       (float(data[j]), float(data[j + 1]), float(data[j + 2])))
+            # print('rot: %0.3f %0.3f %0.3f' %
+            #       (float(data[j + 3]), float(data[j + 4]), float(data[j + 5])))
+            # print('sca: %0.3f %0.3f %0.3f' %
+            #       (float(data[j + 6]), float(data[j + 7]), float(data[j + 8])))
+            # print('pivr: %0.3f %0.3f %0.3f' %
+            #       (float(data[j + 9]), float(data[j + 10]), float(data[j + 11])))
+            # print('pivs: %0.3f %0.3f %0.3f' %
+            #       (float(data[j + 12]), float(data[j + 13]), float(data[j + 14])))
 
     @classmethod
     def export_component_transform_info(cls):
