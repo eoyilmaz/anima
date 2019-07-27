@@ -240,6 +240,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         create_time_log_action = None
         create_project_action = None
         update_task_action = None
+        upload_thumbnail_action = None
         create_child_task_action = None
         duplicate_task_hierarchy_action = None
         delete_task_action = None
@@ -348,6 +349,11 @@ class TaskTreeView(QtWidgets.QTreeView):
                     create_sub_menu.addSeparator()
                     update_task_action = \
                         update_sub_menu.addAction(u'\uf044 Update Task...')
+
+                    upload_thumbnail_action = \
+                        update_sub_menu.addAction(
+                            u'\uf03e Upload Thumbnail...'
+                        )
 
                     create_child_task_action = \
                         create_sub_menu.addAction(
@@ -512,6 +518,17 @@ class TaskTreeView(QtWidgets.QTreeView):
                             # reload the entire
                             self.fill()
                         self.find_and_select_entity_item(entity)
+
+                elif selected_item is upload_thumbnail_action:
+                    from anima.ui import utils as ui_utils
+                    thumbnail_full_path = ui_utils.choose_thumbnail(self)
+
+                    # if the thumbnail_full_path is empty do not do anything
+                    if thumbnail_full_path == "":
+                        return
+
+                    # get the current task
+                    ui_utils.upload_thumbnail(entity, thumbnail_full_path)
 
                 elif selected_item == create_child_task_action:
                     from anima.ui import task_dialog
