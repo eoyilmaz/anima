@@ -813,6 +813,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         sm = pm.ls('sequenceManager1')[0]
         if sm is not None:
             sm.get_shot_name_template()
+            sm.set_task_name(version.task.name)
+            sm.set_take_name(version.take_name)
             sm.set_version('v%03d' % version.version_number)
 
             for seq in sm.sequences.get():

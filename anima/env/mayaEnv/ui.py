@@ -200,7 +200,13 @@ class PrevisUI(object):
         edl_path = os.path.normpath(
             os.path.join(
                 playblast_output_path,
-                '%s_%s.%s' % (seq1.get_sequence_name(), sm.get_version(), 'edl')
+                '%s_%s_%s_%s.%s' % (
+                    seq1.get_sequence_name(),
+                    sm.get_task_name(),
+                    sm.get_take_name(),
+                    sm.get_version(),
+                    'edl'
+                )
             )
         )
 

@@ -252,7 +252,7 @@ class SequenceManagerExtension(object):
         attribute if missing
         """
         if not self.hasAttr('shot_name_template'):
-            default_template = '<Sequence>_<Shot>_<Version>'
+            default_template = '<Sequence>_<Shot>_<Task>_<Take>_<Version>'
             self.set_shot_name_template(default_template)
 
         return self.shot_name_template.get()
@@ -283,6 +283,42 @@ class SequenceManagerExtension(object):
             self.addAttr('version', dt='string')
 
         self.version.set(template)
+
+    @extends(pm.nodetypes.SequenceManager)
+    def get_task_name(self):
+        """returns the task_name attribute value, creates the attribute if
+        missing
+        """
+        if not self.hasAttr('task_name'):
+            self.set_task_name('')
+        return self.task_name.get()
+
+    @extends(pm.nodetypes.SequenceManager)
+    def set_task_name(self, task_name):
+        """sets the task_name attribute value
+        """
+        if not self.hasAttr('task_name'):
+            self.addAttr('task_name', dt='string')
+
+        self.task_name.set(task_name)
+
+    @extends(pm.nodetypes.SequenceManager)
+    def get_take_name(self):
+        """returns the take_name attribute value, creates the attribute if
+        missing
+        """
+        if not self.hasAttr('take_name'):
+            self.set_take_name('')
+        return self.take_name.get()
+
+    @extends(pm.nodetypes.SequenceManager)
+    def set_take_name(self, take_name):
+        """sets the take_name attribute value
+        """
+        if not self.hasAttr('take_name'):
+            self.addAttr('take_name', dt='string')
+
+        self.take_name.set(take_name)
 
     @extends(pm.nodetypes.SequenceManager)
     def create_sequence(self, name=None):
@@ -943,18 +979,24 @@ class ShotExtension(object):
             sm = seq.manager
             camera = self.currentCamera.get()
             version = sm.get_version()
+            task = sm.get_task_name()
+            take = sm.get_take_name()
             template = sm.get_shot_name_template()
 
             # replace template variables
             template = template \
                 .replace('<Sequence>', '%(sequence)s') \
                 .replace('<Shot>', '%(shot)s') \
+                .replace('<Task>', '%(task)s') \
+                .replace('<Take>', '%(take)s') \
                 .replace('<Version>', '%(version)s') \
                 .replace('<Camera>', '%(camera)s')
 
             rendered_template = template % {
                 'shot': self.shotName.get(),
                 'sequence': seq.sequence_name.get(),
+                'task': task,
+                'take': take,
                 'version': version,
                 'camera': camera.name() if camera else None
             }
@@ -1110,18 +1152,24 @@ class ShotExtension(object):
         sm = seq.manager
         camera = self.currentCamera.get()
         version = sm.get_version()
+        task = sm.get_task_name()
+        take = sm.get_take_name()
         template = sm.get_shot_name_template()
 
         # replace template variables
         template = template\
             .replace('<Sequence>', '%(sequence)s')\
             .replace('<Shot>', '%(shot)s')\
+            .replace('<Task>', '%(task)s')\
+            .replace('<Take>', '%(take)s')\
             .replace('<Version>', '%(version)s')\
             .replace('<Camera>', '%(camera)s')
 
         rendered_template = template % {
             'shot': self.shotName.get(),
             'sequence': seq.sequence_name.get(),
+            'task': task,
+            'take': take,
             'version': version,
             'camera': camera.name() if camera else None
         }

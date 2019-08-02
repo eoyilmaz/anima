@@ -662,6 +662,64 @@ class SequenceManagerTestCase(unittest.TestCase):
         self.assertTrue(sm.hasAttr('version'))
         self.assertEqual(result, '')
 
+    def test_set_task_name_is_working_properly(self):
+        """testing if set_task_name() is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('task_name'))
+        test_task_name = 'Animation'
+        sm.set_task_name(test_task_name)
+        self.assertTrue(sm.hasAttr('task_name'))
+        self.assertEqual(sm.task_name.get(), test_task_name)
+
+    def test_get_task_name_is_working_properly(self):
+        """testing if set_task_name() is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('task_name'))
+        test_task_name = 'Animation'
+        sm.set_task_name(test_task_name)
+        self.assertTrue(sm.hasAttr('task_name'))
+        self.assertEqual(sm.get_task_name(), test_task_name)
+
+    def test_get_task_name_will_create_attribute_if_missing(self):
+        """testing if get_task_name() will create the missing task_name attribute
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('task_name'))
+        result = sm.get_task_name()
+        self.assertTrue(sm.hasAttr('task_name'))
+        self.assertEqual(result, '')
+
+    def test_set_take_name_is_working_properly(self):
+        """testing if set_take_name() is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('take_name'))
+        test_take_name = 'Main'
+        sm.set_take_name(test_take_name)
+        self.assertTrue(sm.hasAttr('take_name'))
+        self.assertEqual(sm.take_name.get(), test_take_name)
+
+    def test_get_take_name_is_working_properly(self):
+        """testing if set_take_name() is working properly
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('take_name'))
+        test_take_name = 'Main'
+        sm.set_take_name(test_take_name)
+        self.assertTrue(sm.hasAttr('take_name'))
+        self.assertEqual(sm.get_take_name(), test_take_name)
+
+    def test_get_take_name_will_create_attribute_if_missing(self):
+        """testing if get_take_name() will create the missing take_name attribute
+        """
+        sm = pymel.core.PyNode('sequenceManager1')
+        self.assertFalse(sm.hasAttr('take_name'))
+        result = sm.get_take_name()
+        self.assertTrue(sm.hasAttr('take_name'))
+        self.assertEqual(result, '')
+
     def test_generate_sequence_structure_is_working_properly(self):
         """testing if generate_sequence_structure() method is working properly
         """
