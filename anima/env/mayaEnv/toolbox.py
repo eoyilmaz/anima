@@ -451,9 +451,20 @@ def UI():
             )
 
             pm.button(
-                'fix_student_license_button',
-                l='Fix Student License Error',
-                c=RepeatedCallback(Reference.fix_student_license),
+                'fix_student_license_on_references_button',
+                l='Fix Student License Error On References',
+                c=RepeatedCallback(
+                    Reference.fix_student_license_on_references
+                ),
+                ann=Reference.fix_student_license.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'fix_student_license_on_files_button',
+                l='Fix Student License Error On Selected Files',
+                c=RepeatedCallback(
+                    Reference.fix_student_license_on_selected_file
+                ),
                 ann=Reference.fix_student_license.__doc__,
                 bgc=color.color
             )
@@ -3125,26 +3136,51 @@ class Reference(object):
             m_env.open(current_version, force=True, skip_update_check=True)
 
     @classmethod
-    def fix_student_license(cls):
+    def fix_student_license_on_references(cls):
+        """fixes the student license error on referenced files
+        """
+        for ref in pm.listReferences():
+            result = cls.fix_student_license(ref.path)
+            if result:
+                ref.unload()
+                ref.load()
+
+    @classmethod
+    def fix_student_license_on_selected_file(cls):
+        """fixes the student license error on selected file
+        """
+        texture_path = \
+        file_path = pm.fileDialog2(
+            cap="Choose Maya Scene", okc="Choose", fm=1
+        )[0]
+        result = cls.fix_student_license(file_path)
+        if result:
+            pm.informBox('Done!', 'Fixed:\n\n%s' % file_path)
+        else:
+            pm.informBox(
+                'Fail!', 'No Student License Found on\n\n%s' % file_path
+            )
+
+    @classmethod
+    def fix_student_license(cls, path):
         """fixes the student license error
         """
         import shutil
 
-        for ref in pm.listReferences():
-            with open(ref.path, 'r') as f:
-                data = f.readlines()
+        with open(path, 'r') as f:
+            data = f.readlines()
 
-            for i in range(50):
-                if 'student' in data[i].lower():
-                    # backup the file
-                    shutil.copy(ref.path, '%s.orig' % ref.path)
-                    data.pop(i)
-                    print('Fixed: %s' % ref.path)
-                    with open(ref.path, 'w') as f:
-                        f.writelines(data)
-                    ref.unload()
-                    ref.load()
-                    break
+        for i in range(200):
+            if 'student' in data[i].lower():
+                # backup the file
+                shutil.copy(path, '%s.orig' % path)
+                data.pop(i)
+                print('Fixed: %s' % path)
+                with open(path, 'w') as f:
+                    f.writelines(data)
+                return True
+
+        return False
 
     @classmethod
     def archive_current_scene(cls):
