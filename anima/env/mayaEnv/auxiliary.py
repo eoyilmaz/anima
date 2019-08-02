@@ -1700,8 +1700,12 @@ class Playblaster(object):
                     '-y': ''  # overwrite previous playblast
                 }
                 if sequence:
+                    # Ep002_004_0210_v007.mov.####.png
                     filename = os.path.basename(sequence[0])
-                    start_number = int(filename.split('.')[1])
+                    filename = filename.replace('.mov', '')
+                    start_number = int(
+                        filename.split('.')[1]
+                    )
 
                     options = {
                         'start_number': start_number
