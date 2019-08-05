@@ -3,6 +3,16 @@
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
+"""
+Use the following code in the Python Panel
+
+
+def onCreateInterface():
+    from anima.ui import SET_PYSIDE2
+    SET_PYSIDE2()
+    from anima.env.houdini import toolbox
+    return toolbox.ui()
+"""
 
 from anima.ui.lib import QtCore, QtWidgets
 
