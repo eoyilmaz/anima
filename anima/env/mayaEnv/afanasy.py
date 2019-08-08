@@ -182,6 +182,15 @@ class UI(object):
                 )
 
             with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
+                pm.text(l='<b>Global Depend Mask</b>')
+                pm.textField(
+                    'cgru_afanasy__depend_mask_global',
+                    text=pm.optionVar.get(
+                        'cgru_afanasy__depend_mask_global_ov', ''
+                    )
+                )
+
+            with pm.rowLayout(nc=2, adj=2, cw2=(labels_width, 50)):
                 pm.text(l='<b>Host Mask</b>')
                 pm.textField(
                     'cgru_afanasy__hosts_mask',
@@ -676,6 +685,8 @@ This system will be updated in Afanasy."""
         frames_per_task = \
             pm.intField('cgru_afanasy__frames_per_task', q=1, v=1)
         by_frame = pm.intField('cgru_afanasy__by_frame', q=1, v=1)
+        depend_mask_global = pm.textField('cgru_afanasy__depend_mask_global',
+                                          q=1, text=True)
         hosts_mask = pm.textField('cgru_afanasy__hosts_mask', q=1, text=True)
         hosts_exclude = pm.textField('cgru_afanasy__hosts_exclude', q=1, text=True)
         separate_layers = \
@@ -699,6 +710,7 @@ This system will be updated in Afanasy."""
         by_frame = max(1, by_frame)
 
         # store without quota sign
+        depend_mask_global = depend_mask_global.replace('"', '')
         hosts_mask = hosts_mask.replace('"', '')
         hosts_exclude = hosts_exclude.replace('"', '')
 
@@ -707,6 +719,8 @@ This system will be updated in Afanasy."""
         pm.optionVar['cgru_afanasy__end_frame_ov'] = end_frame
         pm.optionVar['cgru_afanasy__frames_per_task_ov'] = frames_per_task
         pm.optionVar['cgru_afanasy__by_frame_ov'] = by_frame
+        pm.optionVar['cgru_afanasy__depend_mask_global_ov'] = \
+            depend_mask_global
         pm.optionVar['cgru_afanasy__hosts_mask_ov'] = hosts_mask
         pm.optionVar['cgru_afanasy__hosts_exclude_ov'] = hosts_exclude
         pm.optionVar['cgru_afanasy__separate_layers_ov'] = separate_layers
@@ -896,6 +910,7 @@ This system will be updated in Afanasy."""
             job.setAnnotation(annotation)
             job.setFolder('input', os.path.dirname(filename))
             job.setFolder('output', os.path.dirname(outputs[0]))
+            job.setDependMaskGlobal(depend_mask_global)
             job.setHostsMask(hosts_mask)
             job.setHostsMaskExclude(hosts_exclude)
             if life_time > 0:
