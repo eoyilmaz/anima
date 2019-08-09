@@ -2103,12 +2103,11 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         nodes_to_evaluate = [cacheable_node] + \
             cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
         for node in nodes_to_evaluate:
-            for constraint_node in node.listHistory():
-                if isinstance(constraint_node, pm.nt.Constraint):
-                    for input_node in constraint_node.inputs():
-                        related_ref = input_node.referenceFile()
-                        if related_ref is not None and related_ref != ref:
-                            related_references.append(related_ref)
+            for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
+                for input_node in constraint_node.inputs():
+                    related_ref = input_node.referenceFile()
+                    if related_ref is not None and related_ref != ref:
+                        related_references.append(related_ref)
 
         # make it a list of unique values
         related_references = list(set(related_references))
