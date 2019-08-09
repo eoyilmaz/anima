@@ -2092,9 +2092,54 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     kill_all_torn_off_panels()
     maximize_first_model_panel()
 
+    # create a lut for cacheable_node to its related reference
+    cacheable_node_references = {}
+    for cacheable_node in cacheable_nodes:
+        ref = cacheable_node.referenceFile()
+
+        # get related references
+        # sometimes the node is parented or constrained to an object
+        related_references = []
+        nodes_to_evaluate = [cacheable_node] + \
+            cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
+        for node in nodes_to_evaluate:
+            for constraint_node in node.listHistory():
+                if isinstance(constraint_node, pm.nt.Constraint):
+                    for input_node in constraint_node.inputs():
+                        related_ref = input_node.referenceFile()
+                        if related_ref is not None and related_ref != ref:
+                            related_references.append(related_ref)
+
+        # make it a list of unique values
+        related_references = list(set(related_references))
+
+        cacheable_node_references[cacheable_node.name()] = {
+            'ref': ref,
+            'related_refs': related_references
+        }
+
+    # unload all references
+    ref_load_states = {}
+    for ref in pm.listReferences():
+        is_loaded = ref.isLoaded()
+        ref_load_states[ref] = is_loaded
+        if is_loaded:
+            ref.unload()
+
     import tempfile
     import shutil
-    for cacheable_node in cacheable_nodes:
+    for cacheable_node_name in sorted(cacheable_node_references):
+        # load the reference first
+        ref = cacheable_node_references[cacheable_node_name]['ref']
+        ref.load()
+        cacheable_node = pm.PyNode(cacheable_node_name)
+
+        # load related_references
+        related_refs = \
+            cacheable_node_references[cacheable_node_name]['related_refs']
+        for related_ref in related_refs:
+            related_ref.load()
+
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         if cacheable_attr_value == previous_cacheable_attr_value:
             i += 1
@@ -2197,7 +2242,18 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         for panel in panel_list:
             pm.isolateSelect(panel, state=0)
 
+        # unload the reference
+        ref.unload()
+        # and unload the related references
+        for related_ref in related_refs:
+            related_ref.unload()
+
         caller.step()
+
+    # load all references back
+    for ref in pm.listReferences():
+        if ref_load_states[ref]:
+            ref.load()
 
     # restore playback option
     pm.playbackOptions(v=default_playback_option)
