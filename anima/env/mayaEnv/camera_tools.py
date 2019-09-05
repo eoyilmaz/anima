@@ -170,9 +170,12 @@ def camera_focus_plane_tool():
     frame_shape.setAttr('visibleInRefractions', 0)
 
     # Arnold attributes
-    frame_shape.setAttr('aiSelfShadows', 0)
-    frame_shape.setAttr('aiVisibleInDiffuse', 0)
-    frame_shape.setAttr('aiVisibleInGlossy', 0)
+    try:
+        frame_shape.setAttr('aiSelfShadows', 0)
+        frame_shape.setAttr('aiVisibleInDiffuse', 0)
+        frame_shape.setAttr('aiVisibleInGlossy', 0)
+    except pm.MayaAttributeError:
+        pass
 
     # hide unnecessary attributes
     frame.setAttr('tx', lock=True, keyable=False)
