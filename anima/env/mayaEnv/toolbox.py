@@ -5312,6 +5312,8 @@ class Render(object):
             'rsMaxDisplacement',
             'rsDisplacementScale',
             'rsAutoBumpMap',
+
+            'rsObjectId',
         ]
 
         # from anima.ui import progress_dialog
