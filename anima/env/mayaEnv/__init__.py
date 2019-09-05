@@ -268,7 +268,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
             dARO = pm.PyNode('defaultArnoldRenderOptions')
             dARO.setAttr('texture_searchpath', texture_search_path)
-        except pm.MayaNodeError:
+        except (pm.MayaNodeError, ValueError, pm.MayaAttributeError):
             pass
 
         end = time.time()
