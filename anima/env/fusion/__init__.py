@@ -707,6 +707,24 @@ class Fusion(EnvironmentBase):
                 },
             },
             {
+                'name': 'tga',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': output_node_name_generator('tga'),
+                    },
+                    'input_list': {
+                        'Clip': output_path_generator('tga'),
+                        'CreateDir': 1,
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'TGAFormat',
+                    },
+                },
+            },
+            {
                 'name': 'exr',
                 'node_tree': {
                     'type': 'Saver',
