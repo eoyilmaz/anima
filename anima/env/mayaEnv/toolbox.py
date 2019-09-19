@@ -145,6 +145,10 @@ def UI():
 
     color = Color()
 
+    # init the __commands LUT
+    global __commands__
+    __commands__ = []
+
     if pm.dockControl("toolbox_dockControl", q=True, ex=True):
         pm.deleteUI("toolbox_dockControl")
 
