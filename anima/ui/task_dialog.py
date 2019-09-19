@@ -94,11 +94,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.project_label
         )
-        self.projects_comboBox = QtWidgets.QComboBox(self)
+        self.projects_combo_box = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.projects_comboBox
+            self.projects_combo_box
         )
         form_field_index += 1
 
@@ -114,17 +114,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # field
-        self.entity_type_comboBox = QtWidgets.QComboBox(self)
+        self.entity_type_combo_box = QtWidgets.QComboBox(self)
 
-        self.entity_type_comboBox.addItem("Task")
-        self.entity_type_comboBox.addItem("Asset")
-        self.entity_type_comboBox.addItem("Shot")
-        self.entity_type_comboBox.addItem("Sequence")
+        self.entity_type_combo_box.addItem("Task")
+        self.entity_type_combo_box.addItem("Asset")
+        self.entity_type_combo_box.addItem("Shot")
+        self.entity_type_combo_box.addItem("Sequence")
 
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.entity_type_comboBox
+            self.entity_type_combo_box
         )
         form_field_index += 1
 
@@ -137,12 +137,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.parent_label
         )
-        self.parent_task_fields_verticalLayout = QtWidgets.QVBoxLayout()
-        self.parent_task_fields_verticalLayout.setObjectName(
-            "parent_task_fields_verticalLayout")
-        self.parent_task_fields_horizontalLayout = QtWidgets.QHBoxLayout()
-        self.parent_task_fields_horizontalLayout.setObjectName(
-            "parent_task_fields_horizontalLayout")
+        self.parent_task_fields_vertical_layout = QtWidgets.QVBoxLayout()
+        self.parent_task_fields_vertical_layout.setObjectName(
+            "parent_task_fields_vertical_layout")
+        self.parent_task_fields_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.parent_task_fields_horizontal_layout.setObjectName(
+            "parent_task_fields_horizontal_layout")
 
         # Validator
         self.parent_task_validator_label = \
@@ -153,31 +153,31 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Line Edit
         from anima.ui.widgets import ValidatedLineEdit
-        self.parent_task_lineEdit = ValidatedLineEdit(
+        self.parent_task_line_edit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label
         )
-        self.parent_task_lineEdit.setEnabled(False)
-        self.parent_task_fields_horizontalLayout.addWidget(
-            self.parent_task_lineEdit
+        self.parent_task_line_edit.setEnabled(False)
+        self.parent_task_fields_horizontal_layout.addWidget(
+            self.parent_task_line_edit
         )
 
-        self.pick_parent_task_pushButton = QtWidgets.QPushButton(self)
-        self.pick_parent_task_pushButton.setToolTip("Pick parent task")
-        self.pick_parent_task_pushButton.setText("...")
+        self.pick_parent_task_push_button = QtWidgets.QPushButton(self)
+        self.pick_parent_task_push_button.setToolTip("Pick parent task")
+        self.pick_parent_task_push_button.setText("...")
 
-        self.parent_task_fields_horizontalLayout.addWidget(
-            self.pick_parent_task_pushButton
+        self.parent_task_fields_horizontal_layout.addWidget(
+            self.pick_parent_task_push_button
         )
-        self.parent_task_fields_verticalLayout.addLayout(
-            self.parent_task_fields_horizontalLayout
+        self.parent_task_fields_vertical_layout.addLayout(
+            self.parent_task_fields_horizontal_layout
         )
-        self.parent_task_fields_verticalLayout.addWidget(
+        self.parent_task_fields_vertical_layout.addWidget(
             self.parent_task_validator_label
         )
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.parent_task_fields_verticalLayout
+            self.parent_task_fields_vertical_layout
         )
         form_field_index += 1
 
@@ -189,20 +189,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.name_label
         )
-        self.name_field_verticalLayout = QtWidgets.QVBoxLayout()
+        self.name_field_vertical_layout = QtWidgets.QVBoxLayout()
         self.name_validator_label = QtWidgets.QLabel("Validator Message", self)
         self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
-        self.name_lineEdit = ValidatedLineEdit(
+        self.name_line_edit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
-        self.name_field_verticalLayout.addWidget(self.name_lineEdit)
-        self.name_field_verticalLayout.addWidget(self.name_validator_label)
+        self.name_field_vertical_layout.addWidget(self.name_line_edit)
+        self.name_field_vertical_layout.addWidget(self.name_validator_label)
 
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.name_field_verticalLayout
+            self.name_field_vertical_layout
         )
         form_field_index += 1
 
@@ -214,23 +214,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.code_label
         )
-        self.code_field_verticalLayout = QtWidgets.QVBoxLayout()
+        self.code_field_vertical_layout = QtWidgets.QVBoxLayout()
 
         # Validator Label
         self.code_validator_label = QtWidgets.QLabel("Validator Message", self)
         self.code_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         # Validated Line Edit
-        self.code_lineEdit = ValidatedLineEdit(
+        self.code_line_edit = ValidatedLineEdit(
             message_field=self.code_validator_label
         )
-        self.code_field_verticalLayout.addWidget(self.code_lineEdit)
-        self.code_field_verticalLayout.addWidget(self.code_validator_label)
+        self.code_field_vertical_layout.addWidget(self.code_line_edit)
+        self.code_field_vertical_layout.addWidget(self.code_validator_label)
 
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.code_field_verticalLayout
+            self.code_field_vertical_layout
         )
         form_field_index += 1
 
@@ -243,12 +243,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.task_type_label
         )
 
-        self.task_type_comboBox = QtWidgets.QComboBox(self)
-        self.task_type_comboBox.setEditable(True)
+        self.task_type_combo_box = QtWidgets.QComboBox(self)
+        self.task_type_combo_box.setEditable(True)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.task_type_comboBox
+            self.task_type_combo_box
         )
         form_field_index += 1
 
@@ -261,12 +261,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.asset_type_label
         )
 
-        self.asset_type_comboBox = QtWidgets.QComboBox(self)
-        self.asset_type_comboBox.setEditable(True)
+        self.asset_type_combo_box = QtWidgets.QComboBox(self)
+        self.asset_type_combo_box.setEditable(True)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.asset_type_comboBox
+            self.asset_type_combo_box
         )
         form_field_index += 1
 
@@ -278,11 +278,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.sequence_label
         )
-        self.sequence_comboBox = QtWidgets.QComboBox(self)
+        self.sequence_combo_box = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.sequence_comboBox
+            self.sequence_combo_box
         )
         form_field_index += 1
 
@@ -294,35 +294,35 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.fps_label
         )
-        self.fps_spinBox = QtWidgets.QSpinBox(self)
-        self.fps_spinBox.setMinimum(1)
+        self.fps_spin_box = QtWidgets.QSpinBox(self)
+        self.fps_spin_box.setMinimum(1)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.fps_spinBox
+            self.fps_spin_box
         )
         form_field_index += 1
 
         # ----------------------------------------------
         # CutIn & CutOut Fields
-        self.cutIn_cutOut_label = QtWidgets.QLabel("Cut In & Out", self)
+        self.cut_in_cut_out_label = QtWidgets.QLabel("Cut In & Out", self)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.LabelRole,
-            self.cutIn_cutOut_label
+            self.cut_in_cut_out_label
         )
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.cutIn_spinBox = QtWidgets.QSpinBox(self)
-        self.cutIn_spinBox.setMaximum(999999)
-        self.horizontalLayout_4.addWidget(self.cutIn_spinBox)
-        self.cutOut_spinBox = QtWidgets.QSpinBox(self)
-        self.cutOut_spinBox.setMaximum(999999)
+        self.horizontal_layout_4 = QtWidgets.QHBoxLayout()
+        self.cut_in_spin_box = QtWidgets.QSpinBox(self)
+        self.cut_in_spin_box.setMaximum(999999)
+        self.horizontal_layout_4.addWidget(self.cut_in_spin_box)
+        self.cut_out_spin_box = QtWidgets.QSpinBox(self)
+        self.cut_out_spin_box.setMaximum(999999)
 
-        self.horizontalLayout_4.addWidget(self.cutOut_spinBox)
+        self.horizontal_layout_4.addWidget(self.cut_out_spin_box)
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.horizontalLayout_4
+            self.horizontal_layout_4
         )
         form_field_index += 1
 
@@ -344,18 +344,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.depends_to_label
         )
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
+        self.horizontal_layout_3 = QtWidgets.QHBoxLayout()
         self.depends_to_listWidget = QtWidgets.QListWidget(self)
         self.depends_to_listWidget.setSelectionMode(
             QtWidgets.QAbstractItemView.MultiSelection
         )
-        self.horizontalLayout_3.addWidget(self.depends_to_listWidget)
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
+        self.horizontal_layout_3.addWidget(self.depends_to_listWidget)
+        self.vertical_layout_3 = QtWidgets.QVBoxLayout()
         self.add_depending_task_pushButton = QtWidgets.QPushButton("+", self)
         self.add_depending_task_pushButton.setToolTip("Add depending task...")
         self.add_depending_task_pushButton.setMaximumSize(
             QtCore.QSize(25, 16777215))
-        self.verticalLayout_3.addWidget(self.add_depending_task_pushButton)
+        self.vertical_layout_3.addWidget(self.add_depending_task_pushButton)
         self.remove_depending_task_pushButton =\
             QtWidgets.QPushButton("-", self)
         self.remove_depending_task_pushButton.setToolTip(
@@ -363,19 +363,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.remove_depending_task_pushButton.setMaximumSize(
             QtCore.QSize(25, 16777215))
-        self.verticalLayout_3.addWidget(
+        self.vertical_layout_3.addWidget(
             self.remove_depending_task_pushButton)
         spacer_item = QtWidgets.QSpacerItem(
             20, 40,
             QtWidgets.QSizePolicy.Minimum,
             QtWidgets.QSizePolicy.Expanding
         )
-        self.verticalLayout_3.addItem(spacer_item)
-        self.horizontalLayout_3.addLayout(self.verticalLayout_3)
+        self.vertical_layout_3.addItem(spacer_item)
+        self.horizontal_layout_3.addLayout(self.vertical_layout_3)
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.horizontalLayout_3
+            self.horizontal_layout_3
         )
         form_field_index += 1
 
@@ -387,18 +387,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.resources_label
         )
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout()
-        self.resources_comboBox = QtWidgets.QComboBox(self)
-        self.resources_comboBox.setEditable(True)
+        self.vertical_layout_2 = QtWidgets.QVBoxLayout()
+        self.resources_combo_box = QtWidgets.QComboBox(self)
+        self.resources_combo_box.setEditable(True)
 
-        self.verticalLayout_2.addWidget(self.resources_comboBox)
+        self.vertical_layout_2.addWidget(self.resources_combo_box)
         self.resources_listWidget = QtWidgets.QListWidget(self)
         self.resources_listWidget.setToolTip("Double click to remove")
-        self.verticalLayout_2.addWidget(self.resources_listWidget)
+        self.vertical_layout_2.addWidget(self.resources_listWidget)
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.verticalLayout_2
+            self.vertical_layout_2
         )
         form_field_index += 1
 
@@ -410,16 +410,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.responsible_label
         )
-        self.verticalLayout_4 = QtWidgets.QVBoxLayout()
+        self.vertical_layout_4 = QtWidgets.QVBoxLayout()
         self.responsible_comboBox = QtWidgets.QComboBox(self)
         self.responsible_comboBox.setEditable(True)
-        self.verticalLayout_4.addWidget(self.responsible_comboBox)
+        self.vertical_layout_4.addWidget(self.responsible_comboBox)
         self.responsible_listWidget = QtWidgets.QListWidget(self)
-        self.verticalLayout_4.addWidget(self.responsible_listWidget)
+        self.vertical_layout_4.addWidget(self.responsible_listWidget)
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.verticalLayout_4
+            self.vertical_layout_4
         )
         form_field_index += 1
 
@@ -431,18 +431,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.schedule_timing_label
         )
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.schedule_timing_spinBox = QtWidgets.QSpinBox(self)
-        self.schedule_timing_spinBox.setMaximum(9999)
-        self.horizontalLayout_2.addWidget(self.schedule_timing_spinBox)
-        self.schedule_unit_comboBox = QtWidgets.QComboBox(self)
-        self.horizontalLayout_2.addWidget(self.schedule_unit_comboBox)
-        self.schedule_model_comboBox = QtWidgets.QComboBox(self)
-        self.horizontalLayout_2.addWidget(self.schedule_model_comboBox)
+        self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
+        self.schedule_timing_spin_box = QtWidgets.QSpinBox(self)
+        self.schedule_timing_spin_box.setMaximum(9999)
+        self.horizontal_layout_2.addWidget(self.schedule_timing_spin_box)
+        self.schedule_unit_combo_box = QtWidgets.QComboBox(self)
+        self.horizontal_layout_2.addWidget(self.schedule_unit_combo_box)
+        self.schedule_model_combo_box = QtWidgets.QComboBox(self)
+        self.horizontal_layout_2.addWidget(self.schedule_model_combo_box)
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.horizontalLayout_2
+            self.horizontal_layout_2
         )
         form_field_index += 1
 
@@ -454,12 +454,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.update_bid_label
         )
-        self.update_bid_checkBox = QtWidgets.QCheckBox(self)
-        self.update_bid_checkBox.setText("")
+        self.update_bid_check_box = QtWidgets.QCheckBox(self)
+        self.update_bid_check_box.setText("")
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.update_bid_checkBox
+            self.update_bid_check_box
         )
         form_field_index += 1
 
@@ -471,13 +471,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.LabelRole,
             self.priority_label
         )
-        self.priority_spinBox = QtWidgets.QSpinBox(self)
-        self.priority_spinBox.setMaximum(1000)
-        self.priority_spinBox.setProperty("value", 500)
+        self.priority_spin_box = QtWidgets.QSpinBox(self)
+        self.priority_spin_box.setMaximum(1000)
+        self.priority_spin_box.setProperty("value", 500)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.priority_spinBox
+            self.priority_spin_box
         )
 
         self.vertical_layout.addLayout(self.form_layout)
@@ -485,35 +485,35 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ----------------------------------------------
         # Button Box
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
             QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
         )
-        self.vertical_layout.addWidget(self.buttonBox)
+        self.vertical_layout.addWidget(self.button_box)
 
         # ----------------------------------------------
         # Set Tab Order
-        self.setTabOrder(self.projects_comboBox, self.entity_type_comboBox)
+        self.setTabOrder(self.projects_combo_box, self.entity_type_combo_box)
         self.setTabOrder(
-            self.entity_type_comboBox, self.pick_parent_task_pushButton
+            self.entity_type_combo_box, self.pick_parent_task_push_button
         )
         self.setTabOrder(
-            self.pick_parent_task_pushButton, self.name_lineEdit
+            self.pick_parent_task_push_button, self.name_line_edit
         )
         self.setTabOrder(
-            self.name_lineEdit, self.code_lineEdit
+            self.name_line_edit, self.code_line_edit
         )
         self.setTabOrder(
-            self.code_lineEdit, self.task_type_comboBox
+            self.code_line_edit, self.task_type_combo_box
         )
 
-        self.setTabOrder(self.task_type_comboBox, self.asset_type_comboBox)
-        self.setTabOrder(self.asset_type_comboBox, self.sequence_comboBox)
-        self.setTabOrder(self.sequence_comboBox, self.fps_spinBox)
-        self.setTabOrder(self.fps_spinBox, self.cutIn_spinBox)
-        self.setTabOrder(self.cutIn_spinBox, self.cutOut_spinBox)
-        self.setTabOrder(self.cutOut_spinBox, self.depends_to_listWidget)
+        self.setTabOrder(self.task_type_combo_box, self.asset_type_combo_box)
+        self.setTabOrder(self.asset_type_combo_box, self.sequence_combo_box)
+        self.setTabOrder(self.sequence_combo_box, self.fps_spin_box)
+        self.setTabOrder(self.fps_spin_box, self.cut_in_spin_box)
+        self.setTabOrder(self.cut_in_spin_box, self.cut_out_spin_box)
+        self.setTabOrder(self.cut_out_spin_box, self.depends_to_listWidget)
         self.setTabOrder(
             self.depends_to_listWidget, self.add_depending_task_pushButton
         )
@@ -522,26 +522,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.remove_depending_task_pushButton
         )
         self.setTabOrder(
-            self.remove_depending_task_pushButton, self.resources_comboBox
+            self.remove_depending_task_pushButton, self.resources_combo_box
         )
-        self.setTabOrder(self.resources_comboBox, self.resources_listWidget)
+        self.setTabOrder(self.resources_combo_box, self.resources_listWidget)
         self.setTabOrder(self.resources_listWidget, self.responsible_comboBox)
         self.setTabOrder(
             self.responsible_comboBox, self.responsible_listWidget
         )
         self.setTabOrder(
-            self.responsible_listWidget, self.schedule_timing_spinBox
+            self.responsible_listWidget, self.schedule_timing_spin_box
         )
         self.setTabOrder(
-            self.schedule_timing_spinBox, self.schedule_unit_comboBox
+            self.schedule_timing_spin_box, self.schedule_unit_combo_box
         )
         self.setTabOrder(
-            self.schedule_unit_comboBox, self.schedule_model_comboBox
+            self.schedule_unit_combo_box, self.schedule_model_combo_box
         )
         self.setTabOrder(
-            self.schedule_model_comboBox, self.update_bid_checkBox
+            self.schedule_model_combo_box, self.update_bid_check_box
         )
-        self.setTabOrder(self.update_bid_checkBox, self.priority_spinBox)
+        self.setTabOrder(self.update_bid_check_box, self.priority_spin_box)
 
     def show(self):
         """overridden show method
@@ -562,35 +562,35 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # Entity type changed
         QtCore.QObject.connect(
-            self.entity_type_comboBox,
+            self.entity_type_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.entity_type_combo_box_changed
         )
 
         # project_comboBox changed
         QtCore.QObject.connect(
-            self.projects_comboBox,
+            self.projects_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.projects_combo_box_changed
         )
 
-        # name_lineEdit is changed
+        # name_line_edit is changed
         QtCore.QObject.connect(
-            self.name_lineEdit,
+            self.name_line_edit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.name_line_edit_changed
         )
 
-        # code_lineEdit is changed
+        # code_line_edit is changed
         QtCore.QObject.connect(
-            self.code_lineEdit,
+            self.code_line_edit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.code_line_edit_changed
         )
 
         # pick_task_pushButton
         QtCore.QObject.connect(
-            self.pick_parent_task_pushButton,
+            self.pick_parent_task_push_button,
             QtCore.SIGNAL("clicked()"),
             self.pick_parent_task_push_button_clicked
         )
@@ -616,9 +616,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.depends_to_list_widget_item_double_clicked
         )
 
-        # resources_comboBox changed
+        # resources_combo_box changed
         QtCore.QObject.connect(
-            self.resources_comboBox,
+            self.resources_combo_box,
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.resources_combo_box_changed
         )
@@ -646,12 +646,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # button box
         QtCore.QObject.connect(
-            self.buttonBox,
+            self.button_box,
             QtCore.SIGNAL("accepted()"),
             self.accept
         )
         QtCore.QObject.connect(
-            self.buttonBox,
+            self.button_box,
             QtCore.SIGNAL("rejected()"),
             self.reject
         )
@@ -663,44 +663,44 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.parent_task_validator_label.setVisible(False)
 
         # invalidate the name field by default
-        self.name_lineEdit.set_invalid('Please enter a name!')
+        self.name_line_edit.set_invalid('Please enter a name!')
 
         # hide code area
         self.code_label.setVisible(False)
-        self.code_lineEdit.setVisible(False)
+        self.code_line_edit.setVisible(False)
 
         # invalidate the code by default
-        self.code_lineEdit.set_invalid('Please enter a code!')
+        self.code_line_edit.set_invalid('Please enter a code!')
 
         # hide asset type area
         self.asset_type_label.setVisible(False)
-        self.asset_type_comboBox.setVisible(False)
+        self.asset_type_combo_box.setVisible(False)
 
         # hide shot fields
         self.sequence_label.setVisible(False)
-        self.sequence_comboBox.setVisible(False)
+        self.sequence_combo_box.setVisible(False)
         self.fps_label.setVisible(False)
-        self.fps_spinBox.setVisible(False)
-        self.cutIn_cutOut_label.setVisible(False)
-        self.cutIn_spinBox.setVisible(False)
-        self.cutOut_spinBox.setVisible(False)
+        self.fps_spin_box.setVisible(False)
+        self.cut_in_cut_out_label.setVisible(False)
+        self.cut_in_spin_box.setVisible(False)
+        self.cut_out_spin_box.setVisible(False)
         self.image_format.set_visible(False)
 
         # hide update bid fields
         self.update_bid_label.setVisible(False)
-        self.update_bid_checkBox.setVisible(False)
+        self.update_bid_check_box.setVisible(False)
 
         # fill projects list
-        self.projects_comboBox.clear()
+        self.projects_combo_box.clear()
         from stalker import Project, Task
-        self.projects_comboBox.addItems(
+        self.projects_combo_box.addItems(
             sorted([p.name for p in Project.query.all()])
         )
 
         # fill image_format combo_box
         self.image_format.fill_combo_box()
 
-        self.fps_spinBox.setValue(25)
+        self.fps_spin_box.setValue(25)
 
         # select the project if a parent_task or task given
         project = None
@@ -712,7 +712,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 self.parent_task = None
             if project:
                 # set the default value of the fps
-                self.fps_spinBox.setValue(project.fps)
+                self.fps_spin_box.setValue(project.fps)
 
         # if there is a parent task also set the responsible to the parent
         # responsible
@@ -722,7 +722,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.set_project(project)
 
-        # if a parent is given set it to the parent_task_lineEdit
+        # if a parent is given set it to the parent_task_line_edit
         self.set_parent_task(self.parent_task)
 
         # task types
@@ -732,8 +732,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .filter(Type.target_entity_type == 'Task')\
             .order_by(Type.name.asc())\
             .all()
-        self.task_type_comboBox.clear()
-        self.task_type_comboBox.addItems(
+        self.task_type_combo_box.clear()
+        self.task_type_combo_box.addItems(
             [''] + map(lambda x: x[0], all_task_type_names)
         )
 
@@ -743,8 +743,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .filter(Type.target_entity_type == 'Asset')\
             .order_by(Type.name.asc())\
             .all()
-        self.asset_type_comboBox.clear()
-        self.asset_type_comboBox.addItems(
+        self.asset_type_combo_box.clear()
+        self.asset_type_combo_box.addItems(
             [''] + map(lambda x: x[0], all_asset_type_names)
         )
 
@@ -754,25 +754,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .query(Sequence.name)\
             .filter(Sequence.project == project)\
             .all()
-        self.sequence_comboBox.clear()
-        self.sequence_comboBox.addItems(
+        self.sequence_combo_box.clear()
+        self.sequence_combo_box.addItems(
             [''] + map(lambda x: x[0], all_sequence_names)
         )
 
-        self.cutIn_spinBox.setValue(0)
-        self.cutOut_spinBox.setValue(0)
+        self.cut_in_spin_box.setValue(0)
+        self.cut_out_spin_box.setValue(0)
 
         # schedule info defaults
         # schedule timing
         from anima import defaults
-        self.schedule_timing_spinBox.setValue(10)
+        self.schedule_timing_spin_box.setValue(10)
 
         # schedule unit
-        self.schedule_unit_comboBox.addItems(defaults.datetime_units)
-        self.schedule_unit_comboBox.setCurrentIndex(0)
+        self.schedule_unit_combo_box.addItems(defaults.datetime_units)
+        self.schedule_unit_combo_box.setCurrentIndex(0)
 
         # schedule model
-        self.schedule_model_comboBox.addItems(defaults.task_schedule_models)
+        self.schedule_model_combo_box.addItems(defaults.task_schedule_models)
 
     def fill_ui_with_task(self, task):
         """Fills the ui with the given task info
@@ -786,8 +786,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Updating a task
         # so disable the entity_type and project fields
-        self.entity_type_comboBox.setEnabled(False)
-        self.projects_comboBox.setEnabled(False)
+        self.entity_type_combo_box.setEnabled(False)
+        self.projects_combo_box.setEnabled(False)
 
         from stalker import Asset, Shot, Sequence
 
@@ -795,9 +795,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.set_parent_task(task.parent)
 
         # entity_type
-        index = self.entity_type_comboBox.findText(self.task.entity_type)
-        if index and index != self.entity_type_comboBox.currentIndex():
-            self.entity_type_comboBox.setCurrentIndex(index)
+        index = self.entity_type_combo_box.findText(self.task.entity_type)
+        if index and index != self.entity_type_combo_box.currentIndex():
+            self.entity_type_combo_box.setCurrentIndex(index)
         else:
             # because the comboBox will not trigger it automatically do it
             # manually and just allow it to hide or show fields
@@ -808,24 +808,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.task.type:
             combo_box = None
             if self.task.entity_type == 'Task':
-                combo_box = self.task_type_comboBox
+                combo_box = self.task_type_combo_box
             elif self.task.entity_type == 'Asset':
-                combo_box = self.asset_type_comboBox
+                combo_box = self.asset_type_combo_box
 
             if combo_box:
                 index = combo_box.findText(self.task.type.name, match_exactly)
                 if index:
                     combo_box.setCurrentIndex(index)
 
-        self.name_lineEdit.setText(self.task.name)
+        self.name_line_edit.setText(self.task.name)
 
         if isinstance(self.task, (Asset, Shot, Sequence)):
             # set the code
-            self.code_lineEdit.setText(self.task.code)
+            self.code_line_edit.setText(self.task.code)
 
         # shot info
         # set the fps to project by default, later update it to the shot.fps
-        self.fps_spinBox.setValue(self.task.project.fps)
+        self.fps_spin_box.setValue(self.task.project.fps)
 
         # sequences
         from stalker import Sequence
@@ -835,8 +835,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .filter(Sequence.project == task.project) \
             .order_by(Sequence.name.asc()) \
             .all()
-        self.sequence_comboBox.clear()
-        self.sequence_comboBox.addItems(
+        self.sequence_combo_box.clear()
+        self.sequence_combo_box.addItems(
             [''] + map(lambda x: x[0], all_sequence_names)
         )
 
@@ -844,16 +844,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # select the correct sequence
             if self.task.sequences:
                 seq = self.task.sequences[0]
-                index = self.sequence_comboBox.findText(
+                index = self.sequence_combo_box.findText(
                     seq.name,
                     match_exactly
                 )
                 if index:
-                    self.sequence_comboBox.setCurrentIndex(index)
+                    self.sequence_combo_box.setCurrentIndex(index)
 
-            self.fps_spinBox.setValue(self.task.fps)
-            self.cutIn_spinBox.setValue(self.task.cut_in)
-            self.cutOut_spinBox.setValue(self.task.cut_out)
+            self.fps_spin_box.setValue(self.task.fps)
+            self.cut_in_spin_box.setValue(self.task.cut_in)
+            self.cut_out_spin_box.setValue(self.task.cut_out)
 
             # select correct image format
             self.image_format.set_current_image_format(
@@ -872,22 +872,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.responsible_combo_box_changed(user.name)
 
         # schedule info
-        self.schedule_timing_spinBox.setValue(self.task.schedule_timing)
+        self.schedule_timing_spin_box.setValue(self.task.schedule_timing)
 
-        index = self.schedule_unit_comboBox.findText(
+        index = self.schedule_unit_combo_box.findText(
             self.task.schedule_unit, QtCore.Qt.MatchExactly
         )
         if index:
-            self.schedule_unit_comboBox.setCurrentIndex(index)
+            self.schedule_unit_combo_box.setCurrentIndex(index)
 
-        index = self.schedule_model_comboBox.findText(
+        index = self.schedule_model_combo_box.findText(
             self.task.schedule_model, QtCore.Qt.MatchExactly
         )
         if index:
-            self.schedule_model_comboBox.setCurrentIndex(index)
+            self.schedule_model_combo_box.setCurrentIndex(index)
 
     def entity_type_combo_box_changed(self, entity_type):
-        """runs when the entity_type_comboBox has changed
+        """runs when the entity_type_combo_box has changed
 
         :param str entity_type:
         :return:
@@ -895,29 +895,29 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if entity_type == 'Task':
             # code fields
             self.code_label.setVisible(False)
-            self.code_lineEdit.setVisible(False)
+            self.code_line_edit.setVisible(False)
 
             # task type fields
             self.task_type_label.setVisible(True)
-            self.task_type_comboBox.setVisible(True)
+            self.task_type_combo_box.setVisible(True)
 
             # asset type fields
             self.asset_type_label.setVisible(False)
-            self.asset_type_comboBox.setVisible(False)
+            self.asset_type_combo_box.setVisible(False)
 
             # shot fields
             self.sequence_label.setVisible(False)
-            self.sequence_comboBox.setVisible(False)
+            self.sequence_combo_box.setVisible(False)
             self.fps_label.setVisible(False)
-            self.fps_spinBox.setVisible(False)
-            self.cutIn_cutOut_label.setVisible(False)
-            self.cutIn_spinBox.setVisible(False)
-            self.cutOut_spinBox.setVisible(False)
+            self.fps_spin_box.setVisible(False)
+            self.cut_in_cut_out_label.setVisible(False)
+            self.cut_in_spin_box.setVisible(False)
+            self.cut_out_spin_box.setVisible(False)
             self.image_format.set_visible(False)
 
             # resources field
             self.resources_label.setVisible(True)
-            self.resources_comboBox.setVisible(True)
+            self.resources_combo_box.setVisible(True)
             self.resources_listWidget.setVisible(True)
 
             # depends to fields
@@ -928,9 +928,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # schedule fields
             self.schedule_timing_label.setVisible(True)
-            self.schedule_timing_spinBox.setVisible(True)
-            self.schedule_unit_comboBox.setVisible(True)
-            self.schedule_model_comboBox.setVisible(True)
+            self.schedule_timing_spin_box.setVisible(True)
+            self.schedule_unit_combo_box.setVisible(True)
+            self.schedule_model_combo_box.setVisible(True)
             if self.mode == 'Update':
                 # if this is a parent task
                 # do not show resource and timing related fields
@@ -939,49 +939,49 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 if self.task.is_container:
                     self.resources_label.setVisible(False)
-                    self.resources_comboBox.setVisible(False)
+                    self.resources_combo_box.setVisible(False)
                     self.resources_listWidget.setVisible(False)
                     self.schedule_timing_label.setVisible(False)
-                    self.schedule_timing_spinBox.setVisible(False)
-                    self.schedule_unit_comboBox.setVisible(False)
-                    self.schedule_model_comboBox.setVisible(False)
+                    self.schedule_timing_spin_box.setVisible(False)
+                    self.schedule_unit_combo_box.setVisible(False)
+                    self.schedule_model_combo_box.setVisible(False)
 
                     self.update_bid_label.setVisible(False)
-                    self.update_bid_checkBox.setVisible(False)
+                    self.update_bid_check_box.setVisible(False)
                 else:
                     self.update_bid_label.setVisible(True)
-                    self.update_bid_checkBox.setVisible(True)
+                    self.update_bid_check_box.setVisible(True)
 
             else:
                 self.update_bid_label.setVisible(False)
-                self.update_bid_checkBox.setVisible(False)
+                self.update_bid_check_box.setVisible(False)
 
         elif entity_type == 'Asset':
             # code fields
             self.code_label.setVisible(True)
-            self.code_lineEdit.setVisible(True)
+            self.code_line_edit.setVisible(True)
 
             # task type fields
             self.task_type_label.setVisible(False)
-            self.task_type_comboBox.setVisible(False)
+            self.task_type_combo_box.setVisible(False)
 
             # asset type fields
             self.asset_type_label.setVisible(True)
-            self.asset_type_comboBox.setVisible(True)
+            self.asset_type_combo_box.setVisible(True)
 
             # shot fields
             self.sequence_label.setVisible(False)
-            self.sequence_comboBox.setVisible(False)
+            self.sequence_combo_box.setVisible(False)
             self.fps_label.setVisible(False)
-            self.fps_spinBox.setVisible(False)
-            self.cutIn_cutOut_label.setVisible(False)
-            self.cutIn_spinBox.setVisible(False)
-            self.cutOut_spinBox.setVisible(False)
+            self.fps_spin_box.setVisible(False)
+            self.cut_in_cut_out_label.setVisible(False)
+            self.cut_in_spin_box.setVisible(False)
+            self.cut_out_spin_box.setVisible(False)
             self.image_format.set_visible(False)
 
             # resources field
             self.resources_label.setVisible(False)
-            self.resources_comboBox.setVisible(False)
+            self.resources_combo_box.setVisible(False)
             self.resources_listWidget.setVisible(False)
 
             # depends to fields
@@ -992,38 +992,38 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # schedule fields
             self.schedule_timing_label.setVisible(False)
-            self.schedule_timing_spinBox.setVisible(False)
-            self.schedule_unit_comboBox.setVisible(False)
-            self.schedule_model_comboBox.setVisible(False)
+            self.schedule_timing_spin_box.setVisible(False)
+            self.schedule_unit_combo_box.setVisible(False)
+            self.schedule_model_combo_box.setVisible(False)
             self.update_bid_label.setVisible(False)
-            self.update_bid_checkBox.setVisible(False)
+            self.update_bid_check_box.setVisible(False)
 
         elif entity_type == 'Shot':
             # code fields
             self.code_label.setVisible(True)
-            self.code_lineEdit.setVisible(True)
+            self.code_line_edit.setVisible(True)
 
             # task type fields
             self.task_type_label.setVisible(False)
-            self.task_type_comboBox.setVisible(False)
+            self.task_type_combo_box.setVisible(False)
 
             # asset type fields
             self.asset_type_label.setVisible(False)
-            self.asset_type_comboBox.setVisible(False)
+            self.asset_type_combo_box.setVisible(False)
 
             # shot fields
             self.sequence_label.setVisible(True)
-            self.sequence_comboBox.setVisible(True)
+            self.sequence_combo_box.setVisible(True)
             self.fps_label.setVisible(True)
-            self.fps_spinBox.setVisible(True)
-            self.cutIn_cutOut_label.setVisible(True)
-            self.cutIn_spinBox.setVisible(True)
-            self.cutOut_spinBox.setVisible(True)
+            self.fps_spin_box.setVisible(True)
+            self.cut_in_cut_out_label.setVisible(True)
+            self.cut_in_spin_box.setVisible(True)
+            self.cut_out_spin_box.setVisible(True)
             self.image_format.set_visible(True)
 
             # resources field
             self.resources_label.setVisible(False)
-            self.resources_comboBox.setVisible(False)
+            self.resources_combo_box.setVisible(False)
             self.resources_listWidget.setVisible(False)
 
             # depends to fields
@@ -1034,38 +1034,38 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # schedule fields
             self.schedule_timing_label.setVisible(False)
-            self.schedule_timing_spinBox.setVisible(False)
-            self.schedule_unit_comboBox.setVisible(False)
-            self.schedule_model_comboBox.setVisible(False)
+            self.schedule_timing_spin_box.setVisible(False)
+            self.schedule_unit_combo_box.setVisible(False)
+            self.schedule_model_combo_box.setVisible(False)
             self.update_bid_label.setVisible(False)
-            self.update_bid_checkBox.setVisible(False)
+            self.update_bid_check_box.setVisible(False)
 
         elif entity_type == 'Sequence':
             # code fields
             self.code_label.setVisible(True)
-            self.code_lineEdit.setVisible(True)
+            self.code_line_edit.setVisible(True)
 
             # task type fields
             self.task_type_label.setVisible(False)
-            self.task_type_comboBox.setVisible(False)
+            self.task_type_combo_box.setVisible(False)
 
             # asset type fields
             self.asset_type_label.setVisible(False)
-            self.asset_type_comboBox.setVisible(False)
+            self.asset_type_combo_box.setVisible(False)
 
             # shot fields
             self.sequence_label.setVisible(False)
-            self.sequence_comboBox.setVisible(False)
+            self.sequence_combo_box.setVisible(False)
             self.fps_label.setVisible(False)
-            self.fps_spinBox.setVisible(False)
-            self.cutIn_cutOut_label.setVisible(False)
-            self.cutIn_spinBox.setVisible(False)
-            self.cutOut_spinBox.setVisible(False)
+            self.fps_spin_box.setVisible(False)
+            self.cut_in_cut_out_label.setVisible(False)
+            self.cut_in_spin_box.setVisible(False)
+            self.cut_out_spin_box.setVisible(False)
             self.image_format.set_visible(False)
 
             # resources field
             self.resources_label.setVisible(False)
-            self.resources_comboBox.setVisible(False)
+            self.resources_combo_box.setVisible(False)
             self.resources_listWidget.setVisible(False)
 
             # depends to fields
@@ -1076,18 +1076,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # schedule fields
             self.schedule_timing_label.setVisible(False)
-            self.schedule_timing_spinBox.setVisible(False)
-            self.schedule_unit_comboBox.setVisible(False)
-            self.schedule_model_comboBox.setVisible(False)
+            self.schedule_timing_spin_box.setVisible(False)
+            self.schedule_unit_combo_box.setVisible(False)
+            self.schedule_model_combo_box.setVisible(False)
             self.update_bid_label.setVisible(False)
-            self.update_bid_checkBox.setVisible(False)
+            self.update_bid_check_box.setVisible(False)
 
     def get_project(self):
         """returns the current selected project
 
         :return:
         """
-        project_name = self.projects_comboBox.currentText()
+        project_name = self.projects_combo_box.currentText()
         from stalker import Project
         return Project.query.filter(Project.name == project_name).first()
 
@@ -1098,19 +1098,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         if project and project != self.get_project():
-            index = self.projects_comboBox.findText(
+            index = self.projects_combo_box.findText(
                 project.name,
                 QtCore.Qt.MatchExactly
             )
             if index:
-                self.projects_comboBox.setCurrentIndex(index)
+                self.projects_combo_box.setCurrentIndex(index)
 
     def get_parent_task(self):
         """returns the currently selected parent task
 
         :return:
         """
-        parent_task_text = self.parent_task_lineEdit.text()
+        parent_task_text = self.parent_task_line_edit.text()
         if parent_task_text != '':
             return self.get_task_from_ui_text(parent_task_text)
         else:
@@ -1132,7 +1132,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return '%s (%s) (%s)' % (task.name, path, task.id)
 
     def set_parent_task(self, task):
-        """sets the parent_task_lineEdit
+        """sets the parent_task_line_edit
 
         :param task: A Stalker task
         :return:
@@ -1140,12 +1140,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if task:
             self.set_project(task.project)
             self.parent_task = task
-            self.parent_task_lineEdit.setText(
+            self.parent_task_line_edit.setText(
                 self.get_task_hierarchy_name(task)
             )
 
     def pick_parent_task_push_button_clicked(self):
-        """runs when pick_parent_task_pushButton is clicked
+        """runs when pick_parent_task_push_button is clicked
         """
         from anima.ui import task_picker_dialog
 
@@ -1188,11 +1188,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if self.task in parent_task.parents \
                    or self.task == parent_task:
                     # warn the user by invalidating the field
-                    self.parent_task_lineEdit.set_invalid(
+                    self.parent_task_line_edit.set_invalid(
                         'New parent is not valid!'
                     )
                 else:
-                    self.parent_task_lineEdit.set_valid()
+                    self.parent_task_line_edit.set_valid()
 
         # delete the dialog
         task_picker_main_dialog.deleteLater()
@@ -1201,7 +1201,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the project_comboBox is changed
         """
         # reset the parent task
-        self.parent_task_lineEdit.setText('')
+        self.parent_task_line_edit.setText('')
 
         # reset resources
         # add resources
@@ -1230,8 +1230,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # get resources from the project
         self.updating_resources_combo_box = True
-        self.resources_comboBox.clear()
-        self.resources_comboBox.addItems([''] + all_user_names)
+        self.resources_combo_box.clear()
+        self.resources_combo_box.addItems([''] + all_user_names)
         self.updating_resources_combo_box = False
 
         # get resources from the project
@@ -1241,20 +1241,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.updating_responsible_combo_box = False
 
     def name_line_edit_changed(self, text):
-        """runs when the name_lineEdit text has changed
+        """runs when the name_line_edit text has changed
         """
         # if any([True for c in text if ord(c) >= 128]):
-        #     self.name_lineEdit.set_invalid('Turkce karakter kullanma!!!!')
+        #     self.name_line_edit.set_invalid('Turkce karakter kullanma!!!!')
         # else:
-        #     self.name_lineEdit.set_valid()
+        #     self.name_line_edit.set_valid()
 
         if re.findall(r'[^a-zA-Z0-9_ ]+', text):
-            self.name_lineEdit.set_invalid('Invalid character')
+            self.name_line_edit.set_invalid('Invalid character')
         else:
-            self.name_lineEdit.set_valid()
+            self.name_line_edit.set_valid()
 
         if text == '':
-            self.name_lineEdit.set_invalid('Please enter a name!')
+            self.name_line_edit.set_invalid('Please enter a name!')
 
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
@@ -1262,10 +1262,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # remove multiple under scores
         formatted_text = re.sub('[_]+', '_', formatted_text)
 
-        self.code_lineEdit.setText(formatted_text)
+        self.code_line_edit.setText(formatted_text)
 
     def code_line_edit_changed(self, text):
-        """runs when the code_lineEdit text has changed
+        """runs when the code_line_edit text has changed
         """
         if self.updating_code_lineEdit:
             return
@@ -1273,15 +1273,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.updating_code_lineEdit = True
 
         if re.findall(r'[^a-zA-Z0-9_ ]+', text):
-            self.code_lineEdit.set_invalid('Invalid character')
+            self.code_line_edit.set_invalid('Invalid character')
         else:
             if text == '':
-                self.code_lineEdit.set_invalid('Please enter a code!')
+                self.code_line_edit.set_invalid('Please enter a code!')
             else:
                 if len(text) > 16:
-                    self.code_lineEdit.set_invalid('Code is too long (>16)')
+                    self.code_line_edit.set_invalid('Code is too long (>16)')
                 else:
-                    self.code_lineEdit.set_valid()
+                    self.code_line_edit.set_valid()
 
         # just update the code field
         formatted_text = text.strip().replace(' ', '_').replace('-', '_')
@@ -1289,7 +1289,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # remove multiple under scores
         formatted_text = re.sub('[_]+', '_', formatted_text)
 
-        self.code_lineEdit.setText(formatted_text)
+        self.code_line_edit.setText(formatted_text)
         self.updating_code_lineEdit = False
 
     def add_depending_task_push_button_clicked(self):
@@ -1371,7 +1371,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
 
     def resources_combo_box_changed(self, item_text):
-        """runs when resources_comboBox item changed
+        """runs when resources_combo_box item changed
 
         :param str item_text: Currently selected item text
         :return:
@@ -1385,12 +1385,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.updating_resources_combo_box = True
 
         index = \
-            self.resources_comboBox.findText(item_text, QtCore.Qt.MatchExactly)
+            self.resources_combo_box.findText(item_text, QtCore.Qt.MatchExactly)
         if index:
             # remove the item from the comboBox
-            self.resources_comboBox.removeItem(index)
+            self.resources_combo_box.removeItem(index)
             # select the first index which is ''
-            self.resources_comboBox.setCurrentIndex(0)
+            self.resources_combo_box.setCurrentIndex(0)
 
             # add the item to the resources list
             item = QtWidgets.QListWidgetItem(item_text)
@@ -1436,14 +1436,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         item_text = item.text()
-        # remove the item and add it to the resources_comboBox
+        # remove the item and add it to the resources_combo_box
         self.updating_resources_combo_box = True
         self.resources_listWidget.takeItem(
             self.resources_listWidget.row(item)
         )
 
-        # return it to the resources_comboBox
-        self.resources_comboBox.addItem(item_text)
+        # return it to the resources_combo_box
+        self.resources_combo_box.addItem(item_text)
         self.updating_resources_combo_box = False
 
     def depends_to_list_widget_item_double_clicked(self, item):
@@ -1452,7 +1452,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param item: A Qt.QListWidgetItem
         :return:
         """
-        # remove the item and add it to the resources_comboBox
+        # remove the item and add it to the resources_combo_box
         self.depends_to_listWidget.takeItem(
             self.depends_to_listWidget.row(item)
         )
@@ -1517,10 +1517,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """create/update the task
         """
         # start with creating the task
-        entity_type = self.entity_type_comboBox.currentText()
+        entity_type = self.entity_type_combo_box.currentText()
         project = self.get_project()
 
-        if not self.parent_task_lineEdit.is_valid:
+        if not self.parent_task_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
@@ -1529,28 +1529,28 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
         parent_task = self.get_parent_task()
 
-        if not self.name_lineEdit.is_valid:
+        if not self.name_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Some fields are not valid!'
             )
             return
-        name = self.name_lineEdit.text()
+        name = self.name_line_edit.text()
 
-        if not self.code_lineEdit.is_valid:
+        if not self.code_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Some fields are not valid!'
             )
             return
-        code = self.code_lineEdit.text()
+        code = self.code_line_edit.text()
 
         # Task Type
         from stalker import Type
         from stalker.db.session import DBSession
-        task_type_name = self.task_type_comboBox.currentText()
+        task_type_name = self.task_type_combo_box.currentText()
         task_type = None
         if task_type_name:
             task_type = Type.query\
@@ -1567,7 +1567,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 DBSession.add(task_type)
 
         # Asset Type
-        asset_type_name = self.asset_type_comboBox.currentText()
+        asset_type_name = self.asset_type_combo_box.currentText()
         asset_type = None
         if asset_type_name:
             asset_type = Type.query\
@@ -1585,15 +1585,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Sequence
         from stalker import Sequence
-        sequence_name = self.sequence_comboBox.currentText()
+        sequence_name = self.sequence_combo_box.currentText()
         sequence = Sequence.query\
             .filter(Sequence.project == project)\
             .filter(Sequence.name == sequence_name)\
             .first()
 
-        fps = self.fps_spinBox.value()
-        cut_in = self.cutIn_spinBox.value()
-        cut_out = self.cutOut_spinBox.value()
+        fps = self.fps_spin_box.value()
+        cut_in = self.cut_in_spin_box.value()
+        cut_out = self.cut_out_spin_box.value()
         image_format = self.image_format.get_current_image_format()
 
         depends = self.get_tasks_from_list_widget(self.depends_to_listWidget)
@@ -1601,11 +1601,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         responsible = \
             self.get_users_from_list_widget(self.responsible_listWidget)
 
-        schedule_timing = self.schedule_timing_spinBox.value()
-        schedule_unit = self.schedule_unit_comboBox.currentText()
-        schedule_model = self.schedule_model_comboBox.currentText()
+        schedule_timing = self.schedule_timing_spin_box.value()
+        schedule_unit = self.schedule_unit_combo_box.currentText()
+        schedule_model = self.schedule_model_combo_box.currentText()
 
-        priority = self.priority_spinBox.value()
+        priority = self.priority_spin_box.value()
 
         created_by = self.get_logged_in_user()
 
@@ -1706,12 +1706,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 )
                 # revert the parent field
                 if self.task.parent:
-                    self.parent_task_lineEdit.setText(
+                    self.parent_task_line_edit.setText(
                         self.get_task_hierarchy_name(self.task.parent)
                     )
                 else:
-                    self.parent_task_lineEdit.setText('')
-                self.parent_task_lineEdit.set_valid()
+                    self.parent_task_line_edit.setText('')
+                self.parent_task_line_edit.set_valid()
                 return
 
             try:
@@ -1742,7 +1742,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.task.schedule_unit = schedule_unit
             self.task.schedule_model = schedule_model
 
-            if self.update_bid_checkBox.isChecked():
+            if self.update_bid_check_box.isChecked():
                 self.task.bid_timing = schedule_timing
                 self.task.bid_unit = schedule_unit
 

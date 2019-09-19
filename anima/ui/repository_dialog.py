@@ -50,7 +50,7 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
 
         self.dialog_label.setText('%s Repository' % self.mode)
 
-        # create name_lineEdit
+        # create name_line_edit
         from anima.ui.widgets import ValidatedLineEdit
         self.name_lineEdit = ValidatedLineEdit(
             message_field=self.name_validator_label
@@ -70,7 +70,7 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
     def _setup_signals(self):
         """create the signals
         """
-        # name_lineEdit is changed
+        # name_line_edit is changed
         QtCore.QObject.connect(
             self.name_lineEdit,
             QtCore.SIGNAL('textChanged(QString)'),
@@ -83,7 +83,7 @@ class MainDialog(QtWidgets.QDialog, repository_dialog_UI.Ui_Dialog, AnimaDialogB
         pass
 
     def name_line_edit_changed(self, text):
-        """runs when the name_lineEdit text has changed
+        """runs when the name_line_edit text has changed
         """
         if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
             self.name_lineEdit.set_invalid('Invalid character')

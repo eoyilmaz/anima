@@ -145,7 +145,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.environment.has_publishers:
             self.publish_push_button.setText('Publish')
 
-        # create the project attribute in projects_comboBox
+        # create the project attribute in projects_combo_box
         self.current_dialog = None
 
         # setup signals

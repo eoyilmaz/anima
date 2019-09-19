@@ -51,14 +51,14 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
 
         self.dialog_label.setText('%s Structure' % self.mode)
 
-        # create name_lineEdit
+        # create name_line_edit
         from anima.ui.widgets import ValidatedLineEdit
-        self.name_lineEdit = ValidatedLineEdit(
+        self.name_line_edit = ValidatedLineEdit(
             message_field=self.name_validator_label
         )
-        self.name_lineEdit.setPlaceholderText('Enter Name')
+        self.name_line_edit.setPlaceholderText('Enter Name')
         self.name_fields_verticalLayout.insertWidget(
-            0, self.name_lineEdit
+            0, self.name_line_edit
         )
 
         # create DoubleListWidget
@@ -89,9 +89,9 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
     def _setup_signals(self):
         """create the signals
         """
-        # name_lineEdit is changed
+        # name_line_edit is changed
         QtCore.QObject.connect(
-            self.name_lineEdit,
+            self.name_line_edit,
             QtCore.SIGNAL('textChanged(QString)'),
             self.name_line_edit_changed
         )
@@ -137,15 +137,15 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         )
 
     def name_line_edit_changed(self, text):
-        """runs when the name_lineEdit text has changed
+        """runs when the name_line_edit text has changed
         """
         if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
-            self.name_lineEdit.set_invalid('Invalid character')
+            self.name_line_edit.set_invalid('Invalid character')
         else:
             if text == '':
-                self.name_lineEdit.set_invalid('Enter a name')
+                self.name_line_edit.set_invalid('Enter a name')
             else:
-                self.name_lineEdit.set_valid()
+                self.name_line_edit.set_valid()
 
     def fill_ui_with_structure(self, structure):
         """fills the UI with the given structure
@@ -158,8 +158,8 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
             assert isinstance(structure, Structure)
 
         self.structure = structure
-        self.name_lineEdit.setText(self.structure.name)
-        self.name_lineEdit.set_valid()
+        self.name_line_edit.setText(self.structure.name)
+        self.name_line_edit.set_valid()
 
         self.custom_template_plainTextEdit.setPlainText(
             self.structure.custom_template
@@ -295,14 +295,14 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
     def accept(self):
         """overridden accept method
         """
-        if not self.name_lineEdit.is_valid:
+        if not self.name_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
                 'Please fix <b>name</b> field!'
             )
             return
-        name = self.name_lineEdit.text()
+        name = self.name_line_edit.text()
 
         custom_template = self.custom_template_plainTextEdit.toPlainText()
 

@@ -54,7 +54,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.dialog_label.setText('%s Image Format' % self.mode)
 
-        # create name_lineEdit
+        # create name_line_edit
         from anima.ui.widgets import ValidatedLineEdit
         self.name_line_edit = ValidatedLineEdit(
             message_field=self.name_validator_label
@@ -170,7 +170,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_signals(self):
         """create the signals
         """
-        # name_lineEdit is changed
+        # name_line_edit is changed
         QtCore.QObject.connect(
             self.name_line_edit,
             QtCore.SIGNAL('textChanged(QString)'),
@@ -183,7 +183,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         pass
 
     def name_line_edit_changed(self, text):
-        """runs when the name_lineEdit text has changed
+        """runs when the name_line_edit text has changed
         """
         if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
             self.name_line_edit.set_invalid('Invalid character')

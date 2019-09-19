@@ -60,7 +60,7 @@ class ReferenceEditorTestCase(unittest.TestCase):
         """
         dialog = reference_editor.MainDialog()
         self.show_dialog(dialog)
-        #QTest.mouseClick(dialog.buttonBox.buttons()[0], Qt.LeftButton)
+        #QTest.mouseClick(dialog.button_box.buttons()[0], Qt.LeftButton)
         self.assertFalse(dialog.isVisible())
 
     
