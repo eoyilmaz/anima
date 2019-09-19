@@ -10,7 +10,10 @@ to related Animation Tasks with single shot in relation with the Camera Sequence
 
 
 import os
+
+import anima.env.mayaEnv.animation
 import pymel.core as pm
+from pymel import core as pm
 from stalker import LocalSession
 from anima.env import mayaEnv
 
@@ -1055,7 +1058,7 @@ class ShotExporter(object):
                 self.clear_scene(except_this_shot)
 
                 # set frame range before save
-                toolbox.Animation.set_range_from_shot()
+                anima.env.mayaEnv.animation.Animation.set_range_from_shot()
 
                 # update shot.cut_in and shot.cut_out info
                 cut_in = pm.playbackOptions(q=1, min=1)
@@ -1091,3 +1094,117 @@ class ShotExporter(object):
         message += '\r'
         message += 'Completed Succesfully.\r\n'
         pm.confirmDialog(title='Info', message=message, button='OK')
+
+
+class Previs(object):
+    """tools for Previs
+    """
+
+    @classmethod
+    def auto_rename_shots(cls):
+        """Auto rename shots in the camera sequencer
+        """
+        for i, shot in enumerate(sorted(pm.ls(type="shot"), key=lambda x: x.startFrame.get())):
+            shot_name = str((i + 1) * 10).zfill(4)
+            shot.shotName.set(shot_name)
+
+    @classmethod
+    def split_camera(cls):
+        """splits one camera to multiple cameras
+        """
+        selection = pm.ls(sl=1, type=pm.nt.Transform)
+        if not selection:
+            raise RuntimeError("Please select at least one camera")
+
+        new_cameras = []
+
+        from anima.env.mayaEnv import camera_tools
+        for cam in selection:
+            cut_info = camera_tools.find_cut_info(cam)
+
+            for cut_in, cut_out in cut_info:
+                print cut_in, cut_out
+                # duplicate the original camera with input graph
+                dup_cam = pm.duplicate(cam, un=1)[0]
+
+                # remove all keyframes out of the cut range
+                # remove befor
+                pm.cutKey(dup_cam, time=(-1000, cut_in - 1))
+                # # remove after
+                pm.cutKey(dup_cam, time=(cut_out + 1, 100000))
+
+                # rename the new cam
+                dup_cam.rename("%s_#" % cam.name())
+
+                new_cameras.append(dup_cam)
+
+            # remove original camera
+            pm.delete(cam)
+
+        # select all new cameras
+        pm.select(new_cameras)
+
+    @classmethod
+    def shots_from_cams(cls):
+        """creates shot nodes from selected cameras
+        """
+        # get cameras
+        cams = pm.ls(sl=1, type=pm.nt.Transform)
+
+        real_cams = []
+
+        # filter cameras
+        for cam in cams:
+            cam_shape = cam.getShape()
+            if isinstance(cam_shape, pm.nt.Camera):
+                real_cams.append(cam)
+
+        cams = real_cams
+
+        # get sequencer
+        seqs = [seq for seq in pm.ls(type="sequencer") if seq.referenceFile() is None]
+
+        seq = None
+        if not seqs:
+            # create a sequencer
+            sm = pm.ls(type='sequenceManager')[0]
+            seq = sm.create_sequence()
+        else:
+            seq = seqs[0]
+
+        # try to automatically crate the sequence name attribute
+        seq.get_sequence_name()
+
+        # create shot nodes from cameras
+        for cam in cams:
+            # read camera keyframes
+            keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
+
+            if not keyframes:
+                continue
+
+            start_frame = keyframes[0]
+            end_frame = keyframes[-1]
+
+            # create a shot node
+            shot = seq.create_shot()
+            shot.startFrame.set(start_frame)
+            shot.endFrame.set(end_frame)
+            shot.setSequenceStartTime(start_frame)
+            shot.set_camera(cam)
+
+            # TODO: write this properly
+            shot.track.set(1)
+
+    @classmethod
+    def save_previs_to_shots(cls):
+        """exports previs to animation shots
+        """
+        from anima.env import mayaEnv
+        from anima.env.mayaEnv import previs
+        se = previs.ShotExporter()
+
+        # use previs scene take_name
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+        se.save_previs_to_shots(v.take_name)
