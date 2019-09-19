@@ -12,6 +12,8 @@ import tempfile
 import unittest
 
 # prepare for test
+import anima.env.mayaEnv.reference
+
 os.environ['ANIMA_TEST_SETUP'] = ""
 
 import pymel.core as pm
@@ -6603,7 +6605,7 @@ class ToolboxRepresentationToolsTestCase(MayaTestBase):
         self.maya_env.open(self.version102, force=True)
 
         # generate all from here
-        toolbox.Reference.generate_repr_of_all_references()
+        anima.env.mayaEnv.reference.Reference.generate_repr_of_all_references()
 
         # expect all of the representations to be generated for all of the
         # referenced scenes
