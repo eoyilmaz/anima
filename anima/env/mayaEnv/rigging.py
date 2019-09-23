@@ -210,7 +210,7 @@ class Rigging(object):
                         pass
 
     @classmethod
-    def create_joint_on_curve(cls):
+    def create_joints_on_curve_ui(cls):
         """Creates joints on selected curve
         """
         from anima.env import mayaEnv
@@ -218,9 +218,143 @@ class Rigging(object):
         jocd = JointOnCurveDialog(parent=main_window)
         jocd.show()
 
+    @classmethod
+    def create_joints_on_curve(cls, number_of_joints=2, orientation="xyz",
+                               second_axis="+x", align_to_world=False,
+                               reverse_dir=False, joint_name_string="joint",
+                               suffix_string=""):
+        """Creates joints on selected curve
+        """
+
+        sel_list = pm.ls(sl=1)
+        if len(sel_list) < 1:
+            pm.error("Please select one curve")
+
+        curve = sel_list[0]
+        curve_shape = curve.getShape()
+
+        if not isinstance(curve_shape, (pm.nt.NurbsCurve, pm.nt.BezierCurve)):
+            pm.error("Please select one curve")
+
+        if not curve_shape:
+            pm.error("Please select one curve")
+
+        if joint_name_string == "":
+            joint_name_string = "joint"
+
+        motion_path1 = pm.nt.MotionPath()
+        motion_path1.rename("CJOC_motionPath#")
+
+        curve_shape.worldSpace[0] >> motion_path1.geometryPath
+        motion_path1.fractionMode.set(1)
+
+        vector_lut = {
+            "xyz": {
+                'aim_vector': pm.dt.Vector(1, 0, 0),
+                'world_up_vector': pm.dt.Vector(0, 1, 0)
+            },
+            "xzy": {
+                'aim_vector': pm.dt.Vector(1, 0, 0),
+                'world_up_vector': pm.dt.Vector(0, 0, 1)
+            },
+            "yzx": {
+                'aim_vector': pm.dt.Vector(0, 1, 0),
+                'world_up_vector': pm.dt.Vector(0, 0, 1)
+            },
+            "yxz": {
+                'aim_vector': pm.dt.Vector(0, 1, 0),
+                'world_up_vector': pm.dt.Vector(1, 0, 0)
+            },
+            "zxy": {
+                'aim_vector': pm.dt.Vector(0, 0, 1),
+                'world_up_vector': pm.dt.Vector(1, 0, 0)
+            },
+            "zyx": {
+                'aim_vector': pm.dt.Vector(0, 0, 1),
+                'world_up_vector': pm.dt.Vector(0, 1, 0)
+            },
+        }
+
+        aim_vector = vector_lut[orientation]["aim_vector"]
+        world_up_vector = vector_lut[orientation]["world_up_vector"]
+
+        up_vector_lut = {
+            '+x': pm.dt.Vector(1, 0, 0),
+            '-x': pm.dt.Vector(-1, 0, 0),
+            '+y': pm.dt.Vector(0, 1, 0),
+            '-y': pm.dt.Vector(0, -1, 0),
+            '+z': pm.dt.Vector(0, 0, 1),
+            '-z': pm.dt.Vector(0, 0, -1)
+        }
+        up_vector = up_vector_lut[second_axis]
+
+        orientations = [
+            "xyz",
+            "yzx",
+            "zxy",
+            "xzy",
+            "yxz",
+            "zyx",
+        ]
+
+        joints = []
+        for i in range(number_of_joints):
+            u_value = (1.0 * float(i) / (float(number_of_joints) - 1.0))
+
+            if reverse_dir:
+                u_value = 1.0 - u_value
+
+            motion_path1.uValue.set(u_value)
+
+            world_pos = pm.dt.Vector(
+                motion_path1.xCoordinate.get(),
+                motion_path1.yCoordinate.get(),
+                motion_path1.zCoordinate.get()
+            )
+
+            pm.select(None)
+            joint = pm.nt.Joint()
+            joint.rename("%s#" % joint_name_string)
+            joint.t.set(world_pos)
+
+            joint.rotateOrder.set(orientations.index(orientation))
+            joints.append(joint)
+
+        if suffix_string is not None:
+            for joint in joints:
+                joint.rename("%s%s" % (joint.name(), suffix_string))
+
+        for i in range(len(joints) - 1):
+            if not align_to_world:
+                aim_constraint = pm.aimConstraint(
+                    joints[i + 1],
+                    joints[i],
+                    wut="vector",
+                    aim=aim_vector,
+                    wu=up_vector,
+                    u=world_up_vector,
+                )
+                pm.delete(aim_constraint)
+
+            pm.parent(joints[i + 1], joints[i], a=True)
+
+        # fix the last joint
+        pm.makeIdentity(
+            joints[-1],
+            apply=1, t=False, r=False, s=False, n=False, jointOrient=True
+        )
+
+        pm.delete(motion_path1)
+        pm.select(joints[0])
+
+        # fix first joints orientation
+        pm.makeIdentity(
+            apply=True, t=False, r=True, s=False, n=False
+        )
+
 
 class JointOnCurveDialog(QtWidgets.QDialog):
-    """
+    """Dialog for create_joint_on_curve utility
     """
 
     def __init__(self, parent=None):
@@ -335,7 +469,6 @@ class JointOnCurveDialog(QtWidgets.QDialog):
                 "-y",
                 "+z",
                 "-z",
-                "None"
             ]
         )
         self.form_layout.setWidget(
@@ -449,17 +582,9 @@ class JointOnCurveDialog(QtWidgets.QDialog):
 
         # ----------------
         # Create Joints Button
-        self.button_box_layout = QtWidgets.QHBoxLayout(self)
-        spacer_item = QtWidgets.QSpacerItem(
-            20, 40,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Expanding
-        )
-        self.button_box_layout.addSpacerItem(spacer_item)
         self.create_joints_button = QtWidgets.QPushButton()
         self.create_joints_button.setText("Create Joints")
-        self.button_box_layout.addWidget(self.create_joints_button)
-        self.vertical_layout.addLayout(self.button_box_layout)
+        self.vertical_layout.addWidget(self.create_joints_button)
 
         # setup signals
         QtCore.QObject.connect(
@@ -486,7 +611,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         if self.suffix_joint_names_check_box.isChecked():
             suffix_string = self.suffix_joint_names_line_edit.text()
 
-        create_joints_on_curve(
+        Rigging.create_joints_on_curve(
             number_of_joints=number_of_joints,
             orientation=orientation,
             second_axis=second_axis,
@@ -495,142 +620,6 @@ class JointOnCurveDialog(QtWidgets.QDialog):
             joint_name_string=joint_name_string,
             suffix_string=suffix_string
         )
-        super(JointOnCurveDialog, self).accept()
 
 
-def create_joints_on_curve(
-        number_of_joints=2,
-        orientation="xyz",
-        second_axis="+x",
-        align_to_world=False,
-        reverse_dir=False,
-        joint_name_string="joint",
-        suffix_string=""
-):
-    """Creates joints on selected curve
-    """
-    sel_list = pm.ls(sl=1)
-    if len(sel_list) < 1:
-        pm.error("Please select one curve")
 
-    curve = sel_list[0]
-    curve_shape = curve.getShape()
-
-    if not isinstance(curve_shape, (pm.nt.NurbsCurve, pm.nt.BezierCurve)):
-        pm.error("Please select one curve")
-
-    if not curve_shape:
-        pm.error("Please select one curve")
-
-    if joint_name_string == "":
-        joint_name_string = "joint"
-
-    motion_path1 = pm.nt.MotionPath()
-    motion_path1.rename("CJOC_motionPath#")
-
-    curve_shape.worldSpace[0] >> motion_path1.geometryPath
-    motion_path1.fractionMode.set(1)
-
-    vector_lut = {
-        "xyz": {
-            'aim_vector': pm.dt.Vector(1, 0, 0),
-            'world_up_vector': pm.dt.Vector(0, 1, 0)
-        },
-        "xzy": {
-            'aim_vector': pm.dt.Vector(1, 0, 0),
-            'world_up_vector': pm.dt.Vector(0, 0, 1)
-        },
-        "yzx": {
-            'aim_vector': pm.dt.Vector(0, 1, 0),
-            'world_up_vector': pm.dt.Vector(0, 0, 1)
-        },
-        "yxz": {
-            'aim_vector': pm.dt.Vector(0, 1, 0),
-            'world_up_vector': pm.dt.Vector(1, 0, 0)
-        },
-        "zxy": {
-            'aim_vector': pm.dt.Vector(0, 0, 1),
-            'world_up_vector': pm.dt.Vector(1, 0, 0)
-        },
-        "zyx": {
-            'aim_vector': pm.dt.Vector(0, 0, 1),
-            'world_up_vector': pm.dt.Vector(0, 1, 0)
-        },
-    }
-
-    aim_vector = vector_lut[orientation]["aim_vector"]
-    world_up_vector = vector_lut[orientation]["world_up_vector"]
-
-    up_vector_lut = {
-        '+x': pm.dt.Vector(1, 0, 0),
-        '-x': pm.dt.Vector(-1, 0, 0),
-        '+y': pm.dt.Vector(0, 1, 0),
-        '-y': pm.dt.Vector(0, -1, 0),
-        '+z': pm.dt.Vector(0, 0, 1),
-        '-z': pm.dt.Vector(0, 0, -1)
-    }
-    up_vector = up_vector_lut[second_axis]
-
-    orientations = [
-        "xyz",
-        "yzx",
-        "zxy",
-        "xzy",
-        "yxz",
-        "zyx",
-    ]
-
-    joints = []
-    for i in range(number_of_joints):
-        u_value = (1.0 * float(i) / (float(number_of_joints) - 1.0))
-
-        if reverse_dir:
-            u_value = 1.0 - u_value
-
-        motion_path1.uValue.set(u_value)
-
-        world_pos = pm.dt.Vector(
-            motion_path1.xCoordinate.get(),
-            motion_path1.yCoordinate.get(),
-            motion_path1.zCoordinate.get()
-        )
-
-        pm.select(None)
-        joint = pm.nt.Joint()
-        joint.rename("%s#" % joint_name_string)
-        joint.t.set(world_pos)
-
-        joint.rotateOrder.set(orientations.index(orientation))
-        joints.append(joint)
-
-    if suffix_string is not None:
-        for joint in joints:
-            joint.rename("%s%s" % (joint.name(), suffix_string))
-
-    for i in range(len(joints) - 1):
-        if not align_to_world:
-            aim_constraint = pm.aimConstraint(
-                joints[i + 1],
-                joints[i],
-                wut="vector",
-                aim=aim_vector,
-                wu=up_vector,
-                u=world_up_vector,
-            )
-            pm.delete(aim_constraint)
-
-        pm.parent(joints[i + 1], joints[i], a=True)
-
-    # fix the last joint
-    pm.makeIdentity(
-        joints[-1],
-        apply=1, t=False, r=False, s=False, n=False, jointOrient=True
-    )
-
-    pm.delete(motion_path1)
-    pm.select(joints[0])
-
-    # fix first joints orientation
-    pm.makeIdentity(
-        apply=True, t=False, r=True, s=False, n=False
-    )

@@ -869,10 +869,10 @@ def UI():
         with rigging_columnLayout:
             color.reset()
             pm.button(
-                'create_joint_on_curve_button',
-                l="Create Joint On Curve",
-                c=repeated_callback(Rigging.create_joint_on_curve),
-                ann=Rigging.create_joint_on_curve.__doc__,
+                'create_joints_on_curve_ui_button',
+                l="Create Joints On Curve UI",
+                c=repeated_callback(Rigging.create_joints_on_curve_ui),
+                ann=Rigging.create_joints_on_curve_ui.__doc__,
                 bgc=color.color
             )
             pm.button(
