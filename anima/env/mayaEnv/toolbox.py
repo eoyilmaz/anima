@@ -876,6 +876,13 @@ def UI():
                 bgc=color.color
             )
             pm.button(
+                'mirror_transformation_button',
+                l="Mirror Transformation",
+                c=repeated_callback(Rigging.mirror_transformation),
+                ann=Rigging.mirror_transformation.__doc__,
+                bgc=color.color
+            )
+            pm.button(
                 'oyIKFKSetup_button',
                 l="oyIKFKSetup",
                 c=repeated_callback(mel.eval, 'oyIKFKSetup'),

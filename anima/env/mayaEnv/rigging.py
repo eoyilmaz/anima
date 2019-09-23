@@ -352,6 +352,46 @@ class Rigging(object):
             apply=True, t=False, r=True, s=False, n=False
         )
 
+    @classmethod
+    def mirror_transformation(cls):
+        """Mirrors transformation from first selected object to the second
+        selected object
+        """
+        # TODO: This needs more generalization
+        import math
+        sel_list = pm.selected()
+
+        source_node = sel_list[0]
+        target_node = sel_list[1]
+
+        m = source_node.worldMatrix.get()
+
+        local_y_axis = pm.dt.Vector(m[1][0], m[1][1], m[1][2])
+        local_z_axis = pm.dt.Vector(m[2][0], m[2][1], m[2][2])
+
+        # reflection
+        reflected_local_y_axis = local_y_axis.deepcopy()
+        reflected_local_y_axis.x *= -1
+
+        reflected_local_z_axis = local_z_axis.deepcopy()
+        reflected_local_z_axis.x *= -1
+
+        reflected_local_x_axis = reflected_local_y_axis.cross(
+            reflected_local_z_axis)
+        reflected_local_x_axis.normalize()
+
+        wm = pm.dt.TransformationMatrix()
+
+        wm[0, :3] = reflected_local_x_axis
+        wm[1, :3] = reflected_local_y_axis
+        wm[2, :3] = reflected_local_z_axis
+
+        target_node.r.set(map(math.degrees, wm.eulerRotation()))
+        # pm.makeIdentity(
+        #     target_node, apply=1, t=False, r=False, s=False, n=False,
+        #     jointOrient=True
+        # )
+
 
 class JointOnCurveDialog(QtWidgets.QDialog):
     """Dialog for create_joint_on_curve utility
