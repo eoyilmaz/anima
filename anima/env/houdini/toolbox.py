@@ -26,33 +26,6 @@ def ui():
     return root_widget
 
 
-def add_button(label, layout, callback, tooltip=''):
-    """A wrapper for button creation
-
-    :param label: The label of the button
-    :param layout: The layout that the button is going to be placed under.
-    :param callback: The callable that will be called when the button is
-      clicked.
-    :param str tooltip: Optional tooltip for the button
-    :return:
-    """
-    # button
-    button = QtWidgets.QPushButton()
-    button.setText(label)
-    layout.addWidget(button)
-
-    button.setToolTip(tooltip)
-
-    # Signal
-    QtCore.QObject.connect(
-        button,
-        QtCore.SIGNAL("clicked()"),
-        callback
-    )
-
-    return button
-
-
 class ToolboxLayout(QtWidgets.QVBoxLayout):
     """The toolbox
     """
@@ -79,50 +52,46 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # -------------------------------------------------------------------
         # Version Creator
+
+        from anima.ui.utils import add_button
         add_button(
             'Version Creator',
             general_tab_vertical_layout,
-            GenericTools.version_creator,
-            GenericTools.version_creator.__doc__
+            GenericTools.version_creator
         )
 
         add_button(
             'Browse $HIP',
             general_tab_vertical_layout,
-            GenericTools.browse_hip,
-            GenericTools.browse_hip.__doc__
+            GenericTools.browse_hip
         )
 
         # Copy Path
         add_button(
             'Copy Node Path',
             general_tab_vertical_layout,
-            GenericTools.copy_node_path,
-            GenericTools.copy_node_path.__doc__
+            GenericTools.copy_node_path
         )
 
         # Range from shot
         add_button(
             'Range From Shot',
             general_tab_vertical_layout,
-            GenericTools.range_from_shot,
-            GenericTools.range_from_shot.__doc__
+            GenericTools.range_from_shot
         )
 
         # Update render settings
         add_button(
             'Update Render Settings',
             general_tab_vertical_layout,
-            GenericTools.update_render_settings,
-            GenericTools.update_render_settings.__doc__
+            GenericTools.update_render_settings
         )
 
         # Export RSProxy Data As JSON
         add_button(
             'Export RSProxy Data As JSON',
             general_tab_vertical_layout,
-            GenericTools.export_rsproxy_data_as_json,
-            GenericTools.export_rsproxy_data_as_json.__doc__
+            GenericTools.export_rsproxy_data_as_json
         )
 
         # -------------------------------------------------------------------
