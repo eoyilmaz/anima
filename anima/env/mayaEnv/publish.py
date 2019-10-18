@@ -1828,7 +1828,8 @@ def check_time_logs(progress_controller=None):
 
     if v:
         task = v.task
-        if task.schedule_model == 'effort' and task.resources:
+        if task.schedule_model == 'effort' and task.resources \
+                and task.status.code != 'CMPL':
             now = datetime.datetime.now()
             task_start = \
                 task.computed_start if task.computed_start else task.start
