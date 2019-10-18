@@ -244,6 +244,28 @@ def rivet():
     return locator
 
 
+def create_follicle(shape, uv):
+    """creates follicle on the given shape at given uv coordinates
+
+    :param shape:
+    :param uv:
+    :return:
+    """
+    # create a hair follicle
+    follicle = pm.nt.Follicle()
+    follicle.simulationMethod.set(0)
+    shape.worldMatrix >> follicle.inputWorldMatrix
+    shape.outMesh >> follicle.inputMesh
+    follicle.parameterU.set(uv[0])
+    follicle.parameterV.set(uv[1])
+    # parent the object to the follicles transform node
+    follicle_transform = follicle.getParent()
+    follicle.outTranslate >> follicle_transform.translate
+    follicle.outRotate >> follicle_transform.rotate
+
+    return follicle_transform, follicle
+
+
 def auto_rivet():
     """creates hair follicles around selection
     """
@@ -254,31 +276,19 @@ def auto_rivet():
     geo = sel_list[-1]
 
     # get the closest point to the surface
-    geo_shape = geo.getShape()
+    shape = geo.getShape()
 
     follicles = []
 
     for obj in objects:
         # pivot point of the obj
         pivot = obj.getRotatePivot(space='world')
-        uv = geo_shape.getUVAtPoint(pivot, space='world')
+        uv = shape.getUVAtPoint(pivot, space='world')
 
-        # create a hair follicle
-        follicle = pm.nt.Follicle()
-        follicles.append(follicle)
-        follicle.simulationMethod.set(0)
-        geo_shape.worldMatrix >> follicle.inputWorldMatrix
-        geo_shape.outMesh >> follicle.inputMesh
-        follicle.parameterU.set(uv[0])
-        follicle.parameterV.set(uv[1])
-
-        # parent the object to the follicles transform node
-        follicle_transform = follicle.getParent()
-
-        follicle.outTranslate >> follicle_transform.translate
-        follicle.outRotate >> follicle_transform.rotate
-
+        follicle_transform, follicle = create_follicle(shape, uv)
         pm.parent(obj, follicle_transform)
+
+        follicles.append(follicle)
 
     return follicles
 
@@ -295,26 +305,13 @@ def rivet_per_face():
         p = reduce(lambda x, y: x + y, face.getPoints()) / face.numVertices()
         obj = pm.spaceLocator(p=p)
         locators.append(obj)
+        shape = face.node()
         uv = face.getUVAtPoint(p, space='world')
 
-        # create a hair follicle
-        follicle = pm.nt.Follicle()
-        follicles.append(follicle)
-        follicle.simulationMethod.set(0)
-
-        shape = face.node()
-        shape.worldMatrix >> follicle.inputWorldMatrix
-        shape.outMesh >> follicle.inputMesh
-        follicle.parameterU.set(uv[0])
-        follicle.parameterV.set(uv[1])
-
-        # parent the object to the follicles transform node
-        follicle_transform = follicle.getParent()
-
-        follicle.outTranslate >> follicle_transform.translate
-        follicle.outRotate >> follicle_transform.rotate
+        follicle_transform, follicle = create_follicle(shape, uv)
 
         pm.parent(obj, follicle_transform)
+        follicles.append(follicle)
 
     return follicles, locators
 
