@@ -1,4 +1,11 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2012-2019, Erkan Ozgur Yilmaz
+#
+# This module is part of anima and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+
 from anima.env.mayaEnv import auxiliary
+from anima.perf import measure_time
 from pymel import core as pm
 
 from anima.ui.lib import QtCore, QtWidgets
@@ -662,4 +669,60 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         )
 
 
+class PinController(object):
+    """A pin controller is a snappy type of controller where the object is free
+    too move but because its movement is compensated with a parent group it
+    stays at the same position in the space.
 
+    It is mainly used in facial rigs. Where the controller seems to be
+    controlling the object that it is deforming without any cyclic dependency
+    """
+    def __init__(self, pin_size=0.1):
+        self.size = pin_size
+        self.shader_type = 'lambert'
+        self.color = [0, 1, 0]
+        self.pin_transform = None
+        self.pin_shape = None
+
+        self.pin_to_vertex = None
+        self.pin_to_shape = None
+        self.pin_uv = [0, 0]
+        self.follicle_shape = None
+        self.follicle_transform = None
+
+        self.compensation_group = None
+        self.axial_correction_group = None
+
+    def setup(self):
+        """creates the setup
+        """
+        from anima.env.mayaEnv import auxiliary
+
+        vtx_coord = pm.xform(self.pin_to_vertex, ws=1, t=1)
+
+        self.pin_to_shape = self.pin_to_vertex.node()
+        self.pin_uv = self.pin_to_shape.getUVAtPoint(vtx_coord, space='world')
+
+        # create a sphere with the size of pin_size
+        self.pin_transform, self.pin_shape = pm.sphere(radius=self.size)
+
+        # create two axial correction groups
+        self.compensation_group = \
+            auxiliary.axial_correction_group(self.pin_node)
+
+        self.axial_correction_group = \
+            auxiliary.axial_correction_group(self.compensation_group)
+
+        # create compensation setup
+        decompose_matrix = pm.nt.DecomposeMatrix()
+        self.pin_transform.inverseMatrix >> decompose_matrix.inputMatrix
+        decompose_matrix.outputTranslate >> self.compensation_group.t
+        decompose_matrix.outputRotate >> self.compensation_group.r
+        decompose_matrix.outputScale >> self.compensation_group.s
+
+        # create a follicle on the shape at the given uv
+        self.follicle_transform, self.follicle_shape = \
+            auxiliary.create_follicle(self.pin_to_shape, self.pin_uv)
+
+        # move the axial correction group
+        pm.xform(self.axial_correction_group, ws=1, t=vtx_coord)
