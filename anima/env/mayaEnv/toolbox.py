@@ -1001,8 +1001,13 @@ def UI():
                       c=repeated_callback(mel.eval, 'ArtPaintSkinWeightsTool'),
                       ann="paint weights tool",
                       bgc=color.color)
-            pm.button('oySkinTools_button', l="oySkinTools",
-                      c=repeated_callback(mel.eval, 'oySkinTools'),
+
+            def skin_tools_ui_caller():
+                from anima.env.mayaEnv.rigging import SkinTools
+                st = SkinTools()
+                st.ui()
+            pm.button('skin_tools_button', l="Skin Tools",
+                      c=skin_tools_ui_caller,
                       ann="skin tools",
                       bgc=color.color)
             pm.button('oyFixBoundJoint_button', l="fix_bound_joint",
@@ -1730,6 +1735,30 @@ def UI():
 
             pm.text(l='===== Component Animation =====')
             color.change()
+            smooth_selected_keyframes_text_fbg = pm.textFieldButtonGrp(
+                'smooth_selected_keyframes_text_fbg_button',
+                bl="Smooth Selected Keyframes",
+                adj=2, tx=1, cw=(1, 40),
+                ann="select keyframes in graph editor to smooth",
+                bgc=color.color
+            )
+
+            def smooth_selected_keyframes_text_fbg_callback():
+                iteration = int(
+                    pm.textFieldButtonGrp(
+                        "smooth_selected_keyframes_text_fbg_button", q=1, tx=1
+                    )
+                )
+                Animation.smooth_selected_keyframes(iteration)
+
+            pm.textFieldButtonGrp(
+                smooth_selected_keyframes_text_fbg,
+                e=1,
+                bc=repeated_callback(
+                    smooth_selected_keyframes_text_fbg_callback
+                )
+            )
+
             smooth_component_anim = pm.textFieldButtonGrp(
                 'oySmoothComponentAnimation_button',
                 bl="Smooth Component Animation",
@@ -1741,7 +1770,7 @@ def UI():
                 smooth_component_anim,
                 e=1,
                 bc=repeated_callback(
-                    Animation.oySmoothComponentAnimation,
+                    Animation.smooth_component_animation,
                     smooth_component_anim
                 )
             )
