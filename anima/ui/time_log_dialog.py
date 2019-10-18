@@ -902,7 +902,7 @@ order by cast("TimeLogs".start as date)
             QtWidgets.QMessageBox.critical(
                 self,
                 'Error',
-                'Gelecege TimeLog giremezsiniz!!!',
+                'Cannot enter TimeLog to a future date!!!',
             )
             return
 
