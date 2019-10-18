@@ -6,6 +6,7 @@
 
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.utils import add_button
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -27,33 +28,6 @@ def UI(app_in=None, executor=None, **kwargs):
     """
     from anima.ui.base import ui_caller
     return ui_caller(app_in, executor, ToolboxDialog, **kwargs)
-
-
-def add_button(label, layout, callback, tooltip=''):
-    """A wrapper for button creation
-
-    :param label: The label of the button
-    :param layout: The layout that the button is going to be placed under.
-    :param callback: The callable that will be called when the button is
-      clicked.
-    :param str tooltip: Optional tooltip for the button
-    :return:
-    """
-    # button
-    button = QtWidgets.QPushButton(layout.parentWidget())
-    button.setText(label)
-    layout.addWidget(button)
-
-    button.setToolTip(tooltip)
-
-    # Signal
-    QtCore.QObject.connect(
-        button,
-        QtCore.SIGNAL("clicked()"),
-        callback
-    )
-
-    return button
 
 
 class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
@@ -121,15 +95,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             'Version Creator',
             general_tab_vertical_layout,
             GenericTools.version_creator,
-            GenericTools.version_creator.__doc__
+            callback_kwargs={"parent": self.parent()}
         )
 
         # Loader Report
         add_button(
             'Loader Report',
             general_tab_vertical_layout,
-            GenericTools.loader_report,
-            GenericTools.loader_report.__doc__
+            GenericTools.loader_report
         )
 
         # -------------------------------------------------------------------
@@ -142,11 +115,25 @@ class GenericTools(object):
     """
 
     @classmethod
-    def version_creator(cls):
+    def version_creator(cls, **args):
         """version creator
         """
-        from anima.ui.scripts import fusion
-        fusion.version_creator()
+        # from anima.ui.scripts import fusion
+        # fusion.version_creator(*args)
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        fusion_env.name = 'Fusion'
+
+        from anima.ui import version_creator
+
+        ui_instance = version_creator.MainDialog(
+            environment=fusion_env,
+            **args
+        )
+        ui_instance.show()
+        ui_instance.center_window()
 
     @classmethod
     def loader_report(cls):

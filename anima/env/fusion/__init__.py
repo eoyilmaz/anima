@@ -234,6 +234,11 @@ class Fusion(EnvironmentBase):
         """
         super(Fusion, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
+
+        # from anima.env import blackmagic as bmd
+        # self.fusion = bmd.scriptapp("Fusion")
+        # self.fusion = bmd.get_fusion()
+
         self.fusion = bmf.scriptapp("Fusion")
         self.fusion_prefs = self.fusion.GetPrefs()['Global']
 
