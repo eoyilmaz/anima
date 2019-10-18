@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2012-2019, Erkan Ozgur Yilmaz
+#
+# This module is part of anima and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+
 from anima.env.mayaEnv.camera_tools import cam_to_chan
 from pymel import core as pm
 
@@ -144,7 +150,7 @@ class Animation(object):
         pm.delete(base_layer)
 
     @classmethod
-    def oySmoothComponentAnimation(cls, ui_item):
+    def smooth_component_animation(cls, ui_item):
         """calls the mel script oySmoothComponentAnimation
         """
         # get the frame range
@@ -152,6 +158,26 @@ class Animation(object):
             ui_item, q=1, tx=1
         )
         pm.mel.eval('oySmoothComponentAnimation(%s)' % frame_range)
+
+    @classmethod
+    def smooth_selected_keyframes(cls, iteration=10):
+        """smooths the selected keyframes
+
+        :param iteration:
+        :return:
+        """
+        from anima.utils import smooth_array
+
+        node = pm.keyframe(q=1, sl=1, n=1)[0]
+        keyframe_indices = pm.keyframe(q=1, sl=1, iv=1)
+        keyframe_values = pm.keyframe(q=1, sl=1, vc=1)
+
+        for i in range(iteration):
+            keyframe_values = smooth_array(keyframe_values)
+
+        # restore the keyframe values
+        for i, v in zip(keyframe_indices, keyframe_values):
+            pm.keyframe(node, e=1, index=i, vc=v)
 
     @classmethod
     def cam_2_chan(cls, startButton, endButton):
