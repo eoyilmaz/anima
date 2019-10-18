@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2012-2019, Erkan Ozgur Yilmaz
+#
+# This module is part of anima and is released under the BSD 2
+# License: http://www.opensource.org/licenses/BSD-2-Clause
+
 from anima.utils import do_db_setup
 from pymel import core as pm
 
