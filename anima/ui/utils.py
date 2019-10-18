@@ -6,7 +6,6 @@
 """Utilities for UI stuff
 """
 import os
-import shutil
 
 from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
@@ -153,6 +152,7 @@ def upload_thumbnail(task, thumbnail_full_path):
     #     mm = MediaManager()
     #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
 
+    import shutil
     shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
 
     from stalker import Link, Version, Repository
@@ -230,3 +230,38 @@ def load_font(font_filename):
     )
     loaded_font_families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
     return loaded_font_families
+
+
+def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
+    """A wrapper for button creation
+
+    :param label: The label of the button
+    :param layout: The layout that the button is going to be placed under.
+    :param callback: The callable that will be called when the button is
+      clicked.
+    :param str tooltip: Optional tooltip for the button
+    :param callback_args: Callback arguments
+    :return:
+    """
+    if tooltip == '':
+        tooltip = callback.__doc__
+
+    # button
+    button = QtWidgets.QPushButton(layout.parentWidget())
+    button.setText(label)
+    layout.addWidget(button)
+
+    button.setToolTip(tooltip)
+
+    # Signal
+    if callback_kwargs:
+        import functools
+        callback = functools.partial(callback, **callback_kwargs)
+
+    QtCore.QObject.connect(
+        button,
+        QtCore.SIGNAL("clicked()"),
+        callback
+    )
+
+    return button
