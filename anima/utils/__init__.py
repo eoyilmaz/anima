@@ -1911,6 +1911,12 @@ def check_task_status_by_schedule_model(task):
         if depends_tasks_cmpl:
             task.status = status_cmpl
 
+            if task.computed_start is None:
+                task.computed_start = task.start
+
+            if task.computed_end is None:
+                task.computed_end = task.end
+
             if task.computed_end < utc_now:
                 task.status = status_cmpl
             elif task.computed_start < utc_now < task.computed_end:
