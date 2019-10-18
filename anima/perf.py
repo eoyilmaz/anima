@@ -6,11 +6,14 @@
 
 import time
 
+indentation = 0
+tab_stop = 3
+
 
 def measure_time(f_name):
     """This is a decorator that measures performance of the decorated function
 
-    :param function_name: The name of the decorated function
+    :param f_name: The name of the decorated function
     """
 
     def wrapper(f):
@@ -19,10 +22,20 @@ def measure_time(f_name):
             f_inner_name = f.__name__
 
         def wrapped_f(*args, **kwargs):
+            global indentation
+            global tab_stop
+
             start = time.time()
-            return_data = f(*args, **kwargs)
+            print("%s%11s start" % (" " * indentation, f_inner_name))
+            indentation += tab_stop
+            try:
+                return_data = f(*args, **kwargs)
+            except TypeError:
+                return_data = f(*args)
             end = time.time()
-            print('%11s: %0.3f sec' % (f_inner_name, (end - start)))
+            indentation -= tab_stop
+
+            print('%s%11s: %0.3f sec' % (" " * indentation, f_inner_name, (end - start)))
             return return_data
 
         return wrapped_f
