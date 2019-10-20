@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2018, Anima Istanbul
+# Copyright (c) 2012-2019, Anima Istanbul
 #
 # This module is part of anima-tools and is released under the BSD 2
 # License: http://www.opensource.org/licenses/BSD-2-Clause
@@ -31,11 +31,13 @@ def measure_time(f_name):
             try:
                 return_data = f(*args, **kwargs)
             except TypeError:
-                return_data = f(*args)
-            end = time.time()
-            indentation -= tab_stop
+                    return_data = f(*args)
+            finally:
+                end = time.time()
+                indentation -= tab_stop
 
-            print('%s%11s: %0.3f sec' % (" " * indentation, f_inner_name, (end - start)))
+                print('%s%11s: %0.3f sec' % (" " * indentation, f_inner_name, (end - start)))
+
             return return_data
 
         return wrapped_f
