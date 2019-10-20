@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2018, Anima Istanbul
+# Copyright (c) 2012-2019, Anima Istanbul
 #
-# This module is part of anima-tools and is released under the BSD 2
-# License: http://www.opensource.org/licenses/BSD-2-Clause
+# This module is part of anima and is released under the MIT
+# License: http://www.opensource.org/licenses/MIT
 
 import os
 from anima import logger

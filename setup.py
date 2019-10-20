@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2015, Anima Istanbul
+# Copyright (c) 2012-2019, Anima Istanbul
 #
-# This module is part of anima-tools and is released under the BSD 2
-# License: http://www.opensource.org/licenses/BSD-2-Clause
+# This module is part of anima-tools and is released under the MIT
+# License: http://www.opensource.org/licenses/MIT
 
 import os.path
 from setuptools import setup, find_packages
@@ -38,7 +38,7 @@ setup(
     license="http://www.opensource.org/licenses/bsd-license.php",
     classifiers=[
         "Programming Language :: Python",
-        "License :: OSI Approved :: BSD License",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Development Status :: 2 - Pre-Alpha",
         "Intended Audience :: Developers",

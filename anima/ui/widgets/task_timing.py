@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # Copyright (c) 2018, Erkan  Ozgur Yilmaz
 #
-# This module is part of anima-tools and is released under the BSD 2
-# License: http://www.opensource.org/licenses/BSD-2-Clause
+# This module is part of anima and is released under the MIT
+# License: http://www.opensource.org/licenses/MIT
 
 
 from anima.ui.lib import QtCore, QtWidgets
