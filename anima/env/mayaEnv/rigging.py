@@ -802,12 +802,16 @@ class SkinTools(object):
 
             self.column_layout3 = pm.columnLayout(adj=1, cal="center")
             with self.column_layout3:
+                def set_joint_weight_callback(weight, *args):
+                    print("weight: %s" % weight)
+                    print("args: %s" % args)
+                    self.set_joint_weight(weight)
                 self.remove_selected_button = \
                     pm.button(l="remove selected",
-                              c=functools.partial(self.set_joint_weight, 0))
+                              c=functools.partial(set_joint_weight_callback, 0))
                 self.add_selected_button = \
                     pm.button(l="add selected",
-                              c=functools.partial(self.set_joint_weight, 1))
+                              c=functools.partial(set_joint_weight_callback, 1))
 
         pm.formLayout(
             "skinTools_formLayout1",
@@ -970,13 +974,13 @@ class SkinTools(object):
         joint_name = self.get_selected_item_in_list()
 
         temp3 = pm.ls(sl=1, type="joint")
-        pm.select(d=temp3)
+        pm.select(temp3, d=1)
         sel_list = pm.ls(sl=1)
-        pm.select(add=temp3)
+        pm.select(temp3, add=1)
 
         skin_cluster = self.get_skin_cluster(sel_list[0])
 
-        if skin_cluster == "":
+        if not skin_cluster:
             # try to get it from the interface
             skin_cluster = self.get_skin_cluster_from_interface()
 
@@ -984,6 +988,10 @@ class SkinTools(object):
             temp3 = pm.ls(sl=1, type="joint")
             joint_name = temp3[0]
 
+        print("skin_cluster: %s" % skin_cluster)
+        print("sel_list    : %s" % sel_list)
+        print("join_name   : %s" % joint_name)
+        print("value       : %s" % value)
         pm.skinPercent(skin_cluster, sel_list, tv=[(joint_name, value)])
 
         self.update_list()
@@ -1064,8 +1072,15 @@ class SkinTools(object):
         :param element:
         :return:
         """
-        transform = element.node()
-        shapes = transform.getShapes()
+        if isinstance(element, pm.MeshVertex):
+            shape = element.node()
+            transform = shape.getParent()
+            shapes = transform.getShapes()
+        elif isinstance(element, pm.nt.Transform):
+            shapes = element.getShapes()
+        elif isinstance(element, pm.nt.Mesh):
+            transform = element.getParent()
+            shapes = transform.getShapes()
 
         real_shape = None
         for shape in shapes:
@@ -1089,6 +1104,7 @@ class SkinTools(object):
     @measure_time("get_skin_cluster_from_interface")
     def get_skin_cluster_from_interface(self):
         text = pm.text(self.skin_cluster_text, q=1, l=1)
+        print("text: %s" % text)
         try:
             return pm.PyNode(text)
         except pm.MayaNodeError:
@@ -1102,6 +1118,9 @@ class SkinTools(object):
 
     @measure_time("update_list")
     def update_list(self):
+        # clear the list
+        pm.textScrollList(self.influence_list_text_scroll_list, e=1, ra=1)
+
         # remove joints from selection list
         sel_joints = pm.ls(sl=1, type="joint")
         pm.select(sel_joints, d=1)
@@ -1109,15 +1128,13 @@ class SkinTools(object):
         # get the vertex list without joints
         sel_list = pm.ls(sl=1)
 
-        # new_list = self.convert_to_vertex_list(sel_list)
-        # if new_list:
+        new_list = self.convert_to_vertex_list(sel_list)
+        sel_list = new_list
         skin_cluster = self.get_skin_cluster_from_interface()
 
         # get joint names that influence currently selected vertices
         joints = self.get_joints_affecting_components(sel_list, skin_cluster)
 
-        # clear the list
-        pm.textScrollList(self.influence_list_text_scroll_list, e=1, ra=1)
 
         # and add the new joint names to the list
         # add the hold status to the name of the joint
@@ -1143,20 +1160,31 @@ class SkinTools(object):
         """
         # flatten the component list
         joint_list = []
+        joints_lut = skin_cluster.getInfluence()
         component_list = pm.ls(component_list, fl=1)
         for component in component_list:
+            # print("component: %s" % component)
             index = component.index()
 
             weight_attr = skin_cluster.wl[index].w
             num_elements = weight_attr.numElements()
-            for element_index in range(num_elements):
-                weight = weight_attr[num_elements].get()
-                if weight > self.weight_threshold:
-                    joint_list.append(
-                        skin_cluster.matrix[element_index].inputs()[0]
-                    )
 
-        return joint_list
+            # all_weights = weight_attr.get()
+            # map(lambda x, y: x > 0.001, range(num_elements), all_weights)
+
+            # print("len(all_weights): %s" % len(all_weights))
+            # print("num_elements    : %s" % num_elements)
+
+            for element_index in range(num_elements):
+                weight = weight_attr[element_index].get()
+                if weight > 0.00001:
+                    try:
+                        joint_list.append(joints_lut[element_index])
+                    except IndexError:
+                        # this happens sometimes
+                        pass
+
+        return sorted(list(set(joint_list)), key=lambda x: x.name())
 
     @measure_time("convert_to_vertex_list")
     def convert_to_vertex_list(self, input_list):
