@@ -751,6 +751,7 @@ class SkinTools(object):
         :return:
         """
         self.mesh = mesh
+        self.skin_cluster = self.get_skin_cluster()
 
     def set_skin_cluster(self, skin_cluster):
         """sets the skin cluster
@@ -875,10 +876,9 @@ class SkinTools(object):
         :return:
         """
         return pm.ls(
-            filter(lambda x: "*" not in x,
-                   pm.polyListComponentConversion(
-                       input_list, fv=1, fe=1, ff=1, fuv=1, fvf=1, tv=1)
-                   ),
+            pm.polyListComponentConversion(
+                input_list, fv=1, fe=1, ff=1, fuv=1, fvf=1, tv=1
+            ),
             fl=1
         )
 
@@ -906,6 +906,7 @@ class SkinToolsUI(object):
         self.mesh = None
         self.skin_cluster = None
         self.skin_tools = SkinTools()
+        self.joints = []
 
     def ui(self):
         """the ui
@@ -928,22 +929,17 @@ class SkinToolsUI(object):
                 pm.columnLayout("skinTools_columnLayout1", adj=1, cal="center")
             with self.column_layout1:
                 pm.button(
-                    l="Find skinCluster from selection",
-                    c=self.find_skin_cluster_from_selection_button_proc
+                    l="Set Mesh",
+                    c=self.set_mesh_button_proc
                 )
 
                 with pm.rowLayout("skinTools_mesh_name_row_layout", nc=2):
                     pm.text(l="mesh name: ")
-                    self.mesh_name_text = pm.text()
+                    self.mesh_name_text = pm.text(l="")
 
                 with pm.rowLayout("skinTools_skin_cluster_row_layout", nc=2):
                     pm.text(l="skinCluster: ")
                     self.skin_cluster_text = pm.text(l="")
-
-                pm.button(
-                    l="find influenced Vertices",
-                    c=self.find_influenced_vertices_button_proc
-                )
 
                 pm.button(
                     l="update",
@@ -957,16 +953,37 @@ class SkinToolsUI(object):
 
             self.column_layout3 = pm.columnLayout(adj=1, cal="center")
             with self.column_layout3:
+                pm.button(
+                    l="find influenced Vertices",
+                    c=self.find_influenced_vertices_button_proc
+                )
+
                 def set_joint_weight_callback(weight, *args):
-                    print("weight: %s" % weight)
-                    print("args: %s" % args)
-                    self.set_joint_weight(weight)
+                    selection = pm.ls(sl=1)
+                    joints = \
+                        filter(lambda x: isinstance(x, pm.nt.Joint), selection)
+                    vertices = \
+                        filter(
+                            lambda x: isinstance(x, pm.MeshVertex),
+                            selection
+                        )
+                    for joint in joints:
+                        self.skin_tools.set_joint_weight(
+                            joint,
+                            vertices,
+                            weight
+                        )
+
                 self.remove_selected_button = \
-                    pm.button(l="remove selected",
-                              c=functools.partial(set_joint_weight_callback, 0))
+                    pm.button(
+                        l="remove selected",
+                        c=functools.partial(set_joint_weight_callback, 0)
+                    )
                 self.add_selected_button = \
-                    pm.button(l="add selected",
-                              c=functools.partial(set_joint_weight_callback, 1))
+                    pm.button(
+                        l="add selected",
+                        c=functools.partial(set_joint_weight_callback, 1)
+                    )
 
         pm.formLayout(
             "skinTools_formLayout1",
@@ -995,50 +1012,68 @@ class SkinToolsUI(object):
             ]
         )
 
-        self.find_skin_cluster_from_selection_button_proc()
         pm.showWindow(self.window)
         pm.window(self.window, e=1, w=width, h=height)
 
-    @measure_time("find_skin_cluster_from_selection_button_proc")
-    def find_skin_cluster_from_selection_button_proc(self, *args):
+    @measure_time("set_mesh_button_proc")
+    def set_mesh_button_proc(self, *args):
         """the skinCluster_text should be filled with the skinCluster name
         """
-        self.fill_skin_cluster_text_field()
-        self.fill_mesh_name_text_field()
-        self.update_list()
+        # get the mesh from scene selection
+        selection = pm.ls(sl=1)
+        if selection:
+            # get the node type
+            node = selection[0]
+            if isinstance(node, pm.nt.Transform):
+                shape = node.getShape()
+            elif isinstance(node, pm.nt.Mesh):
+                shape = node
+            elif isinstance(node, pm.MeshVertex):
+                shape = node.node()
+            else:
+                shape = node
+
+            self.skin_tools.set_mesh(shape)
+            pm.text(
+                self.mesh_name_text,
+                e=1,
+                l=self.skin_tools.mesh.name()
+            )
+            pm.text(
+                self.skin_cluster_text,
+                e=1,
+                l=self.skin_tools.skin_cluster.name()
+            )
+
+            self.update_list()
 
     @measure_time("find_influenced_vertices_button_proc")
     def find_influenced_vertices_button_proc(self, *args):
         """
         """
         # get the joint name from list
-        mesh = self.get_mesh_name_from_interface()
-        joint = self.get_selected_item_in_list()
-        skin_cluster = self.get_skin_cluster_from_interface()
+        joint = pm.ls(sl=1)
         influenced_vertices = \
-            self.find_influenced_vertices(mesh, joint, skin_cluster)
+            self.skin_tools.find_influenced_vertices(joint)
         pm.select(influenced_vertices)
 
     @measure_time("fill_skin_cluster_text_field")
     def fill_skin_cluster_text_field(self):
         """
         """
-        # try to get the skinCluster from selection
-        skin_cluster = self.find_skin_cluster_from_selection()
-        pm.text(
-            self.skin_cluster_text,
-            e=1,
-            l=skin_cluster
-        )
+        if self.skin_tools.skin_cluster:
+            pm.text(
+                self.skin_cluster_text,
+                e=1,
+                l=self.skin_tools.skin_cluster.name()
+            )
 
     @measure_time("fill_mesh_name_text_field")
     def fill_mesh_name_text_field(self):
         """
         """
-        mesh_name = self.find_mesh_name_from_selection()
-        pm.text(self.mesh_name_text, e=True, l=mesh_name)
-
-
+        if self.skin_tools.mesh:
+            pm.text(self.mesh_name_text, e=True, l=self.skin_tools.mesh.name())
 
     @measure_time("get_selected_item_in_list")
     def get_selected_item_in_list(self):
@@ -1099,9 +1134,10 @@ class SkinToolsUI(object):
             self.influence_list_text_scroll_list, e=True, ap=[index, item_name]
         )
 
-
     @measure_time("update_list")
     def update_list(self):
+        """updates the scroll list with influences
+        """
         # clear the list
         pm.textScrollList(self.influence_list_text_scroll_list, e=1, ra=1)
 
@@ -1111,18 +1147,38 @@ class SkinToolsUI(object):
 
         # get the vertex list without joints
         sel_list = pm.ls(sl=1)
+        transform_nodes = \
+            filter(lambda x: isinstance(x, pm.nt.Transform), sel_list)
+        if transform_nodes:
+            # use only one transform node
+            # this UI operates only on one mesh
+            transform_node = transform_nodes[0]
 
-        new_list = self.convert_to_vertex_list(sel_list)
-        sel_list = new_list
-        skin_cluster = self.get_skin_cluster_from_interface()
+            # get the shape
+            shape = transform_node.getShape()
 
-        # get joint names that influence currently selected vertices
-        joints = self.get_joints_affecting_components(sel_list, skin_cluster)
+            # set the mesh for the skin_tools
+            self.skin_tools.set_mesh(shape)
+            # no problem
+            # component_list = self.skin_tools.convert_to_vertex_list(shape)
+            self.joints = self.skin_tools.skin_cluster.getInfluence()
+        else:
+            # check if any vertices are selected
+            vertices = \
+                filter(lambda x: isinstance(x, pm.MeshVertex), sel_list)
+            component_list = self.skin_tools.convert_to_vertex_list(vertices)
 
+            if not component_list:
+                # do nothing
+                print("no components")
+                return
+
+            self.joints = \
+                self.skin_tools.get_joints_effecting_components(component_list)
 
         # and add the new joint names to the list
         # add the hold status to the name of the joint
-        for joint in joints:
+        for joint in self.joints:
             display_string = joint.name()
 
             if joint.liw.get():
