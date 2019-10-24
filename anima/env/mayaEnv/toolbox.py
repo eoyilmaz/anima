@@ -966,6 +966,33 @@ def UI():
             )
 
             color.change()
+
+            def pin_controller_callback(color, *args):
+                """Creates Pin Controller on the selected Vertex
+                """
+                from anima.env.mayaEnv import rigging
+                vertex = pm.ls(sl=1)[0]
+                pc = rigging.PinController()
+                pc.color = color
+                pc.pin_to_vertex = vertex
+                pc.setup()
+
+            # TODO: Give the user the ability of selecting custom colors
+            with pm.rowLayout(nc=4, adj=1):
+                pm.text(l="Pin Controller")
+                pm.button('pin_controller_red_button', l="R",
+                          c=repeated_callback(pin_controller_callback, [1, 0, 0]),
+                          ann=pin_controller_callback.__doc__,
+                          bgc=[1, 0, 0])
+                pm.button('pin_controller_green_button', l="G",
+                          c=repeated_callback(pin_controller_callback, [0, 1, 0]),
+                          ann=pin_controller_callback.__doc__,
+                          bgc=[0, 1, 0])
+                pm.button('pin_controller_blue_button', l="B",
+                          c=repeated_callback(pin_controller_callback, [0, 0, 1]),
+                          ann=pin_controller_callback.__doc__,
+                          bgc=[0, 0, 1])
+
             pm.button('rivet_button', l="create rivet",
                       c=repeated_callback(mel.eval, 'rivet'),
                       ann="create rivet",
@@ -1002,9 +1029,9 @@ def UI():
                       ann="paint weights tool",
                       bgc=color.color)
 
-            def skin_tools_ui_caller():
-                from anima.env.mayaEnv.rigging import SkinTools
-                st = SkinTools()
+            def skin_tools_ui_caller(*args):
+                from anima.env.mayaEnv.rigging import SkinToolsUI
+                st = SkinToolsUI()
                 st.ui()
             pm.button('skin_tools_button', l="Skin Tools",
                       c=skin_tools_ui_caller,

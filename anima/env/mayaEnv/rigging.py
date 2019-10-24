@@ -677,6 +677,10 @@ class PinController(object):
     It is mainly used in facial rigs. Where the controller seems to be
     controlling the object that it is deforming without any cyclic dependency
     """
+
+    pin_shader_prefix = "PinController_Shader"
+    pin_name_prefix = "PinController"
+
     def __init__(self, pin_size=0.1):
         self.size = pin_size
         self.shader_type = 'lambert'
@@ -698,17 +702,21 @@ class PinController(object):
         """
         from anima.env.mayaEnv import auxiliary
 
-        vtx_coord = pm.xform(self.pin_to_vertex, ws=1, t=1)
+        vtx_coord = pm.xform(self.pin_to_vertex, q=1, ws=1, t=1)
 
         self.pin_to_shape = self.pin_to_vertex.node()
-        self.pin_uv = self.pin_to_shape.getUVAtPoint(vtx_coord, space='world')
+        self.pin_uv = self.pin_to_shape.getUVAtPoint(vtx_coord, space='world', uvSet='map1')
 
         # create a sphere with the size of pin_size
-        self.pin_transform, self.pin_shape = pm.sphere(radius=self.size)
+        self.pin_transform, make_nurbs_node = pm.sphere(radius=self.size)
+        self.pin_transform.rename("%s#" % self.pin_name_prefix)
+
+        self.pin_shape = self.pin_transform.getShape()
 
         # create two axial correction groups
         self.compensation_group = \
-            auxiliary.axial_correction_group(self.pin_node)
+            auxiliary.axial_correction_group(self.pin_transform)
+        self.compensation_group.rename("%s_CompensationGrp" % self.pin_transform.name())
 
         self.axial_correction_group = \
             auxiliary.axial_correction_group(self.compensation_group)
@@ -720,13 +728,57 @@ class PinController(object):
         decompose_matrix.outputRotate >> self.compensation_group.r
         decompose_matrix.outputScale >> self.compensation_group.s
 
+        # limit movement
+        # set the transform limit of the pin to [-1, 1] range
+        pm.transformLimits(
+            self.pin_transform,
+            tx=[-1, 1], etx=[1, 1],
+            ty=[-1, 1], ety=[1, 1],
+            tz=[-1, 1], etz=[1, 1],
+        )
+
         # create a follicle on the shape at the given uv
         self.follicle_transform, self.follicle_shape = \
             auxiliary.create_follicle(self.pin_to_shape, self.pin_uv)
+        self.follicle_transform.rename("%s_Follicle" % self.pin_transform.name())
 
         # move the axial correction group
         pm.xform(self.axial_correction_group, ws=1, t=vtx_coord)
 
+        # parent the axial correction group to the follicle
+        pm.parent(self.axial_correction_group, self.follicle_transform)
+
+        # hide the follicle shape
+        self.follicle_shape.v.set(0)
+
+        # assign shader
+        shader = self.get_pin_shader()
+        shading_engine = shader.outputs(type='shadingEngine')[0]
+        pm.sets("initialShadingGroup", rm=self.pin_shape)
+        pm.sets(shading_engine, fe=self.pin_shape)
+
+    def get_pin_shader(self):
+        """this creates or returns the existing pin shader
+        """
+        shaders = pm.ls(self.pin_shader_prefix)
+        if shaders:
+            # try to find the shader with the same color
+            for shader in shaders:
+                if list(shader.color.get()) == self.color:
+                    return shader
+
+        # so we couldn't find a shader
+        # lets create one
+        shader = pm.shadingNode("lambert", asShader=1)
+        shader.rename("%s#" % self.pin_shader_prefix)
+        shader.color.set(self.color)
+
+        # also create the related shadingEngine
+        shading_engine = pm.nt.ShadingEngine()
+        shading_engine.rename("%sSG#" % self.pin_shader_prefix)
+        shader.outColor >> shading_engine.surfaceShader
+
+        return shader
 
 class SkinTools(object):
     """A helper utility for easy joint influence edit.
