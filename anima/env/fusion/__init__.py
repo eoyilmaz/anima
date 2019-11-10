@@ -293,6 +293,12 @@ class Fusion(EnvironmentBase):
                 fps = shot.fps
                 imf = shot.image_format
 
+                # set frame ranges
+                self.set_frame_range(
+                    start_frame=shot.cut_in,
+                    end_frame=shot.cut_out,
+                )
+
         # set comp resolution and fps
         if imf:
             self.comp.SetPrefs({
@@ -473,12 +479,12 @@ class Fusion(EnvironmentBase):
                         adjust_frame_range=False):
         """sets the start and end frame range
         """
-        #self._root.knob('first_frame').setValue(start_frame)
-        #self._root.knob('last_frame').setValue(end_frame)
         self.comp.SetAttrs(
             {
                 "COMPN_GlobalStart": start_frame,
-                "COMPN_GlobalEnd": end_frame
+                "COMPN_RenderStart": start_frame,
+                "COMPN_GlobalEnd": end_frame,
+                "COMPN_RenderEnd": end_frame,
             }
         )
 
@@ -727,6 +733,9 @@ class Fusion(EnvironmentBase):
                         'ProcessAlpha': 0,
                         'OutputFormat': 'TGAFormat',
                     },
+                    'connected_to': {
+                        'ref_id': random_ref_id
+                    }
                 },
             },
             {
