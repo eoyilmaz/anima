@@ -105,6 +105,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.loader_report
         )
 
+        # PassThrough All Saver nodes
+        add_button(
+            'PassThrough All Savers',
+            general_tab_vertical_layout,
+            GenericTools.pass_through_all_savers
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -161,3 +168,14 @@ class GenericTools(object):
 
         for path in sorted(paths):
             print(path)
+
+    @classmethod
+    def pass_through_all_savers(cls):
+        """disables all saver nodes in the current comp
+        """
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        comp = fusion_env.comp
+        saver_nodes = comp.GetToolList(False, 'Saver').values()
+        for node in saver_nodes:
+            node.SetAttrs({"TOOLB_PassThrough": True})
