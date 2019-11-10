@@ -829,7 +829,7 @@ This system will be updated in Afanasy."""
         if separate_layers in [2, 3]:
             # render each layer separately
             rlm = pm.PyNode('renderLayerManager')
-            layers = [layer for layer in rlm.connections()
+            layers = [layer for layer in rlm.connections(type=pm.nt.RenderLayer)
                       if layer.renderable.get()]
 
             for layer in layers:
