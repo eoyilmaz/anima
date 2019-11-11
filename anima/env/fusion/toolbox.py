@@ -41,7 +41,7 @@ class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_ui(self):
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setModal(True)
-        self.resize(300, 800)
+        self.resize(300, 300)
         size_policy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Preferred,
             QtWidgets.QSizePolicy.Preferred
@@ -112,6 +112,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.pass_through_all_savers
         )
 
+        # Insert Pipe Router
+        add_button(
+            'Insert Pipe Router',
+            general_tab_vertical_layout,
+            GenericTools.insert_pipe_router_to_selected_node
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -179,3 +186,26 @@ class GenericTools(object):
         saver_nodes = comp.GetToolList(False, 'Saver').values()
         for node in saver_nodes:
             node.SetAttrs({"TOOLB_PassThrough": True})
+
+    @classmethod
+    def insert_pipe_router_to_selected_node(cls):
+        """inserts a Pipe Router node between the selected node and the nodes
+        connected to its outuput
+        """
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        comp = fusion_env.comp
+
+        # get active node
+        node = comp.ActiveTool
+
+        # get all node outputs
+        output = node.FindMainOutput(1)
+        connected_inputs = output.GetConnectedInputs()
+
+        # create pipe router
+        pipe_router = comp.PipeRouter({"Input": node})
+
+        # connect it to the other nodes
+        for connected_input in connected_inputs.values():
+            connected_input.ConnectTo(pipe_router)
