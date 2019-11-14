@@ -957,7 +957,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 # dRO.exrForceMultilayer.set(0)
                 dRO.exrMultipart.set(0)
                 dRO.noSaveImage.set(0)
-                # dRO.skipExistingFrames.set(1)  # do not change this setting
+                dRO.skipExistingFrames.set(1)
                 # dRO.unifiedRandomizePattern.set(1)  # do not change this
             except pm.MayaNodeError:
                 pass
