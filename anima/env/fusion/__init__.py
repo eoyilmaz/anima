@@ -607,6 +607,64 @@ class Fusion(EnvironmentBase):
 
         return node
 
+    def output_path_generator(self, version, file_format):
+        """helper function to generate the output path
+
+        :param version: Stalker Version instance
+        :param str file_format: A string showing the file format. Ex: tga, exr
+          etc.
+        :return:
+        """
+        # generate the data needed
+        # the output path
+        file_name_buffer = []
+        template_kwargs = {}
+
+        # if this is a shot related task set it to shots resolution
+        include_project_code = True
+        if version.nice_name.startswith(version.task.project.code):
+            include_project_code = False
+
+        version_sig_name = self.get_significant_name(
+            version,
+            include_project_code=include_project_code
+        )
+
+        file_name_buffer.append(
+            '%(version_sig_name)s.001.%(format)s'
+        )
+        template_kwargs.update({
+            'version_sig_name': version_sig_name,
+            'format': file_format
+        })
+
+        output_file_name = ''.join(file_name_buffer) % template_kwargs
+
+        # check if it is a stereo comp
+        # if it is enable separate view rendering
+        output_file_full_path = os.path.join(
+            version.absolute_path,
+            'Outputs',
+            version.take_name,
+            # 'v%03d' % version.version_number,
+            file_format,
+            output_file_name
+        ).replace('\\', '/')
+
+        # make the path Project: relative
+        output_file_full_path = 'Project:%s' % os.path.relpath(
+            output_file_full_path,
+            os.path.dirname(version.absolute_path)
+        )
+
+        # set the output path
+        return '%s' % os.path.normpath(
+            output_file_full_path
+        ).encode()
+
+    def output_node_name_generator(self, file_format):
+        return '%s_%s' % (self._main_output_node_name, file_format)
+
     def create_main_saver_node(self, version):
         """Creates the default saver node if there is no created before.
 
@@ -618,62 +676,6 @@ class Fusion(EnvironmentBase):
             project = version.task.project
             fps = project.fps
 
-        def output_path_generator(file_format):
-            """helper function to generate the output path
-
-            :param file_format:
-            :return:
-            """
-            # generate the data needed
-            # the output path
-            file_name_buffer = []
-            template_kwargs = {}
-
-            # if this is a shot related task set it to shots resolution
-            include_project_code = True
-            if version.nice_name.startswith(version.task.project.code):
-                include_project_code = False
-
-            version_sig_name = self.get_significant_name(
-                version,
-                include_project_code=include_project_code
-            )
-
-            file_name_buffer.append(
-                '%(version_sig_name)s.001.%(format)s'
-            )
-            template_kwargs.update({
-                'version_sig_name': version_sig_name,
-                'format': file_format
-            })
-
-            output_file_name = ''.join(file_name_buffer) % template_kwargs
-
-            # check if it is a stereo comp
-            # if it is enable separate view rendering
-            output_file_full_path = os.path.join(
-                version.absolute_path,
-                'Outputs',
-                version.take_name,
-                # 'v%03d' % version.version_number,
-                file_format,
-                output_file_name
-            ).replace('\\', '/')
-
-            # make the path Project: relative
-            output_file_full_path = 'Project:%s' % os.path.relpath(
-                output_file_full_path,
-                os.path.dirname(version.absolute_path)
-            )
-
-            # set the output path
-            return '%s' % os.path.normpath(
-                output_file_full_path
-            ).encode()
-
-        def output_node_name_generator(file_format):
-            return '%s_%s' % (self._main_output_node_name, file_format)
-
         random_ref_id = uuid.uuid4().hex
 
         output_format_data = [
@@ -682,10 +684,10 @@ class Fusion(EnvironmentBase):
                 'node_tree': {
                     'type': 'Saver',
                     'attr': {
-                        'TOOLS_Name': output_node_name_generator('jpg'),
+                        'TOOLS_Name': self.output_node_name_generator('jpg'),
                     },
                     'input_list': {
-                        'Clip': output_path_generator('jpg'),
+                        'Clip': self.output_path_generator(version, 'jpg'),
                         'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
@@ -722,10 +724,10 @@ class Fusion(EnvironmentBase):
                 'node_tree': {
                     'type': 'Saver',
                     'attr': {
-                        'TOOLS_Name': output_node_name_generator('tga'),
+                        'TOOLS_Name': self.output_node_name_generator('tga'),
                     },
                     'input_list': {
-                        'Clip': output_path_generator('tga'),
+                        'Clip': self.output_path_generator(version, 'tga'),
                         'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
@@ -743,10 +745,10 @@ class Fusion(EnvironmentBase):
                 'node_tree': {
                     'type': 'Saver',
                     'attr': {
-                        'TOOLS_Name': output_node_name_generator('exr'),
+                        'TOOLS_Name': self.output_node_name_generator('exr'),
                     },
                     'input_list': {
-                        'Clip': output_path_generator('exr'),
+                        'Clip': self.output_path_generator(version, 'exr'),
                         'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
@@ -787,10 +789,10 @@ class Fusion(EnvironmentBase):
                 'node_tree': {
                     'type': 'Saver',
                     'attr': {
-                        'TOOLS_Name': output_node_name_generator('mp4'),
+                        'TOOLS_Name': self.output_node_name_generator('mp4'),
                     },
                     'input_list': {
-                        'Clip': output_path_generator('mp4'),
+                        'Clip': self.output_path_generator(version, 'mp4'),
                         'CreateDir': 1,
                         'ProcessRed': 1,
                         'ProcessGreen': 1,
@@ -821,10 +823,10 @@ class Fusion(EnvironmentBase):
                     'node_tree': {
                         'type': 'Saver',
                         'attr': {
-                            'TOOLS_Name': output_node_name_generator('jpg'),
+                            'TOOLS_Name': self.output_node_name_generator('jpg'),
                         },
                         'input_list': {
-                            'Clip': output_path_generator('jpg'),
+                            'Clip': self.output_path_generator(version, 'jpg'),
                             'CreateDir': 1,
                             'ProcessRed': 1,
                             'ProcessGreen': 1,
@@ -840,10 +842,10 @@ class Fusion(EnvironmentBase):
                     'node_tree': {
                         'type': 'Saver',
                         'attr': {
-                            'TOOLS_Name': output_node_name_generator('exr'),
+                            'TOOLS_Name': self.output_node_name_generator('exr'),
                         },
                         'input_list': {
-                            'Clip': output_path_generator('exr'),
+                            'Clip': self.output_path_generator(version, 'exr'),
                             'CreateDir': 1,
                             'ProcessRed': 1,
                             'ProcessGreen': 1,
@@ -881,10 +883,10 @@ class Fusion(EnvironmentBase):
                     'node_tree': {
                         'type': 'Saver',
                         'attr': {
-                            'TOOLS_Name': output_node_name_generator('mp4'),
+                            'TOOLS_Name': self.output_node_name_generator('mp4'),
                         },
                         'input_list': {
-                            'Clip': output_path_generator('mp4'),
+                            'Clip': self.output_path_generator(version, 'mp4'),
                             'CreateDir': 1,
                             'ProcessRed': 1,
                             'ProcessGreen': 1,
@@ -913,7 +915,7 @@ class Fusion(EnvironmentBase):
 
             # now check if a node with the same name exists
             format_node = None
-            format_node_name = output_node_name_generator(format_name)
+            format_node_name = self.output_node_name_generator(format_name)
             for node in saver_nodes:
                 node_name = node.GetAttrs('TOOLS_Name')
                 if node_name.startswith(format_node_name):
@@ -940,7 +942,7 @@ class Fusion(EnvironmentBase):
             try:
                 os.makedirs(
                     os.path.dirname(
-                        output_path_generator(format_name)
+                        self.output_path_generator(version, format_name)
                     )
                 )
             except OSError:
