@@ -642,12 +642,23 @@ class Fusion(EnvironmentBase):
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
-        output_file_full_path = os.path.join(
+        output_file_path = os.path.join(
             version.absolute_path,
             'Outputs',
             version.take_name,
             # 'v%03d' % version.version_number,
-            file_format,
+            file_format
+        )
+
+        # create the dir
+        try:
+            os.makedirs(output_file_path)
+        except OSError:
+            # path exists
+            pass
+
+        output_file_full_path = os.path.join(
+            output_file_path,
             output_file_name
         ).replace('\\', '/')
 
