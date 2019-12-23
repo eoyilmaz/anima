@@ -824,6 +824,49 @@ class Fusion(EnvironmentBase):
                     }
                 }
             },
+            {
+                'name': 'mov',
+                'node_tree': {
+                    'type': 'Saver',
+                    'attr': {
+                        'TOOLS_Name': self.output_node_name_generator('mov'),
+                    },
+                    'input_list': {
+                        'Clip': self.output_path_generator(version, 'mov'),
+                        'CreateDir': 1,
+                        'ProcessRed': 1,
+                        'ProcessGreen': 1,
+                        'ProcessBlue': 1,
+                        'ProcessAlpha': 0,
+                        'OutputFormat': 'QuickTimeMovies',
+                        'ProcessMode': 'Auto',
+                        'SaveFrames': 'Full',
+                        'QuickTimeMovies.Compression': 'Apple ProRes 422 LT_apcs',
+                        'QuickTimeMovies.Quality': 95.0,
+                        'QuickTimeMovies.FrameRateFps': fps,
+                        'QuickTimeMovies.KeyFrames': 5,
+
+                        'QuickTimeMovies.LimitDataRate': 0.0,
+                        'QuickTimeMovies.DataRateK': 1000.0,
+                        'QuickTimeMovies.Advanced': 1.0,
+                        'QuickTimeMovies.Primaries': 0.0,
+                        'QuickTimeMovies.Transfer': 0.0,
+                        'QuickTimeMovies.Matrix': 0.0,
+                        'QuickTimeMovies.PixelAspectRatio': 0.0,
+                        'QuickTimeMovies.ErrorDiffusion': 1.0,
+                        'QuickTimeMovies.SaveAlphaChannel': 1.0,
+
+                        'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                        'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
+
+
+
+                    },
+                    'connected_to': {
+                        'ref_id': random_ref_id
+                    }
+                }
+            },
         ]
 
         if version.task.type and version.task.type.name == 'Plate':
