@@ -313,7 +313,17 @@ CONVERSION_SPEC_SHEET = {
         # A dirty one liner that converts textures to rstexbin files
         'call_before': lambda x: RedShiftTextureProcessor(
             os.path.expandvars(x.filename.get())
-        ).convert()
+        ).convert(),
+
+        'node_type': 'file',
+        'secondary_type': 'texture',
+
+        'call_after': lambda old_node, new_node:
+        connect_output(old_node, 'outColor', new_node, 'outColor'),
+
+        'attributes': {
+            'filename': 'fileTextureName'
+        }
     },
 
     # LIGHTS
