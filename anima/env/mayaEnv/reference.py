@@ -460,20 +460,32 @@ class Reference(object):
         """
         # get all reference paths
         import os
-        from stalker import Repository, Version
+        from anima.env import mayaEnv
+        from stalker import Repository, Version, Task
+        m = mayaEnv.Maya()
+        current_version = m.get_current_version()
 
-        for ref in pm.listReferences():
-            unresolved_path = ref.unresolvedPath()
-            filename = os.path.basename(unresolved_path)
-            # find the corresponding version
-            # TODO: get the versions from current project
-            v = Version.query\
-                .filter(Version.full_path.endswith(filename))\
-                .first()
-            if v:
-                ref.replaceWith(
-                    Repository.to_os_independent_path(v.absolute_full_path)
-                )
+        # get the current project
+        project = None
+        if current_version:
+            project = current_version.task.project
+
+        # no project then do nothing
+        if project:
+            for ref in pm.listReferences():
+                unresolved_path = ref.unresolvedPath()
+                filename = os.path.basename(unresolved_path)
+                # find the corresponding version
+                v = Version.query\
+                    .join(Version.task, Task.versions)\
+                    .filter(Task.project == project)\
+                    .filter(Version.full_path.endswith(filename)).first()
+                if v:
+                    ref.replaceWith(
+                        Repository.to_os_independent_path(
+                            v.absolute_full_path
+                        )
+                    )
 
     @classmethod
     def unload_unselected_references(cls):
