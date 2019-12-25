@@ -1379,6 +1379,14 @@ def UI():
                       ann="fit placement to UV",
                       bgc=color.color)
 
+            pm.button(
+                'connect_placement2d_to_file_texture_button',
+                l='Connect Placement2D to File Texture',
+                c=repeated_callback(Render.connect_placement2d_to_file),
+                ann=Render.connect_placement2d_to_file.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',

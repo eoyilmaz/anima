@@ -1036,6 +1036,46 @@ class Render(object):
             p.setAttr('translateFrame', (minU, minV))
 
     @classmethod
+    def connect_placement2d_to_file(cls):
+        """connects the selected placement node to the selected file textures
+        """
+        attr_lut = [
+            'coverage',
+            'translateFrame',
+            'rotateFrame',
+            'mirrorU',
+            'mirrorV',
+            'stagger',
+            'wrapU',
+            'wrapV',
+            'repeatUV',
+            'offset',
+            'rotateUV',
+            'noiseUV',
+            'vertexUvOne',
+            'vertexUvTwo',
+            'vertexUvThree',
+            'vertexCameraOne',
+            ('outUV', 'uvCoord'),
+            ('outUvFilterSize', 'uvFilterSize')
+        ]
+
+        # get placement and file nodes
+        placement_node = pm.ls(sl=1, type=pm.nt.Place2dTexture)[0]
+        file_nodes = pm.ls(sl=1, type=pm.nt.File)
+
+        for file_node in file_nodes:
+            for attr in attr_lut:
+                if isinstance(attr, str):
+                    source_attr_name = attr
+                    target_attr_name = attr
+                elif isinstance(attr, tuple):
+                    source_attr_name = attr[0]
+                    target_attr_name = attr[1]
+                placement_node.attr(source_attr_name) >> \
+                    file_node.attr(target_attr_name)
+
+    @classmethod
     def open_node_in_browser(cls):
         # get selected nodes
         node_attrs = {
