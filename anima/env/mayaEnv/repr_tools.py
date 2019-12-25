@@ -13,7 +13,6 @@ import uuid
 import pymel.core as pm
 from stalker import LocalSession, Repository
 
-from anima.env.mayaEnv import ai2rs
 from anima.representation import Representation
 from anima.env.mayaEnv import auxiliary
 from anima import logger
@@ -568,7 +567,7 @@ class RepresentationGenerator(object):
                     ref.importContents()
                 all_refs = pm.listReferences()
 
-        # save the scene as {{original_take}}___BBOX
+        # save the scene as {{original_take}}@BBOX
         # use maya
         take_name = '%s%s%s' % (
             self.base_take_name, Representation.repr_separator, 'BBOX'
@@ -1034,7 +1033,7 @@ class RepresentationGenerator(object):
             # clean up
             self.clean_up()
 
-        # 6. save the scene as {{original_take}}___GPU
+        # 6. save the scene as {{original_take}}@GPU
         # use maya
         take_name = '%s%s%s' % (
             self.base_take_name, Representation.repr_separator, 'GPU'
@@ -1521,7 +1520,7 @@ class RepresentationGenerator(object):
             fe=pm.ls(type='aiStandIn')
         )
 
-        # save the scene as {{original_take}}___ASS
+        # save the scene as {{original_take}}@ASS
         # use maya
         take_name = '%s%s%s' % (
             self.base_take_name, Representation.repr_separator, 'ASS'
@@ -1572,7 +1571,9 @@ class RepresentationGenerator(object):
         self.version = self._validate_version(self.version)
 
         if not os.path.exists(self.version.absolute_full_path):
-            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
+            raise RuntimeError(
+                "Path doesn't exists: %s" % self.version.absolute_full_path
+            )
         self.open_version(self.version)
 
         task = self.version.task
@@ -1597,6 +1598,7 @@ class RepresentationGenerator(object):
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
             )
 
+        from anima.env.mayaEnv.redshift import RedShiftTextureProcessor
         if self.is_look_dev_task(task):
             # in look dev files, we export the RS files directly from the Base
             # version and parent the resulting RS node to the parent of
@@ -1634,7 +1636,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    ai2rs.RedShiftTextureProcessor(path).convert()
+                    RedShiftTextureProcessor(path).convert()
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
@@ -1714,7 +1716,8 @@ class RepresentationGenerator(object):
 
             all_proxies = pm.ls(type='RedshiftProxyMesh')
             for rs_proxy_node in all_proxies:
-                # somehow the output of the RedshiftProxyNode is the Transform node
+                # somehow the output of the RedshiftProxyNode is the Transform
+                # node
                 rs_proxy_tra = rs_proxy_node.outMesh.outputs()[0]
                 full_path = rs_proxy_tra.fullPath()
                 if full_path in nodes_to_rs_files:
@@ -1752,7 +1755,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    ai2rs.RedShiftTextureProcessor(path).convert()
+                    RedShiftTextureProcessor(path).convert()
 
             # import shaders that are referenced to this scene
             # there is only one reference in the vegetation task and this is
@@ -1861,7 +1864,8 @@ class RepresentationGenerator(object):
 
                     pm.delete(child_node)
 
-                    rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(path='')
+                    rs_proxy_node, rs_proxy_mesh = \
+                        auxiliary.create_rs_proxy_node(path='')
                     rs_proxy_tra = rs_proxy_mesh.getParent()
                     pm.parent(rs_proxy_tra, root_node)
                     rs_proxy_tra.rename(child_node_name)
@@ -1900,7 +1904,7 @@ class RepresentationGenerator(object):
             # clean up
             self.clean_up()
 
-        # save the scene as {{original_take}}___ASS
+        # save the scene as {{original_take}}@ASS
         # use maya
         take_name = '%s%s%s' % (
             self.base_take_name, Representation.repr_separator, 'RS'

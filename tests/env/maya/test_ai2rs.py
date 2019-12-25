@@ -425,8 +425,9 @@ class RedShiftTextureProcessorTester(unittest.TestCase):
         """testing if convert is working properly
         """
         import os
+        from anima.env.mayaEnv.redshift import RedShiftTextureProcessor
         texture_full_path = os.path.abspath('./test_data/texture.png')
-        rstp = ai2rs.RedShiftTextureProcessor(texture_full_path)
+        rstp = RedShiftTextureProcessor(texture_full_path)
         result = rstp.convert()
 
         rsmap_full_path = os.path.abspath('./test_data/texture.rstexbin')
