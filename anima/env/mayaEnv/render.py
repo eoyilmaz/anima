@@ -246,7 +246,9 @@ class Render(object):
         materials = pm.selected()
 
         # ask the texture folder
-        texture_path = pm.fileDialog2(cap="Choose Texture Folder", okc="Choose", fm=2)[0]
+        texture_path = pm.fileDialog2(
+            cap="Choose Texture Folder", okc="Choose", fm=2
+        )[0]
 
         for material in materials:
             # textures should start with the same name of the material
@@ -351,6 +353,20 @@ class Render(object):
                     )
                     diffuse_color_file.colorSpace.set('sRGB')
                     diffuse_color_file.outColor >> material.diffuse_color
+
+                # Accept also BaseColor
+                # create a new aiImage
+                base_color_file_path = glob.glob(
+                    "%s/%s_BaseColor*" % (texture_path, material_name))
+                if base_color_file_path:
+                    base_color_file_path = base_color_file_path[0]
+
+                    base_color_file = pm.shadingNode('file', asTexture=1)
+                    base_color_file.fileTextureName.set(
+                        base_color_file_path
+                    )
+                    base_color_file.colorSpace.set('sRGB')
+                    base_color_file.outColor >> material.diffuse_color
 
                 # *********************************************
                 # Height
