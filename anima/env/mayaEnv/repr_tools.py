@@ -1598,7 +1598,7 @@ class RepresentationGenerator(object):
                 '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
             )
 
-        from anima.env.mayaEnv.redshift import RedShiftTextureProcessor
+        # from anima.env.mayaEnv.redshift import RedShiftTextureProcessor
         if self.is_look_dev_task(task):
             # in look dev files, we export the RS files directly from the Base
             # version and parent the resulting RS node to the parent of
@@ -1636,7 +1636,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    RedShiftTextureProcessor(path).convert()
+                    # RedShiftTextureProcessor(path).convert()
 
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
@@ -1755,7 +1755,7 @@ class RepresentationGenerator(object):
                         '',
                         orig_path
                     )
-                    RedShiftTextureProcessor(path).convert()
+                    # RedShiftTextureProcessor(path).convert()
 
             # import shaders that are referenced to this scene
             # there is only one reference in the vegetation task and this is
