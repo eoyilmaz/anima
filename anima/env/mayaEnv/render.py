@@ -1102,8 +1102,11 @@ class Render(object):
                         print(str(e))
 
     @classmethod
-    def enable_subdiv(cls):
+    def enable_subdiv(cls, fixed_tes=False, max_subdiv=3):
         """enables subdiv on selected objects
+
+        :param fixed_tes: Uses fixed tessellation.
+        :param max_subdiv: The max subdivision iteration. Default 3.
         """
         #
         # Set SubDiv to CatClark on Selected nodes
@@ -1111,7 +1114,7 @@ class Render(object):
         for node in pm.ls(sl=1):
             shape = node.getShape()
             try:
-                shape.aiSubdivIterations.set(2)
+                shape.aiSubdivIterations.set(max_subdiv)
                 shape.aiSubdivType.set(1)
                 shape.aiSubdivPixelError.set(0)
             except AttributeError:
@@ -1119,9 +1122,13 @@ class Render(object):
 
             try:
                 shape.rsEnableSubdivision.set(1)
-                shape.rsMaxTessellationSubdivs.set(3)
-                shape.rsLimitOutOfFrustumTessellation.set(1)
-                shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
+                shape.rsMaxTessellationSubdivs.set(max_subdiv)
+                if not fixed_tes:
+                    shape.rsLimitOutOfFrustumTessellation.set(1)
+                    shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
+                else:
+                    shape.rsScreenSpaceAdaptive.set(0)
+                    shape.rsMinTessellationLength.set(0)
             except AttributeError:
                 pass
 
