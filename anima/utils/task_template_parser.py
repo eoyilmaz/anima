@@ -116,6 +116,12 @@ class StalkerEncoder(json.JSONEncoder):
         'walk_inputs',
         'watchers',
 
+        # Shot
+        'image_format',
+        'image_format_id',
+        'source_in',
+        'source_out',
+
         # Version
         'absolute_full_path',
         'inputs',
@@ -190,6 +196,8 @@ class StalkerDecoder(object):
             entity_class = Task
         elif entity_type == 'Shot':
             entity_class = Shot
+            # this is a bug
+            data['sequences'] = []
         elif entity_type == 'Sequence':
             entity_class = Sequence
 
@@ -198,24 +206,34 @@ class StalkerDecoder(object):
         # get the type
         if 'type' in data:
             type_data = data['type']
-            type_name = type_data['name']
-            type_ = Type.query.filter(Type.name == type_name).first()
-            if not type_:
-                # create a Type
-                type_ = Type(**type_data)
-            data['type'] = type_
+            if type_data:
+                type_name = type_data['name']
+                type_ = Type.query.filter(Type.name == type_name).first()
+                if not type_:
+                    # create a Type
+                    type_ = Type(**type_data)
+                data['type'] = type_
 
         data['project'] = self.project
         entity = entity_class(**data)
 
         # create Versions
         if version_data:
+            repo = self.project.repository
+            repo_id = 0
+            if repo:
+                repo_id = repo.id
+
             for v_data in version_data:
                 # get Version info
                 v_data['task'] = entity
                 v = Version(**v_data)
                 # update version_number
                 v.version_number = v_data['version_number']
+                # update REPO path
+                v.full_path = '/'.join(
+                    ['$REPO%s' % repo_id] + v.full_path.split('/')[1:]
+                )
 
         # for each child task call a new StalkerDecoder
         for t in data['tasks']:
