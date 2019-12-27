@@ -358,10 +358,20 @@ class TaskTreeView(QtWidgets.QTreeView):
                             u'\uf03e Upload Thumbnail...'
                         )
 
+                    # Export and Import JSON
+                    create_sub_menu.addSeparator()
+                    export_to_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+
+                    import_from_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
+                    create_sub_menu.addSeparator()
+
                     create_child_task_action = \
                         create_sub_menu.addAction(
                             u'\uf0ae Create Child Task...'
                         )
+
                     duplicate_task_hierarchy_action = \
                         create_sub_menu.addAction(
                             u'\uf0c5 Duplicate Task Hierarchy...'
@@ -370,14 +380,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                         menu.addAction(u'\uf1f8 Delete Task...')
 
                     menu.addSeparator()
-
-                export_to_json_action = \
-                    menu.addAction(u'\uf1f8 Export To JSON...')
-
-                if defaults.is_power_user(logged_in_user):
-                    import_from_json_action = \
-                        menu.addAction(u'\uf1f8 Import From JSON...')
-
 
                 # create the status_menu
                 status_menu = update_sub_menu.addMenu('Status')
