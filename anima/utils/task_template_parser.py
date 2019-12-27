@@ -121,6 +121,7 @@ class StalkerEncoder(json.JSONEncoder):
         'image_format_id',
         'source_in',
         'source_out',
+        'sequences',
 
         # Version
         'absolute_full_path',
@@ -143,7 +144,9 @@ class StalkerEncoder(json.JSONEncoder):
             # don't re-visit self
             if obj in self._visited_objs:
                 return None
-            self._visited_objs.append(obj)
+            # do not append if this is a type instance
+            if obj.entity_type != 'Type':
+                self._visited_objs.append(obj)
 
             # an SQLAlchemy class
             fields = {}
