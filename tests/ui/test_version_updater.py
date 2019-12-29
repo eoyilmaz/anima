@@ -556,10 +556,10 @@ class VersionUpdaterTester(unittest.TestCase):
     def test_test_setup(self):
         """testing if the test setup is correct
         """
-        # print "version2  : %s" % self.version2
-        # print "version5  : %s" % self.version5
-        # print "version12 : %s" % self.version12
-        # print "version15 : %s" % self.version15
+        # print("version2  : %s" % self.version2)
+        # print("version5  : %s" % self.version5)
+        # print("version12 : %s" % self.version12)
+        # print("version15 : %s" % self.version15)
 
         # check the setup
         visited_versions = []
@@ -569,8 +569,8 @@ class VersionUpdaterTester(unittest.TestCase):
             [self.version15, self.version12, self.version5, self.version2,
              self.version45, self.version48]
 
-        # print expected_visited_versions
-        # print visited_versions
+        # print(expected_visited_versions)
+        # print(visited_versions)
 
         self.assertEqual(
             expected_visited_versions,
@@ -932,7 +932,7 @@ class VersionUpdaterTester(unittest.TestCase):
         # self.show_dialog(self.dialog)
 
         QTest.mouseClick(self.dialog.update_pushButton, Qt.LeftButton)
-        #print self.test_environment.test_data
+        #print(self.test_environment.test_data)
 
         self.assertEqual(
             1,

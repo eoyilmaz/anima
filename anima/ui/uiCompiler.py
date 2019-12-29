@@ -264,7 +264,7 @@ def main():
             print('Renewing the MD5 file!')
             ui_file.update_md5_file()
 
-    print "Finished compiling"
+    print("Finished compiling")
 
 
 if __name__ == '__main__':

@@ -832,7 +832,7 @@ class PickedObject(object):
                 weightAlias.setKey(v=1, ott="step")
             else:
                 currentWeight = weightAlias.get()
-                print "currentWeight = ", currentWeight
+                print("currentWeight = %s" % currentWeight)
                 if currentWeight > 0:
                     weightAlias.setKey(v=0, ott="step")
 

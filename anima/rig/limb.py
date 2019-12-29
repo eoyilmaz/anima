@@ -47,8 +47,8 @@ class Limb(object):
             self.mainCtrl = pm.nt.Transform(mainCtrl)
 
     def do_spine_ik(self, curve_in):
-        print self.curve_in
-        print self.name
+        print(self.curve_in)
+        print(self.name)
 
 
 class FkLimb(object):
@@ -241,7 +241,7 @@ class IkSpineLimb(object):
 
             fkJointsPos.append(self.joints.jointPos[i])
         fkJointsPos.append(self.joints.endPos)
-        print fkJointsPos
+        print(fkJointsPos)
         fkSetup = FkLimb()
         fkSetup.create_fk_limb("back_FK_", fkJointsPos)
 

@@ -185,7 +185,7 @@ proc int playblastShot( string $path, string $template, int $setupImagePlane,
 		if ( catch ( $outFile = evalEcho($cmd) ) )
 		{
 			$setupImagePlane = false;	// Don't try do anything with the image plane.
-			print (uiRes("m_doPlayblastShotArgList.kQtPlayblastFailed"));
+			print(uiRes("m_doPlayblastShotArgList.kQtPlayblastFailed"));
 		}
 		if ($outFile == "")
 		{
@@ -213,7 +213,7 @@ proc int playblastShot( string $path, string $template, int $setupImagePlane,
 		if ( catch ( $outFile = evalEcho($cmd) ) )
 		{
 			$setupImagePlane = false;	// Don't try do anything with the image plane
-			print (uiRes("m_doPlayblastShotArgList.kIffPlayblastFailed"));
+			print(uiRes("m_doPlayblastShotArgList.kIffPlayblastFailed"));
 		}
 		
 		string $extension = "iff";
@@ -273,7 +273,7 @@ doPlayblastShotArgList( string $version, string $args[], string $shots )
 	if( ($version == 1 && size($args) != 8) || 
 		($version == 3 && size($args) != 9) ) 
 	{
-		print (uiRes("m_doPlayblastShotArgList.kArgListWrongLength"));
+		print(uiRes("m_doPlayblastShotArgList.kArgListWrongLength"));
 		return;
 	}
 

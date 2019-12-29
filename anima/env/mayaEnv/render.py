@@ -259,7 +259,7 @@ class Render(object):
             print("pattern: %s" % pattern)
 
             files = glob.glob(pattern)
-            print files
+            print(files)
 
             # TODO: Make it beautiful by using the auxiliary.create_shader()
             # For now do it ugly!

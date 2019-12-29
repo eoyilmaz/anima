@@ -122,7 +122,7 @@ class oyTrajectoryDrawer(OpenMayaMPx.MPxLocatorNode):
         # add the positions one by one
         numOfTPos = tPositions.length()
         
-        #print "numOfTPos in bbox : %s " % numOfTPos
+        #print("numOfTPos in bbox : %s " % numOfTPos)
         
         for i in range(numOfTPos):
             

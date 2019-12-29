@@ -3996,18 +3996,18 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         result = \
             self.maya_env.check_referenced_versions()
 
-        # print 'self.version27: %s' % self.version27
-        # print 'self.version38: %s' % self.version38
-        # print 'self.version16: %s' % self.version16
-        # print 'self.version21: %s' % self.version21
-        # print 'self.version2 : %s' % self.version2
-        # print 'self.version4 : %s' % self.version4
-        # print 'self.version11: %s' % self.version11
-        # print 'self.version15: %s' % self.version15
+        # print('self.version27: %s' % self.version27)
+        # print('self.version38: %s' % self.version38)
+        # print('self.version16: %s' % self.version16)
+        # print('self.version21: %s' % self.version21)
+        # print('self.version2 : %s' % self.version2)
+        # print('self.version4 : %s' % self.version4)
+        # print('self.version11: %s' % self.version11)
+        # print('self.version15: %s' % self.version15)
         #
-        # print expected_reference_resolution
-        # print '--------------------------'
-        # print result
+        # print(expected_reference_resolution)
+        # print('--------------------------')
+        # print(result)
 
         self.assertEqual(
             sorted(expected_reference_resolution['root'],
@@ -4099,14 +4099,14 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         result = \
             self.maya_env.check_referenced_versions()
 
-        # print 'self.version15.id: %s' % self.version15.id
-        # print 'self.version11.id: %s' % self.version11.id
-        # print 'self.version4.id : %s' % self.version4.id
-        # print 'self.version2.id : %s' % self.version2.id
+        # print('self.version15.id: %s' % self.version15.id)
+        # print('self.version11.id: %s' % self.version11.id)
+        # print('self.version4.id : %s' % self.version4.id)
+        # print('self.version2.id : %s' % self.version2.id)
         #
-        # print expected_reference_resolution
-        # print '--------------------------'
-        # print result
+        # print(expected_reference_resolution)
+        # print('--------------------------')
+        # print(result)
 
         self.assertEqual(
             sorted(expected_reference_resolution['root'],

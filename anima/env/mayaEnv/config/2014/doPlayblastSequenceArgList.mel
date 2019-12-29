@@ -60,7 +60,7 @@ doPlayblastSequenceArgList( string $version, string $args[])
 	if( ($version == 1 && size($args) != 6) ||
 		( $version == 3 && size($args) != 9 ) )
 	{
-		print (uiRes("m_doPlayblastSequenceArgList.kArgListWrongLength"));
+		print(uiRes("m_doPlayblastSequenceArgList.kArgListWrongLength"));
 		return;
 	}	
 

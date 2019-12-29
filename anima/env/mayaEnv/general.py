@@ -94,7 +94,7 @@ class General(object):
                             pm.namespace(rm=del_nsc, mnr=1)
                 else:
                     pm.namespace(rm=ns, mnr=1)
-                print ('Deleted -> :' + ns)
+                print('Deleted -> :' + ns)
                 caller.step()
         else:
             pm.warning(
@@ -104,7 +104,7 @@ class General(object):
         if len(ref_namespaces) == 0 and len(all_namespaces) > 0:
             for ns in all_namespaces:
                 pm.namespace(rm=ns, mnr=1)
-                print ('Deleted -> : %s' % ns)
+                print('Deleted -> : %s' % ns)
             pm.warning(
                 'There are no references in this scene. All empty namespaces '
                 'are deleted.'

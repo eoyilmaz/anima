@@ -2266,11 +2266,6 @@ def UI():
         cc=functools.partial(store_tab_index, main_tab_layout)
     )
 
-    # pm.showWindow(toolbox_window)
-    # pm.window(toolbox_window, edit=True, w=width)
-
-    #print toolbox_window.name()
-
     dock_control = pm.dockControl(
         "toolbox_dockControl",
         l='toolbox',

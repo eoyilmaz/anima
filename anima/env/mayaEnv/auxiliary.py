@@ -515,7 +515,7 @@ def export_blend_connections():
                 ''.join(map(str, main_shape)),
                 ''.join(map(str, con[0].name()))
             )
-            print (cmd + "\n")
+            print("%s\n" % cmd)
             fileId.write("%s\n" % cmd)
 
     print("\n------------------------------------------------------\n")

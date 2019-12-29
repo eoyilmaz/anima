@@ -418,7 +418,7 @@ class Max(EnvironmentBase):
         """
         from pymxs import runtime as rt
         record_count = rt.objXRefMgr.recordCount
-        print ('record count: %s' % record_count)
+        print('record count: %s' % record_count)
         records = []
         for i in range(record_count):
             records.append(rt.objXRefMgr.GetRecord(i + 1))

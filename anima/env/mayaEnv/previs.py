@@ -223,7 +223,7 @@ def move_all_anim_curves():
                 if i > 30:
                     message += '+ More...\n'
                     break
-            print non_moved_curves
+            print(non_moved_curves)
             pm.confirmDialog(title='Error', message=message, button='OK')
 
         # pdm.close()
@@ -1123,7 +1123,7 @@ class Previs(object):
             cut_info = camera_tools.find_cut_info(cam)
 
             for cut_in, cut_out in cut_info:
-                print cut_in, cut_out
+                print(cut_in, cut_out)
                 # duplicate the original camera with input graph
                 dup_cam = pm.duplicate(cam, un=1)[0]
 

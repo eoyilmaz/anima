@@ -59,7 +59,7 @@ class Reference(object):
         all_referenced_nodes = ref.nodes()
         for node in all_referenced_nodes:
             if isinstance(node, pm.nt.Transform):
-                #print '%s has parent' % node.name()
+                #print('%s has parent' % node.name())
                 parent_node = node.getParent()
                 if parent_node not in all_referenced_nodes:
                     return node

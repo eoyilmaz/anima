@@ -402,13 +402,13 @@ class SequenceManagerExtension(object):
                         start_frame = clip.in_ - handle + shot.anchor
                         end_frame = clip.out - clip.in_ + start_frame - 1
 
-                        # print '-------------------------------'
-                        # print 'clip.in     : %s' % clip.in_
-                        # print 'clip.out    : %s' % clip.out
-                        # print 'clip.start  : %s' % clip.start
-                        # print 'clip.end    : %s' % clip.end
-                        # print 'start_frame : %s' % start_frame
-                        # print 'end_frame   : %s' % end_frame
+                        # print('-------------------------------')
+                        # print('clip.in     : %s' % clip.in_)
+                        # print('clip.out    : %s' % clip.out)
+                        # print('clip.start  : %s' % clip.start)
+                        # print('clip.end    : %s' % clip.end)
+                        # print('start_frame : %s' % start_frame)
+                        # print('end_frame   : %s' % end_frame)
 
                         sequence_start = clip.start
 
@@ -804,8 +804,8 @@ class SequencerExtension(object):
             )
 
             # remove the temp file
-            #os.remove(temp_file_path)
-            #print 'xml path: %s' % temp_file_path
+            # os.remove(temp_file_path)
+            # print('xml path: %s' % temp_file_path)
 
         #if return_code:
         #    # there is an error

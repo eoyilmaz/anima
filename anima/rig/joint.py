@@ -308,7 +308,7 @@ class SpineJoints(JointChain):
         temporalGroup = DrawNode(Shape.transform, 'temporalGroup')
         pm.parent(self.startJoint, temporalGroup.drawnNode)
 
-        print (pm.getAttr(self.zeroJoint.jointOrient))
+        print(pm.getAttr(self.zeroJoint.jointOrient))
         pm.setAttr(self.zeroJoint.jointOrientX, 0)
         pm.parent(self.startJoint, self.zeroJoint)
         temporalGroup.delete()

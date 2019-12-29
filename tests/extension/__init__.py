@@ -69,7 +69,7 @@ class ExtenderTester(unittest.TestCase):
     #         f_result
     #     )
     # 
-    #     print f.__dict__
+    #     print(f.__dict__)
     # 
     #     self.assertEqual(
     #         'func1',
