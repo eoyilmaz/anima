@@ -92,6 +92,7 @@ class StalkerEntityEncoder(json.JSONEncoder):
         'responsible',
         'review_number',
         'reviews',
+        'schedule_seconds',
         'start',
         'status',
         'status_id',
