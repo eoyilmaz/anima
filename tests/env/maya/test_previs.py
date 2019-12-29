@@ -97,11 +97,8 @@ class ShotSplitterTestCase(unittest.TestCase):
                        self.shot_template, self.sequence_template]
         )
 
-        self.project_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[self.status_new, self.status_wip, self.status_comp]
-        )
+        self.project_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
         self.image_format = ImageFormat(
             name='HD 1080',

@@ -8,6 +8,7 @@ import os
 import unittest
 
 from stalker import db, Repository
+from stalker.db.session import DBSession
 
 
 class RepoVarsTestCase(unittest.TestCase):
@@ -60,8 +61,8 @@ class RepoVarsTestCase(unittest.TestCase):
 
         cls.all_repos = [cls.repo1, cls.repo2, cls.repo3, cls.repo4, cls.repo5]
 
-        db.DBSession.add_all(cls.all_repos)
-        db.DBSession.commit()
+        DBSession.add_all(cls.all_repos)
+        DBSession.commit()
 
     def test_environment_var_values_are_correct(self):
         """testing if all environment var values are correct

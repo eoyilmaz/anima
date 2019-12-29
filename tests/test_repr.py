@@ -8,15 +8,15 @@ import tempfile
 
 import unittest
 import os
-from stalker import (db, User, Repository, Status, FilenameTemplate, Structure,
-                     StatusList, ImageFormat, Project, Type, Task, Version)
+# from stalker import (db, User, Repository, Status, FilenameTemplate, Structure,
+#                      StatusList, ImageFormat, Project, Type, Task, Version)
 from anima.representation import Representation
 
 
 class RepresentationTestCase(unittest.TestCase):
     """tests anima.repr.Representation class
     """
-    temp_repo_path = ''
+    temp_repo_path = tempfile.mkdtemp()
     remove_these_files_buffer = []
 
     @classmethod
@@ -27,9 +27,11 @@ class RepresentationTestCase(unittest.TestCase):
         :param take_name: the take_name name
         :return: the version
         """
+        from stalker import Version
+        from stalker.db.session import DBSession
         v = Version(task=task, take_name=take_name)
-        db.DBSession.add(v)
-        db.DBSession.commit()
+        DBSession.add(v)
+        DBSession.commit()
         return v
 
     @classmethod
@@ -39,12 +41,14 @@ class RepresentationTestCase(unittest.TestCase):
         # -----------------------------------------------------------------
         # start of the setUp
         # create the environment variable and point it to a temp directory
+        from stalker import db
         database_url = "sqlite:///:memory:"
         db.setup({'sqlalchemy.url': database_url})
         db.init()
 
         cls.temp_repo_path = tempfile.mkdtemp()
 
+        from stalker import User
         cls.user1 = User(
             name='User 1',
             login='user1',
@@ -52,6 +56,7 @@ class RepresentationTestCase(unittest.TestCase):
             password='12345'
         )
 
+        from stalker import Repository
         cls.repo1 = Repository(
             name='Test Project Repository',
             linux_path=cls.temp_repo_path,
@@ -59,10 +64,12 @@ class RepresentationTestCase(unittest.TestCase):
             osx_path=cls.temp_repo_path
         )
 
+        from stalker import Status
         cls.status_new = Status.query.filter_by(code='NEW').first()
         cls.status_wip = Status.query.filter_by(code='WIP').first()
         cls.status_comp = Status.query.filter_by(code='CMPL').first()
 
+        from stalker import FilenameTemplate
         cls.task_template = FilenameTemplate(
             name='Task Template',
             target_entity_type='Task',
@@ -74,17 +81,17 @@ class RepresentationTestCase(unittest.TestCase):
                      '_v{{"%03d"|format(version.version_number)}}',
         )
 
+        from stalker import Structure
         cls.structure = Structure(
             name='Project Struture',
             templates=[cls.task_template]
         )
 
-        cls.project_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[cls.status_new, cls.status_wip, cls.status_comp]
-        )
+        from stalker import StatusList
+        cls.project_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
+        from stalker import ImageFormat
         cls.image_format = ImageFormat(
             name='HD 1080',
             width=1920,
@@ -93,6 +100,7 @@ class RepresentationTestCase(unittest.TestCase):
         )
 
         # create a test project
+        from stalker import Project
         cls.project = Project(
             name='Test Project',
             code='TP',
@@ -105,12 +113,14 @@ class RepresentationTestCase(unittest.TestCase):
         cls.task_status_list =\
             StatusList.query.filter_by(target_entity_type='Task').first()
 
+        from stalker import Type
         cls.character_type = Type(
             name='Character',
             code='CHAR',
             target_entity_type='Asset'
         )
 
+        from stalker import Task
         # create a test series of root task
         cls.task1 = Task(
             name='Test Task 1',
@@ -122,12 +132,13 @@ class RepresentationTestCase(unittest.TestCase):
         )
 
         # commit everything
-        db.DBSession.add_all([
+        from stalker.db.session import DBSession
+        DBSession.add_all([
             cls.repo1, cls.status_new, cls.status_wip, cls.status_comp,
             cls.project_status_list, cls.project, cls.task_status_list,
             cls.task1, cls.task2, cls.task_template
         ])
-        db.DBSession.commit()
+        DBSession.commit()
 
         cls.version1 = cls.create_version(cls.task1, 'Main')
         cls.version2 = cls.create_version(cls.task1, 'Main')
@@ -138,13 +149,13 @@ class RepresentationTestCase(unittest.TestCase):
         cls.version4 = cls.create_version(cls.task1, 'Main@BBox')
         cls.version5 = cls.create_version(cls.task1, 'Main@BBox')
         cls.version5.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # ASS
         cls.version6 = cls.create_version(cls.task1, 'Main@ASS')
         cls.version7 = cls.create_version(cls.task1, 'Main@ASS')
         cls.version7.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # GPU
         cls.version8 = cls.create_version(cls.task1, 'Main@GPU')
@@ -170,7 +181,7 @@ class RepresentationTestCase(unittest.TestCase):
         # No Repr
         cls.version18 = cls.create_version(cls.task1, 'NoRepr')
         cls.version19 = cls.create_version(cls.task1, 'NoRepr')
-        db.DBSession.commit()
+        DBSession.commit()
 
         # create a buffer for extra created files, which are to be removed
         cls.remove_these_files_buffer = []
@@ -180,7 +191,8 @@ class RepresentationTestCase(unittest.TestCase):
         """cleanup the test
         """
         # set the db.session to None
-        db.DBSession.remove()
+        from stalker.db.session import DBSession
+        DBSession.remove()
 
         # delete the temp folder
         shutil.rmtree(cls.temp_repo_path, ignore_errors=True)

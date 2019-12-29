@@ -34,11 +34,9 @@ elif IS_PYQT4():
     from PyQt4.QtTest import QTest
     from PyQt4.QtCore import Qt
 
-
-#from anima.ui.lib import QtCore, QtGui
-
 from stalker import db, Task, Version, Project, Repository, Structure, \
     FilenameTemplate, StatusList, Status
+from stalker.db.session import DBSession
 
 
 class VersionMoverTestCase(unittest.TestCase):
@@ -70,8 +68,8 @@ class VersionMoverTestCase(unittest.TestCase):
         v = Version(task=task, take_name=take_name)
         v.update_paths()
 
-        db.DBSession.add(v)
-        db.DBSession.commit()
+        DBSession.add(v)
+        DBSession.commit()
 
         # create a file
         try:
@@ -132,11 +130,8 @@ class VersionMoverTestCase(unittest.TestCase):
         self.status_wip = Status.query.filter_by(code='WIP').first()
         self.status_cmpl = Status.query.filter_by(code='CMPL').first()
 
-        self.test_project_status_list = StatusList(
-            name='Project Statuses',
-            statuses=[self.status_new, self.status_wip, self.status_cmpl],
-            target_entity_type='Project'
-        )
+        self.test_project_status_list = \
+            StatusList.query.filter(target_entity_type='Project').first()
 
         self.test_project1 = Project(
             name='Test Project 1',
@@ -145,8 +140,8 @@ class VersionMoverTestCase(unittest.TestCase):
             structure=self.test_structure,
             status_list=self.test_project_status_list
         )
-        db.DBSession.add(self.test_project1)
-        db.DBSession.commit()
+        DBSession.add(self.test_project1)
+        DBSession.commit()
 
         # now create tasks
 
@@ -214,7 +209,7 @@ class VersionMoverTestCase(unittest.TestCase):
             parent=self.test_task3
         )
 
-        db.DBSession.add_all([
+        DBSession.add_all([
             self.test_task1, self.test_task2, self.test_task3, self.test_task4,
             self.test_task5, self.test_task6, self.test_task7, self.test_task8,
             self.test_task9, self.test_task10, self.test_task11,
@@ -502,7 +497,7 @@ class VersionMoverTestCase(unittest.TestCase):
         self.assertTrue(self.test_task8.versions == [])
         self.assertEqual(len(self.test_task4.versions), 9)
 
-        take_name_count = db.DBSession\
+        take_name_count = DBSession\
             .query(distinct(Version.take_name))\
             .filter(Version.task == self.test_task4)\
             .count()

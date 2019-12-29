@@ -38,6 +38,7 @@ elif IS_PYQT4():
 from stalker import (db, User, Project, Repository, Structure, Status,
                      StatusList, Task, Version, FilenameTemplate,
                      ImageFormat, Type, Asset, Sequence, Shot)
+from stalker.db.session import DBSession
 
 
 # exceptions for test purposes
@@ -78,8 +79,8 @@ class VersionUpdaterTester(unittest.TestCase):
             email='user1@users.com',
             password='12345'
         )
-        db.DBSession.add(self.user1)
-        db.DBSession.commit()
+        DBSession.add(self.user1)
+        DBSession.commit()
 
         # login as self.user1
         from stalker import LocalSession
@@ -148,11 +149,8 @@ class VersionUpdaterTester(unittest.TestCase):
                        self.shot_template, self.sequence_template]
         )
 
-        self.project_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[self.status_new, self.status_wip, self.status_comp]
-        )
+        self.project_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
         self.image_format = ImageFormat(
             name='HD 1080',
@@ -266,7 +264,7 @@ class VersionUpdaterTester(unittest.TestCase):
         )
 
         # commit everything
-        db.DBSession.add_all([
+        DBSession.add_all([
             self.repo1, self.status_new, self.status_wip, self.status_comp,
             self.project_status_list, self.project, self.task_status_list,
             self.asset_status_list, self.shot_status_list,
@@ -276,7 +274,7 @@ class VersionUpdaterTester(unittest.TestCase):
             self.task_template, self.asset_template, self.shot_template,
             self.sequence_template
         ])
-        db.DBSession.commit()
+        DBSession.commit()
 
         # now create versions
         def create_version(task, take_name):
@@ -290,8 +288,8 @@ class VersionUpdaterTester(unittest.TestCase):
 
             v = Version(task=task, take_name=take_name)
             v.update_paths()
-            db.DBSession.add(v)
-            db.DBSession.commit()
+            DBSession.add(v)
+            DBSession.commit()
             #self.maya_env.save_as(v)
             return v
 
@@ -542,7 +540,7 @@ class VersionUpdaterTester(unittest.TestCase):
         """cleanup the test
         """
         # set the db.session to None
-        db.DBSession.remove()
+        DBSession.remove()
 
         # delete the temp folder
         shutil.rmtree(self.temp_repo_path, ignore_errors=True)
@@ -988,7 +986,7 @@ class VersionUpdaterTester(unittest.TestCase):
         """
         self.version1.inputs.append(self.version2)
         self.version1.inputs.append(self.version3)
-        db.DBSession.commit()
+        DBSession.commit()
 
         self.test_environment._version = self.version1
 

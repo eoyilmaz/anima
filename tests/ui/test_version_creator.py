@@ -17,6 +17,7 @@ logger.setLevel(logging.DEBUG)
 
 from stalker import (db, User, Project, Repository, Structure,
                      Status, StatusList, Task, Group, Version)
+from stalker.db.session import DBSession
 from stalker.models.auth import LocalSession
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, SET_PYSIDE
 from anima.ui import version_creator
@@ -56,7 +57,7 @@ class VersionCreatorTester(unittest.TestCase):
         """setup once
         """
         # remove the transaction manager
-        db.DBSession.remove()
+        DBSession.remove()
 
         cls.repo_path = tempfile.mkdtemp()
 
@@ -71,8 +72,8 @@ class VersionCreatorTester(unittest.TestCase):
 
         # create Power Users Group
         cls.power_users_group = Group(name='Power Users')
-        db.DBSession.add(cls.power_users_group)
-        db.DBSession.commit()
+        DBSession.add(cls.power_users_group)
+        DBSession.commit()
 
         # create a LocalSession first
         cls.admin = User.query.all()[0]
@@ -98,11 +99,8 @@ class VersionCreatorTester(unittest.TestCase):
         cls.status_wip = Status.query.filter_by(code='WIP').first()
         cls.status_cmpl = Status.query.filter_by(code='CMPL').first()
 
-        cls.project_status_list = StatusList(
-            name='Project Statuses',
-            statuses=[cls.status_new, cls.status_wip, cls.status_cmpl],
-            target_entity_type=Project
-        )
+        cls.project_status_list = \
+            StatusList.query.filter_by(target_entity_type=Project).first()
 
         # create a couple of projects
         cls.test_project1 = Project(
@@ -142,8 +140,8 @@ class VersionCreatorTester(unittest.TestCase):
             email='tuser@tusers.com',
             password='secret'
         )
-        db.DBSession.add(cls.test_user1)
-        db.DBSession.commit()
+        DBSession.add(cls.test_user1)
+        DBSession.commit()
 
         cls.admin.projects.append(cls.test_project1)
         cls.admin.projects.append(cls.test_project2)
@@ -233,13 +231,13 @@ class VersionCreatorTester(unittest.TestCase):
         # +-> Project 3
 
         # record them all to the db
-        db.DBSession.add_all([
+        DBSession.add_all([
             cls.admin, cls.test_project1, cls.test_project2, cls.test_project3,
             cls.test_task1, cls.test_task2, cls.test_task3, cls.test_task4,
             cls.test_task5, cls.test_task6, cls.test_task7, cls.test_task8,
             cls.test_task9
         ])
-        db.DBSession.commit()
+        DBSession.commit()
 
         cls.all_tasks = [
             cls.test_task1, cls.test_task2, cls.test_task3, cls.test_task4,
@@ -254,8 +252,8 @@ class VersionCreatorTester(unittest.TestCase):
             created_with='Test',
             description='Test Description'
         )
-        db.DBSession.add(cls.test_version1)
-        db.DBSession.commit()
+        DBSession.add(cls.test_version1)
+        DBSession.commit()
 
         cls.test_version2 = Version(
             cls.test_task1,
@@ -263,8 +261,8 @@ class VersionCreatorTester(unittest.TestCase):
             created_with='Test',
             description='Test Description'
         )
-        db.DBSession.add(cls.test_version2)
-        db.DBSession.commit()
+        DBSession.add(cls.test_version2)
+        DBSession.commit()
 
         cls.test_version3 = Version(
             cls.test_task1,
@@ -273,8 +271,8 @@ class VersionCreatorTester(unittest.TestCase):
             description='Test Description'
         )
         cls.test_version3.is_published = True
-        db.DBSession.add(cls.test_version3)
-        db.DBSession.commit()
+        DBSession.add(cls.test_version3)
+        DBSession.commit()
 
         cls.test_version4 = Version(
             cls.test_task1,
@@ -284,8 +282,8 @@ class VersionCreatorTester(unittest.TestCase):
             description='Test Description'
         )
         cls.test_version4.is_published = True
-        db.DBSession.add(cls.test_version4)
-        db.DBSession.commit()
+        DBSession.add(cls.test_version4)
+        DBSession.commit()
 
         if not QtGui.QApplication.instance():
             logger.debug('creating a new QApplication')
@@ -313,7 +311,7 @@ class VersionCreatorTester(unittest.TestCase):
         shutil.rmtree(cls.repo_path)
 
         # configure with transaction manager
-        db.DBSession.remove()
+        DBSession.remove()
 
     def show_dialog(self, dialog):
         """show the given dialog

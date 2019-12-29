@@ -505,7 +505,7 @@ class SequenceTestCase(unittest.TestCase):
         # first supply an edl
         from edl import Parser
         p = Parser('24')
-        edl_path = os.path.abspath('./test_data/test_v001.edl')
+        edl_path = os.path.join(__file__, '/test_data/test_v001.edl')
 
         with open(edl_path) as f:
             edl_list = p.parse(f)

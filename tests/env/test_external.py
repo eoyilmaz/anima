@@ -35,9 +35,8 @@ class ExternalEnvTestCase(unittest.TestCase):
         self.status_wip = Status.query.filter_by(code='WIP').first()
         self.status_cmpl = Status.query.filter_by(code='CMPL').first()
 
-        self.project_status_list = StatusList.query.filter(
-            StatusList.target_entity_type=='Project'
-        ).first()
+        self.project_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
         self.task_filename_template = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',

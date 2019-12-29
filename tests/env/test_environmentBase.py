@@ -83,19 +83,11 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         status3 = Status(name='Status 3', code='STS3')
         DBSession.add_all([status1, status2, status3])
 
-        proj_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(proj_status_list)
+        proj_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
-        task_status_list = StatusList(
-            name='Task Statuses',
-            target_entity_type='Task',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(task_status_list)
+        task_status_list = \
+            StatusList.query.filter_by(target_entity_type='Task').first()
 
         version_status_list = StatusList(
             name='Version Statuses',
@@ -274,27 +266,11 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         status3 = Status(name='Status 3', code='STS3')
         DBSession.add_all([status1, status2, status3])
 
-        proj_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(proj_status_list)
+        proj_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
-        task_status_list = StatusList(
-            name='Task Statuses',
-            target_entity_type='Task',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(task_status_list)
-
-        version_status_list = StatusList(
-            name='Version Statuses',
-            target_entity_type='Version',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(version_status_list)
-
+        task_status_list = \
+            StatusList.query.filter_by(target_entity_type='Task').first()
         project1 = Project(
             name='Test Project 1',
             code='TP1',
@@ -333,32 +309,28 @@ class EnvironmentBaseTestCase(unittest.TestCase):
 
         # now create versions
         version1 = Version(
-            task=task1,
-            status_list=version_status_list
+            task=task1
         )
         DBSession.add(version1)
         DBSession.commit()
         version1.update_paths()
 
         version2 = Version(
-            task=task1,
-            status_list=version_status_list
+            task=task1
         )
         DBSession.add(version2)
         DBSession.commit()
         version2.update_paths()
 
         version3 = Version(
-            task=task2,
-            status_list=version_status_list
+            task=task2
         )
         DBSession.add(version3)
         DBSession.commit()
         version3.update_paths()
 
         version4 = Version(
-            task=task2,
-            status_list=version_status_list
+            task=task2
         )
         DBSession.add(version4)
         DBSession.commit()
@@ -471,26 +443,12 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         status3 = Status(name='Status 3', code='STS3')
         DBSession.add_all([status1, status2, status3])
 
-        proj_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(proj_status_list)
+        proj_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
-        task_status_list = StatusList(
-            name='Task Statuses',
-            target_entity_type='Task',
-            statuses=[status1, status2, status3]
-        )
+        task_status_list = \
+            StatusList.query.filter_by(target_entity_type='Task').first()
         DBSession.add(task_status_list)
-
-        version_status_list = StatusList(
-            name='Version Statuses',
-            target_entity_type='Version',
-            statuses=[status1, status2, status3]
-        )
-        DBSession.add(version_status_list)
 
         project1 = Project(
             name='Test Project 1',
@@ -537,26 +495,17 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         DBSession.commit()
         version1.update_paths()
 
-        version2 = Version(
-            task=task1,
-            status_list=version_status_list
-        )
+        version2 = Version(task=task1)
         DBSession.add(version2)
         DBSession.commit()
         version2.update_paths()
 
-        version3 = Version(
-            task=task2,
-            status_list=version_status_list
-        )
+        version3 = Version(task=task2)
         DBSession.add(version3)
         DBSession.commit()
         version3.update_paths()
 
-        version4 = Version(
-            task=task2,
-            status_list=version_status_list
-        )
+        version4 = Version(task=task2)
         DBSession.add(version4)
         DBSession.commit()
         version4.update_paths()

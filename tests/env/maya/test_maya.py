@@ -21,6 +21,7 @@ import pymel.core as pm
 from stalker import (db, Project, Repository, StatusList, Status, Asset, Shot,
                      Task, Sequence, Version, User, Type, Structure,
                      FilenameTemplate, ImageFormat)
+from stalker.db.session import DBSession
 
 from anima import utils
 from anima import publish
@@ -49,7 +50,7 @@ class MayaTestBase(unittest.TestCase):
 
         v = Version(task=task, take_name=take_name)
 
-        db.DBSession.add(v)
+        DBSession.add(v)
         self.maya_env.save_as(v)
 
         return v
@@ -91,8 +92,8 @@ class MayaTestBase(unittest.TestCase):
             windows_path=self.temp_repo_path,
             osx_path=self.temp_repo_path
         )
-        db.DBSession.add(self.repo1)
-        db.DBSession.commit()
+        DBSession.add(self.repo1)
+        DBSession.commit()
 
         self.status_new = Status.query.filter_by(code='NEW').first()
         self.status_wip = Status.query.filter_by(code='WIP').first()
@@ -148,11 +149,8 @@ class MayaTestBase(unittest.TestCase):
                        self.shot_template, self.sequence_template]
         )
 
-        self.project_status_list = StatusList(
-            name='Project Statuses',
-            target_entity_type='Project',
-            statuses=[self.status_new, self.status_wip, self.status_comp]
-        )
+        self.project_status_list = \
+            StatusList.query.filter_by(target_entity_type='Project').first()
 
         self.image_format = ImageFormat(
             name='HD 1080',
@@ -609,7 +607,7 @@ class MayaTestBase(unittest.TestCase):
         )
 
         # commit everything
-        db.DBSession.add_all([
+        DBSession.add_all([
             self.repo1, self.status_new, self.status_wip, self.status_comp,
             self.project_status_list, self.project, self.task_status_list,
             self.asset_status_list, self.shot_status_list,
@@ -643,7 +641,7 @@ class MayaTestBase(unittest.TestCase):
             self.prop1_model_proxy, self.prop1_model_hires,
             self.prop1_look_dev, self.ext1_vegetation
         ])
-        db.DBSession.commit()
+        DBSession.commit()
 
         # create the environment instance
         self.maya_env = Maya()
@@ -848,6 +846,14 @@ class MayaTestBase(unittest.TestCase):
         self.version122 = self.create_version(self.prop1_model_hires, 'Kisa')
         self.version123 = self.create_version(self.prop1_model_hires, 'Kisa')
 
+        # load mtoa plugin
+        try:
+            pm.loadPlugin("mtoa")
+        except RuntimeError:
+            # no mtoa plugin
+            # pass the test
+            pass
+
         # now fill some content
         # Vegetation
         pm.newFile(force=True)
@@ -938,6 +944,7 @@ class MayaTestBase(unittest.TestCase):
 
         # Prop1 | Look Dev | Main
         pm.newFile(force=True)
+        self.maya_env.save_as(self.version112)
         self.maya_env.reference(self.version111)
         # assign a material to the object
         mat = pm.createSurfaceShader('aiStandard', name='kulp_aiStandard')
@@ -952,6 +959,7 @@ class MayaTestBase(unittest.TestCase):
         # create "Kisa" take
         # Prop1 | Look Dev | Kisa
         pm.newFile(force=True)
+        self.maya_env.save_as(self.version118)
         self.maya_env.reference(self.version123)
         # assign a material to the object
         mat = pm.createSurfaceShader('aiStandard', name='kulp_aiStandard')
@@ -988,6 +996,7 @@ class MayaTestBase(unittest.TestCase):
 
         # Building1 | Props | Yapi | Look Dev
         pm.newFile(force=True)
+        self.maya_env.save_as(self.version76)
         self.maya_env.reference(self.version75)
 
         # create an arnold material
@@ -1011,6 +1020,7 @@ class MayaTestBase(unittest.TestCase):
         pm.newFile(force=1)
         base_group = pm.nt.Transform(name='building1_layout')
 
+        self.maya_env.save_as(self.version64)
         ref = self.maya_env.reference(self.version78)
         ref_root_node = pm.ls('*:*:*building1_yapi')[0]
         pm.parent(ref_root_node, base_group)
@@ -1025,6 +1035,7 @@ class MayaTestBase(unittest.TestCase):
         base_group = pm.nt.Transform(name='building2_layout')
 
         # reference building2 | yapi | look dev
+        self.maya_env.save_as(self.version82)
         ref = self.maya_env.reference(self.version96)
         ref_root_node = pm.ls('*:*:*building2_yapi')[0]
         pm.parent(ref_root_node, base_group)
@@ -1037,6 +1048,7 @@ class MayaTestBase(unittest.TestCase):
         # building1 | look dev
         pm.newFile(force=True)
         # reference building1 | Layout | Hires
+        self.maya_env.save_as(self.version67)
         self.maya_env.reference(self.version66)
         # just save it
         self.maya_env.save_as(self.version67)
@@ -1047,6 +1059,7 @@ class MayaTestBase(unittest.TestCase):
         # building2 | look dev
         pm.newFile(force=True)
         # reference building1 | Layout | Hires
+        self.maya_env.save_as(self.version85)
         self.maya_env.reference(self.version84)
         # just save it
         self.maya_env.save_as(self.version85)
@@ -1056,6 +1069,7 @@ class MayaTestBase(unittest.TestCase):
 
         # prepare the main layout of the exterior
         pm.newFile(force=True)
+        self.maya_env.save_as(self.version100)
         # reference Building1 | Layout | Hires
         self.maya_env.reference(self.version66)
         # reference Building2 | Layout | Hires
@@ -1087,6 +1101,7 @@ class MayaTestBase(unittest.TestCase):
         # The Look Dev of the environment
         #*********************************
         pm.newFile(force=True)
+        self.maya_env.save_as(self.version103)
         self.maya_env.reference(self.version102)
         self.maya_env.save_as(self.version103)
         self.maya_env.save_as(self.version104)
@@ -1339,7 +1354,7 @@ class MayaTestBase(unittest.TestCase):
         """cleanup the test
         """
         # set the db.session to None
-        db.DBSession.remove()
+        DBSession.remove()
 
         # delete the temp folder
         shutil.rmtree(self.temp_repo_path, ignore_errors=True)
@@ -1396,8 +1411,8 @@ class MayaTestCase(MayaTestBase):
         )
         version1.extension = '.ma'
         version1.update_paths()
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         self.maya_env.save_as(version1)
 
@@ -1435,8 +1450,8 @@ class MayaTestCase(MayaTestBase):
         )
         version1.extension = '.ma'
         version1.update_paths()
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
         self.maya_env.save_as(version1)
 
         # now check if the render format is correctly set to exr with zip
@@ -1474,8 +1489,8 @@ class MayaTestCase(MayaTestBase):
         )
         version1.extension = '.ma'
         version1.update_paths()
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
         self.maya_env.save_as(version1)
 
         # now check if the render format is correctly set to exr with zip
@@ -1597,8 +1612,8 @@ class MayaTestCase(MayaTestBase):
         )
         version1.extension = '.ma'
         version1.update_paths()
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         width = self.project.image_format.width
         height = self.project.image_format.height
@@ -1622,8 +1637,8 @@ class MayaTestCase(MayaTestBase):
         )
         version1.extension = '.ma'
         version1.update_paths()
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         width = self.project.image_format.width
         height = self.project.image_format.height
@@ -1651,8 +1666,8 @@ class MayaTestCase(MayaTestBase):
         )
         new_version.extension = '.ma'
         new_version.update_paths()
-        db.DBSession.add(new_version)
-        db.DBSession.commit()
+        DBSession.add(new_version)
+        DBSession.commit()
 
         self.maya_env.save_as(new_version)
 
@@ -1670,30 +1685,30 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         versionBase = Version(task=self.task6)
-        db.DBSession.add(versionBase)
-        db.DBSession.commit()
+        DBSession.add(versionBase)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(
             task=self.task6,
             take_name="Take1"
         )
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(
             task=self.task6,
             take_name="Take2"
         )
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(
             task=self.task6,
             take_name="Take3"
         )
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -1772,8 +1787,8 @@ class MayaTestCase(MayaTestBase):
 
         # now save it as a new version
         version1 = Version(task=self.task1)
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         self.maya_env.save_as(version1)
 
@@ -1801,21 +1816,21 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         versionBase = Version(task=self.task1)
-        db.DBSession.add(versionBase)
-        db.DBSession.commit()
+        DBSession.add(versionBase)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -1868,21 +1883,21 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -1927,21 +1942,21 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -1986,21 +2001,21 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -2045,21 +2060,21 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -2104,25 +2119,25 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         version4 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -2174,25 +2189,25 @@ class MayaTestCase(MayaTestBase):
         # Version.references list
 
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         version4 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -2240,21 +2255,21 @@ class MayaTestCase(MayaTestBase):
         """
         # create a new reference
         version_base = Version(task=self.task1)
-        db.DBSession.add(version_base)
-        db.DBSession.commit()
+        DBSession.add(version_base)
+        DBSession.commit()
 
         # change the take name
         version1 = Version(task=self.task1, take_name="Take1")
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(task=self.task1, take_name="Take2")
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         version3 = Version(task=self.task1, take_name="Take3")
-        db.DBSession.add(version3)
-        db.DBSession.commit()
+        DBSession.add(version3)
+        DBSession.commit()
 
         # now create scenes with these files
         self.maya_env.save_as(version1)
@@ -2411,26 +2426,26 @@ class MayaTestCase(MayaTestBase):
             type=self.character_type,
             project=self.project
         )
-        db.DBSession.add(asset1)
-        db.DBSession.commit()
+        DBSession.add(asset1)
+        DBSession.commit()
 
         version1 = Version(task=asset1)
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version_ref1 = Version(
             task=asset1,
             take_name="References1"
         )
-        db.DBSession.add(version_ref1)
-        db.DBSession.commit()
+        DBSession.add(version_ref1)
+        DBSession.commit()
 
         version_ref2 = Version(
             task=asset1,
             take_name="References2"
         )
-        db.DBSession.add(version_ref2)
-        db.DBSession.commit()
+        DBSession.add(version_ref2)
+        DBSession.commit()
 
         # save a maya file with this references
         pm.newFile(f=True)
@@ -2475,8 +2490,8 @@ class MayaTestCase(MayaTestBase):
             type=self.character_type,
             project=self.project
         )
-        db.DBSession.add(asset2)
-        db.DBSession.commit()
+        DBSession.add(asset2)
+        DBSession.commit()
 
         # create a new Version for Asset 2
         version2 = Version(task=asset2)
@@ -2507,7 +2522,7 @@ class MayaTestCase(MayaTestBase):
             fps=24,
             image_format=self.image_format
         )
-        db.DBSession.add(project1)
+        DBSession.add(project1)
 
         project2 = Project(
             name="FPS Test Project 2",
@@ -2518,7 +2533,7 @@ class MayaTestCase(MayaTestBase):
             fps=30,
             image_format=self.image_format
         )
-        db.DBSession.add(project2)
+        DBSession.add(project2)
 
         # create assets
         asset1 = Asset(
@@ -2527,7 +2542,7 @@ class MayaTestCase(MayaTestBase):
             project=project1,
             type=self.character_type
         )
-        db.DBSession.add(asset1)
+        DBSession.add(asset1)
 
         asset2 = Asset(
             name="Test Asset 2",
@@ -2535,23 +2550,23 @@ class MayaTestCase(MayaTestBase):
             project=project2,
             type=self.character_type
         )
-        db.DBSession.add(asset2)
-        db.DBSession.commit()
+        DBSession.add(asset2)
+        DBSession.commit()
 
         # create versions
         version1 = Version(
             task=asset1,
             created_by=self.user1
         )
-        db.DBSession.add(version1)
-        db.DBSession.commit()
+        DBSession.add(version1)
+        DBSession.commit()
 
         version2 = Version(
             task=asset2,
             created_by=self.user1
         )
-        db.DBSession.add(version2)
-        db.DBSession.commit()
+        DBSession.add(version2)
+        DBSession.commit()
 
         # save the current scene for asset1
         self.maya_env.save_as(version1)
@@ -2576,12 +2591,12 @@ class MayaTestCase(MayaTestBase):
         are absolute paths containing repo env var
         """
         vers1 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers1)
-        db.DBSession.commit()
+        DBSession.add(vers1)
+        DBSession.commit()
 
         vers2 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers2)
-        db.DBSession.commit()
+        DBSession.add(vers2)
+        DBSession.commit()
 
         self.maya_env.save_as(vers1)
 
@@ -2634,8 +2649,8 @@ class MayaTestCase(MayaTestBase):
         image_plane.setAttr('imageName', absolute_path)
 
         vers1 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers1)
-        db.DBSession.commit()
+        DBSession.add(vers1)
+        DBSession.commit()
 
         # save the scene
         self.maya_env.save_as(vers1)
@@ -2671,8 +2686,8 @@ class MayaTestCase(MayaTestBase):
         image_plane.setAttr('imageName', absolute_path)
 
         vers1 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers1)
-        db.DBSession.commit()
+        DBSession.add(vers1)
+        DBSession.commit()
 
         # save the scene
         self.maya_env.save_as(vers1)
@@ -2689,8 +2704,8 @@ class MayaTestCase(MayaTestBase):
         )
 
         vers2 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers2)
-        db.DBSession.commit()
+        DBSession.add(vers2)
+        DBSession.commit()
 
         # save the scene as a different version
         pm.newFile(f=1)
@@ -2713,8 +2728,8 @@ class MayaTestCase(MayaTestBase):
             name='Test Task 6 - New',
             parent=self.task1
         )
-        db.DBSession.add(task6)
-        db.DBSession.commit()
+        DBSession.add(task6)
+        DBSession.commit()
 
         version1 = Version(task=task6)
         version1.extension = '.ma'
@@ -2736,8 +2751,8 @@ class MayaTestCase(MayaTestBase):
             name='Test Task 6 - New',
             parent=self.task1
         )
-        db.DBSession.add(task6)
-        db.DBSession.commit()
+        DBSession.add(task6)
+        DBSession.commit()
 
         version1 = Version(task=task6)
         version1.extension = '.ma'
@@ -2803,8 +2818,8 @@ class MayaTestCase(MayaTestBase):
         version = Version(task=self.task1)
         version.extension = '.ma'
         version.update_paths()
-        db.DBSession.add(version)
-        db.DBSession.commit()
+        DBSession.add(version)
+        DBSession.commit()
 
         new_path =\
             self.maya_env.move_to_local(version, temp_file_path, 'Textures')
@@ -2820,18 +2835,18 @@ class MayaTestCase(MayaTestBase):
         namespaces
         """
         vers1 = Version(task=self.asset1, created_by=self.user1)
-        db.DBSession.add(vers1)
-        db.DBSession.commit()
+        DBSession.add(vers1)
+        DBSession.commit()
 
         vers2 = Version(task=self.asset1, created_by=self.user1, take_name='A')
         vers2.is_published = True
-        db.DBSession.add(vers2)
-        db.DBSession.commit()
+        DBSession.add(vers2)
+        DBSession.commit()
 
         vers3 = Version(task=self.asset1, created_by=self.user1, take_name='A')
         vers3.is_published = True
-        db.DBSession.add(vers3)
-        db.DBSession.commit()
+        DBSession.add(vers3)
+        DBSession.commit()
 
         pm.newFile(force=True)
         self.maya_env.save_as(vers2)
@@ -3935,7 +3950,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.maya_env.reference(self.version38)
         pm.saveFile()
         #pm.newFile(force=True)
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check the setup
         visited_versions = []
@@ -4075,7 +4090,7 @@ class MayaReferenceUpdateTestCase(MayaTestBase):
         self.maya_env.reference(self.version11)
         pm.saveFile()
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check the setup
         visited_versions = []
@@ -4195,7 +4210,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         refs[0].namespace = self.version11.filename.replace('.', '_')
         pm.saveFile()
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -4341,7 +4356,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         refs[1].namespace = self.version11.filename.replace('.', '_')
         pm.saveFile()
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -4564,7 +4579,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -4779,7 +4794,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         self.version4.is_published = True
         self.version11.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -4819,7 +4834,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -4909,7 +4924,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         # create deep reference
         self.version2.is_published = True
         self.version4.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -4946,7 +4961,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        db.DBSession.commit()
+        DBSession.commit()
 
         # version15 also references version4
         pm.newFile(force=True)
@@ -4966,7 +4981,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         version2_ref_node = pm.listReferences(refs[0])[0]
         edits = pm.referenceQuery(version2_ref_node, es=1)
         self.assertTrue(len(edits) > 0)
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -5127,7 +5142,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version15.is_published = True
         self.version18.is_published = True
         self.version23.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -5224,7 +5239,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         loc[0].t.set(0, 0, 2)
         pm.saveFile()
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -5449,7 +5464,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         self.version4.is_published = True
         self.version11.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -5489,7 +5504,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -5527,7 +5542,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
 
         self.version4.is_published = True
         self.version11.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -5567,7 +5582,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.assertTrue(len(edits) > 0)
 
         pm.saveFile()
-        db.DBSession.commit()
+        DBSession.commit()
 
         # check namespaces
         all_refs = pm.listReferences(recursive=1)
@@ -5605,7 +5620,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version4.is_published = True
         self.version11.is_published = True
         self.version15.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -5775,7 +5790,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version4.is_published = True
         self.version11.is_published = True
         self.version15.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -5944,7 +5959,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version4.is_published = True
         self.version11.is_published = True
         self.version15.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -6116,7 +6131,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version2.is_published = True
         self.version4.is_published = True
         self.version11.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -6244,7 +6259,7 @@ class MayaFixReferenceNamespaceTestCase(MayaTestBase):
         self.version4.is_published = True
         self.version11.is_published = True
         self.version15.is_published = True
-        db.DBSession.commit()
+        DBSession.commit()
 
         # open version2 and create a locator
         self.maya_env.open(self.version2)  # model
@@ -6451,7 +6466,7 @@ class FileReferenceRepresentationsTestCase(MayaTestBase):
         self.version1.is_published = True
         self.version3.is_published = True
 
-        db.DBSession.commit()
+        DBSession.commit()
 
         pm.newFile(force=True)
 
@@ -7568,7 +7583,7 @@ class PublisherTestCase(MayaTestBase):
 
         v = Version(task=self.task6)
         v.is_published = True
-        db.DBSession.add(v)
+        DBSession.add(v)
 
         # check called publishers
         self.assertEqual(publishers_called, [])
@@ -7594,7 +7609,7 @@ class PublisherTestCase(MayaTestBase):
         pm.newFile(force=True)
 
         v = Version(task=self.task6)
-        db.DBSession.add(v)
+        DBSession.add(v)
 
         # check called publishers
         self.assertEqual(publishers_called, [])
