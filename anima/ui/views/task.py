@@ -631,10 +631,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                         file_path = dialog.selectedFiles()[0]
                         if file_path:
                             import json
-                            from anima.utils import task_template_parser
+                            from anima.utils import task_hierarchy_io
                             data = json.dumps(
                                 entity,
-                                cls=task_template_parser.StalkerEncoder,
+                                cls=task_hierarchy_io.StalkerEntityEncoder,
                                 check_circular=False,
                                 indent=4
                             )
@@ -661,9 +661,9 @@ class TaskTreeView(QtWidgets.QTreeView):
                             import json
                             with open(file_path) as f:
                                 data = json.load(f)
-                            from anima.utils import task_template_parser
+                            from anima.utils import task_hierarchy_io
                             project = entity.project
-                            decoder = task_template_parser.StalkerDecoder(
+                            decoder = task_hierarchy_io.StalkerEntityDecoder(
                                 project=project
                             )
                             loaded_entity = decoder.loads(data)
