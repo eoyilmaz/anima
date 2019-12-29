@@ -1379,12 +1379,29 @@ def UI():
                       ann="fit placement to UV",
                       bgc=color.color)
 
+            pm.button(
+                'connect_placement2d_to_file_texture_button',
+                l='Connect Placement2D to File Texture',
+                c=repeated_callback(Render.connect_placement2d_to_file),
+                ann=Render.connect_placement2d_to_file.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
-                l='Enable Subdiv',
+                l='Enable Subdiv (Adaptive)',
                 c=repeated_callback(Render.enable_subdiv),
-                ann='Enables Arnold/RedShift Subdiv (catclark) on selected objects',
+                ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
+                    'objects',
+                bgc=color.color
+            )
+            pm.button(
+                'enable_fixed_subdiv_on_selected_objects_button',
+                l='Enable Subdiv (Fixed Tes.)',
+                c=repeated_callback(Render.enable_subdiv, fixed_tes=True),
+                ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
+                    'objects with fixed tessellation',
                 bgc=color.color
             )
 

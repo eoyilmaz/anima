@@ -248,6 +248,9 @@ class TaskTreeView(QtWidgets.QTreeView):
         create_child_task_action = None
         duplicate_task_hierarchy_action = None
         delete_task_action = None
+        export_to_json_action = None
+        import_from_json_action = None
+
         no_deps_action = None
         create_project_structure_action = None
         create_task_structure_action = None
@@ -359,16 +362,28 @@ class TaskTreeView(QtWidgets.QTreeView):
                             u'\uf03e Upload Thumbnail...'
                         )
 
+                    # Export and Import JSON
+                    create_sub_menu.addSeparator()
+                    export_to_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+
+                    import_from_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
+                    create_sub_menu.addSeparator()
+
                     create_child_task_action = \
                         create_sub_menu.addAction(
                             u'\uf0ae Create Child Task...'
                         )
+
                     duplicate_task_hierarchy_action = \
                         create_sub_menu.addAction(
                             u'\uf0c5 Duplicate Task Hierarchy...'
                         )
                     delete_task_action = \
                         menu.addAction(u'\uf1f8 Delete Task...')
+
+                    menu.addSeparator()
 
                 # create the status_menu
                 status_menu = update_sub_menu.addMenu('Status')
@@ -606,6 +621,73 @@ class TaskTreeView(QtWidgets.QTreeView):
                         else:
                             self.fill()
                         self.find_and_select_entity_item(item.parent.task)
+
+                elif selected_item is export_to_json_action:
+                    # show a file browser
+                    dialog = QtWidgets.QFileDialog(self, "Choose file")
+                    dialog.setNameFilter("JSON Files (*.json)")
+                    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+                    if dialog.exec_():
+                        file_path = dialog.selectedFiles()[0]
+                        if file_path:
+                            import json
+                            from anima.utils import task_template_parser
+                            data = json.dumps(
+                                entity,
+                                cls=task_template_parser.StalkerEncoder,
+                                check_circular=False,
+                                indent=4
+                            )
+                            try:
+                                with open(file_path, 'w') as f:
+                                    f.write(data)
+                            except Exception as e:
+                                pass
+                            finally:
+                                QtWidgets.QMessageBox.information(
+                                    self,
+                                    'Task data Export to JSON!',
+                                    'Task data Export to JSON!',
+                                )
+
+                elif selected_item is import_from_json_action:
+                    # show a file browser
+                    dialog = QtWidgets.QFileDialog(self, "Choose file")
+                    dialog.setNameFilter("JSON Files (*.json)")
+                    dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+                    if dialog.exec_():
+                        file_path = dialog.selectedFiles()[0]
+                        if file_path:
+                            import json
+                            with open(file_path) as f:
+                                data = json.load(f)
+                            from anima.utils import task_template_parser
+                            project = entity.project
+                            decoder = task_template_parser.StalkerDecoder(
+                                project=project
+                            )
+                            loaded_entity = decoder.loads(data)
+                            loaded_entity.parent = entity
+
+                            # TODO: Check if there is an existing entity with
+                            # the same name
+                            try:
+                                from stalker.db.session import DBSession
+                                DBSession.add(loaded_entity)
+                                DBSession.commit()
+                            except Exception as e:
+                                QtWidgets.QMessageBox.critical(
+                                    self,
+                                    "Error!",
+                                    "%s" % e,
+                                    QtWidgets.QMessageBox.Ok
+                                )
+                            else:
+                                QtWidgets.QMessageBox.information(
+                                    self,
+                                    'New Tasks are created!',
+                                    'New Tasks are created',
+                                )
 
                 elif selected_item == create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(

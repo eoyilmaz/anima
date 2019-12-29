@@ -1240,7 +1240,7 @@ def check_all_renderer_specific_textures(progress_controller=None):
         'arnold': '.tx',
         'redshift': '.rstexbin'
     }
-    default_renderer = 'arnold'
+    default_renderer = 'redshift'
 
     # set the default extension to default_renderer
     current_renderer = pm.PyNode('defaultRenderGlobals').currentRenderer.get()
@@ -1249,6 +1249,12 @@ def check_all_renderer_specific_textures(progress_controller=None):
             current_renderer,
             renderer_texture_extensions[default_renderer]
         )
+
+    # For Redshift skip generation of the texture files, Redshift generates and
+    # stores them automatically on the render machine.
+    if current_renderer == 'redshift':
+        progress_controller.complete()
+        return
 
     v = staging.get('version')
     if v and Representation.repr_separator in v.take_name:
@@ -1289,7 +1295,6 @@ def check_all_renderer_specific_textures(progress_controller=None):
         progress_controller.increment()
 
     import glob
-    # TODO: Also check .rstexbin files for Redshift
     textures_with_no_tx = []
 
     # add more iterations to progress_controller
@@ -1318,24 +1323,16 @@ def check_all_renderer_specific_textures(progress_controller=None):
     number_of_textures_to_process = len(textures_with_no_tx)
     progress_controller.maximum += number_of_textures_to_process
     if number_of_textures_to_process:
-        if current_renderer == 'redshift':
-            # Generate the textures if it is Redshift
-            from anima.env.mayaEnv import ai2rs
-            for texture_path in textures_with_no_tx:
-                rstp = ai2rs.RedShiftTextureProcessor(texture_path)
-                rstp.convert()
-                progress_controller.increment()
-        else:
-            for path in textures_with_no_tx:
-                print(path)
-            progress_controller.complete()
-            raise PublishError(
-                'There are textures with no <b>%s</b> file!!!<br><br>'
-                '%s' % (
-                    current_renderer_texture_extension.upper(),
-                    '<br>'.join(textures_with_no_tx)
-                )
+        for path in textures_with_no_tx:
+            print(path)
+        progress_controller.complete()
+        raise PublishError(
+            'There are textures with no <b>%s</b> file!!!<br><br>'
+            '%s' % (
+                current_renderer_texture_extension.upper(),
+                '<br>'.join(textures_with_no_tx)
             )
+        )
     progress_controller.complete()
 
 

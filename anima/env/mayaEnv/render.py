@@ -246,7 +246,9 @@ class Render(object):
         materials = pm.selected()
 
         # ask the texture folder
-        texture_path = pm.fileDialog2(cap="Choose Texture Folder", okc="Choose", fm=2)[0]
+        texture_path = pm.fileDialog2(
+            cap="Choose Texture Folder", okc="Choose", fm=2
+        )[0]
 
         for material in materials:
             # textures should start with the same name of the material
@@ -351,6 +353,20 @@ class Render(object):
                     )
                     diffuse_color_file.colorSpace.set('sRGB')
                     diffuse_color_file.outColor >> material.diffuse_color
+
+                # Accept also BaseColor
+                # create a new aiImage
+                base_color_file_path = glob.glob(
+                    "%s/%s_BaseColor*" % (texture_path, material_name))
+                if base_color_file_path:
+                    base_color_file_path = base_color_file_path[0]
+
+                    base_color_file = pm.shadingNode('file', asTexture=1)
+                    base_color_file.fileTextureName.set(
+                        base_color_file_path
+                    )
+                    base_color_file.colorSpace.set('sRGB')
+                    base_color_file.outColor >> material.diffuse_color
 
                 # *********************************************
                 # Height
@@ -1036,6 +1052,46 @@ class Render(object):
             p.setAttr('translateFrame', (minU, minV))
 
     @classmethod
+    def connect_placement2d_to_file(cls):
+        """connects the selected placement node to the selected file textures
+        """
+        attr_lut = [
+            'coverage',
+            'translateFrame',
+            'rotateFrame',
+            'mirrorU',
+            'mirrorV',
+            'stagger',
+            'wrapU',
+            'wrapV',
+            'repeatUV',
+            'offset',
+            'rotateUV',
+            'noiseUV',
+            'vertexUvOne',
+            'vertexUvTwo',
+            'vertexUvThree',
+            'vertexCameraOne',
+            ('outUV', 'uvCoord'),
+            ('outUvFilterSize', 'uvFilterSize')
+        ]
+
+        # get placement and file nodes
+        placement_node = pm.ls(sl=1, type=pm.nt.Place2dTexture)[0]
+        file_nodes = pm.ls(sl=1, type=pm.nt.File)
+
+        for file_node in file_nodes:
+            for attr in attr_lut:
+                if isinstance(attr, str):
+                    source_attr_name = attr
+                    target_attr_name = attr
+                elif isinstance(attr, tuple):
+                    source_attr_name = attr[0]
+                    target_attr_name = attr[1]
+                placement_node.attr(source_attr_name) >> \
+                    file_node.attr(target_attr_name)
+
+    @classmethod
     def open_node_in_browser(cls):
         # get selected nodes
         node_attrs = {
@@ -1102,8 +1158,11 @@ class Render(object):
                         print(str(e))
 
     @classmethod
-    def enable_subdiv(cls):
+    def enable_subdiv(cls, fixed_tes=False, max_subdiv=3):
         """enables subdiv on selected objects
+
+        :param fixed_tes: Uses fixed tessellation.
+        :param max_subdiv: The max subdivision iteration. Default 3.
         """
         #
         # Set SubDiv to CatClark on Selected nodes
@@ -1111,7 +1170,7 @@ class Render(object):
         for node in pm.ls(sl=1):
             shape = node.getShape()
             try:
-                shape.aiSubdivIterations.set(2)
+                shape.aiSubdivIterations.set(max_subdiv)
                 shape.aiSubdivType.set(1)
                 shape.aiSubdivPixelError.set(0)
             except AttributeError:
@@ -1119,9 +1178,13 @@ class Render(object):
 
             try:
                 shape.rsEnableSubdivision.set(1)
-                shape.rsMaxTessellationSubdivs.set(3)
-                shape.rsLimitOutOfFrustumTessellation.set(1)
-                shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
+                shape.rsMaxTessellationSubdivs.set(max_subdiv)
+                if not fixed_tes:
+                    shape.rsLimitOutOfFrustumTessellation.set(1)
+                    shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
+                else:
+                    shape.rsScreenSpaceAdaptive.set(0)
+                    shape.rsMinTessellationLength.set(0)
             except AttributeError:
                 pass
 

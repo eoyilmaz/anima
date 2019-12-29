@@ -25,6 +25,8 @@ def UI(app_in=None, executor=None, **kwargs):
 class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Task Dialog
     """
+    CREATE_MODE = 'Create'
+    UPDATE_MODE = 'Update'
 
     def __init__(self, parent=None, parent_task=None, task=None):
         logger.debug("initializing the interface")
@@ -35,9 +37,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.parent_task = parent_task
         self.task = task
-        self.mode = 'Create'
+        self.mode = self.CREATE_MODE
         if self.task:
-            self.mode = 'Update'
+            self.mode = self.UPDATE_MODE
 
         self._setup()
 
@@ -759,8 +761,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             [''] + map(lambda x: x[0], all_sequence_names)
         )
 
-        self.cut_in_spin_box.setValue(0)
-        self.cut_out_spin_box.setValue(0)
+        self.cut_in_spin_box.setValue(1001)
+        self.cut_out_spin_box.setValue(1100)
 
         # schedule info defaults
         # schedule timing
@@ -931,7 +933,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.schedule_timing_spin_box.setVisible(True)
             self.schedule_unit_combo_box.setVisible(True)
             self.schedule_model_combo_box.setVisible(True)
-            if self.mode == 'Update':
+            if self.mode == self.UPDATE_MODE:
                 # if this is a parent task
                 # do not show resource and timing related fields
                 from stalker import Task
@@ -1105,6 +1107,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if index:
                 self.projects_combo_box.setCurrentIndex(index)
 
+            if self.mode == self.CREATE_MODE:
+                # also update the image format field
+                self.image_format.set_current_image_format(
+                    project.image_format
+                )
+
     def get_parent_task(self):
         """returns the currently selected parent task
 
@@ -1182,7 +1190,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.set_parent_task(parent_task)
 
             # also validate if this parent task is ok
-            if self.task and self.mode == 'Update':
+            if self.task and self.mode == self.UPDATE_MODE:
                 # check if the picked parent task is suitable for the updated
                 # task
                 if self.task in parent_task.parents \
@@ -1278,8 +1286,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if text == '':
                 self.code_line_edit.set_invalid('Please enter a code!')
             else:
-                if len(text) > 16:
-                    self.code_line_edit.set_invalid('Code is too long (>16)')
+                if len(text) > 24:
+                    self.code_line_edit.set_invalid('Code is too long (>24)')
                 else:
                     self.code_line_edit.set_valid()
 
@@ -1656,7 +1664,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             entity_class = Task
             kwargs['type'] = task_type
 
-        if self.mode == 'Create':
+        if self.mode == self.CREATE_MODE:
             # Create
             try:
                 task = entity_class(**kwargs)

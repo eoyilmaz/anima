@@ -190,7 +190,7 @@ class GenericTools(object):
     @classmethod
     def insert_pipe_router_to_selected_node(cls):
         """inserts a Pipe Router node between the selected node and the nodes
-        connected to its outuput
+        connected to its output
         """
         from anima.env import fusion
         fusion_env = fusion.Fusion()
@@ -209,3 +209,22 @@ class GenericTools(object):
         # connect it to the other nodes
         for connected_input in connected_inputs.values():
             connected_input.ConnectTo(pipe_router)
+
+    @classmethod
+    def update_secondary_savers(cls):
+        """Updates Savers which are not a Main Saver node
+        """
+        # get all saver nodes
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        comp = fusion_env.comp
+
+        all_saver_nodes = fusion_env.comp.GetToolList(False, 'Saver').values()
+
+        # filter all Main Saver nodes
+        main_savers = fusion_env.get_main_saver_node()
+        secondary_savers = [
+            node for node in all_saver_nodes if node not in main_savers
+        ]
+
+        # get the output path from one of the main savers
