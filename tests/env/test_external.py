@@ -35,11 +35,9 @@ class ExternalEnvTestCase(unittest.TestCase):
         self.status_wip = Status.query.filter_by(code='WIP').first()
         self.status_cmpl = Status.query.filter_by(code='CMPL').first()
 
-        self.project_status_list = StatusList(
-            target_entity_type='Project',
-            name='Project Statuses',
-            statuses=[self.status_new, self.status_wip, self.status_cmpl]
-        )
+        self.project_status_list = StatusList.query.filter(
+            StatusList.target_entity_type=='Project'
+        ).first()
         self.task_filename_template = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',
@@ -64,6 +62,10 @@ class ExternalEnvTestCase(unittest.TestCase):
             name='Test Task',
             project=self.project
         )
+        from stalker.db.session import DBSession
+        DBSession.add(self.task)
+        DBSession.commit()
+
         self.version = Version(
             task=self.task
         )
@@ -376,9 +378,10 @@ class ExternalEnvTestCase(unittest.TestCase):
         """
         # need a database for this test
         from stalker import db
+        from stalker.db.session import DBSession
         db.setup({'sqlalchemy.url': 'sqlite:///:memory:'})
-        db.DBSession.add(self.version)
-        db.DBSession.commit()
+        DBSession.add(self.version)
+        DBSession.commit()
         self.assertTrue(self.version.id is not None)
         self.external_env.append_to_recent_files(self.version)
         last_version = self.external_env.get_last_version()

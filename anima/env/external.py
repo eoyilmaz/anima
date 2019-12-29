@@ -53,7 +53,7 @@ class ExternalEnv(EnvironmentBase):
     environment by setting its file extension etc.
     """
 
-    def __init__(self, name, structure=None, **kwargs):
+    def __init__(self, name, structure=None, extensions=None, **kwargs):
         """
 
         :param name: The name of this environment
@@ -64,9 +64,30 @@ class ExternalEnv(EnvironmentBase):
         super(ExternalEnv, self).__init__(name=name)
         self._name = None
         self._structure = None
+        self._extensions = None
 
         self.name = self._validate_name(name)
         self.structure = self._validate_structure(structure)
+        self.extensions = self._validate_extensions(extensions)
+
+    def _validate_extensions(self, extensions):
+        if not extensions:
+            raise TypeError('%s.extension can not be None' % self.__class__.__name__)
+
+        for i, extension in enumerate(extensions):
+            if not extension.startswith('.'):
+                extension = '.%s' % extension
+                extensions[i] = extension
+
+        return extensions
+
+    @property
+    def extensions(self):
+        return self._extensions
+
+    @extensions.setter
+    def extensions(self, extensions):
+        self._extensions = self._validate_extensions(extensions)
 
     def _validate_name(self, name):
         """validates the given name value

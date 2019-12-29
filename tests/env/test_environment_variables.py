@@ -210,7 +210,7 @@ class EnvironmentVariableSetupTestCase(unittest.TestCase):
         os.environ['ENV1'] = 'Z:/Test/Value'
         discover_env_vars('test_env')
         self.assertEqual(
-            'Z:/Test/Value:Z%(pathsep)s/some/path1%(pathsep)sZ:/some/path2'
+            'Z:/Test/Value%(pathsep)sZ:/some/path1%(pathsep)sZ:/some/path2'
             '%(pathsep)sZ:/some/other/path1%(pathsep)sZ:/some/other/path2' % {
                 'pathsep': os.path.pathsep
             },
