@@ -3,18 +3,7 @@
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
-
 import os
-import platform
-import re
-import itertools
-import calendar
-import datetime
-import shutil
-import tempfile
-import uuid
-import copy
-import subprocess
 
 from anima import logger
 
@@ -40,6 +29,7 @@ def common_prefix(*sequences):
         return [], []
     # loop in parallel on the sequences
     common = []
+    import itertools
     for elements in itertools.izip(*sequences):
         # unless all elements are equal, bail out of the loop
         if not all_equal(elements):
@@ -62,6 +52,7 @@ def relpath(p1, p2, sep=os.path.sep, pardir=os.path.pardir):
 
     """
     # replace any trailing slashes at the end
+    import re
     p1 = re.sub(r"[/]+$", "", p1)
     p1 = re.sub(r"[\\]+$", "", p1)
 
@@ -79,6 +70,7 @@ def open_browser_in_location(path):
     """
     command = []
 
+    import platform
     platform_info = platform.platform()
 
     path = os.path.normpath(os.path.expandvars(path))
@@ -100,6 +92,7 @@ def open_browser_in_location(path):
         command = 'open -a /System/Library/CoreServices/Finder.app ' + path
 
     if os.path.exists(path):
+        import subprocess
         subprocess.call(command, shell=True)
     else:
         raise IOError("%s doesn't exists!" % path)
@@ -178,6 +171,7 @@ class StalkerThumbnailCache(object):
 
 
 def multiple_replace(text, adict):
+    import re
     rx = re.compile('|'.join(map(re.escape, adict)))
 
     def one_xlat(match):
@@ -218,6 +212,7 @@ def unique(s):
 
 
 def embedded_numbers(s):
+    import re
     re_digits = re.compile(r'(\d+)')
     pieces = re_digits.split(str(s))
     pieces[1::2] = map(int, pieces[1::2])
@@ -260,6 +255,8 @@ def utc_to_local(utc_dt):
     http://stackoverflow.com/questions/4563272/how-to-convert-a-python-utc-datetime-to-a-local-datetime-using-only-python-stand/13287083#13287083
     """
     # get integer timestamp to avoid precision lost
+    import datetime
+    import calendar
     timestamp = calendar.timegm(utc_dt.timetuple())
     local_dt = datetime.datetime.fromtimestamp(timestamp)
     return local_dt.replace(microsecond=utc_dt.microsecond)
@@ -405,6 +402,7 @@ class MediaManager(object):
             if img.mode != "RGB":
                 img = img.convert("RGB")
 
+        import tempfile
         thumbnail_path = tempfile.mktemp(suffix=suffix)
 
         img.save(thumbnail_path, **self.thumbnail_options)
@@ -443,6 +441,7 @@ class MediaManager(object):
             if img.mode != "RGB":
                 img = img.convert("RGB")
 
+        import tempfile
         thumbnail_path = tempfile.mktemp(suffix=suffix)
 
         img.save(thumbnail_path)
@@ -497,6 +496,7 @@ class MediaManager(object):
             nb_frames = int(duration * frame_rate)
         nb_frames = int(nb_frames)
 
+        import tempfile
         start_thumb_path = tempfile.mktemp(suffix=self.thumbnail_format)
         mid_thumb_path = tempfile.mktemp(suffix=self.thumbnail_format)
         end_thumb_path = tempfile.mktemp(suffix=self.thumbnail_format)
@@ -593,6 +593,7 @@ class MediaManager(object):
         :param str file_full_path: A string showing the full path of the video
           file.
         """
+        import tempfile
         web_version_full_path = tempfile.mktemp(suffix=self.web_video_format)
         self.convert_to_webm(file_full_path, web_version_full_path)
         return web_version_full_path
@@ -646,6 +647,7 @@ class MediaManager(object):
         :return:
         """
         # upload it to the stalker server side storage path
+        import uuid
         new_filename = uuid.uuid4().hex + extension
         first_folder = new_filename[:2]
         second_folder = new_filename[2:4]
@@ -683,6 +685,7 @@ class MediaManager(object):
         video_info = {}
         stream_info = {}
 
+        import copy
         # get STREAM info
         line = output_buffer.pop(0).strip()
         while line is not None:
@@ -803,6 +806,7 @@ class MediaManager(object):
 
         logger.debug('calling ffmpeg with args: %s' % args)
 
+        import subprocess
         startupinfo = None
         if os.name == 'nt':
             startupinfo = subprocess.STARTUPINFO()
@@ -855,6 +859,7 @@ class MediaManager(object):
 
         logger.debug('calling ffprobe with args: %s' % args)
 
+        import subprocess
         startupinfo = None
         if os.name == 'nt':
             startupinfo = subprocess.STARTUPINFO()
@@ -1039,6 +1044,7 @@ class MediaManager(object):
         :param file_params: An object with two attributes, first a
           ``filename`` attribute and a ``file`` which is a file like object.
         """
+        import tempfile
         uploaded_file_info = []
         # get the file names
         for file_param in file_params:
@@ -1070,6 +1076,7 @@ class MediaManager(object):
         :param str full_path: The filename to be randomized
         :return: str
         """
+        import uuid
         # get the filename
         path = os.path.dirname(full_path)
         filename = os.path.basename(full_path)
@@ -1138,6 +1145,7 @@ class MediaManager(object):
 
         # replace ' ' with '_'
         basename, extension = os.path.splitext(filename)
+        import re
         filename = '%s%s' % (
             re.sub(r'[\s\.\\/:\*\?"<>|=,+]+', '_', basename),
             extension
@@ -1158,6 +1166,7 @@ class MediaManager(object):
         :param str filename: The desired file name for the uploaded file. If it
           is skipped a unique temp filename will be generated.
         """
+        import tempfile
         if file_path is None:
             file_path = tempfile.gettempdir()
 
@@ -1211,6 +1220,8 @@ class MediaManager(object):
         :param str filename: The original filename.
         :returns: :class:`.Link` instance.
         """
+        import shutil
+
         ############################################################
         # ORIGINAL
         ############################################################
@@ -1362,6 +1373,7 @@ class MediaManager(object):
         :param str filename: The original filename.
         :returns: :class:`.Link` instance.
         """
+        import shutil
         ############################################################
         # ORIGINAL
         ############################################################
@@ -1512,8 +1524,6 @@ class Exposure(object):
 
 class C3DEqualizerPointManager(object):
     """Manages 3DEqualizer points
-
-    :param str data: Textual data that contains points
     """
 
     def __init__(self):
@@ -1725,6 +1735,7 @@ def duplicate_task(task, user, keep_resources=False):
         wfd = Status.query.filter(Status.code == 'WFD').first()
 
     import pytz
+    import datetime
     utc_now = datetime.datetime.now(pytz.utc)
 
     kwargs = {
@@ -1895,6 +1906,7 @@ def check_task_status_by_schedule_model(task):
     logger.debug('check_task_status_by_schedule_model starts')
 
     import pytz
+    import datetime
     utc_now = datetime.datetime.now(pytz.utc)
 
     from stalker import Status
@@ -1968,7 +1980,7 @@ def get_actual_end_time(task):
     :type task: :class:`stalker.models.task.Task`
     :return: :class:`datetime.datetime`
     """
-
+    import datetime
     from stalker import Task
     if not isinstance(task, Task):
         raise TypeError(
