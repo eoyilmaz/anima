@@ -194,7 +194,7 @@ class StalkerEntityDecoder(object):
         # get the entity_type
         entity_type = data['entity_type']
 
-        entity_type = 'Task'
+        entity_class = Task
         if entity_type == 'Asset':
             entity_class = Asset
         elif entity_type == 'Shot':
@@ -237,6 +237,7 @@ class StalkerEntityDecoder(object):
                 v.full_path = '/'.join(
                     ['$REPO%s' % repo_id] + v.full_path.split('/')[1:]
                 )
+                v.is_published = v_data['is_published']
 
         # for each child task call a new StalkerEntityDecoder
         for t in data['tasks']:
