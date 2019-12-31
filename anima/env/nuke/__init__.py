@@ -5,7 +5,6 @@
 # License: http://www.opensource.org/licenses/MIT
 import os
 import subprocess
-import tempfile
 import threading
 from anima.env import nukeEnv
 import nuke
