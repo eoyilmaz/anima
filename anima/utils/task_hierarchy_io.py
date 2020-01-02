@@ -194,6 +194,7 @@ class StalkerEntityDecoder(object):
         # get the entity_type
         entity_type = data['entity_type']
 
+        # set default entity class to Task
         entity_class = Task
         if entity_type == 'Asset':
             entity_class = Asset
@@ -222,21 +223,12 @@ class StalkerEntityDecoder(object):
 
         # create Versions
         if version_data:
-            repo = self.project.repository
-            repo_id = 0
-            if repo:
-                repo_id = repo.id
-
             for v_data in version_data:
                 # get Version info
                 v_data['task'] = entity
                 v = Version(**v_data)
                 # update version_number
                 v.version_number = v_data['version_number']
-                # update REPO path
-                v.full_path = '/'.join(
-                    ['$REPO%s' % repo_id] + v.full_path.split('/')[1:]
-                )
                 v.is_published = v_data['is_published']
 
         # for each child task call a new StalkerEntityDecoder

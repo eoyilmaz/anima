@@ -218,15 +218,16 @@ class TaskItem(QtGui.QStandardItem):
         )
 
         if self.canFetchMore():
-            from sqlalchemy import alias
+            from sqlalchemy.orm import aliased
             from sqlalchemy.dialects.postgresql import array_agg
             from stalker import Task, User
             from stalker.models.task import Task_Resources
             from stalker.db.session import DBSession
 
-            inner_tasks = alias(Task.__table__)
-            subquery = DBSession.query(Task.id)\
-                .filter(Task.id == inner_tasks.c.parent_id)
+            inner_tasks = aliased(Task)
+            subquery = DBSession.query(Task.id) \
+                .filter(Task.id == inner_tasks.parent_id)
+
             query = DBSession.query(
                 Task.id,
                 Task.name,
@@ -234,16 +235,16 @@ class TaskItem(QtGui.QStandardItem):
                 Task.status_id,
                 subquery.exists().label('has_children'),
                 array_agg(User.name).label('resources')
-            )\
-                .outerjoin(Task_Resources, Task.id == Task_Resources.c.task_id)\
+            ) \
+                .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id) \
                 .outerjoin(User, Task_Resources.c.resource_id == User.id) \
                 .group_by(
-                    Task.id,
-                    Task.name,
-                    Task.entity_type,
-                    Task.status_id,
-                    subquery.exists().label('has_children')
-                )
+                Task.id,
+                Task.name,
+                Task.entity_type,
+                Task.status_id,
+                subquery.exists().label('has_children')
+            )
 
             if self.task.entity_type != 'Project':
                 # query child tasks

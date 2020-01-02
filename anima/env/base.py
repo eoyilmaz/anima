@@ -163,22 +163,9 @@ class EnvironmentBase(object):
         :param str path: path in a repository
         :return: stalker.models.repository.Repository
         """
-        # path could be using environment variables so expand them
-        # path = os.path.expandvars(path)
-
         # first find the repository
         from stalker import Repository
-
-        repos = Repository.query.all()
-        found_repo = None
-        for repo in repos:
-            if path.startswith(repo.path) \
-               or path.startswith(repo.windows_path) \
-               or path.startswith(repo.linux_path) \
-               or path.startswith(repo.osx_path):
-                found_repo = repo
-                break
-        return found_repo
+        return Repository.find_repo(path)
 
     def get_versions_from_path(self, path):
         """Finds Version instances from the given path value.
