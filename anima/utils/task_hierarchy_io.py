@@ -28,7 +28,7 @@ import json
 class StalkerEntityEncoder(json.JSONEncoder):
     """JSON Encoder for Stalker Classes
     """
-    _visited_objs = []
+
     ignore_fields = [
         # Generic
         'defaults',
@@ -138,6 +138,10 @@ class StalkerEntityEncoder(json.JSONEncoder):
         'version_id',
     ]
 
+    def __init__(self, *args, **kwargs):
+        super(StalkerEntityEncoder, self).__init__(*args, **kwargs)
+        self._visited_objs = []
+
     def default(self, obj):
         from sqlalchemy.ext.declarative import DeclarativeMeta
 
@@ -186,6 +190,7 @@ class StalkerEntityDecoder(object):
         :param data:
         :return:
         """
+        from stalker.db.session import DBSession
         from stalker import Asset, Task, Shot, Sequence, Version, Type
 
         if isinstance(data, str):
@@ -220,6 +225,8 @@ class StalkerEntityDecoder(object):
 
         data['project'] = self.project
         entity = entity_class(**data)
+        DBSession.add(entity)
+        DBSession.commit()
 
         # create Versions
         if version_data:
