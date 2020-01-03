@@ -1666,7 +1666,8 @@ def check_root_node_name(progress_controller=None):
     if root_node_name[-1].isdigit():
         progress_controller.complete()
         raise PublishError(
-            "The name of the root node should not end with a number"
+            "The name of the root node should not end with a number: %s" %
+            root_node_name
         )
     progress_controller.complete()
 
