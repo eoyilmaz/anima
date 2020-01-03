@@ -99,7 +99,10 @@ def ui_caller(app_in, executor, ui_class, **kwargs):
     global app
     global ui_instance
     self_quit = False
-    app = QtWidgets.QApplication.instance()
+    try:
+        app = QtWidgets.QApplication.instance()
+    except TypeError:
+        app = None
     if app is None:
         if not app_in:
             try:

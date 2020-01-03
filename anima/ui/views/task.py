@@ -215,7 +215,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         # if item and not hasattr(item, 'task'):
         #     return
 
-        from anima.ui.models.task import TaskItem
+        # from anima.ui.models.task import TaskItem
         # if not isinstance(item, TaskItem):
         #     return
 
@@ -235,9 +235,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
 
-        # sub menus
-        create_sub_menu = menu.addMenu('Create')
-        update_sub_menu = menu.addMenu('Update')
 
         # -----------------------------------
         # actions created in different scopes
@@ -250,7 +247,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         delete_task_action = None
         export_to_json_action = None
         import_from_json_action = None
-
         no_deps_action = None
         create_project_structure_action = None
         create_task_structure_action = None
@@ -272,6 +268,12 @@ class TaskTreeView(QtWidgets.QTreeView):
         # TODO: Update this to use only task_id
         if task_id:
             entity = SimpleEntity.query.get(task_id)
+
+        reload_action = menu.addAction(u'\uf0e8 Reload')
+
+        # sub menus
+        create_sub_menu = menu.addMenu('Create')
+        update_sub_menu = menu.addMenu('Update')
 
         if defaults.is_power_user(logged_in_user):
             # create the Create Project menu item
@@ -434,8 +436,11 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         selected_item = menu.exec_(global_position)
         if selected_item:
+            if selected_item is reload_action:
+                item.reload()
+
             if create_project_action \
-               and selected_item == create_project_action:
+               and selected_item is create_project_action:
                 from anima.ui import project_dialog
                 project_main_dialog = project_dialog.MainDialog(
                     parent=self,
@@ -549,7 +554,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     # get the current task
                     ui_utils.upload_thumbnail(entity, thumbnail_full_path)
 
-                elif selected_item == create_child_task_action:
+                elif selected_item is create_child_task_action:
                     from anima.ui import task_dialog
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self,
@@ -663,9 +668,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                                 data = json.load(f)
                             from anima.utils import task_hierarchy_io
                             project = entity.project
-                            decoder = task_hierarchy_io.StalkerEntityDecoder(
-                                project=project
-                            )
+                            decoder = \
+                                task_hierarchy_io.StalkerEntityDecoder(
+                                    project=project
+                                )
                             loaded_entity = decoder.loads(data)
                             loaded_entity.parent = entity
 
@@ -683,13 +689,14 @@ class TaskTreeView(QtWidgets.QTreeView):
                                     QtWidgets.QMessageBox.Ok
                                 )
                             else:
+                                item.reload()
                                 QtWidgets.QMessageBox.information(
                                     self,
                                     'New Tasks are created!',
                                     'New Tasks are created',
                                 )
 
-                elif selected_item == create_project_structure_action:
+                elif selected_item is create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
                         'Create Project Folder Structure?',
@@ -712,7 +719,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     else:
                         return
 
-                elif selected_item == create_task_structure_action:
+                elif selected_item is create_task_structure_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
                         'Create Folder Structure?',
@@ -735,7 +742,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     else:
                         return
 
-                elif selected_item == fix_task_status_action:
+                elif selected_item is fix_task_status_action:
                     from stalker import Task
                     if isinstance(entity, Task):
                         from anima import utils
@@ -748,7 +755,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         if item.parent:
                             item.parent.reload()
 
-                elif selected_item == update_project_action:
+                elif selected_item is update_project_action:
                     from anima.ui import project_dialog
                     project_main_dialog = project_dialog.MainDialog(
                         parent=self,
@@ -766,7 +773,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     project_main_dialog.deleteLater()
 
-                elif selected_item == assign_users_action:
+                elif selected_item is assign_users_action:
                     from anima.ui import project_users_dialog
                     project_users_main_dialog = \
                         project_users_dialog.MainDialog(

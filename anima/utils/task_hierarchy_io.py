@@ -28,7 +28,7 @@ import json
 class StalkerEntityEncoder(json.JSONEncoder):
     """JSON Encoder for Stalker Classes
     """
-    _visited_objs = []
+
     ignore_fields = [
         # Generic
         'defaults',
@@ -138,6 +138,10 @@ class StalkerEntityEncoder(json.JSONEncoder):
         'version_id',
     ]
 
+    def __init__(self, *args, **kwargs):
+        super(StalkerEntityEncoder, self).__init__(*args, **kwargs)
+        self._visited_objs = []
+
     def default(self, obj):
         from sqlalchemy.ext.declarative import DeclarativeMeta
 
@@ -186,6 +190,7 @@ class StalkerEntityDecoder(object):
         :param data:
         :return:
         """
+        from stalker.db.session import DBSession
         from stalker import Asset, Task, Shot, Sequence, Version, Type
 
         if isinstance(data, str):
@@ -194,6 +199,7 @@ class StalkerEntityDecoder(object):
         # get the entity_type
         entity_type = data['entity_type']
 
+        # set default entity class to Task
         entity_class = Task
         if entity_type == 'Asset':
             entity_class = Asset
@@ -219,24 +225,17 @@ class StalkerEntityDecoder(object):
 
         data['project'] = self.project
         entity = entity_class(**data)
+        DBSession.add(entity)
+        DBSession.commit()
 
         # create Versions
         if version_data:
-            repo = self.project.repository
-            repo_id = 0
-            if repo:
-                repo_id = repo.id
-
             for v_data in version_data:
                 # get Version info
                 v_data['task'] = entity
                 v = Version(**v_data)
                 # update version_number
                 v.version_number = v_data['version_number']
-                # update REPO path
-                v.full_path = '/'.join(
-                    ['$REPO%s' % repo_id] + v.full_path.split('/')[1:]
-                )
                 v.is_published = v_data['is_published']
 
         # for each child task call a new StalkerEntityDecoder
