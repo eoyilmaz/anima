@@ -47,7 +47,7 @@ def output_to_h264(write_node=None):
     # TODO: if it is a sequence of images rename them by creating temp soft
     #       links to each frame and then use the sequence format in ffmpeg
 
-    # run ffmpeg in a seperate thread
+    # run ffmpeg in a separate thread
     t = threading.Timer(
         1.0,
         convert_to_h264,

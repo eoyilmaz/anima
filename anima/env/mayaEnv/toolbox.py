@@ -1391,7 +1391,7 @@ def UI():
             pm.button(
                 'enable_subdiv_on_selected_objects_button',
                 l='Enable Subdiv (Adaptive)',
-                c=repeated_callback(Render.enable_subdiv),
+                c=repeated_callback(Render.enable_subdiv_on_selected),
                 ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
                     'objects',
                 bgc=color.color
@@ -1399,7 +1399,9 @@ def UI():
             pm.button(
                 'enable_fixed_subdiv_on_selected_objects_button',
                 l='Enable Subdiv (Fixed Tes.)',
-                c=repeated_callback(Render.enable_subdiv, fixed_tes=True),
+                c=repeated_callback(
+                    Render.enable_subdiv_on_selected, fixed_tes=True
+                ),
                 ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
                     'objects with fixed tessellation',
                 bgc=color.color
