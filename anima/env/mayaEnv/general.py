@@ -516,7 +516,9 @@ class PluginCleaner(object):
         "elastikSolver",
         "finalRender",
         "maxwell",
+        "Mayatomr",
         "md_RayDiffuse",
+        "md_rayDiffuse",
         "qualoth-4.1-Maya2014-x64",
         "RenderMan_for_Maya",
         "rpmaya",
@@ -527,8 +529,6 @@ class PluginCleaner(object):
         "vrayformaya2008",
         "xfrog",
     ]
-    max_lines_to_check = 100
-
     backup_template = '%s.backup%s'
 
     def __init__(self, path=''):
@@ -621,12 +621,11 @@ class PluginCleaner(object):
         clean_data = []
         # look only to the first n lines
         dirty = False
-        for line in data[:self.max_lines_to_check]:
-            if not any([p_name in line for p_name in self.plugin_names]):
-                clean_data.append(line)
-            else:
+        for line in data:
+            if line.startswith('requires') and any([p_name in line for p_name in self.plugin_names]):
                 dirty = True
-        clean_data += data[self.max_lines_to_check:]
+            else:
+                clean_data.append(line)
 
         if dirty:
             # backup the file
