@@ -863,7 +863,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.setCurrentIndex(item.index())
 
         self.scrollTo(
-            item.index(), QtWidgets.QAbstractItemView.PositionAtBottom
+            item.index(), QtWidgets.QAbstractItemView.PositionAtCenter
         )
         # print('TaskTreeView.find_and_select_entity_item took: '
         #        '%0.2f seconds' % (time.time() - start))
