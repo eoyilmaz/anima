@@ -484,3 +484,155 @@ class General(object):
         data_man = redshift.RSProxyDataManager()
         data_man.load(path)
         data_man.create()
+
+
+class PluginCleaner(object):
+    """Cleans unnecessary plugin entries from the Maya (.ma) file at the given
+    path
+
+    Usage:
+
+    ```python
+    from anima.env.mayaEnv import general
+    reload(general)
+
+    pc = general.PluginCleaner()
+
+    td = Project.query.filter(Project.code=='TD').first()
+    for v in Version.query.join(Task, Version.task_id==Task.id).filter(Version.created_with=='Maya2018').filter(Task.project==td).all():
+        path = v.absolute_full_path
+        pc.path = path
+        result = pc.clean()
+        if result:
+            print("Cleaned: %s" % path)
+    ```
+
+    """
+    plugin_names = [
+        "AbcImportHb-1.1.1",
+        "ByronsPolyTools",
+        "CpClothPlugin",
+        "CorrectiveShape70",
+        "elastikSolver",
+        "finalRender",
+        "maxwell",
+        "md_RayDiffuse",
+        "qualoth-4.1-Maya2014-x64",
+        "RenderMan_for_Maya",
+        "rpmaya",
+        "shaveNode",
+        "stereoCamera",
+        "Stitch",
+        "vrayformaya",
+        "vrayformaya2008",
+        "xfrog",
+    ]
+    max_lines_to_check = 100
+
+    backup_template = '%s.backup%s'
+
+    def __init__(self, path=''):
+        self._path = None
+        self.path = path
+        self.backup_counter = 1
+
+    @property
+    def path(self):
+        return self._path
+
+    @path.setter
+    def path(self, path):
+        self._path = path
+        # also reset backup counter
+        self.backup_counter = 1
+
+    @property
+    def filename(self):
+        return os.path.basename(self.path)
+
+    @property
+    def dirname(self):
+        return os.path.dirname(self.path)
+
+    def generate_backup_path(self):
+        """generates a backup path
+        """
+        import os
+        backup_path = self.backup_template % (self.path, self.backup_counter)
+        while os.path.exists(backup_path):
+            self.backup_counter += 1
+            backup_path = \
+                self.backup_template % (self.path, self.backup_counter)
+        return backup_path
+
+    def get_lastest_backup_path(self):
+        """gets the latest backup
+        """
+        backup_path = self.backup_template % (self.path, '*')
+        import glob
+        all_backup_files = glob.glob(backup_path)
+        # sort them
+        try:
+            last_backup_path = sorted(
+                all_backup_files,
+                key=lambda x: int(x.split('.')[-1].replace('backup', ''))
+            )[-1]
+        except IndexError:
+            return None
+
+        return last_backup_path
+
+    def backup(self):
+        """creates a backup of the file
+        """
+        import shutil
+        backup_path = self.generate_backup_path()
+        shutil.copy(self.path, backup_path)
+        return backup_path
+
+    def restore(self, backup_path):
+        """restores the latest backup
+        """
+        import os
+        if backup_path and os.path.exists(backup_path):
+            # remove the original file
+            import os
+            try:
+                os.remove(self.path)
+            except OSError:
+                # file doesn't exists, no problem
+                # we were going to remove it already
+                pass
+            os.rename(backup_path, self.path)
+
+    def restore_latest_backup(self):
+        """restores the latest backup
+        """
+        latest_backup_path = self.get_lastest_backup_path()
+        self.restore(latest_backup_path)
+
+    def clean(self):
+        try:
+            with open(self.path) as f:
+                data = f.readlines()
+        except IOError:
+            return False
+
+        clean_data = []
+        # look only to the first n lines
+        dirty = False
+        for line in data[:self.max_lines_to_check]:
+            if not any([p_name in line for p_name in self.plugin_names]):
+                clean_data.append(line)
+            else:
+                dirty = True
+        clean_data += data[self.max_lines_to_check:]
+
+        if dirty:
+            # backup the file
+            self.backup()
+
+            with open(self.path, 'w') as f:
+                f.writelines(clean_data)
+
+        return dirty
