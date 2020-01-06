@@ -565,7 +565,7 @@ class PluginCleaner(object):
                 self.backup_template % (self.path, self.backup_counter)
         return backup_path
 
-    def get_lastest_backup_path(self):
+    def get_latest_backup_path(self):
         """gets the latest backup
         """
         backup_path = self.backup_template % (self.path, '*')
@@ -608,7 +608,7 @@ class PluginCleaner(object):
     def restore_latest_backup(self):
         """restores the latest backup
         """
-        latest_backup_path = self.get_lastest_backup_path()
+        latest_backup_path = self.get_latest_backup_path()
         self.restore(latest_backup_path)
 
     def clean(self):
