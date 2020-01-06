@@ -29,6 +29,9 @@ class Houdini(EnvironmentBase):
             env_var_name = repo.env_var
             value = repo.path
             self.set_environment_variable(env_var_name, value)
+            # TODO: remove the following line
+            # export old env var
+            self.set_environment_variable("REPO%s" % repo.id, value)
 
         self.name = '%s%s.%s' % (
             self.name, hou.applicationVersion()[0], hou.applicationVersion()[1]
