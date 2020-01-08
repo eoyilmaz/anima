@@ -1249,7 +1249,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     if Representation.repr_separator in version.take_name:
                         # use the parent version
                         version = version.parent
-                    if version not in versions:
+                    if version and version not in versions:
                         versions.append(version)
                     prev_path = path
             if caller is not None:
