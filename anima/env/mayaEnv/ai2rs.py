@@ -5,9 +5,7 @@
 # License: http://www.opensource.org/licenses/MIT
 """Converts the scene from Arnold to RedShift
 """
-import os
 import pymel.core as pm
-from anima.env.mayaEnv.redshift import RedShiftTextureProcessor
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
 CONVERSION_SPEC_SHEET = {
@@ -301,21 +299,7 @@ CONVERSION_SPEC_SHEET = {
 
     },
 
-    'file': {
-        # A dirty one liner that converts textures to rstexbin files
-        'call_before': lambda x: RedShiftTextureProcessor(
-            os.path.expandvars(x.computedFileTextureNamePattern.get())
-        ).convert() if int(pm.about(v=1)) > 2014 else RedShiftTextureProcessor(
-            os.path.expandvars(x.fileTextureName.get())
-        ).convert()
-    },
-
     'aiImage': {
-        # A dirty one liner that converts textures to rstexbin files
-        'call_before': lambda x: RedShiftTextureProcessor(
-            os.path.expandvars(x.filename.get())
-        ).convert(),
-
         'node_type': 'file',
         'secondary_type': 'texture',
 
@@ -359,10 +343,6 @@ CONVERSION_SPEC_SHEET = {
                 y.attr('color').inputs()[0].getAttr('filename')
             }
         },
-
-        'call_after': lambda x, y: RedShiftTextureProcessor(
-            os.path.expandvars(y.tex0.get())
-        ).convert(),
     },
 
     'pointLight': {
