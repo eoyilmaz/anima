@@ -1192,7 +1192,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         if external_nodes:
             pm.select(external_nodes)
             raise RuntimeError(
-                'There are external references in your scene!!!\n\n'
+                'There are missing external references in your scene!!!\n\n'
                 'The problematic nodes are:\n\n' +
                 ", ".join(map(lambda x: x.name(), external_nodes)) +
                 '\n\nThese nodes are added in to your selection list,\n'
