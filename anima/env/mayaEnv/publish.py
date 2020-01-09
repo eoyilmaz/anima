@@ -1916,6 +1916,7 @@ def check_sequence_name(progress_controller=None):
     sequencer = shot.outputs(type='sequencer')[0]
     sequence_name = sequencer.sequence_name.get()
     if sequence_name == '' or sequence_name is None:
+        pm.select(sequencer)
         raise PublishError('Please enter a sequence name!!!')
 
 
@@ -1949,6 +1950,7 @@ def check_sequence_name_format(progress_controller=None):
     parts = sequence_name.split('_')
     if len(parts) not in [2, 3]:
         progress_controller.complete()
+        pm.select(sequencer)
         raise PublishError(
             'Sequence name format is not correct!!!<br>'
             '<br>'
@@ -1969,6 +1971,7 @@ def check_sequence_name_format(progress_controller=None):
     # sequence_code should start with SEQ
     if not (sequence_code.upper().startswith('SEQ') or sequence_code.upper().startswith('EP')):
         progress_controller.complete()
+        pm.select(sequencer)
         raise PublishError(
             'Sequence name should start with "SEQ" or "EP"!!!<br>'
             '<br>'
@@ -1981,6 +1984,7 @@ def check_sequence_name_format(progress_controller=None):
     import re
     if not re.match(r'^[\d]+', scene_number):
         progress_controller.complete()
+        pm.select(sequencer)
         raise PublishError(
             'Scene number in sequence name should start with a number!!!<br>'
             '<br>'
@@ -1992,6 +1996,7 @@ def check_sequence_name_format(progress_controller=None):
     # scene number should a 3 digit and an optional letter
     if not len(scene_number) in [3, 4, 5]:
         progress_controller.complete()
+        pm.select(sequencer)
         raise PublishError(
             'Scene number in sequence name should be a number with 3 digits '
             'and an optional uppercase letter!!!<br>'
@@ -2005,6 +2010,7 @@ def check_sequence_name_format(progress_controller=None):
     # scene code should be all upper case letters
     if scene_code != '' and scene_code != scene_code.upper():
         progress_controller.complete()
+        pm.select(sequencer)
         raise PublishError(
             'Scene code in sequence name should be all upper case letters!!!'
             '<br><br>'
