@@ -484,7 +484,7 @@ class RepresentationGenerator(object):
     def generate_all(self):
         """generates all representations at once
         """
-        self.generate_gpu()
+        # self.generate_gpu()
         # self.generate_ass()
         self.generate_rs()
 
