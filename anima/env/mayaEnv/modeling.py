@@ -102,7 +102,8 @@ class Modeling(object):
                 transferColors=2,
                 sampleSpace=sample_space,
                 sourceUvSpace='map1',
-                searchMethod=3,
+                targetUvSpace="map1",
+                searchMethod=0,
                 flipUVs=0,
                 colorBorders=1
             )
