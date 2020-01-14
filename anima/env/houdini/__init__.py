@@ -420,6 +420,9 @@ class Houdini(EnvironmentBase):
                         flat_output_file_path
                     )
 
+                # enable skip rendered images
+                output_node.parm("RS_outputSkipRendered").set(1)
+
                 # do not create the folders
                 # try:
                 #     os.makedirs(flat_output_file_path)
