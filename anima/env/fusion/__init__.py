@@ -841,7 +841,7 @@ class Fusion(EnvironmentBase):
                         'OutputFormat': 'QuickTimeMovies',
                         'ProcessMode': 'Auto',
                         'SaveFrames': 'Full',
-                        'QuickTimeMovies.Compression': 'Apple ProRes 422 LT_apcs',
+                        'QuickTimeMovies.Compression': 'Apple ProRes 422 HQ_apch',
                         'QuickTimeMovies.Quality': 95.0,
                         'QuickTimeMovies.FrameRateFps': fps,
                         'QuickTimeMovies.KeyFrames': 5,
