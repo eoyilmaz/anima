@@ -540,6 +540,35 @@ class Render(object):
             cm.convert(node)
 
     @classmethod
+    def rsproxy_to_bounding_box(cls):
+        """sets the display mode to bounding box on selected proxy nodes
+        """
+        cls.rsproxy_display_mode_toggle(display_mode=0)
+
+    @classmethod
+    def rsproxy_to_preview_mesh(cls):
+        """sets the display mode to preview mesh on selected proxy nodes
+        """
+        cls.rsproxy_display_mode_toggle(display_mode=1)
+
+    @classmethod
+    def rsproxy_display_mode_toggle(cls, display_mode=0):
+        """sets the display mode on selected proxies
+
+        :param display_mode:
+
+          0: Bounding Box
+          1: Preview Mesh
+          2: Linked Mesh
+          3: Hide In Viewport
+        :return:
+        """
+        for node in pm.ls(sl=1):
+            hist = node.getShape().listHistory()
+            proxy = hist[1]
+            proxy.displayMode.set(display_mode)
+
+    @classmethod
     def standin_to_bbox(cls):
         """convert the selected stand-in nodes to bbox
         """
@@ -1027,29 +1056,23 @@ class Render(object):
 
     @classmethod
     def fit_placement_to_UV(cls):
-        selection = pm.ls(sl=1, fl=1)
+        selection = pm.ls(sl=1)
         uvs = [n for n in selection if isinstance(n, pm.general.MeshUV)]
         placements = \
             [p for p in selection if isinstance(p, pm.nt.Place2dTexture)]
 
-        minU = 1000
-        minV = 1000
-        maxU = -1000
-        maxV = -1000
-        for uv in uvs:
-            uvCoord = pm.polyEditUV(uv, q=1)
-            if uvCoord[0] > maxU:
-                maxU = uvCoord[0]
-            if uvCoord[0] < minU:
-                minU = uvCoord[0]
-            if uvCoord[1] > maxV:
-                maxV = uvCoord[1]
-            if uvCoord[1] < minV:
-                minV = uvCoord[1]
+        # get the uv extends
+        temp_data = pm.polyEditUV(uvs, q=1)
+        u = sorted(temp_data[0::2])
+        v = sorted(temp_data[1::2])
+        umin = u[0]
+        umax = u[-1]
+        vmin = v[0]
+        vmax = v[-1]
 
         for p in placements:
-            p.setAttr('coverage', (maxU - minU, maxV - minV))
-            p.setAttr('translateFrame', (minU, minV))
+            p.setAttr('coverage', (umax - umin, vmax - vmin))
+            p.setAttr('translateFrame', (umin, vmin))
 
     @classmethod
     def connect_placement2d_to_file(cls):

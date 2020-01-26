@@ -1178,6 +1178,22 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'set_rsproxy_to_bbox_button',
+                l='RSProxy -> Bounding Box',
+                c=repeated_callback(Render.rsproxy_to_bounding_box),
+                ann=Render.rsproxy_to_bounding_box.__doc__,
+                bgc=color.color
+            )
+
+            pm.button(
+                'set_rsproxy_to_preview_mesh_button',
+                l='RSProxy -> Preview Mesh',
+                c=repeated_callback(Render.rsproxy_to_preview_mesh),
+                ann=Render.rsproxy_to_preview_mesh.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.text(l='===== RedShift IC + IPC Bake =====')
             pm.button(
