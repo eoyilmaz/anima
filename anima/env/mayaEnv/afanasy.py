@@ -277,7 +277,14 @@ class UI(object):
             pm.text(l='<h1><b>Submission Details<b><h1>', h=section_label_height)
             with pm.rowLayout(nc=2, adj=2, cl2=('right', 'left'), cw2=(labels_width, 50)):
                 pm.text(l='<b>Start Paused</b>', al='right')
-                pm.checkBox('cgru_afanasy__paused', l='', v=0)
+                pm.checkBox(
+                    'cgru_afanasy__paused',
+                    l='',
+                    v=pm.optionVar.get(
+                        'cgru_afanasy__paused_ov',
+                        0
+                    )
+                )
 
             pm.radioButtonGrp(
                 'cgru_afanasy__separate_layers',
@@ -737,6 +744,7 @@ This system will be updated in Afanasy."""
         pm.optionVar['cgru_afanasy__errors_retries_ov'] = errors_retries
         pm.optionVar['cgru_afanasy__errors_task_same_host_ov'] = errors_task_same_host
         pm.optionVar['cgru_afanasy__errors_errors_forgive_time_ov'] = errors_forgive_time
+        pm.optionVar['cgru_afanasy__paused_ov'] = pause
 
         # get paths
         scene_name = pm.sceneName()
