@@ -1404,24 +1404,41 @@ def UI():
             )
 
             color.change()
-            pm.button(
-                'enable_subdiv_on_selected_objects_button',
-                l='Enable Subdiv (Adaptive)',
-                c=repeated_callback(Render.enable_subdiv_on_selected),
-                ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
-                    'objects',
-                bgc=color.color
-            )
-            pm.button(
-                'enable_fixed_subdiv_on_selected_objects_button',
-                l='Enable Subdiv (Fixed Tes.)',
-                c=repeated_callback(
-                    Render.enable_subdiv_on_selected, fixed_tes=True
-                ),
-                ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
-                    'objects with fixed tessellation',
-                bgc=color.color
-            )
+            with pm.rowLayout(nc=2, adj=1):
+                def enable_subdiv_callback():
+                    max_tess = pm.intField('enable_subdiv_int_field', q=1, v=1)
+                    Render.enable_subdiv_on_selected(
+                        max_subdiv=max_tess, fixed_tes=False
+                    )
+
+                pm.button(
+                    'enable_subdiv_on_selected_objects_button',
+                    l='Enable Subdiv (Adaptive)',
+                    c=repeated_callback(enable_subdiv_callback),
+                    ann='Enables Arnold/RedShift Subdiv (catclark) on '
+                        'selected objects',
+                    bgc=color.color
+                )
+
+                pm.intField('enable_subdiv_int_field', min=0, v=3)
+
+            with pm.rowLayout(nc=2, adj=1):
+                def fixed_tess_callback():
+                    max_tess = pm.intField('fixed_tess_int_field', q=1, v=1)
+                    Render.enable_subdiv_on_selected(
+                        fixed_tes=True, max_subdiv=max_tess
+                    )
+
+                pm.button(
+                    'enable_fixed_subdiv_on_selected_objects_button',
+                    l='Enable Subdiv (Fixed Tes.)',
+                    c=repeated_callback(fixed_tess_callback),
+                    ann='Enables Arnold/RedShift Subdiv (catclark) on selected '
+                        'objects with fixed tessellation',
+                    bgc=color.color
+                )
+
+                pm.intField('fixed_tess_int_field', min=0, v=1)
 
             color.change()
             pm.button(
