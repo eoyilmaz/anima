@@ -3,8 +3,9 @@
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
-
+import os
 import re
+import tempfile
 
 from anima.env.mayaEnv import auxiliary
 from anima.ui.progress_dialog import ProgressDialogManager
@@ -40,6 +41,11 @@ class Render(object):
         'orig': {},
         'current_frame': 1
     }
+
+    node_attr_info_temp_file_path = os.path.join(
+        tempfile.gettempdir(),
+        'attr_info'
+    )
 
     @classmethod
     def assign_random_material_color(cls):
@@ -1226,6 +1232,51 @@ class Render(object):
                 shape.rsMinTessellationLength.set(0)
         except AttributeError:
             pass
+
+    @classmethod
+    def export_shader_attributes(cls):
+        """exports the selected shader attributes to a JSON file
+        """
+        # get data
+        data = []
+        nodes = pm.ls(sl=1)
+        for node in nodes:
+            node_attr_data = {}
+            attrs = node.listAttr()
+            for attr in attrs:
+                try:
+                    value = attr.get()
+                    if not isinstance(value, pm.PyNode):
+                        node_attr_data[attr.shortName()] = value
+                except TypeError:
+                    continue
+            data.append(node_attr_data)
+
+        # write data
+        import json
+        with open(cls.node_attr_info_temp_file_path, 'w') as f:
+            json.dump(data, f)
+
+    @classmethod
+    def import_shader_attributes(cls):
+        """imports shader attributes from a temp JSON file
+        """
+        # read data
+        import json
+        with open(cls.node_attr_info_temp_file_path) as f:
+            data = json.load(f)
+
+        # set data
+        nodes = pm.ls(sl=1)
+        for i, node in enumerate(nodes):
+            i = i % len(data)
+            node_data = data[i]
+            for key in node_data:
+                value = node_data[key]
+                try:
+                    node.setAttr(key, value)
+                except RuntimeError:
+                    continue
 
     @classmethod
     def barndoor_simulator_setup(cls):
