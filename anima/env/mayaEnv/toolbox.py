@@ -1442,6 +1442,22 @@ def UI():
 
             color.change()
             pm.button(
+                'export_shader_data_button',
+                l='Export Shader Attributes',
+                c=repeated_callback(Render.export_shader_attributes),
+                ann=Render.export_shader_attributes.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'import_shader_data_button',
+                l='Import Shader Attributes',
+                c=repeated_callback(Render.import_shader_attributes),
+                ann=Render.import_shader_attributes.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'create_eye_shader_and_controls_button',
                 l='Create Eye Shader and Controls',
                 c=repeated_callback(Render.create_eye_shader_and_controls),
