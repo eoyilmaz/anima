@@ -928,19 +928,6 @@ class Render(object):
         # auxiliary.transfer_shaders(source, target)
         # pm.select(selection)
 
-        # check if they are direct parents of mesh or nurbs shapes
-        source_shape = source.getShape()
-        target_shape = target.getShape()
-
-        if source_shape and target_shape:
-            # do a direct assignment from source to target
-            shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
-            pm.sets(shading_engines[0], fe=target)
-            pm.select(selection)
-            return
-
-        lut = auxiliary.match_hierarchy(source, target)
-
         attr_names = [
             'castsShadows',
             'receiveShadows',
@@ -997,7 +984,6 @@ class Render(object):
             'aiDispAutobump',
             'aiStepSize',
 
-
             'rsEnableSubdivision',
             'rsSubdivisionRule',
             'rsScreenSpaceAdaptive',
@@ -1015,6 +1001,22 @@ class Render(object):
 
             'rsObjectId',
         ]
+
+        # check if they are direct parents of mesh or nurbs shapes
+        source_shape = source.getShape()
+        target_shape = target.getShape()
+
+        if source_shape and target_shape:
+            # do a direct assignment from source to target
+            #shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
+            #pm.sets(shading_engines[0], fe=target)
+            #pm.select(selection)
+            lut = {
+                'match': [(source_shape, target_shape)],
+                'no_match': []
+            }
+        else:
+            lut = auxiliary.match_hierarchy(source, target)
 
         # from anima.ui import progress_dialog
         # from anima.env.mayaEnv import MayaMainProgressBarWrapper
@@ -1216,6 +1218,7 @@ class Render(object):
             shape.rsEnableSubdivision.set(1)
             shape.rsMaxTessellationSubdivs.set(max_subdiv)
             if not fixed_tes:
+                shape.rsScreenSpaceAdaptive.set(1)
                 shape.rsLimitOutOfFrustumTessellation.set(1)
                 shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
             else:
