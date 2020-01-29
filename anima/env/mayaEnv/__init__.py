@@ -1080,6 +1080,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # check for audio files
         for audio in pm.ls(type=pm.nt.Audio):
             path = audio.filename.get()
+            path = path.replace('\\', '/')
             logger.debug('checking path: %s' % path)
             if path is not None \
                and os.path.isabs(path) \
@@ -1098,6 +1099,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # check for file textures
         for file_texture in pm.ls(type=pm.nt.File):
             path = file_texture.attr('fileTextureName').get()
+            path = path.replace('\\', '/')
             logger.debug('checking path: %s' % path)
             if path is not None \
                and os.path.isabs(path) \
@@ -1116,6 +1118,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # check for arnold textures
         for arnold_texture in pm.ls(type='aiImage'):
             path = arnold_texture.attr('filename').get()
+            path = path.replace('\\', '/')
             logger.debug('checking path: %s' % path)
             if path is not None \
                and os.path.isabs(path) \
@@ -1135,6 +1138,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         try:
             for mr_texture in pm.ls(type=pm.nt.MentalrayTexture):
                 path = mr_texture.attr('fileTextureName').get()
+                path = path.replace('\\', '/')
                 logger.debug("path of %s: %s" % (mr_texture, path))
                 if path is not None \
                    and os.path.isabs(path) \
@@ -1155,6 +1159,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # check for ImagePlanes
         for image_plane in pm.ls(type=pm.nt.ImagePlane):
             path = image_plane.attr('imageName').get()
+            path = path.replace('\\', '/')
             if path is not None \
                and os.path.isabs(path) \
                and not self.is_in_repo(path):
@@ -1173,6 +1178,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         try:
             for ibl in pm.ls(type=pm.nt.MentalrayIblShape):
                 path = ibl.attr('texture').get()
+                path = path.replace('\\', '/')
                 if path is not None \
                    and os.path.isabs(path) \
                    and not self.is_in_repo(path):
