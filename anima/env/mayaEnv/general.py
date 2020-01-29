@@ -486,8 +486,8 @@ class General(object):
         data_man.create()
 
 
-class PluginCleaner(object):
-    """Cleans unnecessary plugin entries from the Maya (.ma) file at the given
+class UnknownPluginCleaner(object):
+    """Cleans unknown plugin entries from the Maya (.ma) file at the given
     path
 
     Usage:
@@ -496,7 +496,7 @@ class PluginCleaner(object):
     from anima.env.mayaEnv import general
     reload(general)
 
-    pc = general.PluginCleaner()
+    pc = general.UnknownPluginCleaner()
 
     td = Project.query.filter(Project.code=='TD').first()
     for v in Version.query.join(Task, Version.task_id==Task.id).filter(Version.created_with=='Maya2018').filter(Task.project==td).all():
@@ -531,10 +531,11 @@ class PluginCleaner(object):
     ]
     backup_template = '%s.backup%s'
 
-    def __init__(self, path=''):
+    def __init__(self, path='', show_progress=True):
         self._path = None
         self.path = path
         self.backup_counter = 1
+        self.show_progress = show_progress
 
     @property
     def path(self):
@@ -612,20 +613,31 @@ class PluginCleaner(object):
         self.restore(latest_backup_path)
 
     def clean(self):
+        from anima.ui import progress_dialog
+        pdm = progress_dialog.ProgressDialogManager()
+        progress_caller = pdm.register(
+            2,
+            title="Cleaning %s" % os.path.basename(self.path)
+        )
         try:
             with open(self.path) as f:
                 data = f.readlines()
+            progress_caller.step()
         except IOError:
+            progress_caller.end_progress()
             return False
 
         clean_data = []
         # look only to the first n lines
         dirty = False
+        progress_caller.max_steps += len(data)
         for line in data:
-            if line.startswith('requires') and any([p_name in line for p_name in self.plugin_names]):
+            if line.startswith('requires') and \
+               any([p_name in line for p_name in self.plugin_names]):
                 dirty = True
             else:
                 clean_data.append(line)
+            progress_caller.step()
 
         if dirty:
             # backup the file
@@ -634,4 +646,40 @@ class PluginCleaner(object):
             with open(self.path, 'w') as f:
                 f.writelines(clean_data)
 
+            progress_caller.step()
+
+        progress_caller.end_progress()
         return dirty
+
+
+def unknown_plugin_cleaner_ui():
+    """UI for Unknown plugin cleaner which cleans unknown plugin entries from
+    the selected *.ma files
+    """
+    from anima.ui.lib import QtWidgets
+    from anima.env.mayaEnv import get_maya_main_window
+    maya_main_window = get_maya_main_window()
+
+    dialog = QtWidgets.QFileDialog(maya_main_window, "Choose file")
+    dialog.setNameFilter("Maya Files (*.ma)")
+    dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+    if dialog.exec_():
+        file_path = dialog.selectedFiles()[0]
+        if file_path:
+            from anima.ui import progress_dialog
+
+            pc = UnknownPluginCleaner(path=file_path, show_progress=True)
+            result = pc.clean()
+            if result:
+                QtWidgets.QMessageBox.information(
+                    maya_main_window,
+                    'Cleaned',
+                    'Cleaned:<br><br>%s' % os.path.basename(file_path),
+                )
+            else:
+                QtWidgets.QMessageBox.information(
+                    maya_main_window,
+                    'Clean',
+                    'The file was clean:<br><br>%s' %
+                    os.path.basename(file_path),
+                )
