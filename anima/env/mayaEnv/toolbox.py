@@ -368,6 +368,16 @@ def UI():
             )
 
             color.change()
+            from anima.env.mayaEnv.general import unknown_plugin_cleaner_ui
+            pm.button(
+                'cleanup_plugins_button',
+                l='Cleanup Unknown Plugins',
+                c=repeated_callback(unknown_plugin_cleaner_ui),
+                ann=unknown_plugin_cleaner_ui.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button(
                 'unshape_parent_node_button',
                 l='Unshape Parent Nodes',
