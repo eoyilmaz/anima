@@ -1044,47 +1044,65 @@ def check_uv_border_crossing(progress_controller=None):
     progress_controller.maximum = mesh_count
     nodes_with_uvs_crossing_borders = []
 
-    # from anima.ui.progress_dialog import ProgressDialogManager
-    # from anima.env.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = ProgressDialogManager(dialog=wrp)
-
-    # if not pm.general.about(batch=1) and mesh_count:
-    #     pdm.use_ui = True
-
-    # caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
-
     for node in all_meshes:
         all_uvs = node.getUVs()
-        # before doing anything get all the uvs and skip if non of them is
-        # bigger than 1.0
-        if not (any(map(lambda x: x > 1.0, all_uvs[0])) or
-                any(map(lambda x: x > 1.0, all_uvs[1]))):
+        # before doing anything get all the uvs and skip if all of them are
+        # in the same UV quadrant (which is the wrong name, sorry!)
+        all_uvs_u = sorted(all_uvs[0])
+        all_uvs_v = sorted(all_uvs[1])
+        if int(all_uvs_u[0]) == int(all_uvs_u[-1]) and \
+           int(all_uvs_v[0]) == int(all_uvs_v[-1]):
             # skip this mesh
             continue
 
-        uv_shell_ids = node.getUvShellsIds()
+        #
+        # Group uvs according to their UV shells
+        #
+        # The following method is 20-25% faster than using getUvShellsIds()
+        #
+        num_uvs = node.numUVs()
+        uv_ids = range(num_uvs)
 
-        # prepare an empty dict of lists
-        uvs_per_shell = {}
-        for shell_id in range(uv_shell_ids[1]):
-            uvs_per_shell[shell_id] = {
-                'u': [],
-                'v': []
-            }
+        uv_shells_and_uv_ids = []
+        uv_shells_and_uv_coords = []
 
-        for uv_id in range(len(uv_shell_ids[0])):
-            u = all_uvs[0][uv_id]
-            v = all_uvs[1][uv_id]
-            shell_id = uv_shell_ids[0][uv_id]
+        i = 0
+        while len(uv_ids) and i < num_uvs + 1:
+            current_uv_id = uv_ids[0]
+            # the polyListComponentConversion takes 85% of the processing time
+            # of getting the uvShells here
+            shell_uv_group_ids = pm.polyListComponentConversion(
+                "%s.map[%s]" % (node.name(), current_uv_id), toUV=1, uvShell=1)
 
-            uvs_per_shell[shell_id]['u'].append(u)
-            uvs_per_shell[shell_id]['v'].append(v)
+            uv_shell_uv_ids = []
+            uv_shell_uv_coords = [[], []]
+            for uv_group_ids in shell_uv_group_ids:
+                if ':' in uv_group_ids:
+                    splits = uv_group_ids.split(':')
+                    start_uv_id = int(splits[0].split('[')[1])
+                    end_uv_id = int(splits[1].split(']')[0])
+                else:
+                    splits = uv_group_ids.split('[')
+                    start_uv_id = int(splits[1].split(']')[0])
+                    end_uv_id = start_uv_id
+
+                for j in range(start_uv_id, end_uv_id + 1):
+                    uv_ids.remove(j)
+                    uv_shell_uv_ids.append(j)
+                    uv_shell_uv_coords[0].append(all_uvs[0][j])
+                    uv_shell_uv_coords[1].append(all_uvs[1][j])
+
+            # store the uv ids and uv coords in this shell
+            uv_shells_and_uv_ids.append(uv_shell_uv_ids)
+            uv_shells_and_uv_coords.append(uv_shell_uv_coords)
+
+            # go to the next pseudo uv shell id
+            i += 1
 
         # now check all uvs per shell
-        for shell_id in range(uv_shell_ids[1]):
-            us = sorted(uvs_per_shell[shell_id]['u'])
-            vs = sorted(uvs_per_shell[shell_id]['v'])
+        for uv_shell_uv_coords in uv_shells_and_uv_coords:
+            us = sorted(uv_shell_uv_coords[0])
+            vs = sorted(uv_shell_uv_coords[1])
 
             # check first and last u and v values
             if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
