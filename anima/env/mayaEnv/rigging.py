@@ -393,7 +393,7 @@ class Rigging(object):
         wm[1, :3] = reflected_local_y_axis
         wm[2, :3] = reflected_local_z_axis
 
-        target_node.r.set(map(math.degrees, wm.eulerRotation()))
+        pm.xform(target_node, ws=1, ro=map(math.degrees, wm.eulerRotation()))
         # pm.makeIdentity(
         #     target_node, apply=1, t=False, r=False, s=False, n=False,
         #     jointOrient=True
