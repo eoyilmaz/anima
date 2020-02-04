@@ -1209,29 +1209,31 @@ class Render(object):
         :param fixed_tes: Uses fixed tessellation.
         :param max_subdiv: The max subdivision iteration. Default 3.
         """
-        shape = node
         if isinstance(node, pm.nt.Transform):
-            shape = node.getShape()
+            shapes = node.getShapes()
+        else:
+            shapes = [node]
 
-        try:
-            shape.aiSubdivIterations.set(max_subdiv)
-            shape.aiSubdivType.set(1)
-            shape.aiSubdivPixelError.set(0)
-        except AttributeError:
-            pass
+        for shape in shapes:
+            try:
+                shape.aiSubdivIterations.set(max_subdiv)
+                shape.aiSubdivType.set(1)
+                shape.aiSubdivPixelError.set(0)
+            except AttributeError:
+                pass
 
-        try:
-            shape.rsEnableSubdivision.set(1)
-            shape.rsMaxTessellationSubdivs.set(max_subdiv)
-            if not fixed_tes:
-                shape.rsScreenSpaceAdaptive.set(1)
-                shape.rsLimitOutOfFrustumTessellation.set(1)
-                shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
-            else:
-                shape.rsScreenSpaceAdaptive.set(0)
-                shape.rsMinTessellationLength.set(0)
-        except AttributeError:
-            pass
+            try:
+                shape.rsEnableSubdivision.set(1)
+                shape.rsMaxTessellationSubdivs.set(max_subdiv)
+                if not fixed_tes:
+                    shape.rsScreenSpaceAdaptive.set(1)
+                    shape.rsLimitOutOfFrustumTessellation.set(1)
+                    shape.rsMaxOutOfFrustumTessellationSubdivs.set(1)
+                else:
+                    shape.rsScreenSpaceAdaptive.set(0)
+                    shape.rsMinTessellationLength.set(0)
+            except AttributeError:
+                pass
 
     @classmethod
     def export_shader_attributes(cls):
