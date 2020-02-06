@@ -16,7 +16,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         QtWidgets.QTableWidget.__init__(self, parent, *args, **kwargs)
 
         self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.setAlternatingRowColors(True)
+        # self.setAlternatingRowColors(True)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.setShowGrid(False)

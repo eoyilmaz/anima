@@ -418,7 +418,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.previous_versions_table_widget.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.previous_versions_table_widget.setAlternatingRowColors(True)
+        # self.previous_versions_table_widget.setAlternatingRowColors(True)
         self.previous_versions_table_widget.setSelectionMode(
             QtWidgets.QAbstractItemView.SingleSelection)
         self.previous_versions_table_widget.setSelectionBehavior(
@@ -498,7 +498,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontalLayout_5.addWidget(self.import_pushButton)
         self.close_pushButton = \
             QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.close_pushButton.setStyleSheet("")
+        # self.close_pushButton.setStyleSheet("")
         self.horizontalLayout_5.addWidget(self.close_pushButton)
         self.verticalLayout_7.addLayout(self.horizontalLayout_5)
         self.horizontalLayout_14.addWidget(self.previous_versions_groupBox)

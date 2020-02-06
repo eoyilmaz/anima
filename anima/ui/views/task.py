@@ -93,7 +93,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         self.is_updating = False
 
-        self.setAlternatingRowColors(True)
+        # self.setAlternatingRowColors(True)
         self.setUniformRowHeights(True)
         self.header().setCascadingSectionResizes(True)
 

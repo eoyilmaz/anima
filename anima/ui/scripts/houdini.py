@@ -30,9 +30,10 @@ class Executor(object):
 
     def exec_(self, app, dialog):
         self.application = app
-        if hou.applicationVersion()[0] <= 15:
+        app_version = hou.applicationVersion()[0]
+        if app_version <= 15:
             self.application.setStyle('CleanLooks')
-        else:
+        elif 15 < app_version <= 17:
             self.application.setStyle('Fusion')
 
         hou.ui.addEventLoopCallback(self.processEvents)
@@ -63,9 +64,7 @@ def version_creator():
     logger.setLevel(logging.WARNING)
 
     if hou.applicationVersion()[0] <= 13:
-        version_creator.UI(
-            environment=h
-        )
+        version_creator.UI(environment=h)
     else:
         version_creator.UI(
             environment=h,
