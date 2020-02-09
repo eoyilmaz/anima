@@ -98,6 +98,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             callback_kwargs={"parent": self.parent()}
         )
 
+        # Update Outputs
+        add_button(
+            'Update Savers',
+            general_tab_vertical_layout,
+            GenericTools.update_savers
+        )
+
         # Loader Report
         add_button(
             'Loader Report',
@@ -148,6 +155,17 @@ class GenericTools(object):
         )
         ui_instance.show()
         ui_instance.center_window()
+
+    @classmethod
+    def update_savers(cls):
+        """updates savers, creates missing ones
+        """
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        v = fusion_env.get_current_version()
+        fusion_env.create_main_saver_node(version=v)
 
     @classmethod
     def loader_report(cls):
