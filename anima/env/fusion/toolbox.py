@@ -126,6 +126,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.insert_pipe_router_to_selected_node
         )
 
+        # Loader From Saver
+        add_button(
+            'Loader from Saver',
+            general_tab_vertical_layout,
+            GenericTools.loader_from_saver
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -246,3 +253,44 @@ class GenericTools(object):
         ]
 
         # get the output path from one of the main savers
+
+    @classmethod
+    def loader_from_saver(cls):
+        """creates a loader from the selected saver node
+        """
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        comp = fusion_env.comp
+
+        node = comp.ActiveTool
+        flow = comp.CurrentFrame.FlowView
+        x, y = flow.GetPosTable(node).values()
+
+        node_input_list = node.GetInputList()
+
+        path = ''
+        key = 'Clip'
+        for input_entry_key in node_input_list.keys():
+            input_entry = node_input_list[input_entry_key]
+            input_id = input_entry.GetAttrs()['INPS_ID']
+            if input_id == key:
+                path = input_entry[0]
+                break
+
+        comp.Lock()
+        loader_node = comp.AddTool('Loader')
+        comp.Unlock()
+
+        node_input_list = loader_node.GetInputList()
+        for input_entry_key in node_input_list.keys():
+            input_entry = node_input_list[input_entry_key]
+            input_id = input_entry.GetAttrs()['INPS_ID']
+            if input_id == key:
+                input_entry[0] = path
+                break
+
+        # set position near to the saver node
+        flow.SetPos(loader_node, x, y + 1.0)
+        flow.Select(node, False)
+        flow.Select(loader_node, True)
+        comp.SetActiveTool(loader_node)
