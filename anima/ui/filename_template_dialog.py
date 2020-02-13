@@ -149,7 +149,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.name_line_edit.set_invalid()  # Empty field is not valid
         self.path_line_edit.setText(
-            '$REPO{{project.repository.id}}/{{project.code}}/'
+            '$REPO{{project.repository.code}}/{{project.code}}/'
             '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
             '/{%- endfor -%}'
         )
