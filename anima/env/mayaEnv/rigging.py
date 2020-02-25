@@ -760,7 +760,7 @@ class PinController(object):
     def get_pin_shader(self):
         """this creates or returns the existing pin shader
         """
-        shaders = pm.ls(self.pin_shader_prefix)
+        shaders = pm.ls("%s*" % self.pin_shader_prefix)
         if shaders:
             # try to find the shader with the same color
             for shader in shaders:
