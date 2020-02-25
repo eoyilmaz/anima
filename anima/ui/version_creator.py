@@ -895,6 +895,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         browse_outputs_action = menu.addAction("Browse Outputs...")
         upload_output_action = menu.addAction("Upload Output...")
         copy_path_action = menu.addAction("Copy Path")
+        rerender_path_variables_action = \
+            menu.addAction("Re-Render Path Variables...")
         menu.addSeparator()
         change_description_action = menu.addAction("Change Description...")
         menu.addSeparator()
@@ -904,6 +906,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             browse_outputs_action.setEnabled(False)
             upload_output_action.setEnabled(False)
             copy_path_action.setEnabled(False)
+            rerender_path_variables_action.setEnabled(False)
             change_description_action.setEnabled(False)
 
         if self.mode:
@@ -1053,7 +1056,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         "Error",
                         "Path doesn't exists:\n%s" % path
                     )
-            if choice == 'Browse Outputs...':
+            elif choice == 'Browse Outputs...':
                 path = os.path.join(
                     os.path.dirname(
                         os.path.expandvars(
@@ -1133,6 +1136,31 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 # now reload the UI
                 self.update_previous_versions_table_widget()
+            elif selected_item == rerender_path_variables_action:
+                if version:
+                    # warn the user before doing anything
+                    # answer = QtWidgets.QMessageBox.question(
+                    #     self,
+                    #     'Re-Render Path Variables?',
+                    #     "This will recalculate the version path"
+                    #     "<br>"
+                    #     "<br>Files will not be deleted!",
+                    #     QtWidgets.QMessageBox.Yes,
+                    #     QtWidgets.QMessageBox.No
+                    # )
+                    # if answer == QtWidgets.QMessageBox.Yes:
+                    from stalker import Version
+                    assert isinstance(version, Version)
+                    ext = version.extension
+                    version.update_paths()
+                    version.extension = ext
+                    from stalker.db.session import DBSession
+                    try:
+                        DBSession.commit()
+                    except BaseException:
+                        DBSession.rollback()
+                    # now reload the UI
+                    self.update_previous_versions_table_widget()
 
     @classmethod
     def get_item_indices_containing_text(cls, text, tree_view):
