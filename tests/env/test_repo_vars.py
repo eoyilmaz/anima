@@ -70,7 +70,10 @@ class RepoVarsTestCase(unittest.TestCase):
         from anima import defaults
         for repo in self.all_repos:
             self.assertEqual(
-                os.environ[defaults.repo_env_template % {'id': repo.id}],
+                os.environ[defaults.repo_env_template % {
+                    'id': repo.id,
+                    'code': repo.code,
+                }],
                 repo.path
             )
 

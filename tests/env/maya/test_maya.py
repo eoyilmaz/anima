@@ -102,7 +102,7 @@ class MayaTestBase(unittest.TestCase):
         self.task_template = FilenameTemplate(
             name='Task Template',
             target_entity_type='Task',
-            path='$REPO{{project.repository.id}}/{{project.code}}/'
+            path='$REPO{{project.repository.code}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -113,7 +113,7 @@ class MayaTestBase(unittest.TestCase):
         self.asset_template = FilenameTemplate(
             name='Asset Template',
             target_entity_type='Asset',
-            path='$REPO{{project.repository.id}}/{{project.code}}/'
+            path='$REPO{{project.repository.code}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -124,7 +124,7 @@ class MayaTestBase(unittest.TestCase):
         self.shot_template = FilenameTemplate(
             name='Shot Template',
             target_entity_type='Shot',
-            path='$REPO{{project.repository.id}}/{{project.code}}/'
+            path='$REPO{{project.repository.code}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',
@@ -135,7 +135,7 @@ class MayaTestBase(unittest.TestCase):
         self.sequence_template = FilenameTemplate(
             name='Sequence Template',
             target_entity_type='Sequence',
-            path='$REPO{{project.repository.id}}/{{project.code}}/'
+            path='$REPO{{project.repository.code}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/'
                  '{%- endfor -%}',

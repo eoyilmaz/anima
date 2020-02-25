@@ -50,7 +50,7 @@ def create_project():
 
     task_filename_template = FilenameTemplate(
         name='Task Filename Template',
-        path='$REPO{{project.repository.id}}/{{project.code}}/'
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
             '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
             '/{%- endfor -%}',
         filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
@@ -58,7 +58,7 @@ def create_project():
     )
     asset_filename_template = FilenameTemplate(
         name='Asset Filename Template',
-        path='$REPO{{project.repository.id}}/{{project.code}}/'
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
             '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
             '/{%- endfor -%}',
         filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
@@ -66,7 +66,7 @@ def create_project():
     )
     shot_filename_template = FilenameTemplate(
         name='Shot Filename Template',
-        path='$REPO{{project.repository.id}}/{{project.code}}/'
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
             '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
             '/{%- endfor -%}',
         filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
@@ -74,7 +74,7 @@ def create_project():
     )
     sequence_filename_template = FilenameTemplate(
         name='Sequence Filename Template',
-        path='$REPO{{project.repository.id}}/{{project.code}}/'
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
             '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
             '/{%- endfor -%}',
         filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',

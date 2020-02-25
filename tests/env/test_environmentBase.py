@@ -64,7 +64,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         task_ft = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',
-            path='$REPO{{project.repository.id}}/{{project.code}}/'
+            path='$REPO{{project.repository.code}}/{{project.code}}/'
                  '{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
             filename='{{task.nice_name}}_{{version.take_name}}'
@@ -247,7 +247,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         task_ft = FilenameTemplate(
             name='Task Filename Template',
             target_entity_type='Task',
-            path='$REPO{{project.repository.id}}/'
+            path='$REPO{{project.repository.code}}/'
                  '{{project.code}}/{%- for parent_task in parent_tasks -%}'
                  '{{parent_task.nice_name}}/{%- endfor -%}',
             filename='{{task.nice_name}}_{{version.take_name}}'
