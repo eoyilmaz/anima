@@ -1454,8 +1454,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # store node types and the attribute that is holding the path
         types_and_attrs = {
             'aiImage': 'filename',
-            'aiStandIn': 'dso',
-            'aiVolume': 'dso',
+            'aiStandIn': 'filename',
+            'aiVolume': 'filename',
             'file': 'fileTextureName',
             'imagePlane': 'imageName',
             'audio': 'filename',
