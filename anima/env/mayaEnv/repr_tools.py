@@ -1697,7 +1697,18 @@ class RepresentationGenerator(object):
                             }
                         )
                         # then move it to the original place
-                        shutil.move(temp_full_path, output_full_path)
+                        try:
+                            shutil.move(temp_full_path, output_full_path)
+                        except OSError as e:
+                            # some Linux flavors don't allow move to overwrite
+                            # if source and target files are under different
+                            # file systems. So simply remove the target
+                            # and move the source again
+                            if os.name == 'posix':
+                                # remove the target
+                                os.remove(output_full_path)
+                                # then move the file again
+                                shutil.move(temp_full_path, output_full_path)
 
                         nodes_to_rs_files[child_node_full_path] = \
                             output_full_path
