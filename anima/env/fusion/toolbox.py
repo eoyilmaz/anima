@@ -4,9 +4,12 @@
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 
+import os
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import add_button
+
+__here__ = os.path.abspath(__file__)
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -61,6 +64,15 @@ class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.toolbox_layout.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.toolbox_layout.setContentsMargins(0, 0, 0, 0)
 
+        # setup icon
+        global __here__
+        icon_path = os.path.abspath(
+            os.path.join(__here__, "../../../ui/images/fusion9.png")
+        )
+        icon = QtWidgets.QIcon(icon_path)
+
+        self.setWindowIcon(icon)
+
 
 class ToolboxLayout(QtWidgets.QVBoxLayout):
     """The toolbox
@@ -73,7 +85,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
     def setup_ui(self):
         """add tools
         """
-        # create the main tab layout
+        # create the main tab layoute
         main_tab_widget = QtWidgets.QTabWidget(self.widget())
         self.addWidget(main_tab_widget)
 
@@ -131,6 +143,29 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             'Loader from Saver',
             general_tab_vertical_layout,
             GenericTools.loader_from_saver
+        )
+
+        # Delete Recent Comps
+        add_button(
+            'Delete Recent Comps',
+            general_tab_vertical_layout,
+            GenericTools.delete_recent_comps
+        )
+
+        # Set Frames At Once To 1
+        add_button(
+            'Set Frames At Once To 1',
+            general_tab_vertical_layout,
+            GenericTools.set_frames_at_once,
+            callback_kwargs={'count': 1}
+        )
+
+        # Set Frames At Once To 8
+        add_button(
+            'Set Frames At Once To 8',
+            general_tab_vertical_layout,
+            GenericTools.set_frames_at_once,
+            callback_kwargs={'count': 8}
         )
 
         # -------------------------------------------------------------------
@@ -294,3 +329,26 @@ class GenericTools(object):
         flow.Select(node, False)
         flow.Select(loader_node, True)
         comp.SetActiveTool(loader_node)
+
+    @classmethod
+    def delete_recent_comps(cls):
+        """Deletes the Recent Comps value in the current preferences. This was
+        created to remedy the low performance bug under Fusion 9 and Windows.
+        It is not clear for now what happens under the other OSes.
+        """
+        import BlackmagicFusion as bmf
+        fusion = bmf.scriptapp("Fusion")
+        print("Erasing RecentComps value!")
+        fusion.SetPrefs('Global.RecentComps', {})
+        fusion.SavePrefs()
+
+    @classmethod
+    def set_frames_at_once(cls, count=1):
+        """Sets the frames at once value to the given number
+        :param count:
+        :return:
+        """
+        import BlackmagicFusion as bmf
+        fusion = bmf.scriptapp("Fusion")
+        comp = fusion.GetCurrentComp()
+        comp.SetPrefs("Comp.Memory.FramesAtOnce", count)
