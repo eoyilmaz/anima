@@ -446,7 +446,7 @@ This system will be updated in Afanasy."""
 
                 if response == 'No':
                     return
-        except pm.MayaNodeError:
+        except (pm.MayaNodeError, pm.MayaAttributeError):
             # no Arnold
             pass
 
@@ -866,16 +866,17 @@ This system will be updated in Afanasy."""
                         layer_name.replace('rs_', '')
                     )
 
-                outputs_split = afcommon.patternFromDigits(
-                    afcommon.patternFromStdC(
-                        afcommon.patternFromPaths(
-                            layer_outputs[0],
-                            layer_outputs[1]
-                        )
-                    )
-                ).split(';')
+                # disable output generation
+                # outputs_split = afcommon.patternFromDigits(
+                #     afcommon.patternFromStdC(
+                #         afcommon.patternFromPaths(
+                #             layer_outputs[0],
+                #             layer_outputs[0]
+                #         )
+                #     )
+                # ).split(';')
 
-                block.setFiles(outputs_split)
+                # block.setFiles(outputs_split)
 
                 block.setNumeric(
                     start_frame, end_frame, frames_per_task, by_frame
@@ -904,13 +905,14 @@ This system will be updated in Afanasy."""
                 renderer_to_block_type.get(render_engine, 'maya')
             )
 
-            block.setFiles(
-                afcommon.patternFromDigits(
-                    afcommon.patternFromStdC(
-                        afcommon.patternFromPaths(outputs[0], outputs[1])
-                    )
-                ).split(';')
-            )
+            # Disable output generation
+            # block.setFiles(
+            #     afcommon.patternFromDigits(
+            #         afcommon.patternFromStdC(
+            #             afcommon.patternFromPaths(outputs[0], outputs[0])
+            #         )
+            #     ).split(';')
+            # )
             block.setNumeric(
                 start_frame, end_frame, frames_per_task, by_frame
             )
