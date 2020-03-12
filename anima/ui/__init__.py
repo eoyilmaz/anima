@@ -59,4 +59,4 @@ def SET_PYQT4():
 def SET_QT():
     logger.debug('setting environment to Qt')
     global qt_lib
-    qt_lib = PYQT4
+    qt_lib = QTPY
