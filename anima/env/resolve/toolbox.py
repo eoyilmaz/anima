@@ -11,29 +11,18 @@ reload(toolbox)
 dialog = toolbox.UI()
 
 """
+import os
+
 
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
-# def ui():
-#     """returns the widget to Houdini
-#     """
-#     root_widget = QtWidgets.QWidget()
-#     tlb = ToolboxLayout()
-#     root_widget.setLayout(tlb)
-#     return root_widget
+__here__ = os.path.abspath(__file__)
+
 
 def UI(app_in=None, executor=None, **kwargs):
     """
-    :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
-
-    :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
-      mode.
-
     :param app_in: A Qt Application instance, which you can pass to let the UI
       be attached to the given applications event process.
 
@@ -57,7 +46,20 @@ class ToolboxDialog(QtWidgets.QDialog):
         """
         tlb = ToolboxLayout()
         self.setLayout(tlb)
-        pass
+
+        # setup icon
+        global __here__
+        icon_path = os.path.abspath(
+            os.path.join(__here__, "../../../ui/images/DaVinciResolve.png")
+        )
+        try:
+            icon = QtWidgets.QIcon(icon_path)
+        except AttributeError:
+            icon = QtGui.QIcon(icon_path)
+
+        self.setWindowIcon(icon)
+
+        self.setWindowTitle("DaVinci Resolve Toolbox")
 
 
 class ToolboxLayout(QtWidgets.QVBoxLayout):
@@ -98,9 +100,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         layout = QtWidgets.QHBoxLayout()
         general_tab_vertical_layout.addLayout(layout)
 
+        clip_index_label = QtWidgets.QLabel()
+        clip_index_label.setText("Clip Index")
         clip_index_spinbox = QtWidgets.QSpinBox()
         clip_index_spinbox.setMinimum(1)
 
+        version_index_label = QtWidgets.QLabel()
+        version_index_label.setText("Version")
         version_spinbox = QtWidgets.QSpinBox()
         version_spinbox.setMinimum(1)
 
@@ -114,7 +120,9 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             layout,
             clip_output_generator_wrapper
         )
+        layout.addWidget(clip_index_label)
         layout.addWidget(clip_index_spinbox)
+        layout.addWidget(version_index_label)
         layout.addWidget(version_spinbox)
 
         # -------------------------------------------------------------------
