@@ -107,7 +107,8 @@ def ui_caller(app_in, executor, ui_class, **kwargs):
         if not app_in:
             try:
                 app = QtWidgets.QApplication(sys.argv)
-            except AttributeError:  # sys.argv gives argv.error
+            except (TypeError, AttributeError):  # sys.argv gives argv.error or
+                                                 # Qt gives TypeError
                 app = QtWidgets.QApplication([])
         else:
             app = app_in
