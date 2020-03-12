@@ -1,59 +1,45 @@
 import os
+import imp
 import sys
 
 
 def get_bmd():
-    """this routine is directly from BlackMagic
+    """this routine is a modified version of DaVinciResolveScript.py from
+    BlackMagic Design
     """
+    bmd = None
     try:
-        # The PYTHONPATH needs to be set correctly for this import statement to
-        # work.
-        # An alternative is to import the DaVinciResolveScript by specifying
-        # absolute path (see ExceptionHandler logic)
-        import DaVinciResolveScript as bmd
+        import fusionscript as bmd
     except ImportError:
-        expected_path = ''
-        if sys.platform.startswith("darwin"):
-            expected_path = \
-                "/Library/Application Support/Blackmagic Design/DaVinci " \
-                "Resolve/Developer/Scripting/Modules/"
-        elif sys.platform.startswith("win") or \
-                sys.platform.startswith("cygwin"):
-            expected_path = os.path.normpath(
-                os.path.join(
-                    os.environ['PROGRAMDATA'],
-                    "Blackmagic Design/DaVinci Resolve/Support/Developer/"
-                    "Scripting/Modules/"
-                )
-            )
-        elif sys.platform.startswith("linux"):
-            expected_path = "/opt/resolve/libs/Fusion/Modules/"
+        # Look for installer based environment variables:
+        import os
+        lib_path = os.getenv("RESOLVE_SCRIPT_LIB")
+        if lib_path:
+            try:
+                bmd = imp.load_dynamic("fusionscript", lib_path)
+            except ImportError:
+                pass
+        if not bmd:
+            # Look for default install locations:
+            ext = ".so"
+            if sys.platform.startswith("darwin"):
+                path = "/Applications/DaVinci Resolve/DaVinci Resolve.app/Contents/Libraries/Fusion/"
+            elif sys.platform.startswith("win") or sys.platform.startswith("cygwin"):
+                ext = ".dll"
+                path = "C:\\Program Files\\Blackmagic Design\\DaVinci Resolve\\"
+            elif sys.platform.startswith("linux"):
+                path = "/opt/resolve/libs/Fusion/"
 
-        # check if the default path has it...
-        print(
-            "Unable to find module DaVinciResolveScript from $PYTHONPATH - "
-            "trying default locations"
-        )
-        try:
-            import imp
-            print('Trying to import DaVinciResolveScript!')
-            print('expected_path: %s' % expected_path)
-            bmd = imp.load_source(
-                'DaVinciResolveScript',
-                os.path.join(
-                    expected_path, "DaVinciResolveScript.py"
-                )
-            )
-        except ImportError:
-            # No fallbacks ... report error:
-            print("Unable to find module DaVinciResolveScript - please "
-                  "ensure that the module DaVinciResolveScript is "
-                  "discoverable by python")
-            print("For a default DaVinci Resolve installation, the module "
-                  "is expected to be located in: %s" % expected_path)
-            sys.exit()
+            try:
+                bmd = imp.load_dynamic("fusionscript", path + "fusionscript" + ext)
+            except ImportError:
+                pass
 
-    return bmd
+    if bmd:
+        sys.modules[__name__] = bmd
+        return bmd
+    else:
+        raise ImportError("Could not locate module dependencies")
 
 
 def get_resolve():
