@@ -89,11 +89,27 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         from anima.ui.utils import add_button
         # -------------------------------------------------------------------
         # Per Clip Output Generator
+        # create a new layout
+        layout = QtWidgets.QHBoxLayout()
+        general_tab_vertical_layout.addLayout(layout)
+
+        per_clip_version_label = QtWidgets.QLabel()
+        per_clip_version_label.setText("Version")
+        per_clip_version_spinbox = QtWidgets.QSpinBox()
+        per_clip_version_spinbox.setMinimum(1)
+
+        def per_clip_output_generator_wrapper():
+            version_number = per_clip_version_spinbox.value()
+            GenericTools.per_clip_output_generator(version_number)
+
         add_button(
             'Per Clip Output Generator',
-            general_tab_vertical_layout,
-            GenericTools.per_clip_output_generator
+            layout,
+            per_clip_output_generator_wrapper
         )
+
+        layout.addWidget(per_clip_version_label)
+        layout.addWidget(per_clip_version_spinbox)
 
         # Clip Output Generator
         # create a new layout
@@ -105,8 +121,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         clip_index_spinbox = QtWidgets.QSpinBox()
         clip_index_spinbox.setMinimum(1)
 
-        version_index_label = QtWidgets.QLabel()
-        version_index_label.setText("Version")
+        version_label = QtWidgets.QLabel()
+        version_label.setText("Version")
         version_spinbox = QtWidgets.QSpinBox()
         version_spinbox.setMinimum(1)
 
@@ -122,7 +138,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         )
         layout.addWidget(clip_index_label)
         layout.addWidget(clip_index_spinbox)
-        layout.addWidget(version_index_label)
+        layout.addWidget(version_label)
         layout.addWidget(version_spinbox)
 
         # -------------------------------------------------------------------
