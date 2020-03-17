@@ -93,7 +93,7 @@ def open_browser_in_location(path):
 
     if os.path.exists(path):
         import subprocess
-        subprocess.call(command, shell=True)
+        subprocess.Popen(command, shell=True)
     else:
         raise IOError("%s doesn't exists!" % path)
 
