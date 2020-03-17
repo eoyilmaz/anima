@@ -41,6 +41,11 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         main_tab_widget = QtWidgets.QTabWidget(self.widget())
         self.addWidget(main_tab_widget)
 
+        # *********************************************************************
+        #
+        # GENERAL TAB
+        #
+        # *********************************************************************
         # add the General Tab
         general_tab_widget = QtWidgets.QWidget(self.widget())
         general_tab_vertical_layout = QtWidgets.QVBoxLayout()
@@ -97,6 +102,40 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
+
+        # *********************************************************************
+        #
+        # CROWD TAB
+        #
+        # *********************************************************************
+
+        # add the Crowd Tab
+        crowd_tab_widget = QtWidgets.QWidget(self.widget())
+        crowd_tab_vertical_layout = QtWidgets.QVBoxLayout()
+        crowd_tab_widget.setLayout(crowd_tab_vertical_layout)
+
+        main_tab_widget.addTab(crowd_tab_widget, 'Crowd')
+
+        # crowd_tools_label = QtWidgets.QLabel("Crowd Tools")
+        # crowd_tab_vertical_layout.addWidget(crowd_tools_label)
+
+        from anima.env.houdini import crowd_tools
+        # Bake Setup
+        add_button(
+            'Create Bake Setup',
+            crowd_tab_vertical_layout,
+            crowd_tools.create_bake_setup
+        )
+        # Bake Setup
+        add_button(
+            'Create Render Setup',
+            crowd_tab_vertical_layout,
+            crowd_tools.create_render_setup
+        )
+
+        # -------------------------------------------------------------------
+        # Add the stretcher
+        crowd_tab_vertical_layout.addStretch()
 
 
 class GenericTools(object):
