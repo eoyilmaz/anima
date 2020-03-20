@@ -99,6 +99,31 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.export_rsproxy_data_as_json
         )
 
+        # Batch Rename
+        batch_rename_layout = QtWidgets.QHBoxLayout()
+        general_tab_vertical_layout.addLayout(batch_rename_layout)
+
+        search_field = QtWidgets.QLineEdit()
+        search_field.setPlaceholderText("Search")
+        replace_field = QtWidgets.QLineEdit()
+        replace_field.setPlaceholderText("Replace")
+        # replace_button = QtWidgets.QPushButton()
+        # replace_button.setText("Search && Replace")
+        batch_rename_layout.addWidget(search_field)
+        batch_rename_layout.addWidget(replace_field)
+        # batch_rename_layout.addWidget(replace_button)
+
+        def search_and_replace_callback():
+            search_str = search_field.text()
+            replace_str = replace_field.text()
+            GenericTools.rename_selected_nodes(search_str, replace_str)
+
+        add_button(
+            "Search && Replace",
+            batch_rename_layout,
+            search_and_replace_callback
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -246,3 +271,17 @@ class GenericTools(object):
         import json
         with open(path, "w") as f:
             f.write(json.dumps(json_data))
+
+    @classmethod
+    def rename_selected_nodes(cls, search_str, replace_str):
+        """Batch renames selected nodes
+
+        :param str search_str: Search for this
+        :param str replace_str: And replace with this
+        :return:
+        """
+        import hou
+        selection = hou.selectedNodes()
+        for node in selection:
+            name = node.name()
+            node.setName(name.replace(search_str, replace_str))
