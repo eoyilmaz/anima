@@ -92,11 +92,30 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.update_render_settings
         )
 
+        def export_rsproxy_data_as_json_callback():
+            """
+            """
+            import hou
+            try:
+                GenericTools.export_rsproxy_data_as_json()
+            except (BaseException, hou.OperationFailed) as e:
+                QtWidgets.QMessageBox.critical(
+                    main_tab_widget,
+                    "Export",
+                    "Error!<br><br>%s" % e
+                )
+            else:
+                QtWidgets.QMessageBox.information(
+                    main_tab_widget,
+                    "Export",
+                    "Data has been exported correctly!"
+                )
+
         # Export RSProxy Data As JSON
         add_button(
             'Export RSProxy Data As JSON',
             general_tab_vertical_layout,
-            GenericTools.export_rsproxy_data_as_json
+            export_rsproxy_data_as_json_callback
         )
 
         # Batch Rename
@@ -107,16 +126,22 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         search_field.setPlaceholderText("Search")
         replace_field = QtWidgets.QLineEdit()
         replace_field.setPlaceholderText("Replace")
-        # replace_button = QtWidgets.QPushButton()
-        # replace_button.setText("Search && Replace")
+        replace_in_child_nodes_check_box = QtWidgets.QCheckBox()
+        replace_in_child_nodes_check_box.setToolTip("Replace In Child Nodes")
+        replace_in_child_nodes_check_box.setChecked(False)
+
         batch_rename_layout.addWidget(search_field)
         batch_rename_layout.addWidget(replace_field)
-        # batch_rename_layout.addWidget(replace_button)
+        batch_rename_layout.addWidget(replace_in_child_nodes_check_box)
 
         def search_and_replace_callback():
             search_str = search_field.text()
             replace_str = replace_field.text()
-            GenericTools.rename_selected_nodes(search_str, replace_str)
+            GenericTools.rename_selected_nodes(
+                search_str,
+                replace_str,
+                replace_in_child_nodes_check_box.isChecked()
+            )
 
         add_button(
             "Search && Replace",
@@ -248,7 +273,6 @@ class GenericTools(object):
             path = os.path.normpath(
                 os.path.join(
                     tempfile.gettempdir(),
-                    '..',
                     'rsproxy_info.json'
                 )
             )
@@ -273,7 +297,7 @@ class GenericTools(object):
             f.write(json.dumps(json_data))
 
     @classmethod
-    def rename_selected_nodes(cls, search_str, replace_str):
+    def rename_selected_nodes(cls, search_str, replace_str, replace_in_child_nodes=False):
         """Batch renames selected nodes
 
         :param str search_str: Search for this
@@ -285,3 +309,7 @@ class GenericTools(object):
         for node in selection:
             name = node.name()
             node.setName(name.replace(search_str, replace_str))
+            if replace_in_child_nodes:
+                for child_node in node.children():
+                    name = child_node.name()
+                    child_node.setName(name.replace(search_str, replace_str))
