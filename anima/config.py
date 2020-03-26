@@ -55,6 +55,9 @@ class Config(ConfigBase):
         _status_colors_by_id={},
         _user_names_lut={},  # a table for fast user name look up,
 
+        cut_in=1001,
+        cut_out=1100,
+
         task_template={
             
             "Asset": {

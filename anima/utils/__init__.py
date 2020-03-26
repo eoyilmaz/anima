@@ -1717,9 +1717,13 @@ def duplicate_task(task, user, keep_resources=False):
         logger.debug('generating unique shot name!')
         shot_name = generate_unique_shot_name(task.name)
 
+        from anima import defaults
         extra_kwargs = {
             'name': shot_name,
-            'code': shot_name
+            'code': shot_name,
+
+            'cut_in': defaults.cut_in,  # use the default values for cut in and cut out
+            'cut_out': defaults.cut_out,
         }
     elif task.entity_type == 'Sequence':
         from stalker import Sequence

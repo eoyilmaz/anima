@@ -761,12 +761,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             [''] + map(lambda x: x[0], all_sequence_names)
         )
 
-        self.cut_in_spin_box.setValue(1001)
-        self.cut_out_spin_box.setValue(1100)
+        from anima import defaults
+        self.cut_in_spin_box.setValue(defaults.cut_in)
+        self.cut_out_spin_box.setValue(defaults.cut_out)
 
         # schedule info defaults
         # schedule timing
-        from anima import defaults
         self.schedule_timing_spin_box.setValue(10)
 
         # schedule unit
