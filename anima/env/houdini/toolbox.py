@@ -65,6 +65,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.version_creator
         )
 
+        # Browse $HIP
         add_button(
             'Browse $HIP',
             general_tab_vertical_layout,
@@ -147,6 +148,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             "Search && Replace",
             batch_rename_layout,
             search_and_replace_callback
+        )
+
+        # Import Shaders From Maya
+        add_button(
+            'Import Shaders From Maya',
+            general_tab_vertical_layout,
+            GenericTools.import_shaders_from_maya
         )
 
         # -------------------------------------------------------------------
@@ -313,3 +321,73 @@ class GenericTools(object):
                 for child_node in node.children():
                     name = child_node.name()
                     child_node.setName(name.replace(search_str, replace_str))
+
+    @classmethod
+    def import_shaders_from_maya(cls):
+        """Imports shader assignment info from Maya.
+
+        Use the Maya counterpart to export the assignment data
+        """
+        import os
+        import tempfile
+        shader_data_temp_file_path = os.path.join(
+            tempfile.gettempdir(),
+            'shader_data'
+        )
+
+        import hou
+        selected_nodes = hou.selectedNodes()
+        if not selected_nodes:
+            raise RuntimeError("Please select a node!")
+
+        base_node = selected_nodes[0]
+
+        # read the json data
+        import json
+        with open(shader_data_temp_file_path, "r") as f:
+            shader_assignment_data = json.load(f)
+
+        current_context = base_node.parent()
+        # create Material SOP node
+        material_sop_node = current_context.createNode(
+            "material"
+        )
+
+        # create material slots
+        material_sop_node\
+            .parm("num_materials")\
+            .set(len(shader_assignment_data))
+
+        # connect the material to the selected node
+        material_sop_node.setInput(0, base_node)
+
+        material_context = hou.node('/mat')
+        for i, shader_name in enumerate(shader_assignment_data):
+            # create a new material for each shader name
+            # Use RSMaterial for now
+
+            # first check if the shader exists
+            shader = hou.node("/mat/%s" % shader_name)
+
+            if not shader:
+                # create an RSMaterial
+                shader = material_context.createNode(
+                    "redshift::Material",
+                    shader_name,
+                )
+
+            # create entries in the Material SOP
+            # set group field
+            material_sop_node.parm("group%s" % (i + 1)).set(
+                " ".join(
+                    map(
+                        lambda x: "@path=%s" % x,
+                        shader_assignment_data[shader_name]
+                    )
+                )
+            )
+
+            # set material field
+            material_sop_node.parm("shop_materialpath%s" % (i + 1)).set(
+                shader.path()
+            )

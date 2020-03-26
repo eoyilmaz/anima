@@ -47,6 +47,11 @@ class Render(object):
         'attr_info'
     )
 
+    shader_data_temp_file_path = os.path.join(
+        tempfile.gettempdir(),
+        'shader_data'
+    )
+
     @classmethod
     def assign_random_material_color(cls):
         """assigns a lambert with a random color to the selected object
@@ -1258,6 +1263,49 @@ class Render(object):
         import json
         with open(cls.node_attr_info_temp_file_path, 'w') as f:
             json.dump(data, f)
+
+    @classmethod
+    def export_shader_assignments_to_houdini(cls):
+        """Exports shader assignments to Houdini via a JSON file.
+
+        Use the Houdini counterpart to import the assignment data
+        """
+        shaders = pm.selected()
+
+        # get the shapes for each shader
+        shader_assignments = {}
+
+        for shader in shaders:
+            shader_name = shader.name()
+            shading_engines = shader.outputs(type=pm.nt.ShadingEngine)
+            if not shading_engines:
+                continue
+            shading_engine = shading_engines[0]
+            shader_assignments[shader_name] = []
+
+            assigned_nodes = pm.sets(shading_engine, q=1)
+            for assigned_node in assigned_nodes:
+                shape = assigned_node.node()
+
+                # get the full path of the shape
+                shape_full_path = shape.fullPath().replace('|', '/')
+                shader_assignments[shader_name].append(shape_full_path)
+
+        # write data
+        try:
+            import json
+            with open(cls.shader_data_temp_file_path, 'w') as f:
+                json.dump(shader_assignments, f)
+        except BaseException as e:
+            pm.confirmDialog(
+                title='Error', message="%s" % e, button='OK'
+            )
+        else:
+            pm.confirmDialog(
+                title='Successful',
+                message="Shader Data exported succesfully!",
+                button='OK'
+            )
 
     @classmethod
     def import_shader_attributes(cls):
