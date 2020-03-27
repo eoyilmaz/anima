@@ -76,6 +76,9 @@ class Houdini(EnvironmentBase):
         # set the environment variables
         self.set_environment_variables(version)
 
+        # update qLib Shot node
+        self.update_shot_node(version)
+
         # set the render file name
         self.set_render_filename(version)
 
@@ -322,6 +325,49 @@ class Houdini(EnvironmentBase):
         """returns the current fps
         """
         return int(hou.fps())
+
+    def get_shot_node(self):
+        """returns or creates qLib shot node
+        """
+        ql_shot_node_type = "qLib::shot_ql::1"
+        obj_context = hou.node("/obj")
+        for child in obj_context.children():
+            if child.type().name() == ql_shot_node_type:
+                return child
+
+        # so we couldn't find the shot node
+        # creat a new one
+        try:
+            shot_node = obj_context.createNode(ql_shot_node_type)
+        except hou.OperationFailed:
+            return
+        else:
+            return shot_node
+
+    def update_shot_node(self, version):
+        """sets the qLib shot node information
+
+        :param version:
+        :return:
+        """
+        task = version.task
+        project = task.project
+        shot_node = self.get_shot_node()
+        if not shot_node:
+            # qLib is not installed
+            return
+
+        shot_node.parm("proj").set(project.name)
+        shot_node.parm("projs").set(project.code)
+
+        from stalker import Shot
+        if task.parent and isinstance(task.parent, Shot):
+            shot = task.parent
+            shot_node.parm("frangex").set(shot.cut_in)
+            shot_node.parm("frangey").set(shot.cut_out)
+
+        shot_node.parm("shot").set(version.nice_name)
+        shot_node.parm("name_shot_node").pressButton()
 
     def set_render_filename(self, version):
         """sets the render file name
