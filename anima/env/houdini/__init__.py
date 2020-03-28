@@ -361,13 +361,20 @@ class Houdini(EnvironmentBase):
         shot_node.parm("projs").set(project.code)
 
         from stalker import Shot
+        image_format = project.image_format
         if task.parent and isinstance(task.parent, Shot):
             shot = task.parent
             shot_node.parm("frangex").set(shot.cut_in)
             shot_node.parm("frangey").set(shot.cut_out)
+            width = project.image_format.width
+            height = project.image_format.height
+            image_format = shot.image_format
 
         shot_node.parm("shot").set(version.nice_name)
         shot_node.parm("name_shot_node").pressButton()
+
+        shot_node.parm("cam_resx").set(image_format.width)
+        shot_node.parm("cam_resy").set(image_format.height)
 
     def set_render_filename(self, version):
         """sets the render file name
