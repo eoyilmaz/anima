@@ -366,8 +366,6 @@ class Houdini(EnvironmentBase):
             shot = task.parent
             shot_node.parm("frangex").set(shot.cut_in)
             shot_node.parm("frangey").set(shot.cut_out)
-            width = project.image_format.width
-            height = project.image_format.height
             image_format = shot.image_format
 
         shot_node.parm("shot").set(version.nice_name)
