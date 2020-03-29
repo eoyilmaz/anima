@@ -295,6 +295,13 @@ class TaskTreeView(QtWidgets.QTreeView):
                         create_sub_menu.addAction(
                             u'\uf0ae Create Child Task...'
                         )
+                    # Export and Import JSON
+                    create_sub_menu.addSeparator()
+                    export_to_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+
+                    import_from_json_action = \
+                        create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
 
         if entity:
             # separate the Project and Task related menu items
@@ -667,13 +674,19 @@ class TaskTreeView(QtWidgets.QTreeView):
                             with open(file_path) as f:
                                 data = json.load(f)
                             from anima.utils import task_hierarchy_io
-                            project = entity.project
+                            if isinstance(entity, Task):
+                                project = entity.project
+                            elif isinstance(entity, Project):
+                                project = entity
+
                             decoder = \
                                 task_hierarchy_io.StalkerEntityDecoder(
                                     project=project
                                 )
                             loaded_entity = decoder.loads(data)
-                            loaded_entity.parent = entity
+
+                            if isinstance(entity, Task):
+                                loaded_entity.parent = entity
 
                             # TODO: Check if there is an existing entity with
                             # the same name
