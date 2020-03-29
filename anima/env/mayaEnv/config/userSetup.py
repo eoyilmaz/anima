@@ -169,17 +169,16 @@ if not pm.general.about(batch=1):
                 pass
 
 
-        mayautils.executeDeferred(load_arnold)
+        # mayautils.executeDeferred(load_arnold)
         mayautils.executeDeferred(load_redshift)
         mayautils.executeDeferred(__plugin_loader, 'AbcExport')
         mayautils.executeDeferred(__plugin_loader, 'AbcImport')
-        mayautils.executeDeferred(__plugin_loader, 'gpuCache')
+        # mayautils.executeDeferred(__plugin_loader, 'gpuCache')
         mayautils.executeDeferred(__plugin_loader, 'objExport')
-        mayautils.executeDeferred(__plugin_loader, 'closestPointOnCurve.py')
-        mayautils.executeDeferred(__plugin_loader, 'fbxmaya')
-        mayautils.executeDeferred(__plugin_loader, 'OpenEXRLoader')
-        mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
-        mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
+        # mayautils.executeDeferred(__plugin_loader, 'closestPointOnCurve.py')
+        # mayautils.executeDeferred(__plugin_loader, 'fbxmaya')
+        # mayautils.executeDeferred(__plugin_loader, 'OpenEXRLoader')
+        # mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
 
 # set CMD_EXTENSION for Afanasy
 os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
