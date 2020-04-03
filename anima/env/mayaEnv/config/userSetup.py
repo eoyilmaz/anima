@@ -181,7 +181,7 @@ if not pm.general.about(batch=1):
         # mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
 
 # set CMD_EXTENSION for Afanasy
-os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
+#os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
 
 # create environment variables for each Repository
 pm.evalDeferred("from anima import utils; utils.do_db_setup();")
