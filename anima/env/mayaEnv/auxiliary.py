@@ -2127,7 +2127,8 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     for cacheable_node_name in sorted(cacheable_node_references):
         # load the reference first
         ref = cacheable_node_references[cacheable_node_name]['ref']
-        ref.load()
+        if ref:
+            ref.load()
         cacheable_node = pm.PyNode(cacheable_node_name)
 
         # load related_references
@@ -2239,7 +2240,8 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             pm.isolateSelect(panel, state=0)
 
         # unload the reference
-        ref.unload()
+        if ref:
+            ref.unload()
         # and unload the related references
         for related_ref in related_refs:
             related_ref.unload()
