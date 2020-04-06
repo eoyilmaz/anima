@@ -181,10 +181,11 @@ class StalkerEntityEncoder(json.JSONEncoder):
 class StalkerEntityDecoder(object):
     """Decoder for Stalker classes
     """
-    def __init__(self, project):
+    def __init__(self, project, parent=None):
         self.project = project
+        self.parent = None
 
-    def loads(self, data):
+    def loads(self, data, parent=None):
         """Decodes Stalker data
 
         :param data:
@@ -210,12 +211,10 @@ class StalkerEntityDecoder(object):
         elif entity_type == 'Sequence':
             entity_class = Sequence
 
-        version_data = data['versions']
-        data['versions'] = []
         # get the type
         if 'type' in data:
             type_data = data['type']
-            if type_data:
+            if type_data and not isinstance(type_data, Type):
                 type_name = type_data['name']
                 type_ = Type.query.filter(Type.name == type_name).first()
                 if not type_:
@@ -223,24 +222,57 @@ class StalkerEntityDecoder(object):
                     type_ = Type(**type_data)
                 data['type'] = type_
 
+        # store version data
+        version_data = data['versions']
+        data['versions'] = []
+
         data['project'] = self.project
-        entity = entity_class(**data)
-        DBSession.add(entity)
-        DBSession.commit()
+
+        # check if the data exists before creating it
+        entity = entity_class.query\
+            .filter(entity_class.project==self.project)\
+            .filter(entity_class.parent==parent)\
+            .filter(entity_class.name==data['name'])\
+            .first()
+
+        if not entity:
+            # then create it
+            entity = entity_class(**data)
+            DBSession.add(entity)
+            DBSession.commit()
 
         # create Versions
         if version_data:
             for v_data in version_data:
-                # get Version info
-                v_data['task'] = entity
-                v = Version(**v_data)
-                # update version_number
-                v.version_number = v_data['version_number']
-                v.is_published = v_data['is_published']
+
+                # check version number and take name
+                # if there is a version with the same version_number
+                # don't create it
+                take_name = v_data['take_name']
+                version_number = v_data['version_number']
+
+                v = Version.query\
+                    .filter(Version.task==entity)\
+                    .filter(Version.take_name==take_name)\
+                    .filter(Version.version_number==version_number)\
+                    .first()
+
+                if not v:
+                    # then create it
+                    # get Version info
+                    v_data['task'] = entity
+                    v = Version(**v_data)
+                    # update version_number
+                    v.version_number = v_data['version_number']
+                    v.is_published = v_data['is_published']
+
+            DBSession.commit()
 
         # for each child task call a new StalkerEntityDecoder
         for t in data['tasks']:
-            child_task = self.loads(t)
-            entity.tasks.append(child_task)
+            self.loads(t, parent=entity)
+
+        if parent:
+            entity.parent = parent
 
         return entity

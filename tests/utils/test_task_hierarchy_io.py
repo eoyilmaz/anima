@@ -4,6 +4,10 @@
 # This module is part of anima-tools and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 
+import os
+
+__here__ = os.path.dirname(__file__)
+
 
 def test_creating_test_data(create_db, create_project):
     """testing if the test project is created correctly
@@ -19,7 +23,7 @@ def test_creating_test_data(create_db, create_project):
 
 
 def test_stalker_entity_encoder_is_working_properly(create_db, create_project):
-    """testing if JSON Encode
+    """testing if JSON Encoder will export data to JSON properly
     """
     from stalker import Task
     project = create_project
@@ -32,600 +36,403 @@ def test_stalker_entity_encoder_is_working_properly(create_db, create_project):
     data = json.dumps(assets_task, cls=task_hierarchy_io.StalkerEntityEncoder,
                       check_circular=False, indent=4)
 
-    expected_data = """{
-    "tasks": [
-        {
-            "tasks": [
-                {
-                    "asset_id": 56, 
-                    "versions": [], 
-                    "code": "Char1", 
-                    "description": "", 
-                    "entity_type": "Asset", 
-                    "type_id": 37, 
-                    "schedule_constraint": 0, 
-                    "schedule_unit": "h", 
-                    "tasks": [
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 41, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Model", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char1/Model", 
-                            "type": {
-                                "code": "Model", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 41, 
-                                "type": null, 
-                                "name": "Model"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 42, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "LookDev", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char1/LookDev", 
-                            "type": {
-                                "code": "LookDev", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 42, 
-                                "type": null, 
-                                "name": "Look Development"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 43, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Rig", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char1/Rig", 
-                            "type": {
-                                "code": "Rig", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 43, 
-                                "type": null, 
-                                "name": "Rig"
-                            }, 
-                            "schedule_model": "effort"
-                        }
-                    ], 
-                    "schedule_timing": 1.0, 
-                    "path": "$REPO/TP/Assets/Characters/Char1", 
-                    "schedule_model": "effort", 
-                    "type": {
-                        "code": "Char", 
-                        "description": "", 
-                        "entity_type": "Type", 
-                        "type_id": null, 
-                        "target_entity_type": "Asset", 
-                        "type_id_local": 37, 
-                        "type": null, 
-                        "name": "Character"
-                    }, 
-                    "name": "Char1"
-                }, 
-                {
-                    "asset_id": 60, 
-                    "versions": [], 
-                    "code": "Char2", 
-                    "description": "", 
-                    "entity_type": "Asset", 
-                    "type_id": 37, 
-                    "schedule_constraint": 0, 
-                    "schedule_unit": "h", 
-                    "tasks": [
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 41, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Model", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char2/Model", 
-                            "type": {
-                                "code": "Model", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 41, 
-                                "type": null, 
-                                "name": "Model"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 42, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "LookDev", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char2/LookDev", 
-                            "type": {
-                                "code": "LookDev", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 42, 
-                                "type": null, 
-                                "name": "Look Development"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 43, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Rig", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Characters/Char2/Rig", 
-                            "type": {
-                                "code": "Rig", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 43, 
-                                "type": null, 
-                                "name": "Rig"
-                            }, 
-                            "schedule_model": "effort"
-                        }
-                    ], 
-                    "schedule_timing": 1.0, 
-                    "path": "$REPO/TP/Assets/Characters/Char2", 
-                    "schedule_model": "effort", 
-                    "type": {
-                        "code": "Char", 
-                        "description": "", 
-                        "entity_type": "Type", 
-                        "type_id": null, 
-                        "target_entity_type": "Asset", 
-                        "type_id_local": 37, 
-                        "type": null, 
-                        "name": "Character"
-                    }, 
-                    "name": "Char2"
-                }
-            ], 
-            "description": "", 
-            "entity_type": "Task", 
-            "type_id": null, 
-            "schedule_constraint": 0, 
-            "schedule_unit": "h", 
-            "name": "Characters", 
-            "versions": [], 
-            "schedule_timing": 1.0, 
-            "path": "$REPO/TP/Assets/Characters", 
-            "type": null, 
-            "schedule_model": "effort"
-        }, 
-        {
-            "tasks": [
-                {
-                    "asset_id": 64, 
-                    "versions": [], 
-                    "code": "Prop2", 
-                    "description": "", 
-                    "entity_type": "Asset", 
-                    "type_id": 38, 
-                    "schedule_constraint": 0, 
-                    "schedule_unit": "h", 
-                    "tasks": [
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 41, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Model", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Props/Prop2/Model", 
-                            "type": {
-                                "code": "Model", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 41, 
-                                "type": null, 
-                                "name": "Model"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 42, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "LookDev", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Props/Prop2/LookDev", 
-                            "type": {
-                                "code": "LookDev", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 42, 
-                                "type": null, 
-                                "name": "Look Development"
-                            }, 
-                            "schedule_model": "effort"
-                        }
-                    ], 
-                    "schedule_timing": 1.0, 
-                    "path": "$REPO/TP/Assets/Props/Prop2", 
-                    "schedule_model": "effort", 
-                    "type": {
-                        "code": "Prop", 
-                        "description": "", 
-                        "entity_type": "Type", 
-                        "type_id": null, 
-                        "target_entity_type": "Asset", 
-                        "type_id_local": 38, 
-                        "type": null, 
-                        "name": "Prop"
-                    }, 
-                    "name": "Prop2"
-                }, 
-                null
-            ], 
-            "description": "", 
-            "entity_type": "Task", 
-            "type_id": null, 
-            "schedule_constraint": 0, 
-            "schedule_unit": "h", 
-            "name": "Props", 
-            "versions": [], 
-            "schedule_timing": 1.0, 
-            "path": "$REPO/TP/Assets/Props", 
-            "type": null, 
-            "schedule_model": "effort"
-        }, 
-        {
-            "tasks": [
-                {
-                    "asset_id": 70, 
-                    "versions": [], 
-                    "code": "Env1", 
-                    "description": "", 
-                    "entity_type": "Asset", 
-                    "type_id": 39, 
-                    "schedule_constraint": 0, 
-                    "schedule_unit": "h", 
-                    "tasks": [
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 44, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Layout", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Environments/Env1/Layout", 
-                            "type": {
-                                "code": "Layout", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 44, 
-                                "type": null, 
-                                "name": "Layout"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [
-                                {
-                                    "asset_id": 73, 
-                                    "versions": [], 
-                                    "code": "Yapi1", 
-                                    "description": "", 
-                                    "entity_type": "Asset", 
-                                    "type_id": 38, 
-                                    "schedule_constraint": 0, 
-                                    "schedule_unit": "h", 
-                                    "tasks": [
-                                        {
-                                            "tasks": [], 
-                                            "description": "", 
-                                            "entity_type": "Task", 
-                                            "type_id": 41, 
-                                            "schedule_constraint": 0, 
-                                            "schedule_unit": "h", 
-                                            "name": "Model", 
-                                            "versions": [], 
-                                            "schedule_timing": 1.0, 
-                                            "path": "$REPO/TP/Assets/Environments/Env1/Props/Yapi1/Model", 
-                                            "type": {
-                                                "code": "Model", 
-                                                "description": "", 
-                                                "entity_type": "Type", 
-                                                "type_id": null, 
-                                                "target_entity_type": "Task", 
-                                                "type_id_local": 41, 
-                                                "type": null, 
-                                                "name": "Model"
-                                            }, 
-                                            "schedule_model": "effort"
-                                        }, 
-                                        {
-                                            "tasks": [], 
-                                            "description": "", 
-                                            "entity_type": "Task", 
-                                            "type_id": 42, 
-                                            "schedule_constraint": 0, 
-                                            "schedule_unit": "h", 
-                                            "name": "LookDev", 
-                                            "versions": [], 
-                                            "schedule_timing": 1.0, 
-                                            "path": "$REPO/TP/Assets/Environments/Env1/Props/Yapi1/LookDev", 
-                                            "type": {
-                                                "code": "LookDev", 
-                                                "description": "", 
-                                                "entity_type": "Type", 
-                                                "type_id": null, 
-                                                "target_entity_type": "Task", 
-                                                "type_id_local": 42, 
-                                                "type": null, 
-                                                "name": "Look Development"
-                                            }, 
-                                            "schedule_model": "effort"
-                                        }
-                                    ], 
-                                    "schedule_timing": 1.0, 
-                                    "path": "$REPO/TP/Assets/Environments/Env1/Props/Yapi1", 
-                                    "schedule_model": "effort", 
-                                    "type": {
-                                        "code": "Prop", 
-                                        "description": "", 
-                                        "entity_type": "Type", 
-                                        "type_id": null, 
-                                        "target_entity_type": "Asset", 
-                                        "type_id_local": 38, 
-                                        "type": null, 
-                                        "name": "Prop"
-                                    }, 
-                                    "name": "Yapi1"
-                                }
-                            ], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": null, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Props", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Environments/Env1/Props", 
-                            "type": null, 
-                            "schedule_model": "effort"
-                        }
-                    ], 
-                    "schedule_timing": 1.0, 
-                    "path": "$REPO/TP/Assets/Environments/Env1", 
-                    "schedule_model": "effort", 
-                    "type": {
-                        "code": "Exterior", 
-                        "description": "", 
-                        "entity_type": "Type", 
-                        "type_id": null, 
-                        "target_entity_type": "Asset", 
-                        "type_id_local": 39, 
-                        "type": null, 
-                        "name": "Exterior"
-                    }, 
-                    "name": "Env1"
-                }, 
-                {
-                    "asset_id": 76, 
-                    "versions": [], 
-                    "code": "Env2", 
-                    "description": "", 
-                    "entity_type": "Asset", 
-                    "type_id": 39, 
-                    "schedule_constraint": 0, 
-                    "schedule_unit": "h", 
-                    "tasks": [
-                        {
-                            "tasks": [], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": 44, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Layout", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Environments/Env2/Layout", 
-                            "type": {
-                                "code": "Layout", 
-                                "description": "", 
-                                "entity_type": "Type", 
-                                "type_id": null, 
-                                "target_entity_type": "Task", 
-                                "type_id_local": 44, 
-                                "type": null, 
-                                "name": "Layout"
-                            }, 
-                            "schedule_model": "effort"
-                        }, 
-                        {
-                            "tasks": [
-                                {
-                                    "asset_id": 79, 
-                                    "versions": [], 
-                                    "code": "Yapi2", 
-                                    "description": "", 
-                                    "entity_type": "Asset", 
-                                    "type_id": 38, 
-                                    "schedule_constraint": 0, 
-                                    "schedule_unit": "h", 
-                                    "tasks": [
-                                        {
-                                            "tasks": [], 
-                                            "description": "", 
-                                            "entity_type": "Task", 
-                                            "type_id": 41, 
-                                            "schedule_constraint": 0, 
-                                            "schedule_unit": "h", 
-                                            "name": "Model", 
-                                            "versions": [], 
-                                            "schedule_timing": 1.0, 
-                                            "path": "$REPO/TP/Assets/Environments/Env2/Props/Yapi2/Model", 
-                                            "type": {
-                                                "code": "Model", 
-                                                "description": "", 
-                                                "entity_type": "Type", 
-                                                "type_id": null, 
-                                                "target_entity_type": "Task", 
-                                                "type_id_local": 41, 
-                                                "type": null, 
-                                                "name": "Model"
-                                            }, 
-                                            "schedule_model": "effort"
-                                        }, 
-                                        {
-                                            "tasks": [], 
-                                            "description": "", 
-                                            "entity_type": "Task", 
-                                            "type_id": 42, 
-                                            "schedule_constraint": 0, 
-                                            "schedule_unit": "h", 
-                                            "name": "LookDev", 
-                                            "versions": [], 
-                                            "schedule_timing": 1.0, 
-                                            "path": "$REPO/TP/Assets/Environments/Env2/Props/Yapi2/LookDev", 
-                                            "type": {
-                                                "code": "LookDev", 
-                                                "description": "", 
-                                                "entity_type": "Type", 
-                                                "type_id": null, 
-                                                "target_entity_type": "Task", 
-                                                "type_id_local": 42, 
-                                                "type": null, 
-                                                "name": "Look Development"
-                                            }, 
-                                            "schedule_model": "effort"
-                                        }
-                                    ], 
-                                    "schedule_timing": 1.0, 
-                                    "path": "$REPO/TP/Assets/Environments/Env2/Props/Yapi2", 
-                                    "schedule_model": "effort", 
-                                    "type": {
-                                        "code": "Prop", 
-                                        "description": "", 
-                                        "entity_type": "Type", 
-                                        "type_id": null, 
-                                        "target_entity_type": "Asset", 
-                                        "type_id_local": 38, 
-                                        "type": null, 
-                                        "name": "Prop"
-                                    }, 
-                                    "name": "Yapi2"
-                                }
-                            ], 
-                            "description": "", 
-                            "entity_type": "Task", 
-                            "type_id": null, 
-                            "schedule_constraint": 0, 
-                            "schedule_unit": "h", 
-                            "name": "Props", 
-                            "versions": [], 
-                            "schedule_timing": 1.0, 
-                            "path": "$REPO/TP/Assets/Environments/Env2/Props", 
-                            "type": null, 
-                            "schedule_model": "effort"
-                        }
-                    ], 
-                    "schedule_timing": 1.0, 
-                    "path": "$REPO/TP/Assets/Environments/Env2", 
-                    "schedule_model": "effort", 
-                    "type": {
-                        "code": "Exterior", 
-                        "description": "", 
-                        "entity_type": "Type", 
-                        "type_id": null, 
-                        "target_entity_type": "Asset", 
-                        "type_id_local": 39, 
-                        "type": null, 
-                        "name": "Exterior"
-                    }, 
-                    "name": "Env2"
-                }
-            ], 
-            "description": "", 
-            "entity_type": "Task", 
-            "type_id": null, 
-            "schedule_constraint": 0, 
-            "schedule_unit": "h", 
-            "name": "Environments", 
-            "versions": [], 
-            "schedule_timing": 1.0, 
-            "path": "$REPO/TP/Assets/Environments", 
-            "type": null, 
-            "schedule_model": "effort"
-        }
-    ], 
-    "description": "", 
-    "entity_type": "Task", 
-    "type_id": null, 
-    "schedule_constraint": 0, 
-    "schedule_unit": "h", 
-    "name": "Assets", 
-    "versions": [], 
-    "schedule_timing": 1.0, 
-    "path": "$REPO/TP/Assets", 
-    "type": null, 
-    "schedule_model": "effort"
-}"""
+    global __here__
+
+    with open(os.path.join(__here__, "data", "test_template2.json")) as f:
+        expected_data = f.read()
 
     assert data == expected_data
+
+
+def test_stalker_entity_decoder_will_create_new_data(create_db, create_empty_project):
+    """testing if JSON decoder will create new data
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template3.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # now there should be only one Assets task
+    from stalker import Task
+    assets_task = Task.query.filter(Task.name=='Assets').first()
+
+    assert isinstance(assets_task, Task)
+    assert assets_task.name == 'Assets'
+
+
+def test_stalker_entity_decoder_will_not_create_existing_tasks(create_db, create_empty_project):
+    """testing if JSON decoder will not recreate existing data
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template3.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # now there should be only one Assets task
+    from stalker import Task
+    assets_tasks = Task.query.filter(Task.name=='Assets').all()
+
+    assert len(assets_tasks) == 1
+
+
+def test_stalker_entity_decoder_will_not_create_existing_child_tasks(create_db, create_empty_project):
+    """testing if JSON decoder will not recreate existing child tasks
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template4.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    # create backup of the data
+    import copy
+    data_backup = copy.deepcopy(data)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # check if they are loaded normally
+    from stalker import Asset, Task
+    ananas_asset = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .first()
+    assert ananas_asset is not None
+    assert isinstance(ananas_asset, Asset)
+
+    ananas_look_dev = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .first()
+    assert ananas_look_dev is not None
+    assert isinstance(ananas_look_dev, Task)
+
+    ananas_model = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='model')\
+        .first()
+    assert ananas_model is not None
+    assert isinstance(ananas_model, Task)
+
+    # now load it again
+    data = copy.deepcopy(data_backup)
+
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # now there should be only one Assets task
+    from stalker import Task
+    assets_tasks = Task.query.filter(Task.name=='Assets').all()
+    assert len(assets_tasks) == 1
+
+    # check if there is only one Ananas asset
+    ananas_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .all()
+    assert len(ananas_assets) == 1
+
+    # check if there is only one LookDev task under the Ananas asset
+    ananas_asset = ananas_assets[0]
+    ananas_look_devs = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(ananas_look_devs) == 1
+
+    ananas_models = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='model')\
+        .all()
+    assert len(ananas_models) == 1
+
+
+def test_stalker_entity_decoder_will_append_new_data(create_db, create_empty_project):
+    """testing if JSON decoder will append new data on top of the existing one
+    even when the JSON contains data about the already existing tasks
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template5.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    # create backup of the data
+    import copy
+    data_backup = copy.deepcopy(data)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # check if they are loaded normally
+    from stalker import Asset, Task
+    ananas_asset = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .first()
+    assert ananas_asset is not None
+    assert isinstance(ananas_asset, Asset)
+
+    ananas_look_dev = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .first()
+    assert ananas_look_dev is not None
+    assert isinstance(ananas_look_dev, Task)
+
+    ananas_model = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='model')\
+        .first()
+    assert ananas_model is not None
+    assert isinstance(ananas_model, Task)
+
+    # now load it again
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # now there should be only one Assets task
+    from stalker import Task
+    assets_tasks = Task.query.filter(Task.name=='Assets').all()
+    assert len(assets_tasks) == 1
+
+    # check if there is only one Ananas asset
+    ananas_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .all()
+    assert len(ananas_assets) == 1
+
+    # check if there is only one LookDev task under the Ananas asset
+    ananas_asset = ananas_assets[0]
+    ananas_look_devs = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(ananas_look_devs) == 1
+
+    ananas_models = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='model')\
+        .all()
+    assert len(ananas_models) == 1
+
+    # check if there is a Peach asset
+    peach_asset = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Peach')\
+        .first()
+    assert peach_asset is not None
+    assert isinstance(peach_asset, Asset)
+
+    # check peach child tasks
+    peach_model = Task.query\
+        .filter(Task.parent==peach_asset)\
+        .filter(Task.name=='model')\
+        .first()
+
+    assert peach_model is not None
+    assert isinstance(peach_model, Task)
+
+    peach_look_dev = Task.query\
+        .filter(Task.parent==peach_asset)\
+        .filter(Task.name=='lookDev')\
+        .first()
+
+    assert peach_look_dev is not None
+    assert isinstance(peach_look_dev, Task)
+
+
+def test_stalker_entity_decoder_will_create_versions(create_db, create_empty_project):
+    """testing if JSON decoder will create new versions along with tasks
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template5.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    from stalker import Asset, Task
+    ananas_asset = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .first()
+
+    ananas_look_dev = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .first()
+
+    # check versions are created normally
+    assert len(ananas_look_dev.versions) == 1
+
+
+def test_stalker_entity_decoder_will_not_recreate_versions(create_db, create_empty_project):
+    """testing if JSON decoder will not recreate already created versions
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template5.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    import copy
+    data_backup = copy.deepcopy(data)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    from stalker import Asset, Task
+    ananas_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .all()
+    assert len(ananas_assets) == 1
+    ananas_asset = ananas_assets[0]
+
+    ananas_look_devs = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(ananas_look_devs) == 1
+    ananas_look_dev = ananas_look_devs[0]
+
+    assert len(ananas_look_dev.versions) == 1
+
+    # load a couple times more
+    # 1
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 2)
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 3
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 4
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    from stalker import Asset, Task
+    ananas_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Ananas')\
+        .all()
+    assert len(ananas_assets) == 1
+    ananas_asset = ananas_assets[0]
+
+    ananas_look_devs = Task.query\
+        .filter(Task.parent==ananas_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(ananas_look_devs) == 1
+    ananas_look_dev = ananas_look_devs[0]
+
+    assert len(ananas_look_dev.versions) == 1
+    assert ananas_look_dev.versions[0].version_number == 1
+
+    print("ananas_look_dev: %s" % ananas_look_dev.name)
+    print("ananas_look_dev.versions: %s" % ananas_look_dev.versions)

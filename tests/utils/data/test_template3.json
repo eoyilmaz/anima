@@ -1,0 +1,14 @@
+{
+    "tasks": [],
+    "description": "",
+    "entity_type": "Task", 
+    "type_id": null, 
+    "schedule_constraint": 0, 
+    "schedule_unit": "min", 
+    "name": "Assets", 
+    "versions": [], 
+    "schedule_timing": 10.0, 
+    "path": "$REPONAS/FuseT_PS/Assets", 
+    "type": null, 
+    "schedule_model": "effort"
+}

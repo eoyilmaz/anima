@@ -8,7 +8,7 @@
 import pytest
 
 
-@pytest.fixture('session')
+@pytest.fixture('function')
 def test_data():
     """reads test data
     """
@@ -24,16 +24,92 @@ def test_data():
     yield test_data
 
 
-@pytest.fixture('session')
+@pytest.fixture('function')
 def create_db():
     """creates a test database
     """
     from stalker import db
+    print("setting up test database")
     db.setup({'sqlalchemy.url': 'sqlite://'})
+    print("initializing test database")
     db.init()
 
 
-@pytest.fixture('session')
+@pytest.fixture('function')
+def create_empty_project():
+    """creates empty project test data
+    """
+    from stalker.db.session import DBSession
+    from stalker import (Task, Asset, Type, Sequence, Shot, Version,
+                         FilenameTemplate, Repository, Project, Structure)
+
+    repo = Repository(
+        name='Test Repository',
+        code='TR',
+        windows_path='T:/',
+        linux_path='/mnt/T/',
+        osx_path='/Volumes/T/'
+    )
+
+    task_filename_template = FilenameTemplate(
+        name='Task Filename Template',
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
+            '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
+            '/{%- endfor -%}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        target_entity_type='Task'
+    )
+    asset_filename_template = FilenameTemplate(
+        name='Asset Filename Template',
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
+            '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
+            '/{%- endfor -%}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        target_entity_type='Asset'
+    )
+    shot_filename_template = FilenameTemplate(
+        name='Shot Filename Template',
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
+            '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
+            '/{%- endfor -%}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        target_entity_type='Shot'
+    )
+    sequence_filename_template = FilenameTemplate(
+        name='Sequence Filename Template',
+        path='$REPO{{project.repository.code}}/{{project.code}}/'
+            '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
+            '/{%- endfor -%}',
+        filename='{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}',
+        target_entity_type='Sequence'
+    )
+
+    structure = Structure(
+        name='Default Project Structure',
+        templates=[task_filename_template, asset_filename_template,
+                   shot_filename_template, sequence_filename_template]
+    )
+
+    DBSession.add_all([
+        structure,
+        task_filename_template, asset_filename_template,
+        shot_filename_template, sequence_filename_template
+    ])
+    DBSession.commit()
+
+    project = Project(
+        name='Test Project',
+        code='TP',
+        repository=repo,
+        structure=structure,
+    )
+    DBSession.add(project)
+    DBSession.commit()
+
+    yield project
+
+
+@pytest.fixture('function')
 def create_project():
     """creates test data
     """
@@ -43,6 +119,7 @@ def create_project():
 
     repo = Repository(
         name='Test Repository',
+        code='TR',
         windows_path='T:/',
         linux_path='/mnt/T/',
         osx_path='/Volumes/T/'

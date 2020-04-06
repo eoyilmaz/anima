@@ -1,0 +1,104 @@
+{
+    "tasks": [
+        {
+            "asset_id": 16078,
+            "versions": [],
+            "code": "Ananas",
+            "description": "Duplicated from Task(3663)",
+            "entity_type": "Asset",
+            "type_id": 49,
+            "schedule_constraint": 0,
+            "schedule_unit": "min",
+            "tasks": [
+                {
+                    "tasks": [],
+                    "description": "",
+                    "entity_type": "Task",
+                    "type_id": 53,
+                    "schedule_constraint": 0,
+                    "schedule_unit": "min",
+                    "name": "lookDev",
+                    "versions": [
+                        {
+                            "version_number": 1,
+                            "type": null,
+                            "description": "",
+                            "extension": ".ma",
+                            "entity_type": "Version",
+                            "name": "Version_8beb3cfe-3ded-444d-84e5-d31b3cd5beb8",
+                            "type_id": null,
+                            "filename": "Ananas_lookDev_Main_v001.ma",
+                            "original_filename": "Ananas_lookDev_Main_v001.ma",
+                            "created_with": "Maya2019",
+                            "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev",
+                            "take_name": "Main",
+                            "full_path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev/Ananas_lookDev_Main_v001.ma",
+                            "is_published": true
+                        }
+                    ],
+                    "schedule_timing": 10.0,
+                    "path": "$REPONAS/FuseT_PS/Assets/Ananas/lookDev",
+                    "type": {
+                        "code": "Look Development",
+                        "description": "",
+                        "entity_type": "Type",
+                        "type_id": null,
+                        "target_entity_type": "Task",
+                        "type_id_local": 53,
+                        "type": null,
+                        "name": "Look Development"
+                    },
+                    "schedule_model": "effort"
+                },
+                {
+                    "tasks": [],
+                    "description": "",
+                    "entity_type": "Task",
+                    "type_id": 51,
+                    "schedule_constraint": 0,
+                    "schedule_unit": "min",
+                    "name": "model",
+                    "versions": [],
+                    "schedule_timing": 10.0,
+                    "path": "$REPONAS/FuseT_PS/Assets/Ananas/model",
+                    "type": {
+                        "code": "Model",
+                        "description": "",
+                        "entity_type": "Type",
+                        "type_id": null,
+                        "target_entity_type": "Task",
+                        "type_id_local": 51,
+                        "type": null,
+                        "name": "Model"
+                    },
+                    "schedule_model": "effort"
+                }
+            ],
+            "schedule_timing": 10.0,
+            "path": "$REPONAS/FuseT_PS/Assets/Ananas",
+            "schedule_model": "effort",
+            "type": {
+                "code": "Prop",
+                "description": "",
+                "entity_type": "Type",
+                "type_id": null,
+                "target_entity_type": "Asset",
+                "type_id_local": 49,
+                "type": null,
+                "name": "Prop"
+            },
+            "name": "Ananas"
+        }
+    ],
+    "description": "",
+    "entity_type": "Task",
+    "type_id": null,
+    "schedule_constraint": 0,
+    "schedule_unit": "min",
+    "name": "Assets",
+    "versions": [],
+    "schedule_timing": 10.0,
+    "path": "$REPONAS/FuseT_PS/Assets",
+    "type": null,
+    "schedule_model": "effort"
+}

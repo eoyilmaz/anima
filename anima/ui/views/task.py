@@ -642,8 +642,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                     if dialog.exec_():
                         file_path = dialog.selectedFiles()[0]
                         if file_path:
+                            import os
                             import json
                             from anima.utils import task_hierarchy_io
+
+                            # check file extension
+                            parts = os.path.splitext(file_path)
+
+                            if not parts[1]:
+                                file_path = '%s%s' % (parts[0], '.json')
+
                             data = json.dumps(
                                 entity,
                                 cls=task_hierarchy_io.StalkerEntityEncoder,
@@ -679,17 +687,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                             elif isinstance(entity, Project):
                                 project = entity
 
+                            parent = None
+                            if isinstance(entity, Task):
+                                parent = entity
+
                             decoder = \
                                 task_hierarchy_io.StalkerEntityDecoder(
                                     project=project
                                 )
-                            loaded_entity = decoder.loads(data)
+                            loaded_entity = decoder.loads(data, parent=parent)
 
-                            if isinstance(entity, Task):
-                                loaded_entity.parent = entity
-
-                            # TODO: Check if there is an existing entity with
-                            # the same name
                             try:
                                 from stalker.db.session import DBSession
                                 DBSession.add(loaded_entity)
