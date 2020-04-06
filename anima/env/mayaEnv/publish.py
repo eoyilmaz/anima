@@ -1217,9 +1217,12 @@ def set_pixel_error(progress_controller=None):
     all_meshes = pm.ls(type='mesh')
     progress_controller.maximum = len(all_meshes)
     for node in all_meshes:
-        pixel_error = node.getAttr('aiSubdivPixelError')
-        if pixel_error > 0:
-            node.setAttr('aiSubdivPixelError', 0)
+        try:
+            pixel_error = node.getAttr('aiSubdivPixelError')
+            if pixel_error > 0:
+                node.setAttr('aiSubdivPixelError', 0)
+        except pm.MayaAttributeError as e:
+            pass
         progress_controller.increment()
     progress_controller.complete()
 
