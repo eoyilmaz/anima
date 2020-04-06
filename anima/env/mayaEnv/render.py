@@ -1270,7 +1270,16 @@ class Render(object):
 
         Use the Houdini counterpart to import the assignment data
         """
-        shaders = pm.selected()
+        # get the shaders from viewport selection
+        shaders = []
+        for node in pm.selected():
+            shape = node.getShape()
+            shading_engines = shape.outputs(type=pm.nt.ShadingEngine)
+
+            for shading_engine in shading_engines:
+                inputs = shading_engine.surfaceShader.inputs()
+                for shader in inputs:
+                    shaders.append(shader)
 
         # get the shapes for each shader
         shader_assignments = {}
@@ -1295,7 +1304,7 @@ class Render(object):
         try:
             import json
             with open(cls.shader_data_temp_file_path, 'w') as f:
-                json.dump(shader_assignments, f)
+                json.dump(shader_assignments, f, indent=4)
         except BaseException as e:
             pm.confirmDialog(
                 title='Error', message="%s" % e, button='OK'
@@ -1303,7 +1312,7 @@ class Render(object):
         else:
             pm.confirmDialog(
                 title='Successful',
-                message="Shader Data exported succesfully!",
+                message="Shader Data exported successfully!",
                 button='OK'
             )
 
