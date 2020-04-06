@@ -434,5 +434,120 @@ def test_stalker_entity_decoder_will_not_recreate_versions(create_db, create_emp
     assert len(ananas_look_dev.versions) == 1
     assert ananas_look_dev.versions[0].version_number == 1
 
-    print("ananas_look_dev: %s" % ananas_look_dev.name)
-    print("ananas_look_dev.versions: %s" % ananas_look_dev.versions)
+
+def test_stalker_entity_decoder_will_not_recreate_versions_2(create_db, create_empty_project):
+    """testing if JSON decoder will not recreate already created versions when the versions data is not oredered to the
+    version number
+    """
+    from stalker import Task
+    project = create_empty_project
+
+    import json
+    from anima.utils import task_hierarchy_io
+
+    global __here__
+    file_path = os.path.join(__here__, "data", "test_template6.json")
+
+    with open(file_path) as f:
+        data = json.load(f)
+
+    import copy
+    data_backup = copy.deepcopy(data)
+
+    decoder = \
+        task_hierarchy_io.StalkerEntityDecoder(
+            project=project
+        )
+    loaded_entity = decoder.loads(data)
+
+    from stalker.db.session import DBSession
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    from stalker import Asset, Task
+    kutu_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Kutu')\
+        .all()
+    assert len(kutu_assets) == 1
+    kutu_asset = kutu_assets[0]
+
+    kutu_look_devs = Task.query\
+        .filter(Task.parent==kutu_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(kutu_look_devs) == 1
+    kutu_look_dev = kutu_look_devs[0]
+
+    assert len(kutu_look_dev.versions) == 9
+
+    current_version = kutu_look_dev.versions[0]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[1]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[2]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[3]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[4]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[5]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[6]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[7]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+    current_version = kutu_look_dev.versions[8]
+    assert current_version.version_number == \
+           int(current_version.filename.split("_v")[-1].split(".")[0])
+
+    # load a couple times more
+    # 1
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 2)
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 3
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    # 4
+    data = copy.deepcopy(data_backup)
+    loaded_entity = decoder.loads(data)
+    DBSession.add(loaded_entity)
+    DBSession.commit()
+
+    from stalker import Asset, Task
+    kutu_assets = Asset.query\
+        .filter(Asset.project==project)\
+        .filter(Asset.name=='Kutu')\
+        .all()
+    assert len(kutu_assets) == 1
+    kutu_asset = kutu_assets[0]
+
+    kutu_look_devs = Task.query\
+        .filter(Task.parent==kutu_asset)\
+        .filter(Task.name=='lookDev')\
+        .all()
+    assert len(kutu_look_devs) == 1
+    kutu_look_dev = kutu_look_devs[0]
+
+    assert len(kutu_look_dev.versions) == 9
+    assert kutu_look_dev.versions[-1].version_number == 8

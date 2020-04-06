@@ -223,7 +223,7 @@ class StalkerEntityDecoder(object):
                 data['type'] = type_
 
         # store version data
-        version_data = data['versions']
+        version_data = sorted(data['versions'], key=lambda x: x["version_number"])
         data['versions'] = []
 
         data['project'] = self.project
