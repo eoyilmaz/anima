@@ -369,7 +369,8 @@ class Houdini(EnvironmentBase):
             image_format = shot.image_format
 
         shot_node.parm("shot").set(version.nice_name)
-        shot_node.parm("name_shot_node").pressButton()
+        #shot_node.parm("name_shot_node").pressButton()
+        shot_node.setName("shotData")
 
         shot_node.parm("cam_resx").set(image_format.width)
         shot_node.parm("cam_resy").set(image_format.height)
