@@ -90,8 +90,8 @@ class Houdini(EnvironmentBase):
             self.set_fps(shot.fps)
 
             # also set frame range if this is the first version
-            if version.version_number == 1:
-                self.set_frame_range(shot.cut_in, shot.cut_out)
+            # if version.version_number == 1:
+            self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             # set to project fps
             self.set_fps(version.task.project.fps)
