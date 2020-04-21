@@ -2195,7 +2195,7 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                       '-stripNamespaces -uvWrite -wholeFrameGeo ' \
                       '-worldSpace -autoSubd -writeUVSets -dataFormat ' \
-                      ' ogawa -writeVisibility '
+                      ' ogawa -writeVisibility -eulerFilter '
         else:
             command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                       '-stripNamespaces -uvWrite -wholeFrameGeo ' \
