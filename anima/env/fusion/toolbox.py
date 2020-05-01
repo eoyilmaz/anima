@@ -6,7 +6,7 @@
 
 import os
 from anima.ui.base import AnimaDialogBase
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import add_button
 
 __here__ = os.path.abspath(__file__)
@@ -69,7 +69,7 @@ class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
         icon_path = os.path.abspath(
             os.path.join(__here__, "../../../ui/images/fusion9.png")
         )
-        icon = QtWidgets.QIcon(icon_path)
+        icon = QtGui.QIcon(icon_path)
 
         self.setWindowIcon(icon)
 
