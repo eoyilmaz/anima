@@ -152,21 +152,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.delete_recent_comps
         )
 
-        # Set Frames At Once To 1
-        add_button(
-            'Set Frames At Once To 1',
-            general_tab_vertical_layout,
-            GenericTools.set_frames_at_once,
-            callback_kwargs={'count': 1}
-        )
-
-        # Set Frames At Once To 8
-        add_button(
-            'Set Frames At Once To 8',
-            general_tab_vertical_layout,
-            GenericTools.set_frames_at_once,
-            callback_kwargs={'count': 8}
-        )
+        # Set Frames At Once To 1, 4 and 8
+        for i in [1, 4, 8]:
+            add_button(
+                'Set Frames At Once To %s' % i,
+                general_tab_vertical_layout,
+                GenericTools.set_frames_at_once,
+                callback_kwargs={'count': i}
+            )
 
         # -------------------------------------------------------------------
         # Add the stretcher
