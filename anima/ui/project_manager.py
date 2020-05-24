@@ -3,6 +3,17 @@
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
+"""
+import os
+os.environ['STALKER_PATH'] = '/mnt/NAS/Users/eoyilmaz/Stalker_Projects'
+
+from anima.ui import SET_PYSIDE2
+SET_PYSIDE2()
+
+from anima.ui import project_manager
+project_manager.ui_caller(None, None, project_manager.MainWindow)
+"""
+
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
@@ -43,7 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.task_dashboard_widget = None
         self.tasks_tree_view = None
 
-        self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
+        # self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
+
         self.settings = QtCore.QSettings(
             self.__company_name__,
             self.__app_name__
