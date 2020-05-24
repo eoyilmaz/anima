@@ -834,7 +834,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 structure=structure,
                 image_format=image_format,
                 fps=fps,
-                created_by=logged_in_user
+                created_by=logged_in_user,
+                status=status
             )
             DBSession.add(new_project)
             try:
