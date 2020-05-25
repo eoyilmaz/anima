@@ -19,24 +19,24 @@ from anima.ui.widgets.version import VersionsTableWidget
 
 
 ref_depth_res = [
-    'As Saved',
-    'All',
-    'Top Level Only',
-    'None'
+    "As Saved",
+    "All",
+    "Top Level Only",
+    "None"
 ]
 
 VersionNT = namedtuple(
     # A named tuple for fast Version look-up
-    'VersionNT',
+    "VersionNT",
     [
-        'id',
-        'version_number',
-        'is_published',
-        'created_with',
-        'created_by_id',
-        'updated_by_id',
-        'full_path',
-        'description'
+        "id",
+        "version_number",
+        "is_published",
+        "created_with",
+        "created_by_id",
+        "updated_by_id",
+        "full_path",
+        "description"
     ]
 )
 
@@ -47,7 +47,7 @@ VersionNT = namedtuple(
 #
 #     def __init__(self, parent=None):
 #         super(RepresentationMessageBox, self).__init__(parent)
-#         self.desired_repr = 'Base'
+#         self.desired_repr = "Base"
 #
 #     def _setup_ui_(self):
 #         """generates default buttons
@@ -124,9 +124,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.mode = mode
         self.chosen_version = None
-        self.environment_name_format = '%n (%e)'
+        self.environment_name_format = "%n (%e)"
 
-        window_title = 'Version Creator | Anima v' + anima.__version__
+        window_title = "Version Creator | Anima v" + anima.__version__
 
         if environment:
             window_title = "%s | %s" % (window_title, environment.name)
@@ -143,7 +143,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.environment = environment
         if not self.environment.has_publishers:
-            self.publish_push_button.setText('Publish')
+            self.publish_push_button.setText("Publish")
 
         # create the project attribute in projects_combo_box
         self.current_dialog = None
@@ -236,7 +236,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Show Completed Projects
         self.show_completed_checkBox =\
             QtWidgets.QCheckBox(self.tasks_groupBox)
-        self.show_completed_checkBox.setText('Show Completed Projects')
+        self.show_completed_checkBox.setText("Show Completed Projects")
         self.show_completed_checkBox.setChecked(False)
         self.verticalLayout_2.addWidget(self.show_completed_checkBox)
 
@@ -659,13 +659,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setTabOrder(self.reference_pushButton, self.import_pushButton)
 
     # def close(self):
-    #     logger.debug('closing the ui')
+    #     logger.debug("closing the ui")
     #     QtWidgets.QDialog.close(self)
 
     def show(self):
         """overridden show method
         """
-        logger.debug('MainDialog.show is started')
+        logger.debug("MainDialog.show is started")
         logged_in_user = self.get_logged_in_user()
         if not logged_in_user:
             self.close()
@@ -673,7 +673,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         else:
             return_val = super(MainDialog, self).show()
 
-        logger.debug('MainDialog.show is finished')
+        logger.debug("MainDialog.show is finished")
         return return_val
 
     def _setup_signals(self):
@@ -734,14 +734,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # recent files comboBox
         QtCore.QObject.connect(
             self.recent_files_comboBox,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
             self.recent_files_combo_box_index_changed
         )
 
         # find_from_path_lineEdit
         QtCore.QObject.connect(
             self.find_from_path_pushButton,
-            QtCore.SIGNAL('clicked()'),
+            QtCore.SIGNAL("clicked()"),
             self.find_from_path_push_button_clicked
         )
 
@@ -913,10 +913,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             change_description_action.setEnabled(False)
 
         # Create power menu
-        publish_action = menu.addAction('Publish')
+        publish_action = menu.addAction("Publish")
         menu.addSeparator()
-        create_version_action = menu.addAction('Create Dummy Version')
-        delete_action = menu.addAction('Delete')
+        create_version_action = menu.addAction("Create Dummy Version")
+        delete_action = menu.addAction("Delete")
 
         if version:
             from anima import defaults
@@ -925,7 +925,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                or defaults.is_power_user(logged_in_user):
 
                 if version.is_published:
-                    publish_action.setText('Un-Publish')
+                    publish_action.setText("Un-Publish")
             else:
                 publish_action.setEnabled(False)
                 delete_action.setEnabled(False)
@@ -965,11 +965,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                         QtWidgets.QMessageBox.critical(
                             self,
-                            'Error',
-                            'This version is referenced by the following '
-                            'tasks:<br><br>%s<br><br>'
-                            'So, you can not un-publish it!' %
-                            '<br>'.join(
+                            "Error",
+                            "This version is referenced by the following "
+                            "tasks:<br><br>%s<br><br>"
+                            "So, you can not un-publish it!" %
+                            "<br>".join(
                                 map(
                                     lambda x: x.name,
                                     related_tasks
@@ -984,7 +984,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         DBSession.commit()
                         # refresh the tableWidget
                         self.update_previous_versions_table_widget()
-                elif choice == 'Delete':
+                elif choice == "Delete":
                     versions_using_this_versions = \
                         Version.query\
                                .filter(Version.inputs.contains(version))\
@@ -999,11 +999,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                         QtWidgets.QMessageBox.critical(
                             self,
-                            'Error',
-                            'This version is referenced by the following '
-                            'tasks:<br><br>%s<br><br>'
-                            'So, you can not delete it!' %
-                            '<br>'.join(
+                            "Error",
+                            "This version is referenced by the following "
+                            "tasks:<br><br>%s<br><br>"
+                            "So, you can not delete it!" %
+                            "<br>".join(
                                 map(
                                     lambda x: x.name,
                                     related_tasks
@@ -1014,7 +1014,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         # Ask user if he/she is sure
                         answer = QtWidgets.QMessageBox.question(
                             self,
-                            'Delete?',
+                            "Delete?",
                             "Delete the version?"
                             "<br>"
                             "<br>Files will not be deleted!",
@@ -1032,7 +1032,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                                 DBSession.rollback()
                                 QtWidgets.QMessageBox.critical(
                                     self,
-                                    'Error',
+                                    "Error",
                                     str(e)
                                 )
                             finally:
@@ -1042,7 +1042,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             return
 
             from anima import utils
-            if choice == 'Browse Path...':
+            if choice == "Browse Path...":
                 path = os.path.expandvars(
                     os.path.expandvars(
                         version.full_path
@@ -1056,7 +1056,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         "Error",
                         "Path doesn't exists:\n%s" % path
                     )
-            elif choice == 'Browse Outputs...':
+            elif choice == "Browse Outputs...":
                 path = os.path.join(
                     os.path.dirname(
                         os.path.expandvars(
@@ -1085,7 +1085,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         MediaManager.upload_version_output(
                             version, f, os.path.basename(file_path)
                         )
-            elif choice == 'Change Description...':
+            elif choice == "Change Description...":
                 if version:
                     # change the description
                     self.current_dialog = QtWidgets.QInputDialog(parent=self)
@@ -1108,7 +1108,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                         # update the previous_versions_table_widget
                         self.update_previous_versions_table_widget()
-            elif choice == 'Copy Path':
+            elif choice == "Copy Path":
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText(
@@ -1141,7 +1141,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # warn the user before doing anything
                     # answer = QtWidgets.QMessageBox.question(
                     #     self,
-                    #     'Re-Render Path Variables?',
+                    #     "Re-Render Path Variables?",
                     #     "This will recalculate the version path"
                     #     "<br>"
                     #     "<br>Files will not be deleted!",
@@ -1167,7 +1167,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """returns the indexes of the item indices containing the given text
         """
         model = tree_view.model()
-        logger.debug('searching for text : %s' % text)
+        logger.debug("searching for text : %s" % text)
         return model.match(
             model.index(0, 0),
             0,
@@ -1185,7 +1185,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         indexes = self.get_item_indices_containing_text(entity.name, tree_view)
         model = tree_view.model()
-        logger.debug('items matching name : %s' % indexes)
+        logger.debug("items matching name : %s" % indexes)
         for index in indexes:
             item = model.itemFromIndex(index)
             if item:
@@ -1223,7 +1223,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.environment.name]
-                recent_files.insert(0, '')
+                recent_files.insert(0, "")
                 # append them to the comboBox
 
                 for i, full_path in enumerate(recent_files[:50]):
@@ -1270,24 +1270,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.tasks_tree_view.fill()
 
         # also setup the signal
-        logger.debug('setting up signals for tasks_tree_view_changed')
+        logger.debug("setting up signals for tasks_tree_view_changed")
         QtCore.QObject.connect(
             self.tasks_tree_view.selectionModel(),
-            QtCore.SIGNAL('selectionChanged(const QItemSelection &, '
-                          'const QItemSelection &)'),
+            QtCore.SIGNAL("selectionChanged(const QItemSelection &, "
+                          "const QItemSelection &)"),
             self.tasks_tree_view_changed
         )
 
     def tasks_tree_view_changed(self):
         """runs when the tasks_tree_view item is changed
         """
-        logger.debug('tasks_tree_view_changed running')
+        logger.debug("tasks_tree_view_changed running")
         if self.tasks_tree_view.is_updating:
-            logger.debug('tasks_tree_view is updating, so returning early')
+            logger.debug("tasks_tree_view is updating, so returning early")
             return
 
         task_id = self.tasks_tree_view.get_task_id()
-        logger.debug('task_id : %s' % task_id)
+        logger.debug("task_id : %s" % task_id)
 
         # update the thumbnail
         # TODO: do it in another thread
@@ -1299,7 +1299,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if task_id:
             # clear the takes_listWidget and fill with new data
-            logger.debug('clear takes widget')
+            logger.debug("clear takes widget")
             self.takes_listWidget.clear()
 
             from stalker import SimpleEntity
@@ -1364,7 +1364,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         splitter.setStretchFactor(1, 1)
         splitter.setStretchFactor(2, 2)
         self.horizontalLayout_14.addWidget(splitter)
-        logger.debug('finished creating splitter')
+        logger.debug("finished creating splitter")
 
         # set icon for search_task_toolButton
         # icon = QtGui.QApplication.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload)
@@ -1506,7 +1506,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.chose_pushButton.setVisible(False)
 
         # update description field
-        self.description_textEdit.setText('')
+        self.description_textEdit.setText("")
 
         self.update_recent_files_combo_box()
 
@@ -1559,15 +1559,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def takes_listWidget_changed(self, index):
         """runs when the takes_listWidget has changed
         """
-        logger.debug('takes_listWidget_changed started')
+        logger.debug("takes_listWidget_changed started")
         # update the previous_versions_table_widget
         self.update_previous_versions_table_widget()
-        logger.debug('takes_listWidget_changed finished')
+        logger.debug("takes_listWidget_changed finished")
 
     def update_previous_versions_table_widget(self):
         """updates the previous_versions_table_widget
         """
-        logger.debug('update_previous_versions_table_widget is started')
+        logger.debug("update_previous_versions_table_widget is started")
         self.previous_versions_table_widget.clear()
 
         from stalker import Task
@@ -1589,7 +1589,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # take name
         take_name = self.takes_listWidget.current_take_name
 
-        if take_name != '':
+        if take_name != "":
             logger.debug("take_name: %s" % take_name)
         else:
             return
@@ -1620,7 +1620,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         versions.reverse()
 
         self.previous_versions_table_widget.update_content(versions)
-        logger.debug('update_previous_versions_table_widget is finished')
+        logger.debug("update_previous_versions_table_widget is finished")
 
     def add_take_push_button_clicked(self):
         """runs when the add_take_toolButton clicked
@@ -1668,8 +1668,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not task.is_leaf:
             QtWidgets.QMessageBox.critical(
                 self,
-                'Error',
-                'Please select a <strong>leaf</strong> task!'
+                "Error",
+                "Please select a <strong>leaf</strong> task!"
             )
             return None
 
@@ -1695,7 +1695,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         except (TypeError, ValueError) as e:
             # pop up an Message Dialog to give the error message
             try:
-                error_message = '%s' % e
+                error_message = "%s" % e
             except UnicodeEncodeError:
                 error_message = unicode(e)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
@@ -1723,11 +1723,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             try:
                 self.environment.export_as(new_version)
             except RuntimeError as e:
-                error_message = '%s' % e
+                error_message = "%s" % e
                 print(error_message)
                 QtWidgets.QMessageBox.critical(
                     self,
-                    'Error',
+                    "Error",
                     error_message
                 )
                 from stalker.db.session import DBSession
@@ -1758,8 +1758,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("saving the data as a new published version")
         answer = QtWidgets.QMessageBox.question(
             self,
-            'Publish?',
-            'Publish?',
+            "Publish?",
+            "Publish?",
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No
         )
@@ -1802,7 +1802,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # if we still don't have a version just return without doing anything
         if not new_version:
-            logger.debug('no new_version, returning back!')
+            logger.debug("no new_version, returning back!")
             return
 
         # call the environments save_as method
@@ -1820,10 +1820,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             is_external_env = True
             if not environment:
-                logger.debug('no env found with name: %s' % env_name)
+                logger.debug("no env found with name: %s" % env_name)
                 DBSession.rollback()
                 return
-            logger.debug('env: %s' % environment.name)
+            logger.debug("env: %s" % environment.name)
         else:
             # check if the version the user is trying to create and the version
             # that is currently open in the current environment belongs to the
@@ -1833,7 +1833,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # ask to the user if he/she is sure about that
                 answer = QtWidgets.QMessageBox.question(
                     self,
-                    'Possible Mistake?',
+                    "Possible Mistake?",
                     "Saving under different Task<br>"
                     "<br>"
                     "current version: <b>%s</b><br>"
@@ -1854,15 +1854,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if version.is_published:
             # check if this is the first version
-            logger.debug('version.version_number: %s' % version.version_number)
+            logger.debug("version.version_number: %s" % version.version_number)
             if version.version_number == 1:
                 # it is not allowed to publish the first version
                 QtWidgets.QMessageBox.critical(
                     self,
-                    'Error',
-                    'Can not publish the FIRST version!!!'
-                    '<br><br>'
-                    'Save it normally first.'
+                    "Error",
+                    "Can not publish the FIRST version!!!"
+                    "<br><br>"
+                    "Save it normally first."
                 )
 
                 DBSession.rollback()
@@ -1873,14 +1873,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             environment.save_as(new_version, **kwargs)
         except (RuntimeError, PublishError) as e:
             try:
-                error_message = '%s' % e
+                error_message = "%s" % e
             except UnicodeEncodeError:
                 error_message = unicode(e)
 
             print(error_message)
             QtWidgets.QMessageBox.critical(
                 self,
-                'Error',
+                "Error",
                 error_message
             )
 
@@ -1892,7 +1892,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             clipboard = QtWidgets.QApplication.clipboard()
 
             logger.debug(
-                'new_version.absolute_full_path: %s' %
+                "new_version.absolute_full_path: %s" %
                 new_version.absolute_full_path)
 
             v_path = os.path.normpath(new_version.absolute_full_path)
@@ -1916,10 +1916,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # raise an error
             QtWidgets.QMessageBox.critical(
                 self,
-                'Error',
-                'Something went wrong with %s\n'
-                'and the file is not created!\n\n'
-                'Please save again!' % environment.name
+                "Error",
+                "Something went wrong with %s\n"
+                "and the file is not created!\n\n"
+                "Please save again!" % environment.name
             )
             DBSession.rollback()
         DBSession.commit()
@@ -1987,7 +1987,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 answer = QtWidgets.QMessageBox.question(
                     self,
-                    'RuntimeError',
+                    "RuntimeError",
                     "There are <b>unsaved changes</b> in the current "
                     "scene<br><br>Do you really want to open the file?",
                     QtWidgets.QMessageBox.Yes,
@@ -2008,8 +2008,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     return
 
             # check the reference_resolution to update old versions
-            if reference_resolution['create'] \
-               or reference_resolution['update']:
+            if reference_resolution["create"] \
+               or reference_resolution["update"]:
                 # invoke the version_updater for this scene
                 from anima.ui import version_updater
                 version_updater_main_dialog = \
@@ -2084,23 +2084,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # .filter(Version.parent == previous_version)\
             all_repr_count = Version.query\
                 .filter(Version.task == previous_version.task)\
-                .filter(Version.take_name.ilike(previous_version.take_name + '@%'))\
+                .filter(Version.take_name.ilike(previous_version.take_name + "@%"))\
                 .count()
 
             if all_repr_count > 0:
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
-                repr_message_box.setText('Which Repr.?')
+                repr_message_box.setText("Which Repr.?")
                 from anima.representation import Representation
                 base_button = \
                     repr_message_box.addButton(
                         Representation.base_repr_name,
                         QtWidgets.QMessageBox.ActionRole
                     )
-                setattr(base_button, 'repr_version', previous_version)
+                setattr(base_button, "repr_version", previous_version)
 
                 for repr_name in self.environment.representations:
-                    repr_str = '%{take}{repr_separator}{repr_name}%'.format(
+                    repr_str = "%{take}{repr_separator}{repr_name}%".format(
                         take=previous_version.take_name,
                         repr_name=repr_name,
                         repr_separator=Representation.repr_separator
@@ -2116,17 +2116,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             repr_name,
                             QtWidgets.QMessageBox.ActionRole
                         )
-                        setattr(repr_button, 'repr_version', repr_version)
+                        setattr(repr_button, "repr_version", repr_version)
 
                 # add a cancel button
                 cancel_button = repr_message_box.addButton(
-                    'Cancel',
+                    "Cancel",
                     QtWidgets.QMessageBox.RejectRole
                 )
 
                 repr_message_box.exec_()
                 clicked_button = repr_message_box.clickedButton()
-                if clicked_button.text() != 'Cancel':
+                if clicked_button.text() != "Cancel":
                     if clicked_button.repr_version:
                         previous_version = clicked_button.repr_version
                 else:
@@ -2247,8 +2247,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         answer = QtWidgets.QMessageBox.question(
             self,
-            'Delete Thumbnail?',
-            'Delete Thumbnail?',
+            "Delete Thumbnail?",
+            "Delete Thumbnail?",
             QtWidgets.QMessageBox.Yes,
             QtWidgets.QMessageBox.No
         )
@@ -2288,7 +2288,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     if not text:
     #         return
     #     tasks = Task.query.filter(Task.name.contains(text)).all()
-    #     logger.debug('tasks with text: "%s" are : %s' % (text, tasks))
+    #     logger.debug("tasks with text: "%s" are : %s" % (text, tasks))
     #     # load all the tasks and their parents so we are going to be able to
     #     # find them later on
     #     # for task in tasks:
@@ -2297,16 +2297,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     # # now get the indices
     #     # indices = self.get_item_indices_containing_text(text,
     #     #                                                 self.tasks_tree_view)
-    #     # logger.debug('indices containing the given text are : %s' % indices)
+    #     # logger.debug("indices containing the given text are : %s" % indices)
     #
     #     # self.search_task_comboBox.addItems(
     #     #     [
-    #     #         (task.name + ' (%s)' % map(lambda x: '|'.join([parent.name for parent in x.parents]), task)) for task in tasks
+    #     #         (task.name + " (%s)" % map(lambda x: "|".join([parent.name for parent in x.parents]), task)) for task in tasks
     #     #     ]
     #     # )
     #     items = []
     #     for task in tasks:
-    #         hierarchy_name = task.name + '(' + '|'.join(map(lambda x: x.name, task.parents)) + ')'
+    #         hierarchy_name = task.name + "(" + "|".join(map(lambda x: x.name, task.parents)) + ")"
     #         items.append(hierarchy_name)
     #     self.search_task_comboBox.addItems(items)
     #
