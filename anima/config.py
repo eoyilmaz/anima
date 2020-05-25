@@ -25,6 +25,12 @@ class Config(ConfigBase):
         recent_file_name='recent_files',
         avid_media_file_path_storage='avid_media_file_path',
 
+        enable_ldap_authentication=False,
+        enable_ldap_authorization=False,
+        ldap_server_address="",
+        ldap_base_dn="",
+        ldap_user_group_map={},
+
         normal_users_group_names=['Normal Users'],
         power_users_group_names=['Power Users', 'admins'],
 

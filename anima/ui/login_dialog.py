@@ -4,8 +4,6 @@
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 
-from sqlalchemy import or_
-
 import anima
 from anima import logger
 from anima.ui import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
@@ -85,40 +83,13 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
     def login(self):
         """does the nasty details for user to login
         """
-        # check the given user password
-        from stalker import User
+        from anima.utils import authenticate
 
         # get the user first
         login = self.login_or_email_lineEdit.text()
         password = self.password_lineEdit.text()
 
-        # check with the login or email attribute
-        user = User.query \
-            .filter(or_(User.login == login, User.email == login)) \
-            .first()
-
-        if user:
-            self.success = user.check_password(password)
-
-        if self.success:
-            from stalker.models.auth import LocalSession
-
-            session = LocalSession()
-            session.store_user(user)
-            session.save()
-
-            # also store a log
-            import datetime
-            from stalker.models.auth import LOGIN, AuthenticationLog
-            al = AuthenticationLog(
-                user=user,
-                date=datetime.datetime.now(),
-                action=LOGIN
-            )
-            from stalker.db.session import DBSession
-            DBSession.add(al)
-            DBSession.commit()
-
+        if authenticate(login, password):
             self.accept()
         else:
             QtWidgets.QMessageBox.critical(
@@ -126,4 +97,3 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
                 "Error",
                 "login or password is incorrect"
             )
-

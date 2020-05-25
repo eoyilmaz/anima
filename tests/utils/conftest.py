@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Erkan Ozgur Yilmaz
+# Copyright (c) 2012-2020, Erkan Ozgur Yilmaz
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
-
-
+import os
 import pytest
+
+# set log level to DEBUG
+import logging
+from anima import logger
+logger.setLevel(logging.DEBUG)
+
+# store current folder path
+__here__ = os.path.dirname(__file__)
 
 
 @pytest.fixture('function')
@@ -410,6 +417,129 @@ def create_project():
     DBSession.commit()
 
     yield project
+
+
+@pytest.fixture('function')
+def ldap_server():
+    """creates a mock ldap server for tests
+    """
+    global __here__
+
+    # set some default ldap settings
+    from anima import defaults
+    defaults.enable_ldap_authentication = True
+    defaults.ldap_server_address = 'localhost'
+    defaults.ldap_base_dn = 'DC=animagpu,DC=local'
+
+    # create mapping from LDAP groups to Stalker Groups
+    defaults.ldap_user_group_map = {
+        'Administrators': 'admins',
+        'Users': 'Normal Users',
+        'GPU Users': 'Normal Users',
+        'GPU Users Admin': 'Power Users'
+    }
+
+    from ldap3 import Server, Connection, MOCK_SYNC
+    test_ldap_server_info_path = os.path.join(__here__, 'data', 'LDAP_server_info.json')
+    test_ldap_server_schema_path = os.path.join(__here__, 'data', 'LDAP_server_schema.json')
+    test_ldap_server_entries_path = os.path.join(__here__, 'data', 'LDAP_server_entries.json')
+
+    # Mock Server with example data
+    class MockServer(Server):
+        def __init__(self, *args, **kwargs):
+            logger.debug("Initializing the Mock Server!")
+            super(MockServer, self).__init__(*args, **kwargs)
+
+            # load the data
+            logger.debug("Loading mock server data")
+            self.from_definition('fake_server', test_ldap_server_info_path, test_ldap_server_schema_path)
+
+    # Mock the Connection class to always use MOCK_SYNC as strategy
+    # and fill it with fake data
+    class MockConnection(Connection):
+
+        def __init__(self, *args, **kwargs):
+            logger.debug("Initializing the Mock Connection!")
+            kwargs['client_strategy'] = MOCK_SYNC
+            super(MockConnection, self).__init__(*args, **kwargs)
+
+            # load the mock data
+            logger.debug("Loading mock connection data")
+            logger.debug("test_ldap_server_entries_path: %s" % test_ldap_server_entries_path)
+            self.strategy.entries_from_json(test_ldap_server_entries_path)
+
+            # load a fake user for Simple binding
+            logger.debug("Loading a fake user for Simple binding")
+            self.strategy.add_entry(
+                defaults.ldap_base_dn,
+                {
+                    "cn": "admin",
+                    "codePage": 0,
+                    "displayName": "admin",
+                    "distinguishedName": "CN=admin,OU=GPU Users Admin,DC=animagpu,DC=local",
+                    "givenName": "admin",
+                    "instanceType": 4,
+                    "memberOf": [
+                        "CN=GPU Users Admin,CN=Users,DC=animagpu,DC=local"
+                    ],
+                    "name": "admin",
+                    "objectCategory": "CN=Person,CN=Schema,CN=Configuration,DC=animagpu,DC=local",
+                    # "objectCategory": "CN=Person,CN=Schema,CN=Configuration,%s" % defaults.ldap_base_dn,
+                    "objectClass": [
+                        "top",
+                        "person",
+                        "organizationalPerson",
+                        "user"
+                    ],
+                    "objectGUID": "{9d96ef4a-14e7-4a77-b5b1-97b2fa239f9f}",
+                    "objectSid": "S-1-5-21-2227021422-3894238547-674366654-1131",
+                    "primaryGroupID": 513,
+                    "revision": 0,
+                    "sAMAccountName": "admin",
+                    "sAMAccountType": 805306368,
+                    "sn": "admin",
+                    "uSNChanged": 423892,
+                    "uSNCreated": 314308,
+                    "userAccountControl": 66048,
+                    "userPassword": "password",
+                    "userPrincipalName": "admin@animagpu.local",
+                }
+            )
+
+        def bind(self, *args, **kwargs):
+            """mock the bind return value
+            """
+            super(MockConnection, self).bind(*args, **kwargs)
+            # always return True if the user is "pipeline"
+            allowed_users = [
+                "pipeline",
+                "CN=Pipeline,CN=Users,DC=animagpu,DC=local",
+                "CN=admin,OU=GPU Users Admin,DC=animagpu,DC=local"
+            ]
+            if self.user in allowed_users and self.password == "password":
+                return True
+            return False
+
+    logger.debug("Replacing original ldap3.Server class")
+    import ldap3
+    orig_server_class = ldap3.Server
+    ldap3.Server = MockServer
+    logger.debug("ldap3.Server: %s" % ldap3.Server)
+
+    logger.debug("Replacing original ldap3.Connection class")
+    orig_connection_class = ldap3.Connection
+    ldap3.Connection = MockConnection
+    logger.debug("ldap3.Connection: %s" % ldap3.Connection)
+
+    yield MockServer, MockConnection
+
+    # restore the class
+    logger.debug("Restoring original ldap3.Server class")
+    ldap3.Server = orig_server_class
+    logger.debug("ldap3.Server: %s" % ldap3.Server)
+    logger.debug("Restoring original ldap3.Connection class")
+    ldap3.Connection = orig_connection_class
+    logger.debug("ldap3.Connection: %s" % ldap3.Connection)
 
 
 def test_database_is_correctly_created(create_db):
