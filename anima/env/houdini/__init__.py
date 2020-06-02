@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -90,8 +90,8 @@ class Houdini(EnvironmentBase):
             self.set_fps(shot.fps)
 
             # also set frame range if this is the first version
-            if version.version_number == 1:
-                self.set_frame_range(shot.cut_in, shot.cut_out)
+            # if version.version_number == 1:
+            self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             # set to project fps
             self.set_fps(version.task.project.fps)

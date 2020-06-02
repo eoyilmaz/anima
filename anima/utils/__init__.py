@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -899,7 +899,7 @@ class MediaManager(object):
         conversion_options = {
             'i': input_path,
             'vcodec': 'libx264',
-            'pix_fmt': 'yuv420p', # to support whatsapp
+            'pix_fmt': 'yuv420p',  # to support whatsapp
             # 'profile:v': 'main',
             'g': 1,  # key frame every 1 frame
             'b:v': '20480k',
@@ -2108,3 +2108,211 @@ def smooth_array(data, iteration=1):
             current = next
 
     return data
+
+
+def authenticate(login, password):
+    """Authenticates the given login and password information.
+
+    If the ``defaults.enable_ldap_authentication`` is False, the system will
+    only use Stalker to authenticate.
+
+    ``defaults.enable_ldap_authentication`` is True then the system will use
+    the given LDAP server for authentication and then will create or update the
+    data in Stalker DB.
+
+    :param str login: The login.
+    :param str password: The plain password.
+    :return:
+    """
+    from anima import defaults
+    if not defaults.enable_ldap_authentication:
+        # No LDAP authentication
+        # try authenticating with stalker
+        success = stalker_authenticate(login, password)
+    else:
+        # defaults.enable_ldap_authentication is True
+        # so always authenticate with LDAP
+        success = ldap_authenticate(login, password)
+
+        # if success:
+        #     # update Stalker with the given information
+        #     # by either creating a new user or updating the user password
+        #     pass
+
+    if success:
+        # create the local session
+        from stalker.models.auth import LocalSession, User
+        from sqlalchemy import or_
+        user = User.query \
+            .filter(or_(User.login == login, User.email == login)) \
+            .first()
+
+        session = LocalSession()
+        session.store_user(user)
+        session.save()
+
+        # also store a AuthenticationLog in the database
+        import datetime
+        import pytz
+        from stalker.models.auth import LOGIN, AuthenticationLog
+        al = AuthenticationLog(
+            user=user,
+            date=datetime.datetime.now(pytz.utc),
+            action=LOGIN
+        )
+        from stalker.db.session import DBSession
+        DBSession.add(al)
+        DBSession.commit()
+
+    return success
+
+
+def stalker_authenticate(login, password):
+    """Authenticates with data from Stalker
+    """
+    # check the given user password
+    from stalker import User
+
+    # check with the login or email attribute
+    from sqlalchemy import or_
+    user = User.query \
+        .filter(or_(User.login == login, User.email == login)) \
+        .first()
+
+    success = False
+    if user:
+        success = user.check_password(password)
+
+    return success
+
+
+def ldap_authenticate(login, password, ldap_server_address=None, ldap_base_dn=None):
+    """Authenticates with data from Stalker and creates a proper local session
+    """
+    # check the LDAP server for login information
+    success = False
+    from anima import defaults
+    if not ldap_server_address:
+        ldap_server_address = defaults.ldap_server_address
+
+    if not ldap_base_dn:
+        ldap_base_dn = defaults.ldap_base_dn
+
+    from ldap3 import Server, Connection
+    if ldap_server_address and ldap_base_dn:
+        ldap_server = Server(ldap_server_address)
+        ldap_connection = Connection(server=ldap_server, user=login, password=password)
+        success = ldap_connection.bind()
+        logger.debug("ldap_connection.bind(): %s" % success)
+        logger.debug("ldap_connection.extend.standard.who_am_i(): %s" % ldap_connection.extend.standard.who_am_i())
+
+        if success:
+            result = ldap_connection.extend.standard.who_am_i()
+
+            if result:
+                create_user_with_ldap_info(ldap_connection, ldap_base_dn, login, password)
+
+        ldap_connection.unbind()
+
+    return success
+
+
+def create_user_with_ldap_info(ldap_connection, ldap_base_dn, login, password):
+    """Creates the user in Stalker with data coming from LDAP server or if the
+    user exists in the Stalker DB it updates the password and group information
+    of the user.
+
+    :param ldap3.Connection ldap_connection:
+    :param str ldap_base_dn:
+    :param str login: The login.
+    :param str password: The clear text password.
+    :return:
+    """
+    # so there is a user in the LDAP server
+    # also create it here in StalkerDB
+    # get user details like name, login, email, password
+    name = get_user_name_from_ldap(ldap_connection, ldap_base_dn, login)
+    # login = login
+    # generate a dummy email for now
+    # TODO: Get a proper email address from the LDAP server
+    email = '%s@%s' % (login, ".".join([DC.split('=')[1] for DC in ldap_base_dn.split(',')]))
+    # password = password
+    from stalker import User, Group
+    from stalker.db.session import DBSession
+
+    # the user may exist in Stalker DB
+    # In this case just update the password
+    new_user = User.query.filter(User.login==login).first()
+    if new_user:  # Just update the password
+        new_user.password = password
+    else:  # The user doesn't exist in the database create a new one
+        new_user = User(name=name, login=login, email=email, password=password)
+
+    DBSession.add(new_user)
+    DBSession.commit()
+
+    # get user group names from the server
+    ldap_group_names = get_user_groups_from_ldap(ldap_connection, ldap_base_dn, login)
+
+    # get a mapped group_names of local Stalker groups
+    from anima import defaults
+    updated_group_info = False
+    for lda_group_name in ldap_group_names:
+        stalker_group_name = defaults.ldap_user_group_map.get(lda_group_name)
+        if stalker_group_name:
+            stalker_group = Group.query.filter(Group.name == stalker_group_name).first()
+            if stalker_group:
+                new_user.groups.append(stalker_group)
+                updated_group_info = True
+
+    if updated_group_info:
+        DBSession.commit()
+
+    return new_user
+
+
+def get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, attribute):
+    """returns the user group names, no permissions for now
+
+    :param ldap3.Connection ldap_connection: The ldap_client as ldap3.Connection instance
+    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
+    :param str login: The login
+    :param str attribute: The attribute to query
+    """
+
+    result = []
+    if ldap_connection:
+        ldap_filter = '(sAMAccountName=%s)' % login
+
+        result = ldap_connection.search(
+            ldap_base_dn,
+            ldap_filter,
+            attributes=attribute,
+        )
+        if result:
+            data = ldap_connection.response
+            return data[0]['attributes'][attribute]
+
+    return None
+
+
+def get_user_name_from_ldap(ldap_connection, ldap_base_dn, login):
+    """returns the real user name from ldap
+
+    :param ldap3.Connection ldap_connection: The ldap_connection as ldap3.Connection instance
+    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
+    :param str login: the login to query the name of
+    :return:
+    """
+    return get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, 'displayName')[0]
+
+
+def get_user_groups_from_ldap(ldap_connection, ldap_base_dn, login):
+    """returns the user group names, no permissions for now
+
+    :param ldap3.Connection ldap_connection: The ldap_connection as ldap3.Connection instance
+    :param str ldap_base_dn: The domain name in LDAP format (all this CN, DN stuff)
+    :param str login: the login to query the name of
+    """
+    data = get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, 'memberOf')
+    return [d.split(',')[0].split("=")[1] for d in data]

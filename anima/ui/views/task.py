@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -444,7 +444,11 @@ class TaskTreeView(QtWidgets.QTreeView):
         selected_item = menu.exec_(global_position)
         if selected_item:
             if selected_item is reload_action:
-                item.reload()
+                if isinstance(entity, Project):
+                    self.fill()
+                    self.find_and_select_entity_item(item.task)
+                else:
+                    item.reload()
 
             if create_project_action \
                and selected_item is create_project_action:

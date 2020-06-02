@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2018-2019, Erkan Ozgur Yilmaz
+# Copyright (c) 2018-2020, Erkan Ozgur Yilmaz
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 
 import os
 from anima.ui.base import AnimaDialogBase
-from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import add_button
 
 __here__ = os.path.abspath(__file__)
@@ -69,7 +69,7 @@ class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
         icon_path = os.path.abspath(
             os.path.join(__here__, "../../../ui/images/fusion9.png")
         )
-        icon = QtWidgets.QIcon(icon_path)
+        icon = QtGui.QIcon(icon_path)
 
         self.setWindowIcon(icon)
 
@@ -152,21 +152,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.delete_recent_comps
         )
 
-        # Set Frames At Once To 1
-        add_button(
-            'Set Frames At Once To 1',
-            general_tab_vertical_layout,
-            GenericTools.set_frames_at_once,
-            callback_kwargs={'count': 1}
-        )
-
-        # Set Frames At Once To 8
-        add_button(
-            'Set Frames At Once To 8',
-            general_tab_vertical_layout,
-            GenericTools.set_frames_at_once,
-            callback_kwargs={'count': 8}
-        )
+        # Set Frames At Once To 1, 4 and 8
+        for i in [1, 4, 8]:
+            add_button(
+                'Set Frames At Once To %s' % i,
+                general_tab_vertical_layout,
+                GenericTools.set_frames_at_once,
+                callback_kwargs={'count': i}
+            )
 
         # -------------------------------------------------------------------
         # Add the stretcher
@@ -352,3 +345,10 @@ class GenericTools(object):
         fusion = bmf.scriptapp("Fusion")
         comp = fusion.GetCurrentComp()
         comp.SetPrefs("Comp.Memory.FramesAtOnce", count)
+
+    @classmethod
+    def afanasy_job_submitter(cls):
+        """alpha feature
+        """
+        # call the lua script from /opt/cgru/plugins/fusion/
+        pass

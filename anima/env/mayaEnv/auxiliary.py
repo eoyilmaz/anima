@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -1271,8 +1271,7 @@ class Playblaster(object):
             import os
             shot_name = os.path.split(pm.sceneName())[1].split('_')[0]
             # use the active panel camera
-            active_panel = self.get_active_panel()
-            current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+            current_cam = self.get_active_panel_camera()
             current_cam_name = current_cam.name()
 
         if isinstance(current_cam, pm.nt.Transform):
@@ -1326,7 +1325,7 @@ class Playblaster(object):
         hud_string = \
             '%s | %s:%smm | tc:%s [%s] | Shot: %s | Length: %s/%sfr | [%s]' % (
                 shot_info,
-                current_cam.split(':')[-1],
+                current_cam_name.split(':')[-1],
                 int(focal_length),
                 tc,
                 str(int(cf)-1).zfill(4),
@@ -1336,6 +1335,18 @@ class Playblaster(object):
                 user_name
             )
         return hud_string
+
+    def get_active_panel_camera(self):
+        """returns the active view camera
+        """
+        active_panel = self.get_active_panel()
+        current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+
+        # really return the camera node and not the transform node
+        if isinstance(current_cam, pm.nt.Transform):
+            current_cam = current_cam.getShape()
+
+        return current_cam
 
     def create_hud(self, hud_name):
         """creates HUD
@@ -1637,8 +1648,12 @@ class Playblaster(object):
         import os
         if 'filename' not in playblast_options:
             if self.version:
-                # use version.base_name
-                filename = os.path.splitext(self.version.filename)[0]
+                # use version.base_name plus the camera name
+                current_camera = self.get_active_panel_camera()
+                filename = "%s_%s" % (
+                    os.path.splitext(self.version.filename)[0],
+                    current_camera.getParent().name()  # use the transform
+                )                                      # node name
             else:
                 # use the current scene name
                 filename = os.path.splitext(
@@ -2195,7 +2210,7 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                       '-stripNamespaces -uvWrite -wholeFrameGeo ' \
                       '-worldSpace -autoSubd -writeUVSets -dataFormat ' \
-                      ' ogawa -writeVisibility '
+                      ' ogawa -writeVisibility -eulerFilter '
         else:
             command = 'AbcExport -j "-frameRange %s %s -step %s -ro ' \
                       '-stripNamespaces -uvWrite -wholeFrameGeo ' \

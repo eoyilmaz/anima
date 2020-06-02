@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2018-2019, Erkan Ozgur Yilmaz
+# Copyright (c) 2018-2020, Erkan Ozgur Yilmaz
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -155,6 +155,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             'Import Shaders From Maya',
             general_tab_vertical_layout,
             GenericTools.import_shaders_from_maya
+        )
+
+        # Create Focus Plane
+        add_button(
+            'Creat Focus Plane',
+            general_tab_vertical_layout,
+            GenericTools.create_focus_plane
         )
 
         # -------------------------------------------------------------------
@@ -391,3 +398,53 @@ class GenericTools(object):
             material_sop_node.parm("shop_materialpath%s" % (i + 1)).set(
                 shader.path()
             )
+
+    @classmethod
+    def create_focus_plane(cls):
+        """Creates a focus plane tool for the selected camera
+        """
+        import hou
+        selected = hou.selectedNodes()
+        if not selected:
+            return
+
+        camera = selected[0]
+
+        # create a grid
+        parent_context = camera.parent()
+        focus_plane_node = parent_context.createNode("geo", "focus_plane1")
+        grid_node = focus_plane_node.createNode("grid")
+
+        # Set orient to XZ Plane
+        grid_node.parm("orient").set(0)
+
+        # set color and alpha
+        attr_wrangle = focus_plane_node.createNode("attribwrangle", "set_color_and_alpha")
+        attr_wrangle.setInput(0, grid_node)
+        attr_wrangle.parm("snippet").set("""v@Cd = {1, 0, 0};
+v@Alpha = {0.5, 0.5, 0.5};""")
+
+        # Create Display node
+        display_null = focus_plane_node.createNode("null", "DISPLAY")
+        display_null.setDisplayFlag(1)
+        display_null.setInput(0, attr_wrangle)
+
+        # Make it not renderable
+        render_null = focus_plane_node.createNode("null", "RENDER")
+        render_null.setRenderFlag(1)
+
+        # connect the tz parameter of the grid node to the cameras focus distance
+        focus_plane_node.setInput(0, camera)
+        focus_plane_node.parm("tz").set(-1)
+        camera.parm("focus").setExpression('-ch("../%s/tz")' % focus_plane_node.name())
+
+        # align the nodes
+        from anima.env.houdini import auxiliary
+        network_editor = auxiliary.get_network_pane()
+        import nodegraphalign  # this is a houdini module
+        nodegraphalign.alignConnected(
+            network_editor, grid_node, None, "down"
+        )
+        nodegraphalign.alignConnected(
+            network_editor, camera, None, "down"
+        )

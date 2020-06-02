@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -708,21 +708,21 @@ class Fusion(EnvironmentBase):
                         'JpegFormat.Quality': 85,
                     },
                     'connected_to': {
-                        # 'ref_id': random_ref_id
                         'Input': {
-                            'type': 'ColorCurves',
-                            'ref_id': random_ref_id,
-                            'input_list': {
-                                'EditAlpha': 0.0,
+                            "type": "OCIOColorSpace",
+                            "ref_id": random_ref_id,
+                            "input_list": {
+                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.1/config.ocio",
+                                "SourceSpace": "ACES - ACEScg",
+                                "OutputSpace": "Output - Rec.709",
                             },
                             'connected_to': {
                                 'Input': {
-                                    'type': 'CineonLog',
-                                    'input_list': {
-                                        'Mode': 1,
-                                        # 'RedBlackLevel': 0.0,
-                                        # 'RedWhiteLevel': 1023.0,
-                                        'RedFilmStockGamma': 1.0
+                                    "type": "OCIOColorSpace",
+                                    "input_list": {
+                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.1/config.ocio",
+                                        "SourceSpace": "Utility - Linear - sRGB",
+                                        "OutputSpace": "ACES - ACEScg",
                                     },
                                 }
                             }
@@ -858,8 +858,6 @@ class Fusion(EnvironmentBase):
 
                         'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
                         'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
-
-
 
                     },
                     'connected_to': {
