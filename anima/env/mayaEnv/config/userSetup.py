@@ -17,7 +17,7 @@ user_setup_start = time.time()
 def logprint(log):
     """wrapper for printing data inside userSetup.py
 
-    :param log: The string to pring
+    :param log: The string to print
     :return:
     """
     print('userSetup.py: %s' % log)
@@ -81,23 +81,7 @@ def __plugin_unloader(plugin_name):
         pm.unloadPlugin(plugin_name)
         logprint('%s unloaded!' % plugin_name)
 
-
-# set the optionVar that enables hidden mentalray shaders
-if pymel.versions.current() <= pymel.versions.v2012:
-    pm.optionVar['MIP_SHD_EXPOSE'] = 1
-    pm.runtime.SavePreferences()
-
-# Change the default camera to Alexa
-try:
-    persp = pm.PyNode("persp")
-    perspShape = persp.getShape()
-
-    perspShape.horizontalFilmAperture.set(23.76 / 25.4)
-    perspShape.verticalFilmAperture.set(13.365 / 25.4)
-except pm.MayaNodeError:
-    pass
-
-# set ui to PySide2 for maya2017
+# set ui to PySide2 for maya2017 and up
 if pymel.versions.current() > 201651:
     logprint('setting QtLib to PySide2 inside userSetup.py')
     from anima import ui
