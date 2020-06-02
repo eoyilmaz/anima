@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2018-2019, Erkan Ozgur Yilmaz
+# Copyright (c) 2018-2020, Erkan Ozgur Yilmaz
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -345,3 +345,10 @@ class GenericTools(object):
         fusion = bmf.scriptapp("Fusion")
         comp = fusion.GetCurrentComp()
         comp.SetPrefs("Comp.Memory.FramesAtOnce", count)
+
+    @classmethod
+    def afanasy_job_submitter(cls):
+        """alpha feature
+        """
+        # call the lua script from /opt/cgru/plugins/fusion/
+        pass

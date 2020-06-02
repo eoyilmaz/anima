@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2019, Anima Istanbul
+# Copyright (c) 2012-2020, Anima Istanbul
 #
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
@@ -896,7 +896,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         upload_output_action = menu.addAction("Upload Output...")
         copy_path_action = menu.addAction("Copy Path")
         rerender_path_variables_action = \
-            menu.addAction("Re-Render Path Variables...")
+            menu.addAction("Re-Render Path Variables")
         menu.addSeparator()
         change_description_action = menu.addAction("Change Description...")
         menu.addSeparator()
