@@ -398,6 +398,7 @@ def convert_old_object_smoothing_to_renderer_time_smoothing(progress_controller=
 
     Currently supports Arnold only.
     """
+    from anima.env.mayaEnv import render
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
@@ -406,8 +407,8 @@ def convert_old_object_smoothing_to_renderer_time_smoothing(progress_controller=
     for node in all_meshes:
         if node.displaySmoothMesh.get() != 0:
             node.displaySmoothMesh.set(0)
-            node.setAttr('aiSubdivType', 1)
-            node.setAttr('aiSubdivIterations', node.smoothLevel.get())
+            render.Render.enable_subdiv(node, max_subdiv=node.smoothLevel.get())
+
         progress_controller.increment()
     progress_controller.complete()
 
