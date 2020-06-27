@@ -357,7 +357,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             self.set_frame_range(shot.cut_in, shot.cut_out)
 
         fps = shot.fps if shot else project.fps
-        imf = shot.imf if shot else project.imf
+        imf = shot.image_format if shot else project.image_format
 
         self.set_render_resolution(imf.width, imf.height, imf.pixel_aspect)
 
