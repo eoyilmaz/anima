@@ -1752,6 +1752,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         new_version = self.get_new_version()
         self.save_as_wrapper(new_version)
 
+    def publisher_rejected(self, version=None):
+        """runs when the publisher is rejected
+        """
+        from stalker import Version
+        from stalker.db.session import DBSession
+        if version and isinstance(version, Version):
+            if version:
+                DBSession.delete(version)
+                DBSession.commit()
+            DBSession.rollback()
+
     def publish_push_button_clicked(self):
         """runs when the publish_push_button clicked
         """
@@ -1781,6 +1792,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     version=new_version,
                     parent=self.parent()
                 )
+
+                # connect the rejected signal to delete the new version
+                QtCore.QObject.connect(
+                    dialog,
+                    QtCore.SIGNAL("rejected()"),
+                    functools.partial(self.publisher_rejected, version=new_version)
+                )
+
                 dialog.show()
                 if dialog.check_all_publishers():
                     # auto run the publish button if all publishers are passing

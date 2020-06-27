@@ -446,7 +446,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # generate one UI element per publisher
         # create the layout
         publisher_element = PublisherElement(publisher)
-        publisher_element.create(self)
+        publisher_element.create(parent=self)
         self.publisher_vertical_layout.addLayout(publisher_element.layout)
         return publisher_element
 
@@ -522,11 +522,3 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.accept()
             if self.publish_callback:
                 self.publish_callback()
-
-    def reject(self):
-        QtWidgets.QDialog.reject(self)
-        from stalker.db.session import DBSession
-        if self.version:
-            DBSession.delete(self.version)
-            DBSession.commit()
-        DBSession.rollback()
