@@ -677,6 +677,43 @@ class EnvironmentBase(object):
 
         logger.debug('created copy to: %s' % output_full_path)
 
+    @classmethod
+    def get_shot(cls, version):
+        from stalker import Shot
+        for task in version.task.parents:
+            if isinstance(task, Shot):
+                return task
+
+    def is_shot_related_version(self, version):
+        """Returns true if this is a shot related version
+
+        :param version:
+        :return:
+        """
+        shot = self.get_shot(version)
+        if shot:
+            return True
+        else:
+            return False
+
+    def set_fps(self, fps=25.0):
+        """Sets the fps of the environment
+
+        :param float fps: The FPS of the current environment. Defaults to 25.
+        :return:
+        """
+        raise NotImplementedError
+
+    def set_render_resolution(self, width, height, pixel_aspect=1.0):
+        """Sets the render resolution for the current environment
+
+        :param int width: The width of the resolution
+        :param int height: The height of the resolution
+        :param float pixel_aspect: The pixel aspect ratio, defaults to 1.0.
+        :return:
+        """
+        raise NotImplementedError
+
 
 class Filter(object):
     """A filter class filters given options against the given versions related
