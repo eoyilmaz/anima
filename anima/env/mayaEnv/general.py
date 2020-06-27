@@ -20,6 +20,27 @@ class General(object):
     )
 
     @classmethod
+    def publish_checker(cls):
+        """Opens the Publish Checker window without publishing the current
+        scene
+        """
+        import functools
+        from anima.env import mayaEnv
+        m = mayaEnv.Maya()
+        version = m.get_current_version()
+
+        # create the publish window
+        from anima.ui import publish_checker
+        dialog = publish_checker.UI(
+            environment=m,
+            publish_callback=None,
+            version=version,
+            parent=mayaEnv.get_maya_main_window()
+        )
+        dialog.auto_delete_new_version_on_exit = False
+        dialog.show()
+
+    @classmethod
     def unshape_parent_nodes(cls):
         """Moves the shape node of a mesh to another transform node as a
         children if the mesh node has other meshes under it. Essentially
@@ -434,7 +455,7 @@ class General(object):
         """generates thumbnail for current scene
         """
         from anima.env.mayaEnv import auxiliary
-        reload(auxiliary)
+        # reload(auxiliary)
         result = auxiliary.generate_thumbnail()
         if result:
             pm.informBox('Done!', 'Thumbnail generated successfully!')

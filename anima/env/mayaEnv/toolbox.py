@@ -227,6 +227,15 @@ def UI():
 
             color.change()
             pm.button(
+                'publishChecker_button',
+                l="Publish Checker",
+                c=repeated_callback(General.publish_checker),
+                ann="Publish Checker",
+                bgc=color.color
+            )
+
+            color.change()
+            pm.button(
                 'rename_unique_button',
                 l='Rename Unique',
                 c=repeated_callback(General.rename_unique),
