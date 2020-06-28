@@ -215,10 +215,9 @@ class Config(ConfigBase):
             do_db_setup()
             from stalker import User
             from stalker.db.session import DBSession
-            map(
-                lambda x: self._user_names_lut.__setitem__(x[0], x[1]),
-                DBSession.query(User.id, User.name).all()
-            )
+
+            for result in DBSession.query(User.id, User.name).all():
+                self._user_names_lut.__setitem__(result.id, result.name)
         return self._user_names_lut
 
     def is_power_user(self, user):
