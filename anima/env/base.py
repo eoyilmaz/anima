@@ -107,7 +107,7 @@ class EnvironmentBase(object):
         :param bool run_pre_publishers: Run pre publishers of this environment
           or not. Default value is True
         """
-        raise NotImplementedError
+        raise NotImplementedError("save_as is not implemented")
 
     def export_as(self, version):
         """Exports the contents of the open document as the given version.
@@ -115,23 +115,23 @@ class EnvironmentBase(object):
         :param version: A :class:`~stalker.models.version.Version` instance
           holding the desired version.
         """
-        raise NotImplementedError
+        raise NotImplementedError("export_as is not implemented")
 
     def open(self, version, force=False, representation=None,
              reference_depth=0, skip_update_check=False):
         """the open action
         """
-        raise NotImplementedError
+        raise NotImplementedError("open is not implemented")
 
     def import_(self, version):
         """the import action
         """
-        raise NotImplementedError
+        raise NotImplementedError("import_ is not implemented")
 
     def reference(self, version, use_namespace=True):
         """the reference action
         """
-        raise NotImplementedError
+        raise NotImplementedError("reference is not implemented")
 
     def trim_repo_path(self, path):
         """Trims the repository path value from the given path
@@ -243,7 +243,7 @@ class EnvironmentBase(object):
 
         :returns: :class:`~stalker.models.version.Version` instance or None
         """
-        raise NotImplementedError
+        raise NotImplementedError("get_current_version is not implemented")
 
     def append_to_recent_files(self, path):
         """appends the given path to the recent files list
@@ -308,14 +308,14 @@ class EnvironmentBase(object):
     def get_project(self):
         """returns the current project from environment
         """
-        raise NotImplementedError
+        raise NotImplementedError("get_project is not implemented")
 
     def set_project(self, version):
         """Sets the project to the given Versions project.
 
         :param version: A :class:`~stalker.models.version.Version`.
         """
-        raise NotImplementedError
+        raise NotImplementedError("set_project is not implemented")
 
     def update_version_inputs(self, parent_ref=None):
         """updates the references list of the current version
@@ -358,7 +358,7 @@ class EnvironmentBase(object):
     def deep_version_inputs_update(self):
         """Updates the inputs of the references of the current scene
         """
-        raise NotImplementedError
+        raise NotImplementedError("deep_version_inputs_update is not implemented")
 
     def check_referenced_versions(self, pdm=None):
         """Deeply checks all the references in the scene and returns a
@@ -500,7 +500,7 @@ class EnvironmentBase(object):
         :param parent_ref: The parent reference node.
         :returns: list of :class:`~stalker.models.version.Version` instances.
         """
-        raise NotImplementedError
+        raise NotImplementedError("get_referenced_versions is not implemented")
 
     def update_versions(self, reference_resolution):
         """Updates the versions to the latest ones.
@@ -511,7 +511,7 @@ class EnvironmentBase(object):
           Version instance is in the 'update' list the reference is updated to
           the latest version.
         """
-        raise NotImplementedError
+        raise NotImplementedError("update_versions is not implemented")
 
     def get_frame_range(self):
         """Returns the frame range from the environment
@@ -519,24 +519,27 @@ class EnvironmentBase(object):
         :returns: a tuple of integers containing the start and end frame
             numbers
         """
-        raise NotImplementedError
+        raise NotImplementedError("get_frame_range is not implemented")
 
     def set_frame_range(self, start_frame=0, end_frame=100,
                         adjust_frame_range=False):
         """Sets the frame range in the environment to the given start and end
         frames
         """
-        raise NotImplementedError
+        raise NotImplementedError("set_frame_range is not implemented")
 
     def get_fps(self):
         """Returns the frame rate of this current environment
         """
-        raise NotImplementedError
+        raise NotImplementedError("get_fps is not implemented")
 
     def set_fps(self, fps=25):
         """Sets the frame rate of the environment. The default value is 25.
+
+        :param float fps: The FPS of the current environment. Defaults to 25.
+        :return:
         """
-        raise NotImplementedError
+        raise NotImplementedError("set_fps is not implemented")
 
     def has_extension(self, filename):
         """Returns True if the given file names extension is in the extensions
@@ -556,7 +559,7 @@ class EnvironmentBase(object):
     def load_referenced_versions(self):
         """loads all the references
         """
-        raise NotImplementedError
+        raise NotImplementedError("load_referenced_versions is not implemented")
 
     def replace_version(self, source_version, target_version):
         """Replaces the source_version with the target_version
@@ -569,7 +572,7 @@ class EnvironmentBase(object):
           :class:`~stalker.models.version.Version` instance holding the new
           version replacing the source one.
         """
-        raise NotImplementedError
+        raise NotImplementedError("replace_version is not implemented")
 
     def replace_external_paths(self, mode=0):
         """Replaces the external paths (which are not starting with the
@@ -583,7 +586,7 @@ class EnvironmentBase(object):
 
         :return:
         """
-        raise NotImplementedError
+        raise NotImplementedError("replace_external_paths is not implemented")
 
     def reference_filters(self, version, options):
         """Checks the given version against the given options
@@ -696,14 +699,6 @@ class EnvironmentBase(object):
         else:
             return False
 
-    def set_fps(self, fps=25.0):
-        """Sets the fps of the environment
-
-        :param float fps: The FPS of the current environment. Defaults to 25.
-        :return:
-        """
-        raise NotImplementedError
-
     def set_render_resolution(self, width, height, pixel_aspect=1.0):
         """Sets the render resolution for the current environment
 
@@ -712,7 +707,7 @@ class EnvironmentBase(object):
         :param float pixel_aspect: The pixel aspect ratio, defaults to 1.0.
         :return:
         """
-        raise NotImplementedError
+        raise NotImplementedError("set_render_resolution is not implemented")
 
 
 class Filter(object):
