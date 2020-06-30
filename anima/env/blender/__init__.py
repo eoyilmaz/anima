@@ -14,7 +14,7 @@ class Blender(EnvironmentBase):
     """The Blender environment wrapper
     """
 
-    name = "Blender %s" % bpy.app.version_string
+    name = "Blender%s.%s" % (bpy.app.version[0:2])
     representations = ['Base']
 
     has_publishers = True
