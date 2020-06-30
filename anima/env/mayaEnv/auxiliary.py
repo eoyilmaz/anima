@@ -266,17 +266,28 @@ def create_follicle(shape, uv):
     return follicle_transform, follicle
 
 
-def auto_rivet():
+def auto_rivet(objects=None, geo=None):
     """creates hair follicles around selection
-    """
-    sel_list = pm.ls(sl=1)
 
-    # the last selection is the mesh
-    objects = sel_list[:-1]
-    geo = sel_list[-1]
+    :param objects: list of objects to attach to the geometry
+    :param geo: A geometry to attach the objects to.
+    """
+    if not objects or not geo:
+        sel_list = pm.ls(sl=1)
+
+        # the last selection is the mesh
+        objects = sel_list[:-1]
+        geo = sel_list[-1]
+
+    # meshes = filter(lambda x: isinstance(x, pm.nt.Mesh), sel_list)
+    # if meshes
+    # objects = filter(lambda x: not isinstance(x, pm.nt.Mesh), sel_list)
 
     # get the closest point to the surface
-    shape = geo.getShape()
+    if isinstance(geo, pm.nt.Transform):
+        shape = geo.getShape()
+    elif isinstance(geo, pm.nt.Mesh):
+        shape = geo
 
     follicles = []
 
