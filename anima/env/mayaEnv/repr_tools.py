@@ -1562,6 +1562,14 @@ class RepresentationGenerator(object):
             # Redshift For maya is not installed
             return
 
+        # somehow the above check is not raising a normal Python error
+        # trying different measures
+        try:
+            pm.pluginInfo('redshift4maya', query=True, vendor=True)
+        except RuntimeError:
+            # now we are sure that the plugin is not loaded
+            return
+
         # # disable "show plugin shapes"
         # active_panel = auxiliary.Playblaster.get_active_panel()
         # show_plugin_shapes = pm.modelEditor(active_panel, q=1, pluginShapes=1)

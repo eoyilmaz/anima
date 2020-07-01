@@ -346,50 +346,22 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # create workspace folders
         self.create_workspace_folders(workspace_path)
 
-        # check if this is a shot related task
-        is_shot_related_task = False
-        shot = None
-        from stalker import Shot
-        for task in version.task.parents:
-            if isinstance(task, Shot):
-                is_shot_related_task = True
-                shot = task
-                break
-
         # set linear and angular units
         pm.currentUnit(l='cm', a='deg')
 
-        # set scene fps
-        # even if this is not the first version set the fps
-        #
-        # or better try to get the parent versions and see if we can reach to
-        # a v001 which will guarantee that this version is coming from a file
-        # that has its fps set before.
-        #
-        # If we can't get a v001 file, than it means that the user created a
-        # new scene and saved it as a new version for series of already
-        # existing versions, (ex. save as v002 for the first time)
-        #
-        # Let's hope that it will not break animators scenes, where we have
-        # 12 FPS set for the shot and the intended fps is 25 which we will
-        # newer know.
+        # check if this is a shot related task
+        shot = self.get_shot(version)
 
-        fps = None
-        imf = None
-        if is_shot_related_task:
-            fps = shot.fps
-            imf = shot.image_format
+        # set the render range if it is the first version
+        if shot and version.version_number == 1:
+            self.set_frame_range(shot.cut_in, shot.cut_out)
 
-            # set the render range if it is the first version
-            if version.version_number == 1:
-                self.set_frame_range(shot.cut_in, shot.cut_out)
-        else:
-            # set render resolution
-            fps = project.fps
-            imf = project.image_format
+        fps = shot.fps if shot else project.fps
+        imf = shot.image_format if shot else project.image_format
 
-        # if version.version_number == 1:
-        self.set_resolution(imf.width, imf.height, imf.pixel_aspect)
+        self.set_render_resolution(imf.width, imf.height, imf.pixel_aspect)
+
+        # now always setting the scene fps
         self.set_fps(fps)
 
         # set arnold texture search paths
@@ -429,7 +401,6 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # go to master layer for Maya 2017
         # to prevent __untitled__ collection creation
         from anima.env.mayaEnv import auxiliary
-        reload(auxiliary)
         current_render_layer = auxiliary.get_current_render_layer()
         if int(pm.about(v=1)) >= 2017:
             auxiliary.switch_to_default_render_layer()
@@ -882,6 +853,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             # just add the <Camera> template variable to the file name
             render_file_rel_path += "_<Camera>"
 
+        # TODO: Some of the following code is repeated in self.set_output_file_format
         # defaultRenderGlobals
         dRG = pm.PyNode('defaultRenderGlobals')
         dRG.imageFilePrefix.set(render_file_rel_path)
@@ -996,7 +968,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                      '%f seconds' % (end - start))
 
     @classmethod
-    def set_resolution(cls, width, height, pixel_aspect=1.0):
+    def set_render_resolution(cls, width, height, pixel_aspect=1.0):
         """Sets the resolution of the current scene
 
         :param width: The width of the output image
@@ -1339,7 +1311,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
     @classmethod
     def set_fps(cls, fps=25.0):
-        """sets the fps of the environment
+        """Sets the fps of the environment
+
+        :param float fps: The FPS of the current environment. Defaults to 25.
         """
         start = time.time()
         # get the current time, current playback min and max (because maya

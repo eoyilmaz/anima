@@ -970,9 +970,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             "tasks:<br><br>%s<br><br>"
                             "So, you can not un-publish it!" %
                             "<br>".join(
-                                map(
-                                    lambda x: x.name,
-                                    related_tasks
+                                list(
+                                    map(
+                                        lambda x: x.name,
+                                        related_tasks
+                                    )
                                 )
                             )
                         )
@@ -1004,9 +1006,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             "tasks:<br><br>%s<br><br>"
                             "So, you can not delete it!" %
                             "<br>".join(
-                                map(
-                                    lambda x: x.name,
-                                    related_tasks
+                                list(
+                                    map(
+                                        lambda x: x.name,
+                                        related_tasks
+                                    )
                                 )
                             )
                         )
@@ -1330,7 +1334,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     .execute(text(sql), task_id=task_id)\
                     .fetchall()
 
-                takes = map(lambda x: x[0], result)
+                takes = list(map(lambda x: x[0], result))
 
                 if not self.repr_as_separate_takes_checkBox.isChecked():
                     # filter representations
@@ -1616,7 +1620,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         data_from_db = \
             query.order_by(Version.version_number.desc()).limit(count).all()
-        versions = map(lambda x: VersionNT(*x), data_from_db)
+        versions = list(map(lambda x: VersionNT(*x), data_from_db))
         versions.reverse()
 
         self.previous_versions_table_widget.update_content(versions)
@@ -1752,6 +1756,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         new_version = self.get_new_version()
         self.save_as_wrapper(new_version)
 
+    def publisher_rejected(self, version=None):
+        """runs when the publisher is rejected
+        """
+        from stalker import Version
+        from stalker.db.session import DBSession
+        if version and isinstance(version, Version):
+            if version:
+                DBSession.delete(version)
+                DBSession.commit()
+            DBSession.rollback()
+
     def publish_push_button_clicked(self):
         """runs when the publish_push_button clicked
         """
@@ -1781,6 +1796,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     version=new_version,
                     parent=self.parent()
                 )
+
+                # connect the rejected signal to delete the new version
+                QtCore.QObject.connect(
+                    dialog,
+                    QtCore.SIGNAL("rejected()"),
+                    functools.partial(self.publisher_rejected, version=new_version)
+                )
+
                 dialog.show()
                 if dialog.check_all_publishers():
                     # auto run the publish button if all publishers are passing
