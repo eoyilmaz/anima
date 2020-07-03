@@ -414,6 +414,14 @@ class Rigging(object):
         rigger.create_fk_hierarchy()
         rigger.create_switch_setup()
 
+    @classmethod
+    def squash_stretch_bend_rigger(cls):
+        """Creates Squash/Stretch/Bend rig for the selected geometry
+        """
+        geo = pm.selected()[0]
+        ssbr = SquashStretchBendRigger(geo)
+        ssbr.setup()
+
 
 class JointOnCurveDialog(QtWidgets.QDialog):
     """Dialog for create_joint_on_curve utility
