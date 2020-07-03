@@ -1662,14 +1662,16 @@ class SquashStretchBendRigger(object):
     :param geo: The geometry to create the rig for.
     """
 
-    def __init__(self, geo=None):
+    def __init__(self, geo=None, use_squash=True, use_delta_mush=True):
         self.geo = geo
         self.bend_deformer = None
         self.bend_handle = None
 
+        self.use_squash = use_squash
         self.squash_deformer = None
         self.squash_handle = None
 
+        self.use_delta_mush = use_delta_mush
         self.delta_mush = None
 
         self.decompose_matrix = None
@@ -1680,8 +1682,29 @@ class SquashStretchBendRigger(object):
         self.aim_locator2 = None
         self.main_control = None
 
-    def setup(self):
+    def check_main_control(self):
+        """checks the existence of the main control
         """
+        if self.main_control is None:
+            raise RuntimeError("Please create the main controller first")
+
+    def setup(self):
+        """creates all the necessary nodes
+        """
+        self.create_main_controller()
+
+        if self.use_squash:
+            self.create_squash_deformer()
+
+        self.create_bend_deformer()
+
+        if self.use_delta_mush:
+            self.create_delta_mush_deformer()
+
+        self.finalize_setup()
+
+    def create_main_controller(self):
+        """creates the main controller
         """
         bbox = self.geo.getBoundingBox()
         y_min = bbox.min().y
@@ -1696,13 +1719,14 @@ class SquashStretchBendRigger(object):
         self.decompose_matrix = pm.nt.DecomposeMatrix()
         self.main_control.worldMatrix[0] >> self.decompose_matrix.inputMatrix
 
-        # create aim locator1 (for bend direction)
-        self.aim_locator1 = pm.spaceLocator(name="ssb_aim_locator#")
-        self.aim_locator1.t.set(bbox.center())
-        self.aim_locator1.ty.set(y_min)
+    def create_squash_deformer(self):
+        """creates the squash deformer
+        """
+        self.check_main_control()
 
-        # create aim locator2 (for bend curvature)
-        self.aim_locator2 = pm.spaceLocator(name="ssb_aim_locator#")
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        h = bbox.height()
 
         # create squash deformer
         self.squash_deformer, self.squash_handle = pm.nonLinear(self.geo, type='squash')
@@ -1715,6 +1739,35 @@ class SquashStretchBendRigger(object):
         self.squash_handle.t >> self.distance_between1.point1
         self.decompose_matrix.outputTranslate >> self.distance_between1.point2
 
+        # Squash
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(-h * 0.5)
+        self.squash_deformer.factor.set(-1)
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(0)
+
+        # adjust infinity of the keyframes to be linear
+        anim_curve = self.squash_deformer.factor.inputs(type=pm.nt.AnimCurve)[0]
+        anim_curve.setPreInfinityType(infinityType='linear')
+        anim_curve.setPostInfinityType(infinityType='linear')
+
+    def create_bend_deformer(self):
+        """creates the bend deformer
+        """
+        self.check_main_control()
+
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        h = bbox.height()
+
+        # create aim locator1 (for bend direction)
+        self.aim_locator1 = pm.spaceLocator(name="ssb_aim_locator#")
+        self.aim_locator1.t.set(bbox.center())
+        self.aim_locator1.ty.set(y_min)
+
+        # create aim locator2 (for bend curvature)
+        self.aim_locator2 = pm.spaceLocator(name="ssb_aim_locator#")
+
         # create bend deformer
         self.bend_deformer, self.bend_handle = pm.nonLinear(self.geo, type='bend')
         self.bend_deformer.lowBound.set(0)
@@ -1724,9 +1777,6 @@ class SquashStretchBendRigger(object):
         pm.parent(self.aim_locator2, self.bend_handle, r=1)
 
         # create aim constraint for the bend.curvature control
-        # self.distance_between2 = pm.nt.DistanceBetween()
-        # self.bend_handle.t >> self.distance_between2.point1
-        # self.aim_locator1.t >> self.distance_between2.point2
         pm.aimConstraint(self.main_control, self.aim_locator2, skip=["x", "y"], aimVector=[1, 0, 0], upVector=[0, 1, 0])
 
         # create constraints
@@ -1748,16 +1798,8 @@ class SquashStretchBendRigger(object):
         anim_curve.setPreInfinityType(infinityType='linear')
         anim_curve.setPostInfinityType(infinityType='linear')
 
-        # Squash
-        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
-        self.main_control.ty.set(-h * 0.5)
-        self.squash_deformer.factor.set(-1)
-        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
-        self.main_control.ty.set(0)
-        # adjust infinity of the keyframes to be linear
-        anim_curve = self.squash_deformer.factor.inputs(type=pm.nt.AnimCurve)[0]
-        anim_curve.setPreInfinityType(infinityType='linear')
-        anim_curve.setPostInfinityType(infinityType='linear')
+    def create_delta_mush_deformer(self):
+        self.check_main_control()
 
         # finally add delta mush
         self.delta_mush = pm.deltaMush(
@@ -1771,16 +1813,24 @@ class SquashStretchBendRigger(object):
         self.delta_mush.outwardConstraint.set(0.25)
         self.delta_mush.distanceWeight.set(0.25)
 
+    def finalize_setup(self):
+        """does final clean up
+        """
+        self.check_main_control()
+
         # group the node together
         parent_group = pm.nt.Transform(name='SquashStretchBendRiggerGroup#')
         pm.parent(self.main_control.getParent(), parent_group)
         pm.parent(self.aim_locator1, parent_group)
-        pm.parent(self.squash_handle, parent_group)
+        if self.use_squash:
+            pm.parent(self.squash_handle, parent_group)
+
         pm.parent(self.bend_handle, parent_group)
 
         # set visibilities
         self.aim_locator1.v.set(0)
-        self.squash_handle.v.set(0)
+        if self.use_squash:
+            self.squash_handle.v.set(0)
         self.bend_handle.v.set(0)
 
         # as a gesture select the main control
