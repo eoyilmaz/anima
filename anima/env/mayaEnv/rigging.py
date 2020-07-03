@@ -1350,6 +1350,8 @@ class IKJointHierarchyBase(JointHierarchy):
         self.ik_end_controller = None
         self.ik_pole_controller = None
 
+        self.main_group = None
+
     def create_ik_setup(self, solver='', controller_radius=0.5):
         """Do create ik setup here
 
@@ -1376,7 +1378,7 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
             pm.ikHandle(sj=self.start_joint, ee=self.end_joint, solver=solver)
 
         self.ik_end_controller, shape = pm.circle(
-            normal=(1, 0, 0),
+            normal=(0, 1, 0),
             radius=controller_radius
         )
         pm.parent(self.ik_end_controller, self.ik_end_effector)
@@ -1406,8 +1408,20 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
         pm.parent(self.ik_pole_controller, self.joints[1], r=1)
         pm.parent(self.ik_pole_controller, w=1)
 
+        # I don't like this but it will help a lot
+        move_amount = [0, -1, 0]
+        if pm.xform(self.ik_pole_controller, q=1, ws=1, t=1)[0] < 0:
+            move_amount = [0, 1, 0]
+        pm.move(self.ik_pole_controller, move_amount, r=1, os=1, wd=1)
+
         pm.poleVectorConstraint(self.ik_pole_controller, self.ik_handle)
         auxiliary.axial_correction_group(self.ik_pole_controller)
+
+        # group everything under the main_group
+        self.main_group = pm.nt.Transform(name='IKLimbJointHierarchy_Grp#')
+        pm.parent(self.ik_handle, self.main_group)
+        pm.parent(self.ik_end_controller.getParent(), self.main_group)
+        pm.parent(self.ik_pole_controller.getParent(), self.main_group)
 
         if self.do_stretchy:
             self.create_stretch_setup()
