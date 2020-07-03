@@ -1656,7 +1656,132 @@ class ReverseFootRigger(RiggerBase):
         pass
 
 
-class SquashStretchBendRigger(RiggerBase):
+class SquashStretchBendRigger(object):
     """creates squash/stretch/bend rig
+
+    :param geo: The geometry to create the rig for.
     """
-    pass
+
+    def __init__(self, geo=None):
+        self.geo = geo
+        self.bend_deformer = None
+        self.bend_handle = None
+
+        self.squash_deformer = None
+        self.squash_handle = None
+
+        self.delta_mush = None
+
+        self.decompose_matrix = None
+        self.distance_between1 = None
+        self.distance_between2 = None
+
+        self.aim_locator1 = None
+        self.aim_locator2 = None
+        self.main_control = None
+
+    def setup(self):
+        """
+        """
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        y_max = bbox.max().y
+        h = bbox.height()
+
+        # create main controller
+        self.main_control = pm.spaceLocator(name="ssb_main_control")
+        self.main_control.t.set(bbox.center())
+        self.main_control.ty.set(y_max)
+        auxiliary.axial_correction_group(self.main_control)
+        self.decompose_matrix = pm.nt.DecomposeMatrix()
+        self.main_control.worldMatrix[0] >> self.decompose_matrix.inputMatrix
+
+        # create aim locator1 (for bend direction)
+        self.aim_locator1 = pm.spaceLocator(name="ssb_aim_locator#")
+        self.aim_locator1.t.set(bbox.center())
+        self.aim_locator1.ty.set(y_min)
+
+        # create aim locator2 (for bend curvature)
+        self.aim_locator2 = pm.spaceLocator(name="ssb_aim_locator#")
+
+        # create squash deformer
+        self.squash_deformer, self.squash_handle = pm.nonLinear(self.geo, type='squash')
+        self.squash_deformer.lowBound.set(0)
+        self.squash_handle.ty.set(y_min)
+        self.squash_handle.s.set(h, h, h)
+
+        # create distance between node1
+        self.distance_between1 = pm.nt.DistanceBetween()
+        self.squash_handle.t >> self.distance_between1.point1
+        self.decompose_matrix.outputTranslate >> self.distance_between1.point2
+
+        # create bend deformer
+        self.bend_deformer, self.bend_handle = pm.nonLinear(self.geo, type='bend')
+        self.bend_deformer.lowBound.set(0)
+        self.bend_deformer.highBound.set(1)
+        self.bend_handle.ty.set(y_min)
+        self.bend_handle.s.set(h, h, h)
+        pm.parent(self.aim_locator2, self.bend_handle, r=1)
+
+        # create aim constraint for the bend.curvature control
+        # self.distance_between2 = pm.nt.DistanceBetween()
+        # self.bend_handle.t >> self.distance_between2.point1
+        # self.aim_locator1.t >> self.distance_between2.point2
+        pm.aimConstraint(self.main_control, self.aim_locator2, skip=["x", "y"], aimVector=[1, 0, 0], upVector=[0, 1, 0])
+
+        # create constraints
+        # main to aim locator
+        pm.pointConstraint(self.main_control, self.aim_locator1, skip="y")
+
+        # create aim constraint
+        pm.aimConstraint(self.aim_locator1, self.bend_handle, upVector=[0, 1, 0], aimVector=[1, 0, 0])
+
+        # create set driven keys
+        # bend
+        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        self.main_control.tx.set(h)
+        self.bend_deformer.curvature.set(90)
+        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        self.main_control.tx.set(0)
+        # adjust infinity of the keyframes to be linear
+        anim_curve = self.bend_deformer.curvature.inputs(type=pm.nt.AnimCurve)[0]
+        anim_curve.setPreInfinityType(infinityType='linear')
+        anim_curve.setPostInfinityType(infinityType='linear')
+
+        # Squash
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(-h * 0.5)
+        self.squash_deformer.factor.set(-1)
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(0)
+        # adjust infinity of the keyframes to be linear
+        anim_curve = self.squash_deformer.factor.inputs(type=pm.nt.AnimCurve)[0]
+        anim_curve.setPreInfinityType(infinityType='linear')
+        anim_curve.setPostInfinityType(infinityType='linear')
+
+        # finally add delta mush
+        self.delta_mush = pm.deltaMush(
+            self.geo,
+            smoothingIterations=10,
+            smoothingStep=0.5,
+            pinBorderVertices=1,
+            envelope=1
+        )
+        self.delta_mush.inwardConstraint.set(0.25)
+        self.delta_mush.outwardConstraint.set(0.25)
+        self.delta_mush.distanceWeight.set(0.25)
+
+        # group the node together
+        parent_group = pm.nt.Transform(name='SquashStretchBendRiggerGroup#')
+        pm.parent(self.main_control.getParent(), parent_group)
+        pm.parent(self.aim_locator1, parent_group)
+        pm.parent(self.squash_handle, parent_group)
+        pm.parent(self.bend_handle, parent_group)
+
+        # set visibilities
+        self.aim_locator1.v.set(0)
+        self.squash_handle.v.set(0)
+        self.bend_handle.v.set(0)
+
+        # as a gesture select the main control
+        pm.select(self.main_control)
