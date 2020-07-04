@@ -169,8 +169,7 @@ class TaskItem(QtGui.QStandardItem):
     task_entity_types = ['Task', 'Asset', 'Shot', 'Sequence']
 
     def __init__(self, *args, **kwargs):
-        # TODO: rename self.task to self.entity
-        self.task = kwargs.pop('entity', None)
+        self.task = kwargs.pop('task', None)
         self.loaded = False
         self.fetched_all = False
 
@@ -192,7 +191,7 @@ class TaskItem(QtGui.QStandardItem):
         """returns a copy of this item
         """
         logger.debug('TaskItem.clone() is started for item: %s' % self.text())
-        new_item = TaskItem(entity=self.task)
+        new_item = TaskItem(task=self.task)
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
         logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
@@ -263,7 +262,7 @@ class TaskItem(QtGui.QStandardItem):
             from anima import defaults
             task_items = []
             for task in tasks:
-                task_item = TaskItem(0, 4, entity=task)
+                task_item = TaskItem(0, 4, task=task)
                 task_item.parent = self
 
                 # color with task status
@@ -359,7 +358,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         )
 
         for project in projects:
-            project_item = TaskItem(0, 4, entity=project)
+            project_item = TaskItem(0, 4, task=project)
             project_item.parent = None
             project_item.setColumnCount(4)
 
