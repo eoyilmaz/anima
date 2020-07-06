@@ -14,7 +14,7 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 from anima.ui.views.task import TaskTreeView
-from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
+from anima.ui.widgets import TakesComboBox, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
 
 
@@ -118,35 +118,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def __init__(self, environment=None, parent=None, mode=0):
         logger.debug("initializing the interface")
-
         super(MainDialog, self).__init__(parent)
-        self._setup_ui()
-
+        self.environment = environment
         self.mode = mode
         self.chosen_version = None
         self.environment_name_format = "%n (%e)"
-
-        window_title = "Version Creator | Anima v" + anima.__version__
-
-        if environment:
-            window_title = "%s | %s" % (window_title, environment.name)
-        else:
-            window_title = "%s | No Environment" % window_title
-
-        if self.mode:
-            window_title = "%s | Read-Only Mode" % window_title
-        else:
-            window_title = "%s | Normal Mode" % window_title
-
-        # change the window title
-        self.setWindowTitle(window_title)
-
-        self.environment = environment
-        if not self.environment.has_publishers:
-            self.publish_push_button.setText("Publish")
-
         # create the project attribute in projects_combo_box
         self.current_dialog = None
+
+        # setup UI
+        self._setup_ui()
 
         # setup signals
         self._setup_signals()
@@ -159,357 +140,166 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         logger.debug("finished initializing the interface")
 
-    def center_window(self):
-        """overridden method
-        """
-        if self.parent():
-            parent_geometry = self.parent().geometry()
-            size = self.geometry()
-
-            self.move(
-                (parent_geometry.width() - size.width()) * 0.5 + parent_geometry.left(),
-                (parent_geometry.height() - size.height()) * 0.5 + parent_geometry.top()
-            )
-        else:
-            return super(MainDialog, self).center_window()
-
     def _setup_ui(self):
+        """sets the UI up
+        """
+        import anima
+        window_title = "Version Creator | Anima Pipeline v" + anima.__version__
+
+        if self.environment:
+            window_title = "%s | %s" % (window_title, self.environment.name)
+        else:
+            window_title = "%s | No Environment" % window_title
+
+        if self.mode:
+            window_title = "%s | Read-Only Mode" % window_title
+        else:
+            window_title = "%s | Normal Mode" % window_title
+
+        # change the window title
+        self.setWindowTitle(window_title)
+
+        style_sheet = """
+            QGroupBox::title {
+                color: rgb(71, 143, 202);
+                font-size: 108pt;
+                font-weight: bold;
+            }
+        """
+
+        self.setStyleSheet(style_sheet)
+
+        # Dialog itself
         self.setWindowModality(QtCore.Qt.ApplicationModal)
-        self.resize(1753, 769)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                           QtWidgets.QSizePolicy.Preferred)
-        size_policy.setHorizontalStretch(1)
-        size_policy.setVerticalStretch(1)
-        size_policy.setHeightForWidth(
-            self.sizePolicy().hasHeightForWidth())
-        self.setSizePolicy(size_policy)
         self.setSizeGripEnabled(True)
         self.setModal(True)
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self)
-        self.verticalWidget = QtWidgets.QWidget(self)
-        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred,
-                                           QtWidgets.QSizePolicy.Preferred)
+
+        # Layouts
+        # Main Layout
+        self.horizontal_layout_1 = QtWidgets.QHBoxLayout(self)
+
+        self.vertical_widget = QtWidgets.QWidget(self)
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Preferred
+        )
         size_policy.setHorizontalStretch(1)
         size_policy.setVerticalStretch(1)
         size_policy.setHeightForWidth(
-            self.verticalWidget.sizePolicy().hasHeightForWidth())
-        self.verticalWidget.setSizePolicy(size_policy)
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.verticalWidget)
-        self.verticalLayout.setSizeConstraint(
-            QtWidgets.QLayout.SetMaximumSize)
-        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
-        self.horizontalLayout_11 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
-        spacerItem = QtWidgets.QSpacerItem(40, 20,
-                                           QtWidgets.QSizePolicy.Expanding,
-                                           QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_11.addItem(spacerItem)
+            self.vertical_widget.sizePolicy().hasHeightForWidth()
+        )
+        self.vertical_widget.setSizePolicy(size_policy)
+
+        self.vertical_layout_1 = QtWidgets.QVBoxLayout(self.vertical_widget)
+        self.vertical_layout_1.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
+        self.vertical_layout_1.setContentsMargins(0, 0, 0, 0)
+
+        # ------------------------------------------------
+        # Login Information
+        self.horizontal_layout_11 = QtWidgets.QHBoxLayout()
+        self.horizontal_layout_11.setContentsMargins(0, 0, 0, 0)
+        spacer_item = QtWidgets.QSpacerItem(
+            40, 20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.horizontal_layout_11.addItem(spacer_item)
 
         # Logged in As Label
-        self.logged_in_as_label = QtWidgets.QLabel(self.verticalWidget)
+        self.logged_in_as_label = QtWidgets.QLabel(self.vertical_widget)
         self.logged_in_as_label.setText("<b>Logged In As:</b>")
         self.logged_in_as_label.setTextFormat(QtCore.Qt.AutoText)
-        self.horizontalLayout_11.addWidget(self.logged_in_as_label)
+        self.horizontal_layout_11.addWidget(self.logged_in_as_label)
 
         # Logged in User Label
-        self.logged_in_user_label = QtWidgets.QLabel(self.verticalWidget)
-        self.horizontalLayout_11.addWidget(self.logged_in_user_label)
+        self.logged_in_user_label = QtWidgets.QLabel(self.vertical_widget)
+        self.horizontal_layout_11.addWidget(self.logged_in_user_label)
 
-        self.logout_pushButton = QtWidgets.QPushButton(self.verticalWidget)
-        self.horizontalLayout_11.addWidget(self.logout_pushButton)
-        self.verticalLayout.addLayout(self.horizontalLayout_11)
-        self.line_3 = QtWidgets.QFrame(self.verticalWidget)
-        self.line_3.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line_3)
-        self.horizontalLayout_14 = QtWidgets.QHBoxLayout()
-        self.tasks_groupBox = QtWidgets.QGroupBox(self.verticalWidget)
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tasks_groupBox)
-        self.verticalLayout_2.setContentsMargins(-1, 9, -1, -1)
+        # Logout Push Button
+        self.logout_push_button = QtWidgets.QPushButton(self.vertical_widget)
+        self.logout_push_button.setText("Logout")
+
+        self.horizontal_layout_11.addWidget(self.logout_push_button)
+        self.vertical_layout_1.addLayout(self.horizontal_layout_11)
+
+        # Add a line
+        line = QtWidgets.QFrame(self.vertical_widget)
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.vertical_layout_1.addWidget(line)
+
+        # ------------------------------------------------
+        # The Task Tree, New Version and Previous Versions Layouts
+        self.horizontal_layout_12 = QtWidgets.QHBoxLayout()
+
+        # before doing anything create a QSplitter for:
+        #   tasks_groupBox
+        #   new_version_group_box
+        #   previous_versions_group_box
+        #
+        # and add it under horizontal_layout_14
+
+        # splitter = QtWidgets.QSplitter()
+        # self.horizontal_layout_12.addWidget(splitter)
+
+        # Tasks GroupBox
+        self.tasks_group_box = QtWidgets.QGroupBox(self)
+        self.tasks_group_box.setTitle("Tasks")
+        self.horizontal_layout_12.addWidget(self.tasks_group_box)
+
+        # splitter.addWidget(self.tasks_groupBox)
+
+        self.vertical_layout_2 = QtWidgets.QVBoxLayout(self.tasks_group_box)
+        self.vertical_layout_2.setContentsMargins(-1, 9, -1, -1)
 
         # Show My Tasks Only CheckBox
-        self.my_tasks_only_checkBox =\
-            QtWidgets.QCheckBox(self.tasks_groupBox)
-        self.my_tasks_only_checkBox.setChecked(False)
-        self.verticalLayout_2.addWidget(self.my_tasks_only_checkBox)
+        self.my_tasks_only_check_box = QtWidgets.QCheckBox(self)
+        self.my_tasks_only_check_box.setText("Show my tasks only")
+        self.my_tasks_only_check_box.setChecked(False)
+        self.vertical_layout_2.addWidget(self.my_tasks_only_check_box)
 
         # Show Completed Projects
-        self.show_completed_checkBox =\
-            QtWidgets.QCheckBox(self.tasks_groupBox)
-        self.show_completed_checkBox.setText("Show Completed Projects")
-        self.show_completed_checkBox.setChecked(False)
-        self.verticalLayout_2.addWidget(self.show_completed_checkBox)
+        self.show_completed_check_box = QtWidgets.QCheckBox(self)
+        self.show_completed_check_box.setText("Show Completed Projects")
+        self.show_completed_check_box.setChecked(False)
+        self.vertical_layout_2.addWidget(self.show_completed_check_box)
 
+        self.horizontal_layout_4 = QtWidgets.QHBoxLayout()
+        self.search_task_line_edit = QtWidgets.QLineEdit(self)
+        self.horizontal_layout_4.addWidget(self.search_task_line_edit)
+        self.vertical_layout_2.addLayout(self.horizontal_layout_4)
 
-        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
-        self.search_task_lineEdit = QtWidgets.QLineEdit(
-            self.tasks_groupBox)
-        self.horizontalLayout_4.addWidget(self.search_task_lineEdit)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
+        # ========================================
+        # Recent Files Combo Box
+        self.horizontal_layout_8 = QtWidgets.QHBoxLayout()
+        self.recent_files_combo_box = RecentFilesComboBox(self)
+        self.recent_files_combo_box.setToolTip("Recent Files")
+        self.recent_files_combo_box.addItem("--- No Recent Files ---")
+        self.horizontal_layout_8.addWidget(self.recent_files_combo_box)
 
-        # self.tasks_tree_view = QtWidgets.QTreeView()
-        self.tasks_tree_view = TaskTreeView(self.tasks_groupBox)
-        self.tasks_tree_view.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers
-        )
-        # self.tasks_tree_view.setAlternatingRowColors(True)
-        # self.tasks_tree_view.setUniformRowHeights(True)
-        # self.tasks_tree_view.header().setCascadingSectionResizes(True)
-        self.verticalLayout_2.addWidget(self.tasks_tree_view)
+        # Clear Recent Files Push Button
+        self.clear_recent_files_push_button = QtWidgets.QPushButton(self)
+        self.clear_recent_files_push_button.setText("Clear")
+        self.horizontal_layout_8.addWidget(self.clear_recent_files_push_button)
+        self.horizontal_layout_8.setStretch(0, 1)
+        self.vertical_layout_2.addLayout(self.horizontal_layout_8)
 
-        self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+        # ========================================
+        self.horizontal_layout_3 = QtWidgets.QHBoxLayout()
+        self.find_from_path_line_edit = QtWidgets.QLineEdit(self)
+        self.find_from_path_line_edit.setPlaceholderText("Find From Path")
 
-        self.recent_files_comboBox = RecentFilesComboBox(self.tasks_groupBox)
-        self.horizontalLayout_8.addWidget(self.recent_files_comboBox)
+        self.horizontal_layout_3.addWidget(self.find_from_path_line_edit)
+        self.find_from_path_push_button = QtWidgets.QPushButton(self)
+        self.find_from_path_push_button.setText("Find")
 
-        self.clear_recent_files_pushButton = QtWidgets.QPushButton(
-            self.tasks_groupBox)
-        self.horizontalLayout_8.addWidget(
-            self.clear_recent_files_pushButton)
-        self.horizontalLayout_8.setStretch(0, 1)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_8)
-        self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
-        self.find_from_path_lineEdit = QtWidgets.QLineEdit(
-            self.tasks_groupBox)
-        self.horizontalLayout_3.addWidget(self.find_from_path_lineEdit)
-        self.find_from_path_pushButton = QtWidgets.QPushButton(
-            self.tasks_groupBox)
-        self.find_from_path_pushButton.setDefault(True)
-        self.horizontalLayout_3.addWidget(self.find_from_path_pushButton)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_3)
-        self.thumbnail_graphicsView = QtWidgets.QGraphicsView(
-            self.tasks_groupBox)
-        size_policy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Fixed,
-            QtWidgets.QSizePolicy.Fixed
-        )
-        size_policy.setHorizontalStretch(0)
-        size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(
-            self.thumbnail_graphicsView.sizePolicy().hasHeightForWidth())
-        self.thumbnail_graphicsView.setSizePolicy(size_policy)
-        self.thumbnail_graphicsView.setMinimumSize(QtCore.QSize(320, 180))
-        self.thumbnail_graphicsView.setMaximumSize(QtCore.QSize(320, 180))
-        self.thumbnail_graphicsView.setAutoFillBackground(False)
-        self.thumbnail_graphicsView.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff)
-        self.thumbnail_graphicsView.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff)
-        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
-        brush.setStyle(QtCore.Qt.SolidPattern)
-        self.thumbnail_graphicsView.setBackgroundBrush(brush)
-        self.thumbnail_graphicsView.setInteractive(False)
-        self.thumbnail_graphicsView.setRenderHints(
-            QtGui.QPainter.Antialiasing |
-            QtGui.QPainter.HighQualityAntialiasing |
-            QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
-        )
-        self.verticalLayout_2.addWidget(self.thumbnail_graphicsView)
-        self.horizontalLayout_16 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_16.setContentsMargins(-1, -1, -1, 10)
-        spacer_item1 = QtWidgets.QSpacerItem(40, 20,
-                                            QtWidgets.QSizePolicy.Expanding,
-                                            QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_16.addItem(spacer_item1)
-        self.upload_thumbnail_pushButton = QtWidgets.QPushButton(
-            self.tasks_groupBox)
-        self.horizontalLayout_16.addWidget(self.upload_thumbnail_pushButton)
-        self.clear_thumbnail_pushButton = \
-            QtWidgets.QPushButton(self.tasks_groupBox)
-        self.horizontalLayout_16.addWidget(self.clear_thumbnail_pushButton)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_16)
-        self.horizontalLayout_14.addWidget(self.tasks_groupBox)
-        self.new_version_groupBox = QtWidgets.QGroupBox(self.verticalWidget)
-        font = QtGui.QFont()
-        font.setWeight(50)
-        font.setBold(False)
-        self.new_version_groupBox.setFont(font)
-        self.verticalLayout_6 = \
-            QtWidgets.QVBoxLayout(self.new_version_groupBox)
-        self.verticalLayout_3 = QtWidgets.QVBoxLayout()
-        self.horizontalLayout_9 = QtWidgets.QHBoxLayout()
-        self.takes_label = QtWidgets.QLabel(self.new_version_groupBox)
-        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
-        font = QtGui.QFont()
-        font.setWeight(50)
-        font.setBold(False)
-        self.takes_label.setFont(font)
-        self.horizontalLayout_9.addWidget(self.takes_label)
-        self.repr_as_separate_takes_checkBox = QtWidgets.QCheckBox(
-            self.new_version_groupBox)
-        self.horizontalLayout_9.addWidget(
-            self.repr_as_separate_takes_checkBox)
-        self.add_take_pushButton = QtWidgets.QPushButton(
-            self.new_version_groupBox)
-        self.horizontalLayout_9.addWidget(self.add_take_pushButton)
-        self.horizontalLayout_9.setStretch(1, 1)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_9)
-        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.find_from_path_push_button.setDefault(True)
+        self.horizontal_layout_3.addWidget(self.find_from_path_push_button)
+        self.vertical_layout_2.addLayout(self.horizontal_layout_3)
 
-        # =================
-        # Takes List Widget
-        self.takes_listWidget = TakesListWidget(self.new_version_groupBox)
-        self.horizontalLayout_6.addWidget(self.takes_listWidget)
-
-        self.verticalLayout_3.addLayout(self.horizontalLayout_6)
-        self.description_label = QtWidgets.QLabel(self.new_version_groupBox)
-        self.description_label.setMinimumSize(QtCore.QSize(35, 0))
-        self.verticalLayout_3.addWidget(self.description_label)
-        self.description_textEdit = QtWidgets.QTextEdit(
-            self.new_version_groupBox
-        )
-        self.description_textEdit.setEnabled(True)
-        self.description_textEdit.setTabChangesFocus(True)
-        self.verticalLayout_3.addWidget(self.description_textEdit)
-        self.verticalLayout_3.setStretch(1, 10)
-        self.verticalLayout_3.setStretch(3, 3)
-        self.verticalLayout_6.addLayout(self.verticalLayout_3)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.environment_comboBox = QtWidgets.QComboBox(
-            self.new_version_groupBox
-        )
-        self.horizontalLayout_2.addWidget(self.environment_comboBox)
-        self.export_as_pushButton = QtWidgets.QPushButton(
-            self.new_version_groupBox
-        )
-        self.horizontalLayout_2.addWidget(self.export_as_pushButton)
-        self.publish_push_button = QtWidgets.QPushButton(
-            self.new_version_groupBox
-        )
-        self.horizontalLayout_2.addWidget(self.publish_push_button)
-        self.save_as_push_button = QtWidgets.QPushButton(
-            self.new_version_groupBox
-        )
-        self.save_as_push_button.setDefault(False)
-        self.horizontalLayout_2.addWidget(self.save_as_push_button)
-        self.verticalLayout_6.addLayout(self.horizontalLayout_2)
-        self.horizontalLayout_14.addWidget(self.new_version_groupBox)
-        self.previous_versions_groupBox = QtWidgets.QGroupBox(
-            self.verticalWidget)
-        self.verticalLayout_7 = \
-            QtWidgets.QVBoxLayout(self.previous_versions_groupBox)
-        self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
-        self.show_only_label = \
-            QtWidgets.QLabel(self.previous_versions_groupBox)
-        self.horizontalLayout_10.addWidget(self.show_only_label)
-        self.version_count_spinBox = \
-            QtWidgets.QSpinBox(self.previous_versions_groupBox)
-        self.version_count_spinBox.setMaximum(999999)
-        self.version_count_spinBox.setProperty("value", 25)
-        self.horizontalLayout_10.addWidget(self.version_count_spinBox)
-        self.line = QtWidgets.QFrame(self.previous_versions_groupBox)
-        self.line.setFrameShape(QtWidgets.QFrame.VLine)
-        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.horizontalLayout_10.addWidget(self.line)
-        self.show_published_only_check_box = \
-            QtWidgets.QCheckBox(self.previous_versions_groupBox)
-        self.horizontalLayout_10.addWidget(self.show_published_only_check_box)
-        spacer_item2 = QtWidgets.QSpacerItem(40, 20,
-                                            QtWidgets.QSizePolicy.Expanding,
-                                            QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacer_item2)
-        self.verticalLayout_7.addLayout(self.horizontalLayout_10)
-
-        # previous_versions_table_widget
-        self.previous_versions_table_widget = VersionsTableWidget(
-            self.previous_versions_groupBox
-        )
-
-        self.previous_versions_table_widget.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers)
-        # self.previous_versions_table_widget.setAlternatingRowColors(True)
-        self.previous_versions_table_widget.setSelectionMode(
-            QtWidgets.QAbstractItemView.SingleSelection)
-        self.previous_versions_table_widget.setSelectionBehavior(
-            QtWidgets.QAbstractItemView.SelectRows)
-        self.previous_versions_table_widget.setShowGrid(False)
-        self.previous_versions_table_widget.setColumnCount(7)
-        self.previous_versions_table_widget.setRowCount(0)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(0, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(1, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(2, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(3, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(4, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(5, item)
-        item = QtWidgets.QTableWidgetItem()
-        self.previous_versions_table_widget.setHorizontalHeaderItem(6, item)
-        self.previous_versions_table_widget\
-            .horizontalHeader()\
-            .setStretchLastSection(True)
-        self.previous_versions_table_widget\
-            .verticalHeader()\
-            .setStretchLastSection(False)
-        self.verticalLayout_7.addWidget(self.previous_versions_table_widget)
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
-        self.label = QtWidgets.QLabel(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.label)
-        self.representations_comboBox = \
-            QtWidgets.QComboBox(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.representations_comboBox)
-        self.label_2 = QtWidgets.QLabel(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.label_2)
-        self.ref_depth_comboBox = \
-            QtWidgets.QComboBox(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.ref_depth_comboBox)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20,
-                                            QtWidgets.QSizePolicy.Expanding,
-                                            QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_5.addItem(spacerItem3)
-        self.useNameSpace_checkBox = \
-            QtWidgets.QCheckBox(self.previous_versions_groupBox)
-        self.useNameSpace_checkBox.setChecked(True)
-        self.horizontalLayout_5.addWidget(self.useNameSpace_checkBox)
-        self.chose_pushButton = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.chose_pushButton)
-        self.checkUpdates_checkBox = \
-            QtWidgets.QCheckBox(self.previous_versions_groupBox)
-        self.checkUpdates_checkBox.setChecked(True)
-        self.horizontalLayout_5.addWidget(self.checkUpdates_checkBox)
-
-        # Open As New Version Push Button
-        self.open_as_new_version_push_button = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.open_as_new_version_push_button)
-        self.open_as_new_version_push_button.setText("Open As\nNew Version")
-        self.open_as_new_version_push_button.setToolTip(
-            "Opens the selected version and immediately creates a new version."
-        )
-
-        # Open Push Button
-        self.open_pushButton = QtWidgets.QPushButton(
-            self.previous_versions_groupBox
-        )
-        self.horizontalLayout_5.addWidget(self.open_pushButton)
-        self.open_pushButton.setText("Open")
-
-        self.reference_pushButton = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.reference_pushButton)
-        self.import_pushButton = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        self.horizontalLayout_5.addWidget(self.import_pushButton)
-        self.close_pushButton = \
-            QtWidgets.QPushButton(self.previous_versions_groupBox)
-        # self.close_pushButton.setStyleSheet("")
-        self.horizontalLayout_5.addWidget(self.close_pushButton)
-        self.verticalLayout_7.addLayout(self.horizontalLayout_5)
-        self.horizontalLayout_14.addWidget(self.previous_versions_groupBox)
-        self.horizontalLayout_14.setStretch(2, 1)
-        self.verticalLayout.addLayout(self.horizontalLayout_14)
-        self.horizontalLayout.addWidget(self.verticalWidget)
-
-        self.setWindowTitle("Version Creator - Stalker")
-        self.logout_pushButton.setText("Logout")
-        self.tasks_groupBox.setTitle("Tasks")
-        self.my_tasks_only_checkBox.setText("Show my tasks only")
+        # ========================================
+        # Tasks Tree View
+        self.tasks_tree_view = TaskTreeView(self)
         self.tasks_tree_view.setToolTip(
             "<html><head/><body><p>Right Click:</p><ul style=\""
             "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
@@ -524,23 +314,87 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             "To go to the <span style=\" font-weight:600;\">"
             "Dependee Tasks</span></li></ul><p><br/></p></body></html>"
         )
-        self.recent_files_comboBox.setToolTip("Recent Files")
-        self.clear_recent_files_pushButton.setText("Clear")
-        self.find_from_path_lineEdit.setPlaceholderText("Find From Path")
-        self.find_from_path_pushButton.setText("Find")
-        self.upload_thumbnail_pushButton.setText("Upload")
-        self.clear_thumbnail_pushButton.setText("Clear")
-        self.new_version_groupBox.setTitle("New Version")
+        self.tasks_tree_view.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
+        # self.tasks_tree_view.setAlternatingRowColors(True)
+        # self.tasks_tree_view.setUniformRowHeights(True)
+        # self.tasks_tree_view.header().setCascadingSectionResizes(True)
+        self.vertical_layout_2.addWidget(self.tasks_tree_view)
+
+        # ------------------------------------------
+        # New Version Group Box
+        self.vertical_layout_6 = QtWidgets.QVBoxLayout(self)
+        self.horizontal_layout_12.addLayout(self.vertical_layout_6)
+
+        self.horizontal_layout_14 = QtWidgets.QHBoxLayout(self)
+        self.vertical_layout_6.addLayout(self.horizontal_layout_14)
+
+        self.new_version_group_box = QtWidgets.QGroupBox(self)
+        self.new_version_group_box.setTitle("Save Version")
+        self.horizontal_layout_14.addWidget(self.new_version_group_box)
+
+        self.new_versions_group_box_main_layout = QtWidgets.QHBoxLayout(self.new_version_group_box)
+
+        self.vertical_layout_4 = QtWidgets.QVBoxLayout(self)
+        self.new_versions_group_box_main_layout.addLayout(self.vertical_layout_4)
+
+        self.vertical_layout_3 = QtWidgets.QVBoxLayout(self)
+        self.horizontal_layout_9 = QtWidgets.QHBoxLayout()
+
+        # ====================
+        # Takes Label
+        self.takes_label = QtWidgets.QLabel(self.new_version_group_box)
         self.takes_label.setText("Take")
-        self.repr_as_separate_takes_checkBox.setToolTip(
+        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
+        self.horizontal_layout_9.addWidget(self.takes_label)
+
+        # ===================
+        # Takes ComboBox
+        self.takes_combo_box = TakesComboBox(self.new_version_group_box)
+        self.horizontal_layout_9.addWidget(self.takes_combo_box)
+
+        # ===================
+        # Add Take Push Button
+        self.add_take_push_button = QtWidgets.QPushButton(self.new_version_group_box)
+        self.add_take_push_button.setText("New Take")
+        self.horizontal_layout_9.addWidget(self.add_take_push_button)
+
+        # add a spacer
+        spacer_item = QtWidgets.QSpacerItem(
+            40, 20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.horizontal_layout_9.addItem(spacer_item)
+
+        # ===================
+        # Show Representations
+        self.repr_as_separate_takes_check_box = QtWidgets.QCheckBox(self.new_version_group_box)
+        self.repr_as_separate_takes_check_box.setText("Show Repr.")
+        self.repr_as_separate_takes_check_box.setToolTip(
             "<html><head/><body><p>Check this to show "
             "<span style=\" font-weight:600;\">Representations</span> as "
             "separate takes if available</p></body></html>"
         )
-        self.repr_as_separate_takes_checkBox.setText("Show Repr.")
-        self.add_take_pushButton.setText("New Take")
+        self.horizontal_layout_9.addWidget(self.repr_as_separate_takes_check_box)
+
+        # ===================
+        # Set Stretches
+        # self.horizontal_layout_9.setStretch(0, 0)
+        # self.horizontal_layout_9.setStretch(1, 1)
+        # self.horizontal_layout_9.setStretch(2, 0)
+        # self.horizontal_layout_9.setStretch(3, 0)
+        self.vertical_layout_3.addLayout(self.horizontal_layout_9)
+
+        # ==================
+        # Description Field
+        self.description_label = QtWidgets.QLabel(self)
         self.description_label.setText("Desc.")
-        self.description_textEdit.setHtml(
+        self.description_label.setMinimumSize(QtCore.QSize(35, 0))
+        self.vertical_layout_3.addWidget(self.description_label)
+        self.description_text_edit = QtWidgets.QTextEdit(self)
+        self.description_text_edit.setHtml(
             "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \""
             "http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
             "<html><head><meta name=\"qrichtext\" content=\"1\" />"
@@ -553,12 +407,141 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             "-qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\'; "
             "font-size:9pt;\"><br /></p></body></html>",
         )
-        self.export_as_pushButton.setText("Export Selection As")
-        self.save_as_push_button.setText("Save As")
+
+        self.description_text_edit.setEnabled(True)
+        self.description_text_edit.setTabChangesFocus(True)
+        self.vertical_layout_3.addWidget(self.description_text_edit)
+        self.vertical_layout_3.setStretch(1, 10)
+        self.vertical_layout_3.setStretch(3, 1)
+        self.vertical_layout_4.addLayout(self.vertical_layout_3)
+        self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
+        self.environment_combo_box = QtWidgets.QComboBox(
+            self.new_version_group_box
+        )
+        self.horizontal_layout_2.addWidget(self.environment_combo_box)
+
+        # ===================
+        # Export Push Button
+        self.export_as_push_button = QtWidgets.QPushButton(self)
+        self.export_as_push_button.setText("Export Selection As")
+        self.horizontal_layout_2.addWidget(self.export_as_push_button)
+
+        # ===================
+        # Publish Push Button
+        self.publish_push_button = QtWidgets.QPushButton(self)
         self.publish_push_button.setText("Publish")
-        self.previous_versions_groupBox.setTitle("Previous Versions")
-        self.show_only_label.setText("Show Only")
+        if not self.environment.has_publishers:
+            self.publish_push_button.setText("Publish")
+        self.horizontal_layout_2.addWidget(self.publish_push_button)
+
+        # ===================
+        # Save As
+        self.save_as_push_button = QtWidgets.QPushButton(self)
+        self.save_as_push_button.setText("Save As")
+        self.save_as_push_button.setDefault(False)
+        self.horizontal_layout_2.addWidget(self.save_as_push_button)
+        self.vertical_layout_4.addLayout(self.horizontal_layout_2)
+
+        # ---------------------------------------------
+        # Thumbnail Graphics View and Buttons
+        self.thumbnail_group_box = QtWidgets.QGroupBox(self)
+        self.thumbnail_group_box.setTitle("Task Thumbnail")
+        self.horizontal_layout_14.addWidget(self.thumbnail_group_box)
+
+        self.thumbnail_layout = QtWidgets.QVBoxLayout(self.thumbnail_group_box)
+
+        self.thumbnail_graphics_view = QtWidgets.QGraphicsView(self)
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.thumbnail_graphics_view.sizePolicy().hasHeightForWidth())
+        self.thumbnail_graphics_view.setSizePolicy(size_policy)
+        self.thumbnail_graphics_view.setMinimumSize(QtCore.QSize(320, 180))
+        self.thumbnail_graphics_view.setMaximumSize(QtCore.QSize(320, 180))
+        self.thumbnail_graphics_view.setAutoFillBackground(False)
+        self.thumbnail_graphics_view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.thumbnail_graphics_view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
+        brush.setStyle(QtCore.Qt.SolidPattern)
+        self.thumbnail_graphics_view.setBackgroundBrush(brush)
+        self.thumbnail_graphics_view.setInteractive(False)
+        self.thumbnail_graphics_view.setRenderHints(
+            QtGui.QPainter.Antialiasing |
+            QtGui.QPainter.HighQualityAntialiasing |
+            QtGui.QPainter.SmoothPixmapTransform |
+            QtGui.QPainter.TextAntialiasing
+        )
+        self.thumbnail_layout.addWidget(self.thumbnail_graphics_view)
+
+        spacer_item1 = QtWidgets.QSpacerItem(
+            0, 0,
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.thumbnail_layout.addItem(spacer_item1)
+
+        self.horizontal_layout_13 = QtWidgets.QHBoxLayout()
+        self.horizontal_layout_13.setContentsMargins(-1, -1, -1, 10)
+        spacer_item1 = QtWidgets.QSpacerItem(
+            5, 20,
+            QtWidgets.QSizePolicy.Minimum,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.horizontal_layout_13.addItem(spacer_item1)
+        self.upload_thumbnail_push_button = QtWidgets.QPushButton(self)
+        self.upload_thumbnail_push_button.setText("Upload")
+        self.horizontal_layout_13.addWidget(self.upload_thumbnail_push_button)
+        self.clear_thumbnail_push_button = QtWidgets.QPushButton(self)
+        self.clear_thumbnail_push_button.setText("Clear")
+        self.horizontal_layout_13.addWidget(self.clear_thumbnail_push_button)
+
+        self.thumbnail_layout.addLayout(self.horizontal_layout_13)
+
+        # ------------------------------------------
+        # Previous Versions Group Box
+        self.previous_versions_group_box = QtWidgets.QGroupBox(self)
+        self.previous_versions_group_box.setTitle("Open Version")
+
+        self.vertical_layout_5 = QtWidgets.QVBoxLayout(self.previous_versions_group_box)
+        self.horizontal_layout_10 = QtWidgets.QHBoxLayout()
+
+        # Show Only # Items Label
+        # self.show_only_label = QtWidgets.QLabel(self.previous_versions_group_box)
+        # self.show_only_label.setText("Show Only")
+        # self.horizontal_layout_10.addWidget(self.show_only_label)
+
+        # Version Count
+        # self.version_count_spin_box = QtWidgets.QSpinBox(self.previous_versions_group_box)
+        # self.version_count_spin_box.setMaximum(999999)
+        # self.version_count_spin_box.setProperty("value", 25)
+        # self.horizontal_layout_10.addWidget(self.version_count_spin_box)
+
+        # # Add a line
+        # line = QtWidgets.QFrame(self.previous_versions_group_box)
+        # line.setFrameShape(QtWidgets.QFrame.VLine)
+        # line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        # self.horizontal_layout_10.addWidget(line)
+
+        # ==============================
+        # Show Published Only Check Box
+        self.show_published_only_check_box = QtWidgets.QCheckBox(self)
+        self.horizontal_layout_10.addWidget(self.show_published_only_check_box)
         self.show_published_only_check_box.setText("Show Published Only")
+
+        spacer_item2 = QtWidgets.QSpacerItem(
+            40, 20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
+        )
+        self.horizontal_layout_10.addItem(spacer_item2)
+        self.vertical_layout_5.addLayout(self.horizontal_layout_10)
+
+        # previous_versions_table_widget
+        self.previous_versions_table_widget = VersionsTableWidget(self.previous_versions_group_box)
+
         self.previous_versions_table_widget.setToolTip(
             """
             <html>
@@ -601,30 +584,52 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             </html>
             """
         )
-        self.previous_versions_table_widget.horizontalHeaderItem(0).setText(
-            "Version"
+        self.previous_versions_table_widget.horizontalHeaderItem(0).setText("Version")
+        self.previous_versions_table_widget.horizontalHeaderItem(1).setText("User")
+        self.previous_versions_table_widget.horizontalHeaderItem(2).setText("File Size")
+        self.previous_versions_table_widget.horizontalHeaderItem(3).setText("Date")
+        self.previous_versions_table_widget.horizontalHeaderItem(4).setText("Description")
+
+        self.previous_versions_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        # self.previous_versions_table_widget.setAlternatingRowColors(True)
+        self.previous_versions_table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.previous_versions_table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.previous_versions_table_widget.setShowGrid(False)
+        self.previous_versions_table_widget.setColumnCount(7)
+        self.previous_versions_table_widget.setRowCount(0)
+
+        for i in range(7):
+            item = QtWidgets.QTableWidgetItem()
+            self.previous_versions_table_widget.setHorizontalHeaderItem(i, item)
+
+        self.previous_versions_table_widget.horizontalHeader().setStretchLastSection(True)
+        self.previous_versions_table_widget.verticalHeader().setStretchLastSection(False)
+
+        self.vertical_layout_5.addWidget(self.previous_versions_table_widget)
+        self.horizontal_layout_5 = QtWidgets.QHBoxLayout()
+        self.representations_label = QtWidgets.QLabel(self.previous_versions_group_box)
+        self.representations_label.setText("Repr.")
+        self.horizontal_layout_5.addWidget(self.representations_label)
+
+        self.representations_comboBox = QtWidgets.QComboBox(self.previous_versions_group_box)
+        self.representations_comboBox.setToolTip("Choose Representation (if supported by the environment)")
+
+        self.horizontal_layout_5.addWidget(self.representations_comboBox)
+        self.reference_depth_label = QtWidgets.QLabel(self.previous_versions_group_box)
+        self.reference_depth_label.setText("Refs")
+        self.horizontal_layout_5.addWidget(self.reference_depth_label)
+        self.ref_depth_combo_box = QtWidgets.QComboBox(self.previous_versions_group_box)
+        self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by environment)")
+        self.horizontal_layout_5.addWidget(self.ref_depth_combo_box)
+        spacer_item3 = QtWidgets.QSpacerItem(
+            40, 20,
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Minimum
         )
-        self.previous_versions_table_widget.horizontalHeaderItem(1).setText(
-            "User"
-        )
-        self.previous_versions_table_widget.horizontalHeaderItem(2).setText(
-            "File Size"
-        )
-        self.previous_versions_table_widget.horizontalHeaderItem(3).setText(
-            "Date"
-        )
-        self.previous_versions_table_widget.horizontalHeaderItem(4).setText(
-            "Description"
-        )
-        self.label.setText("Repr")
-        self.representations_comboBox.setToolTip(
-            "Choose Representation (if supported by the environment)"
-        )
-        self.label_2.setText("Refs")
-        self.ref_depth_comboBox.setToolTip(
-            "Choose reference depth (if supported by environment)"
-        )
-        self.useNameSpace_checkBox.setToolTip(
+        self.horizontal_layout_5.addItem(spacer_item3)
+        self.use_namespace_check_box = QtWidgets.QCheckBox(self.previous_versions_group_box)
+        self.use_namespace_check_box.setText("Use Namespace")
+        self.use_namespace_check_box.setToolTip(
             """
             <html>
                 <head/>
@@ -636,27 +641,69 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             </html>
             """
         )
-        self.useNameSpace_checkBox.setText("Use Namespace")
-        self.chose_pushButton.setText("Choose")
-        self.checkUpdates_checkBox.setToolTip("Disable update check (faster)")
-        self.checkUpdates_checkBox.setText("Check Updates")
+        self.use_namespace_check_box.setChecked(True)
+        self.horizontal_layout_5.addWidget(self.use_namespace_check_box)
 
-        self.reference_pushButton.setText("Reference")
-        self.import_pushButton.setText("Import")
-        self.close_pushButton.setText("Close")
+        # Choose Push Button
+        self.choose_version_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.choose_version_push_button.setText("Choose")
+        self.horizontal_layout_5.addWidget(self.choose_version_push_button)
+
+        # Check Updates Check Box
+        self.check_updates_check_box = QtWidgets.QCheckBox(self.previous_versions_group_box)
+        self.check_updates_check_box.setToolTip("Disable update check (faster)")
+        self.check_updates_check_box.setText("Check Updates")
+        self.check_updates_check_box.setChecked(True)
+        self.horizontal_layout_5.addWidget(self.check_updates_check_box)
+
+        # Open As New Version Push Button
+        self.open_as_new_version_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.horizontal_layout_5.addWidget(self.open_as_new_version_push_button)
+        self.open_as_new_version_push_button.setText("Open As\nNew Version")
+        self.open_as_new_version_push_button.setToolTip(
+            "Opens the selected version and immediately creates a new version."
+        )
+
+        # Open Push Button
+        self.open_push_button = QtWidgets.QPushButton(
+            self.previous_versions_group_box
+        )
+        self.horizontal_layout_5.addWidget(self.open_push_button)
+        self.open_push_button.setText("Open")
+
+        # Reference Push Button
+        self.reference_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.reference_push_button.setText("Reference")
+        self.horizontal_layout_5.addWidget(self.reference_push_button)
+
+        # Import Push Button
+        self.import_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.import_push_button.setText("Import")
+        self.horizontal_layout_5.addWidget(self.import_push_button)
+
+        # Close Push Button
+        self.close_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.close_push_button.setText("Close")
+        self.horizontal_layout_5.addWidget(self.close_push_button)
+        self.vertical_layout_5.addLayout(self.horizontal_layout_5)
+        self.vertical_layout_6.addWidget(self.previous_versions_group_box)
+
+        self.vertical_layout_6.setStretch(0, 1)
+        self.vertical_layout_6.setStretch(1, 10)
+
+        self.horizontal_layout_12.setStretch(0, 1)
+        self.horizontal_layout_12.setStretch(1, 2)
+        self.vertical_layout_1.addLayout(self.horizontal_layout_12)
+        self.horizontal_layout_1.addWidget(self.vertical_widget)
 
         QtCore.QMetaObject.connectSlotsByName(self)
-        self.setTabOrder(self.description_textEdit, self.export_as_pushButton)
-        self.setTabOrder(self.export_as_pushButton, self.save_as_push_button)
-        self.setTabOrder(self.save_as_push_button,
-                         self.previous_versions_table_widget)
-        self.setTabOrder(self.previous_versions_table_widget,
-                         self.open_pushButton)
-        self.setTabOrder(self.open_pushButton,
-                         self.open_as_new_version_push_button)
-        self.setTabOrder(self.open_as_new_version_push_button,
-                         self.reference_pushButton)
-        self.setTabOrder(self.reference_pushButton, self.import_pushButton)
+        self.setTabOrder(self.description_text_edit, self.export_as_push_button)
+        self.setTabOrder(self.export_as_push_button, self.save_as_push_button)
+        self.setTabOrder(self.save_as_push_button, self.previous_versions_table_widget)
+        self.setTabOrder(self.previous_versions_table_widget, self.open_push_button)
+        self.setTabOrder(self.open_push_button, self.open_as_new_version_push_button)
+        self.setTabOrder(self.open_as_new_version_push_button, self.reference_push_button)
+        self.setTabOrder(self.reference_push_button, self.import_push_button)
 
     # def close(self):
     #     logger.debug("closing the ui")
@@ -672,6 +719,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return_val = None
         else:
             return_val = super(MainDialog, self).show()
+            self.center_window()
 
         logger.debug("MainDialog.show is finished")
         return return_val
@@ -683,14 +731,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # close button
         QtCore.QObject.connect(
-            self.close_pushButton,
+            self.close_push_button,
             QtCore.SIGNAL("clicked()"),
             self.close
         )
 
         # logout button
         QtCore.QObject.connect(
-            self.logout_pushButton,
+            self.logout_push_button,
             QtCore.SIGNAL("clicked()"),
             self.logout
         )
@@ -709,52 +757,54 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         #     self.search_task_comboBox_textChanged
         # )
 
-        # # takes_listWidget
+        # # takes_combo_box
         # QtCore.QObject.connect(
-        #     self.takes_listWidget,
+        #     self.takes_combo_box,
         #     QtCore.SIGNAL("currentTextChanged(QString)"),
-        #     self.takes_listWidget_changed
+        #     self.takes_combo_box_changed
         # )
 
         # repr_as_separate_takes_checkBox
         QtCore.QObject.connect(
-            self.repr_as_separate_takes_checkBox,
+            self.repr_as_separate_takes_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
             self.tasks_tree_view_changed
         )
 
-        # takes_listWidget
+        # takes_combo_box
         QtCore.QObject.connect(
-            self.takes_listWidget,
+            self.takes_combo_box,
             QtCore.SIGNAL(
-                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-            self.takes_listWidget_changed
+                # "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"
+                "currentIndexChanged(QString)"
+            ),
+            self.takes_combo_box_changed
         )
 
         # recent files comboBox
         QtCore.QObject.connect(
-            self.recent_files_comboBox,
+            self.recent_files_combo_box,
             QtCore.SIGNAL("currentIndexChanged(QString)"),
             self.recent_files_combo_box_index_changed
         )
 
         # find_from_path_lineEdit
         QtCore.QObject.connect(
-            self.find_from_path_pushButton,
+            self.find_from_path_push_button,
             QtCore.SIGNAL("clicked()"),
             self.find_from_path_push_button_clicked
         )
 
         # add_take_toolButton
         QtCore.QObject.connect(
-            self.add_take_pushButton,
+            self.add_take_push_button,
             QtCore.SIGNAL("clicked()"),
             self.add_take_push_button_clicked
         )
 
         # export_as
         QtCore.QObject.connect(
-            self.export_as_pushButton,
+            self.export_as_push_button,
             QtCore.SIGNAL("clicked()"),
             self.export_as_push_button_clicked
         )
@@ -775,7 +825,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # open
         QtCore.QObject.connect(
-            self.open_pushButton,
+            self.open_push_button,
             QtCore.SIGNAL("clicked()"),
             self.open_push_button_clicked
         )
@@ -789,23 +839,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # chose
         QtCore.QObject.connect(
-            self.chose_pushButton,
+            self.choose_version_push_button,
             QtCore.SIGNAL("cliched()"),
-            self.chose_push_button_clicked
+            self.choose_version_push_button_clicked
         )
 
         # reference
         QtCore.QObject.connect(
-            self.reference_pushButton,
+            self.reference_push_button,
             QtCore.SIGNAL("clicked()"),
             self.reference_push_button_clicked
         )
 
         # import
         QtCore.QObject.connect(
-            self.import_pushButton,
+            self.import_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.import_pushButton_clicked
+            self.import_push_button_clicked
         )
 
         # show_only_published_checkBox
@@ -815,36 +865,36 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.update_previous_versions_table_widget
         )
 
-        # show_only_published_checkBox
-        QtCore.QObject.connect(
-            self.version_count_spinBox,
-            QtCore.SIGNAL("valueChanged(int)"),
-            self.update_previous_versions_table_widget
-        )
+        # # version_count_spin_box
+        # QtCore.QObject.connect(
+        #     self.version_count_spin_box,
+        #     QtCore.SIGNAL("valueChanged(int)"),
+        #     self.update_previous_versions_table_widget
+        # )
 
-        # upload_thumbnail_pushButton
+        # upload_thumbnail_push_button
         QtCore.QObject.connect(
-            self.upload_thumbnail_pushButton,
+            self.upload_thumbnail_push_button,
             QtCore.SIGNAL("clicked()"),
             self.upload_thumbnail_push_button_clicked
         )
 
-        # upload_thumbnail_pushButton
+        # upload_thumbnail_push_button
         QtCore.QObject.connect(
-            self.clear_thumbnail_pushButton,
+            self.clear_thumbnail_push_button,
             QtCore.SIGNAL("clicked()"),
             self.clear_thumbnail_push_button_clicked
         )
 
         # close button
         QtCore.QObject.connect(
-            self.clear_recent_files_pushButton,
+            self.clear_recent_files_push_button,
             QtCore.SIGNAL("clicked()"),
             self.clear_recent_file_push_button_clicked
         )
 
         QtCore.QObject.connect(
-            self.show_completed_checkBox,
+            self.show_completed_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
             self.fill_tasks_tree_view
         )
@@ -1209,52 +1259,66 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clear_recent_file_push_button_clicked(self):
         """clear the recent files
         """
-        self.clear_recent_files()
-        self.update_recent_files_combo_box()
+        # ask the user if he/she is sure about that
+        answer = QtWidgets.QMessageBox.question(
+            self,
+            "Clear recent files list?",
+            "Clear recent files list?",
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
+        if answer == QtWidgets.QMessageBox.Yes:
+            self.clear_recent_files()
+            self.update_recent_files_combo_box()
 
     def update_recent_files_combo_box(self):
         """
         """
-        self.recent_files_comboBox.setSizeAdjustPolicy(
+        self.recent_files_combo_box.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToContentsOnFirstShow
         )
-        self.recent_files_comboBox.setFixedWidth(250)
+        self.recent_files_combo_box.setFixedWidth(250)
 
-        self.recent_files_comboBox.clear()
+        self.recent_files_combo_box.clear()
+        self.recent_files_combo_box.addItem("--- No Recent Files ---")
+
         # update recent files list
         if self.environment:
             from anima.recent import RecentFileManager
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.environment.name]
-                recent_files.insert(0, "")
-                # append them to the comboBox
 
-                for i, full_path in enumerate(recent_files[:50]):
-                    parts = os.path.split(full_path)
-                    filename = parts[-1]
-                    self.recent_files_comboBox.addItem(
-                        filename,
-                        full_path,
+                if len(recent_files):
+                    self.recent_files_combo_box.clear()
+                    recent_files.insert(0, "--- Choose A Recent File ---")
+                    # append them to the comboBox
+
+                    for i, full_path in enumerate(recent_files[:50]):
+                        parts = os.path.split(full_path)
+                        filename = parts[-1]
+                        self.recent_files_combo_box.addItem(
+                            filename,
+                            full_path,
+                        )
+
+                        self.recent_files_combo_box.setItemData(
+                            i,
+                            full_path,
+                            QtCore.Qt.ToolTipRole
+                        )
+
+                    # try:
+                    #     self.recent_files_comboBox.setStyleSheet(
+                    #         "qproperty-textElideMode: ElideNone"
+                    #     )
+                    # except:
+                    #     pass
+
+                    self.recent_files_combo_box.setSizePolicy(
+                        QtWidgets.QSizePolicy.MinimumExpanding,
+                        QtWidgets.QSizePolicy.Minimum
                     )
-
-                    self.recent_files_comboBox.setItemData(
-                        i,
-                        full_path,
-                        QtCore.Qt.ToolTipRole
-                    )
-
-                # try:
-                #     self.recent_files_comboBox.setStyleSheet(
-                #         "qproperty-textElideMode: ElideNone"
-                #     )
-                # except:
-                #     pass
-
-                self.recent_files_comboBox.setSizePolicy(
-                    QtWidgets.QSizePolicy.MinimumExpanding,
-                    QtWidgets.QSizePolicy.Minimum
-                )
             except KeyError:
                 pass
 
@@ -1302,9 +1366,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         takes = []
 
         if task_id:
-            # clear the takes_listWidget and fill with new data
+            # clear the takes_combo_box and fill with new data
             logger.debug("clear takes widget")
-            self.takes_listWidget.clear()
+            self.takes_combo_box.clear()
 
             from stalker import SimpleEntity
             from stalker.db.session import DBSession
@@ -1336,7 +1400,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 takes = list(map(lambda x: x[0], result))
 
-                if not self.repr_as_separate_takes_checkBox.isChecked():
+                if not self.repr_as_separate_takes_check_box.isChecked():
                     # filter representations
                     from anima.representation import Representation
                     takes = [take for take in takes
@@ -1346,30 +1410,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("len(takes) from db: %s" % len(takes))
 
             logger.debug("adding the takes from db")
-            self.takes_listWidget.take_names = takes
+            self.takes_combo_box.take_names = takes
+            self.takes_label.setText("Takes (%s)" % len(takes))
 
     def _set_defaults(self):
         """sets up the defaults for the interface
         """
         logger.debug("started setting up interface defaults")
-
-        # before doing anything create a QSplitter for:
-        #   tasks_groupBox
-        #   new_version_groupBox
-        #   previous_versions_groupBox
-        #
-        # and add it under horizontalLayout_14
-
-        splitter = QtWidgets.QSplitter()
-        splitter.addWidget(self.tasks_groupBox)
-        splitter.addWidget(self.new_version_groupBox)
-        splitter.addWidget(self.previous_versions_groupBox)
-        splitter.setStretchFactor(0, 1)
-        splitter.setStretchFactor(1, 1)
-        splitter.setStretchFactor(2, 2)
-        self.horizontalLayout_14.addWidget(splitter)
-        logger.debug("finished creating splitter")
-
         # set icon for search_task_toolButton
         # icon = QtGui.QApplication.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload)
         # self.search_task_toolButton.setIcon(icon)
@@ -1385,23 +1432,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # fill the tasks and show completed projects if check box is checked
         self.fill_tasks_tree_view(
-            self.show_completed_checkBox.isChecked()
+            self.show_completed_check_box.isChecked()
         )
 
         # reconnect signals
-        # takes_listWidget
+        # takes_combo_box
         QtCore.QObject.connect(
-            self.takes_listWidget,
+            self.takes_combo_box,
             QtCore.SIGNAL("currentTextChanged(QString)"),
-            self.takes_listWidget_changed
+            self.takes_combo_box_changed
         )
 
-        # takes_listWidget
+        # takes_combo_box
         QtCore.QObject.connect(
-            self.takes_listWidget,
+            self.takes_combo_box,
             QtCore.SIGNAL(
                 "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-            self.takes_listWidget_changed
+            self.takes_combo_box_changed
         )
         # *********************************************************************
 
@@ -1422,7 +1469,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.QObject.connect(
                 self.previous_versions_table_widget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.chose_push_button_clicked
+                self.choose_version_push_button_clicked
             )
         else:
             # Read-Write mode, Open the version
@@ -1442,7 +1489,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # completer.activated.connect(self.search_task_lineEdit.setText)
         # completer.setWidget(self.search_task_lineEdit)
         # # self.search_task_lineEdit.editingFinished.connect()
-        self.search_task_lineEdit.setVisible(False)
+        self.search_task_line_edit.setVisible(False)
 
         # fill programs list
         from anima.env.external import ExternalEnvFactory
@@ -1450,7 +1497,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         env_names = env_factory.get_env_names(
             name_format=self.environment_name_format
         )
-        self.environment_comboBox.addItems(env_names)
+        self.environment_combo_box.addItems(env_names)
 
         is_external_env = False
         env = self.environment
@@ -1467,7 +1514,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # add reference depth
         for r in ref_depth_res:
-            self.ref_depth_comboBox.addItem(r)
+            self.ref_depth_combo_box.addItem(r)
 
         logger.debug("restoring the ui with the version from environment")
 
@@ -1479,38 +1526,38 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if is_external_env:
             # hide some buttons
-            self.export_as_pushButton.setVisible(False)
-            self.reference_pushButton.setVisible(False)
-            self.import_pushButton.setVisible(False)
+            self.export_as_push_button.setVisible(False)
+            self.reference_push_button.setVisible(False)
+            self.import_push_button.setVisible(False)
         else:
-            self.environment_comboBox.setVisible(False)
+            self.environment_combo_box.setVisible(False)
 
         if self.mode:
             # run in read-only mode
             # hide buttons
-            self.add_take_pushButton.setVisible(False)
+            self.add_take_push_button.setVisible(False)
             self.description_label.setVisible(False)
-            self.description_textEdit.setVisible(False)
-            self.export_as_pushButton.setVisible(False)
+            self.description_text_edit.setVisible(False)
+            self.export_as_push_button.setVisible(False)
             self.save_as_push_button.setVisible(False)
             self.publish_push_button.setVisible(False)
-            self.open_pushButton.setVisible(False)
-            self.reference_pushButton.setVisible(False)
-            self.import_pushButton.setVisible(False)
-            self.upload_thumbnail_pushButton.setVisible(False)
-            self.user_label.setVisible(False)
-            self.shot_info_update_pushButton.setVisible(False)
-            self.frame_range_label.setVisible(False)
-            self.handles_label.setVisible(False)
-            self.start_frame_spinBox.setVisible(False)
-            self.end_frame_spinBox.setVisible(False)
-            self.handle_at_end_spinBox.setVisible(False)
-            self.handle_at_start_spinBox.setVisible(False)
+            self.open_push_button.setVisible(False)
+            self.reference_push_button.setVisible(False)
+            self.import_push_button.setVisible(False)
+            self.upload_thumbnail_push_button.setVisible(False)
+            # self.user_label.setVisible(False)
+            # self.shot_info_update_pushButton.setVisible(False)
+            # self.frame_range_label.setVisible(False)
+            # self.handles_label.setVisible(False)
+            # self.start_frame_spinBox.setVisible(False)
+            # self.end_frame_spinBox.setVisible(False)
+            # self.handle_at_end_spinBox.setVisible(False)
+            # self.handle_at_start_spinBox.setVisible(False)
         else:
-            self.chose_pushButton.setVisible(False)
+            self.choose_version_push_button.setVisible(False)
 
         # update description field
-        self.description_textEdit.setText("")
+        self.description_text_edit.setText("")
 
         self.update_recent_files_combo_box()
 
@@ -1537,7 +1584,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # take_name
         take_name = version.take_name
-        self.takes_listWidget.current_take_name = take_name
+        self.takes_combo_box.current_take_name = take_name
 
         # select the version in the previous version list
         self.previous_versions_table_widget.select_version(version)
@@ -1553,20 +1600,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             else:
                 # find it in the comboBox
                 index = \
-                    self.environment_comboBox.findText(
+                    self.environment_combo_box.findText(
                         env.name,
                         QtCore.Qt.MatchContains
                     )
                 if index:
-                    self.environment_comboBox.setCurrentIndex(index)
+                    self.environment_combo_box.setCurrentIndex(index)
 
-    def takes_listWidget_changed(self, index):
-        """runs when the takes_listWidget has changed
+    def takes_combo_box_changed(self, index):
+        """runs when the takes_combo_box has changed
         """
-        logger.debug("takes_listWidget_changed started")
-        # update the previous_versions_table_widget
-        self.update_previous_versions_table_widget()
-        logger.debug("takes_listWidget_changed finished")
+        logger.debug("takes_combo_box_changed started")
+        count = self.takes_combo_box.count()
+        if index == count - 1:
+            # call New Take
+            pass
+        else:
+            # update the previous_versions_table_widget
+            self.update_previous_versions_table_widget()
+
+        logger.debug("takes_combo_box_changed finished")
 
     def update_previous_versions_table_widget(self):
         """updates the previous_versions_table_widget
@@ -1591,7 +1644,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # take name
-        take_name = self.takes_listWidget.current_take_name
+        take_name = self.takes_combo_box.current_take_name
 
         if take_name != "":
             logger.debug("take_name: %s" % take_name)
@@ -1616,10 +1669,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             query = query.filter(Version.is_published == True)
 
         # show how many
-        count = self.version_count_spinBox.value()
+        # count = self.version_count_spin_box.value()
 
         data_from_db = \
-            query.order_by(Version.version_number.desc()).limit(count).all()
+            query.order_by(Version.version_number.desc()).all()
         versions = list(map(lambda x: VersionNT(*x), data_from_db))
         versions.reverse()
 
@@ -1635,7 +1688,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.current_dialog = QtWidgets.QInputDialog(self)
 
-        current_take_name = self.takes_listWidget.current_take_name
+        current_take_name = self.takes_combo_box.current_take_name
 
         take_name, ok = self.current_dialog.getText(
             self,
@@ -1646,10 +1699,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         if ok:
-            # add the given text to the takes_listWidget
+            # add the given text to the takes_combo_box
             # if it is not empty
             if take_name != "":
-                self.takes_listWidget.add_take(take_name)
+                self.takes_combo_box.add_take(take_name)
 
     def get_new_version(self, publish=False):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
@@ -1677,12 +1730,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return None
 
-        take_name = self.takes_listWidget.current_take_name
+        take_name = self.takes_combo_box.current_take_name
         user = self.get_logged_in_user()
         if not user:
             self.close()
 
-        description = self.description_textEdit.toPlainText()
+        description = self.description_text_edit.toPlainText()
         # published = self.publish_checkBox.isChecked()
 
         from stalker.db.session import DBSession
@@ -1834,7 +1887,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         environment = self.environment
         if not environment:
             # get the environment
-            env_name = self.environment_comboBox.currentText()
+            env_name = self.environment_combo_box.currentText()
             from anima.env.external import ExternalEnvFactory
             env_factory = ExternalEnvFactory()
             environment = env_factory.get_env(
@@ -1954,8 +2007,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # close the UI
             self.close()
 
-    def chose_push_button_clicked(self):
-        """runs when the chose_pushButton clicked
+    def choose_version_push_button_clicked(self):
+        """runs when the choose_pushButton clicked
         """
         version = self.previous_versions_table_widget.current_version
         if not version:
@@ -1977,7 +2030,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # get the new version
         old_version = self.previous_versions_table_widget.current_version
-        skip_update_check = not self.checkUpdates_checkBox.isChecked()
+        skip_update_check = not self.check_updates_check_box.isChecked()
 
         from stalker import Version
         old_version = Version.query.get(old_version.id)
@@ -1992,7 +2045,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
             ref_depth = ref_depth_res.index(
-                self.ref_depth_comboBox.currentText()
+                self.ref_depth_combo_box.currentText()
             )
 
             # environment can throw RuntimeError for unsaved changes
@@ -2101,7 +2154,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # call the environments reference method
         if self.environment is not None:
             # get the use namespace state
-            use_namespace = self.useNameSpace_checkBox.isChecked()
+            use_namespace = self.use_namespace_check_box.isChecked()
 
             # check if it has any representations
             # .filter(Version.parent == previous_version)\
@@ -2174,7 +2227,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     e.message
                 )
 
-    def import_pushButton_clicked(self):
+    def import_push_button_clicked(self):
         """runs when the import_pushButton clicked
         """
         # get the previous version
@@ -2192,7 +2245,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # call the environments import_ method
         if self.environment is not None:
             # get the use namespace state
-            use_namespace = self.useNameSpace_checkBox.isChecked()
+            use_namespace = self.use_namespace_check_box.isChecked()
 
             self.environment.import_(previous_version, use_namespace)
 
@@ -2210,7 +2263,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """clears the thumbnail_graphicsView
         """
         from anima.ui import utils as ui_utils
-        ui_utils.clear_thumbnail(self.thumbnail_graphicsView)
+        ui_utils.clear_thumbnail(self.thumbnail_graphics_view)
 
     def update_thumbnail(self):
         """updates the thumbnail for the selected task
@@ -2224,7 +2277,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             task = Task.query.get(task_id)
             ui_utils.update_gview_with_task_thumbnail(
                 task,
-                self.thumbnail_graphicsView
+                self.thumbnail_graphics_view
             )
 
     def upload_thumbnail_push_button_clicked(self):
@@ -2252,6 +2305,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clear_thumbnail_push_button_clicked(self):
         """clears the thumbnail of the current task if it has one
         """
+        # check the thumbnail view first
+        scene = self.thumbnail_graphics_view.scene()
+        if not scene.items():
+            print("returned by thumbnail_graphics_view")
+            return
+        print("not returned by thumbnail_graphics_view")
+
         task_id = self.tasks_tree_view.get_task_id()
 
         if not task_id:
@@ -2259,12 +2319,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker import SimpleEntity
         from stalker.db.session import DBSession
-        thumb_id = DBSession\
-            .query(SimpleEntity.thumbnail_id)\
-            .filter(SimpleEntity.id == task_id)\
+        result = DBSession \
+            .query(SimpleEntity.thumbnail_id) \
+            .filter(SimpleEntity.id == task_id) \
             .first()
+        thumb_id = result[0]
 
-        # thumb_id = task.thumbnail
         if not thumb_id:
             return
 
@@ -2294,14 +2354,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # update the thumbnail
             self.clear_thumbnail()
 
+    def find_from_path(self, path):
+        """Finds versions from the given path
+
+        :param path:
+        :return:
+        """
+        from anima.env.base import EnvironmentBase
+        env = EnvironmentBase()
+        if path:
+            version = env.get_version_from_full_path(path)
+            self.restore_ui(version)
+
     def find_from_path_push_button_clicked(self):
         """runs when find_from_path_pushButton is clicked
         """
-        full_path = self.find_from_path_lineEdit.text()
-        from anima.env.base import EnvironmentBase
-        env = EnvironmentBase()
-        version = env.get_version_from_full_path(full_path)
-        self.restore_ui(version)
+        self.find_from_path(self.find_from_path_line_edit.text())
 
     # def search_task_comboBox_textChanged(self, text):
     #     """runs when search_task_comboBox text changed
@@ -2340,7 +2408,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param path: 
         :return:
         """
-        current_index = self.recent_files_comboBox.currentIndex()
-        path = self.recent_files_comboBox.itemData(current_index)
-        self.find_from_path_lineEdit.setText(path)
-        self.find_from_path_push_button_clicked()
+        current_index = self.recent_files_combo_box.currentIndex()
+        if current_index != 0:  # This would be the placeholder
+            path = self.recent_files_combo_box.itemData(current_index)
+            self.find_from_path(path)
