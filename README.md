@@ -8,23 +8,25 @@ It is also an example of how to use
 [Stalker](https://github.com/eoyilmaz/stalker) and build a pipeline on top of
 it.
 
-Anima, supplies PyQt4/PySide/PySide2 UI's for Maya, Houdini, Max, Nuke, Fusion
-and Photoshop and the UIs can be used in standalone mode where users can upload
-their files to server and automatically version them.
+Anima, supplies PyQt4/PySide/PySide2 UI's for Maya, Houdini, Max, Nuke, Fusion,
+Blender, Motion Builder and Photoshop and the UIs can be used in standalone
+mode where users can upload their files to server and automatically version
+them.
 
 
 How To Install
 --------------
 
-First of all, Anima uses Stalker. So you need to have a running PostgreSQL
-database. Stalker can work with other databases too but the preferred database
-is PostgreSQL and it is developed and tested against a PostgreSQL database.
+First of all, Anima uses [Stalker](https://github.com/eoyilmaz/stalker). So you
+need to have a running PostgreSQL database. Stalker can work with other
+databases too but the preferred database is PostgreSQL and it is developed and
+tested against a PostgreSQL database.
 
 To manage your database settings from one place, you need to create a
 `config.py` file in a location that all of workstations and farm computers are
 able to read from. The bad side of it is that it exposes your database user and
 password. But because it is going to be seen only by the studio workers (and
-only by the tech savvy ones).
+only by the tech savvy ones) it should be safe.
 
 In this `config.py` file you need to enter the following configuration
 variables:
@@ -36,15 +38,18 @@ database_engine_settings={
 }
 ```
 
-Then you need to create an environment variable called "STALKER_PATH" in every
-computer that you want to use stalker and then set it to that path (directory)
-that contains the `config.py` file.
+Then you need to create an environment variable called ``STALKER_PATH`` in
+every computer that you want to use stalker and then set it to that path
+(directory) that contains the `config.py` file. Or you can create a script per
+applicationn that first sets the ``STALKER_PATH`` and other custom stuff you
+might need in your studio then runs the application.
 
 For Windows, it is a good idea to create another folder in a network storage,
 copy `anima` and all of its dependencies to that folder. Then install a local
 copy of the `pyscopg2` library and copy the installed `pyscopg2` files (under
 python/Lib/site-packages) to that network drive again. So you do not need to
-install all of the libraries for every single computer in your studio.
+install all of the libraries for every single computer in your studio. And
+update your ``PYTHONPATH`` environment variable to point to that folder.
 
 With these steps you will be able to use:
 
@@ -117,5 +122,4 @@ db.DBSession.commit()
 And then you need to create `Projects` and `Tasks` etc. but lets do them later
 after you successfully come to this stage.
 
-These should be enough to kick start your pipeline. Then you need to customize
-the `anima` a lot, because it is tailored to our workflow in our studio.
+These should be enough to kick start your pipeline.

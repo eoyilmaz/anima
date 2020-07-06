@@ -297,8 +297,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                         )
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
-                    export_to_json_action = \
-                        create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+                    # export_to_json_action = \
+                    #     create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
 
                     import_from_json_action = \
                         create_sub_menu.addAction(u'\uf1f8 Import From JSON...')

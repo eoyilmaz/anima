@@ -38,7 +38,7 @@ class AnimaDialogBase(object):
         left = max(0, left)
         top = max(0, top)
 
-        self.move(left, top,)
+        self.move(left, top)
 
     def center_window_to_screen(self):
         """centers the window to the screen that the mouse pointer is in

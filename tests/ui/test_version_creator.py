@@ -333,7 +333,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(self.dialog.isVisible(), True)
 
         # now run the UI
-        QTest.mouseClick(self.dialog.close_pushButton, Qt.LeftButton)
+        QTest.mouseClick(self.dialog.close_push_button, Qt.LeftButton)
         self.assertEqual(self.dialog.isVisible(), False)
 
     def test_login_dialog_is_shown_if_there_are_no_logged_in_user(self):
@@ -421,7 +421,7 @@ class VersionCreatorTester(unittest.TestCase):
         selection_model = self.dialog.tasks_treeView.selectionModel()
 
         # check show my tasks only check box
-        self.dialog.my_tasks_only_checkBox.setChecked(True)
+        self.dialog.my_tasks_only_check_box.setChecked(True)
 
         # check if all my tasks are represented in the tree
         my_tasks = self.admin.tasks
@@ -457,7 +457,7 @@ class VersionCreatorTester(unittest.TestCase):
                 )
 
         # now un check it and check if all tasks are shown
-        self.dialog.my_tasks_only_checkBox.setChecked(False)
+        self.dialog.my_tasks_only_check_box.setChecked(False)
         # check if all the tasks are present in the tree
         for task in self.all_tasks:
             self.dialog.tasks_treeView.find_and_select_entity_item(
@@ -474,7 +474,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_creator.MainDialog()
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_listWidget.currentItem().text()
+            dialog.takes_combo_box.currentItem().text()
         )
 
     def test_takes_listWidget_lists_Main_by_default_for_tasks_with_no_versions(self):
@@ -490,7 +490,7 @@ class VersionCreatorTester(unittest.TestCase):
         from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_listWidget.currentItem().text()
+            dialog.takes_combo_box.currentItem().text()
         )
 
     def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(self):
@@ -506,7 +506,7 @@ class VersionCreatorTester(unittest.TestCase):
         from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_listWidget.currentItem().text()
+            dialog.takes_combo_box.currentItem().text()
         )
 
     def test_tasks_treeView_tasks_are_sorted(self):
@@ -556,7 +556,7 @@ class VersionCreatorTester(unittest.TestCase):
         )
 
         # select the first take
-        self.dialog.takes_listWidget.setCurrentRow(0)
+        self.dialog.takes_combo_box.setCurrentRow(0)
 
         # the row count should be 2
         self.assertEqual(
@@ -671,7 +671,7 @@ class VersionCreatorTester(unittest.TestCase):
         """testing if repr_as_separate_takes_checkBox is unchecked by default
         """
         self.assertFalse(
-            self.dialog.repr_as_separate_takes_checkBox.isChecked()
+            self.dialog.repr_as_separate_takes_check_box.isChecked()
         )
 
     def test_repr_as_separate_takes_check_box_is_working_properly(self):
@@ -694,16 +694,16 @@ class VersionCreatorTester(unittest.TestCase):
 
         # expect only one "Main" take listed in take_listWidget
         self.assertEqual(
-            sorted(self.dialog.takes_listWidget.take_names),
+            sorted(self.dialog.takes_combo_box.take_names),
             ['Main']
         )
 
         # check the repr_as_separate_takes_checkBox
-        self.dialog.repr_as_separate_takes_checkBox.setChecked(True)
+        self.dialog.repr_as_separate_takes_check_box.setChecked(True)
 
         # expect two takes of "Main" and "Main@GPU"
         self.assertEqual(
-            sorted(self.dialog.takes_listWidget.take_names),
+            sorted(self.dialog.takes_combo_box.take_names),
             ['Main', 'Main@GPU']
         )
 
@@ -727,7 +727,7 @@ class VersionCreatorTester(unittest.TestCase):
         )
 
         # expect only one "Main" take listed in take_listWidget
-        main_item = self.dialog.takes_listWidget.item(0)
+        main_item = self.dialog.takes_combo_box.item(0)
         item_foreground = main_item.foreground()
         color = item_foreground.color()
         self.assertEqual(

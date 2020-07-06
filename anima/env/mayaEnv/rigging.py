@@ -399,6 +399,29 @@ class Rigging(object):
         #     jointOrient=True
         # )
 
+    @classmethod
+    def ik_fk_limb_rigger(cls):
+        """Creates IK/FK Limb Setup from selected start and end joint
+        """
+        selection = pm.selected()
+
+        start_joint = selection[0]
+        end_joint = selection[1]
+
+        rigger = IKFKLimbRigger(start_joint, end_joint)
+
+        rigger.create_ik_hierarchy()
+        rigger.create_fk_hierarchy()
+        rigger.create_switch_setup()
+
+    @classmethod
+    def squash_stretch_bend_rigger(cls):
+        """Creates Squash/Stretch/Bend rig for the selected geometry
+        """
+        geo = pm.selected()[0]
+        ssbr = SquashStretchBendRigger(geo)
+        ssbr.setup()
+
 
 class JointOnCurveDialog(QtWidgets.QDialog):
     """Dialog for create_joint_on_curve utility
@@ -779,6 +802,7 @@ class PinController(object):
         shader.outColor >> shading_engine.surfaceShader
 
         return shader
+
 
 class SkinTools(object):
     """A helper utility for easy joint influence edit.
@@ -1252,3 +1276,584 @@ class SkinToolsUI(object):
         # change the skin influence to current selection
         if selected_item != "":
             pm.mel.eval("setSmoothSkinInfluence %s" % selected_item.name())
+
+
+class JointHierarchy(object):
+    """Represents a joint hierarchy
+    """
+
+    def __init__(self, start_joint, end_joint):
+        self.joints = []
+
+        self.start_joint = start_joint
+        self.end_joint = end_joint
+
+        self.init_hierarchy()
+
+    def init_hierarchy(self):
+        """Initialize the hierarchy joints from start_joint to the given end_joint
+
+        :return:
+        """
+        self.joints = [self.start_joint]
+        found_end_joint = False
+        for j in reversed(self.start_joint.listRelatives(ad=1, type=pm.nt.Joint)):
+            self.joints.append(j)
+            if j == self.end_joint:
+                found_end_joint = True
+                break
+
+        if not found_end_joint:
+            raise RuntimeError(
+                "Cannot reach end joint (%s) from start joint (%s)" %
+                (self.end_joint, self.start_joint)
+            )
+
+    def duplicate(self, class_=None, prefix="", suffix=""):
+        """duplicates itself and returns a new joint hierarchy
+
+        :param class_: The class of the created JointHierarchy. Default value
+          is JointHierarchy
+        :param prefix: Prefix for newly created joints
+        :param suffix: Suffix for newly created joints
+        """
+        if class_ is None:
+            class_ = self.__class__
+
+        new_start_joint = pm.duplicate(self.start_joint)[0]
+        all_hierarchy = list(reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint)))
+        new_end_joint = all_hierarchy[len(self.joints) - 2]
+
+        # delete anything below
+        pm.delete(new_end_joint.listRelatives(ad=1))
+
+        new_hierarchy = class_(start_joint=new_start_joint, end_joint=new_end_joint)
+        for j, nj in zip(self.joints, new_hierarchy.joints):
+            nj.rename("{prefix}{joint}{suffix}".format(prefix=prefix, suffix=suffix, joint=j.name()))
+
+        return new_hierarchy
+
+
+class IKJointHierarchyBase(JointHierarchy):
+    """A base class for IK joint hierarchies
+    """
+
+    def __init__(self, start_joint, end_joint, do_stretchy=True):
+        JointHierarchy.__init__(self, start_joint, end_joint)
+
+        self.do_stretchy = do_stretchy
+        self.default_scale_multiply_divide = None
+
+        self.ik_handle = None
+        self.ik_end_effector = None
+
+        self.ik_end_controller = None
+        self.ik_pole_controller = None
+
+        self.main_group = None
+
+    def create_ik_setup(self, solver='', controller_radius=0.5):
+        """Do create ik setup here
+
+        :param solver:
+        :param controller_radius:
+        :return:
+        """
+        raise NotImplementedError("create_ik_setup is not implemented")
+
+    def create_stretch_setup(self):
+        """Do create stretch setup here
+        """
+        raise NotImplementedError("create_ik_setup is not implemented")
+
+
+class IKLimbJointHierarchy(IKJointHierarchyBase):
+    """IK variant of the JointHierarchy
+    """
+
+    def create_ik_setup(self, solver='ikRPsolver', controller_radius=0.5):
+        """Creates IK setup
+        """
+        self.ik_handle, self.ik_end_effector = \
+            pm.ikHandle(sj=self.start_joint, ee=self.end_joint, solver=solver)
+
+        self.ik_end_controller, shape = pm.circle(
+            normal=(0, 1, 0),
+            radius=controller_radius
+        )
+        pm.parent(self.ik_end_controller, self.ik_end_effector)
+
+        self.ik_end_controller.t.set(0, 0, 0)
+        self.ik_end_controller.r.set(0, 0, 0)
+
+        # create default scale attribute
+        pm.addAttr(self.ik_end_controller, sn="minScale", at="float", dv=1.0, k=True)
+        pm.addAttr(self.ik_end_controller, sn="maxScale", at="float", dv=2.0, k=True)
+        for j in self.joints[:-1]:  # do not scale the last joint
+            self.ik_end_controller.minScale >> j.sx
+
+        pm.parent(self.ik_end_controller, w=1)
+        from anima.env.mayaEnv import auxiliary
+        auxiliary.axial_correction_group(self.ik_end_controller)
+
+        # constraint the orientation of the last joint to the controller
+        pm.orientConstraint(self.ik_end_controller, self.joints[-1], mo=1)
+
+        # create the point constraint
+        pm.pointConstraint(self.ik_end_controller, self.ik_handle)
+
+        # create pole controller
+        self.ik_pole_controller = pm.spaceLocator(name='ikPoleController#')
+        # place it to the extension of the pole vector
+        pm.parent(self.ik_pole_controller, self.joints[1], r=1)
+        pm.parent(self.ik_pole_controller, w=1)
+
+        # I don't like this but it will help a lot
+        move_amount = [0, -1, 0]
+        if pm.xform(self.ik_pole_controller, q=1, ws=1, t=1)[0] < 0:
+            move_amount = [0, 1, 0]
+        pm.move(self.ik_pole_controller, move_amount, r=1, os=1, wd=1)
+
+        pm.poleVectorConstraint(self.ik_pole_controller, self.ik_handle)
+        auxiliary.axial_correction_group(self.ik_pole_controller)
+
+        # group everything under the main_group
+        self.main_group = pm.nt.Transform(name='IKLimbJointHierarchy_Grp#')
+        pm.parent(self.ik_handle, self.main_group)
+        pm.parent(self.ik_end_controller.getParent(), self.main_group)
+        pm.parent(self.ik_pole_controller.getParent(), self.main_group)
+
+        if self.do_stretchy:
+            self.create_stretch_setup()
+
+    def create_stretch_setup(self):
+        """create IK Stretch setup
+        """
+        start_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
+        end_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
+
+        pm.parent(start_locator, self.start_joint, r=1)
+        pm.parent(start_locator, self.start_joint.getParent())
+        pm.parent(end_locator, self.start_joint.getParent())
+
+        pm.pointConstraint(self.ik_end_controller, end_locator)
+
+        distance_between = pm.nt.DistanceBetween()
+        start_locator.t >> distance_between.point1
+        end_locator.t >> distance_between.point2
+
+        default_length = distance_between.distance.get()
+
+        # create multiply divide1
+        multiply_divide1 = pm.nt.MultiplyDivide()
+        multiply_divide1.operation.set(2)  # divide
+        distance_between.distance >> multiply_divide1.input1X
+        multiply_divide1.input2X.set(default_length)
+
+        # create clamp node
+        clamp = pm.nt.Clamp()
+        self.ik_end_controller.minScale >> clamp.minR
+        self.ik_end_controller.maxScale >> clamp.maxR
+        multiply_divide1.outputX >> clamp.inputR
+
+        for j in self.joints:
+            clamp.outputR >> j.sx
+
+
+class FKLimbJointHierarchy(JointHierarchy):
+    """FK variant of the JointHierarchy
+    """
+    pass
+
+
+class ReverseFootJointHierarchy(JointHierarchy):
+    """Reverse foot joint hierarchy
+    """
+    pass
+
+
+class IKSpineJointHierarchy(IKJointHierarchyBase):
+    """Creates IK spine joint hierarchy
+    """
+
+    def __init__(self, start_joint, end_joint, do_stretchy=True):
+        IKJointHierarchyBase.__init__(start_joint, end_joint, do_stretchy)
+        self.spine_curve = None
+
+    def create_ik_setup(self, solver='', controller_radius=0.5):
+        """Create spine ik setup
+
+        :param solver:
+        :param controller_radius:
+        :return:
+        """
+        # create spine curve
+        pos = list(map(lambda x: pm.xform(x, q=1, ws=1, t=1), self.joints))
+        self.spine_curve = pm.curve(ep=pos)
+        spine_curve_shape = self.spine_curve.getShape()
+
+        # attach each joint to a motion path
+        for i, joint in enumerate(self.joints):
+            u_value = (1.0 * float(i) / (float(len(self.joints)) - 1.0))
+
+            locator = pm.spaceLocator(name='ikSplineJointPlacementLoc#')
+
+            motion_path = pm.nt.MotionPath
+            motion_path.uValue.set(u_value)
+
+            # TranslateX
+            add_double_linear = pm.nt.AddDoubleLinear()
+            locator.transMinuseRotatePivotX >> add_double_linear.input1
+            motion_path.allCoordinates.xCoordinate >> add_double_linear.input2
+
+            add_double_linear.output >> locator.translateX
+
+            # TranslateY
+            add_double_linear = pm.nt.AddDoubleLinear()
+            locator.transMinuseRotatePivotY >> add_double_linear.input1
+            motion_path.allCoordinates.yCoordinate >> add_double_linear.input2
+
+            add_double_linear.output >> locator.translateY
+
+            # TranslateZ
+            add_double_linear = pm.nt.AddDoubleLinear()
+            locator.transMinuseRotatePivotZ >> add_double_linear.input1
+            motion_path.allCoordinates.zCoordinate >> add_double_linear.input2
+
+            add_double_linear.output >> locator.translateZ
+
+            spine_curve_shape.worldSpace[0] >> motion_path.geometryPath
+            motion_path.fractionMode.set(1)
+
+    def create_stretch_setup(self):
+        """Creates the stretchy setup
+        """
+        pass
+
+
+class RiggerBase(object):
+    """Base class for rigger classes
+    """
+
+    def __init__(self, start_joint, end_joint):
+        self.start_joint = start_joint
+        self.end_joint = end_joint
+
+        self.ik_fk_switch_handle = None
+
+        self.base_hierarchy = JointHierarchy(start_joint, end_joint)
+        self.ik_hierarchy = None
+        self.fk_hierarchy = None
+
+    def create_ik_hierarchy(self):
+        """Creates the ik hierarchy
+        """
+        self.ik_hierarchy = self.base_hierarchy.duplicate(class_=JointHierarchy, suffix="_ik")
+
+    def create_fk_hierarchy(self):
+        """Creates the fk hierarchy
+        """
+        self.fk_hierarchy = self.base_hierarchy.duplicate(class_=JointHierarchy, suffix="_fk")
+
+    def create_switch_setup(self):
+        """Creates the required IK/FK blend setup
+        """
+        if self.ik_hierarchy is None:
+            raise RuntimeError("No IK hierarchy!")
+
+        if self.fk_hierarchy is None:
+            raise RuntimeError("No FK_hierarchy!")
+
+        self.ik_fk_switch_handle, shape = pm.circle(normal=(1, 0, 0), radius=0.5)
+        pm.parent(self.ik_fk_switch_handle, self.base_hierarchy.joints[0], r=1)
+        pm.parent(self.ik_fk_switch_handle, self.base_hierarchy.joints[0].getParent())
+        pm.addAttr(self.ik_fk_switch_handle, sn="ikFkSwitch", dv=0, at="float", min=0, max=1, k=True)
+
+        # reverser
+        reverser = pm.nt.Reverse()
+        self.ik_fk_switch_handle.ikFkSwitch >> reverser.inputX
+
+        for i in range(len(self.base_hierarchy.joints)):
+            bj = self.base_hierarchy.joints[i]
+            ikj = self.ik_hierarchy.joints[i]
+            fkj = self.fk_hierarchy.joints[i]
+            parent_constraint1 = pm.parentConstraint(ikj, bj)
+            parent_constraint2 = pm.parentConstraint(fkj, bj)
+
+            # get the weight alias list
+            wal = pm.parentConstraint(parent_constraint1, q=1, wal=1)
+
+            reverser.outputX >> wal[0]
+            self.ik_fk_switch_handle.ikFkSwitch >> wal[1]
+
+        # lock the transforms
+        self.ik_fk_switch_handle.t.setKeyable(False)
+        self.ik_fk_switch_handle.t.lock()
+        self.ik_fk_switch_handle.r.setKeyable(False)
+        self.ik_fk_switch_handle.r.lock()
+        self.ik_fk_switch_handle.s.setKeyable(False)
+        self.ik_fk_switch_handle.s.lock()
+        self.ik_fk_switch_handle.v.setKeyable(False)
+
+
+class IKFKLimbRigger(RiggerBase):
+    """Creates a simple IK/FK Limb rig
+
+    The class creates a fully switchable IK/FK limb setup between the start and
+    end joints.
+
+    Test Code:
+
+from anima.env.mayaEnv import rigging
+
+selection = pm.selected()
+
+start_joint = selection[0]
+end_joint = selection[1]
+
+rigger = rigging.IKFKLimbRigger(start_joint, end_joint)
+
+rigger.create_ik_hierarchy()
+rigger.create_fk_hierarchy()
+rigger.create_switch_setup()
+    """
+
+    def create_ik_hierarchy(self):
+        """Creates the ik hierarchy
+        """
+        self.ik_hierarchy = self.base_hierarchy.duplicate(class_=IKLimbJointHierarchy, suffix="_ik")
+        # set joint radius
+        base_radius = self.base_hierarchy.joints[0].radius.get()
+        for j in self.ik_hierarchy.joints:
+            j.radius.set(base_radius * 2)
+        assert isinstance(self.ik_hierarchy, IKLimbJointHierarchy)
+        self.ik_hierarchy.create_ik_setup()
+
+    def create_fk_hierarchy(self):
+        """Creates the fk hierarchy
+        """
+        self.fk_hierarchy = self.base_hierarchy.duplicate(class_=FKLimbJointHierarchy, suffix="_fk")
+        # set joint radius
+        base_radius = self.base_hierarchy.joints[0].radius.get()
+        for j in self.fk_hierarchy.joints:
+            j.radius.set(base_radius * 3)
+        assert isinstance(self.fk_hierarchy, FKLimbJointHierarchy)
+
+
+class SpineRigger(RiggerBase):
+    """creates a stretchy spine setup
+    """
+    pass
+
+
+class ReverseFootRigger(RiggerBase):
+    """Creates reverse foot rig
+    """
+    pass
+
+    def create(self):
+        # reverse_foot_controller = pm.selected()[0]
+        # foot_ik_ankle_joint = pm.selected()[0]
+        # foot_ik_ball_joint = pm.selected()[0]
+        # foot_ik_tip_joint = pm.selected()[0]
+        #
+        # attrs = [
+        #     'tipHeading',
+        #     'tipRoll',
+        #     'tipBank',
+        #     'ballRoll',
+        #     'ballBank'
+        # ]
+        #
+        #
+        # for attr in attrs:
+        #     pm.addAttr(reverse_foot_controller, ln=attr, at='float', k=1)
+        #
+        # reverse_foot_controller.tipHeading >> foot_ik_tip_joint.ry
+        # reverse_foot_controller.tipRoll >> foot_ik_tip_joint.rx
+        # reverse_foot_controller.tipBank >> foot_ik_tip_joint.rz
+        #
+        # reverse_foot_controller.ballRoll >> foot_ik_ball_joint.rx
+        # reverse_foot_controller.ballBank >> foot_ik_ball_joint.rz
+        pass
+
+
+class SquashStretchBendRigger(object):
+    """creates squash/stretch/bend rig
+
+    :param geo: The geometry to create the rig for.
+    """
+
+    def __init__(self, geo=None, use_squash=True, use_delta_mush=True):
+        self.geo = geo
+        self.bend_deformer = None
+        self.bend_handle = None
+
+        self.use_squash = use_squash
+        self.squash_deformer = None
+        self.squash_handle = None
+
+        self.use_delta_mush = use_delta_mush
+        self.delta_mush = None
+
+        self.decompose_matrix = None
+        self.distance_between1 = None
+        self.distance_between2 = None
+
+        self.aim_locator1 = None
+        self.aim_locator2 = None
+        self.main_control = None
+
+    def check_main_control(self):
+        """checks the existence of the main control
+        """
+        if self.main_control is None:
+            raise RuntimeError("Please create the main controller first")
+
+    def setup(self):
+        """creates all the necessary nodes
+        """
+        self.create_main_controller()
+
+        if self.use_squash:
+            self.create_squash_deformer()
+
+        self.create_bend_deformer()
+
+        if self.use_delta_mush:
+            self.create_delta_mush_deformer()
+
+        self.finalize_setup()
+
+    def create_main_controller(self):
+        """creates the main controller
+        """
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        y_max = bbox.max().y
+        h = bbox.height()
+
+        # create main controller
+        self.main_control = pm.spaceLocator(name="ssb_main_control")
+        self.main_control.t.set(bbox.center())
+        self.main_control.ty.set(y_max)
+        auxiliary.axial_correction_group(self.main_control)
+        self.decompose_matrix = pm.nt.DecomposeMatrix()
+        self.main_control.worldMatrix[0] >> self.decompose_matrix.inputMatrix
+
+    def create_squash_deformer(self):
+        """creates the squash deformer
+        """
+        self.check_main_control()
+
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        h = bbox.height()
+
+        # create squash deformer
+        self.squash_deformer, self.squash_handle = pm.nonLinear(self.geo, type='squash')
+        self.squash_deformer.lowBound.set(0)
+        self.squash_handle.ty.set(y_min)
+        self.squash_handle.s.set(h, h, h)
+
+        # create distance between node1
+        self.distance_between1 = pm.nt.DistanceBetween()
+        self.squash_handle.t >> self.distance_between1.point1
+        self.decompose_matrix.outputTranslate >> self.distance_between1.point2
+
+        # Squash
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(-h * 0.5)
+        self.squash_deformer.factor.set(-1)
+        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        self.main_control.ty.set(0)
+
+        # adjust infinity of the keyframes to be linear
+        anim_curve = self.squash_deformer.factor.inputs(type=pm.nt.AnimCurve)[0]
+        anim_curve.setPreInfinityType(infinityType='linear')
+        anim_curve.setPostInfinityType(infinityType='linear')
+
+    def create_bend_deformer(self):
+        """creates the bend deformer
+        """
+        self.check_main_control()
+
+        bbox = self.geo.getBoundingBox()
+        y_min = bbox.min().y
+        h = bbox.height()
+
+        # create aim locator1 (for bend direction)
+        self.aim_locator1 = pm.spaceLocator(name="ssb_aim_locator#")
+        self.aim_locator1.t.set(bbox.center())
+        self.aim_locator1.ty.set(y_min)
+
+        # create aim locator2 (for bend curvature)
+        self.aim_locator2 = pm.spaceLocator(name="ssb_aim_locator#")
+
+        # create bend deformer
+        self.bend_deformer, self.bend_handle = pm.nonLinear(self.geo, type='bend')
+        self.bend_deformer.lowBound.set(0)
+        self.bend_deformer.highBound.set(1)
+        self.bend_handle.ty.set(y_min)
+        self.bend_handle.s.set(h, h, h)
+        pm.parent(self.aim_locator2, self.bend_handle, r=1)
+
+        # create aim constraint for the bend.curvature control
+        pm.aimConstraint(self.main_control, self.aim_locator2, skip=["x", "y"], aimVector=[1, 0, 0], upVector=[0, 1, 0])
+
+        # create constraints
+        # main to aim locator
+        pm.pointConstraint(self.main_control, self.aim_locator1, skip="y")
+
+        # create aim constraint
+        pm.aimConstraint(self.aim_locator1, self.bend_handle, upVector=[0, 1, 0], aimVector=[1, 0, 0])
+
+        # create set driven keys
+        # bend
+        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        self.main_control.tx.set(h)
+        self.bend_deformer.curvature.set(90)
+        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        self.main_control.tx.set(0)
+        # adjust infinity of the keyframes to be linear
+        anim_curve = self.bend_deformer.curvature.inputs(type=pm.nt.AnimCurve)[0]
+        anim_curve.setPreInfinityType(infinityType='linear')
+        anim_curve.setPostInfinityType(infinityType='linear')
+
+    def create_delta_mush_deformer(self):
+        self.check_main_control()
+
+        # finally add delta mush
+        self.delta_mush = pm.deltaMush(
+            self.geo,
+            smoothingIterations=10,
+            smoothingStep=0.5,
+            pinBorderVertices=1,
+            envelope=1
+        )
+        self.delta_mush.inwardConstraint.set(0.25)
+        self.delta_mush.outwardConstraint.set(0.25)
+        self.delta_mush.distanceWeight.set(0.25)
+
+    def finalize_setup(self):
+        """does final clean up
+        """
+        self.check_main_control()
+
+        # group the node together
+        parent_group = pm.nt.Transform(name='SquashStretchBendRiggerGroup#')
+        pm.parent(self.main_control.getParent(), parent_group)
+        pm.parent(self.aim_locator1, parent_group)
+        if self.use_squash:
+            pm.parent(self.squash_handle, parent_group)
+
+        pm.parent(self.bend_handle, parent_group)
+
+        # set visibilities
+        self.aim_locator1.v.set(0)
+        if self.use_squash:
+            self.squash_handle.v.set(0)
+        self.bend_handle.v.set(0)
+
+        # as a gesture select the main control
+        pm.select(self.main_control)

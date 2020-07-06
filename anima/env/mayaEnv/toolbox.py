@@ -902,10 +902,17 @@ def UI():
                 bgc=color.color
             )
             pm.button(
-                'oyIKFKSetup_button',
-                l="oyIKFKSetup",
-                c=repeated_callback(mel.eval, 'oyIKFKSetup'),
-                ann="opens oyIKFKSetup",
+                'IKFKLimbRigger_button',
+                l="IK/FK Limb Rigger",
+                c=repeated_callback(Rigging.ik_fk_limb_rigger),
+                ann=Rigging.ik_fk_limb_rigger.__doc__,
+                bgc=color.color
+            )
+            pm.button(
+                'squashStretchBendRigger_button',
+                l="Squash/Stretch/Bend Rigger",
+                c=repeated_callback(Rigging.squash_stretch_bend_rigger),
+                ann=Rigging.squash_stretch_bend_rigger.__doc__,
                 bgc=color.color
             )
             pm.button(

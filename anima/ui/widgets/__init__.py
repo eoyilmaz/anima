@@ -249,12 +249,12 @@ class TimeEdit(QtWidgets.QTimeEdit):
                     super(TimeEdit, self).stepBy(step)
 
 
-class TakesListWidget(QtWidgets.QListWidget):
-    """A specialized QListWidget variant used in Take names.
+class TakesComboBox(QtWidgets.QComboBox):
+    """A specialized QComboBox variant used in Take names.
     """
 
     def __init__(self, parent=None, *args, **kwargs):
-        QtWidgets.QListWidget.__init__(self, parent, *args, **kwargs)
+        QtWidgets.QComboBox.__init__(self, parent, *args, **kwargs)
         self._take_names = []
         self.take_names = []
 
@@ -282,7 +282,7 @@ class TakesListWidget(QtWidgets.QListWidget):
         self.addItems(self._take_names)
 
         # select the first item
-        self.setCurrentItem(self.item(0))
+        self.setCurrentIndex(0)
 
     def add_take(self, take_name):
         """adds a new take to the takes list
@@ -300,40 +300,34 @@ class TakesListWidget(QtWidgets.QListWidget):
             self.take_names = new_take_list
 
             # select the newly added take name
-            items = self.findItems(take_name, QtCore.Qt.MatchExactly)
-            if items:
-                item = items[0]
-                # set the take to the new one
-                self.setCurrentItem(item)
+            index = self.findText(take_name, QtCore.Qt.MatchExactly)
+            if index:
+                self.setCurrentIndex(index)
 
     @property
     def current_take_name(self):
         """gets the current take name
         """
-        take_name = ''
-        item = self.currentItem()
-        if item:
-            take_name = item.text()
-        return take_name
+        return self.currentText()
 
     @current_take_name.setter
     def current_take_name(self, take_name):
         """sets the current take name
         """
         logger.debug('finding take with name: %s' % take_name)
-        items = self.findItems(
+        index = self.findText(
             take_name,
             QtCore.Qt.MatchExactly
         )
-        if items:
-            self.setCurrentItem(items[0])
+        if index:
+            self.setCurrentIndex(index)
 
     def clear(self):
         """overridden clear method
         """
         self._take_names = []
         # call the super
-        QtWidgets.QListWidget.clear(self)
+        QtWidgets.QComboBox.clear(self)
 
 
 class TaskComboBox(QtWidgets.QComboBox):
