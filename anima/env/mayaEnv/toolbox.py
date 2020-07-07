@@ -908,6 +908,22 @@ def UI():
                 ann=Rigging.ik_fk_limb_rigger.__doc__,
                 bgc=color.color
             )
+            with pm.rowLayout(nc=2, adj=1):
+                def ik_fk_limb_rigger_callback():
+                    subdivision = pm.intField('bendy_ik_fk_subdivision_count_field', q=1, v=1)
+                    print("subdivision: %s" % subdivision)
+                    Rigging.bendy_ik_fk_limb_rigger(subdivision=subdivision)
+
+                pm.button(
+                    'bendy_ik_fk_limb_rigger_button',
+                    l='IK/FK Limb Rigger (Bendy)',
+                    c=repeated_callback(ik_fk_limb_rigger_callback),
+                    ann=Rigging.bendy_ik_fk_limb_rigger.__doc__,
+                    bgc=color.color
+                )
+
+                pm.intField('bendy_ik_fk_subdivision_count_field', min=0, v=2)
+
             pm.button(
                 'squashStretchBendRigger_button',
                 l="Squash/Stretch/Bend Rigger",
@@ -940,20 +956,10 @@ def UI():
 
             color.change()
             pm.button(
-                'oyCreateAxialCorrectionGroup_button',
-                l="create axialCorrectionGroups",
+                'create_axial_correction_group_button',
+                l="Create Axial Correction Groups",
                 c=repeated_callback(Rigging.axial_correction_group),
-                ann="creates a group node above the selected objects "
-                    "to zero-out the transformations",
-                bgc=color.color
-            )
-            pm.button(
-                'createAxialCorrectionGroupForClusters_button',
-                l="create axialCorrectionGroup for clusters",
-                c=repeated_callback(
-                    Rigging.create_axial_correction_group_for_clusters
-                ),
-                ann="create Axial Correction Group For Clusters",
+                ann=Rigging.axial_correction_group.__doc__,
                 bgc=color.color
             )
 

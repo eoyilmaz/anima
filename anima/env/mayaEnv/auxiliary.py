@@ -137,6 +137,20 @@ def axial_correction_group(obj,
         obj.setAttr('r', (0, 0, 0))
         obj.setAttr('jo', (0, 0, 0))
 
+    # do extra steps if this is a cluster
+    cluster_handle = obj.getShape()
+    if isinstance(cluster_handle, pm.nt.ClusterHandle):
+        t = cluster_handle.origin.get()
+        ac_group.t.set(*t)
+        cluster_handle.origin.set(0, 0, 0)
+        cluster_transform = obj
+        cluster_transform.rp.set(0, 0, 0)
+        cluster_transform.sp.set(0, 0, 0)
+
+        cluster = cluster_transform.worldMatrix[0].outputs(type=pm.nt.Cluster)[0]
+        cluster_transform.worldInverseMatrix[0] >> cluster.bindPreMatrix
+        cluster.bindPreMatrix.disconnect()
+
     return ac_group
 
 
