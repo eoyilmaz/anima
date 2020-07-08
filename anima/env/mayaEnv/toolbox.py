@@ -911,7 +911,6 @@ def UI():
             with pm.rowLayout(nc=2, adj=1):
                 def ik_fk_limb_rigger_callback():
                     subdivision = pm.intField('bendy_ik_fk_subdivision_count_field', q=1, v=1)
-                    print("subdivision: %s" % subdivision)
                     Rigging.bendy_ik_fk_limb_rigger(subdivision=subdivision)
 
                 pm.button(
