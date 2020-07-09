@@ -324,10 +324,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ------------------------------------------
         # New Version Group Box
-        self.vertical_layout_6 = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout_6 = QtWidgets.QVBoxLayout()
         self.horizontal_layout_12.addLayout(self.vertical_layout_6)
 
-        self.horizontal_layout_14 = QtWidgets.QHBoxLayout(self)
+        self.horizontal_layout_14 = QtWidgets.QHBoxLayout()
 
         self.new_version_group_box = QtWidgets.QGroupBox(self)
         self.new_version_group_box.setTitle("Save Version")
@@ -335,10 +335,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.new_versions_group_box_main_layout = QtWidgets.QHBoxLayout(self.new_version_group_box)
 
-        self.vertical_layout_4 = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout_4 = QtWidgets.QVBoxLayout()
         self.new_versions_group_box_main_layout.addLayout(self.vertical_layout_4)
 
-        self.vertical_layout_3 = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout_3 = QtWidgets.QVBoxLayout()
         self.horizontal_layout_9 = QtWidgets.QHBoxLayout()
 
         # ====================
