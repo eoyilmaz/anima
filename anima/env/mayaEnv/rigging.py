@@ -62,21 +62,12 @@ class Rigging(object):
 
     @classmethod
     def axial_correction_group(cls):
+        """Creates a group node above the selected objects to zero-out the
+        transformations. Also works for clusters.
+        """
         selection = pm.ls(sl=1)
         for item in selection:
             auxiliary.axial_correction_group(item)
-
-    @classmethod
-    def create_axial_correction_group_for_clusters(cls):
-        selection = pm.ls(sl=1)
-        Rigging.axial_correction_group()
-        pm.select(cl=1)
-        for cluster_handle in selection:
-            cluster_handle_shape = pm.listRelatives(cluster_handle, s=True)
-            cluster_parent = pm.listRelatives(cluster_handle, p=True)
-            trans = cluster_handle_shape[0].origin.get()
-            cluster_parent[0].translate.set(trans[0], trans[1], trans[2])
-        pm.select(selection)
 
     @classmethod
     def set_clusters_relative_state(cls, relative_state):
@@ -413,6 +404,22 @@ class Rigging(object):
         rigger.create_ik_hierarchy()
         rigger.create_fk_hierarchy()
         rigger.create_switch_setup()
+
+    @classmethod
+    def bendy_ik_fk_limb_rigger(cls, subdivision=2):
+        """Creates Bendy IK/FK Limb Setup from selected start and end joint
+        """
+        selection = pm.selected()
+
+        start_joint = selection[0]
+        end_joint = selection[1]
+
+        rigger = IKFKLimbRigger(start_joint, end_joint)
+
+        rigger.create_ik_hierarchy()
+        rigger.create_fk_hierarchy()
+        rigger.create_switch_setup()
+        rigger.create_bendy_hierarchy(subdivision=subdivision)
 
     @classmethod
     def squash_stretch_bend_rigger(cls):
@@ -872,7 +879,6 @@ class SkinTools(object):
         # component_list = self.convert_to_vertex_list(component_list)
 
         for component in component_list:
-            # print("component: %s" % component)
             component_index = component.index()
 
             # query all the weights at once
@@ -1283,6 +1289,10 @@ class JointHierarchy(object):
     """
 
     def __init__(self, start_joint, end_joint):
+        """
+        :param start_joint:
+        :param end_joint:
+        """
         self.joints = []
 
         self.start_joint = start_joint
@@ -1309,13 +1319,16 @@ class JointHierarchy(object):
                 (self.end_joint, self.start_joint)
             )
 
-    def duplicate(self, class_=None, prefix="", suffix=""):
+    def duplicate(self, class_=None, prefix="", suffix="", subdivision=0):
         """duplicates itself and returns a new joint hierarchy
 
         :param class_: The class of the created JointHierarchy. Default value
           is JointHierarchy
         :param prefix: Prefix for newly created joints
         :param suffix: Suffix for newly created joints
+        :param int subdivision: Adds extra joints in between the original
+          joints. Setting subdivision to 2 will add 2 more joints between the
+          original joints.
         """
         if class_ is None:
             class_ = self.__class__
@@ -1327,9 +1340,37 @@ class JointHierarchy(object):
         # delete anything below
         pm.delete(new_end_joint.listRelatives(ad=1))
 
+        # insert subdivision amount of joints between joints
+        if subdivision > 0:
+            all_new_joints = [new_start_joint] + list(reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint)))
+            new_parent = all_new_joints[0]
+            for j_i, j in enumerate(all_new_joints[:-1]):
+                if new_parent != j:
+                    pm.parent(j, new_parent)
+                child_joint = all_new_joints[j_i + 1]
+                child_offset = child_joint.tx.get()
+                new_parent = j
+                for i in range(subdivision):
+                    j_sub = pm.duplicate(j)[0]
+                    pm.delete(j_sub.listRelatives(ad=1))
+                    pm.parent(j_sub, new_parent)
+                    j_sub.tx.set(child_offset / (subdivision + 1))
+                    new_parent = j_sub
+            # parent the last joint
+            pm.parent(all_new_joints[-1], new_parent)
+
         new_hierarchy = class_(start_joint=new_start_joint, end_joint=new_end_joint)
-        for j, nj in zip(self.joints, new_hierarchy.joints):
-            nj.rename("{prefix}{joint}{suffix}".format(prefix=prefix, suffix=suffix, joint=j.name()))
+        for i, j in enumerate(self.joints):
+            if subdivision > 0:
+                for s in range(subdivision + 1):
+                    current_index = i * (subdivision + 1) + s
+                    if current_index >= len(new_hierarchy.joints):
+                        continue
+                    nj = new_hierarchy.joints[current_index]
+                    nj.rename("{prefix}{joint}{suffix}_{subdiv}".format(prefix=prefix, suffix=suffix, joint=j.name(), subdiv=s + 1))
+            else:
+                nj = new_hierarchy.joints[i]
+                nj.rename("{prefix}{joint}{suffix}".format(prefix=prefix, suffix=suffix, joint=j.name()))
 
         return new_hierarchy
 
@@ -1421,7 +1462,8 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
         self.main_group = pm.nt.Transform(name='IKLimbJointHierarchy_Grp#')
         pm.parent(self.ik_handle, self.main_group)
         pm.parent(self.ik_end_controller.getParent(), self.main_group)
-        pm.parent(self.ik_pole_controller.getParent(), self.main_group)
+        # parent pole controller under the end controller
+        pm.parent(self.ik_pole_controller.getParent(), self.ik_end_controller)
 
         if self.do_stretchy:
             self.create_stretch_setup()
@@ -1466,6 +1508,161 @@ class FKLimbJointHierarchy(JointHierarchy):
     pass
 
 
+class BendyLimbJointHierarchy(JointHierarchy):
+    """Bendy variant of JointHierarchy
+    """
+
+    def __init__(self, start_joint, end_joint):
+        super(BendyLimbJointHierarchy, self).__init__(start_joint, end_joint)
+        self.bendy_curves = []
+        self.cluster_data = []
+        self.joints_to_curves = []
+
+    def create_bendy_setup(self, control_hierarchy=None):
+        """creates the necessary nodes and connections for the bendy setup
+        """
+        if not control_hierarchy:
+            raise RuntimeError("Please supply a JointHierarchy instance as the control hierarchy!")
+
+        subdivision = int((len(self.joints) - 3) / 2)
+
+        main_bendy_group = pm.nt.Transform(name="bendy_setup#")
+
+        # create the curves
+        bendy_curves_group = pm.nt.Transform(name="bendy_curves#")
+        pm.parent(bendy_curves_group, main_bendy_group)
+        for i in range(len(control_hierarchy.joints) - 1):
+            curve = pm.curve(
+                d=3,
+                ep=map(lambda x: pm.xform(x, q=1, ws=1, t=1), control_hierarchy.joints[i:i+2]),
+            )
+            self.bendy_curves.append(curve)
+        pm.parent(self.bendy_curves, bendy_curves_group)
+
+        # cluster curve CV points
+        for i, curve in enumerate(self.bendy_curves):
+
+            # create a cluster for first two and last two cvs of the curve
+            for j in range(2):
+                cluster, cluster_handle = pm.cluster('%s.cv[%s:%s]' % (curve.name(), j * 2, j * 2 + 1))
+
+                # move the cluster to the start or end of the curve
+                if j == 0:
+                    cv_index = j * 2
+                else:
+                    cv_index = j * 2 + 1
+                tra = pm.xform('%s.cv[%s]' % (curve.name(), cv_index), q=1, ws=1, t=1)
+                cluster_handle.t.set(tra)
+                cluster_handle.getShape().origin.set(tra)
+
+                data = dict()
+                data['cluster'] = cluster
+                data['cluster_handle'] = cluster_handle
+                data['curve'] = curve
+                data['curve_index'] = i
+                data['cluster_index'] = j
+                self.cluster_data.append(data)
+
+        # parentConstraint the clusters to the control joints
+        clusters_group = pm.nt.Transform(name='bendy_clusters#')
+        pm.parent(clusters_group, main_bendy_group)
+        for cluster_data in self.cluster_data:
+            cluster_handle = cluster_data['cluster_handle']
+            cluster_acg1 = auxiliary.axial_correction_group(cluster_handle, name_postfix='_Ctrl')
+            cluster_data['acg1'] = cluster_acg1
+            cluster_acg2 = auxiliary.axial_correction_group(cluster_acg1)
+            cluster_data['acg2'] = cluster_acg2
+            pm.parent(cluster_acg2, clusters_group)
+
+            joint_index = cluster_data['curve_index'] + cluster_data['cluster_index']
+            oc = pm.orientConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+            oc.interpType.set(2)  # shortest
+            pc = pm.pointConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+
+            joint_index = cluster_data['curve_index'] + cluster_data['cluster_index'] - 1
+            if joint_index >= 0 and not (cluster_data['curve_index'] == (len(control_hierarchy.joints) - 1) and cluster_data['cluster_index'] == 1):
+                oc = pm.orientConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+                oc.interpType.set(2)  # shortest
+
+        # Motion Path stuff
+        # group locators
+        locators_group = pm.nt.Transform(name='bendy_locators#')
+        pm.parent(locators_group, main_bendy_group)
+        for i, j in enumerate(self.joints[:-1]):
+            # directly attach them to the curves
+            # which curve????
+            curve_index = i // (subdivision + 1)
+            joint_index_by_curve = i % (subdivision + 1)
+            # curve_index = min(curve_index, len(self.bendy_curves) - 1)
+            curve = self.bendy_curves[curve_index]
+            curve_shape = curve.getShape()
+            world_up_obj = control_hierarchy.joints[curve_index]
+
+            locator = pm.spaceLocator()
+            pm.parent(locator, locators_group)
+            u_value = float(joint_index_by_curve) / (float(subdivision + 1))
+
+            # create motion path
+            motion_path = pm.nt.MotionPath()
+
+            motion_path.uValue.set(u_value)
+            motion_path.fractionMode.set(1)
+            motion_path.worldUpType.set(2)  # object rotation up
+            motion_path.worldUpVectorX.set(0)
+            motion_path.worldUpVectorY.set(1)
+            motion_path.worldUpVectorZ.set(0)
+            world_up_obj.worldMatrix[0] >> motion_path.worldUpMatrix
+            motion_path.inverseUp.set(1)
+            motion_path.inverseFront.set(0)
+            motion_path.frontAxis.set(1)  # Y
+            motion_path.upAxis.set(0)  # X
+
+            curve_shape.worldSpace[0] >> motion_path.geometryPath
+            motion_path.message >> locator.specifiedManipLocation
+
+            # Translate
+            motion_path.xCoordinate >> locator.translateX
+            motion_path.yCoordinate >> locator.translateY
+            motion_path.zCoordinate >> locator.translateZ
+
+            # Rotate
+            motion_path.rotateX >> locator.rotateX
+            motion_path.rotateY >> locator.rotateY
+            motion_path.rotateZ >> locator.rotateZ
+            motion_path.rotateOrder >> locator.rotateOrder
+
+            # point constraint joint
+            parent_constraint = pm.parentConstraint(locator, j, mo=1)
+            parent_constraint.interpType.set(2)
+
+        # parent constraint the last joint to the last controller joint
+        pc = pm.parentConstraint(control_hierarchy.joints[-1], self.joints[-1], mo=1)
+        pc.interpType.set(2)
+
+        # create controller stuff
+        main_controller = pm.nt.Transform(name="bendy_ctrl#")
+        pm.parent(main_controller, main_bendy_group)
+        pm.addAttr(main_controller, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(main_controller, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(main_controller, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
+
+        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sx
+        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sy
+        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sz
+
+        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sx
+        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sy
+        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sz
+
+        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sx
+        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sy
+        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sz
+
+        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sx
+        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sy
+        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sz
+
+
 class ReverseFootJointHierarchy(JointHierarchy):
     """Reverse foot joint hierarchy
     """
@@ -1503,21 +1700,21 @@ class IKSpineJointHierarchy(IKJointHierarchyBase):
 
             # TranslateX
             add_double_linear = pm.nt.AddDoubleLinear()
-            locator.transMinuseRotatePivotX >> add_double_linear.input1
+            locator.transMinusRotatePivotX >> add_double_linear.input1
             motion_path.allCoordinates.xCoordinate >> add_double_linear.input2
 
             add_double_linear.output >> locator.translateX
 
             # TranslateY
             add_double_linear = pm.nt.AddDoubleLinear()
-            locator.transMinuseRotatePivotY >> add_double_linear.input1
+            locator.transMinusRotatePivotY >> add_double_linear.input1
             motion_path.allCoordinates.yCoordinate >> add_double_linear.input2
 
             add_double_linear.output >> locator.translateY
 
             # TranslateZ
             add_double_linear = pm.nt.AddDoubleLinear()
-            locator.transMinuseRotatePivotZ >> add_double_linear.input1
+            locator.transMinusRotatePivotZ >> add_double_linear.input1
             motion_path.allCoordinates.zCoordinate >> add_double_linear.input2
 
             add_double_linear.output >> locator.translateZ
@@ -1618,6 +1815,10 @@ rigger.create_fk_hierarchy()
 rigger.create_switch_setup()
     """
 
+    def __init__(self, start_joint, end_joint):
+        super(IKFKLimbRigger, self).__init__(start_joint, end_joint)
+        self.bendy_hierarchy = None
+
     def create_ik_hierarchy(self):
         """Creates the ik hierarchy
         """
@@ -1638,6 +1839,18 @@ rigger.create_switch_setup()
         for j in self.fk_hierarchy.joints:
             j.radius.set(base_radius * 3)
         assert isinstance(self.fk_hierarchy, FKLimbJointHierarchy)
+
+    def create_bendy_hierarchy(self, subdivision=2):
+        """Creates bendy hierarchy
+        """
+        self.bendy_hierarchy = self.base_hierarchy.duplicate(
+            class_=BendyLimbJointHierarchy, suffix="_bendy", subdivision=subdivision
+        )
+        base_radius = self.base_hierarchy.joints[0].radius.get()
+        for j in self.bendy_hierarchy.joints:
+            j.radius.set(base_radius * 0.5)
+        assert isinstance(self.bendy_hierarchy, BendyLimbJointHierarchy)
+        self.bendy_hierarchy.create_bendy_setup(control_hierarchy=self.base_hierarchy)
 
 
 class SpineRigger(RiggerBase):
