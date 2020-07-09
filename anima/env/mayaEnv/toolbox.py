@@ -876,6 +876,26 @@ def UI():
                     'T', w=button_with, al='left', ann='Topology'
                 )
 
+            color.change()
+            pm.text(l='======= Manipulator Tools =======')
+            pm.button('set_to_point_button',
+                      l="Set To Point",
+                      c=repeated_callback(pm.mel.eval, "manipMoveOrient 1;"),
+                      ann="Set manipulator to the point",
+                      bgc=color.color)
+
+            pm.button('set_to_edge_button',
+                      l="Set To Edge",
+                      c=repeated_callback(pm.mel.eval, "manipMoveOrient 2;"),
+                      ann="Set manipulator to the edge",
+                      bgc=color.color)
+
+            pm.button('set_to_face_button',
+                      l="Set To Face",
+                      c=repeated_callback(pm.mel.eval, "manipMoveOrient 3;"),
+                      ann="Set manipulator to the face",
+                      bgc=color.color)
+
         # store commands
         __commands__.extend(modeling_column_layout.children())
 
