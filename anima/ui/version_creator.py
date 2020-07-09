@@ -328,7 +328,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontal_layout_12.addLayout(self.vertical_layout_6)
 
         self.horizontal_layout_14 = QtWidgets.QHBoxLayout(self)
-        self.vertical_layout_6.addLayout(self.horizontal_layout_14)
 
         self.new_version_group_box = QtWidgets.QGroupBox(self)
         self.new_version_group_box.setTitle("Save Version")
@@ -540,7 +539,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout_5.addLayout(self.horizontal_layout_10)
 
         # previous_versions_table_widget
-        self.previous_versions_table_widget = VersionsTableWidget(self.previous_versions_group_box)
+        self.previous_versions_table_widget = VersionsTableWidget(self)
 
         self.previous_versions_table_widget.setToolTip(
             """
@@ -607,18 +606,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.vertical_layout_5.addWidget(self.previous_versions_table_widget)
         self.horizontal_layout_5 = QtWidgets.QHBoxLayout()
-        self.representations_label = QtWidgets.QLabel(self.previous_versions_group_box)
+        self.representations_label = QtWidgets.QLabel(self)
         self.representations_label.setText("Repr.")
         self.horizontal_layout_5.addWidget(self.representations_label)
 
-        self.representations_comboBox = QtWidgets.QComboBox(self.previous_versions_group_box)
+        self.representations_comboBox = QtWidgets.QComboBox(self)
         self.representations_comboBox.setToolTip("Choose Representation (if supported by the environment)")
 
         self.horizontal_layout_5.addWidget(self.representations_comboBox)
-        self.reference_depth_label = QtWidgets.QLabel(self.previous_versions_group_box)
+        self.reference_depth_label = QtWidgets.QLabel(self)
         self.reference_depth_label.setText("Refs")
         self.horizontal_layout_5.addWidget(self.reference_depth_label)
-        self.ref_depth_combo_box = QtWidgets.QComboBox(self.previous_versions_group_box)
+        self.ref_depth_combo_box = QtWidgets.QComboBox(self)
         self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by environment)")
         self.horizontal_layout_5.addWidget(self.ref_depth_combo_box)
         spacer_item3 = QtWidgets.QSpacerItem(
@@ -627,7 +626,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QSizePolicy.Minimum
         )
         self.horizontal_layout_5.addItem(spacer_item3)
-        self.use_namespace_check_box = QtWidgets.QCheckBox(self.previous_versions_group_box)
+        self.use_namespace_check_box = QtWidgets.QCheckBox(self)
         self.use_namespace_check_box.setText("Use Namespace")
         self.use_namespace_check_box.setToolTip(
             """
@@ -645,19 +644,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontal_layout_5.addWidget(self.use_namespace_check_box)
 
         # Choose Push Button
-        self.choose_version_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.choose_version_push_button = QtWidgets.QPushButton(self)
         self.choose_version_push_button.setText("Choose")
         self.horizontal_layout_5.addWidget(self.choose_version_push_button)
 
         # Check Updates Check Box
-        self.check_updates_check_box = QtWidgets.QCheckBox(self.previous_versions_group_box)
+        self.check_updates_check_box = QtWidgets.QCheckBox(self)
         self.check_updates_check_box.setToolTip("Disable update check (faster)")
         self.check_updates_check_box.setText("Check Updates")
         self.check_updates_check_box.setChecked(True)
         self.horizontal_layout_5.addWidget(self.check_updates_check_box)
 
         # Open As New Version Push Button
-        self.open_as_new_version_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.open_as_new_version_push_button = QtWidgets.QPushButton(self)
         self.horizontal_layout_5.addWidget(self.open_as_new_version_push_button)
         self.open_as_new_version_push_button.setText("Open As\nNew Version")
         self.open_as_new_version_push_button.setToolTip(
@@ -665,31 +664,31 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # Open Push Button
-        self.open_push_button = QtWidgets.QPushButton(
-            self.previous_versions_group_box
-        )
+        self.open_push_button = QtWidgets.QPushButton(self)
         self.horizontal_layout_5.addWidget(self.open_push_button)
         self.open_push_button.setText("Open")
 
         # Reference Push Button
-        self.reference_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.reference_push_button = QtWidgets.QPushButton(self)
         self.reference_push_button.setText("Reference")
         self.horizontal_layout_5.addWidget(self.reference_push_button)
 
         # Import Push Button
-        self.import_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.import_push_button = QtWidgets.QPushButton(self)
         self.import_push_button.setText("Import")
         self.horizontal_layout_5.addWidget(self.import_push_button)
 
         # Close Push Button
-        self.close_push_button = QtWidgets.QPushButton(self.previous_versions_group_box)
+        self.close_push_button = QtWidgets.QPushButton(self)
         self.close_push_button.setText("Close")
         self.horizontal_layout_5.addWidget(self.close_push_button)
         self.vertical_layout_5.addLayout(self.horizontal_layout_5)
-        self.vertical_layout_6.addWidget(self.previous_versions_group_box)
 
-        self.vertical_layout_6.setStretch(0, 1)
-        self.vertical_layout_6.setStretch(1, 10)
+        self.vertical_layout_6.addWidget(self.previous_versions_group_box)
+        self.vertical_layout_6.addLayout(self.horizontal_layout_14)
+
+        self.vertical_layout_6.setStretch(0, 10)
+        self.vertical_layout_6.setStretch(1, 1)
 
         self.horizontal_layout_12.setStretch(0, 1)
         self.horizontal_layout_12.setStretch(1, 2)
