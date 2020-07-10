@@ -1545,6 +1545,8 @@ class BendyLimbJointHierarchy(JointHierarchy):
         self.bendy_curves = []
         self.cluster_data = []
         self.joints_to_curves = []
+        self.motion_paths = []
+        self.main_controller = None
 
     def create_bendy_setup(self, control_hierarchy=None):
         """creates the necessary nodes and connections for the bendy setup
@@ -1632,6 +1634,7 @@ class BendyLimbJointHierarchy(JointHierarchy):
 
             # create motion path
             motion_path = pm.nt.MotionPath()
+            self.motion_paths.append(motion_path)
 
             motion_path.uValue.set(u_value)
             motion_path.fractionMode.set(1)
@@ -1668,27 +1671,40 @@ class BendyLimbJointHierarchy(JointHierarchy):
         pc.interpType.set(2)
 
         # create controller stuff
-        main_controller = pm.nt.Transform(name="bendy_ctrl#")
-        pm.parent(main_controller, main_bendy_group)
-        pm.addAttr(main_controller, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
-        pm.addAttr(main_controller, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
-        pm.addAttr(main_controller, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
+        self.main_controller = pm.nt.Transform(name="bendy_ctrl#")
+        self.main_controller.v.setKeyable(False)
+        pm.parent(self.main_controller, main_bendy_group)
+        pm.addAttr(self.main_controller, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(self.main_controller, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(self.main_controller, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(self.main_controller, sn="start_twist", at="float", dv=0.0, k=True)
+        pm.addAttr(self.main_controller, sn="end_twist", at="float", dv=0.0, k=True)
 
-        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sx
-        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sy
-        main_controller.start_curviness >> self.cluster_data[0]['acg1'].sz
+        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sx
+        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sy
+        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sz
 
-        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sx
-        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sy
-        main_controller.center_curviness >> self.cluster_data[1]['acg1'].sz
+        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sx
+        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sy
+        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sz
 
-        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sx
-        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sy
-        main_controller.center_curviness >> self.cluster_data[2]['acg1'].sz
+        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sx
+        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sy
+        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sz
 
-        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sx
-        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sy
-        main_controller.end_curviness >> self.cluster_data[3]['acg1'].sz
+        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sx
+        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sy
+        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sz
+
+        # connect front twist controls
+        pm.select(None)
+        for i, motion_path in enumerate(self.motion_paths):
+            blend_colors = pm.nt.BlendColors()
+
+            self.main_controller.start_twist >> blend_colors.color1R
+            self.main_controller.end_twist >> blend_colors.color2R
+            blend_colors.outputR >> motion_path.frontTwist
+            blend_colors.blender.set( 1.0 - float(i) / float(len(self.motion_paths) + 1))
 
 
 class ReverseFootJointHierarchy(JointHierarchy):
@@ -1881,6 +1897,19 @@ rigger.create_switch_setup()
         assert isinstance(self.bendy_hierarchy, BendyLimbJointHierarchy)
         self.bendy_hierarchy.create_bendy_setup(control_hierarchy=self.base_hierarchy)
 
+        # add bendy hierarchy controls to this one
+        if self.bendy_hierarchy:
+            pm.addAttr(self.ik_fk_switch_handle, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
+            pm.addAttr(self.ik_fk_switch_handle, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
+            pm.addAttr(self.ik_fk_switch_handle, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
+            pm.addAttr(self.ik_fk_switch_handle, sn="start_twist", at="float", dv=0.0, k=True)
+            pm.addAttr(self.ik_fk_switch_handle, sn="end_twist", at="float", dv=0.0, k=True)
+            self.ik_fk_switch_handle.start_curviness >> self.bendy_hierarchy.main_controller.start_curviness
+            self.ik_fk_switch_handle.center_curviness >> self.bendy_hierarchy.main_controller.center_curviness
+            self.ik_fk_switch_handle.end_curviness >> self.bendy_hierarchy.main_controller.end_curviness
+            self.ik_fk_switch_handle.start_twist >> self.bendy_hierarchy.main_controller.start_twist
+            self.ik_fk_switch_handle.end_twist >> self.bendy_hierarchy.main_controller.end_twist
+
 
 class SpineRigger(RiggerBase):
     """creates a stretchy spine setup
@@ -1901,7 +1930,7 @@ class ReverseFootRigger(RiggerBase):
         """
         super(ReverseFootRigger, self).__init__(joint_hierarchy)
         self.reverse_foot_joint_hierarchy = None
-        self.reverse_foot_controller = None
+        self.main_controller = None
         self.ball_ik_handle = None
         self.ball_ik_end_effector = None
         self.tip_ik_handle = None
@@ -1952,19 +1981,19 @@ class ReverseFootRigger(RiggerBase):
         if not self.reverse_foot_joint_hierarchy:
             self.create_reverse_foot_hierarchy(heel_extension)
 
-        self.reverse_foot_controller, shape = pm.circle(
+        self.main_controller, shape = pm.circle(
             normal=(0, 1, 0),
             radius=controller_radius
         )
         # set it in the same position with the heel joint
         pm.xform(
-            self.reverse_foot_controller, ws=1,
+            self.main_controller, ws=1,
             t=pm.xform(self.reverse_foot_joint_hierarchy.joints[0], q=1, ws=1, t=1)
         )
         # parent the heel joint under the controller
-        pm.parent(self.reverse_foot_joint_hierarchy.joints[0], self.reverse_foot_controller)
+        pm.parent(self.reverse_foot_joint_hierarchy.joints[0], self.main_controller)
         # and create a axialCorrectionGroup
-        auxiliary.axial_correction_group(self.reverse_foot_controller)
+        auxiliary.axial_correction_group(self.main_controller)
 
         foot_ik_ball_joint = self.reverse_foot_joint_hierarchy.joints[-2]
         foot_ik_tip_joint = self.reverse_foot_joint_hierarchy.joints[-3]
@@ -1995,14 +2024,16 @@ class ReverseFootRigger(RiggerBase):
         ]
 
         for attr in attrs:
-            pm.addAttr(self.reverse_foot_controller, ln=attr, at='float', k=1)
+            pm.addAttr(self.main_controller, ln=attr, at='float', k=1)
 
-        self.reverse_foot_controller.tipHeading >> foot_ik_tip_joint.ry
-        self.reverse_foot_controller.tipRoll >> foot_ik_tip_joint.rx
-        self.reverse_foot_controller.tipBank >> foot_ik_tip_joint.rz
+        self.main_controller.tipHeading >> foot_ik_tip_joint.ry
+        self.main_controller.tipRoll >> foot_ik_tip_joint.rx
+        self.main_controller.tipBank >> foot_ik_tip_joint.rz
 
-        self.reverse_foot_controller.ballRoll >> foot_ik_ball_joint.rx
-        self.reverse_foot_controller.ballBank >> foot_ik_ball_joint.rz
+        self.main_controller.ballRoll >> foot_ik_ball_joint.rx
+        self.main_controller.ballBank >> foot_ik_ball_joint.rz
+
+        self.main_controller.v.setKeyable(False)
 
     def connect_to_ik_fk_limb_rigger(self):
         pm.parent(
@@ -2010,10 +2041,10 @@ class ReverseFootRigger(RiggerBase):
             self.reverse_foot_joint_hierarchy.joints[-2]
         )
         # also connect attributes
-        pm.addAttr(self.reverse_foot_controller, sn="minScale", at="float", dv=1.0, k=True)
-        pm.addAttr(self.reverse_foot_controller, sn="maxScale", at="float", dv=2.0, k=True)
-        self.reverse_foot_controller.minScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.minScale
-        self.reverse_foot_controller.maxScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.maxScale
+        pm.addAttr(self.main_controller, sn="minScale", at="float", dv=1.0, k=True)
+        pm.addAttr(self.main_controller, sn="maxScale", at="float", dv=2.0, k=True)
+        self.main_controller.minScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.minScale
+        self.main_controller.maxScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.maxScale
 
 
 class SquashStretchBendRigger(object):
