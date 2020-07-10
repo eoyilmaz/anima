@@ -79,10 +79,7 @@ def update_gview_with_task_thumbnail(task, gview):
                 break
 
     if full_path:
-        update_gview_with_image_file(
-            full_path,
-            gview
-        )
+        update_gview_with_image_file(full_path, gview)
 
 
 def update_gview_with_image_file(image_full_path, gview):

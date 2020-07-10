@@ -159,6 +159,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # change the window title
         self.setWindowTitle(window_title)
 
+        self.resize(1100, 800)
+
         style_sheet = """
             QGroupBox::title {
                 color: rgb(71, 143, 202);
@@ -167,7 +169,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             }
         """
 
+        # TODO: This is a very dirty fix, do it properly
+        if self.environment.name.lower().startswith("houdini"):
+            style_sheet += """QGroupBox{
+                margin: 0px;
+            }
+            """
+
         self.setStyleSheet(style_sheet)
+
+        # self.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
 
         # Dialog itself
         self.setWindowModality(QtCore.Qt.ApplicationModal)
@@ -245,12 +256,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Tasks GroupBox
         self.tasks_group_box = QtWidgets.QGroupBox(self)
         self.tasks_group_box.setTitle("Tasks")
-        self.horizontal_layout_12.addWidget(self.tasks_group_box)
+
+        self.vertical_layout_7 = QtWidgets.QVBoxLayout()
+        self.vertical_layout_7.addWidget(self.tasks_group_box)
+
+        # self.horizontal_layout_12.addWidget(self.tasks_group_box)
+        self.horizontal_layout_12.addLayout(self.vertical_layout_7)
 
         # splitter.addWidget(self.tasks_groupBox)
 
         self.vertical_layout_2 = QtWidgets.QVBoxLayout(self.tasks_group_box)
-        self.vertical_layout_2.setContentsMargins(-1, 9, -1, -1)
+        # self.vertical_layout_2.setContentsMargins(-1, 9, -1, -1)
 
         # Show My Tasks Only CheckBox
         self.my_tasks_only_check_box = QtWidgets.QCheckBox(self)
@@ -409,15 +425,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.description_text_edit.setEnabled(True)
         self.description_text_edit.setTabChangesFocus(True)
+        self.description_text_edit.setMaximumHeight(130)
         self.vertical_layout_3.addWidget(self.description_text_edit)
-        self.vertical_layout_3.setStretch(1, 10)
-        self.vertical_layout_3.setStretch(3, 1)
+        self.vertical_layout_3.setStretch(0, 0)
+        self.vertical_layout_3.setStretch(1, 0)
+        self.vertical_layout_3.setStretch(2, 1)
         self.vertical_layout_4.addLayout(self.vertical_layout_3)
         self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
-        self.environment_combo_box = QtWidgets.QComboBox(
-            self.new_version_group_box
-        )
+        self.environment_combo_box = QtWidgets.QComboBox(self.new_version_group_box)
         self.horizontal_layout_2.addWidget(self.environment_combo_box)
+
+        # ===================
+        # Save As
+        self.save_as_push_button = QtWidgets.QPushButton(self)
+        self.save_as_push_button.setText("Save As")
+        self.save_as_push_button.setDefault(False)
+        self.horizontal_layout_2.addWidget(self.save_as_push_button)
 
         # ===================
         # Export Push Button
@@ -433,19 +456,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.publish_push_button.setText("Publish")
         self.horizontal_layout_2.addWidget(self.publish_push_button)
 
-        # ===================
-        # Save As
-        self.save_as_push_button = QtWidgets.QPushButton(self)
-        self.save_as_push_button.setText("Save As")
-        self.save_as_push_button.setDefault(False)
-        self.horizontal_layout_2.addWidget(self.save_as_push_button)
+
+        # Close Push Button
+        self.close_push_button = QtWidgets.QPushButton(self)
+        self.close_push_button.setText("Close")
+        self.horizontal_layout_2.addWidget(self.close_push_button)
+
         self.vertical_layout_4.addLayout(self.horizontal_layout_2)
 
         # ---------------------------------------------
         # Thumbnail Graphics View and Buttons
         self.thumbnail_group_box = QtWidgets.QGroupBox(self)
         self.thumbnail_group_box.setTitle("Task Thumbnail")
-        self.horizontal_layout_14.addWidget(self.thumbnail_group_box)
+
+        # self.horizontal_layout_14.addWidget(self.thumbnail_group_box)
+        self.vertical_layout_7.addWidget(self.thumbnail_group_box)
 
         self.thumbnail_layout = QtWidgets.QVBoxLayout(self.thumbnail_group_box)
 
@@ -483,7 +508,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.thumbnail_layout.addItem(spacer_item1)
 
         self.horizontal_layout_13 = QtWidgets.QHBoxLayout()
-        self.horizontal_layout_13.setContentsMargins(-1, -1, -1, 10)
+        # self.horizontal_layout_13.setContentsMargins(-1, -1, -1, 10)
         spacer_item1 = QtWidgets.QSpacerItem(
             5, 20,
             QtWidgets.QSizePolicy.Minimum,
@@ -655,40 +680,39 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.check_updates_check_box.setChecked(True)
         self.horizontal_layout_5.addWidget(self.check_updates_check_box)
 
+        self.horizontal_layout_15 = QtWidgets.QHBoxLayout()
+
+        # Open Push Button
+        self.open_push_button = QtWidgets.QPushButton(self)
+        self.horizontal_layout_15.addWidget(self.open_push_button)
+        self.open_push_button.setText("Open")
+
         # Open As New Version Push Button
         self.open_as_new_version_push_button = QtWidgets.QPushButton(self)
-        self.horizontal_layout_5.addWidget(self.open_as_new_version_push_button)
-        self.open_as_new_version_push_button.setText("Open As\nNew Version")
+        self.horizontal_layout_15.addWidget(self.open_as_new_version_push_button)
+        self.open_as_new_version_push_button.setText("Open As New Version")
         self.open_as_new_version_push_button.setToolTip(
             "Opens the selected version and immediately creates a new version."
         )
 
-        # Open Push Button
-        self.open_push_button = QtWidgets.QPushButton(self)
-        self.horizontal_layout_5.addWidget(self.open_push_button)
-        self.open_push_button.setText("Open")
-
         # Reference Push Button
         self.reference_push_button = QtWidgets.QPushButton(self)
         self.reference_push_button.setText("Reference")
-        self.horizontal_layout_5.addWidget(self.reference_push_button)
+        self.horizontal_layout_15.addWidget(self.reference_push_button)
 
         # Import Push Button
         self.import_push_button = QtWidgets.QPushButton(self)
         self.import_push_button.setText("Import")
-        self.horizontal_layout_5.addWidget(self.import_push_button)
+        self.horizontal_layout_15.addWidget(self.import_push_button)
 
-        # Close Push Button
-        self.close_push_button = QtWidgets.QPushButton(self)
-        self.close_push_button.setText("Close")
-        self.horizontal_layout_5.addWidget(self.close_push_button)
         self.vertical_layout_5.addLayout(self.horizontal_layout_5)
+        self.vertical_layout_5.addLayout(self.horizontal_layout_15)
 
         self.vertical_layout_6.addWidget(self.previous_versions_group_box)
         self.vertical_layout_6.addLayout(self.horizontal_layout_14)
 
         self.vertical_layout_6.setStretch(0, 10)
-        self.vertical_layout_6.setStretch(1, 1)
+        self.vertical_layout_6.setStretch(1, 0)
 
         self.horizontal_layout_12.setStretch(0, 1)
         self.horizontal_layout_12.setStretch(1, 2)
@@ -2268,15 +2292,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """updates the thumbnail for the selected task
         """
         # get the current task
+        self.clear_thumbnail_push_button.setEnabled(False)
         task_id = self.tasks_tree_view.get_task_id()
         if task_id:
             from anima.ui import utils as ui_utils
             # TODO: Update this too
             from stalker import Task
             task = Task.query.get(task_id)
+            if task.thumbnail:
+                self.clear_thumbnail_push_button.setEnabled(True)
             ui_utils.update_gview_with_task_thumbnail(
-                task,
-                self.thumbnail_graphics_view
+                task, self.thumbnail_graphics_view
             )
 
     def upload_thumbnail_push_button_clicked(self):
