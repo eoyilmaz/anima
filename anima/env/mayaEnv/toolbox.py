@@ -921,6 +921,8 @@ def UI():
                 ann=Rigging.mirror_transformation.__doc__,
                 bgc=color.color
             )
+
+            color.change()
             pm.button(
                 'IKFKLimbRigger_button',
                 l="IK/FK Limb Rigger",
@@ -954,13 +956,6 @@ def UI():
                 l="Squash/Stretch/Bend Rigger",
                 c=repeated_callback(Rigging.squash_stretch_bend_rigger),
                 ann=Rigging.squash_stretch_bend_rigger.__doc__,
-                bgc=color.color
-            )
-            pm.button(
-                'oySpineSetupSetup_button',
-                l="oySpineSetupSetup",
-                c=repeated_callback(mel.eval, 'oyStretchySpineSetup'),
-                ann="opens oySpineSetupSetup",
                 bgc=color.color
             )
             pm.button(
