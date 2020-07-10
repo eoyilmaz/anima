@@ -982,6 +982,13 @@ def UI():
                 ann=Rigging.axial_correction_group.__doc__,
                 bgc=color.color
             )
+            pm.button(
+                'create_zv_parent_compatible_groups_button',
+                l="Create ZV Parent Compatible Groups",
+                c=repeated_callback(Rigging.create_zv_parent_compatible_groups),
+                ann=Rigging.axial_correction_group.__doc__,
+                bgc=color.color
+            )
 
             color.change()
             pm.button(

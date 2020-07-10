@@ -70,6 +70,16 @@ class Rigging(object):
             auxiliary.axial_correction_group(item)
 
     @classmethod
+    def create_zv_parent_compatible_groups(cls):
+        """Creates ZV Parent compatible groups.
+        """
+        selection = pm.ls(sl=1)
+        for item in selection:
+            acg1 = auxiliary.axial_correction_group(item, name_postfix="_SN")
+            acg2 = auxiliary.axial_correction_group(acg1, name_postfix="_PH")
+            acg2.rename(acg2.name().replace("_SN_PH", "_PH"))
+
+    @classmethod
     def set_clusters_relative_state(cls, relative_state):
         selection = pm.ls(sl=1)
         cluster = ""
