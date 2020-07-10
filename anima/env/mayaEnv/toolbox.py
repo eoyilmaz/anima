@@ -942,7 +942,13 @@ def UI():
                 )
 
                 pm.intField('bendy_ik_fk_subdivision_count_field', min=0, v=2)
-
+            pm.button(
+                'ReverseFootRigger_button',
+                l="Reverse Foot Rigger",
+                c=repeated_callback(Rigging.reverse_foot_rigger),
+                ann=Rigging.reverse_foot_rigger.__doc__,
+                bgc=color.color
+            )
             pm.button(
                 'squashStretchBendRigger_button',
                 l="Squash/Stretch/Bend Rigger",

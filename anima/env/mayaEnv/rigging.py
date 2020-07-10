@@ -399,7 +399,9 @@ class Rigging(object):
         start_joint = selection[0]
         end_joint = selection[1]
 
-        rigger = IKFKLimbRigger(start_joint, end_joint)
+        joint_hierarchy = JointHierarchy(start_joint, end_joint)
+
+        rigger = IKFKLimbRigger(joint_hierarchy)
 
         rigger.create_ik_hierarchy()
         rigger.create_fk_hierarchy()
@@ -408,18 +410,43 @@ class Rigging(object):
     @classmethod
     def bendy_ik_fk_limb_rigger(cls, subdivision=2):
         """Creates Bendy IK/FK Limb Setup from selected start and end joint
+
+        :param subdivision: How many joints will be added in to the original
+          joints.
         """
         selection = pm.selected()
 
         start_joint = selection[0]
         end_joint = selection[1]
 
-        rigger = IKFKLimbRigger(start_joint, end_joint)
+        joint_hierarchy = JointHierarchy(start_joint, end_joint)
+
+        rigger = IKFKLimbRigger(joint_hierarchy)
 
         rigger.create_ik_hierarchy()
         rigger.create_fk_hierarchy()
         rigger.create_switch_setup()
         rigger.create_bendy_hierarchy(subdivision=subdivision)
+
+        return rigger
+
+    @classmethod
+    def reverse_foot_rigger(cls, ik_fk_rigger=None, heel_extension=0):
+        """Creates Reverse Foot Setup from selected start and end joint
+
+        :param IKFKLimbRigger ik_fk_rigger: An IKFKLimbRigger or derived class
+          instance.
+        """
+        selection = pm.selected()
+
+        start_joint = selection[0]
+        end_joint = selection[1]
+
+        joint_hierarchy = JointHierarchy(start_joint, end_joint)
+
+        rigger = ReverseFootRigger(joint_hierarchy, ik_fk_rigger=ik_fk_rigger)
+        rigger.create_reverse_foot_setup(heel_extension=heel_extension)
+        return rigger
 
     @classmethod
     def squash_stretch_bend_rigger(cls):
@@ -428,6 +455,7 @@ class Rigging(object):
         geo = pm.selected()[0]
         ssbr = SquashStretchBendRigger(geo)
         ssbr.setup()
+        return ssbr
 
 
 class JointOnCurveDialog(QtWidgets.QDialog):
@@ -1732,13 +1760,13 @@ class RiggerBase(object):
     """Base class for rigger classes
     """
 
-    def __init__(self, start_joint, end_joint):
-        self.start_joint = start_joint
-        self.end_joint = end_joint
+    def __init__(self, joint_hierarchy):
+        self.base_hierarchy = joint_hierarchy
+        self.start_joint = self.base_hierarchy.joints[0]
+        self.end_joint = self.base_hierarchy.joints[-1]
 
         self.ik_fk_switch_handle = None
 
-        self.base_hierarchy = JointHierarchy(start_joint, end_joint)
         self.ik_hierarchy = None
         self.fk_hierarchy = None
 
@@ -1807,16 +1835,17 @@ selection = pm.selected()
 
 start_joint = selection[0]
 end_joint = selection[1]
+joint_hierarchy = JointHierarchy(start_joint, end_joint)
 
-rigger = rigging.IKFKLimbRigger(start_joint, end_joint)
+rigger = rigging.IKFKLimbRigger(joint_hierarchy)
 
 rigger.create_ik_hierarchy()
 rigger.create_fk_hierarchy()
 rigger.create_switch_setup()
     """
 
-    def __init__(self, start_joint, end_joint):
-        super(IKFKLimbRigger, self).__init__(start_joint, end_joint)
+    def __init__(self, joint_hierarchy):
+        super(IKFKLimbRigger, self).__init__(joint_hierarchy)
         self.bendy_hierarchy = None
 
     def create_ik_hierarchy(self):
@@ -1862,33 +1891,129 @@ class SpineRigger(RiggerBase):
 class ReverseFootRigger(RiggerBase):
     """Creates reverse foot rig
     """
-    pass
 
-    def create(self):
-        # reverse_foot_controller = pm.selected()[0]
-        # foot_ik_ankle_joint = pm.selected()[0]
-        # foot_ik_ball_joint = pm.selected()[0]
-        # foot_ik_tip_joint = pm.selected()[0]
-        #
-        # attrs = [
-        #     'tipHeading',
-        #     'tipRoll',
-        #     'tipBank',
-        #     'ballRoll',
-        #     'ballBank'
-        # ]
-        #
-        #
-        # for attr in attrs:
-        #     pm.addAttr(reverse_foot_controller, ln=attr, at='float', k=1)
-        #
-        # reverse_foot_controller.tipHeading >> foot_ik_tip_joint.ry
-        # reverse_foot_controller.tipRoll >> foot_ik_tip_joint.rx
-        # reverse_foot_controller.tipBank >> foot_ik_tip_joint.rz
-        #
-        # reverse_foot_controller.ballRoll >> foot_ik_ball_joint.rx
-        # reverse_foot_controller.ballBank >> foot_ik_ball_joint.rz
-        pass
+    def __init__(self, joint_hierarchy, ik_fk_rigger=None):
+        """
+        :param joint_hierarchy: The base joint hierarchy to work on. Should be
+          an instance of JointHierarchy or derivative.
+        :param ik_fk_rigger: An instance of IKFKRigger or derivative. If given
+          it will be used to parent the ik_end_controller to the ankle joint.
+        """
+        super(ReverseFootRigger, self).__init__(joint_hierarchy)
+        self.reverse_foot_joint_hierarchy = None
+        self.reverse_foot_controller = None
+        self.ball_ik_handle = None
+        self.ball_ik_end_effector = None
+        self.tip_ik_handle = None
+        self.tip_ik_end_effector = None
+        self.ik_fk_limb_rigger = ik_fk_rigger
+
+    def create_reverse_foot_hierarchy(self, heel_extension=0):
+        """Creates the reverse foot joint hierarchy
+        """
+        # so we have the base_joints that we need to control with the reverse
+        # joint hierarchy
+        # create the reverse foot hierarchy by duplicating the base_hierarchy
+        self.reverse_foot_joint_hierarchy = self.base_hierarchy.duplicate(class_=ReverseFootJointHierarchy)
+
+        # create the heel joint
+        heel_joint = pm.duplicate(self.reverse_foot_joint_hierarchy.joints[-1], rc=1)[0]
+        pm.parent(heel_joint, w=1)
+
+        # set the position of the joint to X pos of the first joint and Y pos
+        # of the last joint
+        t1 = pm.xform(self.reverse_foot_joint_hierarchy.joints[0], q=1, ws=1, t=1)
+        t2 = pm.xform(self.reverse_foot_joint_hierarchy.joints[-1], q=1, ws=1, t=1)
+
+        if t1 < 0:
+            heel_extension *= -1
+
+        pm.xform(heel_joint, ws=1, t=[t1[0], t2[1], t1[2] - heel_extension])
+
+        # reverse the joint hierarchy
+        pm.parent(self.reverse_foot_joint_hierarchy.joints[-1], w=1)
+        for i, j in enumerate(reversed(self.reverse_foot_joint_hierarchy.joints[:-1])):
+            norm_index = len(self.reverse_foot_joint_hierarchy.joints) - 2 - i
+            pm.parent(j, self.reverse_foot_joint_hierarchy.joints[norm_index + 1])
+
+        # reverse the storage
+        self.reverse_foot_joint_hierarchy.joints = list(reversed(self.reverse_foot_joint_hierarchy.joints))
+
+        # parent them under the heel joint
+        pm.parent(self.reverse_foot_joint_hierarchy.joints[0], heel_joint)
+
+        # add the heel joint
+        self.reverse_foot_joint_hierarchy.joints.insert(0, heel_joint)
+
+    def create_reverse_foot_setup(self, controller_radius=0.5, heel_extension=0):
+        """creates the necessary nodes and connection for the reverse foot to
+        work
+        """
+        if not self.reverse_foot_joint_hierarchy:
+            self.create_reverse_foot_hierarchy(heel_extension)
+
+        self.reverse_foot_controller, shape = pm.circle(
+            normal=(0, 1, 0),
+            radius=controller_radius
+        )
+        # set it in the same position with the heel joint
+        pm.xform(
+            self.reverse_foot_controller, ws=1,
+            t=pm.xform(self.reverse_foot_joint_hierarchy.joints[0], q=1, ws=1, t=1)
+        )
+        # parent the heel joint under the controller
+        pm.parent(self.reverse_foot_joint_hierarchy.joints[0], self.reverse_foot_controller)
+        # and create a axialCorrectionGroup
+        auxiliary.axial_correction_group(self.reverse_foot_controller)
+
+        foot_ik_ball_joint = self.reverse_foot_joint_hierarchy.joints[-2]
+        foot_ik_tip_joint = self.reverse_foot_joint_hierarchy.joints[-3]
+
+        # create the Single Chain IK Handles
+        self.ball_ik_handle, self.ball_ik_end_effector = \
+            pm.ikHandle(sj=self.base_hierarchy.joints[0], ee=self.base_hierarchy.joints[1], solver="ikSCsolver")
+
+        self.tip_ik_handle, self.tip_ik_end_effector = \
+            pm.ikHandle(sj=self.base_hierarchy.joints[1], ee=self.base_hierarchy.joints[2], solver="ikSCsolver")
+
+        # parent the ball IK handle to ball joint
+        pm.parent(self.ball_ik_handle, foot_ik_ball_joint)
+
+        # parent the tip IK handle to the tip joint
+        pm.parent(self.tip_ik_handle, foot_ik_tip_joint)
+
+        # if given a IKFKLimbRigger parent the controller to the ankle too
+        if self.ik_fk_limb_rigger:
+            self.connect_to_ik_fk_limb_rigger()
+
+        attrs = [
+            'tipHeading',
+            'tipRoll',
+            'tipBank',
+            'ballRoll',
+            'ballBank'
+        ]
+
+        for attr in attrs:
+            pm.addAttr(self.reverse_foot_controller, ln=attr, at='float', k=1)
+
+        self.reverse_foot_controller.tipHeading >> foot_ik_tip_joint.ry
+        self.reverse_foot_controller.tipRoll >> foot_ik_tip_joint.rx
+        self.reverse_foot_controller.tipBank >> foot_ik_tip_joint.rz
+
+        self.reverse_foot_controller.ballRoll >> foot_ik_ball_joint.rx
+        self.reverse_foot_controller.ballBank >> foot_ik_ball_joint.rz
+
+    def connect_to_ik_fk_limb_rigger(self):
+        pm.parent(
+            self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller,
+            self.reverse_foot_joint_hierarchy.joints[-2]
+        )
+        # also connect attributes
+        pm.addAttr(self.reverse_foot_controller, sn="minScale", at="float", dv=1.0, k=True)
+        pm.addAttr(self.reverse_foot_controller, sn="maxScale", at="float", dv=2.0, k=True)
+        self.reverse_foot_controller.minScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.minScale
+        self.reverse_foot_controller.maxScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.maxScale
 
 
 class SquashStretchBendRigger(object):
