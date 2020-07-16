@@ -1100,11 +1100,15 @@ def UI():
                       c=repeated_callback(Rigging.fix_bound_joint),
                       ann="fix_bound_joint",
                       bgc=color.color)
-            pm.button('toggleLocalRotationAxes_button',
-                      l="toggle local rotation axes",
-                      c=repeated_callback(General.toggle_attributes,
-                                    "displayLocalAxis"),
-                      ann="toggle local rotation axes",
+            pm.button('toggle_local_rotation_axes_button',
+                      l="Toggle Local Rotation Axes",
+                      c=repeated_callback(General.toggle_attributes, "displayLocalAxis"),
+                      ann="Toggle Local Rotation Axes",
+                      bgc=color.color)
+            pm.button('toggle_display_rotate_pivot_button',
+                      l="Toggle Display Rotate Pivot",
+                      c=repeated_callback(General.toggle_attributes, "displayRotatePivot"),
+                      ann="Toggle Display Rotate Pivot",
                       bgc=color.color)
             pm.button('seroBlendController_button',
                       l="seroBlendController",
