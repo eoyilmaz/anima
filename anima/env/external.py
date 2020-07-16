@@ -95,7 +95,8 @@ class ExternalEnv(EnvironmentBase):
         :param name: the desired name
         :return: str
         """
-        if not isinstance(name, str):
+        from anima import __string_types__
+        if not isinstance(name, __string_types__):
             raise TypeError(
                 '%s.name should be an instance of str, not %s' % (
                     self.__class__.__name__,

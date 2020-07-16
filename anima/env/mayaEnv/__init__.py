@@ -1005,7 +1005,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         :param path: the path which wanted to be checked
         :return: True or False
         """
-        assert isinstance(path, (str, unicode))
+        from anima import __string_types__
+        assert isinstance(path, __string_types__)
         path = os.path.expandvars(path)
         repo = cls.find_repo(path)
         return repo is not None

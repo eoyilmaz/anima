@@ -47,9 +47,10 @@ class NameMixin(object):
     def _validate_name(cls, name):
         """validates the given name value
         """
-        if not isinstance(name, (str, unicode)):
+        from anima import __string_types__
+        if not isinstance(name, __string_types__):
             raise TypeError(
-                '%(class)s.name should be a string or unicode, not %(name_class)s' % {
+                '%(class)s.name should be a string, not %(name_class)s' % {
                     'class': cls.__name__,
                     'name_class': name.__class__.__name__
                 }
@@ -653,7 +654,8 @@ class Clip(EditBase, NameMixin, DurationMixin):
         if id_ is None:
             id_ = ''
 
-        if not isinstance(id_, (str, unicode)):
+        from anima import __string_types__
+        if not isinstance(id_, __string_types__):
             raise TypeError(
                 '%(class)s.id should be a string or unicode, not %(id_class)s' %
                 {
@@ -768,7 +770,8 @@ class File(EditBase, NameMixin, DurationMixin):
     def _validate_pathurl(cls, pathurl):
         """validates the given pathurl value
         """
-        if not isinstance(pathurl, str):
+        from anima import __string_types__
+        if not isinstance(pathurl, __string_types__):
             raise TypeError(
                 '%(class)s.pathurl should be a string, not '
                 '%(pathurl_class)s' % {
@@ -877,7 +880,8 @@ class Rate(EditBase):
         if timebase is None:
             timebase = cls.__timebase_default_value
 
-        if not isinstance(timebase, str):
+        from anima import __string_types__
+        if not isinstance(timebase, __string_types__):
             raise TypeError(
                 '%(class)s.timebase should be a str, not '
                 '%(timebase_class)s' % {

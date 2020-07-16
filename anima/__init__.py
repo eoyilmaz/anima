@@ -24,13 +24,20 @@ Place the following variables in to the config.py file::
   stalker_server_external_address = 'http://e.f.g.h:xxxx'
 """
 
+import sys
 import os
 import stat
 import tempfile
 import logging
 from anima.config import Config
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
+
+__string_types__ = []
+if sys.version_info[0] >= 3:  # Python 3
+    __string_types__ = tuple([str])
+else:  # Python 2
+    __string_types__ = tuple([str, unicode])
 
 # create logger
 # logging.basicConfig()

@@ -1116,9 +1116,10 @@ class Render(object):
         placement_node = pm.ls(sl=1, type=pm.nt.Place2dTexture)[0]
         file_nodes = pm.ls(sl=1, type=pm.nt.File)
 
+        from anima import __string_types__
         for file_node in file_nodes:
             for attr in attr_lut:
-                if isinstance(attr, str):
+                if isinstance(attr, __string_types__):
                     source_attr_name = attr
                     target_attr_name = attr
                 elif isinstance(attr, tuple):
