@@ -4,11 +4,11 @@
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 
-import logging
+import sys
 import os
+import logging
 from collections import namedtuple
 
-import anima
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
@@ -1777,7 +1777,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             try:
                 error_message = "%s" % e
             except UnicodeEncodeError:
-                error_message = unicode(e)
+                if sys.version_info[0] >= 3:
+                    error_message = str(e)
+                else:
+                    error_message = unicode(e)
             QtWidgets.QMessageBox.critical(self, "Error", error_message)
 
             DBSession.rollback()
@@ -1974,7 +1977,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             try:
                 error_message = "%s" % e
             except UnicodeEncodeError:
-                error_message = unicode(e)
+                if sys.version_info[0] >= 3:
+                    error_message = str(e)
+                else:
+                    error_message = unicode(e)
 
             print(error_message)
             QtWidgets.QMessageBox.critical(
@@ -2296,10 +2302,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_id = self.tasks_tree_view.get_task_id()
         if task_id:
             from anima.ui import utils as ui_utils
-            # TODO: Update this too
             from stalker import Task
             task = Task.query.get(task_id)
-            if task.thumbnail:
+            if task and task.thumbnail:
                 self.clear_thumbnail_push_button.setEnabled(True)
             ui_utils.update_gview_with_task_thumbnail(
                 task, self.thumbnail_graphics_view
