@@ -116,7 +116,7 @@ class Rigging(object):
             shapes[i] = temp_list[0]
         joint_shapes = pm.listRelatives(joints, s=True, pa=True)
         for i in range(0, len(joint_shapes)):
-            name = "%sShape%f" % (joints, (i + 1))
+            name = "%sShape%s" % (joints, (i + 1))
             temp = ''.join(name.split('|', 1))
             pm.rename(joint_shapes[i], temp)
         pm.delete(objects)
@@ -1450,6 +1450,13 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
     """IK variant of the JointHierarchy
     """
 
+    def __init__(self, start_joint, end_joint, do_stretchy=True):
+        super(IKLimbJointHierarchy, self).__init__(
+            start_joint=start_joint, end_joint=end_joint, do_stretchy=do_stretchy
+        )
+        self.start_locator = None
+        self.end_locator = None
+
     def create_ik_setup(self, solver='ikRPsolver', controller_radius=0.5):
         """Creates IK setup
         """
@@ -1509,18 +1516,18 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
     def create_stretch_setup(self):
         """create IK Stretch setup
         """
-        start_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
-        end_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
+        self.start_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
+        self.end_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
 
-        pm.parent(start_locator, self.start_joint, r=1)
-        pm.parent(start_locator, self.start_joint.getParent())
-        pm.parent(end_locator, self.start_joint.getParent())
+        pm.parent(self.start_locator, self.start_joint, r=1)
+        pm.parent(self.start_locator, self.start_joint.getParent())
+        pm.parent(self.end_locator, self.start_joint.getParent())
 
-        pm.pointConstraint(self.ik_end_controller, end_locator)
+        pm.pointConstraint(self.ik_end_controller, self.end_locator)
 
         distance_between = pm.nt.DistanceBetween()
-        start_locator.t >> distance_between.point1
-        end_locator.t >> distance_between.point2
+        self.start_locator.t >> distance_between.point1
+        self.end_locator.t >> distance_between.point2
 
         default_length = distance_between.distance.get()
 
@@ -1884,6 +1891,9 @@ rigger.create_switch_setup()
             j.radius.set(base_radius * 2)
         assert isinstance(self.ik_hierarchy, IKLimbJointHierarchy)
         self.ik_hierarchy.create_ik_setup()
+
+        # parent the locator used for stretch measurement to the ik_fk_switch_handle
+        pm.pointConstraint(self.ik_fk_switch_handle, self.ik_hierarchy.start_locator, mo=True)
 
     def create_fk_hierarchy(self):
         """Creates the fk hierarchy
