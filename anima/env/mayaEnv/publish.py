@@ -41,6 +41,7 @@ VALID_MATERIALS = {
     'arnold': [
         # ARNOLD
         'aiAmbientOcclusion',
+        'aiCurvature',
         'aiHair',
         'aiRaySwitch',
         'aiShadowCatcher',
