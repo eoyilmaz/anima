@@ -2154,6 +2154,8 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             'related_refs': related_references
         }
 
+    print("cacheable_node_references: %s" % cacheable_node_references)
+
     # unload all references
     ref_load_states = {}
     for ref in pm.listReferences():
@@ -2256,15 +2258,16 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         temp_cache_file_path = \
             tempfile.mktemp(suffix='.abc').replace('\\', '/')
 
-        pm.mel.eval(
-            command % (
-                int(start_frame - handles),
-                int(end_frame + handles),
-                step,
-                cacheable_node.fullPath(),
-                temp_cache_file_path
-            )
+        command_to_exec = command % (
+            int(start_frame - handles),
+            int(end_frame + handles),
+            step,
+            cacheable_node.fullPath(),
+            temp_cache_file_path
         )
+
+        print("Executing command: %s" % command_to_exec)
+        pm.mel.eval(command_to_exec)
         # move in to place
         shutil.move(temp_cache_file_path, output_full_path)
 
