@@ -62,9 +62,9 @@ def publisher(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
 
     if callable(type_name):
         # it must be the function it self
-        f = type_name
+        f_callable = type_name
         type_name = ''
-        return wrapper(f)
+        return wrapper(f_callable)
 
     return wrapper
 
@@ -73,6 +73,8 @@ def run_publishers(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
     """Runs all the publishers registered under the given type name
 
     :param str type_name: A string holding the type name
+    :param int publisher_type: The type of publisher to run. Use
+      ``publish.PRE_PUBLISHER_TYPE`` or ``publish.POST_PUBLISHER_TYPE``
     :return:
     """
     if type_name != '':
