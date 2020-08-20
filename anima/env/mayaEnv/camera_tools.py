@@ -123,10 +123,9 @@ def get_selected_camera():
             return obj
 
 
-def camera_focus_plane_tool():
+def camera_focus_plane_tool(camera):
     """sets up a focus plane for the selected camera
     """
-    camera = pm.ls(sl=1)[0]
     camera_shape = camera.getShape()
 
     frame = pm.nurbsPlane(
@@ -136,12 +135,12 @@ def camera_focus_plane_tool():
     frame_shape = frame.getShape()
     pm.parent(frame, camera, r=True)
 
-    #transform the frame surface
+    # transform the frame surface
     frame.tz.set(-10.0)
 
     exp = """float $flen = %(camera)s.focalLength;
     float $hfa = %(camera)s.horizontalFilmAperture * 25.4;
-    %(frame)s.sx = -%(frame)s.translateZ * $hfa/ $flen;
+    %(frame)s.sx = -%(frame)s.translateZ * $hfa / $flen;
     %(frame)s.sy = %(frame)s.sx / defaultResolution.deviceAspectRatio;
     %(camera)s.focusDistance = -%(frame)s.tz;
     %(camera)s.aiFocusDistance = %(camera)s.focusDistance;
@@ -186,6 +185,8 @@ def camera_focus_plane_tool():
     frame.setAttr('sx', lock=True, keyable=False)
     frame.setAttr('sy', lock=True, keyable=False)
     frame.setAttr('sz', lock=True, keyable=False)
+
+    return frame
 
 
 def cam_to_chan(start_frame, end_frame):
@@ -347,21 +348,59 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     pm.parent(pitch_ctrl, heading_ctrl)
     pm.parent(heading_ctrl, main_ctrl)
 
-    # add attributes
+    # Attributes
+    # -----------------------------------------------------------
+    # Focal Length And Focal Plane Controls
+    main_ctrl.addAttr('divider1', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.divider1.showInChannelBox(True)
+
     main_ctrl.addAttr('focalLength', at='float', k=True, min=1)
-    main_ctrl.addAttr('offset', at='float', k=True, min=0)
+    main_ctrl.focalLength.set(focal_length)
+    main_ctrl.focalLength >> camera_shape.focalLength
+
+    main_ctrl.addAttr('useDepthOfField', at='enum', enumName='false:true', k=False)
+    main_ctrl.useDepthOfField.showInChannelBox(True)
+    main_ctrl.useDepthOfField >> camera_shape.depthOfField
+
+    main_ctrl.addAttr('fStop', at='float', k=True, min=0.1, dv=2.8)
+    main_ctrl.fStop >> camera_shape.fStop
+
+    main_ctrl.addAttr('focusOffset', at='float', k=True, dv=0)
+
+    # -----------------------------------------------------------
+    # Camera Local Position and Offsets
+    main_ctrl.addAttr('divider2', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.divider2.showInChannelBox(True)
+    main_ctrl.addAttr('offsetX', niceName='Offset X (PanH)', at='float', k=True)
+    main_ctrl.addAttr('offsetY', niceName='Offset Y (PanV)', at='float', k=True)
+    main_ctrl.addAttr('offsetZ', niceName='Offset Z (Depth)', at='float', k=True, min=0)
+
+    main_ctrl.offsetX >> camera_transform.tx
+    main_ctrl.offsetY >> camera_transform.ty
+    main_ctrl.offsetZ >> camera_transform.tz
+
+    # Back to focal plane
+    add_double_linear = pm.shadingNode('addDoubleLinear', asUtility=True)
+    main_ctrl.offsetZ >> add_double_linear.input1
+    main_ctrl.focusOffset >> add_double_linear.input2
+    add_double_linear.output >> camera_shape.focusDistance
+
+    # -----------------------------------------------------------
+    # Camera Orientation
+    main_ctrl.addAttr('divider3', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.divider3.showInChannelBox(True)
     main_ctrl.addAttr('roll', k=True, at='float')
     main_ctrl.addAttr('pitch', k=True, at='float')
     main_ctrl.addAttr('heading', k=True, at='float')
 
-    main_ctrl.focalLength.set(focal_length)
-    main_ctrl.focalLength >> camera_shape.focalLength
-    main_ctrl.offset >> camera_transform.tz
     main_ctrl.roll >> roll_ctrl.rz
     main_ctrl.pitch >> pitch_ctrl.rx
     main_ctrl.heading >> heading_ctrl.ry
 
     # lock all the other transforms
+    main_ctrl.v.setKeyable(False)
+    main_ctrl.v.showInChannelBox(True)
+
     heading_ctrl.t.lock(True)
     heading_ctrl.r.lock(True)
     heading_ctrl.s.lock(True)
@@ -378,3 +417,5 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     camera_transform.t.lock(True)
     camera_transform.r.lock(True)
     camera_transform.s.lock(True)
+
+    pm.select(main_ctrl)

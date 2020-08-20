@@ -1402,12 +1402,17 @@ def UI():
                 ann="Camera Film Offset Tool",
                 bgc=color.color
             )
+
+            def camera_focus_plane_tool_callback():
+                """callback for the camera_focus_plane_tool
+                """
+                camera = pm.ls(sl=1)[0]
+                camera_tools.camera_focus_plane_tool(camera)
+
             pm.button(
                 'CameraFocusPlaneTool_button',
                 l="Camera Focus Plane Tool",
-                c=repeated_callback(
-                    camera_tools.camera_focus_plane_tool
-                ),
+                c=repeated_callback(camera_focus_plane_tool_callback),
                 ann="Camera Film Offset Tool",
                 bgc=color.color
             )
