@@ -1758,6 +1758,13 @@ def UI():
                       ann=Previs.save_previs_to_shots.__doc__,
                       bgc=color.color)
 
+            color.change()
+            pm.button('very_nice_camera_rig_button',
+                      l="Create a Very Nice Camera Rig",
+                      c=repeated_callback(camera_tools.very_nice_camera_rig),
+                      ann=camera_tools.very_nice_camera_rig.__doc__,
+                      bgc=color.color)
+
         # store commands
         __commands__.extend(previs_columnLayout.children())
 
