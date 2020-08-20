@@ -318,3 +318,63 @@ def find_cut_info(cam):
             j += 1
 
     return cut_info
+
+
+def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_film_aperture=24):
+    """creates a very nice camera rig where the Heading, Pitch and Roll controls are on different transform nodes
+    allowing more control on the camera movement
+
+    :param focal_length:
+    :param horizontal_film_aperture:
+    :param vertical_film_aperture:
+    """
+    camera_transform, camera_shape = pm.camera()
+
+    # set camera attributes
+    camera_shape.focalLength.set(focal_length)
+    # set the film back in inches (sadly)
+    camera_shape.horizontalFilmAperture.set(horizontal_film_aperture / 25.4)
+    camera_shape.verticalFilmAperture.set(vertical_film_aperture / 25.4)
+
+    main_ctrl = pm.spaceLocator(name='main_ctrl#')
+    heading_ctrl = pm.nt.Transform(name='heading_ctrl#')
+    pitch_ctrl = pm.nt.Transform(name='pitch_ctrl#')
+    roll_ctrl = pm.nt.Transform(name='roll_ctrl#')
+
+    # create DAG hierarchy
+    pm.parent(camera_transform, roll_ctrl)
+    pm.parent(roll_ctrl, pitch_ctrl)
+    pm.parent(pitch_ctrl, heading_ctrl)
+    pm.parent(heading_ctrl, main_ctrl)
+
+    # add attributes
+    main_ctrl.addAttr('focalLength', at='float', k=True, min=1)
+    main_ctrl.addAttr('offset', at='float', k=True, min=0)
+    main_ctrl.addAttr('roll', k=True, at='float')
+    main_ctrl.addAttr('pitch', k=True, at='float')
+    main_ctrl.addAttr('heading', k=True, at='float')
+
+    main_ctrl.focalLength.set(focal_length)
+    main_ctrl.focalLength >> camera_shape.focalLength
+    main_ctrl.offset >> camera_transform.tz
+    main_ctrl.roll >> roll_ctrl.rz
+    main_ctrl.pitch >> pitch_ctrl.rx
+    main_ctrl.heading >> heading_ctrl.ry
+
+    # lock all the other transforms
+    heading_ctrl.t.lock(True)
+    heading_ctrl.r.lock(True)
+    heading_ctrl.s.lock(True)
+
+    pitch_ctrl.t.lock(True)
+    pitch_ctrl.r.lock(True)
+    pitch_ctrl.s.lock(True)
+
+    roll_ctrl.t.lock(True)
+    roll_ctrl.r.lock(True)
+    roll_ctrl.s.lock(True)
+
+    # also lock camera transforms
+    camera_transform.t.lock(True)
+    camera_transform.r.lock(True)
+    camera_transform.s.lock(True)
