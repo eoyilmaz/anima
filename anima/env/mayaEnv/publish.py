@@ -1000,13 +1000,17 @@ def check_out_of_space_uvs(progress_controller=None):
 
     # caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
 
-    for node in all_meshes:
-        u, v = node.getUVs()
-        u = sorted(u)
-        if u[0] < 0.0 or u[-1] > 10.0 or v[0] < 0.0:
-            nodes_with_out_of_space_uvs.append(node)
+    try:
+        for node in all_meshes:
+            u, v = node.getUVs()
+            u = sorted(u)
+            if u[0] < 0.0 or u[-1] > 10.0 or v[0] < 0.0:
+                nodes_with_out_of_space_uvs.append(node)
 
-        progress_controller.increment()
+            progress_controller.increment()
+    except (IndexError, RuntimeError) as e:
+        print("node: %s" % node)
+        raise RuntimeError("%s \n node: %s" % (e, node))
 
     progress_controller.complete()
     if len(nodes_with_out_of_space_uvs):
@@ -1102,15 +1106,19 @@ def check_uv_border_crossing(progress_controller=None):
             i += 1
 
         # now check all uvs per shell
-        for uv_shell_uv_coords in uv_shells_and_uv_coords:
-            us = sorted(uv_shell_uv_coords[0])
-            vs = sorted(uv_shell_uv_coords[1])
+        try:
+            for uv_shell_uv_coords in uv_shells_and_uv_coords:
+                us = sorted(uv_shell_uv_coords[0])
+                vs = sorted(uv_shell_uv_coords[1])
 
-            # check first and last u and v values
-            if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
-                # they are not equal it is crossing spaces
-                nodes_with_uvs_crossing_borders.append(node)
-                break
+                # check first and last u and v values
+                if int(us[0]) != int(us[-1]) or int(vs[0]) != int(vs[-1]):
+                    # they are not equal it is crossing spaces
+                    nodes_with_uvs_crossing_borders.append(node)
+                    break
+        except (IndexError, RuntimeError) as e:
+            print("%s\nnode: %s" % (e, node))
+            raise RuntimeError()
 
         progress_controller.increment()
 
