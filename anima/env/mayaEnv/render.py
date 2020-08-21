@@ -2442,3 +2442,43 @@ class Render(object):
         else:
             pm.select(nodes)
             _generate_rs()
+
+    @classmethod
+    def import_image_as_plane(cls):
+        """The replica of Blender tool
+        """
+        # get the image path
+        image_path = pm.fileDialog2(fileMode=1)
+
+        # get the image width and height
+        image_path = image_path[0] if image_path else ''
+
+        from PIL import Image
+        img = Image.open(image_path)
+        w, h = img.size
+
+        # create a new plane with that ratio
+        # keep the height 1
+        transform, poly_plane = pm.polyPlane(axis=[0, 0, 1], cuv=1, h=1, w=float(w)/float(h), texture=2, sh=1, sw=1)
+        shape = transform.getShape()
+        shape.instObjGroups[0].disconnect()
+
+        # assign a surface shader
+        surface_shader = pm.shadingNode('surfaceShader', asShader=1)
+        shading_engine = pm.nt.ShadingEngine()
+        surface_shader.outColor >> shading_engine.surfaceShader
+
+        # assign the given file as texture
+        placement = pm.nt.Place2dTexture()
+        file_texture = pm.nt.File()
+
+        pm.select([placement, file_texture])
+        cls.connect_placement2d_to_file()
+
+        file_texture.fileTextureName.set(image_path)
+        file_texture.outColor >> surface_shader.outColor
+        file_texture.outTransparency >> surface_shader.outTransparency
+
+        # pm.sets(shading_engine, fe=transform)
+        pm.select(shape)
+        pm.hyperShade(assign=surface_shader)
