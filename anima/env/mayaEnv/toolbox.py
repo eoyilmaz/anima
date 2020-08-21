@@ -1391,6 +1391,13 @@ def UI():
                       ann=Render.randomize_material_color.__doc__,
                       bgc=color.color)
 
+            color.change()
+            pm.button('import_image_as_plane_button',
+                      l="Import Image as Plane",
+                      c=repeated_callback(Render.import_image_as_plane),
+                      ann=Render.import_image_as_plane.__doc__,
+                      bgc=color.color)
+
             pm.text(l='============ Camera Tools ============')
             color.change()
             pm.button(
