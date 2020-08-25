@@ -282,7 +282,29 @@ CONVERSION_SPEC_SHEET = {
         },
     },
 
-    # 'aiColorCorrect': "",
+    'aiColorCorrect': {
+        'node_type': 'RedshiftColorCorrection',
+        'secondary_type': 'utility',
+
+        'call_after': lambda old_node, new_node:
+            connect_output(old_node, 'outColor', new_node, 'outColor'),
+
+        'attributes': {
+            'input': 'input',
+            'gamma': 'gamma',
+            'hueShift': {
+                'hue': lambda x: (x * 360) % 360,
+            },
+            'saturation': 'saturation',
+            'contrast': {
+                'contrast': lambda x: x * 0.5,
+            },
+            'exposure': {
+                'level': lambda x: pow(2, x)
+            }
+        }
+
+    },
 
     'aiRoundCorners': {
         'node_type': 'RedshiftRoundCorners',
