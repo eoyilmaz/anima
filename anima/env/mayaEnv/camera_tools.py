@@ -397,6 +397,14 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     main_ctrl.pitch >> pitch_ctrl.rx
     main_ctrl.heading >> heading_ctrl.ry
 
+    main_ctrl.addAttr('cameraRx', k=True, at='float')
+    main_ctrl.addAttr('cameraRy', k=True, at='float')
+    main_ctrl.addAttr('cameraRz', k=True, at='float')
+
+    main_ctrl.cameraRx >> camera_transform.rx
+    main_ctrl.cameraRy >> camera_transform.ry
+    main_ctrl.cameraRz >> camera_transform.rz
+
     # lock all the other transforms
     main_ctrl.v.setKeyable(False)
     main_ctrl.v.showInChannelBox(True)
