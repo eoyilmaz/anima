@@ -14,7 +14,7 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 from anima.ui.views.task import TaskTreeView
-from anima.ui.widgets import TakesComboBox, RecentFilesComboBox
+from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
 
 
@@ -355,52 +355,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.new_versions_group_box_main_layout.addLayout(self.vertical_layout_4)
 
         self.vertical_layout_3 = QtWidgets.QVBoxLayout()
-        self.horizontal_layout_9 = QtWidgets.QHBoxLayout()
-
-        # ====================
-        # Takes Label
-        self.takes_label = QtWidgets.QLabel(self.new_version_group_box)
-        self.takes_label.setText("Take")
-        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
-        self.horizontal_layout_9.addWidget(self.takes_label)
-
-        # ===================
-        # Takes ComboBox
-        self.takes_combo_box = TakesComboBox(self.new_version_group_box)
-        self.horizontal_layout_9.addWidget(self.takes_combo_box)
-
-        # ===================
-        # Add Take Push Button
-        self.add_take_push_button = QtWidgets.QPushButton(self.new_version_group_box)
-        self.add_take_push_button.setText("New Take")
-        self.horizontal_layout_9.addWidget(self.add_take_push_button)
-
-        # add a spacer
-        spacer_item = QtWidgets.QSpacerItem(
-            40, 20,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum
-        )
-        self.horizontal_layout_9.addItem(spacer_item)
-
-        # ===================
-        # Show Representations
-        self.repr_as_separate_takes_check_box = QtWidgets.QCheckBox(self.new_version_group_box)
-        self.repr_as_separate_takes_check_box.setText("Show Repr.")
-        self.repr_as_separate_takes_check_box.setToolTip(
-            "<html><head/><body><p>Check this to show "
-            "<span style=\" font-weight:600;\">Representations</span> as "
-            "separate takes if available</p></body></html>"
-        )
-        self.horizontal_layout_9.addWidget(self.repr_as_separate_takes_check_box)
-
-        # ===================
-        # Set Stretches
-        # self.horizontal_layout_9.setStretch(0, 0)
-        # self.horizontal_layout_9.setStretch(1, 1)
-        # self.horizontal_layout_9.setStretch(2, 0)
-        # self.horizontal_layout_9.setStretch(3, 0)
-        self.vertical_layout_3.addLayout(self.horizontal_layout_9)
 
         # ==================
         # Description Field
@@ -525,7 +479,57 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.thumbnail_layout.addLayout(self.horizontal_layout_13)
 
         # ------------------------------------------
+        # Takes Goes its own groupbox
+
+        self.horizontal_layout_16 = QtWidgets.QHBoxLayout()
+
+        self.takes_group_box = QtWidgets.QGroupBox()
+        self.takes_group_box.setTitle("Takes")
+
+        self.vertical_layout_8 = QtWidgets.QVBoxLayout(self.takes_group_box)
+
+        # ===================
+        # Show Representations
+        self.repr_as_separate_takes_check_box = QtWidgets.QCheckBox()
+        self.repr_as_separate_takes_check_box.setText("Show Repr.")
+        self.repr_as_separate_takes_check_box.setToolTip(
+            "<html><head/><body><p>Check this to show "
+            "<span style=\" font-weight:600;\">Representations</span> as "
+            "separate takes if available</p></body></html>"
+        )
+        self.vertical_layout_8.addWidget(self.repr_as_separate_takes_check_box)
+
+        # # add a spacer
+        # spacer_item = QtWidgets.QSpacerItem(
+        #     40, 20,
+        #     QtWidgets.QSizePolicy.Expanding,
+        #     QtWidgets.QSizePolicy.Minimum
+        # )
+        # self.vertical_layout_8.addItem(spacer_item)
+
+        # ===================
+        # Add Take Push Button
+        self.add_take_push_button = QtWidgets.QPushButton(self.new_version_group_box)
+        self.add_take_push_button.setText("New Take")
+        self.add_take_push_button.setMinimumWidth(120)
+        self.vertical_layout_8.addWidget(self.add_take_push_button)
+
+        # ====================
+        # Takes Label
+        self.takes_label = QtWidgets.QLabel()
+        self.takes_label.setText("Take")
+        self.takes_label.setMinimumSize(QtCore.QSize(35, 0))
+        self.vertical_layout_8.addWidget(self.takes_label)
+
+        # ===================
+        # Takes ComboBox
+        # self.takes_combo_box = TakesComboBox(self.new_version_group_box)
+        self.takes_list_widget = TakesListWidget(self.new_version_group_box)
+        self.vertical_layout_8.addWidget(self.takes_list_widget)
+
+        # ------------------------------------------
         # Previous Versions Group Box
+
         self.previous_versions_group_box = QtWidgets.QGroupBox(self)
         self.previous_versions_group_box.setTitle("Open Version")
 
@@ -708,14 +712,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout_5.addLayout(self.horizontal_layout_5)
         self.vertical_layout_5.addLayout(self.horizontal_layout_15)
 
-        self.vertical_layout_6.addWidget(self.previous_versions_group_box)
+        # self.vertical_layout_6.addWidget(self.previous_versions_group_box)
+        self.horizontal_layout_16.addWidget(self.takes_group_box)
+        self.horizontal_layout_16.addWidget(self.previous_versions_group_box)
+        self.horizontal_layout_16.setStretch(0, 1)
+        self.horizontal_layout_16.setStretch(1, 10)
+
+        self.vertical_layout_6.addLayout(self.horizontal_layout_16)
         self.vertical_layout_6.addLayout(self.horizontal_layout_14)
 
         self.vertical_layout_6.setStretch(0, 10)
         self.vertical_layout_6.setStretch(1, 0)
 
         self.horizontal_layout_12.setStretch(0, 1)
-        self.horizontal_layout_12.setStretch(1, 2)
+        self.horizontal_layout_12.setStretch(1, 10)
         self.vertical_layout_1.addLayout(self.horizontal_layout_12)
         self.horizontal_layout_1.addWidget(self.vertical_widget)
 
@@ -796,12 +806,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # takes_combo_box
         QtCore.QObject.connect(
-            self.takes_combo_box,
+            self.takes_list_widget,
             QtCore.SIGNAL(
-                # "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"
-                "currentIndexChanged(QString)"
+                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"
+                # "currentIndexChanged(QString)"
             ),
-            self.takes_combo_box_changed
+            self.takes_list_widget_changed
         )
 
         # recent files comboBox
@@ -1391,7 +1401,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if task_id:
             # clear the takes_combo_box and fill with new data
             logger.debug("clear takes widget")
-            self.takes_combo_box.clear()
+            self.takes_list_widget.clear()
 
             from stalker import SimpleEntity
             from stalker.db.session import DBSession
@@ -1433,7 +1443,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("len(takes) from db: %s" % len(takes))
 
             logger.debug("adding the takes from db")
-            self.takes_combo_box.take_names = takes
+            self.takes_list_widget.take_names = takes
             self.takes_label.setText("Takes (%s)" % len(takes))
 
     def _set_defaults(self):
@@ -1460,18 +1470,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # reconnect signals
         # takes_combo_box
-        QtCore.QObject.connect(
-            self.takes_combo_box,
-            QtCore.SIGNAL("currentTextChanged(QString)"),
-            self.takes_combo_box_changed
-        )
+        # QtCore.QObject.connect(
+        #     self.takes_list_widget,
+        #     QtCore.SIGNAL("currentTextChanged(QString)"),
+        #     self.takes_list_widget_changed
+        # )
 
         # takes_combo_box
         QtCore.QObject.connect(
-            self.takes_combo_box,
+            self.takes_list_widget,
             QtCore.SIGNAL(
                 "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-            self.takes_combo_box_changed
+            self.takes_list_widget_changed
         )
         # *********************************************************************
 
@@ -1607,7 +1617,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # take_name
         take_name = version.take_name
-        self.takes_combo_box.current_take_name = take_name
+        self.takes_list_widget.current_take_name = take_name
 
         # select the version in the previous version list
         self.previous_versions_table_widget.select_version(version)
@@ -1630,17 +1640,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if index:
                     self.environment_combo_box.setCurrentIndex(index)
 
-    def takes_combo_box_changed(self, index):
-        """runs when the takes_combo_box has changed
+    def takes_list_widget_changed(self, index):
+        """runs when the takes_listWidget has changed
         """
-        logger.debug("takes_combo_box_changed started")
-        count = self.takes_combo_box.count()
-        if index == count - 1:
-            # call New Take
-            pass
-        else:
-            # update the previous_versions_table_widget
-            self.update_previous_versions_table_widget()
+        logger.debug("takes_list_widget_changed started")
+        # count = self.takes_list_widget.count()
+        # if index == count - 1:
+        #     # call New Take
+        #     pass
+        # else:
+        #     # update the previous_versions_table_widget
+        #     self.update_previous_versions_table_widget()
+        self.update_previous_versions_table_widget()
 
         logger.debug("takes_combo_box_changed finished")
 
@@ -1667,7 +1678,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # take name
-        take_name = self.takes_combo_box.current_take_name
+        take_name = self.takes_list_widget.current_take_name
 
         if take_name != "":
             logger.debug("take_name: %s" % take_name)
@@ -1711,7 +1722,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.current_dialog = QtWidgets.QInputDialog(self)
 
-        current_take_name = self.takes_combo_box.current_take_name
+        current_take_name = self.takes_list_widget.current_take_name
 
         take_name, ok = self.current_dialog.getText(
             self,
@@ -1725,7 +1736,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # add the given text to the takes_combo_box
             # if it is not empty
             if take_name != "":
-                self.takes_combo_box.add_take(take_name)
+                self.takes_list_widget.add_take(take_name)
 
     def get_new_version(self, publish=False):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
@@ -1753,7 +1764,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
             return None
 
-        take_name = self.takes_combo_box.current_take_name
+        take_name = self.takes_list_widget.current_take_name
         user = self.get_logged_in_user()
         if not user:
             self.close()

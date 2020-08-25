@@ -249,6 +249,93 @@ class TimeEdit(QtWidgets.QTimeEdit):
                     super(TimeEdit, self).stepBy(step)
 
 
+class TakesListWidget(QtWidgets.QListWidget):
+    """A specialized QListWidget variant used in Take names.
+    """
+
+    def __init__(self, parent=None, *args, **kwargs):
+        QtWidgets.QListWidget.__init__(self, parent, *args, **kwargs)
+        self._take_names = []
+        self.take_names = []
+
+    @property
+    def take_names(self):
+        return self._take_names
+
+    @take_names.setter
+    def take_names(self, take_names_in):
+        logger.debug('setting take names')
+        self.clear()
+        self._take_names = take_names_in
+        from anima import defaults
+        main = defaults.version_take_name
+        if main in self._take_names:
+            logger.debug('removing default take name from list')
+            index_of_main = self._take_names.index(main)
+            self._take_names.pop(index_of_main)
+
+        # insert the default take name to the start
+        self._take_names.insert(0, main)
+
+        # clear the list and new items
+        logger.debug('adding supplied take names: %s' % self._take_names)
+        self.addItems(self._take_names)
+
+        # select the first item
+        self.setCurrentItem(self.item(0))
+
+    def add_take(self, take_name):
+        """adds a new take to the takes list
+        """
+        # condition the input
+        from stalker import Version
+        take_name = Version._format_take_name(take_name)
+
+        # if the given take name is in the list don't add it
+        if take_name not in self._take_names:
+            # add the item via property
+            new_take_list = self._take_names
+            new_take_list.append(take_name)
+            new_take_list.sort()
+            self.take_names = new_take_list
+
+            # select the newly added take name
+            items = self.findItems(take_name, QtCore.Qt.MatchExactly)
+            if items:
+                item = items[0]
+                # set the take to the new one
+                self.setCurrentItem(item)
+
+    @property
+    def current_take_name(self):
+        """gets the current take name
+        """
+        take_name = ''
+        item = self.currentItem()
+        if item:
+            take_name = item.text()
+        return take_name
+
+    @current_take_name.setter
+    def current_take_name(self, take_name):
+        """sets the current take name
+        """
+        logger.debug('finding take with name: %s' % take_name)
+        items = self.findItems(
+            take_name,
+            QtCore.Qt.MatchExactly
+        )
+        if items:
+            self.setCurrentItem(items[0])
+
+    def clear(self):
+        """overridden clear method
+        """
+        self._take_names = []
+        # call the super
+        QtWidgets.QListWidget.clear(self)
+
+
 class TakesComboBox(QtWidgets.QComboBox):
     """A specialized QComboBox variant used in Take names.
     """

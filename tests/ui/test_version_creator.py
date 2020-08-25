@@ -474,7 +474,7 @@ class VersionCreatorTester(unittest.TestCase):
         dialog = version_creator.MainDialog()
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_combo_box.currentItem().text()
+            dialog.takes_list_widget.currentItem().text()
         )
 
     def test_takes_listWidget_lists_Main_by_default_for_tasks_with_no_versions(self):
@@ -490,7 +490,7 @@ class VersionCreatorTester(unittest.TestCase):
         from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_combo_box.currentItem().text()
+            dialog.takes_list_widget.currentItem().text()
         )
 
     def test_takes_listWidget_lists_Main_by_default_for_projects_with_no_tasks(self):
@@ -506,7 +506,7 @@ class VersionCreatorTester(unittest.TestCase):
         from anima import defaults
         self.assertEqual(
             defaults.version_take_name,
-            dialog.takes_combo_box.currentItem().text()
+            dialog.takes_list_widget.currentItem().text()
         )
 
     def test_tasks_treeView_tasks_are_sorted(self):
@@ -556,7 +556,7 @@ class VersionCreatorTester(unittest.TestCase):
         )
 
         # select the first take
-        self.dialog.takes_combo_box.setCurrentRow(0)
+        self.dialog.takes_list_widget.setCurrentRow(0)
 
         # the row count should be 2
         self.assertEqual(
@@ -694,7 +694,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         # expect only one "Main" take listed in take_listWidget
         self.assertEqual(
-            sorted(self.dialog.takes_combo_box.take_names),
+            sorted(self.dialog.takes_list_widget.take_names),
             ['Main']
         )
 
@@ -703,7 +703,7 @@ class VersionCreatorTester(unittest.TestCase):
 
         # expect two takes of "Main" and "Main@GPU"
         self.assertEqual(
-            sorted(self.dialog.takes_combo_box.take_names),
+            sorted(self.dialog.takes_list_widget.take_names),
             ['Main', 'Main@GPU']
         )
 
@@ -727,7 +727,7 @@ class VersionCreatorTester(unittest.TestCase):
         )
 
         # expect only one "Main" take listed in take_listWidget
-        main_item = self.dialog.takes_combo_box.item(0)
+        main_item = self.dialog.takes_list_widget.item(0)
         item_foreground = main_item.foreground()
         color = item_foreground.color()
         self.assertEqual(
