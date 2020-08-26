@@ -2143,14 +2143,15 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
                 for input_node in constraint_node.inputs():
                     related_ref = input_node.referenceFile()
-                    # go to the top most reference
-                    parent_ref = related_ref.parent()
-                    while parent_ref:
-                        related_ref = parent_ref
+                    if related_ref is not None:
+                        # go to the top most reference
                         parent_ref = related_ref.parent()
+                        while parent_ref:
+                            related_ref = parent_ref
+                            parent_ref = related_ref.parent()
 
-                    if related_ref is not None and related_ref != ref:
-                        related_references.append(related_ref)
+                        if related_ref != ref:
+                            related_references.append(related_ref)
 
         # make it a list of unique values
         related_references = list(set(related_references))
