@@ -372,8 +372,15 @@ class Houdini(EnvironmentBase):
         #shot_node.parm("name_shot_node").pressButton()
         shot_node.setName("shotData")
 
-        shot_node.parm("cam_resx").set(image_format.width)
-        shot_node.parm("cam_resy").set(image_format.height)
+        try:
+            shot_node.parm("cam_resx").set(image_format.width)
+        except hou.PermissionError:  # parameter is locked
+            pass
+
+        try:
+            shot_node.parm("cam_resy").set(image_format.height)
+        except hou.PermissionError:  # parameter is locked
+            pass
 
     def set_render_filename(self, version):
         """sets the render file name
