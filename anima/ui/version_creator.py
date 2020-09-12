@@ -159,7 +159,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # change the window title
         self.setWindowTitle(window_title)
 
-        self.resize(1100, 800)
+        self.resize(1500, 850)
 
         style_sheet = """
             QGroupBox::title {
