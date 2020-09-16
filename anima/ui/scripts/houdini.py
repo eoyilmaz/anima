@@ -44,7 +44,7 @@ class Executor(object):
         self.application.sendPostedEvents(None, 0)
 
 
-def version_creator():
+def version_creator(mode=2):
     """Helper function for version_creator UI for Houdini
     """
     # connect to db
@@ -64,9 +64,6 @@ def version_creator():
     logger.setLevel(logging.WARNING)
 
     if hou.applicationVersion()[0] <= 13:
-        version_creator.UI(environment=h)
+        version_creator.UI(environment=h, mode=mode)
     else:
-        version_creator.UI(
-            environment=h,
-            executor=Executor()
-        )
+        version_creator.UI(environment=h, executor=Executor(), mode=mode)

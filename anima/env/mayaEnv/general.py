@@ -132,11 +132,11 @@ class General(object):
             )
 
     @classmethod
-    def version_creator(cls):
+    def version_creator(cls, mode=2):
         """version creator
         """
         from anima.ui.scripts import maya
-        maya.version_creator()
+        maya.version_creator(mode=mode)
 
     @classmethod
     def export_transform_info(cls, use_global_pos=False):

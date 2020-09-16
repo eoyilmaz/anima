@@ -110,16 +110,32 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
       is mainly useful if this interface is going to be attached to a parent
       UI, like the Maya or Nuke.
 
-    :param mode: Sets the UI in to Read-Write (mode=0) and Read-Only (mode=1)
-      mode. Where in Read-Write there are all the buttons you would normally
-      have (Export As, Save As, Open, Reference, Import), and in Read-Only mode
-      it has only one button called "Choose" which lets you choose one Version.
+    :param mode: The mode parameter has changed meaning. It is now to define if
+      the UI is in **Save/Create** mode or in **Open/Read** mode. It will
+      discern the Open and Save functionality, which was previously both exist
+      at the same time and still can be by setting the mode to 2, which is the
+      default value for now, but it will deprecate in later versions.
+
+      The previous functionality of defining if the UI is in **Read-Write** or
+      **Read-Only** mode has been automized. So the UI can decide to be in
+      **Read-Only** mode if the given Environment doesn't have ``save_as``
+      ability. When the UI is in Read-Write mode there will be all the buttons
+      you would normally have (Export As, Save As, Open, Reference, Import),
+      and in Read-Only mode it will have only one button called "Choose" which
+      lets you choose one Version.
     """
 
-    def __init__(self, environment=None, parent=None, mode=0):
+    def __init__(self, environment=None, parent=None, mode=2):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
         self.environment = environment
+
+        # Mode is now defining the UI mode as which functionality it gives
+        # Mode 0: Save As
+        # Mode 1: Open
+        # Mode 2: Both Save As and Open. This is the default and this is the
+        #         legacy mode now, which will be deprecated in later versions.
+
         self.mode = mode
         self.chosen_version = None
         self.environment_name_format = "%n (%e)"
@@ -144,17 +160,19 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """sets the UI up
         """
         import anima
-        window_title = "Version Creator | Anima Pipeline v" + anima.__version__
+        window_title = "Anima Pipeline v%s " % anima.__version__
 
         if self.environment:
             window_title = "%s | %s" % (window_title, self.environment.name)
         else:
             window_title = "%s | No Environment" % window_title
 
-        if self.mode:
-            window_title = "%s | Read-Only Mode" % window_title
-        else:
-            window_title = "%s | Normal Mode" % window_title
+        if self.mode == 0:
+            window_title = "%s | Version: Save-As Mode" % window_title
+        elif self.mode == 1:
+            window_title = "%s | Version: Open Mode" % window_title
+        elif self.mode == 2:
+            window_title = "%s | Version: Save As & Open Mode" % window_title
 
         # change the window title
         self.setWindowTitle(window_title)
@@ -187,9 +205,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Layouts
         # Main Layout
-        self.horizontal_layout_1 = QtWidgets.QHBoxLayout(self)
+        self.main_layout = QtWidgets.QVBoxLayout(self)
 
-        self.vertical_widget = QtWidgets.QWidget(self)
+        self.main_widget = QtWidgets.QWidget(self)
         size_policy = QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Preferred,
             QtWidgets.QSizePolicy.Preferred
@@ -197,11 +215,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy.setHorizontalStretch(1)
         size_policy.setVerticalStretch(1)
         size_policy.setHeightForWidth(
-            self.vertical_widget.sizePolicy().hasHeightForWidth()
+            self.main_widget.sizePolicy().hasHeightForWidth()
         )
-        self.vertical_widget.setSizePolicy(size_policy)
+        self.main_widget.setSizePolicy(size_policy)
 
-        self.vertical_layout_1 = QtWidgets.QVBoxLayout(self.vertical_widget)
+        self.vertical_layout_1 = QtWidgets.QVBoxLayout(self.main_widget)
         self.vertical_layout_1.setSizeConstraint(QtWidgets.QLayout.SetMaximumSize)
         self.vertical_layout_1.setContentsMargins(0, 0, 0, 0)
 
@@ -217,24 +235,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.horizontal_layout_11.addItem(spacer_item)
 
         # Logged in As Label
-        self.logged_in_as_label = QtWidgets.QLabel(self.vertical_widget)
+        self.logged_in_as_label = QtWidgets.QLabel(self.main_widget)
         self.logged_in_as_label.setText("<b>Logged In As:</b>")
         self.logged_in_as_label.setTextFormat(QtCore.Qt.AutoText)
         self.horizontal_layout_11.addWidget(self.logged_in_as_label)
 
         # Logged in User Label
-        self.logged_in_user_label = QtWidgets.QLabel(self.vertical_widget)
+        self.logged_in_user_label = QtWidgets.QLabel(self.main_widget)
         self.horizontal_layout_11.addWidget(self.logged_in_user_label)
 
         # Logout Push Button
-        self.logout_push_button = QtWidgets.QPushButton(self.vertical_widget)
+        self.logout_push_button = QtWidgets.QPushButton(self.main_widget)
         self.logout_push_button.setText("Logout")
 
         self.horizontal_layout_11.addWidget(self.logout_push_button)
         self.vertical_layout_1.addLayout(self.horizontal_layout_11)
 
         # Add a line
-        line = QtWidgets.QFrame(self.vertical_widget)
+        line = QtWidgets.QFrame(self.main_widget)
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.vertical_layout_1.addWidget(line)
@@ -242,16 +260,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ------------------------------------------------
         # The Task Tree, New Version and Previous Versions Layouts
         self.horizontal_layout_12 = QtWidgets.QHBoxLayout()
-
-        # before doing anything create a QSplitter for:
-        #   tasks_groupBox
-        #   new_version_group_box
-        #   previous_versions_group_box
-        #
-        # and add it under horizontal_layout_14
-
-        # splitter = QtWidgets.QSplitter()
-        # self.horizontal_layout_12.addWidget(splitter)
 
         # Tasks GroupBox
         self.tasks_group_box = QtWidgets.QGroupBox(self)
@@ -339,29 +347,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout_2.addWidget(self.tasks_tree_view)
 
         # ------------------------------------------
-        # New Version Group Box
-        self.vertical_layout_6 = QtWidgets.QVBoxLayout()
-        self.horizontal_layout_12.addLayout(self.vertical_layout_6)
-
-        self.horizontal_layout_14 = QtWidgets.QHBoxLayout()
-
-        self.new_version_group_box = QtWidgets.QGroupBox(self)
-        self.new_version_group_box.setTitle("Save Version")
-        self.horizontal_layout_14.addWidget(self.new_version_group_box)
-
-        self.new_versions_group_box_main_layout = QtWidgets.QHBoxLayout(self.new_version_group_box)
-
-        self.vertical_layout_4 = QtWidgets.QVBoxLayout()
-        self.new_versions_group_box_main_layout.addLayout(self.vertical_layout_4)
-
-        self.vertical_layout_3 = QtWidgets.QVBoxLayout()
+        # New Version Fields
+        self.new_version_controls_widget = QtWidgets.QWidget(self)
+        self.new_version_main_layout = QtWidgets.QVBoxLayout(self.new_version_controls_widget)
 
         # ==================
         # Description Field
         self.description_label = QtWidgets.QLabel(self)
-        self.description_label.setText("Desc.")
+        self.description_label.setText("Description")
         self.description_label.setMinimumSize(QtCore.QSize(35, 0))
-        self.vertical_layout_3.addWidget(self.description_label)
+        self.new_version_main_layout.addWidget(self.description_label)
         self.description_text_edit = QtWidgets.QTextEdit(self)
         self.description_text_edit.setHtml(
             "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \""
@@ -379,28 +374,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.description_text_edit.setEnabled(True)
         self.description_text_edit.setTabChangesFocus(True)
-        self.description_text_edit.setMaximumHeight(130)
-        self.vertical_layout_3.addWidget(self.description_text_edit)
-        self.vertical_layout_3.setStretch(0, 0)
-        self.vertical_layout_3.setStretch(1, 0)
-        self.vertical_layout_3.setStretch(2, 1)
-        self.vertical_layout_4.addLayout(self.vertical_layout_3)
-        self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
-        self.environment_combo_box = QtWidgets.QComboBox(self.new_version_group_box)
-        self.horizontal_layout_2.addWidget(self.environment_combo_box)
+        # self.description_text_edit.setMaximumHeight(130)
+        self.new_version_main_layout.addWidget(self.description_text_edit)
+
+        self.save_as_buttons_layout = QtWidgets.QHBoxLayout()
+        self.environment_combo_box = QtWidgets.QComboBox(self)
+        self.save_as_buttons_layout.addWidget(self.environment_combo_box)
 
         # ===================
         # Save As
         self.save_as_push_button = QtWidgets.QPushButton(self)
         self.save_as_push_button.setText("Save As")
         self.save_as_push_button.setDefault(False)
-        self.horizontal_layout_2.addWidget(self.save_as_push_button)
+        self.save_as_buttons_layout.addWidget(self.save_as_push_button)
 
         # ===================
         # Export Push Button
         self.export_as_push_button = QtWidgets.QPushButton(self)
         self.export_as_push_button.setText("Export Selection As")
-        self.horizontal_layout_2.addWidget(self.export_as_push_button)
+        self.save_as_buttons_layout.addWidget(self.export_as_push_button)
 
         # ===================
         # Publish Push Button
@@ -408,22 +400,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.publish_push_button.setText("Publish")
         if not self.environment.has_publishers:
             self.publish_push_button.setText("Publish")
-        self.horizontal_layout_2.addWidget(self.publish_push_button)
-
+        self.save_as_buttons_layout.addWidget(self.publish_push_button)
 
         # Close Push Button
         self.close_push_button = QtWidgets.QPushButton(self)
         self.close_push_button.setText("Close")
-        self.horizontal_layout_2.addWidget(self.close_push_button)
+        self.save_as_buttons_layout.addWidget(self.close_push_button)
 
-        self.vertical_layout_4.addLayout(self.horizontal_layout_2)
+        self.new_version_main_layout.addLayout(self.save_as_buttons_layout)
+
+        self.new_version_main_layout.setStretch(0, 0)
+        self.new_version_main_layout.setStretch(1, 10)
+        self.new_version_main_layout.setStretch(2, 1)
 
         # ---------------------------------------------
         # Thumbnail Graphics View and Buttons
         self.thumbnail_group_box = QtWidgets.QGroupBox(self)
         self.thumbnail_group_box.setTitle("Task Thumbnail")
 
-        # self.horizontal_layout_14.addWidget(self.thumbnail_group_box)
         self.vertical_layout_7.addWidget(self.thumbnail_group_box)
 
         self.thumbnail_layout = QtWidgets.QVBoxLayout(self.thumbnail_group_box)
@@ -480,9 +474,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ------------------------------------------
         # Takes Goes its own groupbox
-
-        self.horizontal_layout_16 = QtWidgets.QHBoxLayout()
-
         self.takes_group_box = QtWidgets.QGroupBox()
         self.takes_group_box.setTitle("Takes")
 
@@ -509,7 +500,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ===================
         # Add Take Push Button
-        self.add_take_push_button = QtWidgets.QPushButton(self.new_version_group_box)
+        self.add_take_push_button = QtWidgets.QPushButton(self)
         self.add_take_push_button.setText("New Take")
         self.add_take_push_button.setMinimumWidth(120)
         self.vertical_layout_8.addWidget(self.add_take_push_button)
@@ -523,17 +514,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ===================
         # Takes ComboBox
-        # self.takes_combo_box = TakesComboBox(self.new_version_group_box)
-        self.takes_list_widget = TakesListWidget(self.new_version_group_box)
+        # self.takes_combo_box = TakesComboBox(self)
+        self.takes_list_widget = TakesListWidget(self)
         self.vertical_layout_8.addWidget(self.takes_list_widget)
 
         # ------------------------------------------
         # Previous Versions Group Box
 
-        self.previous_versions_group_box = QtWidgets.QGroupBox(self)
-        self.previous_versions_group_box.setTitle("Open Version")
+        self.versions_group_box = QtWidgets.QGroupBox(self)
+        self.versions_group_box.setTitle("Versions")
 
-        self.vertical_layout_5 = QtWidgets.QVBoxLayout(self.previous_versions_group_box)
+        self.versions_main_layout = QtWidgets.QVBoxLayout(self.versions_group_box)
         self.horizontal_layout_10 = QtWidgets.QHBoxLayout()
 
         # Show Only # Items Label
@@ -565,7 +556,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QSizePolicy.Minimum
         )
         self.horizontal_layout_10.addItem(spacer_item2)
-        self.vertical_layout_5.addLayout(self.horizontal_layout_10)
+        self.versions_main_layout.addLayout(self.horizontal_layout_10)
 
         # previous_versions_table_widget
         self.previous_versions_table_widget = VersionsTableWidget(self)
@@ -633,28 +624,32 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_table_widget.horizontalHeader().setStretchLastSection(True)
         self.previous_versions_table_widget.verticalHeader().setStretchLastSection(False)
 
-        self.vertical_layout_5.addWidget(self.previous_versions_table_widget)
-        self.horizontal_layout_5 = QtWidgets.QHBoxLayout()
+        self.versions_main_layout.addWidget(self.previous_versions_table_widget)
+
+        self.previous_version_secondary_controls_widget = QtWidgets.QWidget(self)
+        self.previous_version_secondary_controls_layout = QtWidgets.QHBoxLayout(self.previous_version_secondary_controls_widget)
+
+
         self.representations_label = QtWidgets.QLabel(self)
         self.representations_label.setText("Repr.")
-        self.horizontal_layout_5.addWidget(self.representations_label)
+        self.previous_version_secondary_controls_layout.addWidget(self.representations_label)
 
         self.representations_comboBox = QtWidgets.QComboBox(self)
         self.representations_comboBox.setToolTip("Choose Representation (if supported by the environment)")
 
-        self.horizontal_layout_5.addWidget(self.representations_comboBox)
+        self.previous_version_secondary_controls_layout.addWidget(self.representations_comboBox)
         self.reference_depth_label = QtWidgets.QLabel(self)
         self.reference_depth_label.setText("Refs")
-        self.horizontal_layout_5.addWidget(self.reference_depth_label)
+        self.previous_version_secondary_controls_layout.addWidget(self.reference_depth_label)
         self.ref_depth_combo_box = QtWidgets.QComboBox(self)
         self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by environment)")
-        self.horizontal_layout_5.addWidget(self.ref_depth_combo_box)
+        self.previous_version_secondary_controls_layout.addWidget(self.ref_depth_combo_box)
         spacer_item3 = QtWidgets.QSpacerItem(
             40, 20,
             QtWidgets.QSizePolicy.Expanding,
             QtWidgets.QSizePolicy.Minimum
         )
-        self.horizontal_layout_5.addItem(spacer_item3)
+        self.previous_version_secondary_controls_layout.addItem(spacer_item3)
         self.use_namespace_check_box = QtWidgets.QCheckBox(self)
         self.use_namespace_check_box.setText("Use Namespace")
         self.use_namespace_check_box.setToolTip(
@@ -670,30 +665,31 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             """
         )
         self.use_namespace_check_box.setChecked(True)
-        self.horizontal_layout_5.addWidget(self.use_namespace_check_box)
+        self.previous_version_secondary_controls_layout.addWidget(self.use_namespace_check_box)
 
         # Choose Push Button
         self.choose_version_push_button = QtWidgets.QPushButton(self)
         self.choose_version_push_button.setText("Choose")
-        self.horizontal_layout_5.addWidget(self.choose_version_push_button)
+        self.previous_version_secondary_controls_layout.addWidget(self.choose_version_push_button)
 
         # Check Updates Check Box
         self.check_updates_check_box = QtWidgets.QCheckBox(self)
         self.check_updates_check_box.setToolTip("Disable update check (faster)")
         self.check_updates_check_box.setText("Check Updates")
         self.check_updates_check_box.setChecked(True)
-        self.horizontal_layout_5.addWidget(self.check_updates_check_box)
+        self.previous_version_secondary_controls_layout.addWidget(self.check_updates_check_box)
 
-        self.horizontal_layout_15 = QtWidgets.QHBoxLayout()
+        self.previous_version_controls_widget = QtWidgets.QWidget(self)
+        self.open_buttons_layout = QtWidgets.QHBoxLayout(self.previous_version_controls_widget)
 
         # Open Push Button
         self.open_push_button = QtWidgets.QPushButton(self)
-        self.horizontal_layout_15.addWidget(self.open_push_button)
+        self.open_buttons_layout.addWidget(self.open_push_button)
         self.open_push_button.setText("Open")
 
         # Open As New Version Push Button
         self.open_as_new_version_push_button = QtWidgets.QPushButton(self)
-        self.horizontal_layout_15.addWidget(self.open_as_new_version_push_button)
+        self.open_buttons_layout.addWidget(self.open_as_new_version_push_button)
         self.open_as_new_version_push_button.setText("Open As New Version")
         self.open_as_new_version_push_button.setToolTip(
             "Opens the selected version and immediately creates a new version."
@@ -702,32 +698,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Reference Push Button
         self.reference_push_button = QtWidgets.QPushButton(self)
         self.reference_push_button.setText("Reference")
-        self.horizontal_layout_15.addWidget(self.reference_push_button)
+        self.open_buttons_layout.addWidget(self.reference_push_button)
 
         # Import Push Button
         self.import_push_button = QtWidgets.QPushButton(self)
         self.import_push_button.setText("Import")
-        self.horizontal_layout_15.addWidget(self.import_push_button)
+        self.open_buttons_layout.addWidget(self.import_push_button)
 
-        self.vertical_layout_5.addLayout(self.horizontal_layout_5)
-        self.vertical_layout_5.addLayout(self.horizontal_layout_15)
+        self.versions_main_layout.addWidget(self.previous_version_secondary_controls_widget)
+        self.versions_main_layout.addWidget(self.previous_version_controls_widget)
+        self.versions_main_layout.addWidget(self.new_version_controls_widget)
 
-        # self.vertical_layout_6.addWidget(self.previous_versions_group_box)
-        self.horizontal_layout_16.addWidget(self.takes_group_box)
-        self.horizontal_layout_16.addWidget(self.previous_versions_group_box)
-        self.horizontal_layout_16.setStretch(0, 1)
-        self.horizontal_layout_16.setStretch(1, 10)
+        self.vertical_layout_6 = QtWidgets.QVBoxLayout()
+        self.horizontal_layout_12.addWidget(self.takes_group_box)
+        self.horizontal_layout_12.addLayout(self.vertical_layout_6)
 
-        self.vertical_layout_6.addLayout(self.horizontal_layout_16)
-        self.vertical_layout_6.addLayout(self.horizontal_layout_14)
+        self.vertical_layout_6.addWidget(self.versions_group_box)
+        # self.vertical_layout_6.addWidget(self)
 
         self.vertical_layout_6.setStretch(0, 10)
         self.vertical_layout_6.setStretch(1, 0)
 
-        self.horizontal_layout_12.setStretch(0, 1)
-        self.horizontal_layout_12.setStretch(1, 10)
+        self.horizontal_layout_12.setStretch(0, 2)
+        self.horizontal_layout_12.setStretch(1, 1)
+        self.horizontal_layout_12.setStretch(2, 4)
+
         self.vertical_layout_1.addLayout(self.horizontal_layout_12)
-        self.horizontal_layout_1.addWidget(self.vertical_widget)
+        self.main_layout.addWidget(self.main_widget)
 
         QtCore.QMetaObject.connectSlotsByName(self)
         self.setTabOrder(self.description_text_edit, self.export_as_push_button)
@@ -990,9 +987,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             upload_output_action.setEnabled(False)
             copy_path_action.setEnabled(False)
             rerender_path_variables_action.setEnabled(False)
-            change_description_action.setEnabled(False)
-
-        if self.mode:
             change_description_action.setEnabled(False)
 
         # Create power menu
@@ -1496,22 +1490,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self._show_previous_versions_tableWidget_context_menu
         )
 
-        if self.mode:
-            # Read-Only mode, Choose the version
-            # add double clicking to previous_versions_table_widget
-            QtCore.QObject.connect(
-                self.previous_versions_table_widget,
-                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.choose_version_push_button_clicked
-            )
-        else:
-            # Read-Write mode, Open the version
-            # add double clicking to previous_versions_table_widget
+        # if self.mode:
+        #     # Read-Only mode, Choose the version
+        #     # add double clicking to previous_versions_table_widget
+        #     QtCore.QObject.connect(
+        #         self.previous_versions_table_widget,
+        #         QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+        #         self.choose_version_push_button_clicked
+        #     )
+        # else:
+
+        # Open the version
+        # add double clicking to previous_versions_table_widget
+        if self.mode in [1, 2]:  # Only in Open and Open & Save Modes
             QtCore.QObject.connect(
                 self.previous_versions_table_widget,
                 QtCore.SIGNAL("cellDoubleClicked(int,int)"),
                 self.open_push_button_clicked
             )
+
         # *********************************************************************
         # set the completer for the search_task_lineEdit
         # completer = TaskNameCompleter(self)
@@ -1565,29 +1562,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         else:
             self.environment_combo_box.setVisible(False)
 
-        if self.mode:
-            # run in read-only mode
-            # hide buttons
-            self.add_take_push_button.setVisible(False)
-            self.description_label.setVisible(False)
-            self.description_text_edit.setVisible(False)
-            self.export_as_push_button.setVisible(False)
-            self.save_as_push_button.setVisible(False)
-            self.publish_push_button.setVisible(False)
-            self.open_push_button.setVisible(False)
-            self.reference_push_button.setVisible(False)
-            self.import_push_button.setVisible(False)
-            self.upload_thumbnail_push_button.setVisible(False)
-            # self.user_label.setVisible(False)
-            # self.shot_info_update_pushButton.setVisible(False)
-            # self.frame_range_label.setVisible(False)
-            # self.handles_label.setVisible(False)
-            # self.start_frame_spinBox.setVisible(False)
-            # self.end_frame_spinBox.setVisible(False)
-            # self.handle_at_end_spinBox.setVisible(False)
-            # self.handle_at_start_spinBox.setVisible(False)
-        else:
-            self.choose_version_push_button.setVisible(False)
+        if self.mode == 0:  # Save As Mode
+            self.previous_version_controls_widget.setVisible(False)
+            self.previous_version_secondary_controls_widget.setVisible(False)
+        elif self.mode == 1:  # Open Mode
+            self.new_version_controls_widget.setVisible(False)
 
         # update description field
         self.description_text_edit.setText("")

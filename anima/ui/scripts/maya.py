@@ -25,7 +25,7 @@ def set_qt_lib():
         pass
 
 
-def version_creator(logging_level=logging.WARNING):
+def version_creator(logging_level=logging.WARNING, mode=2):
     """Helper function for version_creator UI for Maya
     """
     # connect to db
@@ -52,7 +52,7 @@ def version_creator(logging_level=logging.WARNING):
     #     version_creator_dialog.show()
 
     # set the parent object to the maya main window
-    version_creator.UI(environment=m, parent=mayaEnv.get_maya_main_window())
+    version_creator.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
 
 
 def version_updater(logging_level=logging.WARNING):

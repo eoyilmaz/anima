@@ -237,7 +237,7 @@ def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
     :param callback: The callable that will be called when the button is
       clicked.
     :param str tooltip: Optional tooltip for the button
-    :param callback_args: Callback arguments
+    :param callback_kwargs: Callback arguments
     :return:
     """
     if tooltip == '':

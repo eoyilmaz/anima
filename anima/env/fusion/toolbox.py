@@ -102,13 +102,29 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Create tools for general tab
 
         # -------------------------------------------------------------------
-        # Version Creator
+        # Open Version
         add_button(
-            'Version Creator',
+            'Open Version',
             general_tab_vertical_layout,
             GenericTools.version_creator,
-            callback_kwargs={"parent": self.parent()}
+            callback_kwargs={"parent": self.parent(), "mode": 1}
         )
+
+        # Save As Version
+        add_button(
+            'Save As Version',
+            general_tab_vertical_layout,
+            GenericTools.version_creator,
+            callback_kwargs={"parent": self.parent(), "mode": 0}
+        )
+
+        # # Version Creator
+        # add_button(
+        #     'Version Creator (legacy)',
+        #     general_tab_vertical_layout,
+        #     GenericTools.version_creator,
+        #     callback_kwargs={"parent": self.parent()}
+        # )
 
         # Update Outputs
         add_button(
