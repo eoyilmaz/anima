@@ -208,13 +208,7 @@ def UI():
         )
         with general_column_layout:
             color.change()
-            # pm.button(
-            #     'version_dialog_button',
-            #     l="Version Creator",
-            #     c=repeated_callback(General.version_dialog),
-            #     ann="Version Creator",
-            #     bgc=color.color
-            # )
+
             pm.button(
                 'open_version_button',
                 l="Open Version",

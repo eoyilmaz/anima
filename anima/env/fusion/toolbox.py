@@ -118,14 +118,6 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             callback_kwargs={"parent": self.parent(), "mode": 0}
         )
 
-        # # Version Creator
-        # add_button(
-        #     'Version Creator (legacy)',
-        #     general_tab_vertical_layout,
-        #     GenericTools.version_dialog,
-        #     callback_kwargs={"parent": self.parent()}
-        # )
-
         # Update Outputs
         add_button(
             'Update Savers',

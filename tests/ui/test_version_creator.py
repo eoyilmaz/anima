@@ -47,7 +47,7 @@ elif IS_PYQT4():
 
 
 class VersionCreatorTester(unittest.TestCase):
-    """Tests the Version Creator instance
+    """Tests the Version Dialog instance
     """
 
     repo_path = ''

@@ -56,7 +56,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Create tools for general tab
 
         # -------------------------------------------------------------------
-        # Version Creator
+        # Version Dialog
 
         from anima.ui.utils import add_button
         add_button(
@@ -72,12 +72,6 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.version_dialog,
             callback_kwargs={"mode": 0}
         )
-
-        # add_button(
-        #     'Version Creator (legacy)',
-        #     general_tab_vertical_layout,
-        #     GenericTools.version_dialog
-        # )
 
         # Browse $HIP
         add_button(
