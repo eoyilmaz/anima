@@ -711,6 +711,9 @@ def check_if_only_one_root_node(progress_controller=None):
     root_transform_nodes = local_root_nodes
     progress_controller.increment()
 
+    # set all visible in outliner
+    [n.hiddenInOutliner.set(False) for n in root_transform_nodes]
+
     # check of no root node
     if len(root_transform_nodes) == 0:
         progress_controller.complete()
@@ -722,6 +725,7 @@ def check_if_only_one_root_node(progress_controller=None):
     # check more than one root node
     if len(root_transform_nodes) > 1:
         progress_controller.complete()
+        pm.select(root_transform_nodes)
         raise PublishError(
             'There is more than one root node in the scene'
         )
@@ -731,6 +735,7 @@ def check_if_only_one_root_node(progress_controller=None):
     if root_transform_nodes[0].getShape():
         progress_controller.increment()
         progress_controller.complete()
+        pm.select(root_transform_nodes)
         raise PublishError(
             'Root node should be a Group node!'
             # 'Root node should not have a shape'
