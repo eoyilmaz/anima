@@ -31,7 +31,7 @@ import tempfile
 import logging
 from anima.config import Config
 
-__version__ = "0.5.0.1"
+__version__ = "0.5.1"
 
 __string_types__ = []
 if sys.version_info[0] >= 3:  # Python 3

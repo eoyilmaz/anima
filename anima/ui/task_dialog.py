@@ -1146,11 +1146,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         if task:
-            self.set_project(task.project)
-            self.parent_task = task
-            self.parent_task_line_edit.setText(
-                self.get_task_hierarchy_name(task)
-            )
+            from stalker import Task, Project
+            # this is a weird initialization, but the task is may be
+            # a project, then init with it
+            project = task
+            if isinstance(task, Task):  # and if it is a Task then this is ok
+                project = task.project
+
+            self.set_project(project)
+
+            if isinstance(task, Task):
+                self.parent_task = task
+                self.parent_task_line_edit.setText(
+                    self.get_task_hierarchy_name(task)
+                )
+            else:
+                self.parent_task = None
+                self.parent_task_line_edit.setText("")
 
     def pick_parent_task_push_button_clicked(self):
         """runs when pick_parent_task_push_button is clicked
@@ -1181,26 +1193,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if parent_task_id is None:
                 return
 
-            from stalker import Task
-            parent_task = Task.query.get(parent_task_id)
+            from stalker import Entity, Task, Project
+            parent_task = Entity.query.get(parent_task_id)
 
-            if parent_task is None:
-                return
+            if parent_task is not None:
+                self.set_parent_task(parent_task)
 
-            self.set_parent_task(parent_task)
-
-            # also validate if this parent task is ok
-            if self.task and self.mode == self.UPDATE_MODE:
-                # check if the picked parent task is suitable for the updated
-                # task
-                if self.task in parent_task.parents \
-                   or self.task == parent_task:
-                    # warn the user by invalidating the field
-                    self.parent_task_line_edit.set_invalid(
-                        'New parent is not valid!'
-                    )
-                else:
-                    self.parent_task_line_edit.set_valid()
+                if isinstance(parent_task, Task):
+                    # also validate if this parent task is ok
+                    if self.task and self.mode == self.UPDATE_MODE:
+                        # check if the picked parent task is suitable for the updated
+                        # task
+                        if self.task in parent_task.parents \
+                           or self.task == parent_task:
+                            # warn the user by invalidating the field
+                            self.parent_task_line_edit.set_invalid(
+                                'New parent is not valid!'
+                            )
+                        else:
+                            self.parent_task_line_edit.set_valid()
 
         # delete the dialog
         task_picker_main_dialog.deleteLater()

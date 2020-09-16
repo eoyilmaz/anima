@@ -5,28 +5,11 @@
 # License: http://www.opensource.org/licenses/MIT
 
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.lib import QtGui, QtCore, QtWidgets
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import task_picker_dialog_UI_pyside as task_picker_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import task_picker_dialog_UI_pyside2 as task_picker_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import task_picker_dialog_UI_pyqt4 as task_picker_dialog_UI
 
 
 def UI(app_in=None, executor=None, **kwargs):
     """
-    :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
-
-    :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
-      mode.
-
     :param app_in: A Qt Application instance, which you can pass to let the UI
       be attached to the given applications event process.
 
@@ -37,7 +20,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The task picker dialog for easy task selection.
 
     This dialog is created to help users easily pick tasks in a complex task
@@ -51,7 +34,7 @@ class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialog
 
     def __init__(self, parent=None, project=None):
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
+        self._setup_ui()
 
         # create the custom task tree view
 
@@ -71,6 +54,18 @@ class MainDialog(QtWidgets.QDialog, task_picker_dialog_UI.Ui_Dialog, AnimaDialog
             QtCore.SIGNAL('doubleClicked(QModelIndex)'),
             self.tasks_tree_view_double_clicked
         )
+
+    def _setup_ui(self):
+        self.resize(629, 567)
+        self.verticalLayout = QtWidgets.QVBoxLayout(self)
+        self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.verticalLayout.addWidget(self.buttonBox)
+
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), self.accept)
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), self.reject)
+        QtCore.QMetaObject.connectSlotsByName(self)
 
     def tasks_tree_view_double_clicked(self, model_index):
         """runs when double clicked on to a task

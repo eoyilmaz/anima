@@ -235,7 +235,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         # create the menu
         menu = QtWidgets.QMenu()  # Open in browser
 
-
         # -----------------------------------
         # actions created in different scopes
         create_time_log_action = None
