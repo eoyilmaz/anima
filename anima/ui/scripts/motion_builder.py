@@ -14,8 +14,8 @@ def set_qt_lib():
     ui.SET_PYSIDE()
 
 
-def version_creator(logging_level=logging.WARNING):
-    """Helper function for version_creator UI for MotionBuilder
+def version_dialog(logging_level=logging.WARNING):
+    """Helper function for version_dialog UI for MotionBuilder
     """
     # connect to db
     from anima.utils import do_db_setup
@@ -24,10 +24,10 @@ def version_creator(logging_level=logging.WARNING):
     # set Qt library
     set_qt_lib()
 
-    from anima.ui import version_creator
+    from anima.ui import version_dialog
     from anima.env import motion_builder
     mb = motion_builder.MotionBuilder()
 
     logger.setLevel(logging_level)
 
-    version_creator.UI(environment=mb)
+    version_dialog.UI(environment=mb)

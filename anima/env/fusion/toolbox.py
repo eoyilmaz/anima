@@ -106,7 +106,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Open Version',
             general_tab_vertical_layout,
-            GenericTools.version_creator,
+            GenericTools.version_dialog,
             callback_kwargs={"parent": self.parent(), "mode": 1}
         )
 
@@ -114,7 +114,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Save As Version',
             general_tab_vertical_layout,
-            GenericTools.version_creator,
+            GenericTools.version_dialog,
             callback_kwargs={"parent": self.parent(), "mode": 0}
         )
 
@@ -122,7 +122,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # add_button(
         #     'Version Creator (legacy)',
         #     general_tab_vertical_layout,
-        #     GenericTools.version_creator,
+        #     GenericTools.version_dialog,
         #     callback_kwargs={"parent": self.parent()}
         # )
 
@@ -187,20 +187,20 @@ class GenericTools(object):
     """
 
     @classmethod
-    def version_creator(cls, **args):
-        """version creator
+    def version_dialog(cls, **args):
+        """version dialog
         """
         # from anima.ui.scripts import fusion
-        # fusion.version_creator(*args)
+        # fusion.version_dialog(*args)
         from anima.utils import do_db_setup
         do_db_setup()
         from anima.env import fusion
         fusion_env = fusion.Fusion()
         fusion_env.name = 'Fusion'
 
-        from anima.ui import version_creator
+        from anima.ui import version_dialog
 
-        ui_instance = version_creator.MainDialog(
+        ui_instance = version_dialog.MainDialog(
             environment=fusion_env,
             **args
         )

@@ -82,7 +82,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     This is the main interface that the users of the ``anima`` will use to
     create a new :class:`~stalker.models.version.Version`\ s.
 
-    It is possible to run the version_creator UI in read-only mode where the UI
+    It is possible to run the version_dialog UI in read-only mode where the UI
     is created only for choosing previous versions. There will only be one
     button called "Choose" which returns the chosen Version instance.
 

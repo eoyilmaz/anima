@@ -82,7 +82,7 @@ or better:
 
 ```python
 from anima.ui.scripts import maya
-maya.version_creator()
+maya.version_dialog()
 ```
 
 It is a good idea to create a `Studio` instance in your database, with all the

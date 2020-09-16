@@ -12,7 +12,7 @@ import unittest
 from anima.env.testing import TestEnvironment
 
 
-logger = logging.getLogger('anima.ui.version_creator')
+logger = logging.getLogger('anima.ui.version_dialog')
 logger.setLevel(logging.DEBUG)
 
 from stalker import (db, User, Project, Repository, Structure,
@@ -20,7 +20,7 @@ from stalker import (db, User, Project, Repository, Structure,
 from stalker.db.session import DBSession
 from stalker.models.auth import LocalSession
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, SET_PYSIDE
-from anima.ui import version_creator
+from anima.ui import version_dialog
 
 SET_PYSIDE()
 
@@ -294,7 +294,7 @@ class VersionCreatorTester(unittest.TestCase):
             cls.app = QtGui.QApplication.instance()
 
         # cls.test_environment = TestEnvironment()
-        cls.dialog = version_creator.MainDialog()
+        cls.dialog = version_dialog.MainDialog()
             # environment=cls.test_environment
         # )
 
@@ -471,7 +471,7 @@ class VersionCreatorTester(unittest.TestCase):
         """testing if the takes_listWidget lists "Main" by default
         """
         from anima import defaults
-        dialog = version_creator.MainDialog()
+        dialog = version_dialog.MainDialog()
         self.assertEqual(
             defaults.version_take_name,
             dialog.takes_list_widget.currentItem().text()
@@ -484,7 +484,7 @@ class VersionCreatorTester(unittest.TestCase):
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeView
 
-        dialog = version_creator.MainDialog()
+        dialog = version_dialog.MainDialog()
         # self.show_dialog(dialog)
 
         from anima import defaults
@@ -500,7 +500,7 @@ class VersionCreatorTester(unittest.TestCase):
         # now call the dialog and expect to see all these projects as root
         # level items in tasks_treeView
 
-        dialog = version_creator.MainDialog()
+        dialog = version_dialog.MainDialog()
         # self.show_dialog(dialog)
 
         from anima import defaults
@@ -529,9 +529,9 @@ class VersionCreatorTester(unittest.TestCase):
     def test_tasks_treeView_do_not_cause_a_segfault(self):
         """there was a bug causing a segfault
         """
-        dialog = version_creator.MainDialog()
-        dialog = version_creator.MainDialog()
-        dialog = version_creator.MainDialog()
+        dialog = version_dialog.MainDialog()
+        dialog = version_dialog.MainDialog()
+        dialog = version_dialog.MainDialog()
 
     def test_previous_versions_tableWidget_is_filled_with_proper_info(self):
         """testing if the previous_versions_table_widget is filled with proper
@@ -659,7 +659,7 @@ class VersionCreatorTester(unittest.TestCase):
         representations in current environment
         """
         test_environment = TestEnvironment()
-        dialog = version_creator.MainDialog(
+        dialog = version_dialog.MainDialog(
             environment=test_environment
         )
         for i in range(len(TestEnvironment.representations)):

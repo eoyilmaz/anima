@@ -132,11 +132,11 @@ class General(object):
             )
 
     @classmethod
-    def version_creator(cls, mode=2):
-        """version creator
+    def version_dialog(cls, mode=2):
+        """version dialog
         """
         from anima.ui.scripts import maya
-        maya.version_creator(mode=mode)
+        maya.version_dialog(mode=mode)
 
     @classmethod
     def export_transform_info(cls, use_global_pos=False):

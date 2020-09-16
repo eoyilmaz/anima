@@ -62,21 +62,21 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Open Version',
             general_tab_vertical_layout,
-            GenericTools.version_creator,
+            GenericTools.version_dialog,
             callback_kwargs={"mode": 1}
         )
 
         add_button(
             'Save As Version',
             general_tab_vertical_layout,
-            GenericTools.version_creator,
+            GenericTools.version_dialog,
             callback_kwargs={"mode": 0}
         )
 
         # add_button(
         #     'Version Creator (legacy)',
         #     general_tab_vertical_layout,
-        #     GenericTools.version_creator
+        #     GenericTools.version_dialog
         # )
 
         # Browse $HIP
@@ -222,11 +222,11 @@ class GenericTools(object):
     """
 
     @classmethod
-    def version_creator(cls, mode=2):
-        """version creator
+    def version_dialog(cls, mode=2):
+        """version dialog
         """
         from anima.ui.scripts import houdini
-        houdini.version_creator(mode=mode)
+        houdini.version_dialog(mode=mode)
 
     @classmethod
     def browse_hip(cls):

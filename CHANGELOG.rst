@@ -24,7 +24,7 @@ Changes
 * **New:** Added preliminary support for parsing and replicating XSens Network
   Protocol.
 
-* **New:** Added option for power users to delete versions in version_creator
+* **New:** Added option for power users to delete versions in version_dialog
   UI.
 
 * **New:** Added ``config.py`` and ``Config`` class that expands
@@ -123,7 +123,7 @@ Changes
 * **New:** Added full support to ``Representations`` for Maya.
 
 * **New:** It is now possible to choose one of the supported representations
-  for the current environment in ``version_creator`` UI and open the given
+  for the current environment in ``version_dialog`` UI and open the given
   ``version`` with the desired representation.
 
 0.1.8
@@ -459,9 +459,9 @@ Changes
         from anima.pipeline.ui.lib import QtCore, QtGui
 
       The default library is PyQt4.
-    * **Update:** **version_creator.fill_tasks_treeWidget()** now works much
+    * **Update:** **version_dialog.fill_tasks_treeWidget()** now works much
       faster.
-    * **Update:** **version_creator.previous_versions_tableWidget** now
+    * **Update:** **version_dialog.previous_versions_tableWidget** now
       displays the icon of the created environment.
 
   * **Environments:**
@@ -479,9 +479,9 @@ Changes
 * **Pipeline:**
 
   * **Update:** login_dialog is now working.
-  * **New:** created a new UI called version_creator for creating new Versions
+  * **New:** created a new UI called version_dialog for creating new Versions
     from within environments
-  * **New:** A new field is added to the **version_creator** UI which lets the
+  * **New:** A new field is added to the **version_dialog** UI which lets the
     user to restore the previous version from the given path.
   * **New:** Created environment class for **Fusion**.
   * **New:** Created environment class for **Maya**.

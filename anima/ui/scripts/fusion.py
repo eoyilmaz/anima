@@ -8,8 +8,8 @@ import logging
 from anima import logger
 
 
-def version_creator(lib='PySide', logging_level=logging.WARNING, parent=None):
-    """Helper function for version_creator UI for Fusion
+def version_dialog(lib='PySide', logging_level=logging.WARNING, parent=None):
+    """Helper function for version_dialog UI for Fusion
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
     the ``lib`` argument to "PyQt4".
@@ -33,6 +33,6 @@ def version_creator(lib='PySide', logging_level=logging.WARNING, parent=None):
     fusion_env = fusion.Fusion()
     fusion_env.name = 'Fusion'
 
-    from anima.ui import version_creator
+    from anima.ui import version_dialog
     logger.setLevel(logging_level)
-    version_creator.UI(environment=fusion_env, parent=parent)
+    version_dialog.UI(environment=fusion_env, parent=parent)

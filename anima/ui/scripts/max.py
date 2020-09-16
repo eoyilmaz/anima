@@ -24,8 +24,8 @@ class Executor(object):
     #     self.application.sendPostedEvents(None, 0)
 
 
-def version_creator():
-    """Helper function for version_creator UI for Max
+def version_dialog():
+    """Helper function for version_dialog UI for Max
     """
     from anima.utils import do_db_setup
     do_db_setup()
@@ -33,7 +33,7 @@ def version_creator():
     from anima import ui
     ui.SET_PYSIDE()
 
-    from anima.ui import version_creator
+    from anima.ui import version_dialog
     from anima.env import max as max_env
 
     m = max_env.Max()
@@ -41,7 +41,7 @@ def version_creator():
     import MaxPlus
     max_window = MaxPlus.GetQMaxWindow()
 
-    version_creator.UI(
+    version_dialog.UI(
         environment=m,
         executor=Executor(),
         parent=max_window

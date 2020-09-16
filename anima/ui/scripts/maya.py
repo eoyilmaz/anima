@@ -4,11 +4,7 @@
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 import logging
-
 from anima import logger
-
-# version_creator_dialog = None
-# version_updater_dialog = None
 
 
 def set_qt_lib():
@@ -25,8 +21,8 @@ def set_qt_lib():
         pass
 
 
-def version_creator(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_creator UI for Maya
+def version_dialog(logging_level=logging.WARNING, mode=2):
+    """Helper function for version_dialog UI for Maya
     """
     # connect to db
     from anima.utils import do_db_setup
@@ -36,7 +32,7 @@ def version_creator(logging_level=logging.WARNING, mode=2):
     # and PySide2 for Maya 2017
     set_qt_lib()
 
-    from anima.ui import version_creator
+    from anima.ui import version_dialog
     from anima.env import mayaEnv
     m = mayaEnv.Maya()
 
@@ -45,14 +41,8 @@ def version_creator(logging_level=logging.WARNING, mode=2):
 
     logger.setLevel(logging_level)
 
-    # global version_creator_dialog
-    # if version_creator_dialog is None:
-    #     version_creator_dialog = version_creator.UI(environment=m)
-    # else:
-    #     version_creator_dialog.show()
-
     # set the parent object to the maya main window
-    version_creator.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
+    version_dialog.UI(environment=m, parent=mayaEnv.get_maya_main_window(), mode=mode)
 
 
 def version_updater(logging_level=logging.WARNING):

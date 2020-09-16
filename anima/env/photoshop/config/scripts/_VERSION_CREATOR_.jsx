@@ -4,5 +4,5 @@
 // This module is part of anima-tools and is released under the MIT
 // License: http://www.opensource.org/licenses/MIT
 
-var versionCreator = new File("%ANIMA_PATH%/env/photoshop/config/version_creator.py");
+var versionCreator = new File("%ANIMA_PATH%/env/photoshop/config/version_dialog.py");
 versionCreator.execute();

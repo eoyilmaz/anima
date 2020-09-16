@@ -209,16 +209,16 @@ def UI():
         with general_column_layout:
             color.change()
             # pm.button(
-            #     'version_creator_button',
+            #     'version_dialog_button',
             #     l="Version Creator",
-            #     c=repeated_callback(General.version_creator),
+            #     c=repeated_callback(General.version_dialog),
             #     ann="Version Creator",
             #     bgc=color.color
             # )
             pm.button(
                 'open_version_button',
                 l="Open Version",
-                c=repeated_callback(General.version_creator, mode=1),
+                c=repeated_callback(General.version_dialog, mode=1),
                 ann="Open Version",
                 bgc=color.color
             )
@@ -226,7 +226,7 @@ def UI():
             pm.button(
                 'save_as_version_button',
                 l="Save As Version",
-                c=repeated_callback(General.version_creator, mode=0),
+                c=repeated_callback(General.version_dialog, mode=0),
                 ann="Save As Version",
                 bgc=color.color
             )
