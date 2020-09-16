@@ -2120,9 +2120,8 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     # isolate none to speed things up
     pm.select(None)
 
-    wrong_node_names = ['_rig_', '_proxy_']
-    wrong_node_names_starts_with = ['rig_']
-    wrong_node_names_ends_with = ['_rig']
+    wrong_node_names = ['_rig', '_proxy']
+    wrong_node_names_starts_with = ['rig']
 
     default_playback_option = pm.playbackOptions(q=1, v=True)
 
@@ -2211,12 +2210,14 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             underscored_name = \
                 camel_case_to_underscore(current_node.name().split(':')[-1])
 
-            if any([n in underscored_name for n in wrong_node_names]) or \
-               any([underscored_name.startswith(n) for n in wrong_node_names_starts_with]) or \
-               any([underscored_name.endswith(n) for n in wrong_node_names_ends_with]):
-                if current_node.v.get() is True  and not current_node.v.isLocked():
-                    current_node.v.set(False)
-                    hidden_nodes.append(current_node)
+            if any([n in underscored_name
+                    for n in wrong_node_names]) or \
+               any([underscored_name.startswith(n)
+                    for n in wrong_node_names_starts_with]):
+                    if current_node.v.get() is True \
+                       and not current_node.v.isLocked():
+                        current_node.v.set(False)
+                        hidden_nodes.append(current_node)
             else:
                 nodes_to_consider.extend(
                     current_node.getChildren(type='transform')
