@@ -185,7 +185,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def name_line_edit_changed(self, text):
         """runs when the name_line_edit text has changed
         """
-        if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
+        if re.findall(r'[^a-zA-Z0-9\-_. ]+', text):
             self.name_line_edit.set_invalid('Invalid character')
         else:
             if text == '':
