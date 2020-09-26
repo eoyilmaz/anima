@@ -85,7 +85,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
     def setup_ui(self):
         """add tools
         """
-        # create the main tab layoute
+        # create the main tab layout
         main_tab_widget = QtWidgets.QTabWidget(self.widget())
         self.addWidget(main_tab_widget)
 
@@ -161,13 +161,27 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         )
 
         # Set Frames At Once To 1, 4 and 8
+        hbox_layout = QtWidgets.QHBoxLayout()
+        general_tab_vertical_layout.addLayout(hbox_layout)
+        set_frames_at_once_label = QtWidgets.QLabel()
+        set_frames_at_once_label.setText("Set Frames At Once To")
+        hbox_layout.addWidget(set_frames_at_once_label)
+
         for i in [1, 4, 8]:
-            add_button(
-                'Set Frames At Once To %s' % i,
-                general_tab_vertical_layout,
+            button = add_button(
+                '%s' % i,
+                hbox_layout,
                 GenericTools.set_frames_at_once,
                 callback_kwargs={'count': i}
             )
+            button.setMinimumSize(QtCore.QSize(25, 0))
+
+        # Delete Recent Comps
+        add_button(
+            'Range From Shot',
+            general_tab_vertical_layout,
+            GenericTools.range_from_shot
+        )
 
         # -------------------------------------------------------------------
         # Add the stretcher
@@ -360,3 +374,14 @@ class GenericTools(object):
         """
         # call the lua script from /opt/cgru/plugins/fusion/
         pass
+
+    @classmethod
+    def range_from_shot(cls):
+        """sets the range from the shot
+        """
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        version = fusion_env.get_current_version()
+        fusion_env.set_range_from_shot(version)

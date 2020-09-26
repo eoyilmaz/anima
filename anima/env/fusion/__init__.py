@@ -271,6 +271,40 @@ class Fusion(EnvironmentBase):
         # create the main write node
         self.create_main_saver_node(version)
 
+        # set range from the shot
+        self.set_range_from_shot(version)
+
+        # replace read and write node paths
+        # self.replace_external_paths()
+
+        # create the path before saving
+        try:
+            os.makedirs(version.absolute_path)
+        except OSError:
+            # path already exists OSError
+            pass
+
+        version_full_path = os.path.normpath(version.absolute_full_path)
+
+        self.comp.Lock()
+        self.comp.Save(version_full_path.encode())
+        self.comp.Unlock()
+
+        # create a local copy
+        self.create_local_copy(version)
+
+        rfm = RecentFileManager()
+        rfm.add(self.name, version.absolute_full_path)
+
+        return True
+
+    def set_range_from_shot(self, version):
+        """sets the frame range from the Shot entity if this version is related
+        to one.
+
+        :param version:
+        :return:
+        """
         # check if this is a shot related task
         is_shot_related_task = False
         shot = None
@@ -316,30 +350,6 @@ class Fusion(EnvironmentBase):
                 "Comp.FrameFormat.DepthLock": True,
             })
 
-        # replace read and write node paths
-        # self.replace_external_paths()
-
-        # create the path before saving
-        try:
-            os.makedirs(version.absolute_path)
-        except OSError:
-            # path already exists OSError
-            pass
-
-        version_full_path = os.path.normpath(version.absolute_full_path)
-
-        self.comp.Lock()
-        self.comp.Save(version_full_path.encode())
-        self.comp.Unlock()
-
-        # create a local copy
-        self.create_local_copy(version)
-
-        rfm = RecentFileManager()
-        rfm.add(self.name, version.absolute_full_path)
-
-        return True
-
     def export_as(self, version):
         """the export action for nuke environment
         """
@@ -353,8 +363,8 @@ class Fusion(EnvironmentBase):
             'export_as() is not implemented yet for Fusion'
         )
 
-        # create a local copy
-        self.create_local_copy(version)
+        # # create a local copy
+        # self.create_local_copy(version)
 
     def open(self, version, force=False, representation=None,
              reference_depth=0, skip_update_check=False):
@@ -362,26 +372,26 @@ class Fusion(EnvironmentBase):
         """
         version_full_path = os.path.normpath(version.absolute_full_path)
 
-        # delete all the comps and open new one
-        #comps = self.fusion.GetCompList().values()
-        #for comp_ in comps:
-        #    comp_.Close()
+        # # delete all the comps and open new one
+        # comps = self.fusion.GetCompList().values()
+        # for comp_ in comps:
+        #     comp_.Close()
 
         self.fusion.LoadComp(version_full_path.encode())
 
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
 
-        # set the project_directory
-        #self.project_directory = os.path.dirname(version.absolute_path)
+        # # set the project_directory
+        # self.project_directory = os.path.dirname(version.absolute_path)
 
         # TODO: file paths in different OS'es should be replaced with the current one
         # Check if the file paths are starting with a string matching one of
         # the OS'es project_directory path and replace them with a relative one
         # matching the current OS
 
-        # replace paths
-        #self.replace_external_paths()
+        # # replace paths
+        # self.replace_external_paths()
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
@@ -390,7 +400,7 @@ class Fusion(EnvironmentBase):
     def import_(self, version):
         """the import action for nuke environment
         """
-        #nuke.nodePaste(version.absolute_full_path)
+        # nuke.nodePaste(version.absolute_full_path)
         return True
 
     def get_current_version(self):
@@ -400,7 +410,7 @@ class Fusion(EnvironmentBase):
 
         :return: :class:`~oyProjectManager.models.version.Version`
         """
-        #full_path = self._root.knob('name').value()
+        # full_path = self._root.knob('name').value()
         full_path = os.path.normpath(
             self.comp.GetAttrs()['COMPS_FileName']
         ).replace('\\', '/')
@@ -468,9 +478,9 @@ class Fusion(EnvironmentBase):
     def get_frame_range(self):
         """returns the current frame range
         """
-        #self._root = self.get_root_node()
-        #startFrame = int(self._root.knob('first_frame').value())
-        #endFrame = int(self._root.knob('last_frame').value())
+        # self._root = self.get_root_node()
+        # startFrame = int(self._root.knob('first_frame').value())
+        # endFrame = int(self._root.knob('last_frame').value())
         start_frame = self.comp.GetAttrs()['COMPN_GlobalStart']
         end_frame = self.comp.GetAttrs()['COMPN_GlobalEnd']
         return start_frame, end_frame
@@ -1054,11 +1064,11 @@ class Fusion(EnvironmentBase):
         if maps:
             project_dir = maps.get('Project:', None)
 
-        #if not project_dir:
-        #    # set the map for the project dir
-        #    if self.version:
-        #        project_dir = os.path.dirname(self.version.absolute_path)
-        #        self.project_directory = project_dir
+        # if not project_dir:
+        #     # set the map for the project dir
+        #     if self.version:
+        #         project_dir = os.path.dirname(self.version.absolute_path)
+        #         self.project_directory = project_dir
 
         return project_dir
 
