@@ -12,7 +12,7 @@ os.environ['ANIMA_TEST_SETUP'] = ""
 
 from pymel import core as pm
 
-from anima.env.mayaEnv.render_slicer import RenderSlicer
+from anima.env.mayaEnv.render import RenderSlicer
 
 
 class RenderSlicerTester(unittest.TestCase):
