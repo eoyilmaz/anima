@@ -183,6 +183,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.range_from_shot
         )
 
+        # Delete Recent Comps
+        add_button(
+            'Render Merger',
+            general_tab_vertical_layout,
+            GenericTools.render_merger,
+            tooltip="Creates comp setup to merge renders created with Render Slicer."
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -385,3 +393,11 @@ class GenericTools(object):
         fusion_env = fusion.Fusion()
         version = fusion_env.get_current_version()
         fusion_env.set_range_from_shot(version)
+
+    @classmethod
+    def render_merger(cls):
+        """calls the render merger
+        """
+        from anima.env.fusion import render_merger
+        rm = render_merger.RenderMerger()
+        rm.ui()
