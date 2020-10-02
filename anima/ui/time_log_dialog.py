@@ -9,7 +9,7 @@ from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets, QtGui
 
 
-timing_resolution = 10  # in minutes
+TIMING_RESOLUTION = 10  # in minutes
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -177,7 +177,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         from anima.ui.widgets import TimeEdit
-        self.start_time_edit = TimeEdit(self, resolution=timing_resolution)
+        self.start_time_edit = TimeEdit(self, resolution=TIMING_RESOLUTION)
         self.start_time_edit.setCurrentSection(
             QtWidgets.QDateTimeEdit.MinuteSection
         )
@@ -200,7 +200,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.end_time_label
         )
 
-        self.end_time_edit = TimeEdit(self, resolution=timing_resolution)
+        self.end_time_edit = TimeEdit(self, resolution=TIMING_RESOLUTION)
         self.end_time_edit.setCurrentSection(
             QtWidgets.QDateTimeEdit.MinuteSection
         )
@@ -420,12 +420,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # round the minutes to the resolution
         minute = current_time.minute()
         hour = current_time.hour()
-        minute = int(minute / float(timing_resolution)) * timing_resolution
+        minute = int(minute / float(TIMING_RESOLUTION)) * TIMING_RESOLUTION
 
         current_time = QtCore.QTime(hour, minute)
 
         self.start_time_edit.setTime(current_time)
-        self.end_time_edit.setTime(current_time.addSecs(timing_resolution * 60))
+        self.end_time_edit.setTime(current_time.addSecs(TIMING_RESOLUTION * 60))
 
         self.calendar_widget.resource_id = -1
 
@@ -597,16 +597,16 @@ order by cast("TimeLogs".start as date)
         # end = time.time()
         # print('getting data from sql: %0.3f sec' % (end - start))
 
+        # TODO: Remove this in a later version
         from anima.utils import utc_to_local
         time_shifter = utc_to_local
-        import stalker
-
-        # TODO: Remove this in a later version
         from distutils.version import LooseVersion
+        import stalker
         if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
             def time_shifter(x):
                 return x
 
+        last_end_date = None
         for r in result:
             calendar_day = r[0]
             year = calendar_day.year
@@ -623,14 +623,16 @@ order by cast("TimeLogs".start as date)
                 if daily_logged_hours
                 else u'Total: %i min logged' % daily_logged_minutes
             ]
-            for task_name, start, end in sorted(
-                    zip(r[1], r[2], r[3]), key=lambda x: x[1]):
+
+            for task_name, start, end in sorted(zip(r[1], r[2], r[3]), key=lambda x: x[1]):
                 time_log_tool_tip_text = tool_tip_text_format.format(
                     start=time_shifter(start),
                     end=time_shifter(end),
                     task_name=task_name
                 )
                 tool_tip_text_data.append(time_log_tool_tip_text)
+                # store the last_end_date
+                last_end_date = end
 
             merged_tool_tip = u'\n'.join(tool_tip_text_data)
 
@@ -646,6 +648,14 @@ order by cast("TimeLogs".start as date)
             date = QtCore.QDate(year, month, day)
 
             self.calendar_widget.setDateTextFormat(date, date_format)
+
+        # set the start time in the UI to the last_end_date's time value
+        # so the UI will automatically be set to the start of the next
+        # available slot
+        if last_end_date:
+            last_end_time = QtCore.QTime(last_end_date.hour, last_end_date.minute)
+            self.start_time_edit.setTime(last_end_time)
+            self.end_time_edit.setTime(last_end_time.addSecs(TIMING_RESOLUTION * 60))
 
     def calendar_widget_selection_changed(self):
         """runs when selection changed
@@ -725,7 +735,7 @@ order by cast("TimeLogs".start as date)
         """
         end_time = self.end_time_edit.time()
         if q_time >= end_time:
-            self.end_time_edit.setTime(q_time.addSecs(timing_resolution * 60))
+            self.end_time_edit.setTime(q_time.addSecs(TIMING_RESOLUTION * 60))
         self.update_percentage()
         self.update_info_text()
 
@@ -736,10 +746,10 @@ order by cast("TimeLogs".start as date)
         if q_time <= start_time:
             if q_time.hour() == 0 and q_time.minute() == 0:
                 start_time = q_time
-                end_time = q_time.addSecs(timing_resolution * 60)
+                end_time = q_time.addSecs(TIMING_RESOLUTION * 60)
                 self.end_time_edit.setTime(end_time)
             else:
-                start_time = q_time.addSecs(-timing_resolution * 60)
+                start_time = q_time.addSecs(-TIMING_RESOLUTION * 60)
             self.start_time_edit.setTime(start_time)
 
         self.update_percentage()
