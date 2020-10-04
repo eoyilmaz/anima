@@ -1,10 +1,10 @@
-from PySide2 import QtWidgets
-from PySide2 import QtCore
-from shiboken2 import wrapInstance
+from anima.ui.lib import QtCore, QtWidgets
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 
-import maya.OpenMayaUI as omui
+
+
+
 
 
 
@@ -17,32 +17,20 @@ def UI(app_in=None, executor=None, **kwargs):
       function. It also passes the created app instance to this executor.
 
     """
-    user_dialog=UserDialog()
-    try:
-        user_dialog.close()
-        user.dialog.deleteLater()
-    except:
-        pass
+
 
     return ui_caller(app_in, executor, UserDialog, **kwargs)
     
 
     
-def maya_main_window():
-    """
-    Return the Maya main window widget as a Python object
-    """
-    
-    main_window_ptr=omui.MQtUtil.mainWindow()
-    return wrapInstance(long(main_window_ptr),QtWidgets.QWidget)
     
 
 class UserDialog(QtWidgets.QDialog):
     """
     The User Creation Dialog
     """
-    def __init__(self,parent=maya_main_window()):
-        super(UserDialog,self).__init__(parent)
+    def __init__(self,parent=None):
+        super(UserDialog,self).__init__(parent=parent)
         
         self.setWindowTitle("User Dialog")
         self.setWindowFlags(self.windowFlags()^QtCore.Qt.WindowContextHelpButtonHint)
@@ -53,6 +41,9 @@ class UserDialog(QtWidgets.QDialog):
         self.create_connections()
         
     def create_widgets(self):
+        """
+        Creates widgets
+        """
         
         self.dialog_label=QtWidgets.QLabel()
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n"
@@ -81,6 +72,9 @@ class UserDialog(QtWidgets.QDialog):
        
         
     def create_layouts(self):
+        """
+        Creates layouts
+        """
 
         form_layout=QtWidgets.QFormLayout()
         form_layout.addRow("Name", self.name_line_edit)
@@ -108,60 +102,96 @@ class UserDialog(QtWidgets.QDialog):
         
         
     def create_connections(self):
+        """
+        Creates connections
+        """
         
-        self.ok_button.clicked.connect(self.check_userPass)
+        self.ok_button.clicked.connect(self.check_user_pass)
         self.cancel_button.clicked.connect(self.close)
         
         
-    def check_userPass(self):
+    def check_user_pass(self):
+        """
+        Checks the information entered by the user
+        """
         
         self.user_name=self.name_line_edit.text()
         self.user_login=self.login_line_edit.text()
         self.user_email=self.email_line_edit.text()
         self.user_password=self.password_line_edit.text()
-        
-        if len(self.user_name)<2 or len(self.user_login)<2 or len(self.user_email)<2 or len(self.user_password)<2 :
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Information)
 
-            msg.setText("Please, fill out user information completely!")
-            msg.setWindowTitle("Information Message")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok) 
-            msg.exec_() 
+
+        #Sends a warning message if the entered user information is missing 
+        if len(self.user_name) < 2 or len(self.user_login) < 2 or len(self.user_email) < 2 or len(self.user_password) < 2 :
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Warning",
+                "Please, fill out user information completely!"
+            )
+
             
         else:
-            try:
-                self.create_user()
-            except:
-                pass
-                
-            self.close()
-            msg2 = QtWidgets.QMessageBox()
-            msg2.setIcon(QtWidgets.QMessageBox.Information)
+            self.create_user()
+          
 
-            msg2.setText("User '{0}' successfully created!".format(self.user_login))
-            msg2.setWindowTitle("Information Message")
-            msg2.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            msg2.exec_()
 
-            
+
+                        
    
     def create_user(self):
+        """
+        Creates new user
+        """
 
         from stalker.db.session import DBSession
         from stalker import User
-        me = User(
+
+        new_user = User(
             name="{0}".format(self.user_name),
             login="{0}".format(self.user_login),
             email="{0}".format(self.user_email),
             password="{0}".format(self.user_password)
         )
         
-        # Save the user to database
-        DBSession.save(me)
-        
- 
-        
-        
 
+        #Checks if the user's name and e-mail address are registered in the database.
+        #Sends a warning message to the user if registered.
+
+        if not User.query.filter_by(email=self.user_email).scalar() == None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Warning",
+                "The email address you entered already belongs to an existing user , Please re-enter your e-mail address!"
+            )
+
+        elif not User.query.filter_by(login=self.user_login).scalar() == None:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "Warning",
+                "The user '{0}' already exists, Please enter new username!".format(self.user_login)
+            )
+
+
+        else:
+            try: 
+                # Save the user to database
+                DBSession.save(new_user)
+
+            #Gets the string representation of an exception
+            except BaseException as e:
+                DBSession.rollback()
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error",
+                    str(e) 
+                )
+
+            # now we can give the information message
+            QtWidgets.QMessageBox.information(
+                self,
+                "Success",
+                "User '{0}' successfully created!".format(self.user_login)
+            )
+            # then we can close this dialog
+            self.close() 
         
