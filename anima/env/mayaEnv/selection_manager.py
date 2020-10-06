@@ -51,8 +51,8 @@ class SelectionSet(object):
     """
 
     def __init__(self):
-        self.__storedSelList__ = []
-        self.__selectionSet__ = None
+        self.__stored_selection_list__ = []
+        self.__selection_set__ = None
         self.__name__ = 'SelectionSet#'
 
     @property
@@ -66,12 +66,12 @@ class SelectionSet(object):
         """setter for the self.__name__
         """
         self.__name__ = new_name
-        if self.__selectionSet__:
-            pm.rename(self.__selectionSet__, new_name)
+        if self.__selection_set__:
+            pm.rename(self.__selection_set__, new_name)
 
     def replace(self):
         try:
-            pm.select(self.__storedSelList__, replace=True)
+            pm.select(self.__stored_selection_list__, replace=True)
         except pm.MayaNodeError:
             # nodes should have been deleted
             # remove anything that doesn't exist
@@ -79,91 +79,101 @@ class SelectionSet(object):
 
     def add(self):
         """adds the given list of objects to the set
-
-        :param objectList[]: A list of maya objects
         """
-        pm.select(self.__storedSelList__, add=1)
+        pm.select(self.__stored_selection_list__, add=1)
 
     def subtract(self):
         """
         """
-        pm.select(self.__storedSelList__, d=1)
+        pm.select(self.__stored_selection_list__, d=1)
+
+    def and_(self):
+        """returns the selected and the ones on the selection set
+        """
+        pm.select(set(self.__stored_selection_list__).intersection(pm.ls(sl=1)))
+
+    def or_(self):
+        """returns the selected and the ones on the selection set
+        """
+        pm.select(set(self.__stored_selection_list__).remove(pm.ls(sl=1)))
 
     def save(self):
         """creates a new SelectionSet instance with the stored objects
         """
-        self.__storedSelList__ = pm.ls(sl=1)
-        if self.__storedSelList__:
-            self.__selectionSet__ = pm.sets(
-                self.__storedSelList__,
+        # self.__stored_selection_list__ = pm.ls(sl=1)
+        if self.__stored_selection_list__:
+            self.__selection_set__ = pm.sets(
+                self.__stored_selection_list__,
                 name=self.name
             )
         else:
-            self.__selectionSet__ = pm.sets(name=self.name)
+            self.__selection_set__ = pm.sets(name=self.name)
 
-        if self.__selectionSet__.hasAttr('selectionManagerData'):
+        if self.__selection_set__.hasAttr('selectionManagerData'):
             pass
         else:
-            self.__selectionSet__.addAttr('selectionManagerData', at='compound', nc=1)
+            self.__selection_set__.addAttr('selectionManagerData', at='compound', nc=1)
 
-            self.__selectionSet__.addAttr(
+            self.__selection_set__.addAttr(
                 'version', dt='string', p='selectionManagerData'
             )
-            self.__selectionSet__.selectionManagerData.version.set(
+            self.__selection_set__.selectionManagerData.version.set(
                 __version__, type="string"
             )
 
     def restore(self, selection_set):
         """restores set with the given set
         """
-        self.__selectionSet__ = selection_set
-        self.__storedSelList__ = pm.sets(selection_set, q=True)
+        self.__selection_set__ = selection_set
+        self.__stored_selection_list__ = pm.sets(selection_set, q=True)
         self.__name__ = selection_set.name()
 
     def update(self):
         """updates the storedSelList with the selection from maya
         """
-        self.__storedSelList__ = pm.ls(sl=1)
-        if self.__selectionSet__:
-            pm.delete(self.__selectionSet__)
+        self.__stored_selection_list__ = pm.ls(sl=1)
+        if self.__selection_set__:
+            pm.delete(self.__selection_set__)
             self.save()
 
 
 class SelectionRow(object):
-    """Handles the buttons R/+/-/S/U/D along with a :ckBass:`.SelectionSet`
+    """Handles the buttons R/+/-/&&/|/S/U/D along with a :ckBass:`.SelectionSet`
 
     :param parent:
     """
 
     def __init__(self, parent, selection_set):
-        self.replaceButton = None
-        self.addButton = None
-        self.descriptionField = None
-        self.subtractButton = None
-        self.saveButton = None
-        self.updateButton = None
-        self.deleteButton = None
+        self.replace_button = None
+        self.add_button = None
+        self.and_button = None
+        self.or_button = None
+        self.description_field = None
+        self.subtract_button = None
+        self.save_button = None
+        self.update_button = None
+        self.del_button = None
         self.layout = None
 
         self.parent = parent
 
         self._description = ''
-        self._selectionSet = None
+        self._selection_set = None
         self.selection_set = selection_set
 
     @property
     def selection_set(self):
         """getter for the self._selectionSet
         """
-        return self._selectionSet
+        return self._selection_set
 
     @selection_set.setter
     def selection_set(self, selection_set):
         """setter for the self._selectionSet
         """
-        self._selectionSet = selection_set
+        self._selection_set = selection_set
         if selection_set:
-            self.description = self._selectionSet.name
+            self.description = self._selection_set.name
 
     @property
     def description(self):
@@ -176,8 +186,8 @@ class SelectionRow(object):
         """setter for the self._description
         """
         self._description = desc
-        if self.descriptionField:
-            self.descriptionField.text = desc
+        if self.description_field:
+            self.description_field.text = desc
 
     def _draw(self):
         # create buttons under parent and save them in local variables
@@ -192,76 +202,86 @@ class SelectionRow(object):
             nd=100
         )
         with form_layout:
-            self.replaceButton = pm.button(ann="Replace", l="R", w=17)
-            self.addButton = pm.button(ann="Add", l="+", w=17)
-            self.subtractButton = pm.button(ann="Subtract", l="-", w=17)
-            self.saveButton = pm.button(
+            self.replace_button = pm.button(ann="Replace", l="R", w=17)
+            self.add_button = pm.button(ann="Add", l="+", w=17)
+            self.subtract_button = pm.button(ann="Subtract", l="-", w=17)
+            self.and_button = pm.button(ann="And", l="&&", w=17)
+            self.or_button = pm.button(ann="Or", l="|", w=17)
+            self.save_button = pm.button(
                 ann="Save as quick selection set with the description as the "
                     "name of the set",
                 l="S",
                 w=17
             )
-            self.updateButton = pm.button(
+            self.update_button = pm.button(
                 ann="Updates the list with the current selection",
                 l="U",
                 w=17
             )
-            self.deleteButton = pm.button(
+            self.del_button = pm.button(
                 ann="Deletes this button set",
                 l="D",
                 w=17
             )
-            self.descriptionField = pm.textField(text=self.description, w=204)
+            self.description_field = pm.textField(text=self.description, w=204)
 
         self.description = self.description
 
         self.layout = pm.formLayout(
             form_layout, edit=True,
             attachForm=[
-                (self.replaceButton, "left", 0), (self.replaceButton, "top", 0),
-                (self.replaceButton, "bottom", 0),
-                (self.addButton, "top", 0), (self.addButton, "bottom", 0),
-                (self.subtractButton, "top", 0), (self.subtractButton, "bottom", 0),
-                (self.saveButton, "top", 0), (self.saveButton, "bottom", 0),
-                (self.updateButton, "top", 0), (self.updateButton, "bottom", 0),
-                (self.deleteButton, "top", 0), (self.deleteButton, "bottom", 0),
-                (self.descriptionField, "top", 0), (self.descriptionField, "bottom", 0),
-                (self.descriptionField, "right", 0)
+                (self.replace_button, "left", 0), (self.replace_button, "top", 0),
+                (self.replace_button, "bottom", 0),
+                (self.add_button, "top", 0), (self.add_button, "bottom", 0),
+                (self.subtract_button, "top", 0), (self.subtract_button, "bottom", 0),
+                (self.and_button, "top", 0), (self.and_button, "bottom", 0),
+                (self.or_button, "top", 0), (self.or_button, "bottom", 0),
+                (self.save_button, "top", 0), (self.save_button, "bottom", 0),
+                (self.update_button, "top", 0), (self.update_button, "bottom", 0),
+                (self.del_button, "top", 0), (self.del_button, "bottom", 0),
+                (self.description_field, "top", 0), (self.description_field, "bottom", 0),
+                (self.description_field, "right", 0)
             ],
             attachControl=[
-                (self.addButton, "left", 0, self.replaceButton),
-                (self.subtractButton, "left", 0, self.addButton),
-                (self.saveButton, "left", 0, self.subtractButton),
-                (self.updateButton, "left", 0, self.saveButton),
-                (self.deleteButton, "left", 0, self.updateButton),
-                (self.descriptionField, "left", 0, self.deleteButton)
+                (self.add_button, "left", 0, self.replace_button),
+                (self.subtract_button, "left", 0, self.add_button),
+                (self.and_button, "left", 0, self.subtract_button),
+                (self.or_button, "left", 0, self.and_button),
+                (self.save_button, "left", 0, self.or_button),
+                (self.update_button, "left", 0, self.save_button),
+                (self.del_button, "left", 0, self.update_button),
+                (self.description_field, "left", 0, self.del_button)
             ],
             attachPosition=[
-                (self.replaceButton, "right", 0, 5),
-                (self.addButton, "right", 0, 10),
-                (self.subtractButton, "right", 0, 15),
-                (self.saveButton, "right", 0, 20),
-                (self.updateButton, "right", 0, 25),
-                (self.deleteButton, "right", 0, 30)
+                (self.replace_button, "right", 0, 5),
+                (self.add_button, "right", 0, 10),
+                (self.subtract_button, "right", 0, 15),
+                (self.add_button, "right", 0, 10),
+                (self.or_button, "right", 0, 10),
+                (self.save_button, "right", 0, 20),
+                (self.update_button, "right", 0, 25),
+                (self.del_button, "right", 0, 30)
             ]
         )
 
-        self.replaceButton.setCommand(pm.Callback(self.selection_set.replace))
-        self.addButton.setCommand(pm.Callback(self.selection_set.add))
-        self.subtractButton.setCommand(pm.Callback(self.selection_set.subtract))
-        self.saveButton.setCommand(pm.Callback(self.save_button))
-        self.updateButton.setCommand(pm.Callback(self.selection_set.update))
-        self.deleteButton.setCommand(pm.Callback(self.delete_button))
+        self.replace_button.setCommand(pm.Callback(self.selection_set.replace))
+        self.add_button.setCommand(pm.Callback(self.selection_set.add))
+        self.subtract_button.setCommand(pm.Callback(self.selection_set.subtract))
+        self.and_button.setCommand(pm.Callback(self.selection_set.and_))
+        self.or_button.setCommand(pm.Callback(self.selection_set.or_))
+        self.save_button.setCommand(pm.Callback(self.save_button_callback))
+        self.update_button.setCommand(pm.Callback(self.selection_set.update))
+        self.del_button.setCommand(pm.Callback(self.delete_button_callback))
 
-    def save_button(self):
+    def save_button_callback(self):
         self.selection_set.__name__ = pm.textField(
-            self.descriptionField,
+            self.description_field,
             q=True,
             tx=True
         )
         self.selection_set.save()
 
-    def delete_button(self):
+    def delete_button_callback(self):
         """delete rows
         """
         pm.deleteUI(self.layout, layout=True)
@@ -275,9 +295,9 @@ class SelectionRowFactory(object):
     def create_row(cls, parent):
         """creates a selection_set and a row
         """
-        selectionSet = SelectionSet()
-        selectionSet.update()
-        row = SelectionRow(parent, selectionSet)
+        selection_set = SelectionSet()
+        selection_set.update()
+        row = SelectionRow(parent, selection_set)
         return row
 
     @classmethod
