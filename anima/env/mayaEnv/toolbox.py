@@ -524,6 +524,14 @@ def UI():
             )
 
             pm.button(
+                'unload_selected_references_button',
+                l='Unload Selected References',
+                c=repeated_callback(Reference.unload_selected_references),
+                ann='Unloads the highest references that is related with the selected objects',
+                bgc=color.color
+            )
+
+            pm.button(
                 'unload_unselected_references_button',
                 l='Unload UnSelected References',
                 c=repeated_callback(Reference.unload_unselected_references),
@@ -531,6 +539,17 @@ def UI():
                     'selected objects',
                 bgc=color.color
             )
+
+            color.change()
+            pm.button(
+                'remove_selected_references_button',
+                l='Remove Selected References',
+                c=repeated_callback(Reference.remove_selected_references),
+                ann='Removes the highest references that is related with the selected objects',
+                bgc=color.color
+            )
+
+
 
             color.change()
             pm.text(l='===== Representation Tools =====')

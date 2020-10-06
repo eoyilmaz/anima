@@ -488,6 +488,76 @@ class Reference(object):
                     )
 
     @classmethod
+    def unload_selected_references(cls):
+        """unloads the highest parent references that is related to the selected objects
+        """
+        refs_to_unload = []
+
+        # store selected references
+        for node in pm.ls(sl=1):
+            ref = node.referenceFile()
+
+            if not ref:
+                # not a reference, skip
+                continue
+
+            # get the highest parent ref
+            parent_ref = ref.parent()
+
+            i = 0
+            while parent_ref and i < 100:
+                ref = parent_ref
+                parent_ref = ref.parent()
+                i += 1
+
+            if ref not in refs_to_unload:
+                refs_to_unload.append(ref)
+
+        for ref in refs_to_unload:
+            ref.unload()
+
+    @classmethod
+    def remove_selected_references(cls):
+        """removes the highest parent references that is related to the selected objects
+        """
+        refs_to_remove = []
+
+        # store selected references
+        for node in pm.ls(sl=1):
+            ref = node.referenceFile()
+
+            if not ref:
+                # not a reference, skip
+                continue
+
+            # get the highest parent ref
+            parent_ref = ref.parent()
+
+            i = 0
+            while parent_ref and i < 100:
+                ref = parent_ref
+                parent_ref = ref.parent()
+                i += 1
+
+            if ref not in refs_to_remove:
+                refs_to_remove.append(ref)
+
+        response = pm.confirmDialog(
+            title='Remove Selected References?',
+            message="Remove selected references\n\n%s" % "\n".join(map(lambda x: str(x), refs_to_remove)),
+            button=['Yes', 'No'],
+            defaultButton='No',
+            cancelButton='No',
+            dismissString='No'
+        )
+
+        if response == 'No':
+            return
+
+        for ref in refs_to_remove:
+            ref.remove()
+
+    @classmethod
     def unload_unselected_references(cls):
         """unloads the references that is not related to the selected objects
         """
