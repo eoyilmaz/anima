@@ -262,14 +262,6 @@ def UI():
             )
 
             pm.button(
-                'nsDelete_button',
-                l="nsDelete",
-                c=repeated_callback(General.namespace_deleter),
-                ann=General.namespace_deleter.__doc__,
-                bgc=color.color
-            )
-
-            pm.button(
                 'removePastedFromNames_button',
                 l="remove \"pasted_\" from node names",
                 c=repeated_callback(General.remove_pasted),
@@ -415,6 +407,15 @@ def UI():
         with reference_columnLayout:
             color.reset()
             pm.text(l='===== Reference Tools =====')
+            pm.button(
+                'nsDelete_button',
+                l="nsDelete",
+                c=repeated_callback(General.namespace_deleter),
+                ann=General.namespace_deleter.__doc__,
+                bgc=color.color
+            )
+
+            color.change()
             pm.button(
                 'duplicate_selected_reference_button',
                 l='Duplicate Selected Reference',
