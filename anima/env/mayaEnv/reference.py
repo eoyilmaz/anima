@@ -387,71 +387,13 @@ class Reference(object):
     def archive_current_scene(cls):
         """archives the current scene
         """
-        # before doing anything ask it
-        response = pm.confirmDialog(
-            title='Do Archive?',
-            message='This will create a ZIP file containing\n'
-                    'the current scene and all its references\n'
-                    '\n'
-                    'Is that OK?',
-            button=['Yes', 'No'],
-            defaultButton='No',
-            cancelButton='No',
-            dismissString='No'
-        )
-        if response == 'No':
-            return
-
-        import os
-        import shutil
-        import anima
         from anima.env.mayaEnv import Maya
         from anima.env.mayaEnv.archive import Archiver
+        from anima.utils.archive import archive_current_scene
         m_env = Maya()
         version = m_env.get_current_version()
-        if version:
-            path = version.absolute_full_path
-            arch = Archiver()
-            task = version.task
-            if False:
-                from stalker import Version, Task
-                assert(isinstance(version, Version))
-                assert(isinstance(task, Task))
-            # project_name = version.nice_name
-            project_name = os.path.splitext(
-                os.path.basename(
-                    version.absolute_full_path
-                )
-            )[0]
-            project_path = arch.flatten(path, project_name=project_name)
-
-            # append link file
-            stalker_link_file_path = \
-                os.path.join(project_path, 'scenes/stalker_links.txt')
-            version_upload_link = '%s/tasks/%s/versions/list' % (
-                anima.defaults.stalker_server_external_address,
-                task.id
-            )
-            request_review_link = '%s/tasks/%s/view' % (
-                anima.defaults.stalker_server_external_address,
-                task.id
-            )
-            with open(stalker_link_file_path, 'w+') as f:
-                f.write("Version Upload Link: %s\n"
-                        "Request Review Link: %s\n" % (version_upload_link,
-                                                       request_review_link))
-            zip_path = arch.archive(project_path)
-            new_zip_path = os.path.join(
-                version.absolute_path,
-                os.path.basename(zip_path)
-            )
-
-            # move the zip right beside the original version file
-            shutil.move(zip_path, new_zip_path)
-
-            # open the zip file in browser
-            from anima.utils import open_browser_in_location
-            open_browser_in_location(new_zip_path)
+        archiver = Archiver()
+        archive_current_scene(version, archiver)
 
     @classmethod
     def bind_to_original(cls):
