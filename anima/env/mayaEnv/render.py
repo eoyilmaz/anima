@@ -1017,11 +1017,12 @@ class Render(object):
         source_shape = source.getShape()
         target_shape = target.getShape()
 
-        if source_shape and target_shape:
+        if source_shape and not isinstance(source_shape, pm.nt.NurbsCurve) \
+           and target_shape and not isinstance(target_shape, pm.nt.NurbsCurve):
             # do a direct assignment from source to target
-            #shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
-            #pm.sets(shading_engines[0], fe=target)
-            #pm.select(selection)
+            # shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
+            # pm.sets(shading_engines[0], fe=target)
+            # pm.select(selection)
             lut = {
                 'match': [(source_shape, target_shape)],
                 'no_match': []
