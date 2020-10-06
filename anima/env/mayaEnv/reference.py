@@ -629,6 +629,9 @@ class Reference(object):
             references = []
             for node in selection:
                 ref = node.referenceFile()
+                # get the topmost parent
+                ref = ref.topmost_parent()
+
                 if ref is not None and ref not in references:
                     references.append(ref)
 

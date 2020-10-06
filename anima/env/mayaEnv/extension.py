@@ -241,6 +241,23 @@ class FileReferenceExtension(object):
         m = Maya()
         return m.get_version_from_full_path(self.path)
 
+    @extends(FileReference)
+    @property
+    def topmost_parent(self):
+        """returns the highest parent reference, the root reference.
+        """
+        # get the topmost parent ref
+        ref = self
+        parent_ref = ref.parent()
+
+        i = 0
+        while parent_ref and i < 100:  # for safety limit it for 100 for now
+            ref = parent_ref
+            parent_ref = ref.parent()
+            i += 1
+
+        return ref
+
 
 class SequenceManagerExtension(object):
     """Extension to the pm.nodetypes.SequenceManager class
