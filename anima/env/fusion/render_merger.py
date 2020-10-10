@@ -48,14 +48,16 @@ class RenderMerger(object):
                     2: 'Slider',
                     'Min': 1,
                     'Max': 10,
-                    'Default': 5
+                    'Default': 5,
+                    'Integer': True,
                 },
                 3: {
                     1: 'Slice In Height',
                     2: 'Slider',
                     'Min': 1,
                     'Max': 10,
-                    'Default': 5
+                    'Default': 5,
+                    'Integer': True,
                 }
             }
         )
