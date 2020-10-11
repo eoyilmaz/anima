@@ -1666,7 +1666,7 @@ def check_legacy_render_layers(progress_controller=None):
 
         progress_controller.maximum = len(all_render_layers)
         for render_layer in all_render_layers:
-            if render_layer.name()[-18:] != 'defaultRenderLayer' \
+            if 'defaultRenderLayer' not in render_layer.name() \
                and render_layer not in render_setup_layers:
                 legacy_render_layers.append(render_layer)
             progress_controller.increment()
