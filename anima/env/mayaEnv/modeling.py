@@ -522,3 +522,20 @@ class Modeling(object):
                 material = conn[0]
                 # now we can set the resolution
                 material.resolution.set(res)
+
+    @classmethod
+    def bbox_from_selection(cls):
+        """creates the bbox of the selected objects as a real polyCube
+        """
+        bbox = pm.dt.BoundingBox()
+        for node in pm.selected():
+            bbox2 = node.boundingBox()
+            bbox.expand(bbox2.min())
+            bbox.expand(bbox2.max())
+        cube_transform, cube_shape = pm.polyCube(
+            width=bbox.width(),
+            height=bbox.height(),
+            depth=bbox.depth(),
+        )
+        cube_transform.t.set(bbox.center())
+

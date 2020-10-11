@@ -934,6 +934,13 @@ def UI():
                       ann="Set manipulator to the face",
                       bgc=color.color)
 
+            color.change()
+            pm.button('create_bbox_from_selection_button',
+                      l="Create BBOX from selection",
+                      c=repeated_callback(Modeling.bbox_from_selection),
+                      ann=Modeling.bbox_from_selection.__doc__,
+                      bgc=color.color)
+
         # store commands
         __commands__.extend(modeling_column_layout.children())
 
