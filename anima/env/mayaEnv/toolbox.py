@@ -634,6 +634,15 @@ def UI():
                 bgc=color.color
             )
 
+            color.change()
+            pm.button(
+                'update_alembic_references_button',
+                l='Update Alembic References',
+                c=repeated_callback(auxiliary.update_alembic_references),
+                ann=auxiliary.update_alembic_references.__doc__,
+                bgc=color.color
+            )
+
         # store commands
         __commands__.extend(reference_columnLayout.children())
 
