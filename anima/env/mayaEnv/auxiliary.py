@@ -2335,6 +2335,70 @@ def export_alembic_from_cache_node(handles=0, step=1):
     export_alembic_of_nodes(cacheable_nodes, handles, step)
 
 
+def extract_version_from_path(path):
+    """extracts version number ("_v%03d") as an integer from the given path
+
+    :param path: The path to extract the version number from
+    """
+    import re
+    version_matcher = re.compile("([\w\d\/]+_v)([0-9]+)([\w\d\._]+)")
+    m = re.match(version_matcher, path)
+    if m:
+        return int(m.group(2))
+
+
+def update_alembic_references():
+    """Updates referenced alembic files in the current scene
+    """
+    # TODO: This tool needs improvement
+    # There is a need for a UI similar to the ``VersionUpdater``
+    # It is even possible to directly use that UI
+    # So, this tool need to return the updatable references coupled with the
+    # possible new path to update to
+    # the user should select what to update
+    # and then another tool should update it
+    #
+    # But, this is exactly what VersionUpdater does.
+
+    import glob
+    import re
+    version_matcher = re.compile("([\w\d\/_]+)(v[0-9]+)([\w\d\._]+)")
+
+    updated_path_info = []
+    for ref in pm.listReferences():
+        path = ref.path
+        if not path.endswith('.abc'):
+            continue
+
+        m = re.match(version_matcher, path)
+        if not m:
+            continue
+
+        prefix = m.group(1)
+
+        # glob the files
+        glob_pattern = "%s*" % prefix
+        # The versions will always be sorted properly
+        # we don't need to check if the last path in the is the latest one
+        all_abc_files = sorted(glob.glob(glob_pattern))
+        # there may be different takes,
+        # but, we don't need check for that too, because we are globbing for a path
+        # that includes the ``take_name``
+
+        last_abc_file = all_abc_files[-1]
+        if last_abc_file != path:
+            # replace it
+            updated_path_info.append((path, last_abc_file))
+            ref.replaceWith(last_abc_file)
+
+    if updated_path_info:
+        print("###################")
+        print("Updated:")
+
+    for old_ref_path, new_ref_path in updated_path_info:
+        print("%s -> %s" % (old_ref_path, new_ref_path))
+
+
 # noinspection PyStatementEffect
 class BarnDoorSimulator(object):
     """A aiBarnDoor simulator
