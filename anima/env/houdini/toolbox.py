@@ -429,8 +429,7 @@ class GenericTools(object):
         # set color and alpha
         attr_wrangle = focus_plane_node.createNode("attribwrangle", "set_color_and_alpha")
         attr_wrangle.setInput(0, grid_node)
-        attr_wrangle.parm("snippet").set("""v@Cd = {1, 0, 0};
-v@Alpha = {0.5, 0.5, 0.5};""")
+        attr_wrangle.parm("snippet").set("v@Cd = {1, 0, 0};\nv@Alpha = {0.5, 0.5, 0.5};")
 
         # Create Display node
         display_null = focus_plane_node.createNode("null", "DISPLAY")
@@ -456,3 +455,16 @@ v@Alpha = {0.5, 0.5, 0.5};""")
         nodegraphalign.alignConnected(
             network_editor, camera, None, "down"
         )
+
+    @classmethod
+    def archive_current_scene(cls):
+        """archives the current scene
+        """
+        from anima.env import houdini
+        from anima.env.houdini.archive import Archiver
+        from anima.utils.archive import archive_current_scene
+        h_env = houdini.Houdini()
+        version = h_env.get_current_version()
+        archiver = Archiver()
+
+        archive_current_scene(version, archiver)
