@@ -62,14 +62,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Open Version',
             general_tab_vertical_layout,
-            GenericTools.version_dialog,
+            GeneralTools.version_dialog,
             callback_kwargs={"mode": 1}
         )
 
         add_button(
             'Save As Version',
             general_tab_vertical_layout,
-            GenericTools.version_dialog,
+            GeneralTools.version_dialog,
             callback_kwargs={"mode": 0}
         )
 
@@ -77,28 +77,28 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Browse $HIP',
             general_tab_vertical_layout,
-            GenericTools.browse_hip
+            GeneralTools.browse_hip
         )
 
         # Copy Path
         add_button(
             'Copy Node Path',
             general_tab_vertical_layout,
-            GenericTools.copy_node_path
+            GeneralTools.copy_node_path
         )
 
         # Range from shot
         add_button(
             'Range From Shot',
             general_tab_vertical_layout,
-            GenericTools.range_from_shot
+            GeneralTools.range_from_shot
         )
 
         # Update render settings
         add_button(
             'Update Render Settings',
             general_tab_vertical_layout,
-            GenericTools.update_render_settings
+            GeneralTools.update_render_settings
         )
 
         def export_rsproxy_data_as_json_callback():
@@ -106,7 +106,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             """
             import hou
             try:
-                GenericTools.export_rsproxy_data_as_json()
+                GeneralTools.export_rsproxy_data_as_json()
             except (BaseException, hou.OperationFailed) as e:
                 QtWidgets.QMessageBox.critical(
                     main_tab_widget,
@@ -146,7 +146,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         def search_and_replace_callback():
             search_str = search_field.text()
             replace_str = replace_field.text()
-            GenericTools.rename_selected_nodes(
+            GeneralTools.rename_selected_nodes(
                 search_str,
                 replace_str,
                 replace_in_child_nodes_check_box.isChecked()
@@ -162,14 +162,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         add_button(
             'Import Shaders From Maya',
             general_tab_vertical_layout,
-            GenericTools.import_shaders_from_maya
+            GeneralTools.import_shaders_from_maya
         )
 
         # Create Focus Plane
         add_button(
             'Creat Focus Plane',
             general_tab_vertical_layout,
-            GenericTools.create_focus_plane
+            GeneralTools.create_focus_plane
         )
 
         # -------------------------------------------------------------------
@@ -211,8 +211,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         crowd_tab_vertical_layout.addStretch()
 
 
-class GenericTools(object):
-    """Generic Tools
+class GeneralTools(object):
+    """General Tools
     """
 
     @classmethod
