@@ -1043,7 +1043,7 @@ def perform_playblast(action):
         # do playblaster
         pb = Playblaster()
         extra_playblast_options = {
-            'viewer': 1
+            'viewer': 0
         }
 
         # ask playblast format
@@ -1166,7 +1166,7 @@ def perform_playblast_shot(shot_name):
         return
 
     extra_playblast_options = {
-        'viewer': 1,
+        'viewer': 0,
         'percent': resolution
     }
 
@@ -1726,7 +1726,7 @@ class Playblaster(object):
         for output in result:
             # convert each output to a mp4 if the output is a frame
             # sequence
-            if '#' in output:
+            if output and '#' in output:
                 # convert to mp4
 
                 # add start_number option
