@@ -313,7 +313,7 @@ class Render(object):
                 # *********************************************
                 # Metalness
                 metalness_file_path = glob.glob("%s/%s_Metalness*" % (texture_path, material_name))
-                if metalness_file_path:
+                if metalness_file_Refactored the ``Archiver`` class and generated a base class called ``ArchiverBase``. This new class will be used to implement similar functionality in other environmentspath:
                     metalness_file_path = metalness_file_path[0]
 
                     metalness_file = pm.shadingNode("file", asTexture=1)
@@ -328,7 +328,6 @@ class Render(object):
                 if normal_file_path:
                     normal_file_path = normal_file_path[0]
 
-                    # normal_ai_bump2d = pm.nt.AiBump2d()
                     normal_ai_normalmap = pm.shadingNode("aiNormalMap", asUtility=1)
                     normal_file = pm.shadingNode("file", asTexture=1)
 
@@ -439,17 +438,19 @@ class Render(object):
                 if normal_file_path:
                     normal_file_path = normal_file_path[0]
 
-                    rs_bump_map = \
-                        pm.shadingNode("RedshiftBumpMap", asUtility=1)
-                    # set to tangent-space normals
-                    rs_bump_map.inputType.set(1)
-                    normal_file = pm.shadingNode("file", asTexture=1)
+                    # Redshift BumpMap doesn't work properly with Substance normals
+                    # rs_normal_map = pm.shadingNode("RedshiftBumpMap", asUtility=1)
+                    rs_normal_map = pm.shadingNode("RedshiftNormalMap", asUtility=1)
+                    # # set to tangent-space normals
+                    # rs_normal_map.inputType.set(1)
+                    # normal_file = pm.shadingNode("file", asTexture=1)
+                    # normal_file.fileTextureName.set(normal_file_path)
+                    # normal_file.colorSpace.set('Raw')
+                    # normal_file.outColor >> rs_normal_map.input
+                    rs_normal_map.tex0.set(normal_file_path)
 
-                    normal_file.fileTextureName.set(normal_file_path)
-                    normal_file.colorSpace.set('Raw')
-                    normal_file.outColor >> rs_bump_map.input
-                    rs_bump_map.out >> material.bump_input
-                    rs_bump_map.scale.set(1)
+                    rs_normal_map.outDisplacementVector >> material.bump_input
+                    rs_normal_map.scale.set(1)
 
                 # *********************************************
                 # Roughness
