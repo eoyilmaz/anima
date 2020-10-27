@@ -313,7 +313,7 @@ class Render(object):
                 # *********************************************
                 # Metalness
                 metalness_file_path = glob.glob("%s/%s_Metalness*" % (texture_path, material_name))
-                if metalness_file_Refactored the ``Archiver`` class and generated a base class called ``ArchiverBase``. This new class will be used to implement similar functionality in other environmentspath:
+                if metalness_file_path:
                     metalness_file_path = metalness_file_path[0]
 
                     metalness_file = pm.shadingNode("file", asTexture=1)
@@ -1195,6 +1195,36 @@ class Render(object):
                     except RuntimeError as e:
                         # there is some connections
                         print(str(e))
+
+    @classmethod
+    def disable_subdiv(cls, node):
+        """Disables the subdiv on the given nodes
+
+        :param node:
+        :return:
+        """
+        if isinstance(node, pm.nt.Transform):
+            shapes = node.getShapes()
+        else:
+            shapes = [node]
+
+        for shape in shapes:
+            try:
+                shape.aiSubdivType.set(0)
+            except AttributeError:
+                pass
+
+            try:
+                shape.rsEnableSubdivision.set(0)
+            except AttributeError:
+                pass
+
+    @classmethod
+    def disable_subdiv_on_selected(cls):
+        """disables subdiv on selected nodes
+        """
+        for node in pm.ls(sl=1):
+            cls.disable_subdiv(node)
 
     @classmethod
     def enable_subdiv_on_selected(cls, fixed_tes=False, max_subdiv=3):

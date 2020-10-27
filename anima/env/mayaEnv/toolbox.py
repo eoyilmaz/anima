@@ -1560,6 +1560,14 @@ def UI():
 
                 pm.intField('fixed_tess_int_field', min=0, v=1)
 
+            pm.button(
+                'disable_subdiv_on_selected_objects_button',
+                l='Disable Subdiv',
+                c=repeated_callback(Render.disable_subdiv_on_selected),
+                ann=Render.disable_subdiv.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.button(
                 'export_shader_data_button',
