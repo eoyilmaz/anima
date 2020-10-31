@@ -70,6 +70,11 @@ class Houdini(EnvironmentBase):
             # dirs exist
             pass
 
+        # Go to the root take before doing anything
+        if hou.takes.currentTake() != hou.takes.rootTake():
+            root_take = hou.takes.rootTake()
+            hou.takes.setCurrentTake(root_take)
+
         # houdini uses / instead of \ under windows
         # lets fix it
 
