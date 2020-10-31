@@ -1472,7 +1472,6 @@ def check_multiple_connections_for_textures(progress_controller=None):
 
     # get all the texture nodes
     from anima.env.mayaEnv import repr_tools
-    reload(repr_tools)
 
     # try to find the material it is been used by walking up the connections
     nodes_with_multiple_materials = []
@@ -2342,7 +2341,6 @@ def generate_thumbnail(progress_controller=None):
         return
 
     from anima.env.mayaEnv import auxiliary
-    reload(auxiliary)
     auxiliary.generate_thumbnail()
 
 
@@ -2427,7 +2425,7 @@ def update_shot_range(progress_controller=None):
     progress_controller.complete()
 
 
-@publisher(['animation', 'pose', 'mocap'], publisher_type=POST_PUBLISHER_TYPE)
+@publisher(['animation', 'pose', 'mocap', 'camera'], publisher_type=POST_PUBLISHER_TYPE)
 def cache_animations(progress_controller=None):
     """Cache animations
     """
@@ -2445,7 +2443,6 @@ def cache_animations(progress_controller=None):
     #toolbox.Animation.bake_all_constraints()
     #progress_controller.increment()
 
-    reload(auxiliary)
     auxiliary.export_alembic_from_cache_node(handles=1)
     progress_controller.increment()
 
@@ -2468,9 +2465,6 @@ def generate_playblast(progress_controller=None):
 
     import anima
     from anima import utils
-    reload(anima)
-    reload(utils)
-    reload(auxiliary)
 
     # before doing a playblast set all shot handles to 48
     shots = pm.ls(type='shot')
