@@ -1436,6 +1436,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             'audio': 'filename',
             'AlembicNode': 'abc_File',
             'gpuCache': 'cacheFileName',
+            'RedshiftNormalMap': 'tex0',
         }
 
         for node_type in types_and_attrs.keys():
