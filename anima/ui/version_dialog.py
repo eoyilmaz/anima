@@ -215,8 +215,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout_1.setContentsMargins(0, 0, 0, 0)
 
         # ------------------------------------------------
-        # Login Information
+        # Switch Mode Button
         self.horizontal_layout_11 = QtWidgets.QHBoxLayout()
+        self.switch_mode_button = QtWidgets.QPushButton(self.main_widget)
+        self.horizontal_layout_11.addWidget(self.switch_mode_button)
+
+        # ------------------------------------------------
+        # Login Information
         self.horizontal_layout_11.setContentsMargins(0, 0, 0, 0)
         spacer_item = QtWidgets.QSpacerItem(
             40, 20,
@@ -762,8 +767,28 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.mode == SAVE_AS_MODE:  # Save As Mode
             self.previous_version_controls_widget.setVisible(False)
             self.previous_version_secondary_controls_widget.setVisible(False)
+            self.new_version_controls_widget.setVisible(True)
+            self.switch_mode_button.setText("Switch to Open Mode")
         elif self.mode == OPEN_MODE:  # Open Mode
+            self.previous_version_controls_widget.setVisible(True)
+            self.previous_version_secondary_controls_widget.setVisible(True)
             self.new_version_controls_widget.setVisible(False)
+            self.switch_mode_button.setText("Switch to Save As Mode")
+        elif self.mode == SAVE_AS_AND_OPEN_MODE:
+            self.previous_version_controls_widget.setVisible(True)
+            self.previous_version_secondary_controls_widget.setVisible(True)
+            self.new_version_controls_widget.setVisible(True)
+
+            # no mode switching in this mode
+            self.switch_mode_button.setVisible(False)
+
+    def switch_mode(self):
+        """switches mode between Open and Save As
+        """
+        if self.mode == SAVE_AS_MODE:
+            self.set_mode(OPEN_MODE)
+        elif self.mode == OPEN_MODE:
+            self.set_mode(SAVE_AS_MODE)
 
     def show(self):
         """overridden show method
@@ -790,6 +815,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.close_push_button,
             QtCore.SIGNAL("clicked()"),
             self.close
+        )
+
+        # switch mode button
+        QtCore.QObject.connect(
+            self.switch_mode_button,
+            QtCore.SIGNAL("clicked()"),
+            self.switch_mode
         )
 
         # logout button
