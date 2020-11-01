@@ -40,6 +40,15 @@ VersionNT = namedtuple(
     ]
 )
 
+# Mode is now defining the UI mode as which functionality it gives
+# Mode 0: Save As
+# Mode 1: Open
+# Mode 2: Both Save As and Open. This is the default and this is the
+#         legacy mode now, which will be deprecated in later versions.
+SAVE_AS_MODE = 0
+OPEN_MODE = 1
+SAVE_AS_AND_OPEN_MODE = 2
+
 
 # class RepresentationMessageBox(QtGui.QDialog, AnimaDialogBase):
 #     """A message box variant
@@ -125,18 +134,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
       lets you choose one Version.
     """
 
-    def __init__(self, environment=None, parent=None, mode=2):
+    def __init__(self, environment=None, parent=None, mode=SAVE_AS_AND_OPEN_MODE):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
         self.environment = environment
 
-        # Mode is now defining the UI mode as which functionality it gives
-        # Mode 0: Save As
-        # Mode 1: Open
-        # Mode 2: Both Save As and Open. This is the default and this is the
-        #         legacy mode now, which will be deprecated in later versions.
-
-        self.mode = mode
+        self.mode = None
+        self.window_title = ""
         self.chosen_version = None
         self.environment_name_format = "%n (%e)"
         # create the project attribute in projects_combo_box
@@ -151,6 +155,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # setup defaults
         self._set_defaults()
 
+        # set mode
+        self.set_mode(mode)
+
         # center window
         self.center_window()
 
@@ -159,23 +166,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_ui(self):
         """sets the UI up
         """
-        import anima
-        window_title = "Anima Pipeline v%s " % anima.__version__
-
-        if self.environment:
-            window_title = "%s | %s" % (window_title, self.environment.name)
-        else:
-            window_title = "%s | No Environment" % window_title
-
-        if self.mode == 0:
-            window_title = "%s | Version: Save-As Mode" % window_title
-        elif self.mode == 1:
-            window_title = "%s | Version: Open Mode" % window_title
-        elif self.mode == 2:
-            window_title = "%s | Version: Save As & Open Mode" % window_title
-
-        # change the window title
-        self.setWindowTitle(window_title)
+        self.update_window_title()
 
         self.resize(1500, 850)
 
@@ -738,6 +729,41 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     # def close(self):
     #     logger.debug("closing the ui")
     #     QtWidgets.QDialog.close(self)
+
+    def update_window_title(self):
+        """updates the window title depending on the environment and mode
+        """
+        import anima
+        window_title = "Anima Pipeline v%s " % anima.__version__
+
+        if self.environment:
+            window_title = "%s | %s" % (window_title, self.environment.name)
+        else:
+            window_title = "%s | No Environment" % window_title
+
+        if self.mode == SAVE_AS_MODE:
+            window_title = "%s | Version: Save-As Mode" % window_title
+        elif self.mode == OPEN_MODE:
+            window_title = "%s | Version: Open Mode" % window_title
+        elif self.mode == SAVE_AS_AND_OPEN_MODE:
+            window_title = "%s | Version: Save As & Open Mode" % window_title
+
+        # change the window title
+        self.setWindowTitle(window_title)
+
+    def set_mode(self, mode):
+        """sets the UI mode
+
+        :param mode:
+        :return:
+        """
+        self.mode = mode
+        self.update_window_title()
+        if self.mode == SAVE_AS_MODE:  # Save As Mode
+            self.previous_version_controls_widget.setVisible(False)
+            self.previous_version_secondary_controls_widget.setVisible(False)
+        elif self.mode == OPEN_MODE:  # Open Mode
+            self.new_version_controls_widget.setVisible(False)
 
     def show(self):
         """overridden show method
@@ -1490,24 +1516,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self._show_previous_versions_tableWidget_context_menu
         )
 
-        # if self.mode:
-        #     # Read-Only mode, Choose the version
-        #     # add double clicking to previous_versions_table_widget
-        #     QtCore.QObject.connect(
-        #         self.previous_versions_table_widget,
-        #         QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-        #         self.choose_version_push_button_clicked
-        #     )
-        # else:
-
         # Open the version
         # add double clicking to previous_versions_table_widget
-        if self.mode in [1, 2]:  # Only in Open and Open & Save Modes
-            QtCore.QObject.connect(
-                self.previous_versions_table_widget,
-                QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-                self.open_push_button_clicked
-            )
+        QtCore.QObject.connect(
+            self.previous_versions_table_widget,
+            QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+            self.open_push_button_clicked
+        )
 
         # *********************************************************************
         # set the completer for the search_task_lineEdit
@@ -1561,12 +1576,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.import_push_button.setVisible(False)
         else:
             self.environment_combo_box.setVisible(False)
-
-        if self.mode == 0:  # Save As Mode
-            self.previous_version_controls_widget.setVisible(False)
-            self.previous_version_secondary_controls_widget.setVisible(False)
-        elif self.mode == 1:  # Open Mode
-            self.new_version_controls_widget.setVisible(False)
 
         # update description field
         self.description_text_edit.setText("")
@@ -2047,6 +2056,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def open_push_button_clicked(self):
         """runs when the open_pushButton clicked
         """
+        if self.mode == SAVE_AS_MODE:
+            return
+
         # get the new version
         old_version = self.previous_versions_table_widget.current_version
         skip_update_check = not self.check_updates_check_box.isChecked()
