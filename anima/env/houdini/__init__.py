@@ -101,7 +101,6 @@ class Houdini(EnvironmentBase):
             # set to project fps
             self.set_fps(version.task.project.fps)
 
-
         # houdini accepts only strings as file name, no unicode support as I
         # see
         hou.hipFile.save(file_name=str(version.absolute_full_path))
@@ -374,7 +373,7 @@ class Houdini(EnvironmentBase):
             image_format = shot.image_format
 
         shot_node.parm("shot").set(version.nice_name)
-        #shot_node.parm("name_shot_node").pressButton()
+        # shot_node.parm("name_shot_node").pressButton()
         shot_node.setName("shotData")
 
         try:
@@ -403,6 +402,7 @@ class Houdini(EnvironmentBase):
             os.path.splitext(version.filename)[0]
         )
 
+        shot_node = self.get_shot_node()
         output_nodes = self.get_output_nodes()
         for output_node in output_nodes:
             # get only the ifd nodes for now
@@ -448,6 +448,46 @@ class Houdini(EnvironmentBase):
                     # node is locked
                     pass
 
+                try:
+                    output_node.parm("RS_overrideCameraRes").set(True)
+                except hou.PermissionError:  # parameter is locked
+                    pass
+
+                try:
+                    output_node.parm("RS_overrideResScale").set(7)  # User specified
+                except hou.PermissionError:  # parameter is locked
+                    pass
+
+                # get the shot node and connect the resolution to it
+                if shot_node:
+                    # set the render camera
+                    try:
+                        output_node.parm("RS_renderCamera").setExpression('chsop("%s/shotcam")' % shot_node.path())
+                    except hou.PermissionError:  # parameter is locked
+                        pass
+
+                    try:
+                        output_node.parm("RS_overrideRes1").setExpression('ch("%s/cam_resx")' % shot_node.path())
+                        output_node.parm("RS_overrideRes2").setExpression('ch("%s/cam_resy")' % shot_node.path())
+                    except hou.PermissionError:  # parameter is locked
+                        pass
+
+                else:  # no shot node, no qlib
+                    # so use the shot nodes resolution if this is a shot related node
+                    # set the fps
+                    from stalker import Shot
+                    shot = version.task.parent
+                    project = version.task.project
+                    imf = project.image_format
+                    if version and isinstance(shot, Shot):
+                        imf = shot.image_format
+
+                    try:
+                        output_node.parm("RS_overrideRes1").set(imf.width)
+                        output_node.parm("RS_overrideRes2").set(imf.height)
+                    except hou.PermissionError:  # parameter is locked
+                        pass
+
                 # also set any AOVs to use the same output name prefixed with
                 # the AOV name
 
@@ -487,12 +527,13 @@ class Houdini(EnvironmentBase):
                 # enable skip rendered images
                 output_node.parm("RS_outputSkipRendered").set(1)
 
-                # do not create the folders
-                # try:
-                #     os.makedirs(flat_output_file_path)
-                # except OSError:
-                #     # dirs exists
-                #     pass
+                # create the folders if the node is not bypassed
+                if not output_node.isBypassed():
+                    try:
+                        os.makedirs(flat_output_file_path)
+                    except OSError:
+                        # dirs exists
+                        pass
 
         # restore the current take
         hou.takes.setCurrentTake(current_take)
