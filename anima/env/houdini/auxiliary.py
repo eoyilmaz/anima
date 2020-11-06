@@ -11,13 +11,15 @@ import hou
 
 
 def get_network_pane():
-    """returns the active network pane
+    """returns the network pane
     """
-    # This will return the first network pane, not the active one
-    network_pane = None
-    for pane_tab in hou.ui.paneTabs():
-        if isinstance(pane_tab, hou.NetworkEditor):
-            return pane_tab
+    return hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
+
+
+def get_scene_viewer():
+    """returns the scene viewer
+    """
+    return hou.ui.paneTabOfType(hou.paneTabType.SceneViewer)
 
 
 def create_spare_input(node, value=''):

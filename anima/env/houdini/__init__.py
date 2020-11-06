@@ -101,6 +101,9 @@ class Houdini(EnvironmentBase):
             # set to project fps
             self.set_fps(version.task.project.fps)
 
+        # update flipbook settings
+        self.update_flipbook_settings()
+
         # houdini accepts only strings as file name, no unicode support as I
         # see
         hou.hipFile.save(file_name=str(version.absolute_full_path))
@@ -149,6 +152,9 @@ class Houdini(EnvironmentBase):
             version.absolute_full_path
         )
 
+        # update flipbook settings
+        self.update_flipbook_settings()
+
         from anima.env import empty_reference_resolution
         return empty_reference_resolution()
 
@@ -167,19 +173,6 @@ class Houdini(EnvironmentBase):
             version = self.get_version_from_full_path(full_path)
         return version
 
-##     def get_version_from_recent_files(self):
-##        """returns the version from the recent files
-##        """
-##        version = None
-##        recent_files = self.get_recent_file_list()
-##        for i in range(len(recent_files) - 1, 0, -1):
-##            version = self.get_version_from_full_path(
-##                os.path.expandvars(recent_files[i])
-##            )
-##            if version:
-##                break
-##        return version
-
     def get_last_version(self):
         """gets the file name from houdini environment
         """
@@ -189,7 +182,7 @@ class Houdini(EnvironmentBase):
             # read the recent file list
             version = self.get_version_from_recent_files()
 
-        #if version is None:
+        # if version is None:
         #    # get the latest possible version instance by using the project path
 
         return version
@@ -246,6 +239,27 @@ class Houdini(EnvironmentBase):
 
         hscript_command = "set -g %s = '%s'" % (var, value)
         hou.hscript(str(hscript_command))
+
+    @classmethod
+    def update_flipbook_settings(cls):
+        """updates the flipbook settings
+        """
+        from anima.env.houdini import auxiliary
+        scene_viewer = auxiliary.get_scene_viewer()
+        if not scene_viewer:
+            return
+
+        fs = scene_viewer.flipbookSettings()
+        flipbook_path = '$HIP/Outputs/playblasts'
+        fs.output('%s/$HIPNAME.$F4.jpg' % flipbook_path)
+
+        # create the output folder
+        import os
+        try:
+            os.makedirs(os.path.expandvars(flipbook_path))
+        except OSError:
+            # dir exists
+            pass
 
     def get_recent_file_list(self):
         """returns the recent HIP files list from the houdini
