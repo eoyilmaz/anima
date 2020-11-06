@@ -154,8 +154,7 @@ class ArchiverBase(object):
 
         parent_path = os.path.dirname(path) + '/'
 
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED,
-                             allowZip64=True) as z:
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as z:
             for current_dir_path, dir_names, file_names in os.walk(path):
                 for dir_name in dir_names:
                     dir_path = os.path.join(current_dir_path, dir_name)

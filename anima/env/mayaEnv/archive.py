@@ -4,9 +4,7 @@
 # This module is part of anima and is released under the MIT
 # License: http://www.opensource.org/licenses/MIT
 import os
-import tempfile
 import re
-import shutil
 
 from anima import logger
 from anima.utils.archive import ArchiverBase
@@ -115,8 +113,7 @@ sourceimages/3dPaintTextures"""
         return project_path
 
     def _move_file_and_fix_references(self, path, project_path, scenes_folder='', refs_folder=''):
-        """Moves the given file to the given project path and moves any
-        references of it too
+        """Moves the given file to the given project path and moves any references of it too
 
         :param str path: The path of the scene file
         :param str project_path: The project path
@@ -131,13 +128,16 @@ sourceimages/3dPaintTextures"""
         path = os.path.expandvars(path)
 
         original_file_name = os.path.basename(path)
-        logger.debug('original_file_name: %s' % original_file_name)
+        logger.debug("original_file_name: %s" % original_file_name)
 
-        new_file_path = \
-            os.path.join(project_path, scenes_folder, original_file_name)
+        new_file_path = os.path.join(project_path, scenes_folder, original_file_name)
+        logger.debug("new_file_path: %s" % new_file_path)
 
         scenes_folder_lut = {
             '.ma': 'scenes/refs',
+
+            # alembic cache
+            '.abc': 'scenes/refs',
 
             # image files
             '.jpg': 'sourceimages',
@@ -209,11 +209,15 @@ sourceimages/3dPaintTextures"""
                     .replace('u1_v1', 'u*_v*')
                     .replace('U1_V1', 'U*_V*')
                 )
+                if new_file_paths:
+                    logger.debug("found UDIM textures:")
+
                 for p in new_file_paths:
-                    print(p)
+                    logger.debug(p)
 
             # just copy the file
             for new_file_path in new_file_paths:
+                logger.debug("%s -> %s" % (path, new_file_path))
                 try:
                     shutil.copy(path, new_file_path)
                 except IOError:

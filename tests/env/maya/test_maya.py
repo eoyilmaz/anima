@@ -70,15 +70,23 @@ class MayaTestBase(unittest.TestCase):
     def setUp(self):
         """setup the tests
         """
+        import logging
+        logger = logging.getLogger('anima.env.mayaEnv')
+        logger.setLevel(logging.DEBUG)
+
         # -----------------------------------------------------------------
         # start of the setUp
         # create the environment variable and point it to a temp directory
+        logger.debug("initializing db")
         database_url = "sqlite:///:memory:"
         db.setup({'sqlalchemy.url': database_url})
         db.init()
+        logger.debug("initializing db complete")
 
+        logger.debug("creating temp repository path")
         self.temp_repo_path = tempfile.mkdtemp()
 
+        logger.debug("creating user1")
         self.user1 = User(
             name='User 1',
             login='user1',
@@ -86,19 +94,26 @@ class MayaTestBase(unittest.TestCase):
             password='12345'
         )
 
+        logger.debug("creating repo1")
         self.repo1 = Repository(
             name='Test Project Repository',
+            code='TPR',
             linux_path=self.temp_repo_path,
             windows_path=self.temp_repo_path,
             osx_path=self.temp_repo_path
         )
+        logger.debug("commiting repo1")
         DBSession.add(self.repo1)
         DBSession.commit()
+        logger.debug("commit repo1 done!")
 
+        logger.debug("creating statuses")
         self.status_new = Status.query.filter_by(code='NEW').first()
         self.status_wip = Status.query.filter_by(code='WIP').first()
         self.status_comp = Status.query.filter_by(code='CMPL').first()
+        logger.debug("creating statuses done")
 
+        logger.debug("creating filename template")
         self.task_template = FilenameTemplate(
             name='Task Template',
             target_entity_type='Task',
@@ -109,7 +124,9 @@ class MayaTestBase(unittest.TestCase):
             filename='{{version.nice_name}}'
                      '_v{{"%03d"|format(version.version_number)}}',
         )
+        logger.debug("creating filename template done")
 
+        logger.debug("creating asset template")
         self.asset_template = FilenameTemplate(
             name='Asset Template',
             target_entity_type='Asset',
@@ -120,7 +137,9 @@ class MayaTestBase(unittest.TestCase):
             filename='{{version.nice_name}}'
                      '_v{{"%03d"|format(version.version_number)}}',
         )
+        logger.debug("creating asset template done")
 
+        logger.debug("creating shot template")
         self.shot_template = FilenameTemplate(
             name='Shot Template',
             target_entity_type='Shot',
@@ -131,6 +150,7 @@ class MayaTestBase(unittest.TestCase):
             filename='{{version.nice_name}}'
                      '_v{{"%03d"|format(version.version_number)}}',
         )
+        logger.debug("creating shot template done")
 
         self.sequence_template = FilenameTemplate(
             name='Sequence Template',
@@ -168,6 +188,8 @@ class MayaTestBase(unittest.TestCase):
             structure=self.structure,
             image_format=self.image_format
         )
+        DBSession.add(self.project)
+        DBSession.commit()
 
         self.task_status_list =\
             StatusList.query.filter_by(target_entity_type='Task').first()
