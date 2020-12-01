@@ -736,7 +736,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .all()
         self.task_type_combo_box.clear()
         self.task_type_combo_box.addItems(
-            [''] + map(lambda x: x[0], all_task_type_names)
+            [''] + list(map(lambda x: x[0], all_task_type_names))
         )
 
         # asset types
@@ -747,7 +747,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .all()
         self.asset_type_combo_box.clear()
         self.asset_type_combo_box.addItems(
-            [''] + map(lambda x: x[0], all_asset_type_names)
+            [''] + list(map(lambda x: x[0], all_asset_type_names))
         )
 
         # sequences
@@ -758,7 +758,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .all()
         self.sequence_combo_box.clear()
         self.sequence_combo_box.addItems(
-            [''] + map(lambda x: x[0], all_sequence_names)
+            [''] + list(map(lambda x: x[0], all_sequence_names))
         )
 
         from anima import defaults
@@ -839,7 +839,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             .all()
         self.sequence_combo_box.clear()
         self.sequence_combo_box.addItems(
-            [''] + map(lambda x: x[0], all_sequence_names)
+            [''] + list(map(lambda x: x[0], all_sequence_names))
         )
 
         if isinstance(self.task, Shot):
