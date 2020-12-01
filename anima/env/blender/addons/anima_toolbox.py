@@ -22,20 +22,19 @@ if "bpy" in locals():
 
     importlib.reload(toolbox)
     importlib.reload(general)
-    # print("measureit: Reloaded multifiles")
+    importlib.reload(render)
 else:
     from anima.env.blender import toolbox
-    from anima.env.blender.toolbox import general
-    # print("measureit: Imported multifiles")
+    from anima.env.blender.toolbox import general, render
 
-
+# the following import is needed somehow
 import bpy
-
 
 
 panels = (
     toolbox.Main_Panel,
-    general.General
+    general.General,
+    render.Render,
 )
 
 classes = (
@@ -43,6 +42,9 @@ classes = (
     general.General,
     general.OpenVersion,
     general.SaveAsVersion,
+    render.Render,
+    render.SetImageTextureNodesToRAW,
+    render.SetImageTextureNodesTosRGB,
 )
 
 
