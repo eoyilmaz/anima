@@ -19,11 +19,9 @@ class ArchiverBase(object):
 
     @classmethod
     def create_default_project(cls, path, name='DefaultProject'):
-        """Creates default maya project structure along with a suitable
-        workspace.mel file.
+        """Creates default project structure.
 
-        :param str path: The path that the default project structure will be
-          created.
+        :param str path: The path that the default project structure will be created.
         :param str name: The name of the archived project.
 
         :return:
@@ -62,12 +60,9 @@ class ArchiverBase(object):
         default_project_path = \
             self.create_default_project(path=tempdir, name=project_name)
 
-        logger.debug(
-            'creating new default project at: %s' % default_project_path
-        )
+        logger.debug('creating new default project at: %s' % default_project_path)
 
-        ref_paths = \
-            self._move_file_and_fix_references(path, default_project_path, scenes_folder='scenes')
+        ref_paths = self._move_file_and_fix_references(path, default_project_path, scenes_folder='scenes')
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
@@ -103,41 +98,14 @@ class ArchiverBase(object):
         :return list: returns a list of paths
         """
         # This needs to be implemented by the environment
-        raise NotImplementedError("This method needs to be implemented by the environment")
+        raise NotImplementedError("This method needs to be implemented by the derived class")
 
-    def _extract_references(self, data):
+    def _extract_references(self):
         """returns the list of references in the given scene
-
-        :param str data: The content of the maya scene file
 
         :return:
         """
-        import os
-        import re
-
-        path_regex = r'\$REPO[\w\d\/_\.@]+'
-        # so we have all the data
-        # extract references
-        ref_paths = re.findall(path_regex, data)
-
-        # also check for any paths that is starting with any of the $REPO
-        # variable value
-        for k in os.environ.keys():
-            if k.startswith('REPO'):
-                # consider this as a repository path and find all of the paths
-                # starting with this value
-                repo_path = os.environ[k]
-                path_regex = r'\%s[\w\d\/_\.@]+' % repo_path
-                temp_ref_paths = re.findall(path_regex, data)
-                ref_paths += temp_ref_paths
-
-        new_ref_paths = []
-        for ref_path in ref_paths:
-            if os.path.splitext(ref_path)[1] not in self.exclude_mask:
-                new_ref_paths.append(ref_path)
-        ref_paths = new_ref_paths
-
-        return ref_paths
+        raise NotImplementedError("This method needs to be implemented by the derived class")
 
     @classmethod
     def archive(cls, path):

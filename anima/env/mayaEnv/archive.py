@@ -112,6 +112,34 @@ sourceimages/3dPaintTextures"""
 
         return project_path
 
+    def _extract_references(self, data=None):
+        """returns the list of references in the given scene
+
+        :param str data: The content of the maya scene file
+
+        :return:
+        """
+        import os
+        import re
+
+        path_regex = r'\$REPO[\w\d\/_\.@]+'
+        # so we have all the data
+        # extract references
+        ref_paths = re.findall(path_regex, data)
+
+        # also check for any paths that is starting with any of the $REPO
+        # variable value
+        for k in os.environ.keys():
+            if k.startswith('REPO'):
+                # consider this as a repository path and find all of the paths
+                # starting with this value
+                repo_path = os.environ[k]
+                path_regex = r'\%s[\w\d\/_\.@]+' % repo_path
+                temp_ref_paths = re.findall(path_regex, data)
+                ref_paths += temp_ref_paths
+
+        return filter(lambda x: os.path.splitext(x)[1] not in self.exclude_mask, ref_paths)
+
     def _move_file_and_fix_references(self, path, project_path, scenes_folder='', refs_folder=''):
         """Moves the given file to the given project path and moves any references of it too
 
