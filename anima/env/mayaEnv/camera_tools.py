@@ -233,7 +233,7 @@ def cam_to_chan(start_frame, end_frame):
         f.writelines('\n'.join(lines))
 
 
-def create_3dequalizer_points(width, height):
+def import_3dequalizer_points(width, height):
     """creates 3d equalizer points under the selected camera
 
     :param width: The width of the plate

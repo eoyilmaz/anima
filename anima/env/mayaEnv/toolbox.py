@@ -1493,6 +1493,25 @@ def UI():
                       ann="Tracker2Null",
                       bgc=color.color)
 
+            with pm.rowLayout(nc=3, adj=1):
+                def import_3dequalizer_points_callback():
+                    """callback for Import 3DEqualizer points
+                    """
+                    cam_width = pm.intField('import_3DEqualizer_points_width_int_field', q=1, v=1)
+                    cam_height = pm.intField('import_3DEqualizer_points_height_int_field', q=1, v=1)
+                    camera_tools.import_3dequalizer_points(cam_width, cam_height)
+
+                pm.button(
+                    'import_3DEqualizer_points_button', l="Import 3DEqualizer Points",
+                    c=repeated_callback(import_3dequalizer_points_callback),
+                    ann=camera_tools.import_3dequalizer_points.__doc__,
+                    bgc=color.color
+                )
+                pm.intField('import_3DEqualizer_points_width_int_field', min=1, v=1920)
+                pm.intField('import_3DEqualizer_points_height_int_field', min=1, v=1080)
+
+            pm.text(l='===================')
+
             color.change()
             pm.button('reloadFileTextures_button',
                       l="reload file textures",
