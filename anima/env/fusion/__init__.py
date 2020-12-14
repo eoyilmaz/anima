@@ -6,12 +6,22 @@
 
 import os
 import uuid
+
+import sys
+
+exceptions = None
+if sys.version_info[0] >= 3:
+    exceptions = (ImportError, ModuleNotFoundError)
+else:
+    exceptions = ImportError
+
 try:
     # for Fusion 6 and 7
     import PeyeonScript as bmf
-except ImportError:
+except exceptions:
     # for Fusion 8+
     import BlackmagicFusion as bmf
+
 
 from anima import logger
 from anima.env import empty_reference_resolution
@@ -287,7 +297,7 @@ class Fusion(EnvironmentBase):
         version_full_path = os.path.normpath(version.absolute_full_path)
 
         self.comp.Lock()
-        self.comp.Save(version_full_path.encode())
+        self.comp.Save(version_full_path if sys.version_info[0] >= 3 else version_full_path.encode())
         self.comp.Unlock()
 
         # create a local copy
@@ -377,7 +387,7 @@ class Fusion(EnvironmentBase):
         # for comp_ in comps:
         #     comp_.Close()
 
-        self.fusion.LoadComp(version_full_path.encode())
+        self.fusion.LoadComp(version_full_path if sys.version_info[0] >= 3 else version_full_path.encode())
 
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
@@ -679,9 +689,10 @@ class Fusion(EnvironmentBase):
         )
 
         # set the output path
-        return '%s' % os.path.normpath(
-            output_file_full_path
-        ).encode()
+        if sys.version_info[0] >= 3:
+            return '%s' % os.path.normpath(output_file_full_path)
+        else:
+            return '%s' % os.path.normpath(output_file_full_path).encode()
 
     def output_node_name_generator(self, file_format):
         return '%s_%s' % (self._main_output_node_name, file_format)
@@ -1087,7 +1098,7 @@ class Fusion(EnvironmentBase):
         self.comp.SetPrefs(
             {
                 'Comp.Paths.Map': {
-                    'Project:': project_directory_in.encode()
+                    'Project:': project_directory_in if sys.version_info[0] >= 3 else project_directory_in.encode()
                 }
             }
         )
