@@ -171,6 +171,7 @@ sourceimages/3dPaintTextures"""
             '.jpg': 'sourceimages',
             '.png': 'sourceimages',
             '.tif': 'sourceimages',
+            '.tiff': 'sourceimages',
             '.tga': 'sourceimages',
             '.exr': 'sourceimages',
             '.hdr': 'sourceimages',
