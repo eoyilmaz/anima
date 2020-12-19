@@ -1396,6 +1396,11 @@ class JointHierarchy(object):
                     new_parent = j_sub
             # parent the last joint
             pm.parent(all_new_joints[-1], new_parent)
+        # elif subdivision < 0:
+        #     # Remove every other joints
+        #     # -1 means there are 1 extra joints between original joints
+        #     # -2 means there are 2 extra joints etc.
+        #     inner_joint_cnt = abs(subdivision)
 
         new_hierarchy = class_(start_joint=new_start_joint, end_joint=new_end_joint)
         for i, j in enumerate(self.joints):
@@ -1827,6 +1832,9 @@ class RiggerBase(object):
         pm.parent(self.ik_fk_switch_handle, self.base_hierarchy.joints[0].getParent())
         pm.addAttr(self.ik_fk_switch_handle, sn="ikFkSwitch", dv=0, at="float", min=0, max=1, k=True)
 
+        # parent the locator used for stretch measurement to the ik_fk_switch_handle
+        #pm.pointConstraint(self.ik_fk_switch_handle, self.ik_hierarchy.start_locator, mo=True)
+
         # reverser
         reverser = pm.nt.Reverse()
         self.ik_fk_switch_handle.ikFkSwitch >> reverser.inputX
@@ -1891,9 +1899,6 @@ rigger.create_switch_setup()
             j.radius.set(base_radius * 2)
         assert isinstance(self.ik_hierarchy, IKLimbJointHierarchy)
         self.ik_hierarchy.create_ik_setup()
-
-        # parent the locator used for stretch measurement to the ik_fk_switch_handle
-        pm.pointConstraint(self.ik_fk_switch_handle, self.ik_hierarchy.start_locator, mo=True)
 
     def create_fk_hierarchy(self):
         """Creates the fk hierarchy
