@@ -21,18 +21,22 @@ class Render(Panel):
         scene = context.scene
 
         box = layout.box()
-        row = box.row()
+        box.label(text="Image Texture")
 
-        row.operator("anima_toolbox.render_set_image_texture_nodes_to_srgb", text="set to sRGB")
-        row.operator("anima_toolbox.render_set_image_texture_nodes_to_raw", text="set to RAW")
-        split = row.split(factor=0.10, align=True)
-        split.separator()
+        operators = [SetImageTextureNodesTosRGB, SetImageTextureNodesToRAW]
+        for op in operators:
+            row = box.row()
+            row.operator(op.bl_idname, text=op.bl_label)
+
+        # split = row.split(factor=0.10, align=True)
+        # split.separator()
 
 
 class SetImageTextureNodesTosRGB(Operator):
     bl_idname = "anima_toolbox.render_set_image_texture_nodes_to_srgb"
     bl_label = "set to sRGB"
     bl_description = "Sets the selected Image Texture nodes color space attribute to sRGB"
+    bl_icon = None
 
     def execute(self, context):
         from anima.env.blender import auxiliary
@@ -45,6 +49,7 @@ class SetImageTextureNodesToRAW(Operator):
     bl_idname = "anima_toolbox.render_set_image_texture_nodes_to_raw"
     bl_label = "set to RAW"
     bl_description = "Sets the selected Image Texture nodes color space attribute to RAW"
+    bl_icon = None
 
     def execute(self, context):
         from anima.env.blender import auxiliary

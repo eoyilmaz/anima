@@ -22,18 +22,20 @@ class General(Panel):
 
         box = layout.box()
         # box.label(text="Box Label")
-        row = box.row()
+        operators = [OpenVersion, SaveAsVersion, Playblast]
+        for op in operators:
+            row = box.row()
+            row.operator(op.bl_idname, text=op.bl_label)
 
-        row.operator("anima_toolbox.general_open_version", text="Open Version", icon="FILE")
-        row.operator("anima_toolbox.general_save_as_version", text="Save As Version", icon="FILE_NEW")
-        split = row.split(factor=0.10, align=True)
-        split.separator()
+        # split = row.split(factor=0.10, align=True)
+        # split.separator()
 
 
 class OpenVersion(Operator):
     bl_idname = "anima_toolbox.general_open_version"
     bl_label = "Open Version"
     bl_description = "Opens Version Dialog in Open mode"
+    # bl_icon = "FILE"
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
@@ -47,10 +49,26 @@ class SaveAsVersion(Operator):
     bl_idname = "anima_toolbox.general_save_as_version"
     bl_label = "Save As Version"
     bl_description = "Opens Version Dialog in Save mode"
+    # bl_icon = "FILE_NEW"
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
         version_dialog()
+        # redraw
+        # context.area.tag_redraw()
+        return {'FINISHED'}
+
+
+class Playblast(Operator):
+    bl_idname = "anima_toolbox.general_playblast"
+    bl_label = "Playblast"
+    bl_description = "Create a playblast"
+    # bl_icon = "CAMERA_DATA"
+
+    def execute(self, context):
+        from anima.env import blender
+        bl = blender.Blender()
+        bl.viewport_render_animation(context)
         # redraw
         # context.area.tag_redraw()
         return {'FINISHED'}

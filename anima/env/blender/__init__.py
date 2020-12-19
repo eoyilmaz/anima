@@ -139,25 +139,19 @@ class Blender(EnvironmentBase):
         :param version: The Stalker Version instance
         :return:
         """
-        import os
         version_sig_name = self.get_significant_name(
             version,
             include_project_code=False
         )
-        output_filename_template = \
-            '//Outputs/renders/beauty/' \
-            '%(version_sig_name)s_beauty.#'
-
-        render_file_full_path = \
-            output_filename_template % {
-                'version_sig_name': version_sig_name
-            }
+        output_filename_template = '//Outputs/renders/beauty/%(version_sig_name)s_beauty.#'
+        render_file_full_path = output_filename_template % {'version_sig_name': version_sig_name}
 
         bpy.context.scene.render.filepath = render_file_full_path
 
         bpy.context.scene.render.image_settings.file_format = 'OPEN_EXR'
         bpy.context.scene.render.image_settings.color_depth = '16'
         bpy.context.scene.render.image_settings.exr_codec = 'ZIP'
+        bpy.context.scene.render.image_settings.color_mode = 'RGBA'
 
         bpy.context.scene.render.use_overwrite = False
         bpy.context.scene.render.use_placeholder = True
@@ -170,3 +164,80 @@ class Blender(EnvironmentBase):
         if full_path != '':
             version = self.get_version_from_full_path(full_path)
         return version
+
+    def viewport_render_animation(self, context=None):
+        """creates a playblast/flipbook
+
+        :param context: The current context that this script is running at
+        """
+        import os
+        version = self.get_current_version()
+
+        # store the current render settings
+        render_settings = {
+            'filepath': bpy.context.scene.render.filepath,
+            'file_format': bpy.context.scene.render.image_settings.file_format,
+            'color_depth': bpy.context.scene.render.image_settings.color_depth,
+            'exr_codec': bpy.context.scene.render.image_settings.exr_codec,
+            'color_mode': bpy.context.scene.render.image_settings.color_mode,
+        }
+
+        # disable viewport overlay
+        if not context:
+            context = bpy.context
+        current_overlay_state = context.space_data.overlay.show_overlays
+        context.space_data.overlay.show_overlays = False
+
+        # set output settings
+        bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
+        bpy.context.scene.render.image_settings.color_mode = 'RGB'
+        bpy.context.scene.render.ffmpeg.format = 'MPEG4'
+        bpy.context.scene.render.ffmpeg.constant_rate_factor = 'HIGH'
+        bpy.context.scene.render.ffmpeg.ffmpeg_preset = 'GOOD'
+        bpy.context.scene.render.ffmpeg.gopsize = 12
+        bpy.context.scene.render.filepath = "//"
+
+        # set output filename
+        if version:
+            version_sig_name = self.get_significant_name(
+                version,
+                include_project_code=False
+            )
+        else:
+            if bpy.data.filepath:
+                version_sig_name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+            else:
+                version_sig_name = 'playblast'
+
+        output_filename_template = '//Outputs/playblast/%(version_sig_name)s.#'
+        rendered_output_filename = output_filename_template % {'version_sig_name': version_sig_name}
+
+        bpy.context.scene.render.filepath = rendered_output_filename
+
+        # do the playblast
+        try:
+            bpy.ops.render.opengl(animation=True)
+        finally:
+            # enable viewport overlay
+            context.space_data.overlay.show_overlays = current_overlay_state
+
+            # restore the render settings
+            bpy.context.scene.render.filepath = render_settings['filepath']
+            bpy.context.scene.render.image_settings.file_format = render_settings['file_format']
+            bpy.context.scene.render.image_settings.color_depth = render_settings['color_depth']
+            bpy.context.scene.render.image_settings.exr_codec = render_settings['exr_codec']
+            bpy.context.scene.render.image_settings.color_mode = render_settings['color_mode']
+
+            # and open the file path
+            from anima.utils import open_browser_in_location
+            movie_file_rel_path = rendered_output_filename.replace(
+                '#', '%s-%s' % (
+                    bpy.context.scene.frame_start,
+                    bpy.context.scene.frame_end
+                )
+            )[2:]  # removes the '//' at the beginning of the file path
+            playblast_full_path = os.path.join(
+                os.path.dirname(bpy.data.filepath),
+                movie_file_rel_path
+            )
+            open_browser_in_location(playblast_full_path)
