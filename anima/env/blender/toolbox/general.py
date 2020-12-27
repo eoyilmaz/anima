@@ -39,7 +39,7 @@ class OpenVersion(Operator):
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
-        version_dialog()
+        version_dialog(mode=1)
         # redraw
         # context.area.tag_redraw()
         return {'FINISHED'}
@@ -53,7 +53,7 @@ class SaveAsVersion(Operator):
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
-        version_dialog()
+        version_dialog(mode=0)
         # redraw
         # context.area.tag_redraw()
         return {'FINISHED'}
