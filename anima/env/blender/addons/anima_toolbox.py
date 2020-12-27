@@ -55,8 +55,8 @@ def register():
         register_class(cls)
 
     # also do the database connection here
-    from stalker import db
-    db.setup()
+    from anima.utils import do_db_setup
+    do_db_setup()
 
 
 def unregister():
