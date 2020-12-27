@@ -45,8 +45,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
     for other environments reference object type will be as native as it can be
     """
 
-    def __init__(self, environment=None, parent=None,
-                 reference_resolution=None):
+    def __init__(self, environment=None, parent=None, reference_resolution=None):
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
 

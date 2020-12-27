@@ -164,7 +164,11 @@ class ProgressDialogManager(object):
             self.end_progress(caller)
 
         from anima.ui.lib import QtWidgets
-        QtWidgets.qApp.processEvents()
+        try:
+            qApp = QtWidgets.qApp
+        except AttributeError:
+            qApp = QtWidgets.QApplication
+        qApp.processEvents()
 
     def end_progress(self, caller):
         """Ends the progress for the given caller

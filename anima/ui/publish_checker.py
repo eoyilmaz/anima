@@ -31,7 +31,11 @@ class QProgressBarWrapper(ProgressControllerBase):
     @value.setter
     def value(self, value):
         self.progress_bar.setValue(float(value))
-        QtWidgets.qApp.sendPostedEvents()
+        try:
+            qApp = QtWidgets.qApp
+        except AttributeError:
+            qApp = QtWidgets.QApplication
+        qApp.sendPostedEvents()
 
     @property
     def minimum(self):
@@ -40,7 +44,11 @@ class QProgressBarWrapper(ProgressControllerBase):
     @minimum.setter
     def minimum(self, minimum):
         self.progress_bar.setMaximum(float(minimum))
-        QtWidgets.qApp.sendPostedEvents()
+        try:
+            qApp = QtWidgets.qApp
+        except AttributeError:
+            qApp = QtWidgets.QApplication
+        qApp.sendPostedEvents()
 
     @property
     def maximum(self):
@@ -51,7 +59,11 @@ class QProgressBarWrapper(ProgressControllerBase):
         if maximum == 0:
             maximum = 1.0
         self.progress_bar.setMaximum(float(maximum))
-        QtWidgets.qApp.sendPostedEvents()
+        try:
+            qApp = QtWidgets.qApp
+        except AttributeError:
+            qApp = QtWidgets.QApplication
+        qApp.sendPostedEvents()
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -235,7 +247,11 @@ class PublisherElement(object):
                 # disable Check button
                 self.check_push_button.setText('Checking...')
                 self.check_push_button.setEnabled(False)
-                QtWidgets.qApp.sendPostedEvents()
+                try:
+                    qApp = QtWidgets.qApp
+                except AttributeError:
+                    qApp = QtWidgets.QApplication
+                qApp.sendPostedEvents()
                 self.publisher(progress_controller=self.progress_bar_manager)
                 end = time.time()
             except Exception as e:
@@ -454,7 +470,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs all the publishers as if their check buttons are pushed one by
         one
         """
-        QtWidgets.qApp.processEvents()
+        try:
+            qApp = QtWidgets.qApp
+        except AttributeError:
+            qApp = QtWidgets.QApplication
+        qApp.processEvents()
+
         import time
         current_time = time.time()
         # do not run publishers if they ran less than 5 seconds ago
@@ -466,7 +487,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 )
                 publisher.run_publisher()
                 self.update_publisher_total_duration_info()
-                QtWidgets.qApp.sendPostedEvents()
+                qApp.sendPostedEvents()
             self.last_run_date = time.time()
 
         return self.check_publisher_states()
