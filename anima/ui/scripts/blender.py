@@ -22,7 +22,7 @@ import logging
 from anima import logger
 
 
-def version_dialog(logging_level=logging.WARNING):
+def version_dialog(logging_level=logging.WARNING, mode=2):
     """Helper function for version_dialog UI for Maya
     """
     # connect to db
@@ -40,4 +40,4 @@ def version_dialog(logging_level=logging.WARNING):
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    version_dialog.UI(environment=b, parent=None)
+    version_dialog.UI(environment=b, parent=None, mode=mode)
