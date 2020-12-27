@@ -54,6 +54,10 @@ def register():
     for cls in classes:
         register_class(cls)
 
+    # also do the database connection here
+    from stalker import db
+    db.setup()
+
 
 def unregister():
     from bpy.utils import unregister_class
