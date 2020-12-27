@@ -102,6 +102,15 @@ class Blender(EnvironmentBase):
         # leave it simple for now
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
 
+    def reference(self, version, use_namespace=True):
+        """References/Links another Blend file
+
+        :param version:
+        :param use_namespace:
+        :return:
+        """
+        pass
+
     def set_fps(self, fps=25.0):
         """
 
