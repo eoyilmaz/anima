@@ -17,6 +17,10 @@ from anima.ui.views.task import TaskTreeView
 from anima.ui.widgets import TakesListWidget, RecentFilesComboBox
 from anima.ui.widgets.version import VersionsTableWidget
 
+if sys.version_info.major > 2:
+    exceptionMessageGenerator = lambda e: str(e)
+else:
+    exceptionMessageGenerator = lambda e: e.message
 
 ref_depth_res = [
     "As Saved",
@@ -399,9 +403,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.save_as_buttons_layout.addWidget(self.publish_push_button)
 
         # Close Push Button
-        self.close_push_button = QtWidgets.QPushButton(self)
-        self.close_push_button.setText("Close")
-        self.save_as_buttons_layout.addWidget(self.close_push_button)
+        self.close2_push_button = QtWidgets.QPushButton(self)
+        self.close2_push_button.setText("Close")
+        self.save_as_buttons_layout.addWidget(self.close2_push_button)
 
         self.new_version_main_layout.addLayout(self.save_as_buttons_layout)
 
@@ -701,6 +705,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.import_push_button.setText("Import")
         self.open_buttons_layout.addWidget(self.import_push_button)
 
+        # Close Push Button
+        self.close1_push_button = QtWidgets.QPushButton(self)
+        self.close1_push_button.setText("Close")
+        self.open_buttons_layout.addWidget(self.close1_push_button)
+
         self.versions_main_layout.addWidget(self.previous_version_secondary_controls_widget)
         self.versions_main_layout.addWidget(self.previous_version_controls_widget)
         self.versions_main_layout.addWidget(self.new_version_controls_widget)
@@ -812,7 +821,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # close button
         QtCore.QObject.connect(
-            self.close_push_button,
+            self.close1_push_button,
+            QtCore.SIGNAL("clicked()"),
+            self.close
+        )
+
+        QtCore.QObject.connect(
+            self.close2_push_button,
             QtCore.SIGNAL("clicked()"),
             self.close
         )
@@ -2101,15 +2116,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.check_version_file_exists(old_version):
             return
 
-        # close the dialog
-        self.close()
-
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
-            ref_depth = ref_depth_res.index(
-                self.ref_depth_combo_box.currentText()
-            )
+            ref_depth = ref_depth_res.index(self.ref_depth_combo_box.currentText())
 
             # environment can throw RuntimeError for unsaved changes
             try:
@@ -2146,9 +2156,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # no, just return
                     return
 
+            # close the dialog
+            self.close()
+
             # check the reference_resolution to update old versions
-            if reference_resolution["create"] \
-               or reference_resolution["update"]:
+            if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
                 from anima.ui import version_updater
                 version_updater_main_dialog = \
@@ -2162,6 +2174,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 # delete the dialog when it is done
                 version_updater_main_dialog.deleteLater()
+        else:
+            # close the dialog
+            self.close()
 
     def open_as_new_version_push_button_clicked(self):
         """Opens the selected version and immediately saves it as a new version
@@ -2287,7 +2302,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 QtWidgets.QMessageBox.critical(
                     self,
                     "Error",
-                    e.message
+                    exceptionMessageGenerator(e)
                 )
 
     def import_push_button_clicked(self):
