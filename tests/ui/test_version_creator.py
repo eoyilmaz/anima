@@ -333,7 +333,7 @@ class VersionCreatorTester(unittest.TestCase):
         self.assertEqual(self.dialog.isVisible(), True)
 
         # now run the UI
-        QTest.mouseClick(self.dialog.close_push_button, Qt.LeftButton)
+        QTest.mouseClick(self.dialog.close2_push_button, Qt.LeftButton)
         self.assertEqual(self.dialog.isVisible(), False)
 
     def test_login_dialog_is_shown_if_there_are_no_logged_in_user(self):
