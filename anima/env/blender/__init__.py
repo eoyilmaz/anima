@@ -152,6 +152,7 @@ class Blender(EnvironmentBase):
         bpy.context.scene.render.image_settings.color_depth = '16'
         bpy.context.scene.render.image_settings.exr_codec = 'ZIP'
         bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+        bpy.context.scene.render.film_transparent = True
 
         bpy.context.scene.render.use_overwrite = False
         bpy.context.scene.render.use_placeholder = True
