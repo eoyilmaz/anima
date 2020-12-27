@@ -102,6 +102,12 @@ class Blender(EnvironmentBase):
         # leave it simple for now
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
 
+        if not skip_update_check:
+            return self.check_referenced_versions()
+        else:
+            from anima.env import empty_reference_resolution
+            return empty_reference_resolution
+
     def reference(self, version, use_namespace=True):
         """References/Links another Blend file
 
@@ -109,7 +115,106 @@ class Blender(EnvironmentBase):
         :param use_namespace:
         :return:
         """
-        pass
+        if not version:
+            return
+
+        files = {
+            'Collection': [],
+            'Image': [],
+            'Mesh': [],
+            'Material': [],
+            'Object': [],
+            'Scene': [],
+            'Texture': [],
+        }
+        with bpy.data.libraries.load(version.absolute_full_path) as (data_from, data_to):
+            # Collection
+            for name in data_from.collections:
+                files['Collection'].append({'name': name})
+
+            # # Image
+            # for name in data_from.images:
+            #     files['Image'].append({'name': name})
+
+            # # Mesh
+            # for name in data_from.meshes:
+            #     files['Mesh'].append({'name': name})
+
+            # # Materials
+            # for name in data_from.materials:
+            #     files['Material'].append({'name': name})
+
+            # # Objects
+            # for name in data_from.objects:
+            #     files['Object'].append({'name': name})
+
+            # # Scenes
+            # for name in data_from.scenes:
+            #     files['Scene'].append({'name': name})
+
+            # # Textures
+            # for name in data_from.textures:
+            #     files['Texture'].append({'name': name})
+
+        for key in files:
+            if files[key]:
+                bpy.ops.wm.link(
+                    directory="%s/%s/" % (version.absolute_full_path, key),
+                    files=files[key]
+                )
+
+    def get_referenced_versions(self, parent_ref=None):
+        """Returns the referenced versions
+
+        :param parent_ref:
+        :return:
+        """
+        import os
+        versions = []
+        for lib_name in bpy.data.libraries.keys():
+            lib = bpy.data.libraries[lib_name]
+            file_path = lib.filepath
+            if file_path.startswith('//'):  # This is a relative path
+                curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
+                file_full_path = os.path.normpath("%s%s" % (curr_blend_file_dir, file_path))
+            else:
+                file_full_path = os.path.normpath(file_path)
+            version = self.get_version_from_full_path(file_full_path)
+            if version and version not in versions:
+                versions.append(version)
+
+        return versions
+
+    def update_versions(self, reference_resolution):
+        """Updates the linked libraries according to the given reference_resolution.
+
+        :param reference_resolution:
+        :return:
+        """
+        import os
+        for lib_name in bpy.data.libraries.keys():
+            lib = bpy.data.libraries[lib_name]
+            file_path = lib.filepath
+            if file_path.startswith('//'):  # This is a relative path
+                curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
+                file_full_path = os.path.normpath("%s%s" % (curr_blend_file_dir, file_path))
+            else:
+                file_full_path = os.path.normpath(file_path)
+            version = self.get_version_from_full_path(file_full_path)
+            if version in reference_resolution['update']:
+                if not version.is_latest_published_version():
+                    latest_published_version = version.latest_published_version
+
+                    lib.filepath = latest_published_version.absolute_full_path
+                    lib.reload()
+
+        return []  # need to return an empty list
+
+    def deep_version_inputs_update(self):
+        """updates the inputs of the references of the current scene
+        """
+        # just use the first level references for now
+        self.update_version_inputs()
 
     def set_fps(self, fps=25.0):
         """
