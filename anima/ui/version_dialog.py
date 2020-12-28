@@ -2156,9 +2156,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # no, just return
                     return
 
-            # close the dialog
-            self.close()
-
             # check the reference_resolution to update old versions
             if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
@@ -2174,6 +2171,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 # delete the dialog when it is done
                 version_updater_main_dialog.deleteLater()
+                # close the dialog
+                self.close()
+            else:
+                # close the dialog
+                self.close()
+
         else:
             # close the dialog
             self.close()
