@@ -298,6 +298,7 @@ def auto_rivet(objects=None, geo=None):
     # objects = filter(lambda x: not isinstance(x, pm.nt.Mesh), sel_list)
 
     # get the closest point to the surface
+    shape = None
     if isinstance(geo, pm.nt.Transform):
         shape = geo.getShape()
     elif isinstance(geo, pm.nt.Mesh):
@@ -321,6 +322,7 @@ def auto_rivet(objects=None, geo=None):
 def rivet_per_face():
     """creates hair follicles per selected face
     """
+    from functools import reduce
     sel_list = pm.ls(sl=1, fl=1)
 
     follicles = []
@@ -860,9 +862,14 @@ def run_pre_publishers():
             publish_scripts.check_node_names_with_bad_characters()
         except PublishError as e:
             # pop up a message box with the error
+            import sys
+            if sys.version_info.major > 2:
+                stringify = str
+            else:
+                stringify = unicode
             pm.confirmDialog(
                 title='SaveError',
-                message=str(''.join([i for i in unicode(e) if ord(i) < 128])),
+                message=str(''.join([i for i in stringify(e) if ord(i) < 128])),
                 button=['Ok']
             )
             raise e
@@ -1040,8 +1047,7 @@ def perform_playblast(action):
     v = m.get_current_version()
 
     if v:
-        # do playblaster
-        pb = Playblaster()
+        # do use playblaster
         extra_playblast_options = {
             'viewer': 0
         }
@@ -1059,6 +1065,10 @@ def perform_playblast(action):
 
         extra_playblast_options['percent'] = resolution
 
+        # ask for playblast view options
+        playblast_view_options = ask_playblast_view_options()
+
+        pb = Playblaster(playblast_view_options=playblast_view_options)
         outputs = pb.playblast(
             extra_playblast_options=extra_playblast_options
         )
@@ -1141,6 +1151,136 @@ def ask_playblast_format():
         return 'image'
 
 
+def ask_playblast_view_options():
+    """asks the user the playblast view options
+
+    It will store the last selected view options and if there are no previously
+    selected view options it will use the defaults from the Playblaster
+    """
+    # storage
+    import os
+    import tempfile
+    import copy
+    import json
+    user_playblast_view_options_storage = os.path.join(
+        tempfile.gettempdir(),
+        'playblast_view_options.json'
+    )
+
+    use_defaults = False
+    if os.path.exists(user_playblast_view_options_storage):
+        try:
+            with open(user_playblast_view_options_storage, 'r') as f:
+                user_playblast_view_options = json.load(f)
+        except ValueError:
+            use_defaults = True
+    else:
+        use_defaults = True
+
+    if use_defaults:
+        user_playblast_view_options = copy.copy(Playblaster.default_view_options)
+
+    # display the current options and ask the user to change them
+    # sadly we need to use Qt to display a proper modal dialog
+    from anima.ui.lib import QtCore, QtWidgets
+    from anima.env import mayaEnv
+
+    class PlayblastViewOptionsDialog(QtWidgets.QDialog):
+
+        def __init__(self, options=None):
+            parent = mayaEnv.get_maya_main_window()
+            super(PlayblastViewOptionsDialog, self).__init__(parent=parent)
+            self.options = options
+            self.checkers = []
+            self.setup_dialog()
+
+        def setup_dialog(self):
+            self.setWindowTitle("Playblast View Options")
+            # self.resize(517, 545)
+            vertical_layout = QtWidgets.QVBoxLayout(self)
+
+            use_defaults_button = QtWidgets.QPushButton(self)
+            use_defaults_button.setText("Use Defaults")
+            vertical_layout.addWidget(use_defaults_button)
+
+            horizontal_layout = QtWidgets.QHBoxLayout(self)
+            vertical_layout.addLayout(horizontal_layout)
+
+            current_vertical_layout = QtWidgets.QVBoxLayout(self)
+            horizontal_layout.addLayout(current_vertical_layout)
+
+            vertical_button_count = 10
+
+            i = 0
+            for k in sorted(self.options.keys()):
+                v = self.options[k]
+                i += 1
+                if isinstance(v, bool):
+                    checker = QtWidgets.QCheckBox(k, parent=self)
+                    checker.setChecked(v)
+                    current_vertical_layout.addWidget(checker)
+                    self.checkers.append(checker)
+
+                if i % vertical_button_count == 0:
+                    # create a new vertical layout
+                    current_vertical_layout = QtWidgets.QVBoxLayout(self)
+                    horizontal_layout.addLayout(current_vertical_layout)
+
+            # add a spacer to the last column layout
+            spacer_item = QtWidgets.QSpacerItem(
+                20, 20,
+                QtWidgets.QSizePolicy.Minimum,
+                QtWidgets.QSizePolicy.Expanding
+            )
+            current_vertical_layout.addItem(spacer_item)
+
+            button_box = QtWidgets.QDialogButtonBox(self)
+            button_box.setOrientation(QtCore.Qt.Horizontal)
+            button_box.setStandardButtons(
+                QtWidgets.QDialogButtonBox.Cancel |
+                QtWidgets.QDialogButtonBox.Ok
+            )
+            vertical_layout.addWidget(button_box)
+            vertical_layout.setStretch(2, 1)
+
+            # Button box
+            QtCore.QObject.connect(
+                button_box, QtCore.SIGNAL("accepted()"), self.accept
+            )
+            QtCore.QObject.connect(
+                button_box, QtCore.SIGNAL("rejected()"), self.reject
+            )
+            QtCore.QObject.connect(
+                use_defaults_button, QtCore.SIGNAL("clicked()"), self.use_defaults_push_button_clicked
+            )
+
+        def use_defaults_push_button_clicked(self):
+            """sets the default values
+            """
+            for checker in self.checkers:
+                checker.setChecked(
+                    Playblaster.default_view_options[str(checker.text())]
+                )
+
+        def get_playblast_options(self):
+            """returns the current selected options
+            """
+            playblast_options = {}
+            for checker in self.checkers:
+                playblast_options[str(checker.text())] = checker.isChecked()
+            return playblast_options
+
+    pvod = PlayblastViewOptionsDialog(options=user_playblast_view_options)
+    pvod.exec_()
+
+    user_playblast_view_options = pvod.get_playblast_options()
+    # write it down
+    with open(user_playblast_view_options_storage, 'w') as f:
+        json.dump(user_playblast_view_options, f)
+
+    return user_playblast_view_options
+
+
 def perform_playblast_shot(shot_name):
     """Performs shot playblast, this is written to replace the menu action in
     Camera Sequencer.
@@ -1196,15 +1336,43 @@ class Playblaster(object):
     each of them and uploads it to the server
     """
 
-    display_flags = [
-        'nurbsCurves', 'nurbsSurfaces', 'cv', 'hulls', 'polymeshes',
-        'subdivSurfaces', 'planes', 'lights', 'cameras', 'imagePlane',
-        'joints', 'ikHandles', 'deformers', 'dynamics', 'particleInstancers',
-        'fluids', 'hairSystems', 'follicles', 'nCloths', 'nParticles', 'nRigids',
-        'dynamicConstraints', 'locators', 'dimensions', 'pivots',
-        'handles', 'textures', 'strokes', 'motionTrails', 'pluginShapes',
-        'clipGhosts', 'greasePencils', 'manipulators', 'grid',
-    ]
+    default_view_options = {
+        'cameras': False,
+        'clipGhosts': False,
+        'cv': False,
+        'deformers': False,
+        'dimensions': False,
+        'dynamics': True,
+        'dynamicConstraints': False,
+        'fluids': True,
+        'follicles': False,
+        'greasePencils': False,
+        'grid': False,
+        'handles': False,
+        'hairSystems': False,
+        'hulls': False,
+        'ikHandles': False,
+        'imagePlane': True,
+        'joints': False,
+        'lights': False,
+        'locators': False,
+        'manipulators': False,
+        'motionTrails': False,
+        'nCloths': True,
+        'nParticles': True,
+        'nRigids': False,
+        'nurbsCurves': False,
+        'nurbsSurfaces': False,
+        'particleInstancers': True,
+        'pivots': False,
+        'planes': True,
+        'pluginShapes': False,
+        'pluginObjects': ('gpuCacheDisplayFilter', True),
+        'polymeshes': True,
+        'strokes': False,
+        'subdivSurfaces': True,
+        'textures': False,
+    }
 
     cam_attribute_names = [
         'overscan',
@@ -1236,7 +1404,10 @@ class Playblaster(object):
 
     hud_name = 'PlayblasterHUD'
 
-    def __init__(self):
+    def __init__(self, playblast_view_options=None):
+        self._playblast_view_options = None
+        self.playblast_view_options = playblast_view_options
+
         from stalker import LocalSession
         local_session = LocalSession()
         self.logged_in_user = local_session.logged_in_user
@@ -1248,9 +1419,6 @@ class Playblaster(object):
         from anima.env.mayaEnv import Maya
         self.m_env = Maya()
         self.version = self.m_env.get_current_version()
-
-        self.ui_window_name = 'playblaster_window'
-        self.ui_window = None
 
         self.user_view_options = {}
         self.reset_user_view_options_storage()
@@ -1289,7 +1457,14 @@ class Playblaster(object):
         if current_shot:
             shot_name = pm.getAttr('%s.shotName' % current_shot)
             current_cam_name = pm.shot(current_shot, q=1, cc=1)
-            current_cam = pm.PyNode(current_cam_name)
+            if current_cam_name:
+                current_cam = pm.PyNode(current_cam_name)
+            else:
+                # there is no camera in this shot
+                # use the first camera in the scene
+                # TODO: using the first camera is not a good idea
+                current_cam = pm.ls(type=pm.nt.Camera)[0].getParent()
+                current_cam_name = current_cam.name()
         else:
             # then try to get the shot name from the file name
             import os
@@ -1445,7 +1620,7 @@ class Playblaster(object):
         """resets the user view options storage
         """
         self.user_view_options = {
-            'display_flags': {},
+            'view_options': {},
             'huds': {},
             'camera_flags': {}
         }
@@ -1459,18 +1634,18 @@ class Playblaster(object):
         # store show/hide display options for active panel
         self.reset_user_view_options_storage()
 
-        for flag in self.display_flags:
+        for flag in self.default_view_options.keys():
             try:
-                val = pm.modelEditor(active_panel, **{'q': 1, flag: True})
-                self.user_view_options['display_flags'][flag] = val
+                self.user_view_options['view_options'][flag] = \
+                    pm.modelEditor(active_panel, **{'q': 1, flag: True})
             except TypeError:
                 pass
 
         # store hud display options
         hud_names = pm.headsUpDisplay(lh=1)
         for hud_name in hud_names:
-            val = pm.headsUpDisplay(hud_name, q=1, vis=1)
-            self.user_view_options['huds'][hud_name] = val
+            self.user_view_options['huds'][hud_name] = \
+                pm.headsUpDisplay(hud_name, q=1, vis=1)
 
         for camera in pm.ls(type='camera'):
             camera_name = camera.name()
@@ -1480,32 +1655,30 @@ class Playblaster(object):
             self.user_view_options['camera_flags'][camera_name] = \
                 per_camera_attr_dict
 
+    @property
+    def playblast_view_options(self):
+        """the getter for the playblast_view_options
+        """
+        return self._playblast_view_options
+
+    @playblast_view_options.setter
+    def playblast_view_options(self, playblast_view_options):
+        """setter for the playblast view options
+
+        :param dict playblast_view_options: A dict for the desired options
+        :return:
+        """
+        # use defaults if empty
+        if not playblast_view_options:
+            playblast_view_options = self.default_view_options
+
+        self._playblast_view_options = playblast_view_options
+
     def set_view_options(self):
         """set view options for playblast
         """
         active_panel = self.get_active_panel()
-        # turn all show/hide display options off except for polygons and
-        # surfaces
-        pm.modelEditor(active_panel, e=1, allObjects=False)
-        pm.modelEditor(active_panel, e=1, manipulators=False)
-        pm.modelEditor(active_panel, e=1, grid=False)
-
-        pm.modelEditor(active_panel, e=1, polymeshes=True)
-        pm.modelEditor(active_panel, e=1, nurbsSurfaces=False)
-        pm.modelEditor(active_panel, e=1, subdivSurfaces=True)
-        pm.modelEditor(active_panel, e=1,
-                       pluginObjects=('gpuCacheDisplayFilter', True))
-        pm.modelEditor(active_panel, e=1, dynamics=True)
-
-        if int(pm.about(v=1)) > 2014:
-            pm.modelEditor(active_panel, e=1, particleInstancers=True)
-
-        pm.modelEditor(active_panel, e=1, nParticles=True)
-        pm.modelEditor(active_panel, e=1, nCloths=True)
-        pm.modelEditor(active_panel, e=1, fluids=True)
-        pm.modelEditor(active_panel, e=1, nParticles=True)
-        pm.modelEditor(active_panel, e=1, planes=True)
-        pm.modelEditor(active_panel, e=1, imagePlane=True)
+        pm.modelEditor(active_panel, e=1, **self.playblast_view_options)
 
         # turn all hud displays off
         hud_flags = pm.headsUpDisplay(lh=1)
@@ -1540,7 +1713,7 @@ class Playblaster(object):
         """restores user options
         """
         active_panel = self.get_active_panel()
-        for flag, value in self.user_view_options['display_flags'].items():
+        for flag, value in self.user_view_options['view_options'].items():
             try:
                 pm.modelEditor(active_panel, **{'e': 1, flag: value})
             except TypeError:
@@ -2341,7 +2514,7 @@ def extract_version_from_path(path):
     :param path: The path to extract the version number from
     """
     import re
-    version_matcher = re.compile("([\w\d\/]+_v)([0-9]+)([\w\d\._]+)")
+    version_matcher = re.compile("([\w\d/]+_v)([0-9]+)([\w\d._]+)")
     m = re.match(version_matcher, path)
     if m:
         return int(m.group(2))
@@ -2362,7 +2535,7 @@ def update_alembic_references():
 
     import glob
     import re
-    version_matcher = re.compile("([\w\d\/_]+)(v[0-9]+)([\w\d\._]+)")
+    version_matcher = re.compile("([\w\d/_]+)(v[0-9]+)([\w\d._]+)")
 
     updated_path_info = []
     for ref in pm.listReferences():
@@ -2790,8 +2963,8 @@ def match_hierarchy(source, target, node_types=None, use_long_names=False):
       value is (pm.nt.Mesh, pm.nt.NurbsSurface).
     :param use_long_names: Precisely match the placement in the hierarchy.
     """
-    from anima.ui import progress_dialog
-    from anima.env.mayaEnv import MayaMainProgressBarWrapper
+    # from anima.ui import progress_dialog
+    # from anima.env.mayaEnv import MayaMainProgressBarWrapper
     # wrp = MayaMainProgressBarWrapper()
     # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
 
@@ -3007,6 +3180,7 @@ class DummyWindowLight(object):
         ]
 
         if children_shapes:
+            plane_shape = None
             while children_shapes:
                 plane_shape = children_shapes.pop(0)
                 if plane_shape is not None:
