@@ -1677,7 +1677,7 @@ def generate_unique_shot_name(base_name, shot_name_increment=10):
     logger.debug('start shot_number: %s' % shot_number)
 
     # initialize existing_shot variable with base_name
-    while True and i < 10000:
+    while True and i < 100000:
         name_parts[-1] = str(i).zfill(padding)
         shot_name = '_'.join(name_parts)
         with DBSession.no_autoflush:
