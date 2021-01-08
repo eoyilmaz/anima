@@ -618,6 +618,22 @@ proc string assembleCmd( string $shots )
 	return $cmd;
 }
 
+
+global proc string performPlayblastShot (int $action, string $shots )
+{
+    // The patched version
+    python("from anima.env.mayaEnv import auxiliary; pb = auxiliary.perform_playblast_shot(\"" + $shots + "\")");
+
+    return "";
+}
+
+
+global proc set_range_from_shot(string $shot)
+{
+    python("from anima.env.mayaEnv import auxiliary; shot=pm.PyNode(\"" + $shot + "\"); auxiliary.set_range_from_shot(shot);");
+}
+
+
 //
 //  Procedure Name:
 //      performPlayblastShot
@@ -636,7 +652,7 @@ proc string assembleCmd( string $shots )
 //  Return Value:
 //      None.
 //
-global proc string performPlayblastShot (int $action, string $shots )
+global proc string performPlayblastShot_orig (int $action, string $shots )
 {
         string $cmd = "";
 

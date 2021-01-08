@@ -2116,6 +2116,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.check_version_file_exists(old_version):
             return
 
+        # close the dialog
+        self.close()
+
         # call the environments open method
         if self.environment is not None:
             repr_name = self.representations_comboBox.currentText()
@@ -2171,15 +2174,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 # delete the dialog when it is done
                 version_updater_main_dialog.deleteLater()
-                # close the dialog
-                self.close()
-            else:
-                # close the dialog
-                self.close()
-
-        else:
-            # close the dialog
-            self.close()
 
     def open_as_new_version_push_button_clicked(self):
         """Opens the selected version and immediately saves it as a new version

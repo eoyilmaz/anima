@@ -1683,15 +1683,14 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # while len(references_list):
         for ref in references_list:
-            #current_ref = references_list.pop(0)
+            # current_ref = references_list.pop(0)
             current_ref = ref
 
             current_ref_path = current_ref.path
 
             if current_ref_path != prev_path:
                 # get current version
-                current_version = \
-                    self.get_version_from_full_path(current_ref_path)
+                current_version = self.get_version_from_full_path(current_ref_path)
                 prev_vers = current_version
             else:
                 current_version = prev_vers
@@ -1699,8 +1698,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             # update to a new version if present
             if current_version in reference_resolution['update']:
                 if not current_version.is_latest_published_version():
-                    latest_published_version = \
-                        current_version.latest_published_version
+                    latest_published_version = current_version.latest_published_version
 
                     # replace the current reference with this one
                     current_ref.replaceWith(

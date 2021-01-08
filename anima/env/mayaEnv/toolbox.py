@@ -157,7 +157,7 @@ def UI():
         pm.deleteUI(window_name, wnd=True)
 
     toolbox_window = pm.window(
-        'toolbox_window',
+        window_name,
         wh=(width, height),
         title="Anima ToolBox"
     )
