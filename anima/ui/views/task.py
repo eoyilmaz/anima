@@ -555,7 +555,11 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 elif selected_item is upload_thumbnail_action:
                     from anima.ui import utils as ui_utils
-                    thumbnail_full_path = ui_utils.choose_thumbnail(self)
+                    thumbnail_full_path = ui_utils.choose_thumbnail(
+                        self,
+                        start_path=entity.absolute_path,
+                        dialog_title="Choose Thumbnail For: %s" % entity.name
+                    )
 
                     # if the thumbnail_full_path is empty do not do anything
                     if thumbnail_full_path == "":

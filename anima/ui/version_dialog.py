@@ -2359,24 +2359,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def upload_thumbnail_push_button_clicked(self):
         """runs when the upload_thumbnail_pushButton is clicked
         """
+        # get the current task
+        task_id = self.tasks_tree_view.get_task_id()
+
+        if not task_id:
+            return
+
+        from stalker import Task
+        task = Task.query.get(task_id)
+
+        if not task:
+            return
+
         from anima.ui import utils as ui_utils
-        thumbnail_full_path = ui_utils.choose_thumbnail(self)
+        thumbnail_full_path = ui_utils.choose_thumbnail(
+            self,
+            start_path=task.absolute_path,
+            dialog_title="Choose Thumbnail for: %s" % task.name
+        )
 
         # if the thumbnail_full_path is empty do not do anything
         if thumbnail_full_path == "":
             return
 
-        # get the current task
-        task_id = self.tasks_tree_view.get_task_id()
+        ui_utils.upload_thumbnail(task, thumbnail_full_path)
 
-        if task_id:
-            # TODO: Update this too
-            from stalker import Task
-            task = Task.query.get(task_id)
-            ui_utils.upload_thumbnail(task, thumbnail_full_path)
-
-            # update the thumbnail
-            self.update_thumbnail()
+        # update the thumbnail
+        self.update_thumbnail()
 
     def clear_thumbnail_push_button_clicked(self):
         """clears the thumbnail of the current task if it has one
