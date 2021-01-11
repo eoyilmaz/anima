@@ -180,13 +180,17 @@ def upload_thumbnail(task, thumbnail_full_path):
     DBSession.commit()
 
 
-def choose_thumbnail(parent):
+def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
     """shows a dialog for thumbnail upload
     """
+
+    if start_path is None:
+        start_path = os.path.expanduser("~")
+
     # get a file from a FileDialog
     thumbnail_full_path = QtWidgets.QFileDialog.getOpenFileName(
-        parent, "Choose Thumbnail",
-        os.path.expanduser("~"),
+        parent, dialog_title,
+        start_path,
         # "Image Files (*.png *.jpg *.bmp *.tga *.tif *.tiff *.exr)"
         "Image Files (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)"
     )
