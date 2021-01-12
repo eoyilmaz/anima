@@ -54,10 +54,6 @@ def register():
     for cls in classes:
         register_class(cls)
 
-    # also do the database connection here
-    from anima.utils import do_db_setup
-    do_db_setup()
-
 
 def unregister():
     from bpy.utils import unregister_class

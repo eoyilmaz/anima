@@ -19,15 +19,4 @@ class Main_Panel(Panel):
     def draw(self, context):
         """draws the ui
         """
-        # layout = self.layout
-        # scene = context.scene
-        #
-        # box = layout.box()
-        # row = box.row()
-        # if context.window_manager.measureit_run_opengl is False:
-        #     icon = 'PLAY'
-        #     txt = 'Show'
-        # else:
-        #     icon = "PAUSE"
-        #     txt = 'Hide'
         pass
