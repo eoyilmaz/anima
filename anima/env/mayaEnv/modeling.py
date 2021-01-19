@@ -227,10 +227,13 @@ class Modeling(object):
     @classmethod
     def hierarchy_instancer(cls):
         from anima.env.mayaEnv import hierarchy_instancer
+        new_nodes = []
 
         instancer = hierarchy_instancer.HierarchyInstancer()
         for node in pm.ls(sl=1):
-            instancer.instance(node)
+            new_nodes.append(instancer.instance(node))
+
+        pm.select(new_nodes)
 
     @classmethod
     def relax_vertices(cls):

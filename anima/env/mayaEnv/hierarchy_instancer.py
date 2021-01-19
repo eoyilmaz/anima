@@ -78,7 +78,7 @@ class HierarchyInstancer(object):
         if len(source_hierarchy) < 1:
             dup_node = pm.duplicate(source_transform_node, ilf=1, rc=True)[0]
             pm.select(dup_node)
-            return
+            return dup_node
 
         dup_node = pm.duplicate(source_transform_node, rc=True)[0]
         dup_hierarchy = self.walk_hierarchy(dup_node)
@@ -95,5 +95,4 @@ class HierarchyInstancer(object):
                 pm.parent(new_instance_node, node.getParent(), r=False)
                 pm.delete(node)
 
-        pm.select(dup_node)
         return dup_node
