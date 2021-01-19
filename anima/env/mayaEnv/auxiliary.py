@@ -1488,7 +1488,7 @@ class Playblaster(object):
         else:
             shot_info = shot_name
 
-        cf = pm.currentTime(q=1) + 1
+        cf = int(pm.currentTime(q=1)) + 1
 
         import timecode
         frame_rate = 25
