@@ -380,24 +380,27 @@ class Render(object):
 
                 # *********************************************
                 # Height
-                height_file_path = glob.glob(
-                    "%s/%s_Height*" % (texture_path, material_name))
-                if height_file_path:
-                    height_file_path = height_file_path[0]
+                height_channel_names = ["Height", "DisplaceHeightField"]
+                for height_channel_name in height_channel_names:
+                    height_file_path = glob.glob(
+                        "%s/%s_%s*" % (texture_path, material_name, height_channel_name)
+                    )
+                    if height_file_path:
+                        height_file_path = height_file_path[0]
 
-                    # create a displacement node
-                    shading_node = \
-                    material.attr("outColor").outputs(type="shadingEngine")[0]
-                    disp_shader = \
-                        pm.shadingNode('displacementShader', asShader=1)
-                    disp_shader.displacement >> shading_node.displacementShader
+                        # create a displacement node
+                        shading_node = material.attr("outColor").outputs(type="shadingEngine")[0]
+                        disp_shader = pm.shadingNode('displacementShader', asShader=1)
+                        disp_shader.displacement >> shading_node.displacementShader
 
-                    # create texture
-                    disp_file = pm.shadingNode('file', asTexture=1)
-                    disp_file.fileTextureName.set(height_file_path)
-                    disp_file.colorSpace.set('Raw')
-                    disp_file.alphaIsLuminance.set(1)
-                    disp_file.outAlpha >> disp_shader.displacement
+                        # create texture
+                        disp_file = pm.shadingNode('file', asTexture=1)
+                        disp_file.fileTextureName.set(height_file_path)
+                        disp_file.colorSpace.set('Raw')
+                        disp_file.alphaIsLuminance.set(1)
+                        disp_file.outAlpha >> disp_shader.displacement
+
+                        break
 
                 # *********************************************
                 # Metalness
@@ -439,17 +442,17 @@ class Render(object):
                     normal_file_path = normal_file_path[0]
 
                     # Redshift BumpMap doesn't work properly with Substance normals
-                    # rs_normal_map = pm.shadingNode("RedshiftBumpMap", asUtility=1)
-                    rs_normal_map = pm.shadingNode("RedshiftNormalMap", asUtility=1)
-                    # # set to tangent-space normals
-                    # rs_normal_map.inputType.set(1)
-                    # normal_file = pm.shadingNode("file", asTexture=1)
-                    # normal_file.fileTextureName.set(normal_file_path)
-                    # normal_file.colorSpace.set('Raw')
-                    # normal_file.outColor >> rs_normal_map.input
-                    rs_normal_map.tex0.set(normal_file_path)
+                    rs_normal_map = pm.shadingNode("RedshiftBumpMap", asUtility=1)
+                    # rs_normal_map = pm.shadingNode("RedshiftNormalMap", asUtility=1)
+                    # set to tangent-space normals
+                    rs_normal_map.inputType.set(1)
+                    normal_file = pm.shadingNode("file", asTexture=1)
+                    normal_file.fileTextureName.set(normal_file_path)
+                    normal_file.colorSpace.set('Raw')
+                    normal_file.outColor >> rs_normal_map.input
+                    # rs_normal_map.tex0.set(normal_file_path)
 
-                    rs_normal_map.outDisplacementVector >> material.bump_input
+                    rs_normal_map.out >> material.bump_input
                     rs_normal_map.scale.set(1)
 
                 # *********************************************
