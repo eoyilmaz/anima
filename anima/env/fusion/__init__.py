@@ -360,6 +360,32 @@ class Fusion(EnvironmentBase):
                 "Comp.FrameFormat.DepthLock": True,
             })
 
+    def set_shot_from_range(self, version):
+        """sets the Shot.cut_in and Shot.cut_out attributes from the current frame range if the current task is related
+        to a Stalker Shot instance.
+
+        :param Stalker.Version version: A Stalker Version instance.
+        :return:
+        """
+        # check if this is a shot related task
+        is_shot_related_task = False
+        shot = None
+        from stalker import Shot
+        for task in version.task.parents:
+            if isinstance(task, Shot):
+                is_shot_related_task = True
+                shot = task
+                break
+
+        if is_shot_related_task and shot:
+            # set frame ranges
+            cut_in, cut_out = self.get_frame_range()
+            shot.cut_in = int(cut_in)
+            shot.cut_out = int(cut_out)
+            from stalker.db.session import DBSession
+            DBSession.add(shot)
+            DBSession.commit()
+
     def export_as(self, version):
         """the export action for nuke environment
         """
@@ -666,7 +692,7 @@ class Fusion(EnvironmentBase):
             version.absolute_path,
             'Outputs',
             version.take_name,
-            # 'v%03d' % version.version_number,
+            'v%03d' % version.version_number,
             file_format
         )
 
@@ -733,7 +759,7 @@ class Fusion(EnvironmentBase):
                             "type": "OCIOColorSpace",
                             "ref_id": random_ref_id,
                             "input_list": {
-                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.1/config.ocio",
+                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                 "SourceSpace": "ACES - ACEScg",
                                 "OutputSpace": "Output - Rec.709",
                             },
@@ -741,7 +767,7 @@ class Fusion(EnvironmentBase):
                                 'Input': {
                                     "type": "OCIOColorSpace",
                                     "input_list": {
-                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.1/config.ocio",
+                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                         "SourceSpace": "Utility - Linear - sRGB",
                                         "OutputSpace": "ACES - ACEScg",
                                     },
