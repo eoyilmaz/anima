@@ -7,7 +7,7 @@
 import os
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import add_button
+from anima.ui.utils import add_button, add_line
 
 __here__ = os.path.abspath(__file__)
 
@@ -176,12 +176,23 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             )
             button.setMinimumSize(QtCore.QSize(25, 0))
 
-        # Delete Recent Comps
+        add_line(general_tab_vertical_layout)
+
+        # Range From Shot
         add_button(
             'Range From Shot',
             general_tab_vertical_layout,
             GenericTools.range_from_shot
         )
+
+        # Shot From Range
+        add_button(
+            'Shot From Range',
+            general_tab_vertical_layout,
+            GenericTools.shot_from_range
+        )
+
+        add_line(general_tab_vertical_layout)
 
         # Delete Recent Comps
         add_button(
@@ -393,6 +404,22 @@ class GenericTools(object):
         fusion_env = fusion.Fusion()
         version = fusion_env.get_current_version()
         fusion_env.set_range_from_shot(version)
+
+    @classmethod
+    def shot_from_range(cls):
+        """updates the Shot.cut_in and Shot.cut_out attributes from the current range
+        """
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from anima.env import fusion
+        fusion_env = fusion.Fusion()
+        version = fusion_env.get_current_version()
+        try:
+            fusion_env.set_shot_from_range(version)
+        except BaseException as e:
+            QtWidgets.QMessageBox.critical(None, "Error", "%s" % e)
+        finally:
+            QtWidgets.QMessageBox.information(None, "Success", "Shot Range has been updated successfully!")
 
     @classmethod
     def render_merger(cls):
