@@ -180,14 +180,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # Range From Shot
         add_button(
-            'Range From Shot',
+            'Get Comp Range From Database',
             general_tab_vertical_layout,
             GenericTools.range_from_shot
         )
 
         # Shot From Range
         add_button(
-            'Shot From Range',
+            'Set Comp Range To Database',
             general_tab_vertical_layout,
             GenericTools.shot_from_range
         )
