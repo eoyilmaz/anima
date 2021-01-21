@@ -266,3 +266,16 @@ def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
     )
 
     return button
+
+
+def add_line(layout):
+    """Adds a horizontal line
+
+    :param layout:
+    :return:
+    """
+
+    line = QtWidgets.QFrame(layout.parent())
+    line.setFrameShape(QtWidgets.QFrame.HLine)
+    line.setFrameShadow(QtWidgets.QFrame.Sunken)
+    layout.addWidget(line)
