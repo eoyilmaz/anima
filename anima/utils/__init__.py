@@ -1893,8 +1893,8 @@ def duplicate_task_hierarchy(task, parent, name, description, user,
 def fix_task_statuses(task):
     """fixes task statuses
     """
-    from stalker import Task
     if task:
+        from stalker import Task
         assert isinstance(task, Task)
         task.update_status_with_dependent_statuses()
         task.update_status_with_children_statuses()

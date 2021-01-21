@@ -29,7 +29,6 @@ def version_dialog(lib='PySide', logging_level=logging.WARNING, parent=None):
         SET_PYQT4()
 
     from anima.env import fusion
-    reload(fusion)
     fusion_env = fusion.Fusion()
     fusion_env.name = 'Fusion'
 
