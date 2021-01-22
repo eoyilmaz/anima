@@ -757,11 +757,23 @@ class MediaManager(object):
 
         # first process the -i flag
         if 'i' in kwargs:
+            ss_key = 'ss'
+            ss_flag = '-ss'
+            ss_value = None
+            if 'ss' in kwargs:
+                # seek for each input
+                # use pop to remove the key
+                ss_value = kwargs.pop(ss_key)
+
             key = 'i'
             flag = '-%s' % key
             # use pop to remove the key
             value = kwargs.pop(key)
             if not isinstance(value, list):
+                if ss_value:
+                    # put ss before i
+                    args.append(ss_flag)
+                    args.append(ss_value)
                 # append the flag
                 args.append(flag)
                 # append the value
@@ -769,7 +781,11 @@ class MediaManager(object):
             else:
                 # it is a multi flag
                 # so append the flag every time you append the key
-                for v in value:
+                for i, v in enumerate(value):
+                    if ss_value and ss_value[i]:
+                        # put ss before i
+                        args.append(ss_flag)
+                        args.append(ss_value[i])
                     args.append(flag)
                     args.append(str(v))
 
@@ -899,7 +915,7 @@ class MediaManager(object):
         conversion_options = {
             'i': input_path,
             'vcodec': 'libx264',
-            'pix_fmt': 'yuv420p',  # to support whatsapp
+            'vf': 'format=yuv420p',  # to support whatsapp
             # 'profile:v': 'main',
             'g': 1,  # key frame every 1 frame
             'b:v': '20480k',
@@ -962,7 +978,7 @@ class MediaManager(object):
             'qscale:v': 13,  # use between 9 - 13
             'vcodec': 'prores_ks',
             'vendor': 'ap10',
-            'pix_fmt': 'yuv422p10le',
+            'vf': 'format=yuv422p10le',
             'o': output_path
         }
         conversion_options.update(options)
@@ -994,7 +1010,7 @@ class MediaManager(object):
         # -c:v mjpeg
         # -qscale:v 1
         # -vendor ap10
-        # -pix_fmt yuvj422p
+        # -vf format=yuvj422p
         # -s 2048x1152
         # -r 48 output.mov
         conversion_options = {
@@ -1004,7 +1020,7 @@ class MediaManager(object):
             'qscale:v': 1,
             'vcodec': 'mjpeg',
             'vendor': 'ap10',
-            'pix_fmt': 'yuv422p',
+            'vf': 'format=yuv422p',
             'o': output_path
         }
         conversion_options.update(options)
