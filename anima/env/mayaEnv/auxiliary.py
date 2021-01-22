@@ -1052,11 +1052,9 @@ def perform_playblast(action):
             'viewer': 0
         }
 
-        # ask playblast format
-        playblast_format = ask_playblast_format()
-        if playblast_format == 'image':
-            extra_playblast_options['fmt'] = 'image'
-            extra_playblast_options['compression'] = 'png'
+        # always use PNG as image format which now properly supports audio files
+        extra_playblast_options['fmt'] = 'image'
+        extra_playblast_options['compression'] = 'png'
 
         # ask resolution
         resolution = ask_playblast_resolution()
@@ -1610,11 +1608,11 @@ class Playblaster(object):
             q=1,
             sound=1
         )
-        nodes = pm.ls(audio_node_name)
-        if nodes:
-            return nodes[0]
-        else:
-            return None
+        try:
+            audio_node = pm.PyNode(audio_node_name)
+        except pm.MayaNodeError:
+            return
+        return audio_node
 
     def reset_user_view_options_storage(self):
         """resets the user view options storage
@@ -1860,8 +1858,7 @@ class Playblaster(object):
                 )[0]
             # also render to temp
             import tempfile
-            playblast_options['filename'] = \
-                os.path.join(tempfile.gettempdir(), filename)
+            playblast_options['filename'] = os.path.join(tempfile.gettempdir(), filename)
 
         result = []
         try:
@@ -1882,28 +1879,43 @@ class Playblaster(object):
                 except (AttributeError, RuntimeError) as e:
                     pass
 
-            result = [pm.playblast(**playblast_options)]
+            result = [
+                {
+                    'video': pm.playblast(**playblast_options),
+                    'audio': {
+                        'node': audio_node,
+                        'offset': playblast_options.get('startTime') - audio_node.offset.get() if audio_node else 0
+                    }
+                }
+            ]
         finally:
             self.restore_user_options()
 
         return self.convert_image_sequence_to_video(result)
 
     @classmethod
-    def convert_image_sequence_to_video(cls, result):
+    def convert_image_sequence_to_video(cls, data):
         """converts image sequence to video
         """
         import os
         import glob
         # convert image sequences to h264
         new_result = []
-        for output in result:
+        for output in data:
             # convert each output to a mp4 if the output is a frame
             # sequence
-            if output and '#' in output:
+            video_file_path = output
+            audio_data = None
+            if isinstance(output, dict):
+                # this is possibly a more complex output that includes audio
+                video_file_path = output.get('video')
+                audio_data = output.get('audio')
+
+            if video_file_path and '#' in video_file_path:
                 # convert to mp4
 
                 # add start_number option
-                temp_str = output.replace('#', '*')
+                temp_str = video_file_path.replace('#', '*')
                 sequence = sorted(glob.glob(temp_str))
                 options = {
                     '-y': ''  # overwrite previous playblast
@@ -1921,21 +1933,48 @@ class Playblaster(object):
                     }
 
                 # first convert the #'s to %03d format
-                temp_str = output.replace('#', '')
-                hash_count = len(output) - len(temp_str)
-                splits = output.split('#')
-                output = '%s%s%s' % (
+                temp_str = video_file_path.replace('#', '')
+                hash_count = len(video_file_path) - len(temp_str)
+                splits = video_file_path.split('#')
+                video_file_path = '%s%s%s' % (
                     splits[0],
                     '%0{hash_count}d'.format(hash_count=hash_count),
                     splits[-1]
                 )
-                output_h264 = splits[0]
+                video_file_path_h264 = splits[0]
+
+                # check audio output
+                if audio_data:
+                    audio_node = audio_data.get('node')
+                    if audio_node:
+                        audio_file_path = audio_node.filename.get()
+                        # audio offset should be subtracted from the current playblast range
+                        # and should be converted to a TimeCode
+                        audio_offset = audio_data.get('offset')
+                        frame_rate = 25
+                        from anima.env import mayaEnv
+                        maya_env = mayaEnv.Maya()
+                        v = maya_env.get_current_version()
+                        if v:
+                            frame_rate = v.task.project.fps
+
+                        options['i'] = [video_file_path, audio_file_path]
+                        options['map'] = ['0:0', '1:0']
+
+                        if audio_offset:
+                            audio_offset_in_milli_seconds = int(audio_offset / frame_rate * 1000)
+                            if audio_offset_in_milli_seconds < 0:
+                                # use "ss" to trim the audio
+                                options['ss'] = [None, '%sms' % abs(audio_offset_in_milli_seconds)]
+                            else:
+                                # use "af" to add silence
+                                options['af'] = '"adelay=delays=%s:all=true"' % audio_offset_in_milli_seconds
 
                 from anima.utils import MediaManager
                 mm = MediaManager()
-                output = mm.convert_to_h264(output, output_h264, options=options)
+                video_file_path = mm.convert_to_h264(video_file_path, video_file_path_h264, options=options)
 
-            new_result.append(output)
+            new_result.append(video_file_path)
         return new_result
 
     def playblast_shot(self, shot, extra_playblast_options=None):
@@ -1976,8 +2015,7 @@ class Playblaster(object):
             self.create_hud(self.hud_name)
 
             # create video playblast
-            temp_video_file_full_path = \
-                shot.playblast(options=shot_playblast_options)
+            temp_video_file_full_path = shot.playblast(options=shot_playblast_options)
         finally:
             self.restore_user_options()
 
@@ -2029,21 +2067,25 @@ class Playblaster(object):
         for shot in shots:
             per_shot_playblast_options = copy.copy(generic_playblast_options)
 
+            shot_start_frame = shot.startFrame.get()
+            shot_end_frame = shot.endFrame.get()
+
             if range_selected:
                 # skip this shot if the selected playback range do not
                 # coincide with this shot range
-
-                shot_start_frame = shot.startFrame.get()
-                shot_end_frame = shot.endFrame.get()
-
                 if (range_start > shot_start_frame and range_start > shot_end_frame) or \
-                   (range_end < shot_start_frame and range_end < shot_end_frame):
+                        (range_end < shot_start_frame and range_end < shot_end_frame):
                     caller.step()
                     continue
 
-            temp_video_file_full_path = \
-                self.playblast_shot(shot, per_shot_playblast_options)
-            temp_video_file_full_paths.append(temp_video_file_full_path)
+            temp_video_file_full_path = self.playblast_shot(shot, per_shot_playblast_options)
+            temp_video_file_full_paths.append({
+                'video': temp_video_file_full_path,
+                'audio': {
+                    'node': audio_node,
+                    'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0
+                }
+            })
 
             caller.step()
 
