@@ -519,11 +519,8 @@ class Fusion(EnvironmentBase):
     def get_frame_range(self):
         """returns the current frame range
         """
-        # self._root = self.get_root_node()
-        # startFrame = int(self._root.knob('first_frame').value())
-        # endFrame = int(self._root.knob('last_frame').value())
-        start_frame = self.comp.GetAttrs()['COMPN_GlobalStart']
-        end_frame = self.comp.GetAttrs()['COMPN_GlobalEnd']
+        start_frame = self.comp.GetAttrs()['COMPN_RenderStart']
+        end_frame = self.comp.GetAttrs()['COMPN_RenderEnd']
         return start_frame, end_frame
 
     def set_frame_range(self, start_frame=1, end_frame=100,
@@ -542,13 +539,11 @@ class Fusion(EnvironmentBase):
     def set_fps(self, fps=25):
         """sets the current fps
         """
-        #        self._root.knob('fps').setValue(fps)
         pass
 
     def get_fps(self):
         """returns the current fps
         """
-        #return int(self._root.knob('fps').getValue())
         return None
 
     def fix_loader_paths(self):
