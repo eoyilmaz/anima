@@ -415,19 +415,24 @@ class Fusion(EnvironmentBase):
 
         self.fusion.LoadComp(version_full_path if sys.version_info[0] >= 3 else version_full_path.encode())
 
+        self.comp.Lock()
+
+        # set the project_directory
+        # get the current comp fist
+        self.comp = self.fusion.GetCurrentComp()
+        self.project_directory = os.path.dirname(version.absolute_path)
+
+        # update the savers
+        self.create_main_saver_node(version)
+
+        # file paths in different OS'es should be replaced with a path that is suitable for the current one
+        # update loaders
+        self.fix_loader_paths()
+
+        self.comp.Unlock()
+
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
-
-        # # set the project_directory
-        # self.project_directory = os.path.dirname(version.absolute_path)
-
-        # TODO: file paths in different OS'es should be replaced with the current one
-        # Check if the file paths are starting with a string matching one of
-        # the OS'es project_directory path and replace them with a relative one
-        # matching the current OS
-
-        # # replace paths
-        # self.replace_external_paths()
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
@@ -545,6 +550,54 @@ class Fusion(EnvironmentBase):
         """
         #return int(self._root.knob('fps').getValue())
         return None
+
+    def fix_loader_paths(self):
+        """fixes loader paths mainly from one OS to another
+        """
+        import os
+
+        # get all loaders
+        for loader in self.comp.GetToolList(False, 'Loader').values():
+            path = self.get_node_input_entry_value_by_name(loader, 'Clip')
+            if os.path.sep not in path:
+                # replace '\\' with os.path.sep
+                path = path.replace('/', '\\').replace('\\', os.path.sep)
+                self.set_node_input_entry_by_name(loader, 'Clip', path)
+
+    def get_node_input_entry_by_name(self, node, key):
+        """returns the Input List entry by input list entry name
+
+        :param node: The node
+        :param string key: The entry name
+        :return:
+        """
+        node_input_list = node.GetInputList()
+        for input_entry_key in node_input_list.keys():
+            input_entry = node_input_list[input_entry_key]
+            input_id = input_entry.GetAttrs()['INPS_ID']
+            if input_id == key:
+                return input_entry
+
+    def get_node_input_entry_value_by_name(self, node, key):
+        """returns the Input List entry by input list entry name
+
+        :param node: The node
+        :param string key: The entry name
+        :return:
+        """
+        input_entry = self.get_node_input_entry_by_name(node, key)
+        return input_entry[0]
+
+    def set_node_input_entry_by_name(self, node, key, value):
+        """sets the Input List entry value by Input ID
+
+        :param node: The node
+        :param string key: The INS_ID of the key
+        :param value: The value
+        :return:
+        """
+        input_entry = self.get_node_input_entry_by_name(node, key)
+        input_entry[0] = value
 
     def get_main_saver_node(self):
         """Returns the main saver nodes in the scene or an empty list.
@@ -760,7 +813,7 @@ class Fusion(EnvironmentBase):
                             "ref_id": random_ref_id,
                             "input_list": {
                                 "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
-                                "SourceSpace": "ACES - ACEScg",
+                                "SourceSpace": "ACES - ACES2065-1",
                                 "OutputSpace": "Output - Rec.709",
                             },
                             'connected_to': {
@@ -769,7 +822,7 @@ class Fusion(EnvironmentBase):
                                     "input_list": {
                                         "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                         "SourceSpace": "Utility - Linear - sRGB",
-                                        "OutputSpace": "ACES - ACEScg",
+                                        "OutputSpace": "ACES - ACES2065-1",
                                     },
                                 }
                             }
