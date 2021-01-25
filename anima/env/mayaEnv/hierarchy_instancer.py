@@ -32,19 +32,19 @@ class HierarchyInstancer(object):
     """
 
     def __init__(self):
-        self._instanceables = []
+        self._instantiable_types = []
 
-        self.add_instanceable(pm.nodetypes.Mesh)
-        self.add_instanceable(pm.nodetypes.NurbsCurve)
-        self.add_instanceable(pm.nodetypes.NurbsSurface)
-        self.add_instanceable(pm.nodetypes.Subdiv)
-        self.add_instanceable(pm.nodetypes.Locator)
+        self.add_instantiable(pm.nodetypes.Mesh)
+        self.add_instantiable(pm.nodetypes.NurbsCurve)
+        self.add_instantiable(pm.nodetypes.NurbsSurface)
+        self.add_instantiable(pm.nodetypes.Subdiv)
+        self.add_instantiable(pm.nodetypes.Locator)
 
-    def add_instanceable(self, node_type):
-        """Adds new instanceable node type, the type should be a
+    def add_instantiable(self, node_type):
+        """Adds new instantiable node type, the type should be a
         pymel.core.nodeType class
         """
-        self._instanceables.append(node_type)
+        self._instantiable_types.append(node_type)
 
     def walk_hierarchy(self, node):
         """for the given dag node, walks through the hierarchy
@@ -68,9 +68,9 @@ class HierarchyInstancer(object):
         """
 
         # duplicate the given node
-        # then replace the instanceable nodes with instances
+        # then replace the instantiable nodes with instances
 
-        # find instanceable nodes in the node and dupNode
+        # find instantiable nodes in the node and dupNode
         source_hierarchy = self.walk_hierarchy(source_transform_node)
 
         # if there is no node in the sourceHierarchy just return
@@ -86,8 +86,7 @@ class HierarchyInstancer(object):
         for i, node in enumerate(dup_hierarchy):
 
             shape = node.getShape()
-            if shape is not None and isinstance(shape,
-                                                tuple(self._instanceables)):
+            if shape is not None and isinstance(shape, tuple(self._instantiable_types)):
                 # instance the corresponding sourceNode
                 source_node = source_hierarchy[i]
                 new_instance_node = pm.duplicate(source_node, ilf=True)[0]

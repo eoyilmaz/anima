@@ -31,7 +31,7 @@ def measure_time(f_name):
             try:
                 return_data = f(*args, **kwargs)
             except TypeError:
-                    return_data = f(*args)
+                return_data = f(*args)
             finally:
                 end = time.time()
                 indentation -= tab_stop
