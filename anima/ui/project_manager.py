@@ -14,9 +14,6 @@ from anima.ui import project_manager
 project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
 
-from anima.ui import SET_PYSIDE2
-SET_PYSIDE2()
-
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
