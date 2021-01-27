@@ -1378,8 +1378,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def replace_external_paths(self, mode=0):
         """Replaces all the external paths.
 
-        Because absolute mode is the default and only mode, the 'mode'
-        parameter is not used.
+        Because absolute mode is the default and only mode, the 'mode' parameter is not used.
 
         replaces:
           * references
@@ -1387,15 +1386,15 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
           * arnold ass paths
           * arnold aiVolume node path
           * image planes
+          * and a lot of other nodes, just read the code...
 
         Absolute mode works best for now.
 
         .. note::
 
-          The system doesn't care about the mentalrayTexture nodes because the
-          lack of a good environment variable support from that node. Use
-          regular maya file nodes with mib_texture_filter_lookup nodes to have
-          the same sharp results.
+          The system doesn't care about the mentalrayTexture nodes because the lack of a good environment variable
+          support from that node. Use regular maya file nodes with mib_texture_filter_lookup nodes to have the same
+          sharp results.
         """
         start = time.time()
         workspace_path = pm.workspace.path
@@ -1437,75 +1436,81 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             'AlembicNode': 'abc_File',
             'gpuCache': 'cacheFileName',
             'RedshiftNormalMap': 'tex0',
+            'RedshiftProxyMesh': 'fileName',
+            'RedshiftDomeLight': ['tex0', 'tex1']
         }
 
         for node_type in types_and_attrs.keys():
-            attr_name = types_and_attrs[node_type]
-            for node in pm.ls(type=node_type):
-                # # do not update if the node is a referenced node
-                # if node.referenceFile():
-                #     continue
+            attr_names = types_and_attrs[node_type]
+            if not isinstance(attr_names, list):
+                attr_names = [attr_names]
 
-                orig_path = node.getAttr(attr_name)
-                if orig_path is None or orig_path == '' or '$' in orig_path:
-                    # do nothing it is already using an environment variable
-                    continue
+            for attr_name in attr_names:
+                for node in pm.ls(type=node_type):
+                    # # do not update if the node is a referenced node
+                    # if node.referenceFile():
+                    #     continue
 
-                logger.info("replacing file texture: %s" % orig_path)
+                    orig_path = node.getAttr(attr_name)
+                    if orig_path is None or orig_path == '' or '$' in orig_path:
+                        # do nothing it is already using an environment variable
+                        continue
 
-                path = os.path.normpath(
-                    os.path.expandvars(
-                        orig_path
-                    )
-                ).replace("\\", "/")
+                    logger.info("replacing file texture: %s" % orig_path)
 
-                # be sure that it is not a Windows path
-                if ':' not in path:
-                    # convert to absolute
-                    if not os.path.isabs(path):  # be sure it
-                        path = os.path.join(
-                            workspace_path,
-                            path
-                        ).replace("\\", "/")
+                    path = os.path.normpath(
+                        os.path.expandvars(
+                            orig_path
+                        )
+                    ).replace("\\", "/")
 
-                # convert to os independent absolute
-                new_path = Repository.to_os_independent_path(path)
+                    # be sure that it is not a Windows path
+                    if ':' not in path:
+                        # convert to absolute
+                        if not os.path.isabs(path):  # be sure it
+                            path = os.path.join(
+                                workspace_path,
+                                path
+                            ).replace("\\", "/")
 
-                if new_path != orig_path:
-                    logger.info("with: %s" % new_path)
+                    # convert to os independent absolute
+                    new_path = Repository.to_os_independent_path(path)
 
-                    # check if it has any incoming connections
-                    try:
-                        inputs = node.attr(attr_name).inputs(p=1)
-                    except TypeError as e:
-                        inputs = []
-                        print('ignoring this error: %s' % e)
-                        print('node     : %s' % node.name())
-                        print('attr_name: %s' % attr_name)
+                    if new_path != orig_path:
+                        logger.info("with: %s" % new_path)
 
-                    if len(inputs):
-                        # it has incoming connections
-                        # so set the other side
+                        # check if it has any incoming connections
                         try:
-                            inputs[0].set(new_path)
-                        except RuntimeError:
-                            pass
-                    else:
-                        try:
-                            # do it normally
-                            # preserve colorSpace info
-                            if node.hasAttr('colorSpace'):
-                                color_space = node.colorSpace.get()
-                            node.setAttr(attr_name, new_path)
-                            if node.hasAttr('colorSpace'):
-                                node.colorSpace.set(color_space)
-                        except RuntimeError:
-                            # it is locked or something
-                            # skip it
-                            pass
+                            inputs = node.attr(attr_name).inputs(p=1)
+                        except TypeError as e:
+                            inputs = []
+                            print('ignoring this error: %s' % e)
+                            print('node     : %s' % node.name())
+                            print('attr_name: %s' % attr_name)
+
+                        if len(inputs):
+                            # it has incoming connections
+                            # so set the other side
+                            try:
+                                inputs[0].set(new_path)
+                            except RuntimeError:
+                                pass
+                        else:
+                            try:
+                                # preserve colorSpace info
+                                color_space = None
+                                has_color_space = node.hasAttr('colorSpace')
+                                if has_color_space:
+                                    color_space = node.colorSpace.get()
+                                node.setAttr(attr_name, new_path)
+                                if has_color_space:
+                                    node.colorSpace.set(color_space)
+                            except RuntimeError:
+                                # it is probably locked
+                                # just skip it
+                                pass
         end = time.time()
-        logger.debug('replace_external_paths took '
-                     '%f seconds' % (end - start))
+        logger.debug('replace_external_paths took %f seconds' % (end - start))
 
     def create_workspace_file(self, path):
         """creates the workspace.mel at the given path
