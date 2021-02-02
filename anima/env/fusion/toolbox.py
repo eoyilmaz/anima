@@ -160,14 +160,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.delete_recent_comps
         )
 
-        # Set Frames At Once To 1, 4 and 8
+        # Set Frames At Once To 1, 5 and 10
         hbox_layout = QtWidgets.QHBoxLayout()
         general_tab_vertical_layout.addLayout(hbox_layout)
         set_frames_at_once_label = QtWidgets.QLabel()
         set_frames_at_once_label.setText("Set Frames At Once To")
         hbox_layout.addWidget(set_frames_at_once_label)
 
-        for i in [1, 4, 8]:
+        for i in [1, 5, 10]:
             button = add_button(
                 '%s' % i,
                 hbox_layout,
