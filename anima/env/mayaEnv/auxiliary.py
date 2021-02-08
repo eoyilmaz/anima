@@ -1947,7 +1947,7 @@ class Playblaster(object):
                 if audio_data:
                     audio_node = audio_data.get('node')
                     if audio_node:
-                        audio_file_path = audio_node.filename.get()
+                        audio_file_path = os.path.expandvars(audio_node.filename.get())
                         # audio offset should be subtracted from the current playblast range
                         # and should be converted to a TimeCode
                         audio_offset = audio_data.get('offset')
