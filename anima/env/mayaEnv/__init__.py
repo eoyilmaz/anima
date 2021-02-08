@@ -1427,17 +1427,22 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # store node types and the attribute that is holding the path
         types_and_attrs = {
-            'aiImage': 'filename',
-            'aiStandIn': 'filename',
-            'aiVolume': 'filename',
             'file': 'fileTextureName',
             'imagePlane': 'imageName',
             'audio': 'filename',
             'AlembicNode': 'abc_File',
             'gpuCache': 'cacheFileName',
+
+            # Arnold Nodes
+            'aiImage': 'filename',
+            'aiStandIn': 'filename',
+            'aiVolume': 'filename',
+
+            # Redshift Nodes
             'RedshiftNormalMap': 'tex0',
             'RedshiftProxyMesh': 'fileName',
-            'RedshiftDomeLight': ['tex0', 'tex1']
+            'RedshiftDomeLight': ['tex0', 'tex1'],
+            'RedshiftSprite': 'tex0',
         }
 
         for node_type in types_and_attrs.keys():
