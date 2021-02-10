@@ -1884,7 +1884,7 @@ class Playblaster(object):
                     'video': pm.playblast(**playblast_options),
                     'audio': {
                         'node': audio_node,
-                        'offset': playblast_options.get('startTime') - audio_node.offset.get() if audio_node else 0
+                        'offset': playblast_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0
                     }
                 }
             ]
