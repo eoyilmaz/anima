@@ -1308,8 +1308,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def get_fps(self):
         """returns the fps of the environment
         """
-        # return directly from maya, it uses the same format
-        return self.time_to_fps[pm.currentUnit(q=1, t=1)]
+        return int(mel.eval('float $fps = `currentTimeUnitToFPS`'))
 
     @classmethod
     def set_fps(cls, fps=25.0):
