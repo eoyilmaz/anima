@@ -1034,7 +1034,7 @@ def generate_thumbnail():
     return found_output_file
 
 
-def perform_playblast(action):
+def perform_playblast(action=0, resolution=None, playblast_view_options=None, upload_to_server=None):
     """the patched version of the original perform playblast
     """
     # check if the current scene is a Stalker related version
@@ -1057,28 +1057,35 @@ def perform_playblast(action):
         extra_playblast_options['compression'] = 'png'
 
         # ask resolution
-        resolution = ask_playblast_resolution()
+        if resolution is None:
+            resolution = ask_playblast_resolution()
+
         if resolution is None:
             return
 
         extra_playblast_options['percent'] = resolution
 
         # ask for playblast view options
-        playblast_view_options = ask_playblast_view_options()
+        if playblast_view_options is None:
+            playblast_view_options = ask_playblast_view_options()
 
         pb = Playblaster(playblast_view_options=playblast_view_options)
         outputs = pb.playblast(
             extra_playblast_options=extra_playblast_options
         )
 
-        response = pm.confirmDialog(
-            title='Upload To Server?',
-            message='Upload To Server?',
-            button=['Yes', 'No'],
-            defaultButton='No',
-            cancelButton='No',
-            dismissString='No'
-        )
+        if upload_to_server is None:  # so no default options
+            response = pm.confirmDialog(
+                title='Upload To Server?',
+                message='Upload To Server?',
+                button=['Yes', 'No'],
+                defaultButton='No',
+                cancelButton='No',
+                dismissString='No'
+            )
+        else:
+            response = 'Yes' if upload_to_server else 'No'
+
         if response == 'Yes':
             for output in outputs:
                 pb.upload_output(pb.version, output)
@@ -1149,6 +1156,13 @@ def ask_playblast_format():
         return 'image'
 
 
+def get_default_playblast_view_options():
+    """returns a copy of the default_playblast_View_options
+    """
+    import copy
+    return copy.copy(Playblaster.default_view_options)
+
+
 def ask_playblast_view_options():
     """asks the user the playblast view options
 
@@ -1176,7 +1190,7 @@ def ask_playblast_view_options():
         use_defaults = True
 
     if use_defaults:
-        user_playblast_view_options = copy.copy(Playblaster.default_view_options)
+        user_playblast_view_options = get_default_playblast_view_options()
 
     # display the current options and ask the user to change them
     # sadly we need to use Qt to display a proper modal dialog
@@ -1891,7 +1905,18 @@ class Playblaster(object):
         finally:
             self.restore_user_options()
 
-        return self.convert_image_sequence_to_video(result)
+        video = self.convert_image_sequence_to_video(result)
+
+        # delete all the temp files
+        try:
+            video_file_pattern = result[0]['video'].replace("#", "*")
+            import glob
+            for filename in glob.glob(video_file_pattern):
+                os.remove(filename)
+        except (OSError, AttributeError):
+            pass
+
+        return video
 
     @classmethod
     def convert_image_sequence_to_video(cls, data):
