@@ -2115,7 +2115,8 @@ class Playblaster(object):
                 'video': temp_video_file_full_path,
                 'audio': {
                     'node': audio_node,
-                    'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0
+                    'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0,
+                    'duration': shot_end_frame - shot_start_frame + 1
                 }
             })
 
