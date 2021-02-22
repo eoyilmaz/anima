@@ -1974,7 +1974,7 @@ class Playblaster(object):
                     '%0{hash_count}d'.format(hash_count=hash_count),
                     splits[-1]
                 )
-                video_file_path_h264 = splits[0]
+                video_file_path_h264 = splits[0].replace('.mov.', '.')
 
                 # check audio output
                 if audio_data:

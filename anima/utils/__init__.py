@@ -844,7 +844,7 @@ class MediaManager(object):
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
 
-        # print("ffmpeg command: %s" % " ".join(args))
+        print("ffmpeg command: %s" % " ".join(args))
 
         process = subprocess.Popen(
             args,
