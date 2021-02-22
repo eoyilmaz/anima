@@ -758,12 +758,19 @@ class MediaManager(object):
         # first process the -i flag
         if 'i' in kwargs:
             ss_key = 'ss'
-            ss_flag = '-ss'
+            ss_flag = '-%s' % ss_key
             ss_value = None
-            if 'ss' in kwargs:
+            to_key = 'to'
+            to_flag = '-%s' % to_key
+            to_value = None
+            if ss_key in kwargs:
                 # seek for each input
                 # use pop to remove the key
                 ss_value = kwargs.pop(ss_key)
+            if to_key in kwargs:
+                # seek for each input
+                # use pop to remove the key
+                to_value = kwargs.pop(to_key)
 
             key = 'i'
             flag = '-%s' % key
@@ -774,6 +781,11 @@ class MediaManager(object):
                     # put ss before i
                     args.append(ss_flag)
                     args.append(ss_value)
+                if to_value:
+                    # put to after ss and before i
+                    args.append(to_flag)
+                    args.append(to_value)
+
                 # append the flag
                 args.append(flag)
                 # append the value
@@ -786,6 +798,10 @@ class MediaManager(object):
                         # put ss before i
                         args.append(ss_flag)
                         args.append(ss_value[i])
+                    if to_value and to_value[i]:
+                        # put to after ss and before i
+                        args.append(to_flag)
+                        args.append(to_value[i])
                     args.append(flag)
                     args.append(str(v))
 
@@ -827,6 +843,8 @@ class MediaManager(object):
         if os.name == 'nt':
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+
+        # print("ffmpeg command: %s" % " ".join(args))
 
         process = subprocess.Popen(
             args,
@@ -2332,3 +2350,20 @@ def get_user_groups_from_ldap(ldap_connection, ldap_base_dn, login):
     """
     data = get_user_attributes_from_ldap(ldap_connection, ldap_base_dn, login, 'memberOf')
     return [d.split(',')[0].split("=")[1] for d in data]
+
+
+def milliseconds_to_tc(milliseconds):
+    """converts the given milliseconds to FFMpeg compatible timecode
+
+    :param milliseconds:
+    :return:
+    """
+    hours = int(milliseconds / 3600000)
+    residual_minutes = milliseconds - hours * 3600000
+    minutes = int(residual_minutes / 60000)
+    residual_seconds = residual_minutes - minutes * 60000
+    seconds = int(residual_seconds / 1000)
+    residual_milliseoncds = residual_seconds - seconds * 1000
+    milliseconds = int(residual_milliseoncds)
+
+    return "%02i:%02i:%02i.%03i" % (hours,minutes,seconds,milliseconds)

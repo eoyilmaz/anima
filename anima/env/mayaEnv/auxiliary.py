@@ -1813,6 +1813,9 @@ class Playblaster(object):
             if time_range_selected:
                 extra_playblast_options['startTime'] = start
                 extra_playblast_options['endTime'] = end
+            else:
+                extra_playblast_options['startTime'] = int(pm.playbackOptions(q=1, ast=1))
+                extra_playblast_options['endTime'] = int(pm.playbackOptions(q=1, aet=1))
             return self.playblast_simple(extra_playblast_options)
 
     def playblast_simple(self, extra_playblast_options=None):
@@ -1874,6 +1877,10 @@ class Playblaster(object):
             import tempfile
             playblast_options['filename'] = os.path.join(tempfile.gettempdir(), filename)
 
+        from anima.env import mayaEnv
+        menv = mayaEnv.Maya()
+        fps = menv.get_fps()
+
         result = []
         try:
             self.store_user_options()
@@ -1898,7 +1905,8 @@ class Playblaster(object):
                     'video': pm.playblast(**playblast_options),
                     'audio': {
                         'node': audio_node,
-                        'offset': playblast_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0
+                        'offset': playblast_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0,
+                        'duration': (playblast_options.get('endTime', 0) - playblast_options.get('startTime', 0) + 1)
                     }
                 }
             ]
@@ -1975,7 +1983,8 @@ class Playblaster(object):
                         audio_file_path = os.path.expandvars(audio_node.filename.get())
                         # audio offset should be subtracted from the current playblast range
                         # and should be converted to a TimeCode
-                        audio_offset = audio_data.get('offset')
+                        audio_offset = audio_data.get('offset', 0)
+                        audio_duration = audio_data.get('duration', 0)
                         frame_rate = 25
                         from anima.env import mayaEnv
                         maya_env = mayaEnv.Maya()
@@ -1986,23 +1995,12 @@ class Playblaster(object):
                         options['i'] = [os.path.normpath(video_file_path), os.path.normpath(audio_file_path)]
                         options['map'] = ['0:0', '1:0']
 
-                        if audio_offset:
-                            audio_offset_in_milli_seconds = int(audio_offset / frame_rate * 1000)
-                            if audio_offset_in_milli_seconds < 0:
-                                # use "ss" to trim the audio
-                                audio_offset_in_milli_seconds = abs(audio_offset_in_milli_seconds)
-                                hours = int(audio_offset_in_milli_seconds / 3600000 )
-                                residual_minutes = audio_offset_in_milli_seconds - hours * 3600000
-                                minutes = int(residual_minutes / 60000)
-                                residual_seconds = residual_minutes - minutes * 60000
-                                seconds = int(residual_seconds / 1000)
-                                residual_milliseoncds = residual_seconds - seconds * 1000
-                                milliseconds = int(residual_milliseoncds)
+                        audio_offset_in_milli_seconds = int(audio_offset * 1000 / frame_rate)
+                        duration_in_milli_seconds = int(audio_duration * 1000 / frame_rate)
 
-                                options['ss'] = [None, "%02i:%02i:%02i.%03i" % (hours,minutes,seconds,milliseconds)]
-                            else:
-                                # use "af" to add silence
-                                options['af'] = '"adelay=delays=%s:all=true"' % audio_offset_in_milli_seconds
+                        from anima import utils
+                        options['ss'] = [None, utils.milliseconds_to_tc(abs(audio_offset_in_milli_seconds))]
+                        options['to'] = [None, utils.milliseconds_to_tc(abs(audio_offset_in_milli_seconds) + duration_in_milli_seconds)]
 
                 from anima.utils import MediaManager
                 mm = MediaManager()
