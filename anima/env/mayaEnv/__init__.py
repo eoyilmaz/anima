@@ -1984,9 +1984,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         capitalEvilMethodNames = [name.upper() for name in EVIL_METHOD_NAMES]
         modelPanelLabel = pm.mel.eval('localizedPanelLabel("ModelPanel")')
         processedPanelNames = []
-        panelName = cmds.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
+        panelName = mc.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
         while panelName and panelName not in processedPanelNames:
-            editorChangedValue = cmds.modelEditor(panelName, query=True, editorChanged=True)
+            editorChangedValue = mc.modelEditor(panelName, query=True, editorChanged=True)
             parts = editorChangedValue.split(';')
             newParts = []
             changed = False
@@ -1998,7 +1998,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 else:
                     newParts.append(part)
             if changed:
-                cmds.modelEditor(panelName, edit=True, editorChanged=';'.join(newParts))
+                mc.modelEditor(panelName, edit=True, editorChanged=';'.join(newParts))
                 print("Model panel error fixed!")
             processedPanelNames.append(panelName)
-            panelName = cmds.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
+            panelName = mc.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
