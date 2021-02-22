@@ -1983,14 +1983,23 @@ class Playblaster(object):
                         if v:
                             frame_rate = v.task.project.fps
 
-                        options['i'] = [video_file_path, audio_file_path]
+                        options['i'] = [os.path.normpath(video_file_path), os.path.normpath(audio_file_path)]
                         options['map'] = ['0:0', '1:0']
 
                         if audio_offset:
                             audio_offset_in_milli_seconds = int(audio_offset / frame_rate * 1000)
                             if audio_offset_in_milli_seconds < 0:
                                 # use "ss" to trim the audio
-                                options['ss'] = [None, '%sms' % abs(audio_offset_in_milli_seconds)]
+                                audio_offset_in_milli_seconds = abs(audio_offset_in_milli_seconds)
+                                hours = int(audio_offset_in_milli_seconds / 3600000 )
+                                residual_minutes = audio_offset_in_milli_seconds - hours * 3600000
+                                minutes = int(residual_minutes / 60000)
+                                residual_seconds = residual_minutes - minutes * 60000
+                                seconds = int(residual_seconds / 1000)
+                                residual_milliseoncds = residual_seconds - seconds * 1000
+                                milliseconds = int(residual_milliseoncds)
+
+                                options['ss'] = [None, "%02i:%02i:%02i.%03i" % (hours,minutes,seconds,milliseconds)]
                             else:
                                 # use "af" to add silence
                                 options['af'] = '"adelay=delays=%s:all=true"' % audio_offset_in_milli_seconds
@@ -2163,6 +2172,10 @@ class Playblaster(object):
         hires_extension = '.mp4'
         webres_extension = '.webm'
         thumbnail_extension = '.png'
+
+        import os
+        if not os.path.exists(output_file_full_path):
+            raise RuntimeError('Output file does not exits: %s' % output_file_full_path)
 
         import os
         output_file_name = os.path.basename(output_file_full_path)
