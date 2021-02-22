@@ -404,6 +404,10 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         if int(pm.about(v=1)) >= 2017:
             auxiliary.switch_to_default_render_layer()
 
+        # before saving
+        # fix modelPanel scriptJob errors
+        self.remove_rogue_model_panel_change_events()
+
         # save the file
         pm.saveAs(
             version.absolute_full_path,
@@ -622,6 +626,10 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # set arnold texture search paths
         self.set_arnold_texture_search_path()
+
+        # after opening the file
+        # fix modelPanel scriptJob errors
+        self.remove_rogue_model_panel_change_events()
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
@@ -1969,3 +1977,28 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             self.update_reference_edits(started_from_version)
 
         return created_versions
+
+    @classmethod
+    def remove_rogue_model_panel_change_events(cls):
+        EVIL_METHOD_NAMES = ['DCF_updateViewportList', 'CgAbBlastPanelOptChangeCallback','onModelChange3dc', 'look']
+        capitalEvilMethodNames = [name.upper() for name in EVIL_METHOD_NAMES]
+        modelPanelLabel = mel.eval('localizedPanelLabel("ModelPanel")')
+        processedPanelNames = []
+        panelName = cmds.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
+        while panelName and panelName not in processedPanelNames:
+            editorChangedValue = cmds.modelEditor(panelName, query=True, editorChanged=True)
+            parts = editorChangedValue.split(';')
+            newParts = []
+            changed = False
+            for part in parts:
+                for evilMethodName in capitalEvilMethodNames:
+                    if evilMethodName in part.upper():
+                        changed = True
+                        break
+                else:
+                    newParts.append(part)
+            if changed:
+                cmds.modelEditor(panelName, edit=True, editorChanged=';'.join(newParts))
+                print("Model panel error fixed!")
+            processedPanelNames.append(panelName)
+            panelName = cmds.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
