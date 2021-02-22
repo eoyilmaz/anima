@@ -1982,7 +1982,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def remove_rogue_model_panel_change_events(cls):
         EVIL_METHOD_NAMES = ['DCF_updateViewportList', 'CgAbBlastPanelOptChangeCallback','onModelChange3dc', 'look']
         capitalEvilMethodNames = [name.upper() for name in EVIL_METHOD_NAMES]
-        modelPanelLabel = mel.eval('localizedPanelLabel("ModelPanel")')
+        modelPanelLabel = pm.mel.eval('localizedPanelLabel("ModelPanel")')
         processedPanelNames = []
         panelName = cmds.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
         while panelName and panelName not in processedPanelNames:
