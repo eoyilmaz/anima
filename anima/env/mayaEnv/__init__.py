@@ -938,7 +938,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 dRO.noSaveImage.set(0)
                 dRO.skipExistingFrames.set(1)
                 # dRO.unifiedRandomizePattern.set(1)  # do not change this
-                dRO.enableOptiXRTOnSupportedGPUs.set(1)
+                try:
+                    dRO.enableOptiXRTOnSupportedGPUs.set(1)
+                except AttributeError:
+                    # should be RS2.x
+                    pass
             except pm.MayaNodeError:
                 pass
 
