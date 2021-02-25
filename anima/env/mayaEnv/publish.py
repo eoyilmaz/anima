@@ -37,6 +37,7 @@ VALID_MATERIALS = {
         'phongE',
         'rampShader',
         'surfaceShader',
+        'standardSurface',  # for Maya 2020
     ],
     'arnold': [
         # ARNOLD
@@ -51,6 +52,20 @@ VALID_MATERIALS = {
         'aiStandardSurface',
         'aiUtility',
         'aiWireframe',
+        'aiVolumeScattering',
+        'alCel',
+        'alHair',
+        'alSurface',
+        'alLayer',
+        'aiBump2d',
+        'aiBump3d',
+        'aiUserDataBool',
+        'aiUserDataFloat',
+        'aiUserDataInt',
+        'aiUserDataString',
+        'aiUserDataVector',
+        'aiUserDataPnt2',
+        'aiUserDataColor',
     ],
     'redshift': [
         # REDSHIFT
@@ -648,11 +663,19 @@ def check_if_default_shader(progress_controller=None):
         return
 
     delete_unused_shading_nodes(progress_controller)
-    if len(pm.ls(mat=1)) > 2:
-        progress_controller.complete()
-        raise PublishError(
-            'Use only lambert1 as the shader!'
-        )
+    maya_version = int(pm.about(v=1))
+    if maya_version > 2019:
+        if len(pm.ls(mat=1)) > 3:  # [lambert1, particleCloud1, standardSurface1]
+            progress_controller.complete()
+            raise PublishError(
+                'Use only lambert1 as the shader!'
+            )
+    else:
+        if len(pm.ls(mat=1)) > 2:
+            progress_controller.complete()
+            raise PublishError(
+                'Use only lambert1 as the shader!'
+            )
     progress_controller.complete()
 
 
@@ -852,7 +875,7 @@ def check_display_layer(progress_controller=None):
     progress_controller.complete()
 
 
-@publisher('model')
+@publisher(LOOK_DEV_TYPES + ['model', 'rig', 'layout'])
 def check_extra_cameras(progress_controller=None):
     """No extra cameras
 
@@ -864,6 +887,19 @@ def check_extra_cameras(progress_controller=None):
         progress_controller.complete()
         raise PublishError('There should be no extra cameras in your scene!')
     progress_controller.complete()
+
+
+def check_extra_cameras___fix():
+    """
+    tries to fix check_extra_cameras
+    """
+    cameras = pm.ls(type='camera')
+
+    for camera in cameras:
+        if camera not in ['frontShape', 'perspShape', 'sideShape', 'topShape']:
+            pm.delete(camera.getParent())
+        else:
+            camera.getParent().setAttr('visibility', 0)
 
 
 @publisher('model')
@@ -931,6 +967,61 @@ def check_empty_shapes(progress_controller=None):
             'There are <b>meshes with no geometry</b> in your scene, '
             'please delete them!!!'
         )
+
+
+@publisher('model')
+def check_default_uv_set(progress_controller=None):
+    """All mesh have default UVSet map1
+
+    checks if all mesh have 1 default UVSet named as map1
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    # skip if this is a representation
+    v = staging.get('version')
+    if v and Representation.repr_separator in v.take_name:
+        progress_controller.complete()
+        return
+
+    all_meshes = pm.ls(type='mesh')
+    progress_controller.maximum = len(all_meshes)
+    nodes_with_non_default_uvset = []
+    for node in all_meshes:
+        if len(node.getUVSetNames()) != 1 or node.getUVSetNames()[0] != 'map1':
+            nodes_with_non_default_uvset.append(node)
+        progress_controller.increment()
+
+    progress_controller.complete()
+    if len(nodes_with_non_default_uvset) > 0:
+        # get transform nodes
+        tra_nodes = map(
+            lambda x: x.getParent(),
+            nodes_with_non_default_uvset
+        )
+        pm.select(tra_nodes)
+        raise RuntimeError(
+            """There are nodes with <b>non default UVSet (map1)</b>:
+            <br><br>%s""" %
+            '<br>'.join(
+                map(lambda x: x.name(),
+                    tra_nodes[:MAX_NODE_DISPLAY])
+            )
+        )
+
+
+def check_default_uv_set___fix():
+    """
+    tries to fix check_default_uv_set
+    """
+    all_meshes = pm.ls(type='mesh')
+    for mesh in all_meshes:
+        node = mesh.getParent()
+        pm.select(node, r=1)
+        uvsets = pm.polyUVSet(node, q=1, auv=1)
+        if len(uvsets) == 1 and uvsets[0] != 'map1':
+            pm.polyUVSet(rename=1, newUVSet='map1', uvSet= uvsets[0])
+    pm.select(cl=1)
 
 
 @publisher('model')
@@ -1418,7 +1509,7 @@ def check_only_supported_materials_are_used(progress_controller=None):
     all_materials = pm.ls(mat=1)
     progress_controller.maximum = len(all_materials)
     for material in all_materials:
-        if material.name() not in ['lambert1', 'particleCloud1']:
+        if material.name() not in ['lambert1', 'particleCloud1', 'standardSurface1']:
             if material.type() not in all_valid_materials:
                 non_arnold_materials.append(material)
         progress_controller.increment()
@@ -1683,72 +1774,151 @@ def check_legacy_render_layers(progress_controller=None):
         progress_controller.complete()
 
 
+def check_legacy_render_layers___fix():
+    """
+    tries to fix check_legacy_render_layers
+    """
+    maya_version = pm.about(v=1)
+    if int(maya_version) >= 2017:
+        legacy_render_layers = []
+        all_render_layers = pm.ls(type='renderLayer')
+        default_render_layer = all_render_layers[0].defaultRenderLayer()
+        all_render_layers.remove(default_render_layer)
+        render_setup_layers = pm.ls('rs_*', type='renderLayer')
+
+        for render_layer in all_render_layers:
+            if 'defaultRenderLayer' not in render_layer.name() \
+               and render_layer not in render_setup_layers:
+                legacy_render_layers.append(render_layer)
+
+        for render_layer in legacy_render_layers:
+            try:
+                pm.delete(render_layer)
+            except:
+                pass
+
+
+@publisher('rig')
+def check_unique_names_for_geometry(progress_controller=None):
+    """Checks if all geometry names are unique in the scene
+
+    geometry names must be unique to transfer shaders properly
+    between asset related tasks.
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    non_unique_names = []
+
+    geo_shapes = pm.ls(type='mesh')
+    progress_controller.maximum = len(geo_shapes)
+
+    for shape in geo_shapes:
+        if shape.getParent().isUniquelyNamed() is False \
+                and shape.getParent().isReferenced() is False:
+            non_unique_names.append(shape.getParent())
+        progress_controller.increment()
+
+    if non_unique_names:
+        mc.select(non_unique_names)
+        raise PublishError(
+            'Some geometry objects are not <b>Uniquely Named</b><br><br>'
+            '%s<br><br>Please rename them.'
+        )
+    progress_controller.complete()
+
+
 @publisher('rig')
 def check_root_node_name(progress_controller=None):
     """Root node name is correct
 
-    In rig scenes, the name of the root node should not end with a number
+    checks if the root node name starts with asset's name
+    and does not end with a number...
+    if the asset's name ends with a number the root node's name
+    must start with asset's name...
+
+    e.g (asset_name = Box_02, root_node_name = Box_02_grp)
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
     progress_controller.maximum = 2
 
     root_nodes = auxiliary.get_root_nodes()
+
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+    t = v.task
+
+    from stalker import Asset
+    asset_name = None
+    if isinstance(t.parent, Asset):
+        asset_name = t.parent.name
     progress_controller.increment()
 
-    root_node_name = root_nodes[0].name()
+    if not root_nodes[0].isReferenced():
+        root_node_name = root_nodes[0].name()
+    else:
+        root_node_name = str(root_nodes[0].stripNamespace())
     progress_controller.increment()
+
+    # if root node name ends with a number it clashes with animation export alembic post-publish
+    # if the same reference rig duplicated several times in a scene...
+    # a number is added accordingly to the end of folder names via cacheable attribute.
+    # so if root node name is Rig_01 its duplicates will be exported as Rig_01[1], Rig_01[2], Rig_013...
+    # as cacheable attr value must be the same with root node name this should not be allowed.
     if root_node_name[-1].isdigit():
         progress_controller.complete()
         raise PublishError(
-            "The name of the root node should not end with a number: %s" %
-            root_node_name
+            "The name of the root node should not end with a number"
         )
+    if asset_name is not None:
+        asset_name = asset_name.replace(' ', '_')  # Maya node names can not include spaces. Replace with '_'.
+        if asset_name[0].isdigit():  # if asset name starts with a number
+            asset_name = '_%s' % asset_name  # add "_" in front (Maya node names can not start with a number)
+        if ':' in root_node_name:
+            raise PublishError(
+                "Imported namespaces are not allowed in non-referenced root node names"
+            )
+        if not root_node_name.startswith(asset_name):
+            progress_controller.complete()
+            raise PublishError(
+                "The name of the root node should start with asset's name"
+            )
     progress_controller.complete()
 
 
-@publisher('rig')
-def check_cacheable_attr(progress_controller=None):
-    """Cacheable attribute exists
-
-    checks if there is at least one cacheable attr
+def check_root_node_name___fix():
     """
-    if progress_controller is None:
-        progress_controller = ProgressControllerBase()
+    tries to fix check_root_node_name
+    """
+    from stalker import Asset
+    from anima.env import mayaEnv
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+    t = v.task
+    asset_name = None
+    if isinstance(t.parent, Asset):
+        asset_name = t.parent.name
 
     root_nodes = auxiliary.get_root_nodes()
-    progress_controller.maximum = len(root_nodes)
+    root_node_name = root_nodes[0].name()
 
-    root_node_has_cacheable_attr = []
-    for root_node in root_nodes:
-        root_node_has_cacheable_attr.append(
-            root_node.hasAttr('cacheable')
-            and root_node.getAttr('cacheable') != '' and
-            root_node.getAttr('cacheable') is not None
-        )
-        progress_controller.increment()
+    if asset_name is not None:
+        correct_node_name = asset_name
+        correct_node_name = correct_node_name.replace(' ', '_')
+        if correct_node_name[0].isdigit():
+            correct_node_name = '_%s' % correct_node_name
+        if correct_node_name[-1].isdigit():
+            correct_node_name += '_grp'
+    else:
+        correct_node_name = root_node_name
+        if correct_node_name[0].isdigit():
+            correct_node_name = '_%s' % correct_node_name
+        if correct_node_name[-1].isdigit():
+            correct_node_name += '_grp'
 
-    root_node_has_cacheable_attr = any(root_node_has_cacheable_attr)
-
-    if not root_node_has_cacheable_attr:
-        # check children nodes
-        progress_controller.maximum += len(root_nodes)
-        for root_node in root_nodes:
-            child_has_cacheable = False
-            for child_node in root_node.listRelatives(c=1):
-                if child_node.hasAttr('cacheable') \
-                   and child_node.getAttr('cacheable') != '' \
-                   and child_node.getAttr('cacheable') is not None:
-                    child_has_cacheable = True
-                    break
-            progress_controller.increment()
-
-        progress_controller.complete()
-        if not child_has_cacheable:
-            raise PublishError(
-                'Please add <b>cacheable</b> attribute and set it to a '
-                '<b>proper name</b>!'
-            )
+    root_nodes[0].rename(correct_node_name)
 
 
 @publisher('rig')
@@ -1773,6 +1943,84 @@ def cacheable_attr_to_lowercase(progress_controller=None):
         progress_controller.increment()
         progress_controller.complete()
     progress_controller.complete()
+
+
+@publisher('rig')
+def check_cacheable_attr(progress_controller=None):
+    """Cacheable attribute is valid
+
+    checks if there is a valid cacheable attr
+    """
+    from stalker import Asset
+    from anima.env import mayaEnv
+
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    has_valid_cacheable = False
+
+    # assumes there is only one root node (def check_if_only_one_root_node)
+    root_node = auxiliary.get_root_nodes()[0]
+    progress_controller.maximum = 2
+
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+    t = v.task
+
+    asset_name = None
+    if isinstance(t.parent, Asset):
+        asset_name = t.parent.name
+
+    if root_node.hasAttr('cacheable') \
+            and root_node.getAttr('cacheable') != '' \
+            and root_node.getAttr('cacheable') is not None \
+            and asset_name is not None \
+            and root_node.getAttr('cacheable').startswith(asset_name.lower()) is True \
+            and root_node.getAttr('cacheable') == root_node.lower():
+        has_valid_cacheable = True
+        progress_controller.increment()
+
+    progress_controller.complete()
+    if has_valid_cacheable is False:
+        raise PublishError(
+            'Please add <b>cacheable</b> attribute and set it to a '
+            '<b>proper name</b>!'
+        )
+
+
+def check_cacheable_attr___fix():
+    """
+    tries to fix check_cacheable_attr
+    """
+    from stalker import Asset
+    from anima.env import mayaEnv
+
+    # assumes there is only one root node (def check_if_only_one_root_node)
+    node = auxiliary.get_root_nodes()[0]
+
+    m_env = mayaEnv.Maya()
+    v = m_env.get_current_version()
+    t = v.task
+    asset_name = None
+    if isinstance(t.parent, Asset):
+        asset_name = t.parent.name
+
+    if asset_name:
+        if node.name().startswith(asset_name):
+            node_name = node.name()
+        else:
+            node_name = asset_name
+    else:
+        if node.isReferenced() is True:
+            node_name = str(node.stripNamespace())
+        else:
+            node_name = node.name()
+
+    if not node.hasAttr('cacheable'):
+        node.addAttr('cacheable', dt='string')
+        node.setAttr('cacheable', node_name.lower())
+    else:
+        node.setAttr('cacheable', node_name.lower())
 
 
 @publisher('animation')
@@ -1955,6 +2203,59 @@ def check_sequence_name(progress_controller=None):
         raise PublishError('Please enter a sequence name!!!')
 
 
+def check_sequence_name___fix():
+    """
+    tries to fix check_sequence_name
+    """
+    # do not consider referenced shot nodes
+    shots = pm.ls(type='shot')
+    shot = None
+    for s in shots:
+        if s.referenceFile() is None:
+            shot = s
+            break
+
+    sequencer = shot.outputs(type='sequencer')[0]
+
+    # get current task
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+    task = v.task
+
+    # get sequence and scene names
+    scene = None
+    sequence = None
+    while task is not None:
+        if task.entity_type == 'Scene':
+            scene = task
+        else:
+            try:
+                if task.type.name == 'Scene':
+                    scene = task
+            except AttributeError:
+                pass
+        if task.entity_type == 'Sequence':
+            sequence = task
+            break
+        else:
+            task = task.parent
+
+    if scene:
+        scene_name = scene.name
+    else:
+        scene_name = 'SCN'
+
+    if sequence:
+        sequence_name = sequence.name
+    else:
+        sequence_name = 'SEQ'
+
+    # set sequencer name as seq_name + sc_name
+    name = '%s_%s' % (sequence_name, scene_name)
+    sequencer.set_sequence_name(name)
+
+
 @publisher(['animation', 'previs', 'shot previs'])
 def check_sequence_name_format(progress_controller=None):
     """Sequence name format is ok
@@ -1964,143 +2265,195 @@ def check_sequence_name_format(progress_controller=None):
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
+    progress_controller.maximum = 2
+
     # do not consider referenced shot nodes
     shots = pm.ls(type='shot')
-    progress_controller.maximum = len(shots) + 5
     shot = None
     for s in shots:
         if s.referenceFile() is None:
             shot = s
             break
-        progress_controller.increment()
 
     sequencer = shot.outputs(type='sequencer')[0]
-    sequence_name = sequencer.sequence_name.get()
+
+    # get current task
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+    task = v.task
+
+    # get sequence and scene names
+    scene = None
+    sequence = None
+    while task is not None:
+        if task.entity_type == 'Scene':
+            scene = task
+        else:
+            try:
+                if task.type.name == 'Scene':
+                    scene = task
+            except AttributeError:
+                pass
+        if task.entity_type == 'Sequence':
+            sequence = task
+            break
+        else:
+            task = task.parent
+
+    if scene:
+        scene_name = scene.name
+    else:
+        scene_name = 'SC'
+
+    if sequence:
+        sequence_name = sequence.name
+    else:
+        sequence_name = 'SEQ'
+
     progress_controller.increment()
+    # set sequencer name as seq_name + sc_name
+    name = '%s_%s' % (sequence_name, scene_name)
 
-    # SEQ001_003_TNGI
-    # SEQ001_003A_TNGI
-    # EP001_001
-
-    parts = sequence_name.split('_')
-    if len(parts) not in [2, 3]:
+    if sequencer.get_sequence_name() != name:
         progress_controller.complete()
-        pm.select(sequencer)
         raise PublishError(
             'Sequence name format is not correct!!!<br>'
             '<br>'
             'It should be in the following format:<br>'
             '<br>'
-            'SEQXXX_XXX_XXXX or EPXXX_XXX'
+            '[Sequence Name]_[Scene Name]'
             '<br>'
-            'ex: SEQ001_003_TNGI or EP001_001'
+            'ex: SEQ001_SC_001'
         )
 
-    sequence_code = parts[0]
-    scene_number = parts[1]
-    if len(parts) > 2:
-        scene_code = parts[2]
-    else:
-        scene_code = ""
-
-    # sequence_code should start with SEQ
-    if not (sequence_code.upper().startswith('SEQ') or sequence_code.upper().startswith('EP')):
-        progress_controller.complete()
-        pm.select(sequencer)
-        raise PublishError(
-            'Sequence name should start with "SEQ" or "EP"!!!<br>'
-            '<br>'
-            'Not:<br>'
-            '%s' % sequence_code
-        )
-    progress_controller.increment()
-
-    # scene number should start with a number
-    import re
-    if not re.match(r'^[\d]+', scene_number):
-        progress_controller.complete()
-        pm.select(sequencer)
-        raise PublishError(
-            'Scene number in sequence name should start with a number!!!<br>'
-            '<br>'
-            'Not:<br>'
-            '%s' % scene_number
-        )
-    progress_controller.increment()
-
-    # scene number should a 3 digit and an optional letter
-    if not len(scene_number) in [3, 4, 5]:
-        progress_controller.complete()
-        pm.select(sequencer)
-        raise PublishError(
-            'Scene number in sequence name should be a number with 3 digits '
-            'and an optional uppercase letter!!!<br>'
-            '<br>'
-            'Not:<br>'
-            '%s' %
-            scene_number
-        )
-    progress_controller.increment()
-
-    # scene code should be all upper case letters
-    if scene_code != '' and scene_code != scene_code.upper():
-        progress_controller.complete()
-        pm.select(sequencer)
-        raise PublishError(
-            'Scene code in sequence name should be all upper case letters!!!'
-            '<br><br>'
-            'Not:'
-            '<br>'
-            '%s' % scene_code
-        )
-    progress_controller.increment()
     progress_controller.complete()
 
 
 @publisher(['animation', 'previs', 'shot previs'])
 def check_shot_name_format(progress_controller=None):
     """Shot name format is ok
-
     check shot name format
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
 
-    import re
-    regex = r'^[\d]+$'
-    shot_nodes = pm.ls(type='shot')
     shots_with_wrong_shot_name_format = []
+
+    shot_nodes = pm.ls(type='shot')
     progress_controller.maximum = len(shot_nodes)
+
     for shot in shot_nodes:
         shot_name = shot.shotName.get()
 
-        # check if all digits
-        if not re.match(regex, shot_name):
-            shots_with_wrong_shot_name_format.append(shot)
-            progress_controller.increment()
-            continue
+        correct_format = False
 
-        # check if 4 digits used only
-        if len(shot_name) != 4:
+        # default shot name: 0010
+        if shot_name.isdigit() and len(shot_name) == 4:
+            correct_format = True
+        # handle shot alternative name: 0010A
+        elif shot_name[:-1].isdigit() \
+                and len(shot_name) == 5 \
+                and shot_name[-1].isupper():
+            correct_format = True
+
+        if correct_format is False:
             shots_with_wrong_shot_name_format.append(shot)
-            progress_controller.increment()
-            continue
+
         progress_controller.increment()
 
     progress_controller.complete()
+
     if len(shots_with_wrong_shot_name_format) > 0:
         raise PublishError(
-            'The following shots have wrongly formatted shot names:<br>'
+            'Under Sequencer -> Shot Attributes [Shot Name] attr format should be as...<br>'
+            '<b>0010</b> or <b>0010A</b> respectively for each shot.<br>'
+            'A four digit shot number or + uppercase letter for shot alternatives.<br>'
+            '<br>The following shots have wrongly formatted shot names:<br>'
             '<br>'
             '%s' % (
                 ', '.join(
                     map(
-                        lambda x: x.shotName.get(),
+                        lambda x: '%s -> %s' % (x.name(), x.shotName.get()),
                         shots_with_wrong_shot_name_format
                     )
                 )
             )
         )
+
+
+def check_shot_name_format___fix():
+    """
+    tries to fix check_shot_name_format
+    """
+    shot_nodes = pm.ls(type='shot')
+
+    # auto fix if there is only 1 shot in the scene
+    if len(shot_nodes) == 1:
+        from anima import defaults
+        from stalker import Shot
+        from anima.env import mayaEnv
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+
+        if v:
+            current_task = v.task
+
+            # fix only if current task is a child of a Shot instance
+            task_type = None
+            try:
+                task_type = current_task.parent.type.name
+            except AttributeError:
+                pass
+
+            if isinstance(current_task.parent, Shot):
+                shot_task = current_task.parent
+
+                try:
+                    # assume that Shot instance is named as Stalker default
+                    shot_name = shot_task.name.split('_')[-1]
+
+                    check = False
+                    # default shot name: 0010
+                    if shot_name.isdigit() and len(shot_name) == 4:
+                        check = True
+                    # handle shot alternative name: 0010A
+                    elif shot_name[:-1].isdigit() \
+                            and len(shot_name) == 5 \
+                            and shot_name[-1].isupper():
+                        check = True
+
+                    if check is True:
+                        shot_nodes[0].shotName.set(shot_name)
+
+                except IndexError:
+                    pass
+            else:
+                from anima.ui.lib import QtCore, QtWidgets
+                d = QtWidgets.QMessageBox()
+                d.setWindowTitle('Error')
+                d.setText(
+                    'Only Shot instances and special task types are auto-fixed<br>'
+                    '<br>Click the help button [?] to see how to correct manually.'
+                )
+                d.setDefaultButton(QtWidgets.QMessageBox.Ok)
+                d.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+                d.exec_()
+
+    else:
+        from anima.ui.lib import QtCore, QtWidgets
+        d = QtWidgets.QMessageBox()
+        d.setWindowTitle('Error')
+        d.setText(
+            'There are multiple shots in this scene.<br>'
+            'Multiple shots can not be fixed automatically...<br>'
+            'as they might be aligned randomly in Sequencer Edit.<br>'
+            'Correct them manually and respectively.<br>'
+            '<br>Click the help button [?] to see how to correct.'
+        )
+        d.setDefaultButton(QtWidgets.QMessageBox.Ok)
+        d.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        d.exec_()
 
 
 @publisher('previs')
