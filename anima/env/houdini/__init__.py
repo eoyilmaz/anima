@@ -472,6 +472,11 @@ class Houdini(EnvironmentBase):
                 except hou.PermissionError:  # parameter is locked
                     pass
 
+                try:
+                    output_node.parm("EnableOptiXRTOnSupportedGPUs").set(True)
+                except hou.PermissionError:  # parameter is locked
+                    pass
+
                 # get the shot node and connect the resolution to it
                 if shot_node:
                     # set the render camera

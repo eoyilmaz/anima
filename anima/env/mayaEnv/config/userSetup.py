@@ -164,6 +164,8 @@ if not pm.general.about(batch=1):
         # mayautils.executeDeferred(__plugin_loader, 'fbxmaya')
         # mayautils.executeDeferred(__plugin_loader, 'OpenEXRLoader')
         # mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
+        mayautils.executeDeferred(__plugin_loader, 'MayaScanner')
+        mayautils.executeDeferred(__plugin_loader, 'MayaScannerCB')
 
 # set CMD_EXTENSION for Afanasy
 # os.environ['AF_CMDEXTENSION'] = pm.about(v=1)

@@ -1090,7 +1090,7 @@ def generate_thumbnail():
     return found_output_file
 
 
-def perform_playblast(action):
+def perform_playblast(action=0, resolution=None, playblast_view_options=None, upload_to_server=None):
     """the patched version of the original perform playblast
     """
     # check if the current scene is a Stalker related version
@@ -1113,28 +1113,35 @@ def perform_playblast(action):
         extra_playblast_options['compression'] = 'png'
 
         # ask resolution
-        resolution = ask_playblast_resolution()
+        if resolution is None:
+            resolution = ask_playblast_resolution()
+
         if resolution is None:
             return
 
         extra_playblast_options['percent'] = resolution
 
         # ask for playblast view options
-        playblast_view_options = ask_playblast_view_options()
+        if playblast_view_options is None:
+            playblast_view_options = ask_playblast_view_options()
 
         pb = Playblaster(playblast_view_options=playblast_view_options)
         outputs = pb.playblast(
             extra_playblast_options=extra_playblast_options
         )
 
-        response = pm.confirmDialog(
-            title='Upload To Server?',
-            message='Upload To Server?',
-            button=['Yes', 'No'],
-            defaultButton='No',
-            cancelButton='No',
-            dismissString='No'
-        )
+        if upload_to_server is None:  # so no default options
+            response = pm.confirmDialog(
+                title='Upload To Server?',
+                message='Upload To Server?',
+                button=['Yes', 'No'],
+                defaultButton='No',
+                cancelButton='No',
+                dismissString='No'
+            )
+        else:
+            response = 'Yes' if upload_to_server else 'No'
+
         if response == 'Yes':
             for output in outputs:
                 pb.upload_output(pb.version, output)
@@ -1205,6 +1212,13 @@ def ask_playblast_format():
         return 'image'
 
 
+def get_default_playblast_view_options():
+    """returns a copy of the default_playblast_View_options
+    """
+    import copy
+    return copy.copy(Playblaster.default_view_options)
+
+
 def ask_playblast_view_options():
     """asks the user the playblast view options
 
@@ -1232,7 +1246,7 @@ def ask_playblast_view_options():
         use_defaults = True
 
     if use_defaults:
-        user_playblast_view_options = copy.copy(Playblaster.default_view_options)
+        user_playblast_view_options = get_default_playblast_view_options()
 
     # display the current options and ask the user to change them
     # sadly we need to use Qt to display a proper modal dialog
@@ -1855,6 +1869,9 @@ class Playblaster(object):
             if time_range_selected:
                 extra_playblast_options['startTime'] = start
                 extra_playblast_options['endTime'] = end
+            else:
+                extra_playblast_options['startTime'] = int(pm.playbackOptions(q=1, ast=1))
+                extra_playblast_options['endTime'] = int(pm.playbackOptions(q=1, aet=1))
             return self.playblast_simple(extra_playblast_options)
 
     def playblast_simple(self, extra_playblast_options=None):
@@ -1916,6 +1933,10 @@ class Playblaster(object):
             import tempfile
             playblast_options['filename'] = os.path.join(tempfile.gettempdir(), filename)
 
+        from anima.env import mayaEnv
+        menv = mayaEnv.Maya()
+        fps = menv.get_fps()
+
         result = []
         try:
             self.store_user_options()
@@ -1940,14 +1961,26 @@ class Playblaster(object):
                     'video': pm.playblast(**playblast_options),
                     'audio': {
                         'node': audio_node,
-                        'offset': playblast_options.get('startTime') - audio_node.offset.get() if audio_node else 0
+                        'offset': playblast_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0,
+                        'duration': (playblast_options.get('endTime', 0) - playblast_options.get('startTime', 0) + 1)
                     }
                 }
             ]
         finally:
             self.restore_user_options()
 
-        return self.convert_image_sequence_to_video(result)
+        video = self.convert_image_sequence_to_video(result)
+
+        # delete all the temp files
+        try:
+            video_file_pattern = result[0]['video'].replace("#", "*")
+            import glob
+            for filename in glob.glob(video_file_pattern):
+                os.remove(filename)
+        except (OSError, AttributeError):
+            pass
+
+        return video
 
     @classmethod
     def convert_image_sequence_to_video(cls, data):
@@ -1997,16 +2030,17 @@ class Playblaster(object):
                     '%0{hash_count}d'.format(hash_count=hash_count),
                     splits[-1]
                 )
-                video_file_path_h264 = splits[0]
+                video_file_path_h264 = splits[0].replace('.mov.', '.')
 
                 # check audio output
                 if audio_data:
                     audio_node = audio_data.get('node')
                     if audio_node:
-                        audio_file_path = audio_node.filename.get()
+                        audio_file_path = os.path.expandvars(audio_node.filename.get())
                         # audio offset should be subtracted from the current playblast range
                         # and should be converted to a TimeCode
-                        audio_offset = audio_data.get('offset')
+                        audio_offset = audio_data.get('offset', 0)
+                        audio_duration = audio_data.get('duration', 0)
                         frame_rate = 25
                         from anima.env import mayaEnv
                         maya_env = mayaEnv.Maya()
@@ -2014,17 +2048,15 @@ class Playblaster(object):
                         if v:
                             frame_rate = v.task.project.fps
 
-                        options['i'] = [video_file_path, audio_file_path]
+                        options['i'] = [os.path.normpath(video_file_path), os.path.normpath(audio_file_path)]
                         options['map'] = ['0:0', '1:0']
 
-                        if audio_offset:
-                            audio_offset_in_milli_seconds = int(audio_offset / frame_rate * 1000)
-                            if audio_offset_in_milli_seconds < 0:
-                                # use "ss" to trim the audio
-                                options['ss'] = [None, '%sms' % abs(audio_offset_in_milli_seconds)]
-                            else:
-                                # use "af" to add silence
-                                options['af'] = '"adelay=delays=%s:all=true"' % audio_offset_in_milli_seconds
+                        audio_offset_in_milli_seconds = int(audio_offset * 1000 / frame_rate)
+                        duration_in_milli_seconds = int(audio_duration * 1000 / frame_rate)
+
+                        from anima import utils
+                        options['ss'] = [None, utils.milliseconds_to_tc(abs(audio_offset_in_milli_seconds))]
+                        options['to'] = [None, utils.milliseconds_to_tc(abs(audio_offset_in_milli_seconds) + duration_in_milli_seconds)]
 
                 from anima.utils import MediaManager
                 mm = MediaManager()
@@ -2139,7 +2171,8 @@ class Playblaster(object):
                 'video': temp_video_file_full_path,
                 'audio': {
                     'node': audio_node,
-                    'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0
+                    'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0,
+                    'duration': shot_end_frame - shot_start_frame + 1
                 }
             })
 
@@ -2194,6 +2227,10 @@ class Playblaster(object):
         hires_extension = '.mp4'
         webres_extension = '.webm'
         thumbnail_extension = '.png'
+
+        import os
+        if not os.path.exists(output_file_full_path):
+            raise RuntimeError('Output file does not exits: %s' % output_file_full_path)
 
         import os
         output_file_name = os.path.basename(output_file_full_path)
