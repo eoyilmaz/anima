@@ -7,7 +7,7 @@
 import threading
 
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtCore, QtWidgets, QtGui
+from anima.ui.lib import QtCore, QtWidgets
 from anima.publish import ProgressControllerBase
 
 
@@ -88,6 +88,9 @@ class PublisherElement(object):
         self.publisher = publisher
         self.layout = None
         self.check_push_button = None
+        self.fix_push_button = None
+        self.fix_identifier = '___fix'
+        self.help_push_button = None
         self.publisher_name_label = None
 
         self.publisher_state_ok_icon = None
@@ -125,6 +128,16 @@ class PublisherElement(object):
             QtWidgets.QSizePolicy.Fixed,
             QtWidgets.QSizePolicy.Fixed
         )
+
+        # Create fix push button
+        self.fix_push_button = QtWidgets.QPushButton(parent)
+        self.fix_push_button.setText('Fix')
+        self.layout.addWidget(self.fix_push_button)
+        self.fix_push_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        self.fix_push_button.setMaximumWidth(40)
 
         # Create Progress Bar
         self.progress_bar = QtWidgets.QProgressBar(parent)
@@ -172,6 +185,16 @@ class PublisherElement(object):
         )
         self.layout.addWidget(self.publisher_name_label)
 
+        # Create help push button
+        self.help_push_button = QtWidgets.QPushButton(parent)
+        self.help_push_button.setText('?')
+        self.layout.addWidget(self.help_push_button)
+        self.help_push_button.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Fixed
+        )
+        self.help_push_button.setMaximumWidth(20)
+
         spacer = QtWidgets.QSpacerItem(
             20, 40,
             QtWidgets.QSizePolicy.Expanding,
@@ -188,6 +211,71 @@ class PublisherElement(object):
             QtCore.SIGNAL("clicked()"),
             functools.partial(self.run_publisher)
         )
+
+        QtCore.QObject.connect(
+            self.help_push_button,
+            QtCore.SIGNAL('clicked()'),
+            functools.partial(self.show_publisher_docs)
+        )
+
+        QtCore.QObject.connect(
+            self.fix_push_button,
+            QtCore.SIGNAL('clicked()'),
+            functools.partial(self.run_fix_definition)
+        )
+
+    def run_fix_definition(self):
+        """runs fix definitions for publishers
+        """
+        m = QtWidgets.QMessageBox()
+        m.setWindowTitle('Continue?')
+        m.setText(
+            'This command will try to fix<br/>'
+            '[ <b>%s</b> ] issue<br/>'
+            'automatically.<br/><br/>'
+            'Confirm ? <b>(BETA)</b>' % self.publisher.__doc__.split('\n')[0].strip()
+        )
+        m.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        m.setDefaultButton(QtWidgets.QMessageBox.Yes)
+        m.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+        m.exec_()
+
+        if m.clickedButton() == m.defaultButton():
+            fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
+            try:
+                from anima.env.mayaEnv import publish
+                exec 'publish.%s()' % fix_def_name
+            except AttributeError:
+                pass
+            self.check_push_button.click()
+
+    def show_publisher_docs(self):
+        """Help dialog for publishers
+        """
+        if self.publisher:
+            m = QtWidgets.QMessageBox()
+            m.setWindowTitle('Help')
+
+            # cleanup exception message format
+            import re
+            error = str(''.join([i for i in unicode(self.publisher_state_label.toolTip()) if ord(i) < 128]))
+            publish_error = ''
+            for exception in ['PublishError:', 'RuntimeError:']:
+                try:
+                    clean_error = error.split(exception)[1]
+                    formatted_error = clean_error.replace('<br>', '\n')
+                    publish_error = re.sub('<[^>]*>', '', formatted_error)
+                except IndexError:
+                    continue
+
+            # display message
+            message = self.publisher.__doc__
+            message += '\n--------------------\n'
+            message += publish_error
+
+            m.setText(message)
+            m.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+            m.exec_()
 
     def _set_label_icon(self, label, icon):
         """sets the label icon
@@ -273,6 +361,22 @@ class PublisherElement(object):
             self.check_push_button.setText('Check')
             self.check_push_button.setEnabled(True)
 
+            # set fix label
+            if self.state is True:
+                self.fix_push_button.setDisabled(True)
+                self.fix_push_button.setStyleSheet('background-color: None')
+            else:
+                # disable fix button if fix definition does not exist
+                fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
+                try:
+                    from anima.env.mayaEnv import publish
+                    exec 'publish.%s' % fix_def_name
+                    self.fix_push_button.setEnabled(True)
+                    self.fix_push_button.setStyleSheet('background-color: green')
+                except AttributeError:
+                    self.fix_push_button.setDisabled(True)
+                    self.fix_push_button.setStyleSheet('background-color: None')
+
 
 class PublisherRunner(threading.Thread):
     """The thread
@@ -304,6 +408,40 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self._setup_ui()
         self._fill_ui()
 
+    def closeEvent(self, event):
+        """if user tries to close the publish_checker dialog
+        pop up a question dialog
+        """
+        answer = QtWidgets.QMessageBox.question(
+            self,
+            'DO NOT Close Window!!!',
+            'You should <b>NOT</b> close this window!!!<br/>'
+            ' <br/>'
+            'Drag Publish Checker to the side and fix your scene<br/>'
+            'When fixed hit Check buttons until Published!!!<br/>'
+            ' <br/>'
+            'Close Anyway !!!',
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
+
+        if answer == QtWidgets.QMessageBox.Yes:
+            # delete any empty published versions if created
+            if self.version.is_latest_published_version() \
+                    and self.version.absolute_full_path == '.' \
+                    and self.version.extension == '' \
+                    and not self.version.created_with:  # this means the last published version is empty
+                from stalker.db.session import DBSession
+                try:
+                    DBSession.delete(self.version)
+                    # DBSession.commit() # no need to commit
+                except Exception:
+                    DBSession.rollback()
+
+            event.accept()
+        else:
+            event.ignore()
+
     def _setup_ui(self):
         """create the ui elements
         """
@@ -327,6 +465,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.main_layout.addWidget(line)
+
+        # Version Label
+        self.version_label = QtWidgets.QLabel(self)
+        self.version_label.setText(self.version.nice_name)
+        self.version_label.setStyleSheet("color: rgb(71, 143, 202);font: 12pt;")
+        self.main_layout.addWidget(self.version_label)
+
+        # Version Line
+        line1 = QtWidgets.QFrame(self)
+        line1.setFrameShape(QtWidgets.QFrame.HLine)
+        line1.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.main_layout.addWidget(line1)
 
         # ----------------------------------------------------
         # Fields
@@ -543,3 +693,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.accept()
             if self.publish_callback:
                 self.publish_callback()
+
+    def reject(self):
+        QtWidgets.QDialog.reject(self)
+        from stalker.db.session import DBSession
+        if self.version:
+            DBSession.delete(self.version)
+            DBSession.commit()
+        DBSession.rollback()
