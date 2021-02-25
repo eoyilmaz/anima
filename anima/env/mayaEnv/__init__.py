@@ -294,9 +294,20 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 try:
                     run_publishers(type_name,
                                    publisher_type=PRE_PUBLISHER_TYPE)
-                except PublishError as e:
+                except (PublishError, RuntimeError) as e:
                     # do not forget to clean up the staging area
                     staging.clear()
+
+                    # pop up a message box with the error
+                    pm.confirmDialog(
+                        title='PublishError',
+                        icon='critical',
+                        message='<b>%s</b><br/><br/>%s' % (
+                            'PRE PUBLISH FAILED!!!',
+                            str(''.join([i for i in unicode(e) if ord(i) < 128]))
+                        ),
+                        button=['Ok']
+                    )
                     raise e
         else:
             # run some of the publishers
@@ -439,19 +450,47 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # run post publishers here
         if version.is_published:
+            from anima.ui.lib import QtCore, QtWidgets, QtGui
+
             # before doing anything run all publishers
             type_name = ''
             if version.task.type:
                 type_name = version.task.type.name
 
+            # show splash screen during post publish progress and lock maya
+            here = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
+            image_path = os.path.normpath(
+                os.path.join(here, 'config', 'images', 'splash_screen.jpg')
+            ).replace('\\', '/')
+
+            p = QtGui.QPixmap(image_path)
+            s = QtWidgets.QSplashScreen(p, QtCore.Qt.WindowStaysOnTopHint)
+            s.setEnabled(False)
+            s.setWindowModality(QtCore.Qt.ApplicationModal)
+            s.show()
+
             # before running use the staging area to store the current version
             staging['version'] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-            except PublishError as e:
+                s.close()
+            except (PublishError, RuntimeError) as e:
+                s.close()
                 # do not forget to clean up the staging area
                 staging.clear()
+                # pop up a message box with the error
+                pm.confirmDialog(
+                    title='PublishError',
+                    icon='critical',
+                    message='<b>%s</b><br/><br/>%s' % (
+                        'POST PUBLISH FAILED!!!',
+                        str(''.join([i for i in unicode(e) if ord(i) < 128]))
+                    ),
+                    button=['Ok']
+                )
                 raise e
+            # close splash screen in any case
+            s.close()
 
         end = time.time()
         logger.debug('save_as took %f seconds' % (end - start))
@@ -466,12 +505,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # check if this is the first version
         if version.is_published and not self.allow_publish_on_export:
-            # it is not allowed to publish the first version (desdur)
+            # it is not allowed to publish the first version
             raise RuntimeError(
-                'Publish ederek export yasak!!!'
+                'It is forbidden to export a published version!!!'
                 '<br><br>'
-                'Once bi normal export et. Sonra dosyayi acip ustune '
-                'publishle...'
+                'Export normally, open version and Publish... '
             )
 
         # do not save if there are local files
