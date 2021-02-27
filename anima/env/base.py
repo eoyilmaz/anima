@@ -597,8 +597,7 @@ class EnvironmentBase(object):
         pass
 
     @classmethod
-    def get_significant_name(cls, version, include_project_code=True,
-                             include_version_number=True):
+    def get_significant_name(cls, version, include_project_code=True, include_version_number=True):
         """returns a significant name starting from the closest parent which is
         an Asset, Shot or Sequence and includes the Project.code
 
