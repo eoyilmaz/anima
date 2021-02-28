@@ -25,7 +25,6 @@ from anima.env.mayaEnv import publish as publish_scripts  # register publishers
 
 from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                            POST_PUBLISHER_TYPE)
-reload(publish_scripts)
 
 
 def get_maya_main_window():
