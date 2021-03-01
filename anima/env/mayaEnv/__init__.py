@@ -292,9 +292,20 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 try:
                     run_publishers(type_name,
                                    publisher_type=PRE_PUBLISHER_TYPE)
-                except PublishError as e:
+                except (PublishError, RuntimeError) as e:
                     # do not forget to clean up the staging area
                     staging.clear()
+
+                    # pop up a message box with the error
+                    pm.confirmDialog(
+                        title='PublishError',
+                        icon='critical',
+                        message='<b>%s</b><br/><br/>%s' % (
+                            'PRE PUBLISH FAILED!!!',
+                            e
+                        ),
+                        button=['Ok']
+                    )
                     raise e
         else:
             # run some of the publishers
@@ -441,19 +452,40 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # run post publishers here
         if version.is_published:
+            from anima.ui.lib import QtCore, QtWidgets, QtGui
+
             # before doing anything run all publishers
             type_name = ''
             if version.task.type:
                 type_name = version.task.type.name
 
+            # show dialog during post publish progress and lock maya
+            from anima.ui.utils import initialize_post_publish_dialog
+            d = initialize_post_publish_dialog()
+            d.show()
+
             # before running use the staging area to store the current version
             staging['version'] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-            except PublishError as e:
+                d.close()
+            except (PublishError, RuntimeError) as e:
+                d.close()
                 # do not forget to clean up the staging area
                 staging.clear()
+                # pop up a message box with the error
+                pm.confirmDialog(
+                    title='PublishError',
+                    icon='critical',
+                    message='<b>%s</b><br/><br/>%s' % (
+                        'POST PUBLISH FAILED!!!',
+                        e
+                    ),
+                    button=['Ok']
+                )
                 raise e
+            # close dialog in any case
+            d.close()
 
         end = time.time()
         logger.debug('save_as took %f seconds' % (end - start))
@@ -468,12 +500,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         # check if this is the first version
         if version.is_published and not self.allow_publish_on_export:
-            # it is not allowed to publish the first version (desdur)
+            # it is not allowed to publish the first version
             raise RuntimeError(
-                'Publish ederek export yasak!!!'
+                'It is forbidden to export a published version!!!'
                 '<br><br>'
-                'Once bi normal export et. Sonra dosyayi acip ustune '
-                'publishle...'
+                'Export normally, open version and Publish... '
             )
 
         # do not save if there are local files
