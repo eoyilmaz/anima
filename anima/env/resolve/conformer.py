@@ -15,13 +15,6 @@ from anima.ui.lib import QtCore, QtWidgets
 from anima.env import blackmagic
 from anima.utils import do_db_setup
 
-do_db_setup()
-
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    _fromUtf8 = lambda s: s
-
 
 def UI(app_in=None, executor=None, **kwargs):
     """
@@ -50,6 +43,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         xml_file_path = os.path.join(xml_path, xml_file_name)
         self.xml_path = xml_file_path
 
+        do_db_setup()
+
         self._setup_ui()
 
         self._setup_signals()
@@ -59,6 +54,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_ui(self):
         """setups UI
         """
+        try:
+            _fromUtf8 = QtCore.QString.fromUtf8
+        except AttributeError:
+            _fromUtf8 = lambda s: s
+
         bmgc_project_name = self.project.GetName()
         bmgc_project_fps = self.project.GetSetting('timelineFrameRate')
 
