@@ -715,18 +715,9 @@ class Fusion(EnvironmentBase):
         template_kwargs = {}
 
         # if this is a shot related task set it to shots resolution
-        include_project_code = True
-        if version.nice_name.startswith(version.task.project.code):
-            include_project_code = False
+        version_sig_name = self.get_significant_name(version, include_project_code=False)
 
-        version_sig_name = self.get_significant_name(
-            version,
-            include_project_code=include_project_code
-        )
-
-        file_name_buffer.append(
-            '%(version_sig_name)s.001.%(format)s'
-        )
+        file_name_buffer.append('%(version_sig_name)s.001.%(format)s')
         template_kwargs.update({
             'version_sig_name': version_sig_name,
             'format': file_format

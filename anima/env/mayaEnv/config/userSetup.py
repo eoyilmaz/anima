@@ -131,7 +131,7 @@ if not pm.general.about(batch=1):
     else:
         logprint('no **%s** env var for shelves' % custom_shelves_env_var_name)
 
-    if 'ANIMA_TEST_SETUP' not in os.environ.keys():
+    if 'ANIMA_TEST_SETUP' not in os.environ:
         def load_arnold():
             try:
                 __plugin_loader('mtoa')
@@ -166,6 +166,8 @@ if not pm.general.about(batch=1):
         # mayautils.executeDeferred(__plugin_loader, 'tiffFloatReader')
         mayautils.executeDeferred(__plugin_loader, 'MayaScanner')
         mayautils.executeDeferred(__plugin_loader, 'MayaScannerCB')
+    else:
+        logprint("ANIMA_TEST_SETUP detected, skipping auto plugin loads!")
 
 # set CMD_EXTENSION for Afanasy
 # os.environ['AF_CMDEXTENSION'] = pm.about(v=1)

@@ -25,7 +25,6 @@ from anima.env.mayaEnv import publish as publish_scripts  # register publishers
 
 from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                            POST_PUBLISHER_TYPE)
-reload(publish_scripts)
 
 
 def get_maya_main_window():
@@ -854,10 +853,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             image_folder_from_ws
         ).replace("\\", "/")
 
-        version_sig_name = self.get_significant_name(
-            version,
-            include_project_code=False
-        )
+        version_sig_name = self.get_significant_name(version, include_project_code=False)
 
         # check the current renderer
         dRG = pm.PyNode('defaultRenderGlobals')
@@ -987,11 +983,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             'Outputs', "Playblast"
         ).replace('\\', '/')
 
-        # use project name and sequence name if available
-        # playblast_filename = version.task.project.code + "_" + \
-        #                      os.path.splitext(version.filename)[0]
-
-        playblast_filename = cls.get_significant_name(version)
+        playblast_filename = cls.get_significant_name(version, include_project_code=False)
 
         playblast_full_path = os.path.join(
             playblast_path,

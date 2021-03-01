@@ -314,10 +314,7 @@ class Blender(EnvironmentBase):
 
         # set output filename
         if version:
-            version_sig_name = self.get_significant_name(
-                version,
-                include_project_code=False
-            )
+            version_sig_name = self.get_significant_name(version, include_project_code=False)
         else:
             if bpy.data.filepath:
                 version_sig_name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
