@@ -304,7 +304,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                         icon='critical',
                         message='<b>%s</b><br/><br/>%s' % (
                             'PRE PUBLISH FAILED!!!',
-                            str(''.join([i for i in unicode(e) if ord(i) < 128]))
+                            e
                         ),
                         button=['Ok']
                     )
@@ -457,25 +457,18 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
             if version.task.type:
                 type_name = version.task.type.name
 
-            # show splash screen during post publish progress and lock maya
-            here = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
-            image_path = os.path.normpath(
-                os.path.join(here, 'config', 'images', 'splash_screen.jpg')
-            ).replace('\\', '/')
-
-            p = QtGui.QPixmap(image_path)
-            s = QtWidgets.QSplashScreen(p, QtCore.Qt.WindowStaysOnTopHint)
-            s.setEnabled(False)
-            s.setWindowModality(QtCore.Qt.ApplicationModal)
-            s.show()
+            # show dialog during post publish progress and lock maya
+            from anima.ui.utils import initialize_post_publish_dialog
+            d = initialize_post_publish_dialog()
+            d.show()
 
             # before running use the staging area to store the current version
             staging['version'] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-                s.close()
+                d.close()
             except (PublishError, RuntimeError) as e:
-                s.close()
+                d.close()
                 # do not forget to clean up the staging area
                 staging.clear()
                 # pop up a message box with the error
@@ -484,13 +477,13 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     icon='critical',
                     message='<b>%s</b><br/><br/>%s' % (
                         'POST PUBLISH FAILED!!!',
-                        str(''.join([i for i in unicode(e) if ord(i) < 128]))
+                        e
                     ),
                     button=['Ok']
                 )
                 raise e
-            # close splash screen in any case
-            s.close()
+            # close dialog in any case
+            d.close()
 
         end = time.time()
         logger.debug('save_as took %f seconds' % (end - start))
