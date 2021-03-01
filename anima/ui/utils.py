@@ -222,6 +222,33 @@ def render_image_from_gview(gview, image_full_path):
         )
 
 
+def initialize_post_publish_dialog():
+    """
+    A frameless, staysOnTop dialog to be initialized during post publish process
+    for locking its application and actually show user that post publishes are in progress.
+    """
+    try:
+        _fromUtf8 = QtCore.QString.fromUtf8
+    except AttributeError:
+        _fromUtf8 = lambda s: s
+
+    dialog = QtWidgets.QDialog()
+    dialog.vertical_layout = QtWidgets.QVBoxLayout(dialog)
+    dialog.label = QtWidgets.QLabel(dialog.vertical_layout.widget())
+    dialog.label.setText('POST PUBLISH IN PROGRESS')
+    dialog.label.setStyleSheet(_fromUtf8("color: rgb(20, 255, 20);\n""font: 16pt;"))
+    dialog.vertical_layout.addWidget(dialog.label)
+    dialog.label1 = QtWidgets.QLabel(dialog.vertical_layout.widget())
+    dialog.label1.setText('PLEASE WAIT...')
+    dialog.label1.setAlignment(QtCore.Qt.AlignCenter)
+    dialog.vertical_layout.addWidget(dialog.label1)
+    dialog.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+    dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+    dialog.setWindowModality(QtCore.Qt.ApplicationModal)
+
+    return dialog
+
+
 def load_font(font_filename):
     """loads extra fonts from the fonts folder
     """
