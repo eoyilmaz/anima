@@ -971,9 +971,7 @@ def check_empty_shapes(progress_controller=None):
 
 @publisher('model')
 def check_default_uv_set(progress_controller=None):
-    """All mesh have default UVSet map1
-
-    checks if all mesh have 1 default UVSet named as map1
+    """checks if all meshes have the default UV set named as map1
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
@@ -988,7 +986,7 @@ def check_default_uv_set(progress_controller=None):
     progress_controller.maximum = len(all_meshes)
     nodes_with_non_default_uvset = []
     for node in all_meshes:
-        if len(node.getUVSetNames()) != 1 or node.getUVSetNames()[0] != 'map1':
+        if 'map1' not in node.getUVSetNames():
             nodes_with_non_default_uvset.append(node)
         progress_controller.increment()
 
@@ -1020,7 +1018,7 @@ def check_default_uv_set___fix():
         pm.select(node, r=1)
         uvsets = pm.polyUVSet(node, q=1, auv=1)
         if len(uvsets) == 1 and uvsets[0] != 'map1':
-            pm.polyUVSet(rename=1, newUVSet='map1', uvSet= uvsets[0])
+            pm.polyUVSet(rename=1, newUVSet='map1', uvSet=uvsets[0])
     pm.select(cl=1)
 
 
@@ -1778,24 +1776,8 @@ def check_legacy_render_layers___fix():
     """
     tries to fix check_legacy_render_layers
     """
-    maya_version = pm.about(v=1)
-    if int(maya_version) >= 2017:
-        legacy_render_layers = []
-        all_render_layers = pm.ls(type='renderLayer')
-        default_render_layer = all_render_layers[0].defaultRenderLayer()
-        all_render_layers.remove(default_render_layer)
-        render_setup_layers = pm.ls('rs_*', type='renderLayer')
-
-        for render_layer in all_render_layers:
-            if 'defaultRenderLayer' not in render_layer.name() \
-               and render_layer not in render_setup_layers:
-                legacy_render_layers.append(render_layer)
-
-        for render_layer in legacy_render_layers:
-            try:
-                pm.delete(render_layer)
-            except:
-                pass
+    from anima.env.mayaEnv import render
+    render.Render.delete_render_layers()
 
 
 @publisher('rig')
@@ -1989,8 +1971,7 @@ def check_cacheable_attr(progress_controller=None):
 
 
 def check_cacheable_attr___fix():
-    """
-    tries to fix check_cacheable_attr
+    """tries to fix check_cacheable_attr
     """
     from stalker import Asset
     from anima.env import mayaEnv
@@ -2203,6 +2184,51 @@ def check_sequence_name(progress_controller=None):
         raise PublishError('Please enter a sequence name!!!')
 
 
+def get_seq_name_from_task(task):
+    """helper function to return the sequence name from a given task
+    """
+    sequence = None
+    while task is not None:
+        if task.entity_type == 'Sequence':
+            sequence = task
+            break
+        else:
+            task = task.parent
+
+    if sequence:
+        sequence_name = sequence.name
+    else:
+        sequence_name = 'SEQ'
+
+    return sequence_name
+
+
+def get_scene_name_from_task(task):
+    """helper function to return the scene name from a given task
+    """
+    scene = None
+    while task is not None:
+        if task.entity_type == 'Scene':
+            scene = task
+        else:
+            try:
+                if task.type.name == 'Scene':
+                    scene = task
+            except AttributeError:
+                pass
+        if task.entity_type == 'Sequence':
+            break
+        else:
+            task = task.parent
+
+    if scene:
+        scene_name = scene.name
+    else:
+        scene_name = 'SCN'
+
+    return scene_name
+
+
 def check_sequence_name___fix():
     """
     tries to fix check_sequence_name
@@ -2224,32 +2250,8 @@ def check_sequence_name___fix():
     task = v.task
 
     # get sequence and scene names
-    scene = None
-    sequence = None
-    while task is not None:
-        if task.entity_type == 'Scene':
-            scene = task
-        else:
-            try:
-                if task.type.name == 'Scene':
-                    scene = task
-            except AttributeError:
-                pass
-        if task.entity_type == 'Sequence':
-            sequence = task
-            break
-        else:
-            task = task.parent
-
-    if scene:
-        scene_name = scene.name
-    else:
-        scene_name = 'SCN'
-
-    if sequence:
-        sequence_name = sequence.name
-    else:
-        sequence_name = 'SEQ'
+    sequence_name = get_seq_name_from_task(task)
+    scene_name = get_scene_name_from_task(task)
 
     # set sequencer name as seq_name + sc_name
     name = '%s_%s' % (sequence_name, scene_name)
@@ -2284,32 +2286,8 @@ def check_sequence_name_format(progress_controller=None):
     task = v.task
 
     # get sequence and scene names
-    scene = None
-    sequence = None
-    while task is not None:
-        if task.entity_type == 'Scene':
-            scene = task
-        else:
-            try:
-                if task.type.name == 'Scene':
-                    scene = task
-            except AttributeError:
-                pass
-        if task.entity_type == 'Sequence':
-            sequence = task
-            break
-        else:
-            task = task.parent
-
-    if scene:
-        scene_name = scene.name
-    else:
-        scene_name = 'SC'
-
-    if sequence:
-        sequence_name = sequence.name
-    else:
-        sequence_name = 'SEQ'
+    sequence_name = get_seq_name_from_task(task)
+    scene_name = get_scene_name_from_task(task)
 
     progress_controller.increment()
     # set sequencer name as seq_name + sc_name
