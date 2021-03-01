@@ -205,23 +205,22 @@ class PublisherElement(object):
         self.state = False
 
         # create button signal
-        import functools
         QtCore.QObject.connect(
             self.check_push_button,
             QtCore.SIGNAL("clicked()"),
-            functools.partial(self.run_publisher)
+            self.run_publisher
         )
 
         QtCore.QObject.connect(
             self.help_push_button,
             QtCore.SIGNAL('clicked()'),
-            functools.partial(self.show_publisher_docs)
+            self.show_publisher_docs
         )
 
         QtCore.QObject.connect(
             self.fix_push_button,
             QtCore.SIGNAL('clicked()'),
-            functools.partial(self.run_fix_definition)
+            self.run_fix_definition
         )
 
     def run_fix_definition(self):
@@ -244,21 +243,29 @@ class PublisherElement(object):
             fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
             try:
                 from anima.env.mayaEnv import publish
-                exec 'publish.%s()' % fix_def_name
-            except AttributeError:
+                fix_func = publish.__dict__[fix_def_name]
+                fix_func()
+            except KeyError:
                 pass
             self.check_push_button.click()
 
     def show_publisher_docs(self):
         """Help dialog for publishers
         """
+        # TODO: Too much string interpretation. Needs improvement.
         if self.publisher:
             m = QtWidgets.QMessageBox()
             m.setWindowTitle('Help')
 
+            import sys
+            if sys.version_info.major > 2:
+                stringify = str
+            else:
+                stringify = unicode
+
             # cleanup exception message format
             import re
-            error = str(''.join([i for i in unicode(self.publisher_state_label.toolTip()) if ord(i) < 128]))
+            error = str(''.join([i for i in stringify(self.publisher_state_label.toolTip()) if ord(i) < 128]))
             publish_error = ''
             for exception in ['PublishError:', 'RuntimeError:']:
                 try:
@@ -368,14 +375,15 @@ class PublisherElement(object):
             else:
                 # disable fix button if fix definition does not exist
                 fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
-                try:
-                    from anima.env.mayaEnv import publish
-                    exec 'publish.%s' % fix_def_name
+
+                from anima.env.mayaEnv import publish
+                # disable by default
+                self.fix_push_button.setDisabled(True)
+                self.fix_push_button.setStyleSheet('background-color: None')
+                # enable if the function exists
+                if fix_def_name in publish.__dict__:
                     self.fix_push_button.setEnabled(True)
                     self.fix_push_button.setStyleSheet('background-color: green')
-                except AttributeError:
-                    self.fix_push_button.setDisabled(True)
-                    self.fix_push_button.setStyleSheet('background-color: None')
 
 
 class PublisherRunner(threading.Thread):

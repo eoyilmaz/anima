@@ -843,11 +843,6 @@ def run_pre_publishers():
     if Representation.repr_separator in version.take_name:
         return
 
-    if sys.version_info.major > 2:
-        stringify = str
-    else:
-        stringify = unicode
-
     if version.is_published:
         from anima.publish import (run_publishers, staging, PRE_PUBLISHER_TYPE,
                                    POST_PUBLISHER_TYPE)
@@ -869,7 +864,7 @@ def run_pre_publishers():
                 icon='critical',
                 message='<b>%s</b><br/><br/>%s' % (
                     'SCENE NOT SAVED!!!',
-                    str(''.join([i for i in stringify(e) if ord(i) < 128]))
+                    e
                 ),
                 button=['Ok']
             )
@@ -888,7 +883,7 @@ def run_pre_publishers():
                 icon='critical',
                 message='<b>%s</b><br/><br/>%s' % (
                     'SCENE NOT SAVED!!!',
-                    str(''.join([i for i in stringify(e) if ord(i) < 128]))
+                    e
                 ),
                 button=['Ok']
             )
@@ -938,23 +933,16 @@ def run_post_publishers():
         # before running use the staging area to store the current version
         staging['version'] = version
 
-        # show splash screen during post publish progress and lock maya
-        here = os.path.normpath(os.path.dirname(os.path.realpath(__file__)))
-        image_path = os.path.normpath(
-            os.path.join(here, 'config', 'images', 'splash_screen.jpg')
-        ).replace('\\', '/')
-
-        p = QtGui.QPixmap(image_path)
-        s = QtWidgets.QSplashScreen(p, QtCore.Qt.WindowStaysOnTopHint)
-        s.setEnabled(False)
-        s.setWindowModality(QtCore.Qt.ApplicationModal)
-        s.show()
+        # show dialog during post publish progress and lock maya
+        from anima.ui.utils import initialize_post_publish_dialog
+        d = initialize_post_publish_dialog()
+        d.show()
 
         try:
             run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
-            s.close()
+            d.close()
         except (PublishError, RuntimeError) as e:
-            s.close()
+            d.close()
             # do not forget to clean up the staging area
             staging.clear()
             # pop up a message box with the error
@@ -963,14 +951,14 @@ def run_post_publishers():
                 icon='critical',
                 message='<b>%s</b><br/><br/>%s' % (
                     'POST PUBLISH FAILED!!!',
-                    str(''.join([i for i in unicode(e) if ord(i) < 128]))
+                    e
                 ),
                 button=['Ok']
             )
             raise e
 
-        # close splash screen in any case
-        s.close()
+        # close dialog in any case
+        d.close()
         # do not forget to clean up the staging area
         staging.clear()
 
