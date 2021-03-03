@@ -773,7 +773,7 @@ def get_root_nodes():
         if node.getParent() is None:
             shape = node.getShape()
             if shape:
-                if shape.type() not in ['camera']:
+                if shape.type() not in ['camera', 'displayPoints']:
                     root_transform_nodes.append(node)
             else:
                 root_transform_nodes.append(node)
@@ -827,6 +827,8 @@ def run_pre_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
+    import sys
+    from anima.env.mayaEnv.publish import PublishError
     from anima.env import mayaEnv
     m_env = mayaEnv.Maya()
 
@@ -851,25 +853,38 @@ def run_pre_publishers():
 
         # before running use the staging area to store the current version
         staging['version'] = version
-        run_publishers(type_name)
+        try:
+            run_publishers(type_name)
+        except (PublishError, RuntimeError) as e:
+            # do not forget to clean up the staging area
+            staging.clear()
+            # pop up a message box with the error
+            pm.confirmDialog(
+                title='SaveError',
+                icon='critical',
+                message='<b>%s</b><br/><br/>%s' % (
+                    'SCENE NOT SAVED!!!',
+                    e
+                ),
+                button=['Ok']
+            )
+            raise e
         # do not forget to clean up the staging area
         staging.clear()
     else:
         # run some of the publishers
-        from anima.env.mayaEnv.publish import PublishError
         from anima.env.mayaEnv import publish as publish_scripts
         try:
             publish_scripts.check_node_names_with_bad_characters()
-        except PublishError as e:
+        except (PublishError, RuntimeError) as e:
             # pop up a message box with the error
-            import sys
-            if sys.version_info.major > 2:
-                stringify = str
-            else:
-                stringify = unicode
             pm.confirmDialog(
                 title='SaveError',
-                message=str(''.join([i for i in stringify(e) if ord(i) < 128])),
+                icon='critical',
+                message='<b>%s</b><br/><br/>%s' % (
+                    'SCENE NOT SAVED!!!',
+                    e
+                ),
                 button=['Ok']
             )
             raise e
@@ -890,6 +905,9 @@ def run_post_publishers():
     This is written to prevent users to save on top of a Published version and
     create a back door to skip un publishable scene to publish
     """
+    import os
+    from anima.ui.lib import QtCore, QtWidgets, QtGui
+    from anima.env.mayaEnv.publish import PublishError
     from anima.env import mayaEnv
     m_env = mayaEnv.Maya()
 
@@ -914,7 +932,33 @@ def run_post_publishers():
 
         # before running use the staging area to store the current version
         staging['version'] = version
-        run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
+
+        # show dialog during post publish progress and lock maya
+        from anima.ui.utils import initialize_post_publish_dialog
+        d = initialize_post_publish_dialog()
+        d.show()
+
+        try:
+            run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
+            d.close()
+        except (PublishError, RuntimeError) as e:
+            d.close()
+            # do not forget to clean up the staging area
+            staging.clear()
+            # pop up a message box with the error
+            pm.confirmDialog(
+                title='PublishError',
+                icon='critical',
+                message='<b>%s</b><br/><br/>%s' % (
+                    'POST PUBLISH FAILED!!!',
+                    e
+                ),
+                button=['Ok']
+            )
+            raise e
+
+        # close dialog in any case
+        d.close()
         # do not forget to clean up the staging area
         staging.clear()
 
