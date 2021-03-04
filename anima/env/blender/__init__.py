@@ -108,6 +108,57 @@ class Blender(EnvironmentBase):
             from anima.env import empty_reference_resolution
             return empty_reference_resolution
 
+    def import_(self, version, use_namespace=False):
+        """the imports the given version
+        """
+        if not version:
+            return
+
+        files = {
+            'Collection': [],
+            'Image': [],
+            'Mesh': [],
+            'Material': [],
+            'Object': [],
+            'Scene': [],
+            'Texture': [],
+        }
+        with bpy.data.libraries.load(version.absolute_full_path) as (data_from, data_to):
+            # Collection
+            for name in data_from.collections:
+                files['Collection'].append({'name': name})
+
+            # # Image
+            # for name in data_from.images:
+            #     files['Image'].append({'name': name})
+
+            # # Mesh
+            # for name in data_from.meshes:
+            #     files['Mesh'].append({'name': name})
+
+            # # Materials
+            # for name in data_from.materials:
+            #     files['Material'].append({'name': name})
+            #
+            # # Objects
+            # for name in data_from.objects:
+            #     files['Object'].append({'name': name})
+            #
+            # # Scenes
+            # for name in data_from.scenes:
+            #     files['Scene'].append({'name': name})
+            #
+            # # Textures
+            # for name in data_from.textures:
+            #     files['Texture'].append({'name': name})
+
+        for key in files:
+            if files[key]:
+                bpy.ops.wm.append(
+                    directory="%s/%s/" % (version.absolute_full_path, key),
+                    files=files[key]
+                )
+
     def reference(self, version, use_namespace=True):
         """References/Links another Blend file
 
