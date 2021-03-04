@@ -2117,7 +2117,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # close the dialog
-        self.close()
+        # TODO: Please, please, please fix the following code!
+        is_blender = False
+        if self.environment and self.environment.name.lower().startswith('blender'):
+            is_blender = True
+
+        if not is_blender:
+            self.close()
 
         # call the environments open method
         if self.environment is not None:
@@ -2174,6 +2180,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 # delete the dialog when it is done
                 version_updater_main_dialog.deleteLater()
+
+        if is_blender:
+            self.close()
 
     def open_as_new_version_push_button_clicked(self):
         """Opens the selected version and immediately saves it as a new version
