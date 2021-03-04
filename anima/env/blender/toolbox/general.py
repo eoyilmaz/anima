@@ -22,7 +22,7 @@ class General(Panel):
 
         box = layout.box()
         # box.label(text="Box Label")
-        operators = [OpenVersion, SaveAsVersion, Playblast, RangeFromShot]
+        operators = [OpenVersion, SaveAsVersion, VersionUpdater, Playblast, RangeFromShot]
         for op in operators:
             row = box.row()
             row.operator(op.bl_idname, text=op.bl_label)
@@ -54,6 +54,19 @@ class SaveAsVersion(Operator):
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
         version_dialog(mode=0)
+        # redraw
+        # context.area.tag_redraw()
+        return {'FINISHED'}
+
+
+class VersionUpdater(Operator):
+    bl_idname = "anima_toolbox.version_updater"
+    bl_label = "Version Updater"
+    bl_description = "Updates versions"
+
+    def execute(self, context):
+        from anima.ui.scripts.blender import version_updater
+        version_updater()
         # redraw
         # context.area.tag_redraw()
         return {'FINISHED'}

@@ -42,6 +42,7 @@ classes = (
     general.General,
     general.OpenVersion,
     general.SaveAsVersion,
+    general.VersionUpdater,
     general.Playblast,
     general.RangeFromShot,
     render.Render,
