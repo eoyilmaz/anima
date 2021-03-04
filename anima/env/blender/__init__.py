@@ -44,7 +44,7 @@ class Blender(EnvironmentBase):
 
         fps = None
         imf = None
-        if shot and version.version_number == 1:
+        if shot:
             self.set_frame_range(shot.cut_in, shot.cut_out)
 
         fps = shot.fps if shot else project.fps

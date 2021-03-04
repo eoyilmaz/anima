@@ -43,6 +43,7 @@ classes = (
     general.OpenVersion,
     general.SaveAsVersion,
     general.Playblast,
+    general.RangeFromShot,
     render.Render,
     render.SetImageTextureNodesToRAW,
     render.SetImageTextureNodesTosRGB,
