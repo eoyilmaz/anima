@@ -205,7 +205,12 @@ class Blender(EnvironmentBase):
                 if not version.is_latest_published_version():
                     latest_published_version = version.latest_published_version
 
-                    lib.filepath = latest_published_version.absolute_full_path
+                    # make it relative again
+                    new_file_path = '//%s' % os.path.relpath(
+                        latest_published_version.absolute_full_path,
+                        os.path.dirname(bpy.data.filepath)
+                    )
+                    lib.filepath = new_file_path
                     lib.reload()
 
         return []  # need to return an empty list
