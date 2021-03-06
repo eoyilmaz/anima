@@ -1031,15 +1031,14 @@ class ShotExtension(object):
         self.unmute()
 
         default_options = {
-            'fmt': 'qt',
+            'fmt': 'image',
             'sequenceTime': 1,
             'forceOverwrite': 1,
             'clearCache': 1,
             'showOrnaments': 1,
-            'percent': 50,
             'offScreen': 1,
             'viewer': 0,
-            'compression': 'MPEG-4 Video',
+            'compression': 'png',
             'quality': 85,
             'startTime': start_frame,
             'endTime': end_frame + extra_frame,
@@ -1062,13 +1061,29 @@ class ShotExtension(object):
             import pprint
             pprint.pprint(default_options)
 
-            result = pm.playblast(**default_options)
+            # result = pm.playblast(**default_options)
+            audio_nodes = sequence.audio.get()
+            audio_node = None
+            if audio_nodes:
+                audio_node = audio_nodes[0]
+
+            result = [
+                {
+                    'video': pm.playblast(**default_options),
+                    'audio': {
+                        'node': audio_node,
+                        'offset': default_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0,
+                        'duration': (default_options.get('endTime', 0) - default_options.get('startTime', 0) + 1)
+                    }
+                }
+            ]
             sequence.unmute_shots()
 
         # restore track
         self.track.set(track)
 
-        return result
+        from anima.env.mayaEnv.auxiliary import Playblaster
+        return Playblaster.convert_image_sequence_to_video(result, delete_source_sequence=True)
 
     @extends(pm.nodetypes.Shot)
     def convert_to_mxf(self, metafuze_xml):
