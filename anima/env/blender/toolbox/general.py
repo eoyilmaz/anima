@@ -22,7 +22,7 @@ class General(Panel):
 
         box = layout.box()
         # box.label(text="Box Label")
-        operators = [OpenVersion, SaveAsVersion, Playblast]
+        operators = [OpenVersion, SaveAsVersion, VersionUpdater, Playblast, RangeFromShot]
         for op in operators:
             row = box.row()
             row.operator(op.bl_idname, text=op.bl_label)
@@ -59,6 +59,19 @@ class SaveAsVersion(Operator):
         return {'FINISHED'}
 
 
+class VersionUpdater(Operator):
+    bl_idname = "anima_toolbox.version_updater"
+    bl_label = "Version Updater"
+    bl_description = "Updates versions"
+
+    def execute(self, context):
+        from anima.ui.scripts.blender import version_updater
+        version_updater()
+        # redraw
+        # context.area.tag_redraw()
+        return {'FINISHED'}
+
+
 class Playblast(Operator):
     bl_idname = "anima_toolbox.general_playblast"
     bl_label = "Playblast"
@@ -71,4 +84,23 @@ class Playblast(Operator):
         bl.viewport_render_animation(context)
         # redraw
         # context.area.tag_redraw()
+        return {'FINISHED'}
+
+
+class RangeFromShot(Operator):
+    bl_idname = "anima.general_range_from_shot"
+    bl_label = "Range From Shot"
+    bl_description = "Adjust playback range to shot range"
+
+    def execute(self, context):
+        from anima.env import blender
+        bl = blender.Blender()
+        version = bl.get_current_version()
+        if not version:
+            return {'FINISHED'}
+
+        shot = bl.get_shot(version)
+        if shot:
+            bl.set_frame_range(shot.cut_in, shot.cut_out)
+
         return {'FINISHED'}

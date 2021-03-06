@@ -44,7 +44,7 @@ class Blender(EnvironmentBase):
 
         fps = None
         imf = None
-        if shot and version.version_number == 1:
+        if shot:
             self.set_frame_range(shot.cut_in, shot.cut_out)
 
         fps = shot.fps if shot else project.fps
@@ -107,6 +107,57 @@ class Blender(EnvironmentBase):
         else:
             from anima.env import empty_reference_resolution
             return empty_reference_resolution
+
+    def import_(self, version, use_namespace=False):
+        """the imports the given version
+        """
+        if not version:
+            return
+
+        files = {
+            'Collection': [],
+            'Image': [],
+            'Mesh': [],
+            'Material': [],
+            'Object': [],
+            'Scene': [],
+            'Texture': [],
+        }
+        with bpy.data.libraries.load(version.absolute_full_path) as (data_from, data_to):
+            # Collection
+            for name in data_from.collections:
+                files['Collection'].append({'name': name})
+
+            # # Image
+            # for name in data_from.images:
+            #     files['Image'].append({'name': name})
+
+            # # Mesh
+            # for name in data_from.meshes:
+            #     files['Mesh'].append({'name': name})
+
+            # # Materials
+            # for name in data_from.materials:
+            #     files['Material'].append({'name': name})
+            #
+            # # Objects
+            # for name in data_from.objects:
+            #     files['Object'].append({'name': name})
+            #
+            # # Scenes
+            # for name in data_from.scenes:
+            #     files['Scene'].append({'name': name})
+            #
+            # # Textures
+            # for name in data_from.textures:
+            #     files['Texture'].append({'name': name})
+
+        for key in files:
+            if files[key]:
+                bpy.ops.wm.append(
+                    directory="%s/%s/" % (version.absolute_full_path, key),
+                    files=files[key]
+                )
 
     def reference(self, version, use_namespace=True):
         """References/Links another Blend file
@@ -205,7 +256,12 @@ class Blender(EnvironmentBase):
                 if not version.is_latest_published_version():
                     latest_published_version = version.latest_published_version
 
-                    lib.filepath = latest_published_version.absolute_full_path
+                    # make it relative again
+                    new_file_path = '//%s' % os.path.relpath(
+                        latest_published_version.absolute_full_path,
+                        os.path.dirname(bpy.data.filepath)
+                    )
+                    lib.filepath = new_file_path
                     lib.reload()
 
         return []  # need to return an empty list

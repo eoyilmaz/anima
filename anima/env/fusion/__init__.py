@@ -973,6 +973,27 @@ class Fusion(EnvironmentBase):
                             'OutputFormat': 'JPEGFormat',
                             'JpegFormat.Quality': 85,
                         },
+                        'connected_to': {
+                            'Input': {
+                                "type": "OCIOColorSpace",
+                                "input_list": {
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "SourceSpace": "ACES - ACES2065-1",
+                                    "OutputSpace": "Output - sRGB",
+                                },
+                                'connected_to': {
+                                    'Input': {
+                                        "type": "OCIOColorSpace",
+                                        "ref_id": random_ref_id,
+                                        "input_list": {
+                                            "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                            "SourceSpace": "ACES - ACES2065-1",
+                                            "OutputSpace": "ACES - ACES2065-1",
+                                        },
+                                    }
+                                }
+                            }
+                        }
                     },
                 },
                 {
@@ -1014,34 +1035,21 @@ class Fusion(EnvironmentBase):
                             'OpenEXRFormat.XDispEnable': 0,
                             'OpenEXRFormat.YDispEnable': 0,
                         },
+                        'connected_to': {
+                            'Input': {
+                                "type": "OCIOColorSpace",
+                                "input_list": {
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "SourceSpace": "ACES - ACES2065-1",
+                                    "OutputSpace": "ACES - ACES2065-1",
+                                },
+                                'connected_to': {
+                                    "ref_id": random_ref_id,
+                                }
+                            }
+                        }
                     },
                 },
-                # {
-                #     'name': 'mp4',
-                #     'node_tree': {
-                #         'type': 'Saver',
-                #         'attr': {
-                #             'TOOLS_Name': self.output_node_name_generator('mp4'),
-                #         },
-                #         'input_list': {
-                #             'Clip': self.output_path_generator(version, 'mp4'),
-                #             'CreateDir': 1,
-                #             'ProcessRed': 1,
-                #             'ProcessGreen': 1,
-                #             'ProcessBlue': 1,
-                #             'ProcessAlpha': 0,
-                #             'OutputFormat': 'QuickTimeMovies',
-                #             'ProcessMode': 'Auto',
-                #             'SaveFrames': 'Full',
-                #             'QuickTimeMovies.Compression': 'H.264_avc1',
-                #             'QuickTimeMovies.Quality': 95.0,
-                #             'QuickTimeMovies.FrameRateFps': fps,
-                #             'QuickTimeMovies.KeyFrames': 5,
-                #             'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
-                #             'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
-                #         },
-                #     },
-                # },
                 {
                     'name': 'mov',
                     'node_tree': {
@@ -1077,6 +1085,19 @@ class Fusion(EnvironmentBase):
                             'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
                             'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                         },
+                        'connected_to': {
+                            'Input': {
+                                "type": "OCIOColorSpace",
+                                "input_list": {
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "SourceSpace": "ACES - ACES2065-1",
+                                    "OutputSpace": "Utility - Rec.709 - Camera",
+                                },
+                                'connected_to': {
+                                    "ref_id": random_ref_id,
+                                }
+                            }
+                        }
                     },
                 },
             ]

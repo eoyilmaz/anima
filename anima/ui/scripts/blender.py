@@ -23,7 +23,7 @@ from anima import logger
 
 
 def version_dialog(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_dialog UI for Maya
+    """Helper function for version_dialog UI for Blender
     """
     # connect to db
     from anima.utils import do_db_setup
@@ -41,3 +41,24 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
     # set the parent object to the maya main window
     version_dialog.UI(environment=b, parent=None, mode=mode)
+
+
+def version_updater(logging_level=logging.WARNING):
+    """Helper function for version_dialog UI for Blender
+    """
+    # connect to db
+    from anima.utils import do_db_setup
+    do_db_setup()
+
+    # use PySide2
+    from anima import ui
+    ui.SET_PYSIDE2()
+
+    from anima.ui import version_updater
+    from anima.env import blender
+    b = blender.Blender()
+
+    logger.setLevel(logging_level)
+
+    # set the parent object to the blender main window
+    version_updater.UI(environment=b, parent=None)
