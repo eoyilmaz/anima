@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2018-2020, Erkan Ozgur Yilmaz
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 """
 import os
 os.environ['STALKER_PATH'] = '/mnt/NAS/Users/eoyilmaz/Stalker_Projects'

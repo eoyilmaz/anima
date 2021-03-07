@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2020, Anima Istanbul
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 """Anima Pipeline Library
 
 Anima uses ``Stalker Configuration Framework``.
@@ -31,7 +27,7 @@ import tempfile
 import logging
 from anima.config import Config
 
-__version__ = "0.5.2"
+__version__ = "0.6.0"
 
 __string_types__ = []
 if sys.version_info[0] >= 3:  # Python 3
@@ -46,8 +42,7 @@ logging_level = logging.ERROR
 logger.setLevel(logging_level)
 
 # create formatter
-logging_formatter = \
-    logging.Formatter('%(module)s: %(funcName)s: %(levelname)s: %(message)s')
+logging_formatter = logging.Formatter('%(module)s: %(funcName)s: %(levelname)s: %(message)s')
 
 # create file handler
 log_file_path = os.path.join(

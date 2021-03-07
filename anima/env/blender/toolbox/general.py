@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2020, Erkan Ozgur Yilmaz
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
-
 
 from bpy.types import Panel, Operator
 
