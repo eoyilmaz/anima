@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2020, Anima Istanbul
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 
 import pymel.core as pm
 
@@ -1078,12 +1074,21 @@ def generate_thumbnail():
     return found_output_file
 
 
-def perform_playblast(action=0, resolution=None, playblast_view_options=None, upload_to_server=None):
+def perform_playblast(action=0, resolution=100, playblast_view_options=None, upload_to_server=None):
     """the patched version of the original perform playblast
+
+    :param int action: Passed directly to the Maya version of the playblast if the current scene is not related to a
+      Stalker Version.
+    :param int resolution: An integer value one of 25, 50, 100 defining the playblast resolution as a percent fraction
+      of the original scene resolution. Default value is 100. If given as None, the value or this argument will be asked
+      to the user.
+    :param dict playblast_view_options: A dictionary containing the view options.
+      ``auxiliary.get_default_playblast_view_options`` can be used to get one. If given as None, the value or this
+        argument will be asked to the user.
+    :param bool upload_to_server: A bool value to specify if the resultant video should be uploaded to the server or
+      not. If given as None, the value or this argument will be asked to the user.
     """
     # check if the current scene is a Stalker related version
-    print('called anima.env.mayaEnv.auxiliary.perform_playblast(%s)' % action)
-
     # if not call the default playblast
     # if it is call out ShotPlayblaster
     from anima.env.mayaEnv import Maya
@@ -1118,21 +1123,22 @@ def perform_playblast(action=0, resolution=None, playblast_view_options=None, up
             extra_playblast_options=extra_playblast_options
         )
 
-        if upload_to_server is None:  # so no default options
-            response = pm.confirmDialog(
-                title='Upload To Server?',
-                message='Upload To Server?',
-                button=['Yes', 'No'],
-                defaultButton='No',
-                cancelButton='No',
-                dismissString='No'
-            )
-        else:
-            response = 'Yes' if upload_to_server else 'No'
+        if outputs:
+            if upload_to_server is None:  # so no default options
+                response = pm.confirmDialog(
+                    title='Upload To Server?',
+                    message='Upload To Server?',
+                    button=['Yes', 'No'],
+                    defaultButton='No',
+                    cancelButton='No',
+                    dismissString='No'
+                )
+            else:
+                response = 'Yes' if upload_to_server else 'No'
 
-        if response == 'Yes':
-            for output in outputs:
-                pb.upload_output(pb.version, output)
+            if response == 'Yes':
+                for output in outputs:
+                    pb.upload_output(pb.version, output)
 
     else:
         # call the original playblast
@@ -1178,26 +1184,7 @@ def ask_playblast_resolution():
     elif response == 'Cancel':
         return None
 
-    return 50
-
-
-def ask_playblast_format():
-    """asks the user the playblast format
-    """
-    # ask resolution
-    response = pm.confirmDialog(
-        title='Format?',
-        message='Format?',
-        button=['QuickTime', 'PNG'],
-        defaultButton='QuickTime',
-        cancelButton='QuickTime',
-        dismissString='QuickTime'
-    )
-
-    if response == 'QuickTime':
-        return 'qt'
-    elif response == 'PNG':
-        return 'image'
+    return 100
 
 
 def get_default_playblast_view_options():
@@ -1444,16 +1431,14 @@ class Playblaster(object):
     ]
 
     global_playblast_options = {
-        # 'fmt': 'image',
-        'fmt': 'qt',
+        'fmt': 'image',
         'forceOverwrite': 1,
         'clearCache': 1,
         'showOrnaments': 1,
         'percent': 100,
         'offScreen': 1,
         'viewer': 0,
-        # 'compression': 'png',
-        'compression': 'MPEG-4 Video',
+        'compression': 'png',
         'quality': 85,
         'sequenceTime': 1
     }
@@ -1463,13 +1448,16 @@ class Playblaster(object):
     def __init__(self, playblast_view_options=None):
         self._playblast_view_options = None
         self.playblast_view_options = playblast_view_options
+        self.batch_mode = pm.general.about(batch=1)
 
-        from stalker import LocalSession
-        local_session = LocalSession()
-        self.logged_in_user = local_session.logged_in_user
+        self.logged_in_user = None
+        if not self.batch_mode:
+            from stalker import LocalSession
+            local_session = LocalSession()
+            self.logged_in_user = local_session.logged_in_user
 
-        if not self.logged_in_user:
-            raise RuntimeError('Please login first!')
+            if not self.logged_in_user:
+                raise RuntimeError('Please login first!')
 
         self.version = None
         from anima.env.mayaEnv import Maya
@@ -1479,7 +1467,6 @@ class Playblaster(object):
         self.user_view_options = {}
         self.reset_user_view_options_storage()
 
-        self.batch_mode = False
 
     def check_sequence_name(self):
         """checks sequence name and asks the user to set one if maya is in UI
@@ -1487,8 +1474,7 @@ class Playblaster(object):
         """
         sequencer = pm.ls(type='sequencer')[0]
         sequence_name = sequencer.getAttr('sequence_name')
-        if sequence_name == '' and not pm.general.about(batch=1) \
-           and not self.batch_mode:
+        if sequence_name == '' and not self.batch_mode:
             result = pm.promptDialog(
                 title='Please enter a Sequence Name',
                 message='Sequence Name:',
@@ -1644,18 +1630,39 @@ class Playblaster(object):
             cameras.append(camera)
         return cameras
 
-    @classmethod
-    def get_frame_range(cls):
+    def get_selected_frame_range(self):
         """returns the playback range
         """
-        return map(
-            int,
-            pm.timeControl(
-                pm.melGlobals['$gPlayBackSlider'],
-                q=1,
-                rangeArray=True
+        if not self.batch_mode:
+            return map(
+                int,
+                pm.timeControl(
+                    pm.melGlobals['$gPlayBackSlider'],
+                    q=1,
+                    rangeArray=True
+                )
             )
-        )
+        else:
+            # return the whole timeline range
+            start_time = int(pm.playbackOptions(q=1, ast=1))
+            end_time = int(pm.playbackOptions(q=1, aet=1))
+            return [start_time, end_time]
+
+    def is_frame_range_selected(self):
+        """returns true if a range in the time line is selected
+        """
+        if not self.batch_mode:
+            start, end = map(
+                int,
+                pm.timeControl(
+                    pm.melGlobals['$gPlayBackSlider'],
+                    q=1,
+                    rangeArray=True
+                )
+            )
+            return (end - start) > 1
+        else:
+            return False
 
     @classmethod
     def get_audio_node(cls):
@@ -1699,9 +1706,10 @@ class Playblaster(object):
 
         # store hud display options
         hud_names = pm.headsUpDisplay(lh=1)
-        for hud_name in hud_names:
-            self.user_view_options['huds'][hud_name] = \
-                pm.headsUpDisplay(hud_name, q=1, vis=1)
+        if hud_names:  # in batch mode there is no hud_names
+            for hud_name in hud_names:
+                self.user_view_options['huds'][hud_name] = \
+                    pm.headsUpDisplay(hud_name, q=1, vis=1)
 
         for camera in pm.ls(type='camera'):
             camera_name = camera.name()
@@ -1738,8 +1746,9 @@ class Playblaster(object):
 
         # turn all hud displays off
         hud_flags = pm.headsUpDisplay(lh=1)
-        for flag in hud_flags:
-            pm.headsUpDisplay(flag, e=1, vis=0)
+        if hud_flags:  # in batch mode there is node headsUpDisplay
+            for flag in hud_flags:
+                pm.headsUpDisplay(flag, e=1, vis=0)
 
         # set camera options for playblast
         for camera in pm.ls(type='camera'):
@@ -1826,14 +1835,9 @@ class Playblaster(object):
             extra_playblast_options = {}
 
         # if a time range is selected do a simple playblast
-        start, end = pm.timeControl(
-            pm.melGlobals['$gPlayBackSlider'],
-            q=1,
-            rangeArray=True
-        )
-        time_range_selected = (end - start) > 1
-
-        if len(shots) and not time_range_selected:
+        # the following will return ``False`` in batch mode
+        start, end = self.get_selected_frame_range()
+        if len(shots) and not self.is_frame_range_selected():
             if not self.batch_mode:
                 response = pm.confirmDialog(
                     title='Which Camera?',
@@ -1854,12 +1858,8 @@ class Playblaster(object):
                 return []
             return self.playblast_all_shots(extra_playblast_options)
         else:
-            if time_range_selected:
-                extra_playblast_options['startTime'] = start
-                extra_playblast_options['endTime'] = end
-            else:
-                extra_playblast_options['startTime'] = int(pm.playbackOptions(q=1, ast=1))
-                extra_playblast_options['endTime'] = int(pm.playbackOptions(q=1, aet=1))
+            extra_playblast_options['startTime'] = start
+            extra_playblast_options['endTime'] = end
             return self.playblast_simple(extra_playblast_options)
 
     def playblast_simple(self, extra_playblast_options=None):
@@ -1872,7 +1872,7 @@ class Playblaster(object):
         import copy
         playblast_options = copy.copy(self.global_playblast_options)
         playblast_options['sequenceTime'] = False
-        playblast_options['percent'] = 50
+        playblast_options['percent'] = 100
 
         if extra_playblast_options:
             playblast_options.update(extra_playblast_options)
@@ -1957,22 +1957,26 @@ class Playblaster(object):
         finally:
             self.restore_user_options()
 
-        video = self.convert_image_sequence_to_video(result)
-
-        # delete all the temp files
-        try:
-            video_file_pattern = result[0]['video'].replace("#", "*")
-            import glob
-            for filename in glob.glob(video_file_pattern):
-                os.remove(filename)
-        except (OSError, AttributeError):
-            pass
-
+        video = self.convert_image_sequence_to_video(result, delete_source_sequence=True)
         return video
 
     @classmethod
-    def convert_image_sequence_to_video(cls, data):
+    def convert_image_sequence_to_video(cls, data, delete_source_sequence=False):
         """converts image sequence to video
+
+        :param data: A dictionary containing audio and video information in the following format:
+
+          {
+              'video': 'video_path',
+              'audio': {
+                  'node': audio_node_path,
+                  'offset': in frames,
+                  'duration': in frames
+              }
+          }
+
+        :param bool delete_source_sequence: If True, this option will let the function to delete the source image
+          sequence.
         """
         import os
         import glob
@@ -1988,6 +1992,7 @@ class Playblaster(object):
                 video_file_path = output.get('video')
                 audio_data = output.get('audio')
 
+            original_image_sequence_path = video_file_path
             if video_file_path and '#' in video_file_path:
                 # convert to mp4
 
@@ -2051,6 +2056,17 @@ class Playblaster(object):
                 video_file_path = mm.convert_to_h264(video_file_path, video_file_path_h264, options=options)
 
             new_result.append(video_file_path)
+
+        # delete all the temp files
+        if delete_source_sequence:
+            try:
+                video_file_pattern = original_image_sequence_path.replace("#", "*")
+                import glob
+                for filename in glob.glob(video_file_pattern):
+                    os.remove(filename)
+            except (OSError, AttributeError):
+                pass
+
         return new_result
 
     def playblast_shot(self, shot, extra_playblast_options=None):
@@ -2061,7 +2077,6 @@ class Playblaster(object):
 
         shot_playblast_options.update({
             'sequenceTime': 1,
-            'percent': 50,
         })
         if extra_playblast_options:
             shot_playblast_options.update(extra_playblast_options)
@@ -2120,13 +2135,9 @@ class Playblaster(object):
 
         # if the time range is selected from the time line
         # just use this range
-        range_start, range_end = self.get_frame_range()
-        range_selected = False
-        if range_end - range_start > 1:
-            # means that there is a range selected in the time slider
-            range_selected = True
-            generic_playblast_options['startTime'] = range_start
-            generic_playblast_options['endTime'] = range_end
+        range_start, range_end = self.get_selected_frame_range()
+        generic_playblast_options['startTime'] = range_start
+        generic_playblast_options['endTime'] = range_end
 
         # check audio
         audio_node = self.get_audio_node()
@@ -2146,7 +2157,7 @@ class Playblaster(object):
             shot_start_frame = shot.startFrame.get()
             shot_end_frame = shot.endFrame.get()
 
-            if range_selected:
+            if self.is_frame_range_selected():
                 # skip this shot if the selected playback range do not
                 # coincide with this shot range
                 if (range_start > shot_start_frame and range_start > shot_end_frame) or \
@@ -2156,7 +2167,7 @@ class Playblaster(object):
 
             temp_video_file_full_path = self.playblast_shot(shot, per_shot_playblast_options)
             temp_video_file_full_paths.append({
-                'video': temp_video_file_full_path,
+                'video': temp_video_file_full_path[0],
                 'audio': {
                     'node': audio_node,
                     'offset': audio_node.offset.get() - shot_start_frame if audio_node else 0,
@@ -2275,16 +2286,14 @@ class Playblaster(object):
         # generate the web version
         from anima.utils import MediaManager
         m = MediaManager()
-        temp_web_version_full_path = \
-            m.generate_media_for_web(output_file_full_path)
+        temp_web_version_full_path = m.generate_media_for_web(output_file_full_path)
 
         try:
             shutil.copy(temp_web_version_full_path, webres_path)
         except IOError:
             pass
 
-        temp_thumbnail_full_path = \
-            m.generate_thumbnail(output_file_full_path)
+        temp_thumbnail_full_path = m.generate_thumbnail(output_file_full_path)
         try:
             # also upload thumbnail
             shutil.copy(temp_thumbnail_full_path, thumbnail_path)

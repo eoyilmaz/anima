@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2012-2020, Anima Istanbul
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 """previs_to_shots
 This tool exports maya scenes from a Previs Task with multpile shots
 to related Animation Tasks with single shot in relation with the Camera Sequencer (Maya).

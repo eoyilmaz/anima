@@ -1,11 +1,6 @@
+# -*- coding: utf-8 -*-
 from anima.ui.lib import QtCore, QtWidgets
-
 from anima.ui.base import AnimaDialogBase, ui_caller
-
-
-
-
-
 
 
 def UI(app_in=None, executor=None, **kwargs):

@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2017-2020, Erkan Ozgur Yilmaz
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets

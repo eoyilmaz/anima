@@ -1,47 +1,70 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright (c) 2021, Erkan Ozgur Yilmaz
-#
-# This module is part of anima and is released under the MIT
-# License: http://www.opensource.org/licenses/MIT
 
 import os
 import sys
 
+def submit_job(job_name, block_name, command):
+    """Submits an Afanasy job
 
-def submit_export_alembics(path):
-    """creates a afanasy job that exports the alembics on a given scene
-
-    :param str path: Path to a maya file
+    :param job_name:
+    :param block_name:
+    :param command:
+    :return:
     """
+
     import af
     import afcommon
 
-    block = af.Block(
-        "Alembic Export",
-        'maya',
-    )
-
-    command = [
-        "mayapy",
-        "-c",
-        "\"import pymel.core as pm; from anima.env.mayaEnv import afanasy_publisher;afanasy_publisher.export_alembics('%s');\"" % path
-    ]
-
+    block = af.Block(block_name, 'maya')
     block.setCommand(" ".join(command))
     block.setNumeric(1, 1, 1, 1)
 
-    job = af.Job('Test - Alembic Export')
+    job = af.Job(job_name)
     job.blocks = [block]
     status, data = job.send()
 
-    # restore job name
     if not status:
         RuntimeError('Something went wrong!')
 
 
+def submit_alembic_job(path, project_code=''):
+    """creates a afanasy job that exports the alembics on a given scene
+
+    :param str path: Path to a maya file
+    :param project_code: Project.code
+    """
+    job_name = "%s:%s - Alembic Export" % (project_code, os.path.basename(path))
+    block_name = job_name
+    command = [
+        "mayapy",
+        "-c",
+        "\"import pymel.core as pm;"
+        "from anima.env.mayaEnv import afanasy_publisher;"
+        "afanasy_publisher.export_alembics('{path}');\"".format(path=path)
+    ]
+    submit_job(job_name, block_name, command)
+
+
+def submit_playblast_job(path, project_code=''):
+    """creates a afanasy job that exports the alembics on a given scene
+
+    :param str path: Path to a maya file
+    :param project_code: Project.code
+    """
+    job_name = "%s:%s - Playblast" % (project_code, os.path.basename(path))
+    block_name = job_name
+    command = [
+        "mayapy",
+        "-c",
+        "\"import pymel.core as pm;"
+        "from anima.env.mayaEnv import afanasy_publisher;"
+        "afanasy_publisher.export_playblast('{path}');\"".format(path=path)
+    ]
+    submit_job(job_name, block_name, command)
+
+
 def export_alembics(path):
-    """This does all the work needed
+    """Creates alembic files
 
     :param str path: The path of the file version
     :return:
@@ -57,3 +80,40 @@ def export_alembics(path):
 
     from anima.env.mayaEnv import auxiliary
     auxiliary.export_alembic_from_cache_node(handles=1)
+    print("Alembic Export Done!")
+
+
+def export_playblast(path):
+    """Playblasts the current scene
+
+    :param str path: The path of the file version
+    :return:
+    """
+    import pymel.core as pm
+    from anima.env import mayaEnv
+    m = mayaEnv.Maya()
+    m.use_progress_window = False  # Maya sets that automatically but let's be sure!
+    v = m.get_version_from_full_path(path)
+    if not v:
+        raise RuntimeError("version not found!")
+
+    m.open(v, force=True, skip_update_check=True, prompt=False)
+
+    shots = pm.ls(type='shot')
+    if shots:
+        shot = shots[0]
+
+        camera = None
+        if shot:
+            camera = pm.PyNode(shot.getCurrentCamera())
+
+        # set only the camera renderable and the rest non renderable
+        for cam in pm.ls(type='camera'):
+            cam.renderable.set(0)
+        if camera:
+            camera.renderable.set(1)
+
+    from anima.env.mayaEnv import auxiliary
+    default_view_options = auxiliary.get_default_playblast_view_options()
+    auxiliary.perform_playblast(0, resolution=100, playblast_view_options=default_view_options, upload_to_server=True)
+    print("Playblast Done!")
