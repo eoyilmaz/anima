@@ -1966,6 +1966,23 @@ def UI():
                 #    bgc=color.color
                 #)
 
+            pm.button(
+                'export_alembic_on_farm_button',
+                l='Export Alembic On Farm',
+                c=repeated_callback(Animation.export_alembics_on_farm),
+                ann=Animation.export_alembics_on_farm.__doc__.split('\n')[0],
+                bgc=color.color
+            )
+
+            pm.text(l='===== Playblast Tools =====')
+            color.change()
+            pm.button(
+                'playblast_on_farm_button',
+                l='PLayblast On Farm',
+                c=repeated_callback(Animation.playblast_on_farm),
+                ann=Animation.playblast_on_farm.__doc__.split('\n')[0],
+                bgc=color.color
+            )
 
             pm.text(l='===== Exporters =====')
             color.change()

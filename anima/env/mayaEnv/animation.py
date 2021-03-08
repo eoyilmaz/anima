@@ -409,3 +409,28 @@ class Animation(object):
             pm.error(
                 'No shot node in the scene, nor the task is related to a Shot!'
             )
+
+    @classmethod
+    def export_alembics_on_farm(cls):
+        """Submits alembic export jobs to Afanasy
+        """
+        from anima.env.mayaEnv import Maya, afanasy_publisher
+        m = Maya()
+        v = m.get_current_version()
+        if v:
+            afanasy_publisher.submit_alembic_job(v.absolute_full_path, project_code=v.task.project.code)
+        else:
+            raise RuntimeError("This scene is not a Stalker version!")
+
+    @classmethod
+    def playblast_on_farm(cls):
+        """Submits playblast creation jobs to Afanasy
+        """
+        from anima.env.mayaEnv import Maya, afanasy_publisher
+        m = Maya()
+        v = m.get_current_version()
+        if v:
+            afanasy_publisher.submit_playblast_job(v.absolute_full_path, project_code=v.task.project.code)
+        else:
+            raise RuntimeError("This scene is not a Stalker version!")
+
