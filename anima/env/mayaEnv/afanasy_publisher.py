@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
-import sys
+
 
 def submit_job(job_name, block_name, command):
     """Submits an Afanasy job
@@ -13,7 +13,6 @@ def submit_job(job_name, block_name, command):
     """
 
     import af
-    import afcommon
 
     block = af.Block(block_name, 'maya')
     block.setCommand(" ".join(command))
