@@ -260,10 +260,10 @@ sourceimages/3dPaintTextures"""
 
         :return:
         """
-        path_regex = r'scenes/refs/[\w\d\/_\.@]+'
+        path_regex = r'(\-typ\s)([\w\"]*\s)(")(.*scenes/.*[\w\d\/_\.@]+)'
         # so we have all the data
         # extract references
-        ref_paths = re.findall(path_regex, data)
+        ref_paths = [r[3] for r in re.findall(path_regex, data)]
 
         return ref_paths
 
