@@ -1960,11 +1960,6 @@ def UI():
                 ann=auxiliary.export_alembic_of_selected_cacheable_nodes.__doc__.split('\n')[0],
                 bgc=color.color
             )
-                #alembic_cache_steps_int_field = pm.intField(
-                #    'alembic_cache_steps_inf_field',
-                #    value=1,
-                #    bgc=color.color
-                #)
 
             pm.button(
                 'export_alembic_on_farm_button',
