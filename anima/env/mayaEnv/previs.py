@@ -779,42 +779,7 @@ class ShotExporter(object):
             oy_publish.check_sequence_name()
             oy_publish.check_sequence_name_format()
         except:
-            seq_name = None
-            if self.current_type == self.prev_type:
-                seq_name = '_'.join(self.current_version.nice_name.split('_Previs')[0].split('_')[-3:]).upper()
-            if self.current_type == self.anim_type:
-                seq_name = '_'.join(self.current_version.nice_name.split('_')[:3]).upper()
-            self.sequencer.set_sequence_name(seq_name)
-
-            message = 'Scene Task name is Wrong.\n'
-            # message += '%s\n' % seq_name
-            message += '\n'
-            message += 'Enter Seq Name Manually below like:\n'
-            message += 'EP001_001_TEMP  or SEQ001_001_TEMP\n'
-            message += '<Episode Num>_<Scene Num>_<Env>'
-            pd = pm.promptDialog(title='Error', message=message, button='SET Seq Name')
-
-            if pd == 'SET Seq Name':
-                seq_name = pm.promptDialog(q=1, text=1)
-                self.sequencer.set_sequence_name(seq_name)
-
-            try:
-                oy_publish.check_sequence_name_format()
-            except PublishError as e:
-                raise RuntimeError(e)
-
-            # if pd == 'SET Seq Name':
-            #     seq_name = pm.promptDialog(q=1, text=1)
-            #     self.sequencer.set_sequence_name(seq_name)
-            #     try:
-            #         oy_publish.check_sequence_name_format()
-            #     except:
-            #         self.set_sequencer_name()
-            # else:
-            #     try:
-            #         oy_publish.check_sequence_name_format()
-            #     except:
-            #         self.set_sequencer_name()
+            oy_publish.check_sequence_name___fix()
 
     def clear_scene(self, keep_shot):
         # delete all other shot nodes
