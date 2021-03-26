@@ -1945,15 +1945,15 @@ def check_cacheable_attr(progress_controller=None):
     v = m_env.get_current_version()
     t = v.task
 
-    asset_name = None
+    asset_code = None
     if isinstance(t.parent, Asset):
-        asset_name = t.parent.name
+        asset_code = t.parent.code
 
     if root_node.hasAttr('cacheable') \
             and root_node.getAttr('cacheable') != '' \
             and root_node.getAttr('cacheable') is not None \
-            and asset_name is not None \
-            and root_node.getAttr('cacheable').startswith(asset_name.lower()) is True \
+            and asset_code is not None \
+            and root_node.getAttr('cacheable').startswith(asset_code.lower()) is True \
             and root_node.getAttr('cacheable') == root_node.lower():
         has_valid_cacheable = True
         progress_controller.increment()
@@ -1978,15 +1978,15 @@ def check_cacheable_attr___fix():
     m_env = mayaEnv.Maya()
     v = m_env.get_current_version()
     t = v.task
-    asset_name = None
+    asset_code = None
     if isinstance(t.parent, Asset):
-        asset_name = t.parent.name
+        asset_code = t.parent.code
 
-    if asset_name:
-        if node.name().startswith(asset_name):
+    if asset_code:
+        if node.name().startswith(asset_code):
             node_name = node.name()
         else:
-            node_name = asset_name
+            node_name = asset_code
     else:
         if node.isReferenced() is True:
             node_name = str(node.stripNamespace())
