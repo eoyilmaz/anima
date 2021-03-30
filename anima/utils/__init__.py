@@ -1622,48 +1622,26 @@ def create_project_structure(entity):
     """
     import jinja2
     from stalker import Project, Task
-    if not isinstance(entity, Task):
-        # this is not a Task
-        if not isinstance(entity, Project):
-            # neither a Project
-            raise TypeError('Please supply a Stalker Project or Task instance!')
 
     project = None
     if isinstance(entity, Project):
         project = entity
     elif isinstance(entity, Task):
-        project = entity.project  # get project entity
+        project = entity.project
 
-    if project is not None:
-        t = jinja2.Template(project.structure.custom_template)
-        paths = t.render(project=entity).split('\n')
-        for path in paths:
-            path = path.strip()
-            if path != '':
-                if not os.path.exists(path):
-                    try:
-                        os.makedirs(path)
-                    except OSError:
-                        # path already exist
-                        pass
+    if project is None:
+        raise TypeError('Please supply a Stalker Project or Task instance!')
 
-
-# def create_task_structure(task):
-#     """Creates the task structure of the given task
-#
-#     :param task: A Stalker Project instance
-#     :return:
-#     """
-#     from stalker import Task
-#     if not isinstance(task, Task):
-#         raise TypeError('Please supply a Stalker Task instance!')
-#
-#     for t in task.walk_hierarchy():
-#         try:
-#             os.makedirs(t.absolute_path)
-#         except OSError:
-#             # path already exist
-#             pass
+    t = jinja2.Template(project.structure.custom_template)
+    paths = t.render(project=entity).split('\n')
+    for path in paths:
+        path = path.strip()
+        if path != '':
+            try:
+                os.makedirs(path)
+            except OSError:
+                # path already exist
+                pass
 
 
 def file_browser_name():
