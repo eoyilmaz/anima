@@ -244,7 +244,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         import_from_json_action = None
         no_deps_action = None
         create_project_structure_action = None
-        # create_task_structure_action = None
         update_project_action = None
         assign_users_action = None
         open_in_web_browser_action = None
@@ -312,11 +311,6 @@ class TaskTreeView(QtWidgets.QTreeView):
 
             if isinstance(entity, Task):
                 # this is a task
-                # create_task_structure_action = \
-                #     create_sub_menu.addAction(
-                #         u'\uf115 Create Task Folder Structure'
-                #     )
-
                 create_project_structure_action = \
                     create_sub_menu.addAction(
                         u'\uf115 Create Task Folder Structure'
@@ -746,29 +740,6 @@ class TaskTreeView(QtWidgets.QTreeView):
                             )
                     else:
                         return
-
-                # elif selected_item is create_task_structure_action:
-                #     answer = QtWidgets.QMessageBox.question(
-                #         self,
-                #         'Create Folder Structure?',
-                #         "This will create task folders, OK?",
-                #         QtWidgets.QMessageBox.Yes,
-                #         QtWidgets.QMessageBox.No
-                #     )
-                #     if answer == QtWidgets.QMessageBox.Yes:
-                #         from anima import utils
-                #         try:
-                #             utils.create_task_structure(entity)
-                #         except Exception as e:
-                #             pass
-                #         finally:
-                #             QtWidgets.QMessageBox.information(
-                #                 self,
-                #                 'Folder Structure is created!',
-                #                 'Folder Structure is created!',
-                #             )
-                #     else:
-                #         return
 
                 elif selected_item is fix_task_status_action:
                     from stalker import Task
