@@ -1614,52 +1614,56 @@ class C3DEqualizerTrackPoint(object):
             self.data[i] = pos[1:]
 
 
-def create_project_structure(project):
-    """Creates the project structure of the given project
-
-    :param project: A Stalker Project instance
+def create_project_structure(entity):
+    """Creates the structure of the given project or task
+    based on custom template structure
+    :param entity: A Stalker Project or Task instance
     :return:
     """
-    from stalker import Project
-    if not isinstance(project, Project):
-        raise TypeError('Please supply a Stalker Project instance!')
-
     import jinja2
-    t = jinja2.Template(project.structure.custom_template)
-    for line in t.render(project=project):
-        line = line.strip()
-        if line != '':
-            try:
-                os.makedirs(line)
-            except OSError:
-                # path already exist
-                pass
+    from stalker import Project, Task
+    if not isinstance(entity, Task):
+        # this is not a Task
+        if not isinstance(entity, Project):
+            # neither a Project
+            raise TypeError('Please supply a Stalker Project or Task instance!')
 
-    # Generate folders for tasks
-    for t in project.tasks:
-        try:
-            os.makedirs(t.absolute_path)
-        except OSError:
-            # path already exist
-            pass
+    project = None
+    if isinstance(entity, Project):
+        project = entity
+    elif isinstance(entity, Task):
+        project = entity.project  # get project entity
+
+    if project is not None:
+        t = jinja2.Template(project.structure.custom_template)
+        paths = t.render(project=entity).split('\n')
+        for path in paths:
+            path = path.strip()
+            if path != '':
+                if not os.path.exists(path):
+                    try:
+                        os.makedirs(path)
+                    except OSError:
+                        # path already exist
+                        pass
 
 
-def create_task_structure(task):
-    """Creates the task structure of the given task
-
-    :param task: A Stalker Project instance
-    :return:
-    """
-    from stalker import Task
-    if not isinstance(task, Task):
-        raise TypeError('Please supply a Stalker Task instance!')
-
-    for t in task.walk_hierarchy():
-        try:
-            os.makedirs(t.absolute_path)
-        except OSError:
-            # path already exist
-            pass
+# def create_task_structure(task):
+#     """Creates the task structure of the given task
+#
+#     :param task: A Stalker Project instance
+#     :return:
+#     """
+#     from stalker import Task
+#     if not isinstance(task, Task):
+#         raise TypeError('Please supply a Stalker Task instance!')
+#
+#     for t in task.walk_hierarchy():
+#         try:
+#             os.makedirs(t.absolute_path)
+#         except OSError:
+#             # path already exist
+#             pass
 
 
 def file_browser_name():
