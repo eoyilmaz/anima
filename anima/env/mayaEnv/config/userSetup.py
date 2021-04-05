@@ -168,6 +168,8 @@ if not pm.general.about(batch=1):
 # set CMD_EXTENSION for Afanasy
 # os.environ['AF_CMDEXTENSION'] = pm.about(v=1)
 
+pm.evalDeferred("from anima.env import mayaEnv; mayaEnv.Maya.clean_malware();")
+
 # create environment variables for each Repository
 pm.evalDeferred("from anima import utils; utils.do_db_setup();")
 

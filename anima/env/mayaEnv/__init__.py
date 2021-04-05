@@ -274,6 +274,9 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
         It saves the given Version instance to the Version.absolute_full_path.
         """
+        # clean malware
+        self.clean_malware()
+
         start = time.time()
         if version.is_published:
             if run_pre_publishers:
@@ -603,7 +606,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     version.absolute_full_path,
                     f=force,
                     loadReferenceDepth='none',
-                    prompt=prompt
+                    prompt=prompt,
+                    esn=False
                 )
                 # list all references and switch their paths
                 for ref in pm.listReferences():
@@ -618,7 +622,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     pm.openFile(
                         version.absolute_full_path,
                         f=force,
-                        prompt=prompt
+                        prompt=prompt,
+                        esn=False
                     )
                 else:
                     logger.info('using loadReferenceDepth:%s' %
@@ -627,7 +632,8 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                         version.absolute_full_path,
                         f=force,
                         prompt=prompt,
-                        loadReferenceDepth=reference_depth_res[reference_depth]
+                        loadReferenceDepth=reference_depth_res[reference_depth],
+                        esn=False
                     )
         except RuntimeError as e:
             # restore the previous workspace
@@ -656,6 +662,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         # after opening the file
         # fix modelPanel scriptJob errors
         self.remove_rogue_model_panel_change_events()
+        self.clean_malware()
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
@@ -682,6 +689,10 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 version.absolute_full_path,
                 defaultNamespace=True
             )
+
+        # clean malware
+        self.clean_malware()
+
         return True
 
     def reference(self, version, use_namespace=True):
@@ -2025,3 +2036,29 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                 print("Model panel error fixed!")
             processedPanelNames.append(panelName)
             panelName = mc.sceneUIReplacement(getNextPanel=('modelPanel', modelPanelLabel))
+
+    @classmethod
+    def clean_malware(cls):
+        """cleans malwares
+        """
+        malicous_node_names = ["vaccine_gene", "breed_gene"]
+        for node_name in malicous_node_names:
+            try:
+                node = pm.PyNode(node_name)
+                print("Found malicous node: %s" % node_name)
+                node.unlock()
+                pm.delete(node)
+                print("Deleted malicous node!")
+            except pm.MayaNodeError:
+                pass
+
+        # delete vaccine.py, userSetup.py
+        user_app_dir = '%s/scripts' % pm.internalVar(userAppDir=True)
+        malicous_script_file_names = ["vaccine.py", "vaccine.pyc", "userSetup.py", "userSetup.pyc"]
+        for malicous_script_file_name in malicous_script_file_names:
+            malicous_script_file_full_path = os.path.join(user_app_dir, malicous_script_file_name)
+            try:
+                os.remove(malicous_script_file_full_path)
+                print("Removed: %s" % malicous_script_file_full_path)
+            except OSError:
+                pass
