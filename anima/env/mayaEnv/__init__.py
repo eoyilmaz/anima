@@ -606,8 +606,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     version.absolute_full_path,
                     f=force,
                     loadReferenceDepth='none',
-                    prompt=prompt,
-                    esn=False
+                    prompt=prompt
                 )
                 # list all references and switch their paths
                 for ref in pm.listReferences():
@@ -622,8 +621,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                     pm.openFile(
                         version.absolute_full_path,
                         f=force,
-                        prompt=prompt,
-                        esn=False
+                        prompt=prompt
                     )
                 else:
                     logger.info('using loadReferenceDepth:%s' %
@@ -632,8 +630,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
                         version.absolute_full_path,
                         f=force,
                         prompt=prompt,
-                        loadReferenceDepth=reference_depth_res[reference_depth],
-                        esn=False
+                        loadReferenceDepth=reference_depth_res[reference_depth]
                     )
         except RuntimeError as e:
             # restore the previous workspace
