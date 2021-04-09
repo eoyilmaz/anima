@@ -77,6 +77,9 @@ def export_alembics(path):
 
     m.open(v, force=True, skip_update_check=True, prompt=False)
 
+    from anima.env.mayaEnv import animation
+    animation.Animation.set_range_from_shot()
+
     from anima.env.mayaEnv import auxiliary
     auxiliary.export_alembic_from_cache_node(handles=1)
     print("Alembic Export Done!")
@@ -97,6 +100,9 @@ def export_playblast(path):
         raise RuntimeError("version not found!")
 
     m.open(v, force=True, skip_update_check=True, prompt=False)
+
+    from anima.env.mayaEnv import animation
+    animation.Animation.set_range_from_shot()
 
     shots = pm.ls(type='shot')
     if shots:

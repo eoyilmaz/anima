@@ -508,7 +508,7 @@ class ShotExporter(object):
         for shot in shots:
             start = shot.getSequenceStartTime()
             end = shot.getSequenceEndTime()
-            mid_frame = int(start+((end-start)/2))
+            mid_frame = int(start + ((end - start) / 2))
             shots_mid_frames.append([shot, mid_frame])
             mid_frames.append(mid_frame)
 
@@ -1006,7 +1006,6 @@ class ShotExporter(object):
         ind = 0
         caller = pdm.register(len(shots_to_export), 'Batch Saving Previs Shot Nodes to Animation Shot Tasks...')
         from anima.env.mayaEnv import toolbox
-        reload(toolbox)
         from stalker.db.session import DBSession
         for shot_info in shots_to_export:
             shot_task = versions[ind].task.parent
