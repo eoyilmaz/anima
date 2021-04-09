@@ -2383,6 +2383,28 @@ def get_cacheable_nodes():
     return cacheable_nodes
 
 
+def get_reference_copy_number(node):
+    """returns the reference number of the given reference file
+    """
+    ref_node = node.referenceFile()
+    if not ref_node:
+        # not a referenced file
+        return 1
+
+    copy_number_list = ref_node.copyNumberList()
+    if copy_number_list == [u'0']:
+        # there is only one copy of this node
+        return 1
+
+    path_with_copy_number = ref_node.withCopyNumber()
+    path = ref_node.path
+    if path_with_copy_number == path:
+        return 1
+    else:
+        ref_number = int(path_with_copy_number.split("{")[1].split("}")[0]) + 1
+        return ref_number
+
+
 def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     """exports alembic caches of the given nodes
 
@@ -2419,7 +2441,6 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
 
     # export alembic caches
     previous_cacheable_attr_value = ''
-    i = 1
 
     # isolate none to speed things up
     pm.select(None)
@@ -2492,10 +2513,7 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             related_ref.load()
 
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
-        if cacheable_attr_value == previous_cacheable_attr_value:
-            i += 1
-        else:
-            i = 1
+        copy_number = get_reference_copy_number(cacheable_node)
 
         # get cacheable_attributes | attributes that needs to be exported
         cacheable_attrs = ''
@@ -2512,8 +2530,7 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         nodes_to_consider = cacheable_node.getChildren(type='transform')
         while len(nodes_to_consider):
             current_node = nodes_to_consider.pop(0)
-            underscored_name = \
-                camel_case_to_underscore(current_node.name().split(':')[-1])
+            underscored_name = camel_case_to_underscore(current_node.name().split(':')[-1])
 
             if any([n in underscored_name for n in wrong_node_names]) or \
                any([underscored_name.startswith(n) for n in wrong_node_names_starts_with]) or \
@@ -2528,12 +2545,12 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
 
         output_path = os.path.join(
             current_file_path,
-            'Outputs/alembic/%s%i/' % (cacheable_attr_value, i)
+            'Outputs/alembic/%s%i/' % (cacheable_attr_value, copy_number)
         )
 
         output_filename = '%s_%i_%i_%s%i%s' % (
             os.path.splitext(current_file_name)[0],
-            start_frame, end_frame, cacheable_attr_value, i, '.abc'
+            start_frame, end_frame, cacheable_attr_value, copy_number, '.abc'
         )
 
         output_full_path = \
@@ -2637,6 +2654,10 @@ def export_alembic_from_cache_node(handles=0, step=1):
     """
     # get cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
+    print("cacheable_nodes")
+    print("===============")
+    for node in cacheable_nodes:
+        print(node.name())
     export_alembic_of_nodes(cacheable_nodes, handles, step)
 
 
