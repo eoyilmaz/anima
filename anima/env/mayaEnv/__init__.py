@@ -725,8 +725,7 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
         else:
             ref = pm.createReference(
                 version.full_path,
-                gl=True,
-                defaultNamespace=True,  # this is not "no namespace", but safe
+                gl=True,                defaultNamespace=True,  # this is not "no namespace", but safe
                 options='v=0'
             )
 
@@ -2039,26 +2038,26 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
 
     @classmethod
     def clean_malware(cls):
-        """cleans malwares
+        """cleans malware
         """
-        malicous_node_names = ["vaccine_gene", "breed_gene"]
-        for node_name in malicous_node_names:
+        malicious_node_names = ["vaccine_gene", "breed_gene"]
+        for node_name in malicious_node_names:
             try:
                 node = pm.PyNode(node_name)
-                print("Found malicous node: %s" % node_name)
+                print("Found malicious node: %s" % node_name)
                 node.unlock()
                 pm.delete(node)
-                print("Deleted malicous node!")
+                print("Deleted malicious node!")
             except pm.MayaNodeError:
                 pass
 
         # delete vaccine.py, userSetup.py
         user_app_dir = '%s/scripts' % pm.internalVar(userAppDir=True)
-        malicous_script_file_names = ["vaccine.py", "vaccine.pyc", "userSetup.py", "userSetup.pyc"]
-        for malicous_script_file_name in malicous_script_file_names:
-            malicous_script_file_full_path = os.path.join(user_app_dir, malicous_script_file_name)
+        malicious_script_file_names = ["vaccine.py", "vaccine.pyc", "userSetup.py", "userSetup.pyc"]
+        for malicious_script_file_name in malicious_script_file_names:
+            malicious_script_file_full_path = os.path.join(user_app_dir, malicious_script_file_name)
             try:
-                os.remove(malicous_script_file_full_path)
-                print("Removed: %s" % malicous_script_file_full_path)
+                os.remove(malicious_script_file_full_path)
+                print("Removed: %s" % malicious_script_file_full_path)
             except OSError:
                 pass
