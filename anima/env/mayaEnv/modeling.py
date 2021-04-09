@@ -111,7 +111,8 @@ class Modeling(object):
         """creates automatic uv maps for the selected objects and layouts the
         uvs. Fixes model problems along the way.
         """
-        for node in pm.selected():
+        selection_list = pm.selected()
+        for node in selection_list:
             pm.polyAutoProjection(
                 node,
                 lm=0, pb=0, ibd=1, cm=0, l=2, sc=1, o=1, p=6, ps=0.2, ws=0
@@ -126,18 +127,16 @@ class Modeling(object):
 
             pm.select(node)
             try:
-                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125,
-                             mar=0.0078125, box=(0, 1, 0, 1))
+                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1))
             except RuntimeError as e:
-                if 'non-manifold UVs' in str(e):
+                if 'non-manifold UVs' in str(e) or 'Mesh has unconnected vertices' in str(e):
                     pm.mel.eval('Unfold3DFixNonManifold({"nonManifoldUV"})')
-                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125,
-                             mar=0.0078125, box=(0, 1, 0, 1))
+                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1))
 
             pm.select(node)
             pm.mel.eval('DeleteHistory;')
 
-            pm.select(node)
+        pm.select(selection_list)
 
     @classmethod
     def fix_uvsets(cls):

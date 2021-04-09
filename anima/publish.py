@@ -49,7 +49,7 @@ def register_publisher(callable_, type_name='', publisher_type=PRE_PUBLISHER_TYP
 def publisher(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
     """A decorator to easily register a method or function as a publisher
 
-    :param str type_name: The name of this publisher type.
+    :param str, list type_name: The name of this publisher type.
     :param int publisher_type: 0 for pre 1 for post publishers
     """
     def wrapper(f):
