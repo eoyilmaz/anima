@@ -1554,7 +1554,7 @@ class Playblaster(object):
         length = int(end_time - start_time) + 1
 
         if self.version:
-            user_name = self.version.updated_by.name
+            user_name = self.version.updated_by.name if self.version.updated_by else 'None'
         else:
             # get the user name from the login info
             if self.logged_in_user:
@@ -1634,7 +1634,7 @@ class Playblaster(object):
         """returns the playback range
         """
         if not self.batch_mode:
-            return map(
+            start_time, end_time = map(
                 int,
                 pm.timeControl(
                     pm.melGlobals['$gPlayBackSlider'],
@@ -1642,11 +1642,14 @@ class Playblaster(object):
                     rangeArray=True
                 )
             )
-        else:
+
+        if end_time - start_time <= 1:
+            # there should be something wrong
             # return the whole timeline range
             start_time = int(pm.playbackOptions(q=1, ast=1))
             end_time = int(pm.playbackOptions(q=1, aet=1))
-            return [start_time, end_time]
+
+        return [start_time, end_time]
 
     def is_frame_range_selected(self):
         """returns true if a range in the time line is selected
