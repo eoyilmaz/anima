@@ -1633,8 +1633,11 @@ class Playblaster(object):
     def get_selected_frame_range(self):
         """returns the playback range
         """
+        start_time = int(pm.playbackOptions(q=1, ast=1))
+        end_time = int(pm.playbackOptions(q=1, aet=1))
+
         if not self.batch_mode:
-            start_time, end_time = map(
+            selected_start_time, selected_end_time = map(
                 int,
                 pm.timeControl(
                     pm.melGlobals['$gPlayBackSlider'],
@@ -1643,11 +1646,10 @@ class Playblaster(object):
                 )
             )
 
-        if end_time - start_time <= 1:
-            # there should be something wrong
-            # return the whole timeline range
-            start_time = int(pm.playbackOptions(q=1, ast=1))
-            end_time = int(pm.playbackOptions(q=1, aet=1))
+            if selected_end_time - selected_start_time > 1:
+                # the selection is valid
+                start_time = selected_start_time
+                end_time = selected_end_time
 
         return [start_time, end_time]
 
@@ -2644,6 +2646,19 @@ def export_alembic_of_selected_cacheable_nodes(handles=0, step=1):
         for n in pm.selected()
         if n.hasAttr('cacheable') and n.getAttr('cacheable')
     ]
+    export_alembic_of_nodes(cacheable_nodes, handles, step)
+
+
+def export_alembic_of_all_cacheable_nodes(handles=0, step=1):
+    """Exports alembic caches of the all cacheable nodes
+
+    :param int handles: An integer that shows the desired handles from start
+      and end.
+    :param int step:
+    :return:
+    """
+    # get selected cacheable nodes in the current scene
+    cacheable_nodes = get_cacheable_nodes()
     export_alembic_of_nodes(cacheable_nodes, handles, step)
 
 
