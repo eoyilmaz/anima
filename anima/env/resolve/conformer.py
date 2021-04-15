@@ -633,13 +633,38 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def get_timecode_from_image(self, fps, img_path):
         """queries timecode metadata from given image
         """
+        import os
+        import platform
         import subprocess
         import timecode
 
+        os_name = 'nt'
+        if os.name == 'posix':
+            if platform.system() == 'Linux':
+                os_name = 'posix'
+            elif platform.system() == 'Darwin':
+                os_name = 'darwin'
+
+        exif_path = None
+        if os_name == 'nt':
+            dev_path = 'T:/DEV'
+            exif_path = os.path.join(dev_path, 'lib/windows/py2/__extras__/exiftool.exe')
+            exif_path = os.path.normpath(exif_path).replace('\\', '/')
+        elif os_name == 'darwin':
+            dev_path = '/Volumes/GFX/DEV'
+            exif_path = os.path.join(dev_path, 'lib/osx/py2/__extras__/exiftool')
+            exif_path = os.path.normpath(exif_path).replace('\\', '/')
+        elif os_name == 'linux':
+            dev_path = '/mnt/T/DEV'
+            exif_path = os.path.join(dev_path, 'lib/linux/py2/__extras__/exiftool')
+            exif_path = os.path.normpath(exif_path).replace('\\', '/')
+
+        if not os.path.exists(exif_path):
+            raise RuntimeError('ExifTool path does not exist!.')
+  
         frame_number = 0
 
         info = {}
-        exif_path = 'T:/DEV/lib/windows/py2/__extras__/exiftool.exe'
         process = subprocess.Popen([exif_path, img_path],
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
@@ -845,9 +870,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 except BaseException:
                     continue
 
-            update_list.sort()
-            for update_string in update_list:
-                self.updated_shot_list.addItem(update_string)
+            if update_list:
+                update_list.sort()
+                for update_string in update_list:
+                    self.updated_shot_list.addItem(update_string)
+            else:
+                self.updated_shot_list.addItem('No Updated Shots found after specified date / ui specs.')
 
     def conform(self):
         """conforms given Stalker Shot instances to a Timeline in Reolve
