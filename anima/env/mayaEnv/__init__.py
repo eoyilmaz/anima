@@ -2037,7 +2037,11 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def clean_malware(cls):
         """cleans malware
         """
-        malicious_node_names = ["vaccine_gene", "breed_gene"]
+        malicious_node_names = []
+        for node in pm.ls(type='script'):
+            if 'vaccine_gene' in node.name() or 'breed_gene' in node.name():
+                malicious_node_names.append(node.name())
+
         for node_name in malicious_node_names:
             try:
                 node = pm.PyNode(node_name)
