@@ -1269,17 +1269,17 @@ def UI():
             pm.text(l='=========== RedShift Tools ===========')
             pm.button(
                 'generate_rs_from_selection_button',
-                l='Generate RS From Selection',
-                c=repeated_callback(Render.generate_rs_from_selection),
-                ann=Render.generate_rs_from_selection.__doc__,
+                l='Generate RSProxy From Selection',
+                c=repeated_callback(Render.generate_rsproxy_from_selection),
+                ann=Render.generate_rsproxy_from_selection.__doc__,
                 bgc=color.color
             )
 
             pm.button(
                 'generate_rs_from_selection_per_selection_button',
-                l='Generate RS From Selection (Per Selection)',
-                c=repeated_callback(Render.generate_rs_from_selection, True),
-                ann=Render.generate_rs_from_selection.__doc__,
+                l='Generate RSProxy From Selection (Per Selection)',
+                c=repeated_callback(Render.generate_rsproxy_from_selection, True),
+                ann=Render.generate_rsproxy_from_selection.__doc__,
                 bgc=color.color
             )
 

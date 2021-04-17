@@ -68,6 +68,8 @@ class EnvironmentBase(object):
     allow_publish_on_export = False
     extensions = []
 
+    project_structure = []
+
     def __init__(self, name="", version=None):
         self._name = name
         self._version = version
@@ -627,6 +629,20 @@ class EnvironmentBase(object):
                 '%s/projects_backup' % defaults.local_cache_folder
             )
         ).replace('\\', '/')
+
+    def create_project_structure(self, version):
+        """creates the project structure
+        :param version: Stalker version
+        """
+        import os
+        project_path = version.absolute_path
+        for path in self.project_structure:
+            # TODO: use exist_ok=True for Python 3.x
+            try:
+                os.makedirs(os.path.normpath(os.path.join(project_path, path)))
+            except OSError:
+                # exists_ok
+                pass
 
     @classmethod
     def create_local_copy(cls, version):
