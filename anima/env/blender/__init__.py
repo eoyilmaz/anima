@@ -16,6 +16,15 @@ class Blender(EnvironmentBase):
 
     extensions = ['.blend']
 
+    project_structure = [
+        'Outputs',
+        'Outputs/alembic',
+        'Outputs/fbx',
+        'Outputs/geo',
+        'Outputs/rs',
+        'Inputs',
+    ]
+
     def __init__(self,version=None):
         EnvironmentBase.__init__(self, self.name, version)
 
@@ -67,6 +76,9 @@ class Blender(EnvironmentBase):
         # append it to the recent file list
         self.append_to_recent_files(version.absolute_full_path)
         DBSession.commit()
+
+        # create project structure
+        self.create_project_structure(version)
 
         # create a local copy
         self.create_local_copy(version)
