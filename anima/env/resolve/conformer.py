@@ -635,12 +635,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         import subprocess
         import timecode
-
+  
         frame_number = 0
 
         info = {}
-        exif_path = 'T:/DEV/lib/windows/py2/__extras__/exiftool.exe'
-        process = subprocess.Popen([exif_path, img_path],
+        process = subprocess.Popen(['exiftool', img_path],
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.STDOUT,
                                    universal_newlines=True)
@@ -845,9 +844,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 except BaseException:
                     continue
 
-            update_list.sort()
-            for update_string in update_list:
-                self.updated_shot_list.addItem(update_string)
+            if update_list:
+                update_list.sort()
+                for update_string in update_list:
+                    self.updated_shot_list.addItem(update_string)
+            else:
+                self.updated_shot_list.addItem('No Updated Shots found after specified date / ui specs.')
 
     def conform(self):
         """conforms given Stalker Shot instances to a Timeline in Reolve

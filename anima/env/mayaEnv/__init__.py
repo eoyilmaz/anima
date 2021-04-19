@@ -2037,14 +2037,15 @@ workspace -fr "translatorData" "Outputs/data";
         """
         malicious_node_names = ["vaccine_gene", "breed_gene"]
         for node_name in malicious_node_names:
-            try:
-                node = pm.PyNode(node_name)
-                print("Found malicious node: %s" % node_name)
-                node.unlock()
-                pm.delete(node)
-                print("Deleted malicious node!")
-            except pm.MayaNodeError:
-                pass
+            malicious_nodes = pm.ls("*%s*" % node_name)
+            for node in malicious_nodes:
+                try:
+                    print("Found malicious node: %s" % node_name)
+                    node.unlock()
+                    pm.delete(node)
+                    print("Deleted malicious node!")
+                except pm.MayaNodeError:
+                    pass
 
         # delete vaccine.py, userSetup.py
         user_app_dir = '%s/scripts' % pm.internalVar(userAppDir=True)
