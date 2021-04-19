@@ -2037,20 +2037,17 @@ workspace -fr "furAttrMap" "Outputs/data/renderData/fur/furAttrMap";
     def clean_malware(cls):
         """cleans malware
         """
-        malicious_node_names = []
-        for node in pm.ls(type='script'):
-            if 'vaccine_gene' in node.name() or 'breed_gene' in node.name():
-                malicious_node_names.append(node.name())
-
+        malicious_node_names = ["vaccine_gene", "breed_gene"]
         for node_name in malicious_node_names:
-            try:
-                node = pm.PyNode(node_name)
-                print("Found malicious node: %s" % node_name)
-                node.unlock()
-                pm.delete(node)
-                print("Deleted malicious node!")
-            except pm.MayaNodeError:
-                pass
+            malicious_nodes = pm.ls("*%s*" % node_name)
+            for node in malicious_nodes:
+                try:
+                    print("Found malicious node: %s" % node_name)
+                    node.unlock()
+                    pm.delete(node)
+                    print("Deleted malicious node!")
+                except pm.MayaNodeError:
+                    pass
 
         # delete vaccine.py, userSetup.py
         user_app_dir = '%s/scripts' % pm.internalVar(userAppDir=True)
