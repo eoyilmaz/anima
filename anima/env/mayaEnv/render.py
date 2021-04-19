@@ -2473,7 +2473,7 @@ class Render(object):
         caller.end_progress()
 
     @classmethod
-    def generate_rs_from_selection(cls, per_selection=False):
+    def generate_rsproxy_from_selection(cls, per_selection=False):
         """generates a temp rs file from selected nodes and hides the selected
         nodes
 

@@ -168,6 +168,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GeneralTools.create_focus_plane
         )
 
+        # Create Focus Plane
+        from anima.env.houdini import auxiliary
+        add_button(
+            'Create A Very Nice Camera Rig',
+            general_tab_vertical_layout,
+            auxiliary.very_nice_camera_rig
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
