@@ -621,13 +621,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def create_resolve_timeline_from_clips(self, timeline_name, clip_paths):
         """creates timeline in resolve from given clip paths
         """
-        print '---------Started creating Timeline----------'
+        print('---------Started creating Timeline----------')
         media_pool = self.project.GetMediaPool()
         media_storage = self.resolve.GetMediaStorage()
 
         clips = media_storage.AddItemListToMediaPool(clip_paths)
         media_pool.CreateTimelineFromClips(timeline_name, clips)
-        print '---------Finished creating Timeline----------'
+        print('---------Finished creating Timeline----------')
 
     # TODO: getting timecode from image must be done with proper exif library that supports any platform
     def get_timecode_from_image(self, fps, img_path):
@@ -655,7 +655,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         except BaseException:
             pass
 
-        print '[%s] frame number returned from [%s]' % (frame_number, os.path.basename(img_path))
+        print('[%s] frame number returned from [%s]' % (frame_number, os.path.basename(img_path)))
         
         return frame_number
 
@@ -756,27 +756,27 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     clip_path_list.append(clip_path)
                 else:
                     none_path_list.append('%s -> No Outputs/Main found.' % shot.name)
-                print 'Checking Shot... - %s' % shot.name
+                print('Checking Shot... - %s' % shot.name)
             clip_path_list.sort()
             none_path_list.sort()
 
-            print '--------------------------------------------------------------------------'
+            print('--------------------------------------------------------------------------')
             for clip_path in clip_path_list:
-                print clip_path
-            print '--------------------------------------------------------------------------'
+                print(clip_path)
+            print('--------------------------------------------------------------------------')
             for none_path in none_path_list:
-                print none_path
-            print '--------------------------------------------------------------------------'
+                print(none_path)
+            print('--------------------------------------------------------------------------')
 
             if clip_path_list:
                 self.clip_paths_to_xml(clip_path_list, self.xml_path)
-                print 'XML CREATED----------------------------'
+                print('XML CREATED----------------------------')
 
                 media_pool = self.project.GetMediaPool()
                 media_pool.ImportTimelineFromFile(self.xml_path)
-                print 'XML IMPORTED to Resolve'
+                print('XML IMPORTED to Resolve')
             else:
-                print 'No Outputs found with given specs!'
+                print('No Outputs found with given specs!')
 
             # self.create_resolve_timeline_from_clips(timeline_name, clip_path_list)
 
@@ -797,7 +797,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             update_list = []
             t_name = self.task_name_combo_box.currentText()
             for shot in shots:
-                print 'Checking Shot... - %s' % shot.name
+                print('Checking Shot... - %s' % shot.name)
                 comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == t_name).first()
 
                 if not comp_task:
