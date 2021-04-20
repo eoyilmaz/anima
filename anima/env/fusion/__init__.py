@@ -1087,7 +1087,7 @@ class Fusion(EnvironmentBase):
                                 "input_list": {
                                     "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
-                                    "OutputSpace": "Utility - Rec.709 - Camera",
+                                    "OutputSpace": "Output - Rec.709",
                                 },
                                 'connected_to': {
                                     "ref_id": random_ref_id,
