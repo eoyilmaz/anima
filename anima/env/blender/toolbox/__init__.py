@@ -8,7 +8,7 @@ class Main_Panel(Panel):
     bl_label = "Anima Toolbox"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'View'
+    bl_category = 'Anima'
     bl_options = {'DEFAULT_CLOSED'}
 
     def draw(self, context):
