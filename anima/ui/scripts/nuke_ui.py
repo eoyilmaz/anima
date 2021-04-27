@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import nuke
-from nukescripts import *
-
-
 def set_qt_lib():
-    if nuke.NUKE_VERSION_MAJOR < 10 or (nuke.NUKE_VERSION_MAJOR == 11):
+    import nuke
+    if nuke.NUKE_VERSION_MAJOR > 10:
         from anima.ui import SET_PYSIDE2
         SET_PYSIDE2()
     else:
@@ -13,13 +10,11 @@ def set_qt_lib():
         SET_PYSIDE()
 
 
-from anima.utils import do_db_setup
-
-
 def version_dialog():
     """Helper function for version_dialog UI for Nuke
     """
     # connect to db
+    from anima.utils import do_db_setup
     do_db_setup()
 
     # set PySide or PySide2
@@ -27,8 +22,9 @@ def version_dialog():
 
     from anima.ui import version_dialog
     from anima.env import nukeEnv
+    import nuke
     n = nukeEnv.Nuke()
-    n.name = "Nuke"
+    n.name = "nuke%s.%s" % (nuke.NUKE_VERSION_MAJOR, nuke.NUKE_VERSION_MINOR)
 
     # display only warning messages
     import logging

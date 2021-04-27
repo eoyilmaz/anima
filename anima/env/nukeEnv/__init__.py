@@ -2,8 +2,6 @@
 
 import os
 import nuke
-from nukescripts import *
-from anima.env import empty_reference_resolution
 from anima.env.base import EnvironmentBase
 
 
@@ -11,7 +9,7 @@ class Nuke(EnvironmentBase):
     """the nuke environment class
     """
 
-    name = "Nuke"
+    name = "nuke%s" % nuke.NUKE_VERSION_MAJOR
     extensions = ['.nk']
 
     def __init__(self, name='', version=None):
@@ -24,7 +22,8 @@ class Nuke(EnvironmentBase):
 
         self._main_output_node_name = "MAIN_OUTPUT"
 
-    def get_root_node(self):
+    @classmethod
+    def get_root_node(cls):
         """returns the root node of the current nuke session
         """
         return nuke.toNode("root")
@@ -48,13 +47,16 @@ class Nuke(EnvironmentBase):
         version.created_with = self.name
 
         # set project_directory
-        # self.project_directory = os.path.dirname(version.absolute_path)
+        self.project_directory = os.path.dirname(version.absolute_path)
+
+        # Update color management
+        self.update_color_management()
 
         # create the main write node
         self.create_main_write_node(version)
 
         # replace read and write node paths
-        # self.replace_external_paths()
+        self.replace_external_paths()
 
         # create the path before saving
         try:
@@ -78,7 +80,7 @@ class Nuke(EnvironmentBase):
         project = version.task.project
         self.set_fps(project.fps)
 
-        if version.version_number == 1:
+        if version.version_number == 1 or (version.parent and version.parent.task != version.task):
             if is_shot_related_task:
                 # just set if the frame range is not 1-1
                 if shot.cut_in != 1 and shot.cut_out != 1:
@@ -90,12 +92,11 @@ class Nuke(EnvironmentBase):
             else:
                 imf = project.image_format
 
-            # TODO: set the render resolution later
-            # self.set_resolution(
-            #     imf.width,
-            #     imf.height,
-            #     imf.pixel_aspect
-            # )
+            self.set_resolution(
+                imf.width,
+                imf.height,
+                imf.pixel_aspect
+            )
 
         nuke.scriptSaveAs(version.absolute_full_path)
 
@@ -125,18 +126,19 @@ class Nuke(EnvironmentBase):
         nuke.scriptOpen(version.absolute_full_path)
 
         # set the project_directory
-        # self.project_directory = os.path.dirname(version.absolute_path)
+        self.project_directory = os.path.dirname(version.absolute_path)
 
-        # TODO: file paths in different OS'es should be replaced with the current one
+        # TODO: file paths in different OS's should be replaced with the current one
         # Check if the file paths are starting with a string matching one of the
-        # OS'es project_directory path and replace them with a relative one
+        # OS's project_directory path and replace them with a relative one
         # matching the current OS
 
         # replace paths
-        # self.replace_external_paths()
+        self.replace_external_paths()
 
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
+        from anima.env import empty_reference_resolution
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
@@ -209,10 +211,10 @@ class Nuke(EnvironmentBase):
     def get_frame_range(self):
         """returns the current frame range
         """
-        #self._root = self.get_root_node()
-        startFrame = int(self._root.knob('first_frame').value())
-        endFrame = int(self._root.knob('last_frame').value())
-        return startFrame, endFrame
+        # self._root = self.get_root_node()
+        start_frame = int(self._root.knob('first_frame').value())
+        end_frame = int(self._root.knob('last_frame').value())
+        return start_frame, end_frame
 
     def set_frame_range(self, start_frame=1, end_frame=100,
                         adjust_frame_range=False):
@@ -238,8 +240,11 @@ class Nuke(EnvironmentBase):
         :param height: The height of the output image
         :param pixel_aspect: The pixel aspect ratio
         """
-        # TODO: set resolution later
-        pass
+        root = self.get_root_node()
+        format_obj = root.format()
+        format_obj.setWidth(width)
+        format_obj.setHeight(height)
+        format_obj.setPixelAspect(pixel_aspect)
 
     def get_main_write_nodes(self):
         """Returns the main write node in the scene or None.
@@ -266,31 +271,33 @@ class Nuke(EnvironmentBase):
             main_write_nodes.append(main_write_node)
 
         for main_write_node in main_write_nodes:
-            # set the output path
-            output_file_name = ""
-
-            output_file_name = version.task.project.code + "_"
-
             # get the output format
-            output_format_enum = \
-                main_write_node.knob('file_type').value().strip()
-            if output_format_enum == '':
-                # set it to png by default
-                output_format_enum = 'png'
+            output_format_enum = main_write_node.knob('file_type').value().strip()
+            if output_format_enum == '' or output_format_enum == 'exr':
+                # set it to exr by default
+                output_format_enum = 'exr'
                 main_write_node.knob('file_type').setValue(output_format_enum)
+
+                # set default attributes
+                main_write_node["colorspace"].setValue(1)   # ACES 2065-1
+                main_write_node["datatype"].setValue(1)     # 16 bit half
+                main_write_node["compression"].setValue(1)  # Zip (1 scanline)
             elif output_format_enum == 'ffmpeg':
                 output_format_enum = 'mov'
+                main_write_node["colorspace"].setValue(104)  # Output - Rec.709
             elif output_format_enum == 'targa':
                 output_format_enum = 'tga'
+                main_write_node["colorspace"].setValue(104)  # Output - Rec.709
 
-            output_file_name += '%s_v%03d' % (
+            # set the output path
+            output_file_name = '%s_v%03d' % (
                 version.nice_name, version.version_number
             )
 
-            if output_format_enum != 'mov':
-                output_file_name += ".####." + output_format_enum
+            if output_format_enum == 'mov':
+                output_file_name = '%s.%s' % (output_file_name, output_format_enum)
             else:
-                output_file_name += '.' + output_format_enum
+                output_file_name = '%s.####.%s' % (output_file_name, output_format_enum)
 
             # check if it is a stereo comp
             # if it is enable separate view rendering
@@ -322,11 +329,6 @@ class Nuke(EnvironmentBase):
     def replace_external_paths(self, mode=0):
         """make paths relative to the project dir
         """
-        # TODO: replace file paths if project_directory changes
-        # check if the project_directory is still the same
-        # if it is do the regular replacement
-        # but if it is not then expand all the paths to absolute paths
-
         # convert the given path to tcl environment script
         from anima import utils
 
@@ -334,34 +336,32 @@ class Nuke(EnvironmentBase):
             return utils.relpath(self.project_directory, path, "/", "..")
 
         # get all read nodes
-        allNodes = nuke.allNodes()
+        all_nodes = nuke.allNodes()
 
-        readNodes = [node for node in allNodes if node.Class() == "Read"]
-        writeNodes = [node for node in allNodes if node.Class() == "Write"]
-        readGeoNodes = [node for node in allNodes if node.Class() == "ReadGeo"]
-        readGeo2Nodes = [node for node in allNodes if
-                         node.Class() == "ReadGeo2"]
-        writeGeoNodes = [node for node in allNodes if
-                         node.Class() == "WriteGeo"]
+        read_nodes = [node for node in all_nodes if node.Class() == "Read"]
+        write_nodes = [node for node in all_nodes if node.Class() == "Write"]
+        read_geo_nodes = [node for node in all_nodes if node.Class() == "ReadGeo"]
+        read_geo2_nodes = [node for node in all_nodes if node.Class() == "ReadGeo2"]
+        write_geo_nodes = [node for node in all_nodes if node.Class() == "WriteGeo"]
 
-        def nodeRep(nodes):
+        def node_rep(nodes):
             """helper function to replace path values
             """
-            [node["file"].setValue(
+            [n["file"].setValue(
                 rep_path(
                     os.path.expandvars(
                         os.path.expanduser(
-                            node["file"].getValue()
+                            n["file"].getValue()
                         )
                     ).replace('\\', '/')
                 )
-            ) for node in nodes]
+            ) for n in nodes]
 
-        nodeRep(readNodes)
-        nodeRep(writeNodes)
-        nodeRep(readGeoNodes)
-        nodeRep(readGeo2Nodes)
-        nodeRep(writeGeoNodes)
+        node_rep(read_nodes)
+        node_rep(write_nodes)
+        node_rep(read_geo_nodes)
+        node_rep(read_geo2_nodes)
+        node_rep(write_geo_nodes)
 
     @property
     def project_directory(self):
@@ -421,3 +421,17 @@ Status: {{version.task.status.name}}
         }
 
         return template.render(**template_vars)
+
+    def update_color_management(self):
+        """updates color management
+        """
+        root = self.get_root_node()
+        root["colorManagement"].setValue(1)  # OCIO
+        # root["OCIO_config"].setValue(6)      # Custom
+        # root["OCIOConfigPath"].setValue("[getenv ANIMA_DEV_PATH]/OpenColorIO-Configs/aces_1.1/config.ocio")
+        root["workingSpaceLUT"].setValue(0)  # ACES 2065-1
+        root["monitorLut"].setValue(0)       # sRGB
+        root["int8Lut"].setValue(148)        # Utility - sRGB - Texture
+        root["int16Lut"].setValue(148)       # Utility - sRGB - Texture
+        root["logLut"].setValue(5)           # Input - ADX - ADX10
+        root["floatLut"].setValue(0)         # ACES 2065-1

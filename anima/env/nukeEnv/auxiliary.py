@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
-
-import os
-import subprocess
-import threading
-from anima.env import nukeEnv
-import nuke
-
-
 from anima import logger
-from anima.utils import do_db_setup
 
 
 def update_outputs():
     """updates outputs in the current script
     """
+    from anima.utils import do_db_setup
     do_db_setup()
+    
+    from anima.env import nukeEnv
+
     nEnv = nukeEnv.Nuke()
     version = nEnv.get_current_version()
     if version:
@@ -24,6 +19,9 @@ def update_outputs():
 def output_to_h264(write_node=None):
     """an after render function which converts the input to h264
     """
+    import os
+    import nuke
+
     # get the file name
     if not write_node:
         write_node = nuke.thisNode()
@@ -45,6 +43,7 @@ def output_to_h264(write_node=None):
     #       links to each frame and then use the sequence format in ffmpeg
 
     # run ffmpeg in a separate thread
+    import threading
     t = threading.Timer(
         1.0,
         convert_to_h264,
@@ -104,6 +103,7 @@ def ffmpeg(**kwargs):
 
     logger.debug('calling real ffmpeg with args: %s' % args)
 
+    import subprocess
     process = subprocess.Popen(args, stderr=subprocess.PIPE)
 
     # loop until process finishes and capture stderr output
@@ -132,6 +132,7 @@ def open_in_file_browser(path):
 
     system = platform.system()
 
+    import subprocess
     if system == 'Windows':
         subprocess.Popen(['explorer', '/select,', path.replace('/', '\\')])
     elif system == 'Darwin':
@@ -145,6 +146,8 @@ def open_in_file_browser(path):
 def open_node_in_file_browser(node):
     """opens the node path in filebrowser
     """
+    import os
+    import nuke
     file_full_path = nuke.filename(node)
     # get the path
     file_name = os.path.basename(file_full_path)
@@ -155,6 +158,7 @@ def open_node_in_file_browser(node):
 def open_selected_nodes_in_file_browser():
     """opens selected node in filebrowser
     """
+    import nuke
     nodes = nuke.selectedNodes()
     for node in nodes:
         open_node_in_file_browser(node)
@@ -164,6 +168,8 @@ def create_auto_crop_writer():
     """creates a write node for every selected node, and sets the autocrop flag
     to auto crop the output for fast reading
     """
+    import os
+    import nuke
     # get selected nodes and deselect them
     nodes = nuke.selectedNodes()
     [node.setSelected(False) for node in nodes]
