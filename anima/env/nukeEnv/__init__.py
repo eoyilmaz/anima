@@ -80,23 +80,19 @@ class Nuke(EnvironmentBase):
         project = version.task.project
         self.set_fps(project.fps)
 
-        if version.version_number == 1 or (version.parent and version.parent.task != version.task):
-            if is_shot_related_task:
-                # just set if the frame range is not 1-1
-                if shot.cut_in != 1 and shot.cut_out != 1:
-                    self.set_frame_range(
-                        shot.cut_in,
-                        shot.cut_out
-                    )
-                imf = shot.image_format
-            else:
-                imf = project.image_format
+        # if version.version_number == 1 or (version.parent and version.parent.task != version.task):
+        if is_shot_related_task:
+            # just set if the frame range is not 1-1
+            if shot.cut_in != 1 and shot.cut_out != 1:
+                self.set_frame_range(
+                    shot.cut_in,
+                    shot.cut_out
+                )
+            imf = shot.image_format
+        else:
+            imf = project.image_format
 
-            self.set_resolution(
-                imf.width,
-                imf.height,
-                imf.pixel_aspect
-            )
+        self.set_resolution(image_format=imf)
 
         nuke.scriptSaveAs(version.absolute_full_path)
 
@@ -233,18 +229,28 @@ class Nuke(EnvironmentBase):
         """
         return int(self._root.knob('fps').getValue())
 
-    def set_resolution(self, width, height, pixel_aspect=1.0):
+    def set_resolution(self, image_format):
         """Sets the resolution of the current scene
 
-        :param width: The width of the output image
-        :param height: The height of the output image
-        :param pixel_aspect: The pixel aspect ratio
+        :param image_format: Stalker ImageFormat instance
         """
+        # try to get the format first
+        found_format = None
+        for f in nuke.formats():
+            if f.name() == image_format.name:
+                found_format = f
+                break
+
+        if not found_format:
+            # create a new format
+            found_format = nuke.addFormat(
+                "%s %s" % (image_format.width, image_format.height)
+            )
+            found_format.setName(image_format.name)
+
+        # set the current format to that value
         root = self.get_root_node()
-        format_obj = root.format()
-        format_obj.setWidth(width)
-        format_obj.setHeight(height)
-        format_obj.setPixelAspect(pixel_aspect)
+        root["format"].setValue("%s" % image_format.name)
 
     def get_main_write_nodes(self):
         """Returns the main write node in the scene or None.
@@ -280,7 +286,7 @@ class Nuke(EnvironmentBase):
 
                 # set default attributes
                 main_write_node["colorspace"].setValue(1)   # ACES 2065-1
-                main_write_node["datatype"].setValue(1)     # 16 bit half
+                main_write_node["datatype"].setValue(0)     # 16 bit half
                 main_write_node["compression"].setValue(1)  # Zip (1 scanline)
             elif output_format_enum == 'ffmpeg':
                 output_format_enum = 'mov'
