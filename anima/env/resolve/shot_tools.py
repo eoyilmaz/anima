@@ -62,16 +62,50 @@ class InjectionManager(object):
         clips = timeline.GetItemListInTrack('video', 1)
         return clips
 
-    def get_shot_list(self):
+    def get_shots(self):
         """returns the shots in the current video track
         """
-        shot_list = []
+        shots = []
         clips = self.get_clip_list()
         for clip in clips:
             pi = PlateInjector(project=self.project, sequence=self.sequence, clip=clip, timeline=self.timeline)
             if pi.is_shot():
-                shot_list.append(pi)
-        return shot_list
+                shots.append(pi)
+        return shots
+
+    def check_duplicate_shots(self):
+        """checks for duplicate shots
+        """
+        shot_list = self.get_shots()
+        shot_codes = []
+        for shot in shot_list:
+            shot_codes.append(shot.shot_code)
+        shot_codes = sorted(shot_codes)
+        unique_shot_codes = sorted(list(set(shot_codes)))
+        duplicate_shot_codes = []
+        if len(unique_shot_codes) != len(shot_codes):
+            # find duplicate shot names
+            prev_shot_code = ''
+            for shot_code in shot_codes:
+                current_shot_code = shot_code
+                if current_shot_code == prev_shot_code:
+                    duplicate_shot_codes.append(current_shot_code)
+                prev_shot_code = current_shot_code
+
+        return duplicate_shot_codes
+
+    def validate_shot_codes(self):
+        """validate shot codes
+        """
+        shots = self.get_shots()
+        invalid_shots = []
+        for shot in shots:
+            try:
+                shot.validate_shot_code()
+            except ValueError:
+                invalid_shots.append(shot)
+
+        return invalid_shots
 
     def get_thumbnail(cls):
         """returns the current media thumbnail
@@ -407,6 +441,17 @@ class PlateInjector(object):
 
         print("result: %s" % result)
 
+    def validate_shot_code(self):
+        """validates the shot code
+        """
+        import re
+        regex = re.compile(r"([\w]+)_(\d{3})_(\d{3}[A-Z]{0,1})_(\d{4})")
+
+        shot_code = self.shot_code
+        match = regex.match(shot_code)
+        if not match:
+            raise ValueError("Shot code format is not valid: %s" % shot_code)
+
 
 class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
     """The UI for the PlateInjector
@@ -476,6 +521,16 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         get_shot_list_push_button.setText("Get Shot List")
         self.main_layout.addWidget(get_shot_list_push_button)
 
+        # Check Duplicate Shot Code
+        validate_shots_push_button = QtWidgets.QPushButton(self)
+        validate_shots_push_button.setText("Validate Shots")
+        self.main_layout.addWidget(validate_shots_push_button)
+
+        # Check Duplicate Shot Code
+        check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self)
+        check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
+        self.main_layout.addWidget(check_duplicate_shot_code_push_button)
+
         # Create Render Jobs button
         create_render_jobs_button = QtWidgets.QPushButton(self)
         create_render_jobs_button.setText("Create Render Jobs")
@@ -498,7 +553,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             ok_button,
             QtCore.SIGNAL("clicked()"),
-            self.do_something
+            self.close
         )
 
         QtCore.QObject.connect(
@@ -513,16 +568,22 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
             self.get_shot_list
         )
 
+        QtCore.QObject.connect(
+            check_duplicate_shot_code_push_button,
+            QtCore.SIGNAL("clicked()"),
+            self.check_duplicate_shots
+        )
+
+        QtCore.QObject.connect(
+            validate_shots_push_button,
+            QtCore.SIGNAL("clicked()"),
+            self.validate_shot_codes
+        )
+
     def project_changed(self, index):
         """runs when the current selected project has been changed
         """
         self.sequence_combo_box.project = self.project_combo_box.get_current_project()
-
-    def do_something(self):
-        """
-        """
-        project = self.project_combo_box.get_current_project()
-        print(project.name)
 
     def get_shot_list(self):
         """just prints the shot names
@@ -530,19 +591,26 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
         im = InjectionManager(project, sequence)
-        for shot in im.get_shot_list():
+        for shot in im.get_shots():
             isinstance(shot, PlateInjector)
             print(shot.shot_code)
 
     def create_render_jobs(self):
         """creates render jobs
         """
+        # first check duplicate shots
+        if not self.check_duplicate_shots():
+            return
+
+        if not self.validate_shot_codes():
+            return
+
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
         im = InjectionManager(project, sequence)
 
         try:
-            for shot in im.get_shot_list():
+            for shot in im.get_shots():
                 isinstance(shot, PlateInjector)
                 shot.create_render_job()
         except BaseException as e:
@@ -555,6 +623,54 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         finally:
             QtWidgets.QMessageBox.information(
                 self,
-                "Created Shots and Render Jobs!!!",
-                "Created Shots and Render Jobs!!!"
+                "Created Shots and Render Jobs 👍",
+                "Created Shots and Render Jobs 👍"
             )
+
+    def validate_shot_codes(self):
+        """validates the shot codes
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = InjectionManager(project, sequence)
+        invalid_shots = im.validate_shot_codes()
+        invalid_shot_codes = []
+        for shot in invalid_shots:
+            invalid_shot_codes.append(shot.shot_code)
+
+        if invalid_shot_codes:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Invalid shot names!!!",
+                "There are invalid shot codes:<br>%s" % "<br>".join(invalid_shot_codes)
+            )
+            return False
+        else:
+            QtWidgets.QMessageBox.information(
+                self,
+                "All shots valid 👍",
+                "All shots valid 👍"
+            )
+            return True
+
+    def check_duplicate_shots(self):
+        """checks for duplicate shot code
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = InjectionManager(project, sequence)
+        duplicate_shot_codes = im.check_duplicate_shots()
+        if duplicate_shot_codes:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Duplicate Shot Codes!!!",
+                "There are duplicate shot codes:<br>%s" % "<br>".join(duplicate_shot_codes)
+            )
+            return False
+        else:
+            QtWidgets.QMessageBox.information(
+                self,
+                "No Duplicate Shots 👍",
+                "No duplicate shots 👍"
+            )
+            return True
