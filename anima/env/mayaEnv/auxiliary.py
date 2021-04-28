@@ -2009,14 +2009,19 @@ class Playblaster(object):
                 }
                 if sequence:
                     # Ep002_004_0210_v007.mov.####.png
-                    filename = os.path.basename(sequence[0])
-                    filename = filename.replace('.mov', '')
-                    start_number = int(
-                        filename.split('.')[1]
-                    )
+                    # fix start number for %04d to %05d passage (eg. 9900 to 10010)
+                    smallest_start_number = 1e10
+                    for file_in_seq in sequence:
+                        filename = os.path.basename(file_in_seq)
+                        filename = filename.replace('.mov', '')
+                        start_number = int(
+                            filename.split('.')[1]
+                        )
+                        if start_number < smallest_start_number:
+                            smallest_start_number = start_number
 
                     options = {
-                        'start_number': start_number
+                        'start_number': smallest_start_number
                     }
 
                 # first convert the #'s to %03d format
