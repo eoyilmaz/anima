@@ -7,6 +7,7 @@ reload(toolbox)
 dialog = toolbox.UI()
 
 """
+import sys
 import os
 
 
@@ -15,6 +16,16 @@ from anima.ui.lib import QtGui, QtWidgets
 
 
 __here__ = os.path.abspath(__file__)
+
+
+def reload_lib(lib):
+    """helper funtion to reload a lib
+    """
+    if sys.version_info[0] >= 3:  # Python 3
+        import importlib
+        importlib.reload(lib)
+    else:
+        reload(lib)
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -769,8 +780,8 @@ class GenericTools(object):
         """returns the shot code of the current clip
         """
         from anima.env.resolve import shot_tools
-        import importlib
-        importlib.reload(shot_tools)
+        reload_lib(shot_tools)
+
         im = shot_tools.InjectionManager()
         print("current shot code: %s" % im.get_current_shot_code())
 
@@ -779,8 +790,7 @@ class GenericTools(object):
         """sets the shot code
         """
         from anima.env.resolve import shot_tools
-        import importlib
-        importlib.reload(shot_tools)
+        reload_lib(shot_tools)
         im = shot_tools.InjectionManager()
         im.set_current_shot_code(shot_code)
 
@@ -789,8 +799,7 @@ class GenericTools(object):
         """returns the shot thumbnail
         """
         from anima.env.resolve import shot_tools
-        import importlib
-        importlib.reload(shot_tools)
+        reload_lib(shot_tools)
         im = shot_tools.InjectionManager()
         data = im.get_thumbnail()
         print("current clip thumbnail: %s x %s" % (data['width'], data['height']))
@@ -800,7 +809,6 @@ class GenericTools(object):
         """calls the plate injector
         """
         from anima.env.resolve import shot_tools
-        import importlib
-        importlib.reload(shot_tools)
+        reload_lib(shot_tools)
         plate_injector_ui = shot_tools.PlateInjectorUI(parent=parent_ui)
         plate_injector_ui.show()
