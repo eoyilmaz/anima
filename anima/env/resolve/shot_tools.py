@@ -136,16 +136,16 @@ class PlateInjector(object):
     def create_shot(self):
         """creates the related shot
         """
+        logged_in_user = self.get_logged_in_user()
+
         from stalker import Shot, Task
         from stalker.db.session import DBSession
         shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
         if not shot:
             # create the shot
 
-            logged_in_user = self.get_logged_in_user()
-
-            # FP001_001_0010
-            scene_code = self.shot_code.split("_")[1]
+            # FP_001_001_0010
+            scene_code = self.shot_code.split("_")[2]
             scene_task = Task.query.filter(Task.parent==self.sequence).filter(Task.name.contains(scene_code)).first()
 
             if not scene_task:
@@ -153,6 +153,7 @@ class PlateInjector(object):
                 scene_task = Task(
                     project=self.project,
                     name='SCN%s' % scene_code,
+                    type=self.get_type("Scene"),
                     parent=self.sequence,
                     description='Autocreated by PlateInjector',
                     created_by=logged_in_user,
@@ -181,15 +182,17 @@ class PlateInjector(object):
                 parent=shots_task,
                 sequences=[self.sequence],
                 cut_in=1001,
-                cut_out=self.clip.GetEnd() - self.clip.GetStart() + 1000,
+                cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
                 description='Autocreated by PlateInjector',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
             )
             DBSession.add(shot)
 
-            # creat shot tasks
-            # Anim
+        # creat shot tasks
+        # Anim
+        anim_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Anim').first()
+        if not anim_task:
             anim_task = Task(
                 name='Anim',
                 parent=shot,
@@ -201,7 +204,9 @@ class PlateInjector(object):
             )
             DBSession.add(anim_task)
 
-            # Camera
+        # Camera
+        camera_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Camera').first()
+        if not camera_task:
             camera_task = Task(
                 name='Camera',
                 parent=shot,
@@ -213,7 +218,9 @@ class PlateInjector(object):
             )
             DBSession.add(camera_task)
 
-            # Cleanup
+        # Cleanup
+        cleanup_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Cleanup').first()
+        if not cleanup_task:
             cleanup_task = Task(
                 name='Cleanup',
                 parent=shot,
@@ -225,7 +232,9 @@ class PlateInjector(object):
             )
             DBSession.add(cleanup_task)
 
-            # Comp
+        # Comp
+        comp_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Comp').first()
+        if not comp_task:
             comp_task = Task(
                 name='Comp',
                 parent=shot,
@@ -237,7 +246,9 @@ class PlateInjector(object):
             )
             DBSession.add(comp_task)
 
-            # Lighting
+        # Lighting
+        lighting_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Lighting').first()
+        if not lighting_task:
             lighting_task = Task(
                 name='Lighting',
                 parent=shot,
@@ -249,7 +260,9 @@ class PlateInjector(object):
             )
             DBSession.add(lighting_task)
 
-            # Plate
+        # Plate
+        plate_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Plate').first()
+        if not plate_task:
             plate_task = Task(
                 name='Plate',
                 parent=shot,
@@ -261,14 +274,14 @@ class PlateInjector(object):
             )
             DBSession.add(plate_task)
 
-            # add dependency relation
-            camera_task.depends = [plate_task]
-            anim_task.depends = [camera_task]
-            lighting_task.depends = [anim_task]
-            cleanup_task.depends = [plate_task]
-            comp_task.depends = [lighting_task, cleanup_task]
+        # add dependency relation
+        camera_task.depends = [plate_task]
+        anim_task.depends = [camera_task]
+        lighting_task.depends = [anim_task]
+        cleanup_task.depends = [plate_task]
+        comp_task.depends = [lighting_task, cleanup_task]
 
-            DBSession.commit()
+        DBSession.commit()
 
         return shot
 
@@ -355,10 +368,10 @@ class PlateInjector(object):
 
         # get the shot
         from stalker import Task, Shot, Type
-        shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
-        if not shot:
-            # raise RuntimeError("No shot with code: %s" % self.shot_code)
-            shot = self.create_shot()
+        # shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
+        # if not shot:
+        #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
+        shot = self.create_shot()
 
         # get plate task
         plate_type = Type.query.filter(Type.name=='Plate').first()
@@ -377,7 +390,7 @@ class PlateInjector(object):
             'CustomName': '%s_Main_v001.' % self.shot_code,
             'TargetDir': '%s/Outputs/Main/v001/exr' % plate_task.absolute_path
         })
-        proj.SetCurrentRenderMode(1)
+        # proj.SetCurrentRenderMode(1)
         proj.AddRenderJob()
 
     def get_shot_related_marker(self):
@@ -414,7 +427,7 @@ class PlateInjector(object):
         if not self._shot_code:
             marker = self.get_shot_related_marker()
             if marker:
-                self._shot_code = marker['note']
+                self._shot_code = marker['note'].strip()
 
         return self._shot_code
 
