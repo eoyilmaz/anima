@@ -312,6 +312,13 @@ class PlateInjector(object):
         pm = resolve.GetProjectManager()
         proj = pm.GetCurrentProject()
 
+        template_name = "PlateInjector"
+        result = proj.LoadRenderPreset(template_name)
+        if not result:
+            print("No template named: %s" % template_name)
+        else:
+            print("Template loaded successfully: %s" % template_name)
+
         # get the shot
         from stalker import Task, Shot, Type
         shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
@@ -333,9 +340,10 @@ class PlateInjector(object):
         proj.SetRenderSettings({
             'MarkIn': self.clip.GetStart(),
             'MarkOut': self.clip.GetEnd() - 1,
-            'CustomName': '%s_Main_v001' % self.shot_code,
+            'CustomName': '%s_Main_v001.' % self.shot_code,
             'TargetDir': '%s/Outputs/Main/v001/exr' % plate_task.absolute_path
         })
+        proj.SetCurrentRenderMode(1)
         proj.AddRenderJob()
 
     def get_shot_related_marker(self):
@@ -543,6 +551,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
                 "Error",
                 str(e)
             )
+            raise e
         finally:
             QtWidgets.QMessageBox.information(
                 self,
