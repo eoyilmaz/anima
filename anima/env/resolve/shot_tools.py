@@ -16,17 +16,33 @@ class InjectionManager(object):
         self.sequence = sequence
         self.timeline = self.get_current_timeline()
 
-    @classmethod
-    def get_current_shot_code(cls):
+    def get_current_shot_code(self):
         """returns the current shot code
         """
-        timeline = cls.get_current_timeline()
-        clip = cls.get_current_clip()
+        plate_injector = self.get_current_shot()
+        return plate_injector.shot_code
 
+    def get_current_shot(self):
+        timeline = self.get_current_timeline()
+        clip = self.get_current_clip()
         plate_injector = PlateInjector()
+        plate_injector.project = self.project
+        plate_injector.sequence = self.sequence
         plate_injector.timeline = timeline
         plate_injector.clip = clip
-        return plate_injector.shot_code
+        return plate_injector
+
+    @classmethod
+    def set_current_shot_code(cls, shot_code):
+        """sets the current shot code
+
+        :param str shot_code: The desired shot code
+        """
+        timeline = cls.get_current_timeline()
+
+        plate_injector = PlateInjector()
+        plate_injector.clip = timeline.GetCurrentVideoItem()
+        plate_injector.set_shot_code(shot_code)
 
     @classmethod
     def get_current_clip(cls):
@@ -42,18 +58,6 @@ class InjectionManager(object):
         proj = pm.GetCurrentProject()
         timeline = proj.GetCurrentTimeline()
         return timeline
-
-    @classmethod
-    def set_current_shot_code(cls, shot_code):
-        """sets the current shot code
-
-        :param str shot_code: The desired shot code
-        """
-        timeline = cls.get_current_timeline()
-
-        plate_injector = PlateInjector()
-        plate_injector.clip = timeline.GetCurrentVideoItem()
-        plate_injector.set_shot_code(shot_code)
 
     def get_clip_list(self):
         """returns the clips
@@ -138,6 +142,8 @@ class PlateInjector(object):
         """
         logged_in_user = self.get_logged_in_user()
 
+        print("self.project: %s" % self.project)
+
         from stalker import Shot, Task
         from stalker.db.session import DBSession
         shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
@@ -146,7 +152,7 @@ class PlateInjector(object):
 
             # FP_001_001_0010
             scene_code = self.shot_code.split("_")[2]
-            scene_task = Task.query.filter(Task.parent==self.sequence).filter(Task.name.contains(scene_code)).first()
+            scene_task = Task.query.filter(Task.parent==self.sequence).filter(Task.name.endswith(scene_code)).first()
 
             if not scene_task:
                 # create the scene task
@@ -622,10 +628,26 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         sequence = self.sequence_combo_box.get_current_sequence()
         im = InjectionManager(project, sequence)
 
+        message_box = QtWidgets.QMessageBox(self)
+        # message_box.setTitle("Which Shots?")
+        message_box.setText("Which Shots?")
+
+        current_shot = QtWidgets.QPushButton("Current")
+        all_shots = QtWidgets.QPushButton("All")
+
+        message_box.addButton(current_shot, QtWidgets.QMessageBox.YesRole)
+        message_box.addButton(all_shots, QtWidgets.QMessageBox.NoRole)
+
+        message_box.exec_()
+
         try:
-            for shot in im.get_shots():
-                isinstance(shot, PlateInjector)
-                shot.create_render_job()
+            clicked_button = message_box.clickedButton()
+            message_box.deleteLater()
+            if clicked_button == all_shots:
+                for shot in im.get_shots():
+                    shot.create_render_job()
+            else:
+                im.get_current_shot().create_render_job()
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self,
