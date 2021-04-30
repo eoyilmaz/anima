@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import anima.utils
 from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.models.task import TaskTreeModel
@@ -561,7 +561,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         return
 
                     # get the current task
-                    ui_utils.upload_thumbnail(entity, thumbnail_full_path)
+                    anima.utils.upload_thumbnail(entity, thumbnail_full_path)
 
                 elif selected_item is create_child_task_action:
                     from anima.ui import task_dialog

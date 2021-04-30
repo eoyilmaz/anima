@@ -7,6 +7,7 @@ import os
 import logging
 from collections import namedtuple
 
+import anima.utils
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
@@ -2359,7 +2360,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             task = Task.query.get(task_id)
             if task and task.thumbnail:
                 self.clear_thumbnail_push_button.setEnabled(True)
-            ui_utils.update_gview_with_task_thumbnail(
+            ui_utils.update_graphics_view_with_task_thumbnail(
                 task, self.thumbnail_graphics_view
             )
 
@@ -2389,7 +2390,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if thumbnail_full_path == "":
             return
 
-        ui_utils.upload_thumbnail(task, thumbnail_full_path)
+        anima.utils.upload_thumbnail(task, thumbnail_full_path)
 
         # update the thumbnail
         self.update_thumbnail()

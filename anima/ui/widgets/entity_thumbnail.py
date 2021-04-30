@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import anima.utils
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
@@ -98,7 +98,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.clear_thumbnail()
 
         from anima.ui import utils
-        utils.update_gview_with_task_thumbnail(
+        utils.update_graphics_view_with_task_thumbnail(
             self.task,
             self.thumbnail_graphics_view
         )
@@ -122,5 +122,5 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         # self.upload_thumbnail_button.setVisible(False)
         from anima.ui import utils
         thumbnail_full_path = utils.choose_thumbnail(self)
-        utils.upload_thumbnail(self.task, thumbnail_full_path)
+        anima.utils.upload_thumbnail(self.task, thumbnail_full_path)
         self.fill_ui()

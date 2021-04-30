@@ -16,36 +16,36 @@ def get_icon(icon_name):
     return QtGui.QIcon(icon_full_path)
 
 
-def clear_thumbnail(gview):
+def clear_thumbnail(graphics_view):
     """Clears the thumbnail for the given QGraphicsView
 
-    :param gview: The QGraphicsView instance
+    :param graphics_view: The QGraphicsView instance
     """
 
-    if not gview:
+    if not graphics_view:
         return
 
     # clear the graphics scene in case there is no thumbnail
-    scene = gview.scene()
+    scene = graphics_view.scene()
     if not scene:
-        scene = QtWidgets.QGraphicsScene(gview)
-        gview.setScene(scene)
+        scene = QtWidgets.QGraphicsScene(graphics_view)
+        graphics_view.setScene(scene)
 
     scene.clear()
 
 
-def update_gview_with_task_thumbnail(task, gview):
+def update_graphics_view_with_task_thumbnail(task, graphics_view):
     """Updates the given QGraphicsView with the given Task thumbnail
 
     :param task: A
       :class:`~stalker.models.task.Task` instance
 
-    :param gview: A QtGui.QGraphicsView instance
+    :param graphics_view: A QtGui.QGraphicsView instance
     """
     from stalker import Task
 
     if not isinstance(task, Task) or \
-       not isinstance(gview, QtWidgets.QGraphicsView):
+       not isinstance(graphics_view, QtWidgets.QGraphicsView):
         # do nothing
         logger.debug('task is not a stalker.models.task.Task instance')
         return
@@ -75,17 +75,17 @@ def update_gview_with_task_thumbnail(task, gview):
                 break
 
     if full_path:
-        update_gview_with_image_file(full_path, gview)
+        update_graphics_view_with_image_file(full_path, graphics_view)
 
 
-def update_gview_with_image_file(image_full_path, gview):
+def update_graphics_view_with_image_file(image_full_path, graphics_view):
     """updates the QGraphicsView with the given image
     """
 
-    if not isinstance(gview, QtWidgets.QGraphicsView):
+    if not isinstance(graphics_view, QtWidgets.QGraphicsView):
         return
 
-    clear_thumbnail(gview)
+    clear_thumbnail(graphics_view)
 
     if image_full_path != "":
         image_full_path = os.path.normpath(image_full_path)
@@ -95,7 +95,7 @@ def update_gview_with_image_file(image_full_path, gview):
         # size = conf.thumbnail_size
         # width = size[0]
         # height = size[1]
-        size = gview.size()
+        size = graphics_view.size()
         width = size.width()
         height = size.height()
         logger.debug('width: %s' % width)
@@ -109,71 +109,8 @@ def update_gview_with_image_file(image_full_path, gview):
             )
             # pixmap = QtGui.QPixmap(image_full_path, format='JPG')
 
-            scene = gview.scene()
+            scene = graphics_view.scene()
             scene.addPixmap(pixmap)
-
-
-def upload_thumbnail(task, thumbnail_full_path):
-    """Uploads the given thumbnail for the given entity
-
-    :param task: An instance of :class:`~stalker.models.entity.SimpleEntity`
-      or a derivative.
-
-    :param str thumbnail_full_path: A string which is showing the path
-      of the thumbnail image
-    """
-    extension = os.path.splitext(thumbnail_full_path)[-1]
-
-    # move the file to the task thumbnail folder
-    # and mimic StalkerPyramids output format
-    thumbnail_original_file_name = 'thumbnail%s' % extension
-    thumbnail_final_full_path = os.path.join(
-        task.absolute_path, 'Thumbnail', thumbnail_original_file_name
-    )
-
-    try:
-        os.makedirs(os.path.dirname(thumbnail_final_full_path))
-    except OSError:
-        pass
-
-    # # convert the thumbnail to jpg if it is a format that is not supported by
-    # # browsers
-    # ext_not_supported_by_browsers = ['.bmp', '.tga', '.tif', '.tiff', '.exr']
-    # if extension in ext_not_supported_by_browsers:
-    #     # use MediaManager to convert them
-    #     from anima.utils import MediaManager
-    #     mm = MediaManager()
-    #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
-
-    import shutil
-    shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
-
-    from stalker import Link, Version, Repository
-
-    thumbnail_os_independent_path = \
-        Repository.to_os_independent_path(thumbnail_final_full_path)
-    l_thumb = Link.query\
-        .filter(Link.full_path == thumbnail_os_independent_path).first()
-
-    if not l_thumb:
-        l_thumb = Link(
-            full_path=thumbnail_os_independent_path,
-            original_filename=thumbnail_original_file_name
-        )
-
-    task.thumbnail = l_thumb
-
-    # get a version of this Task
-    from stalker.db.session import DBSession
-    v = Version.query.filter(Version.task == task).first()
-    if v:
-        for naming_parent in v.naming_parents:
-            if not naming_parent.thumbnail:
-                naming_parent.thumbnail = l_thumb
-                DBSession.add(naming_parent)
-
-    DBSession.add(l_thumb)
-    DBSession.commit()
 
 
 def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
@@ -197,16 +134,16 @@ def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
     return thumbnail_full_path
 
 
-def render_image_from_gview(gview, image_full_path):
-    """renders the gview scene to an image at the given full path
+def render_image_from_graphics_view(graphics_view, image_full_path):
+    """renders the graphics view scene to an image at the given full path
     """
-    assert isinstance(gview, QtWidgets.QGraphicsView)
-    scene = gview.scene()
+    assert isinstance(graphics_view, QtWidgets.QGraphicsView)
+    scene = graphics_view.scene()
     # there should be only one item
     items = scene.items()
     if items:
-        pixmapItem = items[0]
-        pixmap = pixmapItem.pixmap()
+        pixmap_item = items[0]
+        pixmap = pixmap_item.pixmap()
         try:
             os.makedirs(os.path.split(image_full_path)[0])
         except OSError:
@@ -226,7 +163,9 @@ def initialize_post_publish_dialog():
     try:
         _fromUtf8 = QtCore.QString.fromUtf8
     except AttributeError:
-        _fromUtf8 = lambda s: s
+        def direct_drive(s):
+            return s
+        _fromUtf8 = direct_drive
 
     dialog = QtWidgets.QDialog()
     dialog.vertical_layout = QtWidgets.QVBoxLayout(dialog)

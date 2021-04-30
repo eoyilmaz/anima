@@ -3,6 +3,9 @@
 import pymel.core as pm
 
 import re
+
+import anima.utils
+
 FIRST_CAP_RE = re.compile('(.)([A-Z][a-z]+)')
 ALL_CAP_RE = re.compile('([a-z0-9])([A-Z])')
 
@@ -1069,7 +1072,7 @@ def generate_thumbnail():
         output_file = found_output_file[0]
 
         from anima.ui import utils
-        utils.upload_thumbnail(task, output_file)
+        anima.utils.upload_thumbnail(task, output_file)
 
     return found_output_file
 

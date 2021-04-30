@@ -2346,3 +2346,66 @@ def milliseconds_to_tc(milliseconds):
     milliseconds = int(residual_milliseoncds)
 
     return "%02i:%02i:%02i.%03i" % (hours,minutes,seconds,milliseconds)
+
+
+def upload_thumbnail(task, thumbnail_full_path):
+    """Uploads the given thumbnail for the given entity
+
+    :param task: An instance of :class:`~stalker.models.entity.SimpleEntity`
+      or a derivative.
+
+    :param str thumbnail_full_path: A string which is showing the path
+      of the thumbnail image
+    """
+    extension = os.path.splitext(thumbnail_full_path)[-1]
+
+    # move the file to the task thumbnail folder
+    # and mimic StalkerPyramids output format
+    thumbnail_original_file_name = 'thumbnail%s' % extension
+    thumbnail_final_full_path = os.path.join(
+        task.absolute_path, 'Thumbnail', thumbnail_original_file_name
+    )
+
+    try:
+        os.makedirs(os.path.dirname(thumbnail_final_full_path))
+    except OSError:
+        pass
+
+    # # convert the thumbnail to jpg if it is a format that is not supported by
+    # # browsers
+    # ext_not_supported_by_browsers = ['.bmp', '.tga', '.tif', '.tiff', '.exr']
+    # if extension in ext_not_supported_by_browsers:
+    #     # use MediaManager to convert them
+    #     from anima.utils import MediaManager
+    #     mm = MediaManager()
+    #     thumbnail_full_path = mm.generate_image_thumbnail(thumbnail_full_path)
+
+    import shutil
+    shutil.copy(thumbnail_full_path, thumbnail_final_full_path)
+
+    from stalker import Link, Version, Repository
+
+    thumbnail_os_independent_path = Repository.to_os_independent_path(thumbnail_final_full_path)
+    l_thumb = Link.query.filter(Link.full_path == thumbnail_os_independent_path).first()
+
+    if not l_thumb:
+        l_thumb = Link(
+            full_path=thumbnail_os_independent_path,
+            original_filename=thumbnail_original_file_name
+        )
+
+    task.thumbnail = l_thumb
+
+    # get a version of this Task
+    from stalker.db.session import DBSession
+    v = Version.query.filter(Version.task == task).first()
+    if v:
+        for naming_parent in v.naming_parents:
+            if not naming_parent.thumbnail:
+                naming_parent.thumbnail = l_thumb
+                DBSession.add(naming_parent)
+
+    DBSession.add(l_thumb)
+    DBSession.commit()
+
+    return True
