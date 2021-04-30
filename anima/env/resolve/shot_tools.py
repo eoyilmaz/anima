@@ -330,14 +330,23 @@ class PlateInjector(object):
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
         resolve.OpenPage('color')
+
+        # pm = resolve.GetProjectManager()
+        # ms = resolve.GetMediaStorage()
+        # proj = resolve.GetCurrentProject()
+        # mp = proj.GetMediaPool()
+
+        # mp_item = self.clip.GetMediaPoolItem()
+        # ms.RevealInStorage(self.clip.GetName())
+
         current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
-        # resolve.OpenPage('edit')
+        resolve.OpenPage('edit')
 
         from PIL import Image
         import base64
         image = Image.frombytes(
             mode='RGB',
-            size=[current_media_thumbnail['width'], current_media_thumbnail['height']],
+            size=[int(current_media_thumbnail['width']), int(current_media_thumbnail['height'])],
             data=base64.b64decode(current_media_thumbnail['data'])
         )
 
