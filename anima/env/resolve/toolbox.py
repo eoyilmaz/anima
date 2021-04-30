@@ -156,35 +156,35 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         layout.addWidget(version_label)
         layout.addWidget(version_spinbox)
 
-        add_button(
-            "Get Shot Code",
-            general_tab_vertical_layout,
-            GenericTools.get_shot_code,
-            GenericTools.get_shot_code.__doc__
-        )
+        # add_button(
+        #     "Get Shot Code",
+        #     general_tab_vertical_layout,
+        #     GenericTools.get_shot_code,
+        #     GenericTools.get_shot_code.__doc__
+        # )
 
-        # -------------------------------------------------------------------
-        # Set Shot Code
-
-        layout = QtWidgets.QHBoxLayout()
-        general_tab_vertical_layout.addLayout(layout)
-
-        set_clip_code_label = QtWidgets.QLabel()
-        set_clip_code_label.setText("Code")
-        set_clip_code_line_edit = QtWidgets.QLineEdit()
-
-        def set_shot_code_wrapper():
-            shot_code = set_clip_code_line_edit.text()
-            GenericTools.set_shot_code(shot_code)
-
-        layout.addWidget(set_clip_code_label)
-        layout.addWidget(set_clip_code_line_edit)
-        add_button(
-            "Set Shot Code",
-            layout,
-            set_shot_code_wrapper,
-            GenericTools.set_shot_code.__doc__,
-        )
+        # # -------------------------------------------------------------------
+        # # Set Shot Code
+        #
+        # layout = QtWidgets.QHBoxLayout()
+        # general_tab_vertical_layout.addLayout(layout)
+        #
+        # set_clip_code_label = QtWidgets.QLabel()
+        # set_clip_code_label.setText("Code")
+        # set_clip_code_line_edit = QtWidgets.QLineEdit()
+        #
+        # def set_shot_code_wrapper():
+        #     shot_code = set_clip_code_line_edit.text()
+        #     GenericTools.set_shot_code(shot_code)
+        #
+        # layout.addWidget(set_clip_code_label)
+        # layout.addWidget(set_clip_code_line_edit)
+        # add_button(
+        #     "Set Shot Code",
+        #     layout,
+        #     set_shot_code_wrapper,
+        #     GenericTools.set_shot_code.__doc__,
+        # )
 
         def parent_ui_callback():
             GenericTools.plate_injector(parent_ui=self.parent())
@@ -196,12 +196,12 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             GenericTools.plate_injector.__doc__
         )
 
-        add_button(
-            "Get Current Thumbnail",
-            general_tab_vertical_layout,
-            GenericTools.get_thumbnail,
-            GenericTools.get_thumbnail.__doc__
-        )
+        # add_button(
+        #     "Get Current Thumbnail",
+        #     general_tab_vertical_layout,
+        #     GenericTools.get_thumbnail,
+        #     GenericTools.get_thumbnail.__doc__
+        # )
 
 
         # -------------------------------------------------------------------
@@ -774,35 +774,6 @@ class GenericTools(object):
         })
 
         proj.AddRenderJob()
-
-    @classmethod
-    def get_shot_code(cls):
-        """returns the shot code of the current clip
-        """
-        from anima.env.resolve import shot_tools
-        reload_lib(shot_tools)
-
-        im = shot_tools.InjectionManager()
-        print("current shot code: %s" % im.get_current_shot_code())
-
-    @classmethod
-    def set_shot_code(cls, shot_code):
-        """sets the shot code
-        """
-        from anima.env.resolve import shot_tools
-        reload_lib(shot_tools)
-        im = shot_tools.InjectionManager()
-        im.set_current_shot_code(shot_code)
-
-    @classmethod
-    def get_thumbnail(cls):
-        """returns the shot thumbnail
-        """
-        from anima.env.resolve import shot_tools
-        reload_lib(shot_tools)
-        im = shot_tools.InjectionManager()
-        data = im.get_thumbnail()
-        print("current clip thumbnail: %s x %s" % (data['width'], data['height']))
 
     @classmethod
     def plate_injector(cls, parent_ui):

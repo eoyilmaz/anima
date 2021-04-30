@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Shot related tools
 """
+import anima.utils
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 
@@ -59,7 +60,7 @@ class InjectionManager(object):
         timeline = proj.GetCurrentTimeline()
         return timeline
 
-    def get_clip_list(self):
+    def get_clips(self):
         """returns the clips
         """
         timeline = self.get_current_timeline()
@@ -70,7 +71,7 @@ class InjectionManager(object):
         """returns the shots in the current video track
         """
         shots = []
-        clips = self.get_clip_list()
+        clips = self.get_clips()
         for clip in clips:
             pi = PlateInjector(project=self.project, sequence=self.sequence, clip=clip, timeline=self.timeline)
             if pi.is_shot():
@@ -119,7 +120,7 @@ class InjectionManager(object):
         plate_injector = PlateInjector()
         plate_injector.timeline = timeline
         plate_injector.clip = timeline.GetCurrentVideoItem()
-        thumbnail = plate_injector.update_shot_thumbnail()
+        thumbnail = plate_injector.get_clip_thumbnail()
         return thumbnail
 
 
@@ -137,67 +138,22 @@ class PlateInjector(object):
         self.clip = clip
         self._shot_code = None
 
-    def create_shot(self):
-        """creates the related shot
+    def create_shot_hierarchy(self):
+        """creates the related shot hierarchy
         """
         logged_in_user = self.get_logged_in_user()
 
         print("self.project: %s" % self.project)
 
-        from stalker import Shot, Task
+        from stalker import Task
         from stalker.db.session import DBSession
-        shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
+        shot = self.get_shot()
         if not shot:
-            # create the shot
-
-            # FP_001_001_0010
-            scene_code = self.shot_code.split("_")[2]
-            scene_task = Task.query.filter(Task.parent==self.sequence).filter(Task.name.endswith(scene_code)).first()
-
-            if not scene_task:
-                # create the scene task
-                scene_task = Task(
-                    project=self.project,
-                    name='SCN%s' % scene_code,
-                    type=self.get_type("Scene"),
-                    parent=self.sequence,
-                    description='Autocreated by PlateInjector',
-                    created_by=logged_in_user,
-                    updated_by=logged_in_user,
-                )
-                DBSession.add(scene_task)
-                DBSession.commit()
-
-            shots_task = Task.query.filter(Task.parent==scene_task).filter(Task.name=='Shots').first()
-            if not shots_task:
-                shots_task = Task(
-                    project=self.project,
-                    name='Shots',
-                    parent=scene_task,
-                    description='Autocreated by PlateInjector',
-                    created_by=logged_in_user,
-                    updated_by=logged_in_user,
-                )
-                DBSession.add(shots_task)
-                DBSession.commit()
-
-            shot = Shot(
-                name=self.shot_code,
-                code=self.shot_code,
-                project=self.project,
-                parent=shots_task,
-                sequences=[self.sequence],
-                cut_in=1001,
-                cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
-                description='Autocreated by PlateInjector',
-                created_by=logged_in_user,
-                updated_by=logged_in_user,
-            )
-            DBSession.add(shot)
+            shot = self.create_shot()
 
         # creat shot tasks
         # Anim
-        anim_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Anim').first()
+        anim_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Anim').first()
         if not anim_task:
             anim_task = Task(
                 name='Anim',
@@ -211,7 +167,7 @@ class PlateInjector(object):
             DBSession.add(anim_task)
 
         # Camera
-        camera_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Camera').first()
+        camera_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Camera').first()
         if not camera_task:
             camera_task = Task(
                 name='Camera',
@@ -225,7 +181,7 @@ class PlateInjector(object):
             DBSession.add(camera_task)
 
         # Cleanup
-        cleanup_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Cleanup').first()
+        cleanup_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
         if not cleanup_task:
             cleanup_task = Task(
                 name='Cleanup',
@@ -239,7 +195,7 @@ class PlateInjector(object):
             DBSession.add(cleanup_task)
 
         # Comp
-        comp_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Comp').first()
+        comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Comp').first()
         if not comp_task:
             comp_task = Task(
                 name='Comp',
@@ -253,7 +209,7 @@ class PlateInjector(object):
             DBSession.add(comp_task)
 
         # Lighting
-        lighting_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Lighting').first()
+        lighting_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Lighting').first()
         if not lighting_task:
             lighting_task = Task(
                 name='Lighting',
@@ -267,7 +223,7 @@ class PlateInjector(object):
             DBSession.add(lighting_task)
 
         # Plate
-        plate_task = Task.query.filter(Task.parent==shot).filter(Task.name=='Plate').first()
+        plate_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Plate').first()
         if not plate_task:
             plate_task = Task(
                 name='Plate',
@@ -284,7 +240,7 @@ class PlateInjector(object):
         # set the status the task
         with DBSession.no_autoflush:
             from stalker import Status
-            cmpl = Status.query.filter(Status.code=='CMPL').first()
+            cmpl = Status.query.filter(Status.code == 'CMPL').first()
             plate_task.status = cmpl
 
         # add dependency relation
@@ -298,30 +254,98 @@ class PlateInjector(object):
 
         return shot
 
+    def get_shot(self):
+        """returns the related Stalker Shot instance.
+        """
+        from stalker import Shot
+        shot = Shot.query.filter(Shot.project == self.project).filter(Shot.code == self.shot_code).first()
+        return shot
+
+    def create_shot(self):
+        """creates the related Stalker Shot entity with the current clip
+        """
+        from stalker import Shot, Task
+        from stalker.db.session import DBSession
+        # create the shot
+        logged_in_user = self.get_logged_in_user()
+        # FP_001_001_0010
+        scene_code = self.shot_code.split("_")[2]
+        scene_task = Task.query.filter(Task.parent == self.sequence).filter(Task.name.endswith(scene_code)).first()
+        if not scene_task:
+            # create the scene task
+            scene_task = Task(
+                project=self.project,
+                name='SCN%s' % scene_code,
+                type=self.get_type("Scene"),
+                parent=self.sequence,
+                description='Autocreated by PlateInjector',
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
+            )
+            DBSession.add(scene_task)
+            DBSession.commit()
+
+        shots_task = Task.query.filter(Task.parent == scene_task).filter(Task.name == 'Shots').first()
+        if not shots_task:
+            shots_task = Task(
+                project=self.project,
+                name='Shots',
+                parent=scene_task,
+                description='Autocreated by PlateInjector',
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
+            )
+            DBSession.add(shots_task)
+            DBSession.commit()
+
+        shot = Shot(
+            name=self.shot_code,
+            code=self.shot_code,
+            project=self.project,
+            parent=shots_task,
+            sequences=[self.sequence],
+            cut_in=1001,
+            cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
+            description='Autocreated by PlateInjector',
+            created_by=logged_in_user,
+            updated_by=logged_in_user,
+        )
+        DBSession.add(shot)
+        return shot
+
     def update_shot_thumbnail(self):
-        """updates the shot thumbnail from resolve
+        """updates the related shot thumbnail
+        """
+        thumbnail_full_path = self.get_clip_thumbnail()
+        shot = self.get_shot()
+        if not shot:
+            shot = self.create_shot_hierarchy()
+        from anima import utils
+        return utils.upload_thumbnail(shot, thumbnail_full_path)
+
+    def get_clip_thumbnail(self):
+        """saves the thumbnail from resolve to a temp path and returns the path of the JPG file
         """
         # go to the color page to retrieve the thumbnail
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
         resolve.OpenPage('color')
         current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
-        resolve.OpenPage('edit')
+        # resolve.OpenPage('edit')
 
         from PIL import Image
-        from io import BytesIO
         import base64
-        im = Image.open(BytesIO(base64.b64decode(current_media_thumbnail['data'])))
-
-        with open('/home/eoyilmaz/resolve_raw_thumbnail_data', 'w+') as f:
-            f.write(current_media_thumbnail['data'])
+        image = Image.frombytes(
+            mode='RGB',
+            size=[current_media_thumbnail['width'], current_media_thumbnail['height']],
+            data=base64.b64decode(current_media_thumbnail['data'])
+        )
 
         import tempfile
         thumbnail_path = tempfile.mktemp(suffix='.jpg')
-        print('thumbnail_path: %s' % thumbnail_path)
-        im.save(thumbnail_path, quality=85)
+        image.save(thumbnail_path, quality=85)
 
-        return current_media_thumbnail
+        return thumbnail_path
 
     @classmethod
     def get_logged_in_user(cls):
@@ -348,7 +372,7 @@ class PlateInjector(object):
         :return:
         """
         from stalker import Type
-        type_instance = Type.query.filter(Type.name==type_name).first()
+        type_instance = Type.query.filter(Type.name == type_name).first()
         if not type_instance:
             logged_in_user = self.get_logged_in_user()
             type_instance = Type(
@@ -384,14 +408,14 @@ class PlateInjector(object):
         # shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
         # if not shot:
         #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
-        shot = self.create_shot()
+        shot = self.create_shot_hierarchy()
 
         # get plate task
-        plate_type = Type.query.filter(Type.name=='Plate').first()
+        plate_type = Type.query.filter(Type.name == 'Plate').first()
         if not plate_type:
             raise RuntimeError("No plate type!!!")
 
-        plate_task = Task.query.filter(Task.parent==shot).filter(Task.type==plate_type).first()
+        plate_task = Task.query.filter(Task.parent == shot).filter(Task.type == plate_type).first()
         if not plate_task:
             raise RuntimeError("No plate task in shot: %s" % self.shot_code)
 
@@ -562,6 +586,11 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         create_render_jobs_button.setText("Create Render Jobs")
         self.main_layout.addWidget(create_render_jobs_button)
 
+        # Update Shot Thumbnail button
+        update_shot_thumbnail_button = QtWidgets.QPushButton(self)
+        update_shot_thumbnail_button.setText("Update Shot Thumbnail")
+        self.main_layout.addWidget(update_shot_thumbnail_button)
+
         # Ok button
         ok_button = QtWidgets.QPushButton(self)
         ok_button.setText("OK")
@@ -604,6 +633,12 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
             validate_shots_push_button,
             QtCore.SIGNAL("clicked()"),
             self.validate_shot_codes
+        )
+
+        QtCore.QObject.connect(
+            update_shot_thumbnail_button,
+            QtCore.SIGNAL("clicked()"),
+            self.update_shot_thumbnail
         )
 
     def project_changed(self, index):
@@ -716,3 +751,26 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
                 "No duplicate shots 👍"
             )
             return True
+
+    def update_shot_thumbnail(self):
+        """updates the current shot thumbnail with the clip thumbnail from resolve
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = InjectionManager(project, sequence)
+        shot = im.get_current_shot()
+
+        try:
+            shot.update_shot_thumbnail()
+        except BaseException as e:
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Shot thumbnail could not be updated",
+                str(e)
+            )
+        else:
+            QtWidgets.QMessageBox.information(
+                self,
+                "Updated shot thumbnail 👍",
+                "Updated shot thumbnail 👍"
+            )
