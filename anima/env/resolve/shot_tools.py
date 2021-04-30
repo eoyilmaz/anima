@@ -6,8 +6,8 @@ from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 
 
-class InjectionManager(object):
-    """manager for plate injection process
+class ShotManager(object):
+    """Manager for plate injection process
 
     Contains the general logic
     """
@@ -20,18 +20,18 @@ class InjectionManager(object):
     def get_current_shot_code(self):
         """returns the current shot code
         """
-        plate_injector = self.get_current_shot()
-        return plate_injector.shot_code
+        shot_clip = self.get_current_shot()
+        return shot_clip.shot_code
 
     def get_current_shot(self):
         timeline = self.get_current_timeline()
         clip = self.get_current_clip()
-        plate_injector = PlateInjector()
-        plate_injector.project = self.project
-        plate_injector.sequence = self.sequence
-        plate_injector.timeline = timeline
-        plate_injector.clip = clip
-        return plate_injector
+        shot_clip = ShotClip()
+        shot_clip.project = self.project
+        shot_clip.sequence = self.sequence
+        shot_clip.timeline = timeline
+        shot_clip.clip = clip
+        return shot_clip
 
     @classmethod
     def set_current_shot_code(cls, shot_code):
@@ -41,9 +41,9 @@ class InjectionManager(object):
         """
         timeline = cls.get_current_timeline()
 
-        plate_injector = PlateInjector()
-        plate_injector.clip = timeline.GetCurrentVideoItem()
-        plate_injector.set_shot_code(shot_code)
+        shot_clip = ShotClip()
+        shot_clip.clip = timeline.GetCurrentVideoItem()
+        shot_clip.set_shot_code(shot_code)
 
     @classmethod
     def get_current_clip(cls):
@@ -73,7 +73,7 @@ class InjectionManager(object):
         shots = []
         clips = self.get_clips()
         for clip in clips:
-            pi = PlateInjector(project=self.project, sequence=self.sequence, clip=clip, timeline=self.timeline)
+            pi = ShotClip(project=self.project, sequence=self.sequence, clip=clip, timeline=self.timeline)
             if pi.is_shot():
                 shots.append(pi)
         return shots
@@ -117,18 +117,22 @@ class InjectionManager(object):
         """
         timeline = self.get_current_timeline()
 
-        plate_injector = PlateInjector()
-        plate_injector.timeline = timeline
-        plate_injector.clip = timeline.GetCurrentVideoItem()
-        thumbnail = plate_injector.get_clip_thumbnail()
+        shot_clip = ShotClip()
+        shot_clip.timeline = timeline
+        shot_clip.clip = timeline.GetCurrentVideoItem()
+        thumbnail = shot_clip.get_clip_thumbnail()
         return thumbnail
 
 
-class PlateInjector(object):
-    """Renders plates for the given clip
+class ShotClip(object):
+    """Manages Stalker Shots along with Resolve Clips
 
-    Generates render jobs that renders the VFX related clips in the current
-    timeline to their respective shot folder.
+    Some of the functionalities that this class supplies:
+
+      * Creates Stalker Shot hierarchy by looking at the shot related markers.
+      * Generates render jobs that renders the VFX related clips in the current timeline to their respective shot
+        folder.
+      * Creates shot thumbnails that are visible through the system.
     """
 
     def __init__(self, project=None, sequence=None, clip=None, timeline=None):
@@ -142,8 +146,6 @@ class PlateInjector(object):
         """creates the related shot hierarchy
         """
         logged_in_user = self.get_logged_in_user()
-
-        print("self.project: %s" % self.project)
 
         from stalker import Task
         from stalker.db.session import DBSession
@@ -246,7 +248,7 @@ class PlateInjector(object):
         # add dependency relation
         camera_task.depends = [plate_task]
         anim_task.depends = [camera_task]
-        lighting_task.depends = [anim_task]
+        lighting_task.depends = [anim_task, camera_task]
         cleanup_task.depends = [plate_task]
         comp_task.depends = [lighting_task, cleanup_task]
 
@@ -278,7 +280,7 @@ class PlateInjector(object):
                 name='SCN%s' % scene_code,
                 type=self.get_type("Scene"),
                 parent=self.sequence,
-                description='Autocreated by PlateInjector',
+                description='Autocreated by Resolve',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
             )
@@ -291,7 +293,7 @@ class PlateInjector(object):
                 project=self.project,
                 name='Shots',
                 parent=scene_task,
-                description='Autocreated by PlateInjector',
+                description='Autocreated by Resolve',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
             )
@@ -306,7 +308,7 @@ class PlateInjector(object):
             sequences=[self.sequence],
             cut_in=1001,
             cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
-            description='Autocreated by PlateInjector',
+            description='Autocreated by Resolve',
             created_by=logged_in_user,
             updated_by=logged_in_user,
         )
@@ -512,12 +514,12 @@ class PlateInjector(object):
             raise ValueError("Shot code format is not valid: %s" % shot_code)
 
 
-class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
-    """The UI for the PlateInjector
+class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
+    """The UI for the ShotManager
     """
 
     def __init__(self, *args, **kwargs):
-        super(PlateInjectorUI, self).__init__(*args, **kwargs)
+        super(ShotManagerUI, self).__init__(*args, **kwargs)
         self.main_layout = None
         self.form_layout = None
         self.project_combo_box = None
@@ -533,7 +535,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         # get logged in user
         self.get_logged_in_user()
 
-        self.setWindowTitle("Plate Injector")
+        self.setWindowTitle("Shot Manager")
 
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.form_layout = QtWidgets.QFormLayout(self)
@@ -660,9 +662,9 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = InjectionManager(project, sequence)
+        im = ShotManager(project, sequence)
         for shot in im.get_shots():
-            isinstance(shot, PlateInjector)
+            isinstance(shot, ShotClip)
             print(shot.shot_code)
 
     def create_render_jobs(self):
@@ -677,7 +679,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
 
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = InjectionManager(project, sequence)
+        im = ShotManager(project, sequence)
 
         message_box = QtWidgets.QMessageBox(self)
         # message_box.setTitle("Which Shots?")
@@ -718,7 +720,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = InjectionManager(project, sequence)
+        im = ShotManager(project, sequence)
         invalid_shots = im.validate_shot_codes()
         invalid_shot_codes = []
         for shot in invalid_shots:
@@ -744,7 +746,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = InjectionManager(project, sequence)
+        im = ShotManager(project, sequence)
         duplicate_shot_codes = im.check_duplicate_shots()
         if duplicate_shot_codes:
             QtWidgets.QMessageBox.critical(
@@ -766,7 +768,7 @@ class PlateInjectorUI(QtWidgets.QDialog, AnimaDialogBase):
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = InjectionManager(project, sequence)
+        im = ShotManager(project, sequence)
         shot = im.get_current_shot()
 
         try:

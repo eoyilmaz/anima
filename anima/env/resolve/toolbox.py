@@ -187,13 +187,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # )
 
         def parent_ui_callback():
-            GenericTools.plate_injector(parent_ui=self.parent())
+            GenericTools.shot_manager(parent_ui=self.parent())
 
         add_button(
-            "Plate Injector",
+            "Shot Manager",
             general_tab_vertical_layout,
             parent_ui_callback,
-            GenericTools.plate_injector.__doc__
+            GenericTools.shot_manager.__doc__
         )
 
         # add_button(
@@ -202,7 +202,6 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         #     GenericTools.get_thumbnail,
         #     GenericTools.get_thumbnail.__doc__
         # )
-
 
         # -------------------------------------------------------------------
         # Add the stretcher
@@ -776,10 +775,10 @@ class GenericTools(object):
         proj.AddRenderJob()
 
     @classmethod
-    def plate_injector(cls, parent_ui):
-        """calls the plate injector
+    def shot_manager(cls, parent_ui):
+        """calls the Shot Manager UI
         """
         from anima.env.resolve import shot_tools
         reload_lib(shot_tools)
-        plate_injector_ui = shot_tools.PlateInjectorUI(parent=parent_ui)
-        plate_injector_ui.show()
+        shot_manager_ui = shot_tools.ShotManagerUI(parent=parent_ui)
+        shot_manager_ui.show()
