@@ -111,10 +111,10 @@ class InjectionManager(object):
 
         return invalid_shots
 
-    def get_thumbnail(cls):
+    def get_thumbnail(self):
         """returns the current media thumbnail
         """
-        timeline = cls.get_current_timeline()
+        timeline = self.get_current_timeline()
 
         plate_injector = PlateInjector()
         plate_injector.timeline = timeline
@@ -273,12 +273,19 @@ class PlateInjector(object):
                 name='Plate',
                 parent=shot,
                 type=self.get_type('Plate'),
-                bid_timing=10,
-                bid_unit='min',
+                schedule_timing=10,
+                schedule_unit='min',
+                schedule_model='duration',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
             )
             DBSession.add(plate_task)
+
+        # set the status the task
+        with DBSession.no_autoflush:
+            from stalker import Status
+            cmpl = Status.query.filter(Status.code=='CMPL').first()
+            plate_task.status = cmpl
 
         # add dependency relation
         camera_task.depends = [plate_task]
