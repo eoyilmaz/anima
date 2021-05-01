@@ -2203,15 +2203,15 @@ def get_scene_name_from_task(task):
     """helper function to return the scene name from a given task
     """
     scene = None
+
     while task is not None:
         if task.entity_type == 'Scene':
             scene = task
+            break
         else:
-            try:
-                if task.type.name == 'Scene':
-                    scene = task
-            except AttributeError:
-                pass
+            if task.type and task.type.name == 'Scene':
+                scene = task
+
         if task.entity_type == 'Sequence':
             break
         else:
@@ -2220,14 +2220,14 @@ def get_scene_name_from_task(task):
     if scene:
         scene_name = scene.name
     else:
-        scene_name = 'SCN'
+        # No scene task, use a default number
+        scene_name = '001'
 
     return scene_name
 
 
 def check_sequence_name___fix():
-    """
-    tries to fix check_sequence_name
+    """tries to fix check_sequence_name
     """
     # do not consider referenced shot nodes
     shots = pm.ls(type='shot')
@@ -2294,11 +2294,12 @@ def check_sequence_name_format(progress_controller=None):
         raise PublishError(
             'Sequence name format is not correct!!!<br>'
             '<br>'
-            'It should be in the following format:<br>'
+            'It should have been:<br>'
             '<br>'
-            '[Sequence Name]_[Scene Name]'
+            '%s<br>'
             '<br>'
-            'ex: SEQ001_SC_001'
+            'But found:<br>'
+            '%s' % (name, sequencer.get_sequence_name())
         )
 
     progress_controller.complete()
