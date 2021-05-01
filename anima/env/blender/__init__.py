@@ -320,7 +320,7 @@ class Blender(EnvironmentBase):
             version,
             include_project_code=False
         )
-        output_filename_template = '//Outputs/renders/beauty/%(version_sig_name)s_beauty.#'
+        output_filename_template = '//Outputs/renders/beauty/%(version_sig_name)s_beauty.####'
         render_file_full_path = output_filename_template % {'version_sig_name': version_sig_name}
 
         bpy.context.scene.render.filepath = render_file_full_path
