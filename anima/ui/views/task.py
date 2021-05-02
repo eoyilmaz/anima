@@ -357,42 +357,28 @@ class TaskTreeView(QtWidgets.QTreeView):
                 menu.addSeparator()
                 if defaults.is_power_user(logged_in_user):
                     create_sub_menu.addSeparator()
-                    update_task_action = \
-                        update_sub_menu.addAction(u'\uf044 Update Task...')
+                    update_task_action = update_sub_menu.addAction(u'\uf044 Update Task...')
 
-                    upload_thumbnail_action = \
-                        update_sub_menu.addAction(
-                            u'\uf03e Upload Thumbnail...'
-                        )
+                    upload_thumbnail_action = update_sub_menu.addAction(u'\uf03e Upload Thumbnail...')
 
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
-                    export_to_json_action = \
-                        create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+                    export_to_json_action = create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
 
-                    import_from_json_action = \
-                        create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
+                    import_from_json_action = create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
                     create_sub_menu.addSeparator()
 
-                    create_child_task_action = \
-                        create_sub_menu.addAction(
-                            u'\uf0ae Create Child Task...'
-                        )
+                    create_child_task_action = create_sub_menu.addAction(u'\uf0ae Create Child Task...')
 
-                    duplicate_task_hierarchy_action = \
-                        create_sub_menu.addAction(
-                            u'\uf0c5 Duplicate Task Hierarchy...'
-                        )
-                    delete_task_action = \
-                        menu.addAction(u'\uf1f8 Delete Task...')
+                    duplicate_task_hierarchy_action = create_sub_menu.addAction(u'\uf0c5 Duplicate Task Hierarchy...')
+                    delete_task_action = menu.addAction(u'\uf1f8 Delete Task...')
 
                     menu.addSeparator()
 
                 # create the status_menu
                 status_menu = update_sub_menu.addMenu('Status')
 
-                fix_task_status_action = \
-                    status_menu.addAction(u'\uf0e8 Fix Task Status')
+                fix_task_status_action = status_menu.addAction(u'\uf0e8 Fix Task Status')
 
                 assert isinstance(status_menu, QtWidgets.QMenu)
                 status_menu.addSeparator()
@@ -403,12 +389,9 @@ class TaskTreeView(QtWidgets.QTreeView):
                 menu_style_sheet = ''
                 defaults_status_colors = defaults.status_colors
                 for status_code in defaults.status_colors:
-                    change_status_menu_action = \
-                        status_menu.addAction(status_code)
+                    change_status_menu_action = status_menu.addAction(status_code)
 
-                    change_status_menu_action.setObjectName(
-                        'status_%s' % status_code
-                    )
+                    change_status_menu_action.setObjectName('status_%s' % status_code)
 
                     change_status_menu_actions.append(
                         change_status_menu_action
@@ -627,6 +610,23 @@ class TaskTreeView(QtWidgets.QTreeView):
                         from stalker.db.session import DBSession
                         from stalker import Task
                         task = Task.query.get(item.task.id)
+
+                        # get the next sibling or the previous
+                        # to select after deletion
+                        select_task = item.parent.task
+                        if task.parent:
+                            all_siblings = list(Task.query.filter(Task.parent == task.parent).order_by(Task.name).all())
+                            if len(all_siblings) > 1:
+                                sibling_index = all_siblings.index(task)
+                                if sibling_index < len(all_siblings) - 1:
+                                    # this is not the last task in the list
+                                    # select next one
+                                    select_task = all_siblings[sibling_index + 1]
+                                elif sibling_index == len(all_siblings) - 1:
+                                    # this is the last task
+                                    # select previous task
+                                    select_task = all_siblings[sibling_index - 1]
+
                         DBSession.delete(task)
                         DBSession.commit()
                         # reload the parent
@@ -634,7 +634,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                             item.parent.reload()
                         else:
                             self.fill()
-                        self.find_and_select_entity_item(item.parent.task)
+                        # either select the next or previous task or the parent
+                        self.find_and_select_entity_item(select_task)
 
                 elif selected_item is export_to_json_action:
                     # show a file browser
