@@ -165,6 +165,7 @@ class ShotClip(object):
                 bid_unit='min',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(anim_task)
 
@@ -179,6 +180,7 @@ class ShotClip(object):
                 bid_unit='min',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(camera_task)
 
@@ -188,11 +190,12 @@ class ShotClip(object):
             cleanup_task = Task(
                 name='Cleanup',
                 parent=shot,
-                type=self.get_type('Comp'),
+                type=self.get_type('Cleanup'),
                 bid_timing=10,
                 bid_unit='min',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(cleanup_task)
 
@@ -207,6 +210,7 @@ class ShotClip(object):
                 bid_unit='min',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(comp_task)
 
@@ -221,6 +225,7 @@ class ShotClip(object):
                 bid_unit='min',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(lighting_task)
 
@@ -236,8 +241,19 @@ class ShotClip(object):
                 schedule_model='duration',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
+                description='Autocreated by Resolve',
             )
             DBSession.add(plate_task)
+
+        # Create a dummy version if there is non
+        from stalker import Version
+        all_versions = Version.query.filter(Version.task == plate_task).all()
+        if not all_versions:
+            v = Version(
+                task=plate_task,
+                take_name='Main',  # TODO: use the track name as take
+                description='Autocreated by Resolve',
+            )
 
         # set the status the task
         with DBSession.no_autoflush:
