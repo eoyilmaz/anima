@@ -127,6 +127,12 @@ class TaskTreeView(QtWidgets.QTreeView):
             self.show_context_menu
         )
 
+        QtCore.QObject.connect(
+            self,
+            QtCore.SIGNAL("doubleClicked(const QModelIndex&)"),
+            self.double_clicked_on_entity
+        )
+
     def replace_with_other(self, layout, index, tree_view=None):
         """Replaces the given tree_view with itself
 
@@ -826,6 +832,64 @@ class TaskTreeView(QtWidgets.QTreeView):
                         )
                     except AttributeError:
                         pass
+
+    def double_clicked_on_entity(self, index):
+        """runs when double clicked on an leaf entity
+
+        :param index:
+        :return:
+        """
+        model = self.model()
+        item = model.itemFromIndex(index)
+        if not item:
+            return
+
+        if item.hasChildren():
+            return
+
+        logger.debug('item : %s' % item)
+        task_id = None
+        entity = None
+
+        try:
+            if item.task:
+                task_id = item.task.id
+        except AttributeError:
+            return
+
+        from stalker import Task
+        if item.task.entity_type == 'Task':
+
+            if task_id:
+                from stalker import SimpleEntity
+                entity = SimpleEntity.query.get(task_id)
+
+            from anima.ui import task_dialog
+            task_main_dialog = task_dialog.MainDialog(
+                parent=self,
+                task=entity
+            )
+            task_main_dialog.exec_()
+            result = task_main_dialog.result()
+            task_main_dialog.deleteLater()
+
+            try:
+                # PySide and PySide2
+                accepted = QtWidgets.QDialog.DialogCode.Accepted
+            except AttributeError:
+                # PyQt4
+                accepted = QtWidgets.QDialog.Accepted
+
+            # refresh the task list
+            if result == accepted:
+                # just reload the same item
+                if item.parent:
+                    item.parent.reload()
+                else:
+                    # reload the entire
+                    self.fill()
+
+                self.find_and_select_entity_item(entity)
 
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item
