@@ -623,6 +623,12 @@ class TaskTreeView(QtWidgets.QTreeView):
                     if answer == QtWidgets.QMessageBox.Yes:
                         from stalker.db.session import DBSession
                         from stalker import Task
+
+                        task_ids = self.get_task_ids()
+                        tasks = Task.query.filter(Task.id.in_(task_ids)).all()
+                        logger.debug("task_ids: %s" % task_ids)
+                        logger.debug("tasks   : %s" % tasks)
+
                         task = Task.query.get(item.task.id)
 
                         # get the next sibling or the previous
@@ -641,7 +647,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                                     # select previous task
                                     select_task = all_siblings[sibling_index - 1]
 
-                        DBSession.delete(task)
+                        for task in tasks:
+                            DBSession.delete(task)
                         DBSession.commit()
                         # reload the parent
                         if item.parent:
