@@ -70,7 +70,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         # get the task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = None
+        task_ids = self.tasks_treeView.get_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
         from stalker import Task
         task = Task.query.get(task_id)
         # if the task is a leaf task then return it

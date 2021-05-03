@@ -82,6 +82,13 @@ class TaskTreeView(QtWidgets.QTreeView):
     """
 
     def __init__(self, *args, **kwargs):
+        # filter non Qt kwargs
+        allow_multi_selection = False
+        try:
+            allow_multi_selection = kwargs.pop('allow_multi_selection')
+        except KeyError:
+            pass
+
         self.project = kwargs.pop('project', None)
         self.show_completed_projects = False
 
@@ -93,8 +100,9 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.setUniformRowHeights(True)
         self.header().setCascadingSectionResizes(True)
 
-        # # allow multiple selection
-        # self.setSelectionMode(self.MultiSelection)
+        # allow multiple selection
+        if allow_multi_selection:
+            self.setSelectionMode(self.ExtendedSelection)
 
         # delegate = TaskItemDelegate(self)
         # self.setItemDelegate(delegate)
@@ -1009,11 +1017,12 @@ class TaskTreeView(QtWidgets.QTreeView):
             QtCore.Qt.MatchRecursive
         )
 
-    def get_task_id(self):
+    def get_task_ids(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
         or project
         """
-        task_id = None
+        from anima.ui.models.task import TaskItem
+        task_ids = []
         selection_model = self.selectionModel()
         logger.debug('selection_model: %s' % selection_model)
 
@@ -1021,14 +1030,15 @@ class TaskTreeView(QtWidgets.QTreeView):
         logger.debug('selected indexes : %s' % indexes)
 
         if indexes:
-            current_index = indexes[0]
-            logger.debug('current_index : %s' % current_index)
-
             item_model = self.model()
-            current_item = item_model.itemFromIndex(current_index)
 
-            if current_item:
-                task_id = current_item.task.id
+            logger.debug('indexes: %s' % indexes)
+            for index in indexes:
+                current_item = item_model.itemFromIndex(index)
 
-        logger.debug('task_id: %s' % task_id)
-        return task_id
+                if current_item and isinstance(current_item, TaskItem):
+                    task_id = current_item.task.id
+                    task_ids.append(task_id)
+
+        logger.debug('task_ids: %s' % task_ids)
+        return task_ids

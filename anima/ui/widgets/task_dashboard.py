@@ -72,6 +72,12 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         horizontal_layout3.addWidget(self.watch_task_button)
         horizontal_layout3.addWidget(self.fix_task_status_button)
 
+        QtCore.QObject.connect(
+            self.fix_task_status_button,
+            QtCore.SIGNAL("clicked()"),
+            self.fix_task_status
+        )
+
         # Add Status Label
         vertical_layout3 = QtWidgets.QVBoxLayout()
         from anima.ui.widgets.task_status_label import TaskStatusLabel
@@ -227,3 +233,14 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_notes_widget.task = self.task
         self.task_notes_widget.fill_ui()
 
+    def fix_task_status(self):
+        """fix current task status
+        """
+        from stalker import Task
+        assert isinstance(self.task, Task)
+        from anima import utils
+        utils.fix_task_statuses(self.task)
+
+        from stalker.db.session import DBSession
+        DBSession.add(self.task)
+        DBSession.commit()

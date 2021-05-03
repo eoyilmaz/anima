@@ -1160,8 +1160,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             accepted = QtWidgets.QDialog.Accepted
 
         if task_picker_main_dialog.result() == accepted:
-            parent_task_id = \
-                task_picker_main_dialog.tasks_treeView.get_task_id()
+            parent_task_id = None
+            task_ids = task_picker_main_dialog.tasks_treeView.get_task_ids()
+            if task_ids:
+                parent_task_id = task_ids[0]
 
             if parent_task_id is None:
                 return
@@ -1313,7 +1315,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_picker_main_dialog.exec_()
 
         if task_picker_main_dialog.result() == accepted:
-            task_id = task_picker_main_dialog.tasks_treeView.get_task_id()
+            task_id = None
+            task_ids = task_picker_main_dialog.tasks_treeView.get_task_ids()
+            if task_ids:
+                task_id = task_ids[0]
+
             from stalker import Task
             task = Task.query.get(task_id)
 

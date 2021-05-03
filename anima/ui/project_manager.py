@@ -273,7 +273,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.project_dock_widget.setObjectName('project_dock_widget')
         # create the TaskTreeView as the main widget
         from anima.ui.views.task import TaskTreeView
-        self.tasks_tree_view = TaskTreeView(parent=self)
+        self.tasks_tree_view = TaskTreeView(parent=self, allow_multi_selection=True)
         self.tasks_tree_view.setEditTriggers(
             QtWidgets.QAbstractItemView.NoEditTriggers
         )
@@ -307,7 +307,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """runs when the tasks tree view changed
         """
         # get the currently selected task
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
+
         from stalker import Task
         task = Task.query.get(task_id)
 

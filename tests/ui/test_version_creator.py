@@ -435,10 +435,10 @@ class VersionCreatorTester(unittest.TestCase):
                 self.dialog.tasks_treeView
             )
             # get the current selection
-            self.assertEqual(
-                task,
-                self.dialog.tasks_treeView.get_task_id()
-            )
+            task_ids = self.dialog.tasks_treeView.get_task_ids()
+            if task_ids:
+                task_id = task_ids[0]
+            self.assertEqual(task, task_id)
 
         # check if non of the other tasks or their parents are visible
         for task in self.all_tasks:
@@ -448,8 +448,12 @@ class VersionCreatorTester(unittest.TestCase):
                     self.dialog.tasks_treeView
                 )
                 # get the current selection
+                task_id = None
+                task_ids = self.dialog.tasks_treeView.get_task_ids()
+                if task_ids:
+                    task_id = task_ids[0]
                 self.assertTrue(
-                    self.dialog.tasks_treeView.get_task_id() is None
+                    task_id is None
                 )
 
         # now un check it and check if all tasks are shown
@@ -461,7 +465,11 @@ class VersionCreatorTester(unittest.TestCase):
                 self.dialog.tasks_treeView
             )
             # get the current selection
-            self.assertEqual(self.dialog.tasks_treeView.get_task_id(), task)
+            task_id = None
+            task_ids = self.dialog.tasks_treeView.get_task_ids()
+            if task_ids:
+                task_id = task_ids[0]
+            self.assertEqual(task_id, task)
 
     def test_takes_listWidget_lists_Main_by_default(self):
         """testing if the takes_listWidget lists "Main" by default
