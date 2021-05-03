@@ -592,7 +592,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         latest_comp_name = None
         if comp_task.versions:
             latest_comp_version = comp_task.versions[0].latest_version
-            latest_comp_name = latest_comp_version.filename.strip('.comp')
+            latest_comp_name = os.path.splitext(latest_comp_version.filename)[0]
 
         resolve_path = None
         if latest_comp_name:
