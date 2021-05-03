@@ -455,6 +455,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.update_bid_check_box = QtWidgets.QCheckBox(self)
         self.update_bid_check_box.setText("")
+        self.update_bid_check_box.setChecked(True)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
@@ -494,18 +495,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ----------------------------------------------
         # Set Tab Order
         self.setTabOrder(self.projects_combo_box, self.entity_type_combo_box)
-        self.setTabOrder(
-            self.entity_type_combo_box, self.pick_parent_task_push_button
-        )
-        self.setTabOrder(
-            self.pick_parent_task_push_button, self.name_line_edit
-        )
-        self.setTabOrder(
-            self.name_line_edit, self.code_line_edit
-        )
-        self.setTabOrder(
-            self.code_line_edit, self.task_type_combo_box
-        )
+        self.setTabOrder(self.entity_type_combo_box, self.pick_parent_task_push_button)
+        self.setTabOrder(self.pick_parent_task_push_button, self.name_line_edit)
+        self.setTabOrder(self.name_line_edit, self.code_line_edit)
+        self.setTabOrder(self.code_line_edit, self.task_type_combo_box)
 
         self.setTabOrder(self.task_type_combo_box, self.asset_type_combo_box)
         self.setTabOrder(self.asset_type_combo_box, self.sequence_combo_box)
@@ -513,33 +506,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setTabOrder(self.fps_spin_box, self.cut_in_spin_box)
         self.setTabOrder(self.cut_in_spin_box, self.cut_out_spin_box)
         self.setTabOrder(self.cut_out_spin_box, self.depends_to_listWidget)
-        self.setTabOrder(
-            self.depends_to_listWidget, self.add_depending_task_pushButton
-        )
-        self.setTabOrder(
-            self.add_depending_task_pushButton,
-            self.remove_depending_task_pushButton
-        )
-        self.setTabOrder(
-            self.remove_depending_task_pushButton, self.resources_combo_box
-        )
+        self.setTabOrder(self.depends_to_listWidget, self.add_depending_task_pushButton)
+        self.setTabOrder(self.add_depending_task_pushButton, self.remove_depending_task_pushButton)
+        self.setTabOrder(self.remove_depending_task_pushButton, self.resources_combo_box)
         self.setTabOrder(self.resources_combo_box, self.resources_listWidget)
         self.setTabOrder(self.resources_listWidget, self.responsible_comboBox)
-        self.setTabOrder(
-            self.responsible_comboBox, self.responsible_listWidget
-        )
-        self.setTabOrder(
-            self.responsible_listWidget, self.schedule_timing_spin_box
-        )
-        self.setTabOrder(
-            self.schedule_timing_spin_box, self.schedule_unit_combo_box
-        )
-        self.setTabOrder(
-            self.schedule_unit_combo_box, self.schedule_model_combo_box
-        )
-        self.setTabOrder(
-            self.schedule_model_combo_box, self.update_bid_check_box
-        )
+        self.setTabOrder(self.responsible_comboBox, self.responsible_listWidget)
+        self.setTabOrder(self.responsible_listWidget, self.schedule_timing_spin_box)
+        self.setTabOrder(self.schedule_timing_spin_box, self.schedule_unit_combo_box)
+        self.setTabOrder(self.schedule_unit_combo_box, self.schedule_model_combo_box)
+        self.setTabOrder(self.schedule_model_combo_box, self.update_bid_check_box)
         self.setTabOrder(self.update_bid_check_box, self.priority_spin_box)
 
     def show(self):
