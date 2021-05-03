@@ -432,9 +432,9 @@ class TaskTreeView(QtWidgets.QTreeView):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        selected_item = menu.exec_(global_position)
-        if selected_item:
-            if selected_item is reload_action:
+        selected_action = menu.exec_(global_position)
+        if selected_action:
+            if selected_action is reload_action:
                 if isinstance(entity, Project):
                     self.fill()
                     self.find_and_select_entity_item(item.task)
@@ -442,7 +442,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     item.reload()
 
             if create_project_action \
-               and selected_item is create_project_action:
+               and selected_action is create_project_action:
                 from anima.ui import project_dialog
                 project_main_dialog = project_dialog.MainDialog(
                     parent=self,
@@ -465,10 +465,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                     entity.id
                 )
 
-                if selected_item is open_in_web_browser_action:
+                if selected_action is open_in_web_browser_action:
                     import webbrowser
                     webbrowser.open(url)
-                elif selected_item is open_in_file_browser_action:
+                elif selected_action is open_in_file_browser_action:
                     from anima import utils
                     try:
                         utils.open_browser_in_location(entity.absolute_path)
@@ -479,7 +479,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                             "%s" % e,
                             QtWidgets.QMessageBox.Ok
                         )
-                elif selected_item is copy_url_action:
+                elif selected_action is copy_url_action:
                     clipboard = QtWidgets.QApplication.clipboard()
                     clipboard.setText(url)
 
@@ -492,7 +492,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         url,
                         QtWidgets.QMessageBox.Ok
                     )
-                elif selected_item is copy_id_to_clipboard:
+                elif selected_action is copy_id_to_clipboard:
                     clipboard = QtWidgets.QApplication.clipboard()
                     clipboard.setText('%s' % entity.id)
 
@@ -505,7 +505,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         QtWidgets.QMessageBox.Ok
                     )
 
-                elif selected_item is create_time_log_action:
+                elif selected_action is create_time_log_action:
                     from anima.ui import time_log_dialog
                     time_log_dialog_main_dialog = time_log_dialog.MainDialog(
                         parent=self,
@@ -525,7 +525,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         # reselect the same task
                         self.find_and_select_entity_item(entity)
 
-                elif selected_item is update_task_action:
+                elif selected_action is update_task_action:
                     from anima.ui import task_dialog
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self,
@@ -545,7 +545,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                             self.fill()
                         self.find_and_select_entity_item(entity)
 
-                elif selected_item is upload_thumbnail_action:
+                elif selected_action is upload_thumbnail_action:
                     from anima.ui import utils as ui_utils
                     thumbnail_full_path = ui_utils.choose_thumbnail(
                         self,
@@ -560,7 +560,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     # get the current task
                     anima.utils.upload_thumbnail(entity, thumbnail_full_path)
 
-                elif selected_item is create_child_task_action:
+                elif selected_action is create_child_task_action:
                     from anima.ui import task_dialog
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self,
@@ -579,7 +579,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                             self.fill()
                         self.find_and_select_entity_item(task)
 
-                elif selected_item is duplicate_task_hierarchy_action:
+                elif selected_action is duplicate_task_hierarchy_action:
                     duplicate_task_hierarchy_dialog = \
                         DuplicateTaskHierarchyDialog(
                             parent=self, duplicated_task_name=item.task.name
@@ -612,7 +612,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                             item.parent.reload()
                             self.find_and_select_entity_item(new_task)
 
-                elif selected_item is delete_task_action:
+                elif selected_action is delete_task_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
                         'Delete Task?',
@@ -651,14 +651,20 @@ class TaskTreeView(QtWidgets.QTreeView):
                             DBSession.delete(task)
                         DBSession.commit()
                         # reload the parent
-                        if item.parent:
-                            item.parent.reload()
+                        unique_parent_items = []
+                        for item in self.get_selected_task_items():
+                            if item.parent and item.parent not in unique_parent_items:
+                                unique_parent_items.append(item.parent)
+
+                        if unique_parent_items:
+                            for parent_item in unique_parent_items:
+                                parent_item.reload()
                         else:
                             self.fill()
                         # either select the next or previous task or the parent
                         self.find_and_select_entity_item(select_task)
 
-                elif selected_item is export_to_json_action:
+                elif selected_action is export_to_json_action:
                     # show a file browser
                     dialog = QtWidgets.QFileDialog(self, "Choose file")
                     dialog.setNameFilter("JSON Files (*.json)")
@@ -694,7 +700,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                                     'Task data Export to JSON!',
                                 )
 
-                elif selected_item is import_from_json_action:
+                elif selected_action is import_from_json_action:
                     # show a file browser
                     dialog = QtWidgets.QFileDialog(self, "Choose file")
                     dialog.setNameFilter("JSON Files (*.json)")
@@ -740,7 +746,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                                     'New Tasks are created',
                                 )
 
-                elif selected_item is create_project_structure_action:
+                elif selected_action is create_project_structure_action:
                     answer = QtWidgets.QMessageBox.question(
                         self,
                         'Create Project Folder Structure?',
@@ -763,20 +769,26 @@ class TaskTreeView(QtWidgets.QTreeView):
                     else:
                         return
 
-                elif selected_item is fix_task_status_action:
-                    from stalker import Task
-                    if isinstance(entity, Task):
-                        from anima import utils
-                        utils.fix_task_statuses(entity)
+                elif selected_action is fix_task_status_action:
+                    from stalker.db.session import DBSession
+                    from stalker import SimpleEntity, Task
+                    from anima import utils
+                    entities = SimpleEntity.query.filter(SimpleEntity.id.in_(self.get_task_ids())).all()
+                    for entity in entities:
+                        if isinstance(entity, Task):
+                            utils.fix_task_statuses(entity)
+                            DBSession.add(entity)
+                    DBSession.commit()
 
-                        from stalker.db.session import DBSession
-                        DBSession.add(entity)
-                        DBSession.commit()
+                    unique_parent_items = []
+                    for item in self.get_selected_task_items():
+                        if item.parent and item.parent not in unique_parent_items:
+                            unique_parent_items.append(item.parent)
 
-                        if item.parent:
-                            item.parent.reload()
+                    for parent_item in unique_parent_items:
+                        parent_item.reload()
 
-                elif selected_item is update_project_action:
+                elif selected_action is update_project_action:
                     from anima.ui import project_dialog
                     project_main_dialog = project_dialog.MainDialog(
                         parent=self,
@@ -794,7 +806,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     project_main_dialog.deleteLater()
 
-                elif selected_item is assign_users_action:
+                elif selected_action is assign_users_action:
                     from anima.ui import project_users_dialog
                     project_users_main_dialog = \
                         project_users_dialog.MainDialog(
@@ -806,9 +818,9 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     project_users_main_dialog.deleteLater()
 
-                elif selected_item in change_status_menu_actions:
+                elif selected_action in change_status_menu_actions:
                     # get the status code
-                    status_code = selected_item.text()
+                    status_code = selected_action.text()
 
                     from sqlalchemy import func
                     status = \
@@ -840,7 +852,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                 else:
                     try:
                         # go to the dependencies
-                        dep_task = selected_item.task
+                        dep_task = selected_action.task
                         self.find_and_select_entity_item(
                             dep_task,
                             self
@@ -1024,28 +1036,33 @@ class TaskTreeView(QtWidgets.QTreeView):
             QtCore.Qt.MatchRecursive
         )
 
+    def get_selected_task_items(self):
+        """returns the selected TaskItems
+        """
+        from anima.ui.models.task import TaskItem
+        selection_model = self.selectionModel()
+        logger.debug('selection_model: %s' % selection_model)
+        indexes = selection_model.selectedIndexes()
+        logger.debug('selected indexes : %s' % indexes)
+        task_items = []
+        if indexes:
+            item_model = self.model()
+            logger.debug('indexes: %s' % indexes)
+            for index in indexes:
+                current_item = item_model.itemFromIndex(index)
+                if current_item and isinstance(current_item, TaskItem):
+                    task_items.append(current_item)
+        logger.debug('task_items: %s' % task_items)
+        return task_items
+
     def get_task_ids(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
         or project
         """
-        from anima.ui.models.task import TaskItem
         task_ids = []
-        selection_model = self.selectionModel()
-        logger.debug('selection_model: %s' % selection_model)
-
-        indexes = selection_model.selectedIndexes()
-        logger.debug('selected indexes : %s' % indexes)
-
-        if indexes:
-            item_model = self.model()
-
-            logger.debug('indexes: %s' % indexes)
-            for index in indexes:
-                current_item = item_model.itemFromIndex(index)
-
-                if current_item and isinstance(current_item, TaskItem):
-                    task_id = current_item.task.id
-                    task_ids.append(task_id)
+        for item in self.get_selected_task_items():
+            task_id = item.task.id
+            task_ids.append(task_id)
 
         logger.debug('task_ids: %s' % task_ids)
         return task_ids
