@@ -10,10 +10,19 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 def get_icon(icon_name):
     """Returns an icon from ui library
     """
-    here = os.path.abspath(os.path.dirname(__file__))
-    images_path = os.path.join(here, 'images')
-    icon_full_path = os.path.join(images_path, icon_name)
-    return QtGui.QIcon(icon_full_path)
+    import time
+    start_time = time.time()
+    # get the icon from cache if possible
+    from anima.ui import ICON_CACHE
+    q_icon = ICON_CACHE.get(icon_name)
+    if not q_icon:
+        here = os.path.abspath(os.path.dirname(__file__))
+        images_path = os.path.join(here, 'images')
+        icon_full_path = os.path.join(images_path, icon_name)
+        q_icon = QtGui.QIcon(icon_full_path)
+        ICON_CACHE[icon_name] = q_icon
+    logger.debug("get_icon took: %0.6f s" % (time.time() - start_time))
+    return q_icon
 
 
 def clear_thumbnail(graphics_view):
