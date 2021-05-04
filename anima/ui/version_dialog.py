@@ -2367,7 +2367,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_id = None
         task_ids = self.tasks_tree_view.get_task_ids()
         if task_ids:
-            task_id = task_id[0]
+            task_id = task_ids[0]
 
         if task_id:
             from anima.ui import utils as ui_utils
