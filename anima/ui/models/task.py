@@ -234,12 +234,12 @@ class TaskItem(QtGui.QStandardItem):
                 .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id) \
                 .outerjoin(User, Task_Resources.c.resource_id == User.id) \
                 .group_by(
-                Task.id,
-                Task.name,
-                Task.entity_type,
-                Task.status_id,
-                subquery.exists().label('has_children')
-            )
+                    Task.id,
+                    Task.name,
+                    Task.entity_type,
+                    Task.status_id,
+                    subquery.exists().label('has_children')
+                )
 
             if self.task.entity_type != 'Project':
                 # query child tasks

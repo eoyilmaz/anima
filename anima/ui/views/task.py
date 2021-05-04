@@ -115,13 +115,13 @@ class TaskTreeView(QtWidgets.QTreeView):
         QtCore.QObject.connect(
             self,
             QtCore.SIGNAL('expanded(QModelIndex)'),
-            self.auto_fit_column
+            self.expand_all_selected
         )
 
         QtCore.QObject.connect(
             self,
             QtCore.SIGNAL('collapsed(QModelIndex)'),
-            self.auto_fit_column
+            self.collapse_all_selected
         )
 
         # custom context menu for the tasks_treeView
@@ -439,7 +439,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                     self.fill()
                     self.find_and_select_entity_item(item.task)
                 else:
-                    item.reload()
+                    for item in self.get_selected_task_items():
+                        item.reload()
 
             if create_project_action \
                and selected_action is create_project_action:
@@ -1066,3 +1067,23 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         logger.debug('task_ids: %s' % task_ids)
         return task_ids
+
+    def expand_all_selected(self, index):
+        """expands all the selected items
+
+        :param index:
+        :return:
+        """
+        for item in self.get_selected_task_items():
+            self.setExpanded(item.index(), True)
+        self.auto_fit_column()
+
+    def collapse_all_selected(self, index):
+        """collapse all the selected items
+
+        :param index:
+        :return:
+        """
+        for item in self.get_selected_task_items():
+            self.setExpanded(item.index(), False)
+        self.auto_fit_column()
