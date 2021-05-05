@@ -64,4 +64,6 @@ os.chmod(
     stat.S_IXUSR - stat.S_IXGRP - stat.S_IXOTH
 )
 
+TIMING_RESOLUTION = 10  # in minutes
+
 defaults = Config()
