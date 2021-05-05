@@ -308,9 +308,9 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         # get the currently selected task
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
-            task_id = task_ids[0]
+            task_id = task_ids[-1]
 
         from stalker import Task
         task = Task.query.get(task_id)

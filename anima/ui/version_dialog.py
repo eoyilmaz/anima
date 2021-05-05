@@ -1454,7 +1454,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 
@@ -1701,7 +1701,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker import Task
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 
@@ -1789,7 +1789,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # create a new version
         from stalker import Task
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 
@@ -2365,7 +2365,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # get the current task
         self.clear_thumbnail_push_button.setEnabled(False)
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 
@@ -2384,7 +2384,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # get the current task
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 
@@ -2424,7 +2424,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         print("not returned by thumbnail_graphics_view")
 
         task_id = None
-        task_ids = self.tasks_tree_view.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
 

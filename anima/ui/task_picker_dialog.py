@@ -35,18 +35,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # create the custom task tree view
 
         from anima.ui.views.task import TaskTreeView
-        self.tasks_treeView = TaskTreeView(project=project)
+        self.tasks_tree_view = TaskTreeView(project=project)
 
-        self.tasks_treeView.replace_with_other(
+        self.tasks_tree_view.replace_with_other(
             self.verticalLayout,
             0
         )
 
-        self.tasks_treeView.fill()
+        self.tasks_tree_view.fill()
 
         # setup the double click signal
         QtCore.QObject.connect(
-            self.tasks_treeView,
+            self.tasks_tree_view,
             QtCore.SIGNAL('doubleClicked(QModelIndex)'),
             self.tasks_tree_view_double_clicked
         )
@@ -71,7 +71,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # get the task
         task_id = None
-        task_ids = self.tasks_treeView.get_task_ids()
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
             task_id = task_ids[0]
         from stalker import Task

@@ -530,7 +530,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     from anima.ui import task_dialog
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self,
-                        task=entity
+                        tasks=self.get_selected_tasks()
                     )
                     task_main_dialog.exec_()
                     result = task_main_dialog.result()
@@ -625,9 +625,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         from stalker.db.session import DBSession
                         from stalker import Task
 
-                        task_ids = self.get_task_ids()
-                        tasks = Task.query.filter(Task.id.in_(task_ids)).all()
-                        logger.debug("task_ids: %s" % task_ids)
+                        tasks = self.get_selected_tasks()
                         logger.debug("tasks   : %s" % tasks)
 
                         task = Task.query.get(item.task.id)
@@ -774,7 +772,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     from stalker.db.session import DBSession
                     from stalker import SimpleEntity, Task
                     from anima import utils
-                    entities = SimpleEntity.query.filter(SimpleEntity.id.in_(self.get_task_ids())).all()
+                    entities = SimpleEntity.query.filter(SimpleEntity.id.in_(self.get_selected_task_ids())).all()
                     for entity in entities:
                         if isinstance(entity, Task):
                             utils.fix_task_statuses(entity)
@@ -895,7 +893,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             from anima.ui import task_dialog
             task_main_dialog = task_dialog.MainDialog(
                 parent=self,
-                task=entity
+                tasks=[entity]
             )
             task_main_dialog.exec_()
             result = task_main_dialog.result()
@@ -1056,7 +1054,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         logger.debug('task_items: %s' % task_items)
         return task_items
 
-    def get_task_ids(self):
+    def get_selected_task_ids(self):
         """returns the task from the UI, it is an task, asset, shot, sequence
         or project
         """
@@ -1067,6 +1065,13 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         logger.debug('task_ids: %s' % task_ids)
         return task_ids
+
+    def get_selected_tasks(self):
+        """returns the selected tasks
+        """
+        task_ids = self.get_selected_task_ids()
+        from stalker import SimpleEntity
+        return list(SimpleEntity.query.filter(SimpleEntity.id.in_(task_ids)).all())
 
     def expand_all_selected(self, index):
         """expands all the selected items
