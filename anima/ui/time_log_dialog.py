@@ -766,7 +766,6 @@ order by cast("TimeLogs".start as date)
         logger.debug("q_time(RAW)    : %s" % q_time)
         from anima import TIMING_RESOLUTION
 
-        # secs = q_time.msecsSinceStartOfDay() / 1000
         start_of_today = QtCore.QTime(0, 0)
         secs = start_of_today.secsTo(q_time)
 
@@ -869,14 +868,18 @@ order by cast("TimeLogs".start as date)
 
         # q_time can not be smaller thane TIMING_RESOLUTION
         from anima import TIMING_RESOLUTION
-        if q_time.msecsSinceStartOfDay() / 1000 < TIMING_RESOLUTION * 60:
+
+        start_of_today = QtCore.QTime(0, 0)
+        secs_since_start_of_day = start_of_today.secsTo(q_time)
+
+        if secs_since_start_of_day < TIMING_RESOLUTION * 60:
             # clip to TIMING_RESOLUTION
             q_time = QtCore.QTime(0, 0)
             q_time = q_time.addSecs(TIMING_RESOLUTION * 60)
             self.effort_time_edit.setTime(q_time)
 
         start_time = self.start_time_edit.time()
-        end_time = start_time.addMSecs(q_time.msecsSinceStartOfDay())
+        end_time = start_time.addSecs(start_of_today.secsTo(q_time))
         self.end_time_edit.setTime(end_time)
 
         self.updating_timings = False

@@ -435,7 +435,7 @@ class VersionCreatorTester(unittest.TestCase):
                 self.dialog.tasks_treeView
             )
             # get the current selection
-            task_ids = self.dialog.tasks_treeView.get_task_ids()
+            task_ids = self.dialog.tasks_treeView.get_selected_task_ids()
             if task_ids:
                 task_id = task_ids[0]
             self.assertEqual(task, task_id)
@@ -449,7 +449,7 @@ class VersionCreatorTester(unittest.TestCase):
                 )
                 # get the current selection
                 task_id = None
-                task_ids = self.dialog.tasks_treeView.get_task_ids()
+                task_ids = self.dialog.tasks_treeView.get_selected_task_ids()
                 if task_ids:
                     task_id = task_ids[0]
                 self.assertTrue(
@@ -466,7 +466,7 @@ class VersionCreatorTester(unittest.TestCase):
             )
             # get the current selection
             task_id = None
-            task_ids = self.dialog.tasks_treeView.get_task_ids()
+            task_ids = self.dialog.tasks_treeView.get_selected_task_ids()
             if task_ids:
                 task_id = task_ids[0]
             self.assertEqual(task_id, task)
