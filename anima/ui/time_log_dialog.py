@@ -766,14 +766,16 @@ order by cast("TimeLogs".start as date)
         logger.debug("q_time(RAW)    : %s" % q_time)
         from anima import TIMING_RESOLUTION
 
-        secs = q_time.msecsSinceStartOfDay() / 1000
+        # secs = q_time.msecsSinceStartOfDay() / 1000
+        start_of_today = QtCore.QTime(0, 0)
+        secs = start_of_today.secsTo(q_time)
+
         logger.debug('secs       : %s' % secs)
         logger.debug("TIMING_RESOLUTION: %s" % TIMING_RESOLUTION)
         rounded_secs = (secs // (TIMING_RESOLUTION * 60)) * TIMING_RESOLUTION * 60
-        start_of_the_day = QtCore.QTime(0, 0)
 
         logger.debug("rounded_secs: %s" % rounded_secs)
-        rounded_q_time = start_of_the_day.addSecs(rounded_secs)
+        rounded_q_time = start_of_today.addSecs(rounded_secs)
 
         logger.debug("q_time(Rounded): %s" % rounded_q_time)
 
