@@ -494,15 +494,17 @@ class TaskTreeView(QtWidgets.QTreeView):
                         QtWidgets.QMessageBox.Ok
                     )
                 elif selected_action is copy_id_to_clipboard:
+
                     clipboard = QtWidgets.QApplication.clipboard()
-                    clipboard.setText('%s' % entity.id)
+                    selected_entity_ids = ', '.join(list(map(str, self.get_selected_task_ids())))
+                    clipboard.setText(selected_entity_ids)
 
                     # and warn the user about a new version is created and the
                     # clipboard is set to the new version full path
                     QtWidgets.QMessageBox.warning(
                         self,
                         "ID Copied To Clipboard",
-                        "ID %s is copied to clipboard!" % entity.id,
+                        "IDs are copied to clipboard!<br>%s" % selected_entity_ids,
                         QtWidgets.QMessageBox.Ok
                     )
 
