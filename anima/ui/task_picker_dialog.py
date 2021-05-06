@@ -28,14 +28,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     :param project: The pre-selected project to show the tasks of.
     """
 
-    def __init__(self, parent=None, project=None):
+    def __init__(self, parent=None, project=None, allow_multi_selection=False):
         super(MainDialog, self).__init__(parent)
         self._setup_ui()
 
         # create the custom task tree view
 
         from anima.ui.views.task import TaskTreeView
-        self.tasks_tree_view = TaskTreeView(project=project)
+        self.tasks_tree_view = TaskTreeView(project=project, allow_multi_selection=allow_multi_selection)
 
         self.tasks_tree_view.replace_with_other(
             self.verticalLayout,
@@ -45,6 +45,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.tasks_tree_view.fill()
 
         # setup the double click signal
+        self.tasks_tree_view.doubleClicked.disconnect(self.tasks_tree_view.double_clicked_on_entity)
         QtCore.QObject.connect(
             self.tasks_tree_view,
             QtCore.SIGNAL('doubleClicked(QModelIndex)'),

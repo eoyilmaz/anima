@@ -1410,7 +1410,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         from anima.ui import task_picker_dialog
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self,
-            project=self.get_project()
+            project=self.get_project(),
+            allow_multi_selection=True
         )
 
         if self.last_selected_dependent_task:
@@ -1426,15 +1427,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_picker_main_dialog.exec_()
 
         if task_picker_main_dialog.result() == accepted:
-            task_id = None
-            task_ids = task_picker_main_dialog.tasks_tree_view.get_selected_task_ids()
-            if task_ids:
-                task_id = task_ids[0]
-
-            from stalker import Task
-            task = Task.query.get(task_id)
-
-            if task is not None:
+            tasks = task_picker_main_dialog.tasks_tree_view.get_selected_tasks()
+            for task in tasks:
                 if task.project != self.get_project():
                     QtWidgets.QMessageBox.critical(
                         self,
