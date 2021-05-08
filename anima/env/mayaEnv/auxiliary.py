@@ -2472,12 +2472,16 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     cacheable_node_references = {}
     for cacheable_node in cacheable_nodes:
         ref = cacheable_node.referenceFile()
+        # get the top most reference
+        parent_ref = ref.parent()
+        while parent_ref:
+            ref = parent_ref
+            parent_ref = ref.parent()
 
         # get related references
         # sometimes the node is parented or constrained to an object
         related_references = []
-        nodes_to_evaluate = [cacheable_node] + \
-            cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
+        nodes_to_evaluate = [cacheable_node] + cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
         for node in nodes_to_evaluate:
             for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
                 for input_node in constraint_node.inputs():
