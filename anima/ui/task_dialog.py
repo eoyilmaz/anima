@@ -766,9 +766,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         logger.debug("attr: %s" % attr)
         merged_items = []
+        from anima import __string_types__
         for item in items:
             value = getattr(item, attr)
-            if not isinstance(value, str) and hasattr(value, '__getitem__'):
+            if not isinstance(value, __string_types__) and hasattr(value, '__getitem__'):
                 merged_items += value
             else:
                 merged_items.append(value)
@@ -878,6 +879,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # entity_type
         entity_type = self.get_unique_items(self.tasks, "entity_type")
+        logger.debug("entity_type: %s" % entity_type)
         if entity_type:
             index = self.entity_type_combo_box.findText(entity_type)
             if index and index != self.entity_type_combo_box.currentIndex():
