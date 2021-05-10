@@ -39,6 +39,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.multi_selection_mode = False
         self._tasks = None
+
+        if not tasks:
+            tasks = []
         self.tasks = tasks
 
         self.mode = self.CREATE_MODE
