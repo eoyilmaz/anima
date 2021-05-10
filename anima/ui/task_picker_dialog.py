@@ -28,25 +28,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     :param project: The pre-selected project to show the tasks of.
     """
 
-    def __init__(self, parent=None, project=None):
+    def __init__(self, parent=None, project=None, allow_multi_selection=False):
         super(MainDialog, self).__init__(parent)
         self._setup_ui()
 
         # create the custom task tree view
 
         from anima.ui.views.task import TaskTreeView
-        self.tasks_treeView = TaskTreeView(project=project)
+        self.tasks_tree_view = TaskTreeView(project=project, allow_multi_selection=allow_multi_selection)
 
-        self.tasks_treeView.replace_with_other(
+        self.tasks_tree_view.replace_with_other(
             self.verticalLayout,
             0
         )
 
-        self.tasks_treeView.fill()
+        self.tasks_tree_view.fill()
 
         # setup the double click signal
+        self.tasks_tree_view.doubleClicked.disconnect(self.tasks_tree_view.double_clicked_on_entity)
         QtCore.QObject.connect(
-            self.tasks_treeView,
+            self.tasks_tree_view,
             QtCore.SIGNAL('doubleClicked(QModelIndex)'),
             self.tasks_tree_view_double_clicked
         )
@@ -70,7 +71,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         # get the task
-        task_id = self.tasks_treeView.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
         from stalker import Task
         task = Task.query.get(task_id)
         # if the task is a leaf task then return it

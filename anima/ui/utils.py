@@ -10,10 +10,43 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 def get_icon(icon_name):
     """Returns an icon from ui library
     """
-    here = os.path.abspath(os.path.dirname(__file__))
-    images_path = os.path.join(here, 'images')
-    icon_full_path = os.path.join(images_path, icon_name)
-    return QtGui.QIcon(icon_full_path)
+    import time
+    start_time = time.time()
+    # get the icon from cache if possible
+    from anima.ui import ICON_CACHE
+    q_icon = ICON_CACHE.get(icon_name)
+    if not q_icon:
+        logger.debug("getting icon from the cache!")
+        # use the local icon cache
+        import os
+        from anima import defaults
+        local_icon_cache_path = os.path.normpath(
+            os.path.expanduser(
+                os.path.join(defaults.local_cache_folder, "icons")
+            )
+        )
+        local_icon_full_path = os.path.join(local_icon_cache_path, "%s.png" % icon_name)
+        logger.debug("local_icon_full_path: %s" % local_icon_full_path)
+        if not os.path.exists(local_icon_full_path):
+            logger.debug("local icon cache not found: %s" % icon_name)
+            logger.debug("retrieving icon from library!")
+            here = os.path.abspath(os.path.dirname(__file__))
+            images_path = os.path.join(here, 'images')
+            icon_full_path = os.path.join(images_path, "%s.png" % icon_name)
+            logger.debug("icon_full_path: %s" % icon_full_path)
+
+            # copy to local cache folder
+            try:
+                os.makedirs(local_icon_cache_path)
+            except OSError:
+                pass
+
+            import shutil
+            shutil.copy(icon_full_path, local_icon_full_path)
+        q_icon = QtGui.QIcon(local_icon_full_path)
+        ICON_CACHE[icon_name] = q_icon
+    logger.debug("get_icon took: %0.6f s" % (time.time() - start_time))
+    return q_icon
 
 
 def clear_thumbnail(graphics_view):

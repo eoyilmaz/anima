@@ -13,6 +13,8 @@ QTPY = 'QtPy'  # support for https://www.gihub.com/motttoso/Qt.py
 qt_lib_key = "QT_LIB"
 qt_lib = PYSIDE
 
+ICON_CACHE = {}
+
 
 if qt_lib_key in os.environ:
     qt_lib = os.environ[qt_lib_key]

@@ -1453,7 +1453,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             logger.debug("tasks_tree_view is updating, so returning early")
             return
 
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
+
         logger.debug("task_id : %s" % task_id)
 
         # update the thumbnail
@@ -1696,7 +1700,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_table_widget.clear()
 
         from stalker import Task
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
+
         if not task_id:  # or not isinstance(task, Task):
             return
 
@@ -1780,7 +1788,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # create a new version
         from stalker import Task
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
 
         if not task_id:
             return None
@@ -2353,7 +2364,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # get the current task
         self.clear_thumbnail_push_button.setEnabled(False)
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
+
         if task_id:
             from anima.ui import utils as ui_utils
             from stalker import Task
@@ -2368,7 +2383,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """runs when the upload_thumbnail_pushButton is clicked
         """
         # get the current task
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
 
         if not task_id:
             return
@@ -2405,7 +2423,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
         print("not returned by thumbnail_graphics_view")
 
-        task_id = self.tasks_tree_view.get_task_id()
+        task_id = None
+        task_ids = self.tasks_tree_view.get_selected_task_ids()
+        if task_ids:
+            task_id = task_ids[0]
 
         if not task_id:
             return
