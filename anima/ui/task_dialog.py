@@ -838,7 +838,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # select the correct sequence
                 sequences = self.get_unique_items(self.tasks, "sequences")
                 if sequences:
-                    seq = sequences[0]
+                    seq = sequences
                     index = self.sequence_combo_box.findText(
                         seq.name,
                         match_exactly
