@@ -2472,11 +2472,12 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
     cacheable_node_references = {}
     for cacheable_node in cacheable_nodes:
         ref = cacheable_node.referenceFile()
-        # get the top most reference
-        parent_ref = ref.parent()
-        while parent_ref:
-            ref = parent_ref
+        if ref:
+            # get the top most reference
             parent_ref = ref.parent()
+            while parent_ref:
+                ref = parent_ref
+                parent_ref = ref.parent()
 
         # get related references
         # sometimes the node is parented or constrained to an object
