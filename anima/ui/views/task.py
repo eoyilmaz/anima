@@ -407,9 +407,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     change_status_menu_action.setObjectName('status_%s' % status_code)
 
-                    change_status_menu_actions.append(
-                        change_status_menu_action
-                    )
+                    change_status_menu_actions.append(change_status_menu_action)
 
                     menu_style_sheet = "%s %s" % (
                         menu_style_sheet,
@@ -824,19 +822,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                     status_code = selected_action.text()
 
                     from sqlalchemy import func
-                    status = \
-                        Status.query.filter(
-                            func.lower(Status.code) == func.lower(status_code)
-                        ).first()
+                    status = Status.query.filter(func.lower(Status.code) == func.lower(status_code)).first()
 
                     # change the status of the entity
                     # if it is a leaf task
                     # if it doesn't have any dependent_of
                     # assert isinstance(entity, Task)
-                    if isinstance(entity, Task):
-                        if entity.is_leaf and not entity.dependent_of:
+                    for task in self.get_selected_tasks():
+                        if task.is_leaf and not task.dependent_of:
                             # then we can update it
-                            entity.status = status
+                            task.status = status
 
                             # # fix other task statuses
                             # from anima import utils
@@ -844,7 +839,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                             # refresh the tree
                             from stalker.db.session import DBSession
-                            DBSession.add(entity)
+                            DBSession.add(task)
                             DBSession.commit()
 
                             if item.parent:
