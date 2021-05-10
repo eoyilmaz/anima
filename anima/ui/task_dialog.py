@@ -1829,7 +1829,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     str(e)
                 )
             else:
-                self.tasks[0] = task
+                self.tasks = [task]
         else:
             # Update
             if not self.multi_selection_mode:
