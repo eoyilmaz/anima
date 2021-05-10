@@ -970,7 +970,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         self._tasks = tasks
-        if len(self._tasks) > 1:
+        if self._tasks and len(self._tasks) > 1:
             self.multi_selection_mode = True
 
     def entity_type_combo_box_changed(self, entity_type):

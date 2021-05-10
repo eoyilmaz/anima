@@ -569,16 +569,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                     )
                     task_main_dialog.exec_()
                     result = task_main_dialog.result()
-                    task = task_main_dialog.task
+                    tasks = task_main_dialog.tasks
                     task_main_dialog.deleteLater()
 
-                    if result == accepted and task:
+                    if result == accepted and tasks:
                         # reload the parent item
                         if item.parent:
                             item.parent.reload()
                         else:
                             self.fill()
-                        self.find_and_select_entity_item(task)
+                        self.find_and_select_entity_item(tasks[0])
 
                 elif selected_action is duplicate_task_hierarchy_action:
                     duplicate_task_hierarchy_dialog = \
