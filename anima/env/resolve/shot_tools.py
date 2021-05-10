@@ -254,6 +254,11 @@ class ShotClip(object):
                 take_name='Main',  # TODO: use the track name as take
                 description='Autocreated by Resolve',
             )
+            from anima.env import blackmagic
+            resolve = blackmagic.get_resolve()
+            version_info = resolve.GetVersion()
+            v.created_with = 'Resolve%s.%s' % (version_info[0], version_info[1])
+            DBSession.add(v)
 
         # set the status the task
         with DBSession.no_autoflush:
