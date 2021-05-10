@@ -165,6 +165,30 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.vertical_layout.addLayout(self.h_layout4)
 
+        self.h_layout4a = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+
+        self.filter_statuses_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.filter_statuses_check_box.setText('Filter Statuses')
+        self.h_layout4a.addWidget(self.filter_statuses_check_box)
+
+        self.wip_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.wip_check_box.setText('WIP')
+        self.h_layout4a.addWidget(self.wip_check_box)
+
+        self.hrev_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.hrev_check_box.setText('HREV')
+        self.h_layout4a.addWidget(self.hrev_check_box)
+
+        self.prev_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.prev_check_box.setText('PREV')
+        self.h_layout4a.addWidget(self.prev_check_box)
+
+        self.completed_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.completed_check_box.setText('CMLT')
+        self.h_layout4a.addWidget(self.completed_check_box)
+
+        self.vertical_layout.addLayout(self.h_layout4a)
+
         self.h_layout5 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
 
         self.task_name_label = QtWidgets.QLabel(self.h_layout5.widget())
@@ -281,6 +305,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.shot_out_combo_box_changed
         )
 
+        # filter statuses check_box is changed
+        QtCore.QObject.connect(
+            self.filter_statuses_check_box,
+            QtCore.SIGNAL('stateChanged(int)'),
+            self.filter_statuses_check_box_changed
+        )
+
         # conform_button is clicked
         QtCore.QObject.connect(
             self.conform_button,
@@ -325,6 +356,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.ext_name_combo_box.addItem('png', 0)
         self.ext_name_combo_box.addItem('tga', 1)
         self.ext_name_combo_box.addItem('jpg', 2)
+
+        self.wip_check_box.setEnabled(0)
+        self.hrev_check_box.setEnabled(0)
+        self.prev_check_box.setChecked(1)
+        self.prev_check_box.setEnabled(0)
+        self.completed_check_box.setChecked(1)
+        self.completed_check_box.setEnabled(0)
 
     # TODO: seeing stalker ids in UI might be confusing... keep id data hidden
     def add_data_as_text_to_ui(self, name, task_id):
@@ -523,6 +561,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         self.updated_shot_list.clear()
 
+    def filter_statuses_check_box_changed(self, state):
+        """runs when the filter_status_check_box is changed
+        """
+        if state == 0:
+            self.wip_check_box.setEnabled(0)
+            self.hrev_check_box.setEnabled(0)
+            self.prev_check_box.setEnabled(0)
+            self.completed_check_box.setEnabled(0)
+        else:
+            self.wip_check_box.setEnabled(1)
+            self.hrev_check_box.setEnabled(1)
+            self.prev_check_box.setEnabled(1)
+            self.completed_check_box.setEnabled(1)
+
     def get_shots_from_ui(self):
         """returns Stalker Shot instances as a list based on selection from UI
         """
@@ -586,6 +638,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """returns the Output/Main outputs path for resolve from a given Shot stalker instance
         """
         comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == task_name).first()
+        if not comp_task and task_name == 'Comp': # try Cleanup task
+            comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
+        if not comp_task:
+            return None
+
+        if self.filter_statuses_check_box.isChecked():
+            valid_status_names = []
+            if self.wip_check_box.isChecked():
+                valid_status_names.append('Work In Progress')
+            if self.hrev_check_box.isChecked():
+                valid_status_names.append('Has Revision')
+            if self.prev_check_box.isChecked():
+                valid_status_names.append('Pending Review')
+            if self.completed_check_box.isChecked():
+                valid_status_names.append('Completed')
+
+            if comp_task.status.name not in valid_status_names:
+                print('%s -> %s' % (shot.name, comp_task.status.name))
+                return None
+
         comp_path = comp_task.absolute_path
         output_path = os.path.join(comp_path, 'Outputs', 'Main')
 
@@ -752,9 +824,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             none_path_list = []
             for shot in shots:
                 clip_path = self.get_latest_output_path(shot, t_name, ext=extension)
+                if t_name == 'Comp' and clip_path is None: # look for Cleanup task
+                    clip_path = self.get_latest_output_path(shot, 'Cleanup', ext=extension)
                 if clip_path:
                     clip_path_list.append(clip_path)
-                else:
+                elif clip_path is None:
                     none_path_list.append('%s -> No Outputs/Main found.' % shot.name)
                 print('Checking Shot... - %s' % shot.name)
             clip_path_list.sort()
@@ -764,9 +838,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             for clip_path in clip_path_list:
                 print(clip_path)
             print('--------------------------------------------------------------------------')
-            for none_path in none_path_list:
-                print(none_path)
-            print('--------------------------------------------------------------------------')
+            if none_path_list:
+                for none_path in none_path_list:
+                    print(none_path)
+                print('--------------------------------------------------------------------------')
 
             if clip_path_list:
                 self.clip_paths_to_xml(clip_path_list, self.xml_path)
