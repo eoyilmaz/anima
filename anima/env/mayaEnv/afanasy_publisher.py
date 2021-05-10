@@ -104,6 +104,9 @@ def export_playblast(path):
     from anima.env.mayaEnv import animation
     animation.Animation.set_range_from_shot()
 
+    # delete any focusPlane shape nodes to prevent them from being shown in the playblast
+    pm.delete(pm.ls("focusPlane*Shape"))
+
     shots = pm.ls(type='shot')
     if shots:
         shot = shots[0]
