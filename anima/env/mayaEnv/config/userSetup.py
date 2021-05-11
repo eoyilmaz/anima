@@ -145,6 +145,8 @@ if not pm.general.about(batch=1):
 
         def load_redshift():
             try:
+                # For Maya 2020 and RS 3.0.44+ if the XGenToolkit is not loaded Redshift will not load too
+                __plugin_loader('xgenToolkit')
                 __plugin_loader('redshift4maya')
             except RuntimeError:
                 pass
