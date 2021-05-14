@@ -2418,13 +2418,16 @@ def get_reference_copy_number(node):
         return ref_number
 
 
-def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
+def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1, isolate=True, unload_refs=True):
     """exports alembic caches of the given nodes
 
     :param list cacheable_nodes: The top transform nodes
     :param int handles: An integer that shows the desired handles from start
       and end.
     :param int step:
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
+      of constraints not to work on some scenes. Default value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
     :return:
     """
     # stop if there are no cacheable nodes given
@@ -2454,8 +2457,6 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
 
     # export alembic caches
     previous_cacheable_attr_value = ''
-
-    # isolate none to speed things up
     pm.select(None)
 
     wrong_node_names = ['_rig_', '_proxy_']
@@ -2470,65 +2471,75 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
 
     # create a lut for cacheable_node to its related reference
     cacheable_node_references = {}
-    for cacheable_node in cacheable_nodes:
-        ref = cacheable_node.referenceFile()
-        if ref:
-            # get the top most reference
-            parent_ref = ref.parent()
-            while parent_ref:
-                ref = parent_ref
+    if unload_refs:
+        for cacheable_node in cacheable_nodes:
+            ref = cacheable_node.referenceFile()
+            if ref:
+                # get the top most reference
                 parent_ref = ref.parent()
+                while parent_ref:
+                    ref = parent_ref
+                    parent_ref = ref.parent()
 
-        # get related references
-        # sometimes the node is parented or constrained to an object
-        related_references = []
-        nodes_to_evaluate = [cacheable_node] + cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
-        for node in nodes_to_evaluate:
-            for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
-                for input_node in constraint_node.inputs():
-                    related_ref = input_node.referenceFile()
-                    if related_ref is not None:
-                        # go to the top most reference
-                        parent_ref = related_ref.parent()
-                        while parent_ref:
-                            related_ref = parent_ref
+            # get related references
+            # sometimes the node is parented or constrained to an object
+            related_references = []
+            nodes_to_evaluate = [cacheable_node] + cacheable_node.listRelatives(ad=1, type=pm.nt.Transform)
+            for node in nodes_to_evaluate:
+                for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
+                    for input_node in constraint_node.inputs():
+                        related_ref = input_node.referenceFile()
+                        if related_ref is not None:
+                            # go to the top most reference
                             parent_ref = related_ref.parent()
+                            while parent_ref:
+                                related_ref = parent_ref
+                                parent_ref = related_ref.parent()
 
-                        if related_ref != ref:
-                            related_references.append(related_ref)
+                            if related_ref != ref:
+                                related_references.append(related_ref)
 
-        # make it a list of unique values
-        related_references = list(set(related_references))
+            # make it a list of unique values
+            related_references = list(set(related_references))
 
-        cacheable_node_references[cacheable_node.name()] = {
-            'ref': ref,
-            'related_refs': related_references
-        }
+            cacheable_node_references[cacheable_node.name()] = {
+                'ref': ref,
+                'related_refs': related_references
+            }
+    else:
+        for cacheable_node in cacheable_nodes:
+            cacheable_node_references[cacheable_node.name()] = {
+                'ref': None,
+                'related_refs': []
+            }
 
     # print("cacheable_node_references: %s" % cacheable_node_references)
 
     # unload all references
     ref_load_states = {}
-    for ref in pm.listReferences():
-        is_loaded = ref.isLoaded()
-        ref_load_states[ref] = is_loaded
-        if is_loaded:
-            ref.unload()
+    if unload_refs:
+        for ref in pm.listReferences():
+            is_loaded = ref.isLoaded()
+            ref_load_states[ref] = is_loaded
+            if is_loaded:
+                ref.unload()
 
     import tempfile
     import shutil
     for cacheable_node_name in sorted(cacheable_node_references):
-        # load the reference first
-        ref = cacheable_node_references[cacheable_node_name]['ref']
-        if ref:
-            ref.load()
-        cacheable_node = pm.PyNode(cacheable_node_name)
 
-        # load related_references
-        related_refs = \
-            cacheable_node_references[cacheable_node_name]['related_refs']
-        for related_ref in related_refs:
-            related_ref.load()
+        if unload_refs:
+            # load the reference first
+            ref = cacheable_node_references[cacheable_node_name]['ref']
+            if ref:
+                ref.load()
+
+            # load related_references
+            related_refs = cacheable_node_references[cacheable_node_name]['related_refs']
+            for related_ref in related_refs:
+                related_ref.load()
+
+        cacheable_node = pm.PyNode(cacheable_node_name)
 
         cacheable_attr_value = cacheable_node.getAttr('cacheable')
         copy_number = get_reference_copy_number(cacheable_node)
@@ -2539,10 +2550,11 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             cacheable_attrs = cacheable_node.cacheable_attrs.get().strip().split(' ')
 
         # isolate in all panels
-        panel_list = pm.getPanel(type='modelPanel')
-        for panel in panel_list:
-            pm.isolateSelect(panel, state=1)
-            pm.isolateSelect(panel, ado=cacheable_node)
+        if isolate:
+            panel_list = pm.getPanel(type='modelPanel')
+            for panel in panel_list:
+                pm.isolateSelect(panel, state=1)
+                pm.isolateSelect(panel, ado=cacheable_node)
 
         hidden_nodes = []
         nodes_to_consider = cacheable_node.getChildren(type='transform')
@@ -2551,8 +2563,8 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
             underscored_name = camel_case_to_underscore(current_node.name().split(':')[-1])
 
             if any([n in underscored_name for n in wrong_node_names]) or \
-               any([underscored_name.startswith(n) for n in wrong_node_names_starts_with]) or \
-               any([underscored_name.endswith(n) for n in wrong_node_names_ends_with]):
+                    any([underscored_name.startswith(n) for n in wrong_node_names_starts_with]) or \
+                    any([underscored_name.endswith(n) for n in wrong_node_names_ends_with]):
                 if current_node.v.get() is True  and not current_node.v.isLocked():
                     current_node.v.set(False)
                     hidden_nodes.append(current_node)
@@ -2595,13 +2607,11 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
                 ' '.join(map(lambda x: '-attr %s' % x, cacheable_attrs))
             )
 
-        # TODO: This is ugly!
         command += ' -root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
-        temp_cache_file_path = \
-            tempfile.mktemp(suffix='.abc').replace('\\', '/')
+        temp_cache_file_path = tempfile.mktemp(suffix='.abc').replace('\\', '/')
 
         command_to_exec = command % (
             int(start_frame - handles),
@@ -2616,30 +2626,31 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1):
         # move in to place
         shutil.move(temp_cache_file_path, output_full_path)
 
-        previous_cacheable_attr_value = cacheable_attr_value
-
         # reveal any previously hidden nodes
         for node in hidden_nodes:
             node.v.set(True)
 
         # restore isolation in all panels
-        panel_list = pm.getPanel(type='modelPanel')
-        for panel in panel_list:
-            pm.isolateSelect(panel, state=0)
+        if isolate:
+            panel_list = pm.getPanel(type='modelPanel')
+            for panel in panel_list:
+                pm.isolateSelect(panel, state=0)
 
-        # unload the reference
-        if ref:
-            ref.unload()
-        # and unload the related references
-        for related_ref in related_refs:
-            related_ref.unload()
+        if unload_refs:
+            # unload the reference
+            if ref:
+                ref.unload()
+            # and unload the related references
+            for related_ref in related_refs:
+                related_ref.unload()
 
         caller.step()
 
-    # load all references back
-    for ref in pm.listReferences():
-        if ref_load_states[ref]:
-            ref.load()
+    if unload_refs:
+        # load all references back
+        for ref in pm.listReferences():
+            if ref_load_states[ref]:
+                ref.load()
 
     # restore playback option
     pm.playbackOptions(v=default_playback_option)
