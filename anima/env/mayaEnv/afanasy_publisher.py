@@ -81,7 +81,7 @@ def export_alembics(path):
     animation.Animation.set_range_from_shot()
 
     from anima.env.mayaEnv import auxiliary
-    auxiliary.export_alembic_from_cache_node(handles=1)
+    auxiliary.export_alembic_from_cache_node(handles=1, isolate=False, unload_refs=False)
     print("Alembic Export Done!")
 
 
