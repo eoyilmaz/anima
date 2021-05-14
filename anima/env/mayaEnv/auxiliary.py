@@ -2656,12 +2656,15 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1, isolate=True, un
     pm.playbackOptions(v=default_playback_option)
 
 
-def export_alembic_of_selected_cacheable_nodes(handles=0, step=1):
+def export_alembic_of_selected_cacheable_nodes(handles=0, step=1, isolate=True, unload_refs=True):
     """Exports alembic caches of the selected cacheable nodes
 
     :param int handles: An integer that shows the desired handles from start
       and end.
     :param int step:
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
+      of constraints not to work on some scenes. Default value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
     :return:
     """
     # get selected cacheable nodes in the current scene
@@ -2670,29 +2673,35 @@ def export_alembic_of_selected_cacheable_nodes(handles=0, step=1):
         for n in pm.selected()
         if n.hasAttr('cacheable') and n.getAttr('cacheable')
     ]
-    export_alembic_of_nodes(cacheable_nodes, handles, step)
+    export_alembic_of_nodes(cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs)
 
 
-def export_alembic_of_all_cacheable_nodes(handles=0, step=1):
+def export_alembic_of_all_cacheable_nodes(handles=0, step=1, isolate=True, unload_refs=True):
     """Exports alembic caches of the all cacheable nodes
 
     :param int handles: An integer that shows the desired handles from start
       and end.
     :param int step:
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
+      of constraints not to work on some scenes. Default value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
     :return:
     """
     # get selected cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
-    export_alembic_of_nodes(cacheable_nodes, handles, step)
+    export_alembic_of_nodes(cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs)
 
 
-def export_alembic_from_cache_node(handles=0, step=1):
+def export_alembic_from_cache_node(handles=0, step=1, isolate=True, unload_refs=True):
     """exports alembic caches by looking at the current scene and try to find
     transform nodes which has an attribute called "cacheable"
 
     :param int handles: An integer that shows the desired handles from start
       and end.
     :param int step: Frame step
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
+      of constraints not to work on some scenes. Default value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
     """
     # get cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
@@ -2700,7 +2709,7 @@ def export_alembic_from_cache_node(handles=0, step=1):
     print("===============")
     for node in cacheable_nodes:
         print(node.name())
-    export_alembic_of_nodes(cacheable_nodes, handles, step)
+    export_alembic_of_nodes(cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs)
 
 
 def extract_version_from_path(path):
