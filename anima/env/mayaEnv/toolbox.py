@@ -1952,19 +1952,42 @@ def UI():
             # )
 
             #rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
-            #with rowLayout:
             pm.text(l='===== EXPORT =====')
+            with pm.rowLayout(nc=2, adj=1):
+                pm.checkBoxGrp(
+                    'export_alembic_of_nodes_checkbox_grp',
+                    l='Alembic Options',
+                    numberOfCheckBoxes=2,
+                    labelArray2=['Isolate', 'Unload Refs'],
+                    cl3=['left', 'left', 'left'],
+                    cw3=[100, 60, 60],
+                    valueArray2=[1, 1]
+                )
+
+            def export_alembic_callback_with_options(func):
+                """calls the function with the parameters from the ui
+
+                :param func:
+                :return:
+                """
+                isolate, unload_refs = pm.checkBoxGrp(
+                    'export_alembic_of_nodes_checkbox_grp',
+                    q=1,
+                    valueArray2=1
+                )
+                func(isolate=isolate, unload_refs=unload_refs)
+
             pm.button(
                 'export_alembic_of_selected_cacheable_nodes_button',
                 l='Selected Cacheable Nodes',
-                c=repeated_callback(auxiliary.export_alembic_of_selected_cacheable_nodes),
+                c=repeated_callback(export_alembic_callback_with_options, auxiliary.export_alembic_of_selected_cacheable_nodes),
                 ann=auxiliary.export_alembic_of_selected_cacheable_nodes.__doc__.split('\n')[0],
                 bgc=color.color
             )
             pm.button(
                 'export_alembic_of_all_cacheable_nodes_button',
                 l='ALL Cacheable Nodes',
-                c=repeated_callback(auxiliary.export_alembic_of_all_cacheable_nodes),
+                c=repeated_callback(export_alembic_callback_with_options, auxiliary.export_alembic_of_all_cacheable_nodes),
                 ann=auxiliary.export_alembic_of_all_cacheable_nodes.__doc__.split('\n')[0],
                 bgc=color.color
             )
