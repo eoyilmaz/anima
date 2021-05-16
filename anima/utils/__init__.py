@@ -1614,31 +1614,47 @@ class C3DEqualizerTrackPoint(object):
             self.data[i] = pos[1:]
 
 
-def create_project_structure(entity):
-    """Creates the structure of the given project or task
-    based on custom template structure
+def create_structure(entity):
+    """Creates the directory structure of the given project or task also considers custom template structure
+
     :param entity: A Stalker Project or Task instance
     :return:
     """
-    import jinja2
+    print('entity: %s' % entity)
     from stalker import Project, Task
-
-    project = None
     if isinstance(entity, Project):
         project = entity
-    elif isinstance(entity, Task):
-        project = entity.project
 
-    if project is None:
-        raise TypeError('Please supply a Stalker Project or Task instance!')
+        if project is None:
+            raise TypeError('Please supply a Stalker Project or Task instance!')
 
-    t = jinja2.Template(project.structure.custom_template)
-    paths = t.render(project=entity).split('\n')
-    for path in paths:
-        path = path.strip()
-        if path != '':
+        # Custom Template
+        import jinja2
+        t = jinja2.Template(project.structure.custom_template)
+        paths = t.render(project=project).split('\n')
+        for path in paths:
+            path = path.strip()
+            if path != '':
+                try:
+                    os.makedirs(path)
+                except OSError:
+                    # path already exist
+                    pass
+
+        # Task Folders
+        for t in project.tasks:
             try:
-                os.makedirs(path)
+                os.makedirs(t.absolute_path)
+            except OSError:
+                # path already exist
+                pass
+
+    elif isinstance(entity, Task):
+        task = entity
+        for t in task.walk_hierarchy():
+            print('t: %s' % t)
+            try:
+                os.makedirs(t.absolute_path)
             except OSError:
                 # path already exist
                 pass

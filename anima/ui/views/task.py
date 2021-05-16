@@ -285,64 +285,42 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         if defaults.is_power_user(logged_in_user):
             # create the Create Project menu item
-            create_project_action = \
-                create_sub_menu.addAction(u'\uf0e8 Create Project...')
+            create_project_action = create_sub_menu.addAction(u'\uf0e8 Create Project...')
 
             if isinstance(entity, Project):
                 # this is a project!
                 if defaults.is_power_user(logged_in_user):
-                    update_project_action = \
-                        update_sub_menu.addAction(u'\uf044 Update Project...')
-                    assign_users_action = \
-                        menu.addAction(u'\uf0c0 Assign Users...')
-                    create_project_structure_action = \
-                        create_sub_menu.addAction(
-                            u'\uf115 Create Project Structure'
-                        )
-                    create_child_task_action = \
-                        create_sub_menu.addAction(
-                            u'\uf0ae Create Child Task...'
-                        )
+                    update_project_action = update_sub_menu.addAction(u'\uf044 Update Project...')
+                    assign_users_action = menu.addAction(u'\uf0c0 Assign Users...')
+                    create_project_structure_action = create_sub_menu.addAction(u'\uf115 Create Project Structure')
+                    create_child_task_action = create_sub_menu.addAction(u'\uf0ae Create Child Task...')
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
-                    # export_to_json_action = \
-                    #     create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+                    # export_to_json_action = create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
 
-                    import_from_json_action = \
-                        create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
+                    import_from_json_action = create_sub_menu.addAction(u'\uf1f8 Import From JSON...')
 
         if entity:
             # separate the Project and Task related menu items
             menu.addSeparator()
 
-            open_in_web_browser_action = \
-                menu.addAction(u'\uf14c Open In Web Browser...')
-            open_in_file_browser_action = \
-                menu.addAction(u'\uf07c Browse Folders...')
+            open_in_web_browser_action = menu.addAction(u'\uf14c Open In Web Browser...')
+            open_in_file_browser_action = menu.addAction(u'\uf07c Browse Folders...')
             copy_url_action = menu.addAction(u'\uf0c5 Copy URL')
-            copy_id_to_clipboard = \
-                menu.addAction(u'\uf0c5 Copy ID to clipboard')
+            copy_id_to_clipboard = menu.addAction(u'\uf0c5 Copy ID to clipboard')
 
             if isinstance(entity, Task):
                 # this is a task
-                create_project_structure_action = \
-                    create_sub_menu.addAction(
-                        u'\uf115 Create Task Folder Structure'
-                    )
+                create_project_structure_action = create_sub_menu.addAction(u'\uf115 Create Task Folder Structure')
 
                 task = entity
                 from stalker import Status
                 status_wfd = Status.query.filter(Status.code == 'WFD').first()
-                status_prev = \
-                    Status.query.filter(Status.code == 'PREV').first()
-                status_cmpl = \
-                    Status.query.filter(Status.code == 'CMPL').first()
-                if logged_in_user in task.resources \
-                        and task.status not in [status_wfd, status_prev,
-                                                status_cmpl]:
+                status_prev = Status.query.filter(Status.code == 'PREV').first()
+                status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
+                if logged_in_user in task.resources and task.status not in [status_wfd, status_prev, status_cmpl]:
                     create_sub_menu.addSeparator()
-                    create_time_log_action = \
-                        create_sub_menu.addAction(u'\uf073 Create TimeLog...')
+                    create_time_log_action = create_sub_menu.addAction(u'\uf073 Create TimeLog...')
 
                 # Add Depends To menu
                 menu.addSeparator()
@@ -589,12 +567,8 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     result = duplicate_task_hierarchy_dialog.result()
                     if result == accepted:
-                        new_task_name = \
-                            duplicate_task_hierarchy_dialog.line_edit.text()
-
-                        keep_resources = \
-                            duplicate_task_hierarchy_dialog\
-                                .check_box.checkState()
+                        new_task_name = duplicate_task_hierarchy_dialog.line_edit.text()
+                        keep_resources = duplicate_task_hierarchy_dialog.check_box.checkState()
 
                         from anima import utils
                         from stalker import Task
@@ -756,9 +730,13 @@ class TaskTreeView(QtWidgets.QTreeView):
                     if answer == QtWidgets.QMessageBox.Yes:
                         from anima import utils
                         try:
-                            utils.create_project_structure(entity)
+                            utils.create_structure(entity)
                         except Exception as e:
-                            pass
+                            QtWidgets.QMessageBox.critical(
+                                self,
+                                "Error",
+                                str(e)
+                            )
                         finally:
                             QtWidgets.QMessageBox.information(
                                 self,
