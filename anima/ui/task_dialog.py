@@ -895,22 +895,28 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.entity_type_combo_box.setEnabled(False)
 
         # task or asset type
-        type_obj = self.get_unique_items(self.tasks, 'type')
-        if type_obj:
-            combo_box = None
-            if entity_type:
-                if entity_type == "Task":
-                    combo_box = self.task_type_combo_box
-                elif entity_type == "Asset":
-                    combo_box = self.asset_type_combo_box
+        type_obj = self.get_merged_items(self.tasks, 'type')
+        combo_box = None
+        if entity_type:
+            if entity_type == "Task":
+                combo_box = self.task_type_combo_box
+            elif entity_type == "Asset":
+                combo_box = self.asset_type_combo_box
 
-                if combo_box:
-                    index = combo_box.findText(type_obj.name, match_exactly)
-                    if index:
-                        combo_box.setCurrentIndex(index)
+        if len(type_obj) == 1:
+            # single type selected
+            type_name = type_obj[0].name
         else:
-            self.task_type_combo_box.setEnabled(False)
-            self.asset_type_combo_box.setEnabled(False)
+            # multi type has selected
+            # add the MULTI_ENUM_VALUE to the list and select it
+            type_name = MULTI_VALUE_ENUM
+            if combo_box:
+                combo_box.addItem(MULTI_VALUE_ENUM)
+
+        if combo_box and type_name:
+            index = combo_box.findText(type_name, match_exactly)
+            if index:
+                combo_box.setCurrentIndex(index)
 
         if self.multi_selection_mode:
             self.name_line_edit.setEnabled(False)
@@ -1672,6 +1678,52 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     users.append(user)
         return users
 
+    def get_task_type(self):
+        """returns the task type
+        """
+        from stalker import Type
+        from stalker.db.session import DBSession
+        task_type_name = self.task_type_combo_box.currentText()
+        task_type = None
+        if task_type_name and task_type_name != MULTI_VALUE_ENUM:
+            task_type = Type.query\
+                .filter(Type.target_entity_type == 'Task')\
+                .filter(Type.name == task_type_name)\
+                .first()
+            if not task_type:
+                # create a new Task Type
+                task_type = Type(
+                    name=task_type_name,
+                    code=task_type_name,
+                    target_entity_type='Task'
+                )
+                DBSession.add(task_type)
+
+        return task_type
+
+    def get_asset_type(self):
+        """returns the asset type
+        """
+        from stalker import Type
+        from stalker.db.session import DBSession
+        asset_type_name = self.asset_type_combo_box.currentText()
+        asset_type = None
+        if asset_type_name and asset_type_name != MULTI_VALUE_ENUM:
+            asset_type = Type.query\
+                .filter(Type.target_entity_type == 'Asset')\
+                .filter(Type.name == asset_type_name)\
+                .first()
+            if not asset_type:
+                # create a new Asset Type
+                asset_type = Type(
+                    name=asset_type_name,
+                    code=asset_type_name,
+                    target_entity_type='Asset'
+                )
+                DBSession.add(asset_type)
+
+        return asset_type
+
     def accept(self):
         """create/update the task
         """
@@ -1707,40 +1759,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         code = self.code_line_edit.text()
 
         # Task Type
-        from stalker import Type
-        from stalker.db.session import DBSession
-        task_type_name = self.task_type_combo_box.currentText()
-        task_type = None
-        if task_type_name:
-            task_type = Type.query\
-                .filter(Type.target_entity_type == 'Task')\
-                .filter(Type.name == task_type_name)\
-                .first()
-            if not task_type:
-                # create a new Task Type
-                task_type = Type(
-                    name=task_type_name,
-                    code=task_type_name,
-                    target_entity_type='Task'
-                )
-                DBSession.add(task_type)
+        task_type = self.get_task_type()
 
         # Asset Type
-        asset_type_name = self.asset_type_combo_box.currentText()
-        asset_type = None
-        if asset_type_name:
-            asset_type = Type.query\
-                .filter(Type.target_entity_type == 'Asset')\
-                .filter(Type.name == asset_type_name)\
-                .first()
-            if not asset_type:
-                # create a new Asset Type
-                asset_type = Type(
-                    name=asset_type_name,
-                    code=asset_type_name,
-                    target_entity_type='Asset'
-                )
-                DBSession.add(asset_type)
+        asset_type = self.get_asset_type()
 
         # Sequence
         from stalker import Sequence
@@ -1779,6 +1801,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             utc_now = utc_now.replace(tzinfo=pytz.utc)
 
         from stalker import Task, Asset, Shot, Sequence
+        from stalker.db.session import DBSession
         if self.mode == self.CREATE_MODE:
             # Create
             kwargs = {
@@ -1914,6 +1937,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 if MULTI_VALUE_ENUM not in responsible:
                     task.responsible = responsible
+
+                if task_type and task.entity_type == 'Task' and task_type != MULTI_VALUE_ENUM:
+                    task.type = task_type
+
+                if asset_type and task.entity_type == 'Asset' and asset_type != MULTI_VALUE_ENUM:
+                    task.type = asset_type
 
                 task.schedule_timing = schedule_timing
                 task.schedule_unit = schedule_unit
