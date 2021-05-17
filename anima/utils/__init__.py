@@ -1620,18 +1620,36 @@ def create_structure(entity):
     :param entity: A Stalker Project or Task instance
     :return:
     """
-    print('entity: %s' % entity)
     from stalker import Project, Task
+    custom_template = None
+    project = None
+    task = None
+    tasks = []
+
     if isinstance(entity, Project):
         project = entity
+        task = None
+        custom_template = project.structure.custom_template
+        tasks = project.tasks
 
-        if project is None:
-            raise TypeError('Please supply a Stalker Project or Task instance!')
+    elif isinstance(entity, Task):
+        task = entity
+        tasks = [entity]
+        custom_template = task.project.structure.custom_template
 
-        # Custom Template
+    # Task Folders
+    for t in tasks:
+        try:
+            os.makedirs(t.absolute_path)
+        except OSError:
+            # path already exist
+            pass
+
+    # Custom Template
+    if custom_template:
         import jinja2
-        t = jinja2.Template(project.structure.custom_template)
-        paths = t.render(project=project).split('\n')
+        template = jinja2.Template(custom_template, extensions=['jinja2.ext.do'])
+        paths = template.render(project=project, entity=task).split('\n')
         for path in paths:
             path = path.strip()
             if path != '':
@@ -1641,23 +1659,6 @@ def create_structure(entity):
                     # path already exist
                     pass
 
-        # Task Folders
-        for t in project.tasks:
-            try:
-                os.makedirs(t.absolute_path)
-            except OSError:
-                # path already exist
-                pass
-
-    elif isinstance(entity, Task):
-        task = entity
-        for t in task.walk_hierarchy():
-            print('t: %s' % t)
-            try:
-                os.makedirs(t.absolute_path)
-            except OSError:
-                # path already exist
-                pass
 
 
 def file_browser_name():
