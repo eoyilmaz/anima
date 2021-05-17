@@ -354,6 +354,7 @@ class ShotClip(object):
         # go to the color page to retrieve the thumbnail
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
+        current_page = resolve.GetCurrentPage()
         resolve.OpenPage('color')
 
         # pm = resolve.GetProjectManager()
@@ -365,7 +366,7 @@ class ShotClip(object):
         # ms.RevealInStorage(self.clip.GetName())
 
         current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
-        resolve.OpenPage('edit')
+        resolve.OpenPage(current_page)
 
         from PIL import Image
         import base64
