@@ -42,7 +42,11 @@ def get_icon(icon_name):
                 pass
 
             import shutil
-            shutil.copy(icon_full_path, local_icon_full_path)
+            try:
+                shutil.copy(icon_full_path, local_icon_full_path)
+            except OSError:
+                # original icon doesn't exist
+                pass
         q_icon = QtGui.QIcon(local_icon_full_path)
         ICON_CACHE[icon_name] = q_icon
     logger.debug("get_icon took: %0.6f s" % (time.time() - start_time))
