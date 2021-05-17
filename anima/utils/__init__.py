@@ -1660,7 +1660,6 @@ def create_structure(entity):
                     pass
 
 
-
 def file_browser_name():
     """returns the file browser name of the current OS
     """

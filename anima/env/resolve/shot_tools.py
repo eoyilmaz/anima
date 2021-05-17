@@ -453,11 +453,33 @@ class ShotClip(object):
 
         proj.SetCurrentRenderFormatAndCodec('exr', 'RGBHalfZIP')
 
+        version = plate_task.versions[-1]
+        from stalker import Version
+        assert isinstance(version, Version)
+        version = version.latest_version
+        assert isinstance(version, Version)
+        from anima.env.base import EnvironmentBase
+        version_sig_name = EnvironmentBase.get_significant_name(version, include_project_code=False)
+
+        extension = version.extension
+        version.update_paths()
+        version.extension = extension
+
+        import os
+        custom_name = '%s.' % version_sig_name
+        target_dir = os.path.join(
+            version.absolute_path,
+            'Outputs',
+            version.take_name,
+            'v%03d' % version.version_number,
+            'exr'
+        )
+
         proj.SetRenderSettings({
             'MarkIn': self.clip.GetStart(),
             'MarkOut': self.clip.GetEnd() - 1,
-            'CustomName': '%s_Main_v001.' % self.shot_code,
-            'TargetDir': '%s/Outputs/Main/v001/exr' % plate_task.absolute_path
+            'CustomName': custom_name,
+            'TargetDir': target_dir
         })
         # proj.SetCurrentRenderMode(1)
         proj.AddRenderJob()
