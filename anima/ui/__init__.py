@@ -14,6 +14,7 @@ qt_lib_key = "QT_LIB"
 qt_lib = PYSIDE
 
 ICON_CACHE = {}
+FONT_CACHE = {}
 
 
 if qt_lib_key in os.environ:

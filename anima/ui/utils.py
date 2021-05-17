@@ -224,12 +224,54 @@ def initialize_post_publish_dialog():
 def load_font(font_filename):
     """loads extra fonts from the fonts folder
     """
-    here = os.path.dirname(os.path.realpath(__file__))
-    font_id = QtGui.QFontDatabase.addApplicationFont(
-        os.path.join(here, 'fonts', font_filename)
-    )
-    loaded_font_families = QtGui.QFontDatabase.applicationFontFamilies(font_id)
-    return loaded_font_families
+    import time
+    start_time = time.time()
+    # get the font from cache if possible
+    from anima.ui import FONT_CACHE
+    font_family = FONT_CACHE.get(font_filename)
+    if not font_family:
+        logger.debug("font not found in runtime cache!")
+        logger.debug("getting font from local cache!")
+        # use the local font cache
+        import os
+        from anima import defaults
+        local_font_cache_path = os.path.normpath(
+            os.path.expanduser(
+                os.path.join(
+                    defaults.local_cache_folder, "fonts"
+                )
+            )
+        )
+        local_font_full_path = os.path.join(local_font_cache_path, font_filename)
+        logger.debug("local_font_full_path: %s" % local_font_full_path)
+        if not os.path.exists(local_font_full_path):
+            logger.debug("local font cache not found: %s" % font_filename)
+            logger.debug("retrieving font from library!")
+            here = os.path.dirname(os.path.realpath(__file__))
+            font_full_path = os.path.join(here, 'fonts', font_filename)
+            logger.debug("font_full_path: %s" % font_full_path)
+
+            # copy to local cache folder
+            try:
+                os.makedirs(local_font_cache_path)
+            except OSError:
+                pass
+
+            import shutil
+            try:
+                shutil.copy(font_full_path, local_font_full_path)
+            except OSError:
+                # original font doesn't exist either
+                pass
+
+        font_id = QtGui.QFontDatabase.addApplicationFont(local_font_full_path)
+        font_family = QtGui.QFontDatabase.applicationFontFamilies(font_id)
+        FONT_CACHE[font_filename] = font_family
+    else:
+        logger.debug("font found in runtime cache!")
+
+    logger.debug("load_font took: %0.6f s" % (time.time() - start_time))
+    return font_family
 
 
 def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
