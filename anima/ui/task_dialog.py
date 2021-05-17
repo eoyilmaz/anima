@@ -905,7 +905,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         if len(type_obj) == 1:
             # single type selected
-            type_name = type_obj[0].name
+            type_obj = type_obj[0]
+            from stalker import Type
+            if type_obj is not None and isinstance(type_obj, Type):
+                type_name = type_obj.name
         else:
             # multi type has selected
             # add the MULTI_ENUM_VALUE to the list and select it
