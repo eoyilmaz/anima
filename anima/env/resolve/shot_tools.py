@@ -252,6 +252,8 @@ class ShotClip(object):
             v = Version(
                 task=plate_task,
                 take_name='Main',  # TODO: use the track name as take
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
                 description='Autocreated by Resolve',
             )
             from anima.env import blackmagic
