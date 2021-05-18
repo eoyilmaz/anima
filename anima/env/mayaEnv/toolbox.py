@@ -1951,9 +1951,9 @@ def UI():
             #     bgc=color.color
             # )
 
-            #rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
+            # rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             pm.text(l='===== EXPORT =====')
-            with pm.rowLayout(nc=2, adj=1):
+            with pm.rowLayout(nc=3, adj=3):
                 pm.checkBoxGrp(
                     'export_alembic_of_nodes_checkbox_grp',
                     l='Alembic Options',
@@ -1963,6 +1963,16 @@ def UI():
                     cw3=[100, 60, 60],
                     valueArray2=[1, 1]
                 )
+
+            pm.intFieldGrp(
+                'export_alembic_of_nodes_handles_int_slider_grp',
+                l='Handles',
+                el='frames',
+                nf=1,
+                adj=2,
+                cw3=[65, 1, 20],
+                v1=1,
+            )
 
             def export_alembic_callback_with_options(func):
                 """calls the function with the parameters from the ui
@@ -1975,7 +1985,8 @@ def UI():
                     q=1,
                     valueArray2=1
                 )
-                func(isolate=isolate, unload_refs=unload_refs)
+                handles = pm.intFieldGrp('export_alembic_of_nodes_handles_int_slider_grp', q=1, v1=1)
+                func(isolate=isolate, unload_refs=unload_refs, handles=handles)
 
             pm.button(
                 'export_alembic_of_selected_cacheable_nodes_button',
