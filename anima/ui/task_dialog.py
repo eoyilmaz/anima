@@ -1803,7 +1803,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             import pytz
             utc_now = utc_now.replace(tzinfo=pytz.utc)
 
-        from stalker import Task, Asset, Shot, Sequence
+        from stalker import Task, Asset, Shot
         from stalker.db.session import DBSession
         if self.mode == self.CREATE_MODE:
             # Create
@@ -1867,7 +1867,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 if isinstance(self.tasks[0], Shot):
                     self.tasks[0].fps = fps
-                    self.tasks[0].sequences = [sequence]
+                    if sequence:
+                        self.tasks[0].sequences = [sequence]
+                    else:
+                        self.tasks[0].sequences = []
                     self.tasks[0].cut_in = cut_in
                     self.tasks[0].cut_out = cut_out
 
