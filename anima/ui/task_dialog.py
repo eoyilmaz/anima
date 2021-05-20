@@ -903,6 +903,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             elif entity_type == "Asset":
                 combo_box = self.asset_type_combo_box
 
+        type_name = None
         if len(type_obj) == 1:
             # single type selected
             type_obj = type_obj[0]
