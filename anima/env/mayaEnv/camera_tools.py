@@ -333,6 +333,10 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     camera_shape.horizontalFilmAperture.set(horizontal_film_aperture / 25.4)
     camera_shape.verticalFilmAperture.set(vertical_film_aperture / 25.4)
 
+    # add cacheable attribute
+    from anima.env.mayaEnv import rigging
+    rigging.Rigging.add_cacheable_attribute(camera_transform, "shot_camera")
+
     main_ctrl = pm.spaceLocator(name='main_ctrl#')
     heading_ctrl = pm.nt.Transform(name='heading_ctrl#')
     pitch_ctrl = pm.nt.Transform(name='pitch_ctrl#')
