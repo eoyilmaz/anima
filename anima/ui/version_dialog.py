@@ -1068,14 +1068,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         delete_action = menu.addAction("Delete")
 
         if version:
-            from anima import defaults
-            if logged_in_user in version.task.responsible \
-               or logged_in_user not in version.task.resources \
-               or defaults.is_power_user(logged_in_user):
+            if version.is_published:
+                publish_action.setText("Un-Publish")
 
-                if version.is_published:
-                    publish_action.setText("Un-Publish")
-            else:
+            from anima import defaults
+            if logged_in_user not in version.task.responsible and not defaults.is_power_user(logged_in_user):
                 publish_action.setEnabled(False)
                 delete_action.setEnabled(False)
         else:
