@@ -1187,9 +1187,16 @@ def UI():
                       bgc=color.color)
 
             color.change()
+
+            def add_cacheable_attribute_callback():
+                """add <b>cacheable</b> attribute to the selected nodes
+                """
+                for node in pm.selected():
+                    Rigging.add_cacheable_attribute(node)
+
             pm.button('add_cacheable_attr_button', l="add `cacheable` attribute",
-                      c=repeated_callback(Rigging.add_cacheable_attribute),
-                      ann="add <b>cacheable</b> attribute",
+                      c=repeated_callback(add_cacheable_attribute_callback),
+                      ann=add_cacheable_attribute_callback.__doc__,
                       bgc=color.color)
 
         # store commands
