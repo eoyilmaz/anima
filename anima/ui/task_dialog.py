@@ -442,6 +442,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
         self.schedule_timing_spin_box = QtWidgets.QSpinBox(self)
+        self.schedule_timing_spin_box.setMinimum(-1)
         self.schedule_timing_spin_box.setMaximum(9999)
         self.horizontal_layout_2.addWidget(self.schedule_timing_spin_box)
         self.schedule_unit_combo_box = QtWidgets.QComboBox(self)
@@ -955,19 +956,37 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # schedule info
         if self.tasks:
-            self.schedule_timing_spin_box.setValue(self.tasks[0].schedule_timing)
 
-            index = self.schedule_unit_combo_box.findText(
-                self.tasks[0].schedule_unit, QtCore.Qt.MatchExactly
-            )
-            if index:
-                self.schedule_unit_combo_box.setCurrentIndex(index)
+            schedule_timings = self.get_merged_items(self.tasks, 'schedule_timing')
+            if len(schedule_timings) == 1:
+                self.schedule_timing_spin_box.setValue(schedule_timings[0])
+            else:
+                self.schedule_timing_spin_box.setValue(-1)
 
-            index = self.schedule_model_combo_box.findText(
-                self.tasks[0].schedule_model, QtCore.Qt.MatchExactly
-            )
-            if index:
-                self.schedule_model_combo_box.setCurrentIndex(index)
+            schedule_units = self.get_merged_items(self.tasks, 'schedule_unit')
+            schedule_unit = None
+            if len(schedule_units) == 1:
+                schedule_unit = schedule_units[0]
+            else:
+                self.schedule_unit_combo_box.addItem(MULTI_VALUE_ENUM)
+                schedule_unit = MULTI_VALUE_ENUM
+
+            if schedule_unit:
+                index = self.schedule_unit_combo_box.findText(schedule_unit, QtCore.Qt.MatchExactly)
+                if index:
+                    self.schedule_unit_combo_box.setCurrentIndex(index)
+
+            schedule_models = self.get_merged_items(self.tasks, 'schedule_model')
+            if len(schedule_models) == 1:
+                schedule_model = schedule_models[0]
+            else:
+                self.schedule_model_combo_box.addItem(MULTI_VALUE_ENUM)
+                schedule_model = MULTI_VALUE_ENUM
+
+            if schedule_model:
+                index = self.schedule_model_combo_box.findText(schedule_model, QtCore.Qt.MatchExactly)
+                if index:
+                    self.schedule_model_combo_box.setCurrentIndex(index)
 
     @property
     def tasks(self):
@@ -1951,13 +1970,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if asset_type and task.entity_type == 'Asset' and asset_type != MULTI_VALUE_ENUM:
                     task.type = asset_type
 
-                task.schedule_timing = schedule_timing
-                task.schedule_unit = schedule_unit
-                task.schedule_model = schedule_model
+                if schedule_timing not in [-1, 0]:
+                    task.schedule_timing = schedule_timing
+
+                if schedule_unit != MULTI_VALUE_ENUM:
+                    task.schedule_unit = schedule_unit
+
+                if schedule_model != MULTI_VALUE_ENUM:
+                    task.schedule_model = schedule_model
 
                 if self.update_bid_check_box.isChecked():
-                    task.bid_timing = schedule_timing
-                    task.bid_unit = schedule_unit
+                    if schedule_timing not in [-1, 0]:
+                        task.bid_timing = schedule_timing
+
+                    if schedule_unit != MULTI_VALUE_ENUM:
+                        task.bid_unit = schedule_unit
 
                 task.priority = priority
                 task.updated_by = self.get_logged_in_user()
