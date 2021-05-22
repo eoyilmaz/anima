@@ -934,6 +934,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # set the code
                 self.code_line_edit.setText(self.tasks[0].code)
 
+        # add resources
         if not self.multi_selection_mode:
             depends = self.get_merged_items(self.tasks, "depends")
             for dep_task in depends:
@@ -1802,8 +1803,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         depends = self.get_tasks_from_list_widget(self.depends_to_list_widget)
         resources = self.get_users_from_list_widget(self.resources_list_widget)
-        responsible = \
-            self.get_users_from_list_widget(self.responsible_list_widget)
+        responsible = self.get_users_from_list_widget(self.responsible_list_widget)
 
         schedule_timing = self.schedule_timing_spin_box.value()
         schedule_unit = self.schedule_unit_combo_box.currentText()

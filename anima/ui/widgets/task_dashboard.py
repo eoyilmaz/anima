@@ -23,6 +23,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_timing_widget = None
         self.description_label = None
         self.description_field = None
+        self.description_field_is_updating = False
         self.responsible_info_widget = None
         self.resource_info_widget = None
         self.task_versions_usage_info_widget = None
@@ -167,6 +168,9 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # add stretcher
         vertical_layout1.addStretch(1)
 
+        # connect signal
+        self.description_field.textChanged.connect(self.update_description)
+
         # ---------------------------
         # Responsible Info
         from anima.ui.widgets.responsible_info import ResponsibleInfoWidget
@@ -222,6 +226,8 @@ class TaskDashboardWidget(QtWidgets.QWidget):
 
         # self.description_label = None
         # self.description_field = None
+        if self.task:
+            self.description_field.setText(self.task.description)
         # self.responsible_info_widget = None
         # self.resource_info_widget = None
         # self.task_versions_usage_info_widget = None
@@ -244,3 +250,18 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         from stalker.db.session import DBSession
         DBSession.add(self.task)
         DBSession.commit()
+
+    def update_description(self):
+        """runs when description field has changed
+        """
+        if self.description_field_is_updating:
+            return
+
+        self.description_field_is_updating = True
+
+        self.task.description = self.description_field.toPlainText()
+        from stalker.db.session import DBSession
+        DBSession.add(self.task)
+        DBSession.commit()
+
+        self.description_field_is_updating = False
