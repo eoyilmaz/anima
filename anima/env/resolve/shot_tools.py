@@ -232,6 +232,10 @@ class ShotClip(object):
         # Plate
         plate_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Plate').first()
         if not plate_task:
+            import datetime
+            import pytz
+            from stalker import defaults
+            utc_now = datetime.datetime.now(pytz.utc)
             plate_task = Task(
                 name='Plate',
                 parent=shot,
@@ -242,6 +246,8 @@ class ShotClip(object):
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
                 description='Autocreated by Resolve',
+                start=utc_now,  # this will be rounded to the timing resolution
+                duration=defaults.timing_resolution
             )
             DBSession.add(plate_task)
 
