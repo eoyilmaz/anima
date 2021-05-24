@@ -32,14 +32,14 @@ class MayaRenderCommandBuilder(object):
                  render_layer=None, camera=None, outputs=None, project='',
                  by_frame=1):
         self.name = name
-        self.file_full_path = file_full_path
+        self.file_full_path = file_full_path.replace("\\", "/")
         self.render_engine = render_engine
         self.render_layer = render_layer  # -rl "%s"
         self.camera = camera  # -cam "%s"
         if outputs is None:
             outputs = []
         self.outputs = outputs
-        self.project = project  # -proj "%s"
+        self.project = project.replace("\\", "/")  # -proj "%s"
         self.by_frame = by_frame
 
     def build_command(self):
