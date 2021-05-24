@@ -72,7 +72,7 @@ class MayaRenderCommandBuilder(object):
                 cmd_buffer.append('-rl "%s"' % self.render_layer)
 
         if self.project:
-            cmd_buffer.append('-proj "%s"' % os.path.normpath(self.project))
+            cmd_buffer.append('-proj "%s"' % os.path.normpath(self.project).replace("\\", "/"))
 
         cmd_buffer.append(self.file_full_path)
 
