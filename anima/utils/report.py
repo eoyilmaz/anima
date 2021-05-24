@@ -80,10 +80,10 @@ class NetflixReporter(object):
                             shot_methodologies.append("3D Set Extension")
                             break
 
-        # Animation -> "3D Animated Objects"
+        # Animation -> "3D Animated Object"
         # Animation.dependency -> Character.Rig -> "3D Character"
         if "animation" in child_task_type_names:
-            shot_methodologies.append("3D Animated Objects")
+            shot_methodologies.append("3D Animated Object")
             # also check if there are any dependencies to a character rig
             animation_tasks = filter(lambda x: x.type and x.type.name.lower().startswith("anim"), child_tasks)
             for animation_task in animation_tasks:
