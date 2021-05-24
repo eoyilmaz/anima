@@ -1473,6 +1473,14 @@ def UI():
                 bgc=color.color
             )
 
+            pm.button(
+                'lock_tracked_camera_channels_button',
+                l="Lock Tracked Camera Channels",
+                c=repeated_callback(camera_tools.lock_tracked_camera_channels),
+                ann=camera_tools.lock_tracked_camera_channels.__doc__,
+                bgc=color.color
+            )
+
             color.change()
             pm.text(l='===== Vertigo =====')
             pm.button('vertigo_setup_look_at_button',

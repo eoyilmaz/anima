@@ -427,3 +427,17 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     camera_transform.s.lock(True)
 
     pm.select(main_ctrl)
+
+
+def lock_tracked_camera_channels():
+    """Locks tracked camera translate channels
+    """
+    for node in pm.selected():
+        node.t.lock()
+        node.r.lock()
+        node.s.lock()
+        shape = node.getShape()
+        if shape and isinstance(shape, pm.nt.Camera):
+            shape.horizontalFilmAperture.lock()
+            shape.verticalFilmAperture.lock()
+            shape.focalLength.lock()
