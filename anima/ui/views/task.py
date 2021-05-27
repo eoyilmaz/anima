@@ -750,10 +750,10 @@ class TaskTreeView(QtWidgets.QTreeView):
                     from stalker.db.session import DBSession
                     from stalker import SimpleEntity, Task
                     from anima import utils
-                    entities = SimpleEntity.query.filter(SimpleEntity.id.in_(self.get_selected_task_ids())).all()
-                    for entity in entities:
+                    for entity in self.get_selected_tasks():
                         if isinstance(entity, Task):
                             utils.fix_task_statuses(entity)
+                            utils.fix_task_computed_time(entity)
                             DBSession.add(entity)
                     DBSession.commit()
 
