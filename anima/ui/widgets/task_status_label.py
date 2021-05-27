@@ -14,14 +14,15 @@ class TaskStatusLabel(QtWidgets.QLabel):
         'WIP': 'orange',
         'HREV': 'purple',
         'DREV': 'dodgerblue',
-        'STP': 'red',
+        'STOP': 'red',
         'OH': 'red',
         'CMPL': 'green',
     }
 
     def __init__(self, task=None, **kwargs):
-        self.task = task
         super(TaskStatusLabel, self).__init__(**kwargs)
+        self._task = None
+        self.task = task
 
         self.setup_ui()
 
@@ -34,7 +35,21 @@ class TaskStatusLabel(QtWidgets.QLabel):
 
         from anima.ui.lib import QtCore
         self.setAlignment(QtCore.Qt.AlignCenter)
-        if self.task:
+
+    @property
+    def task(self):
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """setter for the task property
+
+        :param task: A Stalker Task instance
+        :return:
+        """
+        from stalker import Task
+        if isinstance(task, Task):
+            self._task = task
             status_color = self.status_colors[self.task.status.code]
             self.setStyleSheet(
                 """
@@ -47,6 +62,7 @@ class TaskStatusLabel(QtWidgets.QLabel):
             )
             self.setText(self.task.status.name)
         else:
+            self._task = None
             self.setText('No Task')
             self.setStyleSheet(
                 """

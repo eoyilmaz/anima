@@ -317,7 +317,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # update the task dashboard widget
         self.task_dashboard_widget.task = task
-        self.task_dashboard_widget.fill_ui()
 
     def show_and_raise(self):
         """

@@ -9,7 +9,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, task=None, parent=None, **kwargs):
-        self.task = task
+        self._task = None
         self.parent = parent
         super(TaskDetailWidget, self).__init__(parent=parent)
 
@@ -35,7 +35,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.cut_out_field = None
 
         self.setup_ui()
-        self.fill_ui()
+        self.task = task
 
     def setup_ui(self):
         """creates the UI widgets
@@ -231,33 +231,44 @@ class TaskDetailWidget(QtWidgets.QWidget):
             self.type_field_changed
         )
 
-    def fill_ui(self):
+    @property
+    def task(self):
         """fill the ui with the data
         """
-        if self.task:
-            self.name_field.setText(self.task.name)
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """setter for the task property
+        :param task: A Stalker Task instance
+        :return:
+        """
+        from stalker import Task
+        if isinstance(task, Task):
+            self._task = task
+            self.name_field.setText(task.name)
 
             self._fill_task_type_widget()
 
-            if self.task.created_by:
-                self.created_by_field.setText(self.task.created_by.name)
+            if task.created_by:
+                self.created_by_field.setText(task.created_by.name)
 
-            if self.task.updated_by:
-                self.updated_by_field.setText(self.task.updated_by.name)
+            if task.updated_by:
+                self.updated_by_field.setText(task.updated_by.name)
 
             self.timing_field.setText(
                 '%s - %s' % (
-                    self.task.start.strftime('%d-%m-%Y %H:%M'),
-                    self.task.end.strftime('%d-%m-%Y %H:%M')
+                    task.start.strftime('%d-%m-%Y %H:%M'),
+                    task.end.strftime('%d-%m-%Y %H:%M')
                 )
             )
 
-            self.priority_field.setText('%s' % self.task.priority)
+            self.priority_field.setText('%s' % task.priority)
 
             from stalker import Shot
-            if isinstance(self.task, Shot):
-                self.cut_in_field.setText('%s' % self.task.cut_in)
-                self.cut_out_field.setText('%s' % self.task.cut_out)
+            if isinstance(task, Shot):
+                self.cut_in_field.setText('%s' % task.cut_in)
+                self.cut_out_field.setText('%s' % task.cut_out)
                 self.cut_in_label.setVisible(True)
                 self.cut_in_field.setVisible(True)
                 self.cut_out_label.setVisible(True)
@@ -267,6 +278,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
                 self.cut_in_field.setVisible(False)
                 self.cut_out_label.setVisible(False)
                 self.cut_out_field.setVisible(False)
+        else:
+            self._task = None
 
     def _fill_task_type_widget(self):
         """fills the task type widget

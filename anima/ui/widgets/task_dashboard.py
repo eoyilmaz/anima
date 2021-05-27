@@ -9,7 +9,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, task=None, parent=None, **kwargs):
-        self.task = task
+        self._task = None
         self.parent = parent
 
         super(TaskDashboardWidget, self).__init__(parent=parent)
@@ -34,7 +34,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_notes_widget = None
 
         self.setup_ui()
-        self.fill_ui()
+        self.task = task
 
     def setup_ui(self):
         """create the UI widgets
@@ -50,9 +50,6 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.vertical_layout.addLayout(horizontal_layout3)
 
         self.widget_label = QtWidgets.QLabel(self)
-        self.widget_label.setText(
-            self.task.name if self.task else 'Task Name'
-        )
         self.widget_label.setStyleSheet(
             "color: rgb(71, 143, 202);\nfont: 18pt;"
         )
@@ -204,40 +201,52 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # ---------------------------
         # Task Notes
         from anima.ui.widgets.entity_notes import EntityNotesWidgets
-        self.task_notes_widget = \
-            EntityNotesWidgets(entity=self.task, parent=self)
+        self.task_notes_widget = EntityNotesWidgets(entity=self.task, parent=self)
         self.vertical_layout.addWidget(self.task_notes_widget)
 
-    def fill_ui(self):
-        """fills the ui
+    @property
+    def task(self):
+        """getter for the _task attribute
         """
-        self.widget_label.setText(
-            self.task.name if self.task else 'Task Name'
-        )
+        return self._task
 
-        self.task_thumbnail_widget.task = self.task
-        self.task_thumbnail_widget.fill_ui()
+    @task.setter
+    def task(self, task):
+        """setter for the task attribute
+        """
 
-        self.task_detail_widget.task = self.task
-        self.task_detail_widget.fill_ui()
-
-        self.task_timing_widget.task = self.task
-        self.task_timing_widget.fill_ui()
+        from stalker import Task
+        if isinstance(task, Task):
+            self._task = task
+        else:
+            self._task = None
 
         # self.description_label = None
         # self.description_field = None
-        if self.task:
-            self.description_field.setText(self.task.description)
         # self.responsible_info_widget = None
         # self.resource_info_widget = None
         # self.task_versions_usage_info_widget = None
         # self.watch_task_button = None
         # self.fix_task_status_button = None
-        # self.task_status_label = None
         # self.task_progress = None
 
-        self.task_notes_widget.task = self.task
-        self.task_notes_widget.fill_ui()
+        if self._task:
+            self.description_field_is_updating = True
+            self.description_field.setText(self._task.description)
+            self.description_field_is_updating = False
+            self.task_progress.setValue(self._task.percent_complete)
+        else:
+            self.description_field_is_updating = True
+            self.description_field.setText('')
+            self.description_field_is_updating = False
+            self.task_progress.setValue(0)
+
+        self.widget_label.setText(self._task.name if self._task else 'Task Name')
+        self.task_thumbnail_widget.task = self._task
+        self.task_detail_widget.task = self._task
+        self.task_timing_widget.task = self._task
+        self.task_status_label.task = self._task
+        self.task_notes_widget.task = self._task
 
     def fix_task_status(self):
         """fix current task status
@@ -246,6 +255,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         assert isinstance(self.task, Task)
         from anima import utils
         utils.fix_task_statuses(self.task)
+        utils.fix_task_computed_time(self.task)
 
         from stalker.db.session import DBSession
         DBSession.add(self.task)

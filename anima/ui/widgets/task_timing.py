@@ -9,7 +9,7 @@ class TaskTimingWidget(QtWidgets.QWidget):
     """
 
     def __init__(self, task=None, parent=None, **kwargs):
-        self.task = task
+        self._task = None
         self.parent = parent
         super(TaskTimingWidget, self).__init__(parent=parent)
 
@@ -29,7 +29,7 @@ class TaskTimingWidget(QtWidgets.QWidget):
         self.schedule_model_field = None
 
         self.setup_ui()
-        self.fill_ui()
+        self.task = task
 
     def setup_ui(self):
         """creates the UI widgets
@@ -190,27 +190,45 @@ class TaskTimingWidget(QtWidgets.QWidget):
             self.schedule_model_field
         )
 
-    def fill_ui(self):
-        """fills the UI item with data
+    @property
+    def task(self):
+        """the getter for the _task attribute
         """
-        if self.task is None:
-            return
+        return self._task
 
-        self.bid_field.setText(
-            '%s %s' % (self.task.bid_timing, self.task.bid_unit)
-        )
-        self.schedule_timing_field.setText(
-            '%s %s' % (self.task.schedule_timing, self.task.schedule_unit)
-        )
-        self.total_time_logs_field.setText(
-            '%s %s' % self.task.least_meaningful_time_unit(
-                self.task.total_logged_seconds
-            )
-        )
-        self.time_to_complete_field.setText(
-            '%s %s' % self.task.least_meaningful_time_unit(
-                self.task.total_seconds - self.task.total_logged_seconds
-            )
-        )
+    @task.setter
+    def task(self, task):
+        """setter for the task property
 
-        self.schedule_model_field.setText(self.task.schedule_model)
+        :param task: A Stalker Task instance
+        :return:
+        """
+        from stalker import Task
+        if isinstance(task, Task):
+            self._task = task
+
+            self.bid_field.setText(
+                '%s %s' % (task.bid_timing, task.bid_unit)
+            )
+            self.schedule_timing_field.setText(
+                '%s %s' % (task.schedule_timing, task.schedule_unit)
+            )
+            self.total_time_logs_field.setText(
+                '%s %s' % task.least_meaningful_time_unit(
+                    task.total_logged_seconds
+                )
+            )
+            self.time_to_complete_field.setText(
+                '%s %s' % task.least_meaningful_time_unit(
+                    task.total_seconds - task.total_logged_seconds
+                )
+            )
+
+            self.schedule_model_field.setText(task.schedule_model)
+        else:
+            field_value = 'No Task'
+            self.bid_field.setText(field_value)
+            self.schedule_timing_field.setText(field_value)
+            self.total_time_logs_field.setText(field_value)
+            self.time_to_complete_field.setText(field_value)
+            self._task = None
