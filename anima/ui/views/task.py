@@ -730,7 +730,8 @@ class TaskTreeView(QtWidgets.QTreeView):
                     if answer == QtWidgets.QMessageBox.Yes:
                         from anima import utils
                         try:
-                            utils.create_structure(entity)
+                            for task in self.get_selected_tasks():
+                                utils.create_structure(task)
                         except Exception as e:
                             QtWidgets.QMessageBox.critical(
                                 self,
