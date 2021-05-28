@@ -190,12 +190,21 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         add_line(general_tab_vertical_layout)
 
-        # Delete Recent Comps
+        # Render Merger
         add_button(
             'Render Merger',
             general_tab_vertical_layout,
             GenericTools.render_merger,
             tooltip="Creates comp setup to merge renders created with Render Slicer."
+        )
+
+        # Render Merger
+        import functools
+        add_button(
+            '3DE4 Lens Distort',
+            general_tab_vertical_layout,
+            functools.partial(GenericTools.tde4_lens_distort_node_creator, self.parent()),
+            tooltip=GenericTools.tde4_lens_distort_node_creator.__doc__
         )
 
         # -------------------------------------------------------------------
@@ -424,3 +433,19 @@ class GenericTools(object):
         from anima.env.fusion import render_merger
         rm = render_merger.RenderMerger()
         rm.ui()
+
+    @classmethod
+    def tde4_lens_distort_node_creator(cls, parent):
+        """creates lens distort nodes from the given 3de4 lens file
+        """
+        # show a file browser
+        dialog = QtWidgets.QFileDialog(parent, "Choose file")
+        dialog.setNameFilter("3DE4 Lens Files (*.txt)")
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        if dialog.exec_():
+            file_path = dialog.selectedFiles()[0]
+            if not file_path:
+                return
+            from anima.env.fusion.utils import TDE4LensDistortionImporter
+            lens_importer = TDE4LensDistortionImporter()
+            lens_importer.import_(file_path)
