@@ -125,8 +125,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Task Thumbnail
         from anima.ui.widgets.entity_thumbnail import EntityThumbnailWidget
-        self.task_thumbnail_widget = \
-            EntityThumbnailWidget(task=self.task, parent=self)
+        self.task_thumbnail_widget = EntityThumbnailWidget(task=self.task, parent=self)
 
         horizontal_layout2.addWidget(self.task_thumbnail_widget)
 

@@ -11,9 +11,8 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
     default_thumbnail_size = [288, 162]
 
     def __init__(self, task=None, parent=None, **kwargs):
-        self.task = task
+        self._task = None
         self.parent = parent
-
         super(EntityThumbnailWidget, self).__init__(parent=parent)
 
         # storage for UI elements
@@ -22,6 +21,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.upload_thumbnail_button = None
 
         self.setup_ui()
+        self.task = task
 
     def setup_ui(self):
         """create the UI widgets
@@ -91,17 +91,31 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
             self.upload_thumbnail_button_clicked
         )
 
-    def fill_ui(self):
-        """fills the ui with the given task thumbnail
+    @property
+    def task(self):
+        """getter for the task property
         """
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """setter for the task property
+
+        :param task: A Stalker Task instance
+        :return:
+        """
+        from stalker import Task
+        if isinstance(task, Task):
+            self._task = task
+
         # clear the thumbnail first
         self.clear_thumbnail()
-
-        from anima.ui import utils
-        utils.update_graphics_view_with_task_thumbnail(
-            self.task,
-            self.thumbnail_graphics_view
-        )
+        if task:
+            from anima.ui import utils
+            utils.update_graphics_view_with_task_thumbnail(
+                self.task,
+                self.thumbnail_graphics_view
+            )
 
     def clear_thumbnail(self):
         """clears the content of the thumbnail
