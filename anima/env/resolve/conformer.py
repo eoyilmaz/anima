@@ -4,7 +4,7 @@ import os
 import re
 import glob
 import tempfile
-from stalker import Project, Sequence, Scene, Shot, Task
+from stalker import Project, Sequence, Scene, Shot, Task, Version
 
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
@@ -209,10 +209,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.ext_name_combo_box.setSizePolicy(size_policy)
         self.h_layout5.addWidget(self.ext_name_combo_box)
 
+        self.plus_plates_check_box = QtWidgets.QCheckBox(self.h_layout5.widget())
+        self.plus_plates_check_box.setText('+ Plates')
+        self.h_layout5.addWidget(self.plus_plates_check_box)
+
         self.alpha_only_check_box = QtWidgets.QCheckBox(self.h_layout5.widget())
         self.alpha_only_check_box.setText('Alpha Only')
         self.h_layout5.addWidget(self.alpha_only_check_box)
-
+        
         self.vertical_layout.addLayout(self.h_layout5)
 
         self.conform_button = QtWidgets.QPushButton(self.vertical_layout.widget())
@@ -232,7 +236,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.h_layout6.addWidget(self.date_label)
 
         self.start_date = QtWidgets.QDateEdit(self.h_layout6.widget())
-        self.start_date.setDate(QtCore.QDate(2021, 1, 1))
+        self.start_date.setDate(QtCore.QDate.currentDate()) # setDate(QtCore.QDate(2021, 1, 1))
         self.start_date.setCurrentSection(QtWidgets.QDateTimeEdit.MonthSection)
         self.start_date.setCalendarPopup(True)
         self.h_layout6.addWidget(self.start_date)
@@ -304,6 +308,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.SIGNAL('currentIndexChanged(QString)'),
             self.shot_out_combo_box_changed
         )
+        
+        # task_name_combo_box is changed
+        QtCore.QObject.connect(
+            self.task_name_combo_box,
+            QtCore.SIGNAL('currentIndexChanged(QString)'),
+            self.task_name_combo_box_changed
+        )
 
         # filter statuses check_box is changed
         QtCore.QObject.connect(
@@ -351,6 +362,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.shot_out_combo_box.setEnabled(0)
 
         self.task_name_combo_box.addItem('Comp', -1)
+        self.task_name_combo_box.addItem('Plate', 0)
 
         self.ext_name_combo_box.addItem('exr', -1)
         self.ext_name_combo_box.addItem('png', 0)
@@ -561,6 +573,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         self.updated_shot_list.clear()
 
+    def task_name_combo_box_changed(self):
+        """runs when the task_name_combo_box is changed
+        """
+        task_in_text = self.task_name_combo_box.currentText()
+        if task_in_text == 'Comp':
+            self.alpha_only_check_box.setChecked(0)
+            self.alpha_only_check_box.setEnabled(1)
+            self.plus_plates_check_box.setChecked(0)
+            self.plus_plates_check_box.setEnabled(1)
+        else:
+            self.alpha_only_check_box.setChecked(0)
+            self.alpha_only_check_box.setEnabled(0)
+            self.plus_plates_check_box.setChecked(0)
+            self.plus_plates_check_box.setEnabled(0)   
+
     def filter_statuses_check_box_changed(self, state):
         """runs when the filter_status_check_box is changed
         """
@@ -634,49 +661,83 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         return shots
 
+    def get_valid_statuses_from_ui(self):
+        """returns valisd statuses from ui
+        """
+        valid_status_names = []
+        
+        if self.wip_check_box.isChecked():
+            valid_status_names.append('Work In Progress')
+        if self.hrev_check_box.isChecked():
+            valid_status_names.append('Has Revision')
+        if self.prev_check_box.isChecked():
+            valid_status_names.append('Pending Review')
+        if self.completed_check_box.isChecked():
+            valid_status_names.append('Completed')
+        
+        return valid_status_names
+
     def get_latest_output_path(self, shot, task_name, ext='exr'):
         """returns the Output/Main outputs path for resolve from a given Shot stalker instance
         """
-        comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == task_name).first()
-        if not comp_task and task_name == 'Comp': # try Cleanup task
-            comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
-        if not comp_task:
+        task = Task.query.filter(Task.parent == shot).filter(Task.name == task_name).first()
+        if not task and task_name == 'Comp': # try Cleanup task
+            task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
+        if not task:
             return None
 
         if self.filter_statuses_check_box.isChecked():
-            valid_status_names = []
-            if self.wip_check_box.isChecked():
-                valid_status_names.append('Work In Progress')
-            if self.hrev_check_box.isChecked():
-                valid_status_names.append('Has Revision')
-            if self.prev_check_box.isChecked():
-                valid_status_names.append('Pending Review')
-            if self.completed_check_box.isChecked():
-                valid_status_names.append('Completed')
+            if task_name != 'Plate': # do not check status for plates
+                valid_status_names = self.get_valid_statuses_from_ui()
+                if task.status.name not in valid_status_names:
+                    print('%s -> %s' % (shot.name, task.status.name))
+                    return None
 
-            if comp_task.status.name not in valid_status_names:
-                print('%s -> %s' % (shot.name, comp_task.status.name))
-                return None
+        task_path = task.absolute_path
+        output_path = os.path.join(task_path, 'Outputs', 'Main')
 
-        comp_path = comp_task.absolute_path
-        output_path = os.path.join(comp_path, 'Outputs', 'Main')
-
-        latest_comp_name = None
-        if comp_task.versions:
-            latest_comp_version = comp_task.versions[0].latest_version
-            latest_comp_name = os.path.splitext(latest_comp_version.filename)[0]
+        latest_task_name = None
+        if task.versions:
+            latest_task_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main').order_by(Version.version_number.desc()).first()
+            if latest_task_version:
+                latest_task_name = os.path.splitext(latest_task_version.filename)[0]
 
         resolve_path = None
-        if latest_comp_name:
+        if latest_task_name:
             if not self.alpha_only_check_box.isChecked():
-                file_paths = glob.glob("%s/*/%s/*%s.*.%s" % (output_path, ext, latest_comp_name, ext))
+                file_paths = glob.glob("%s/*/%s/*%s.*.%s" % (output_path, ext, latest_task_name, ext))
                 if not file_paths:  # try outputs with no version folders
-                    file_paths = glob.glob("%s/%s/*%s.*.%s" % (output_path, ext, latest_comp_name, ext))
+                    file_paths = glob.glob("%s/%s/*%s.*.%s" % (output_path, ext, latest_task_name, ext))
             else:  # check for paths that contain "alpha" as text
-                version_folder = latest_comp_name.split('_')[-1]
+                version_folder = latest_task_name.split('_')[-1]
                 file_paths = glob.glob("%s/%s/%s/*%s*.*.%s" % (output_path, version_folder, ext, 'alpha', ext))
                 if not file_paths:  # try outputs with no version folders
                     file_paths = glob.glob("%s/%s/*%s*%s.*.%s" % (output_path, ext, 'alpha', version_folder, ext))
+
+            if file_paths:
+                regex = r'\d+$|#+$'
+                dir_base = file_paths[0].split('.')[0]
+                first_dir_base = os.path.splitext(file_paths[0])[0]
+                first_frame = re.findall(regex, first_dir_base)
+                last_dir_base = os.path.splitext(file_paths[-1])[0]
+                last_frame = re.findall(regex, last_dir_base)
+                resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
+                resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
+
+        if not resolve_path and task_name == 'Plate': # try to find path manually for plate tasks as they might not have default naming conventions or versions
+            version_numbers = []
+            main_dir = os.path.join(shot.absolute_path, 'Plate', 'Outputs', 'Main')
+            if os.path.isdir(main_dir):
+                dirs = glob.glob('%s/*' % main_dir)
+                for dir in dirs:
+                    if os.path.isdir(dir) and os.path.basename(dir)[0] == 'v' and os.path.basename(dir)[1:].isdigit() and len(os.path.basename(dir)) == 4:
+                        version_numbers.append(int(os.path.basename(dir)[1:]))
+            latest_version_number = max(version_numbers)
+            latest_version_folder_name = 'v%s' % str(latest_version_number).rjust(3, '0')
+            plate_path = os.path.join(main_dir, latest_version_folder_name, ext)           
+            plate_path = os.path.normpath(plate_path).replace('\\', '/')
+
+            file_paths = glob.glob('%s/*.%s' %(plate_path, ext)) 
 
             if file_paths:
                 regex = r'\d+$|#+$'
@@ -821,27 +882,73 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             t_name = self.task_name_combo_box.currentText()
             extension = self.ext_name_combo_box.currentText()
             clip_path_list = []
+            plate_path_list = []
+            plate_not_found_list = []
+            plate_range_mismatch_list = []
             none_path_list = []
             for shot in shots:
                 clip_path = self.get_latest_output_path(shot, t_name, ext=extension)
                 if t_name == 'Comp' and clip_path is None: # look for Cleanup task
-                    clip_path = self.get_latest_output_path(shot, 'Cleanup', ext=extension)
+                    clip_path = self.get_latest_output_path(shot, 'Cleanup', ext=extension)       
+                
                 if clip_path:
                     clip_path_list.append(clip_path)
                 elif clip_path is None:
                     none_path_list.append('%s -> No Outputs/Main found.' % shot.name)
+
+                if t_name == 'Comp' and clip_path and self.plus_plates_check_box.isChecked():
+                    plate_path = self.get_latest_output_path(shot, 'Plate', ext=extension)
+                    if plate_path:
+                        plate_path_list.append(plate_path)
+                    elif clip_path: # add comp or cleanup clip to match timelines
+                        plate_path_list.append(clip_path)
+                        plate_not_found_list.append(clip_path)
+
                 print('Checking Shot... - %s' % shot.name)
             clip_path_list.sort()
             none_path_list.sort()
+            plate_path_list.sort()
+            plate_not_found_list.sort()
+            plate_range_mismatch_list.sort()
+
+            if plate_path_list and self.plus_plates_check_box.isChecked():
+                if len(clip_path_list) != len(plate_path_list):
+                    print('--------------------------------------------------------------------------')
+                    print('ERROR: Comp / Plate mismatch! Contact Supervisor.')
+                    print('--------------------------------------------------------------------------')
+                    raise RuntimeError('Comp / Plate mismatch! Contact Supervisor.')
+
+                for i in range(0, len(clip_path_list)):
+                    try:
+                        clip_range = os.path.basename(clip_path_list[i]).split('.')[1]
+                        plate_range = os.path.basename(plate_path_list[i]).split('.')[1]
+                        print('Clip: %s -> Plate: %s' % (clip_range, plate_range))
+                        if clip_range != plate_range:
+                            plate_range_mismatch_list.append(clip_path_list[i])
+                    except IndexError:
+                        pass
 
             print('--------------------------------------------------------------------------')
-            for clip_path in clip_path_list:
-                print(clip_path)
+            for i in range(0, len(clip_path_list)):
+                if plate_path_list and self.plus_plates_check_box.isChecked():
+                    print('%s  +  %s' % (clip_path_list[i], plate_path_list[i]))
+                else:    
+                    print(clip_path_list[i])
             print('--------------------------------------------------------------------------')
             if none_path_list:
                 for none_path in none_path_list:
                     print(none_path)
                 print('--------------------------------------------------------------------------')
+            if plate_not_found_list:
+                print('--------------------------PLATES NOT FOUND--------------------------------')
+                for p_path in plate_not_found_list:
+                    print(p_path)
+                print('--------------------------------------------------------------------------')
+            if plate_range_mismatch_list:
+                print('-----------------------PLATES RANGE MISMATCH------------------------------')
+                for p_path in plate_range_mismatch_list:
+                    print(p_path)
+                print('--------------------------------------------------------------------------')        
 
             if clip_path_list:
                 self.clip_paths_to_xml(clip_path_list, self.xml_path)
@@ -850,6 +957,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 media_pool = self.project.GetMediaPool()
                 media_pool.ImportTimelineFromFile(self.xml_path)
                 print('XML IMPORTED to Resolve')
+                if plate_path_list and self.plus_plates_check_box.isChecked():
+                    print('CREATING + PLATES XML... Please Wait... ----------------------------')
+                    self.clip_paths_to_xml(plate_path_list, self.xml_path)
+                    print('+ PLATES XML CREATED----------------------------')
+                    media_pool = self.project.GetMediaPool()
+                    media_pool.ImportTimelineFromFile(self.xml_path)
+                    print('+ PLATES XML IMPORTED to Resolve')
             else:
                 print('No Outputs found with given specs!')
 
@@ -873,51 +987,68 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             t_name = self.task_name_combo_box.currentText()
             for shot in shots:
                 print('Checking Shot... - %s' % shot.name)
-                comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == t_name).first()
+                task = Task.query.filter(Task.parent == shot).filter(Task.name == t_name).first()
 
-                if not comp_task:
-                    continue
+                has_valid_status = True
+                if self.filter_statuses_check_box.isChecked():
+                    if t_name != 'Plate': # do not check status for plates
+                        try:
+                            valid_status_names = self.get_valid_statuses_from_ui()
+                            if task.status.name not in valid_status_names:
+                                print('%s -> %s' % (shot.name, task.status.name))
+                                has_valid_status = False
+                        except AttributeError:
+                            pass        
 
-                if comp_task.versions:
-                    last_version = comp_task.versions[0].latest_version
-                else:
-                    continue
+                if has_valid_status is True:            
+                    if not task:
+                        continue
 
-                try:
-                    raw_seconds = os.path.getmtime(last_version.absolute_full_path)
+                    if task.versions:
+                        last_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main').order_by(Version.version_number.desc()).first()
+                    else:
+                        continue
 
-                    # If we are looking for *Alpha*, comp name will not match with outputs...
-                    # because the output is rendered from Main take with a different saver path
-                    # so we have to look for the first file rendered which had *Alpha* in its name
-                    if self.alpha_only_check_box.isChecked():
-                        ext = self.ext_name_combo_box.currentText()
-                        comp_path = comp_task.absolute_path
-                        output_path = os.path.join(comp_path, 'Outputs', 'Main')
-                        latest_comp_name = last_version.filename.strip('.comp')
-                        version_folder = latest_comp_name.split('_')[-1]
-                        file_paths = glob.glob("%s/%s/%s/*%s*.*.%s" % (output_path, version_folder,
-                                                                       ext, 'alpha', ext))
-                        if not file_paths:  # try outputs with no version folders
-                            file_paths = glob.glob("%s/%s/*%s*%s.*.%s" % (output_path, ext, 'alpha',
-                                                                          version_folder, ext))
-                        if file_paths:
-                            raw_seconds = os.path.getmtime(file_paths[0])
+                    try:
+                        has_alpha = False
+                        raw_seconds = os.path.getmtime(last_version.absolute_full_path)
 
-                    local_time = time.localtime(raw_seconds)
-                    modification_date = datetime.datetime(local_time.tm_year,
-                                                          local_time.tm_mon,
-                                                          local_time.tm_mday)
+                        # If we are looking for *Alpha*, comp name will not match with outputs...
+                        # because the output is rendered from Main take with a different saver path
+                        # so we have to look for the first file rendered which had *Alpha* in its name
+                        if self.alpha_only_check_box.isChecked():
+                            ext = self.ext_name_combo_box.currentText()
+                            t_path = task.absolute_path
+                            output_path = os.path.join(t_path, 'Outputs', 'Main')
+                            latest_task_name = os.path.splitext(last_version.filename)[0]
+                            version_folder = latest_task_name.split('_')[-1]
+                            file_paths = glob.glob("%s/%s/%s/*%s*.*.%s" % (output_path, version_folder,
+                                                                           ext, 'alpha', ext))
+                            if not file_paths:  # try outputs with no version folders
+                                file_paths = glob.glob("%s/%s/*%s*%s.*.%s" % (output_path, ext, 'alpha',
+                                                                              version_folder, ext))
+                            if file_paths:
+                                raw_seconds = os.path.getmtime(file_paths[0])
+                                has_alpha = True
 
-                    if modification_date > query_date:
-                        update_info = '%s : %s > %s' % (
-                            comp_task.parent.name,
-                            modification_date,
-                            last_version.updated_by.name
-                        )
-                        update_string = self.add_data_as_text_to_ui(update_info, shot.id)
-                        update_list.append(update_string)
-                except BaseException:
-                    continue
+                        local_time = time.localtime(raw_seconds)
+                        modification_date = datetime.datetime(local_time.tm_year,
+                                                              local_time.tm_mon,
+                                                              local_time.tm_mday)
+
+                        if modification_date >= query_date:
+                            update_info = '%s : %s > %s' % (
+                                task.parent.name,
+                                modification_date,
+                                last_version.updated_by.name
+                            )
+                            update_string = self.add_data_as_text_to_ui(update_info, shot.id)
+                            if not self.alpha_only_check_box.isChecked():
+                                update_list.append(update_string)
+                            elif has_alpha is True:
+                                update_list.append(update_string)    
+                    except BaseException:
+                        continue
 
             if update_list:
                 update_list.sort()
