@@ -20,7 +20,7 @@ class NetflixReporter(object):
         'PREV': 'In Progress',
         'HREV': 'In Progress',
         'DREV': 'In Progress',
-        'CMPL': 'Final Approved',
+        'CMPL': 'Pending Netflix Review',
         'STOP': 'Omit',
         'OH': 'On Hold',
     }
@@ -105,12 +105,14 @@ class NetflixReporter(object):
 
         return shot_methodologies
 
-    def report(self, seq, csv_output_path, vfx_turnover_to_vendor_date, vendors, hourly_cost, currency):
+    def report(self, seq, csv_output_path, vfx_turnover_to_vendor_date, vfx_next_studio_review_date, vendors,
+               hourly_cost, currency):
         """Generates the report
 
         :param seq: The Sequence to generate the report of
         :param csv_output_path: The output path of the resultant CSV file
         :param vfx_turnover_to_vendor_date: The date that the picture lock has been received.
+        :param vfx_next_studio_review_date: The date that Netflix can review the CMPL shots
         :param list vendors: A list of vendor names
         :param hourly_cost: The hourly cost for the budget field.
         :param currency: The currency of the hourly cost.
@@ -168,7 +170,7 @@ class NetflixReporter(object):
                     scope_of_work=shot.description,
                     vendors=', '.join(vendors),
                     vfx_turnover_to_vendor_date=vfx_turnover_to_vendor_date.strftime(self.date_time_format),
-                    vfx_next_studio_review_date='',
+                    vfx_next_studio_review_date=vfx_next_studio_review_date if comp_or_cleanup_task.status.code == 'CMPL' else '',
                     vfx_final_delivery_date=shot.end.strftime(self.date_time_format),
                     vfx_final_version=vfx_final_version,
                     shot_cost='%0.2f' % (total_bid_seconds / 3600 * hourly_cost),
