@@ -322,7 +322,7 @@ This system will be updated in Afanasy."""
                 pm.checkBox(
                     'cgru_afanasy__generate_previews',
                     l='',
-                    v=pm.optionVar.get('cgru_afanasy__generate_previews_ov', 1)
+                    v=pm.optionVar.get('cgru_afanasy__generate_previews_ov', 0)
                 )
 
             with pm.rowLayout(nc=2, adj=2, cl2=('right', 'left'), cw2=(labels_width, 40)):
