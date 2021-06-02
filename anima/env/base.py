@@ -705,11 +705,7 @@ class EnvironmentBase(object):
         :param version:
         :return:
         """
-        shot = self.get_shot(version)
-        if shot:
-            return True
-        else:
-            return False
+        return self.get_shot(version) is not None
 
     def set_render_resolution(self, width, height, pixel_aspect=1.0):
         """Sets the render resolution for the current environment

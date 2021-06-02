@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-import uuid
-
 import sys
 
 exceptions = None
@@ -272,6 +269,7 @@ class Fusion(EnvironmentBase):
         version.created_with = self.name
 
         # set project_directory
+        import os
         self.project_directory = os.path.dirname(version.absolute_path)
 
         # create the main write node
@@ -312,32 +310,22 @@ class Fusion(EnvironmentBase):
         :return:
         """
         # check if this is a shot related task
-        is_shot_related_task = False
-        shot = None
-        from stalker import Shot
-        for task in version.task.parents:
-            if isinstance(task, Shot):
-                is_shot_related_task = True
-                shot = task
-                break
+        shot = self.get_shot(version)
 
-        fps = None
-        imf = None
-        if not is_shot_related_task:
+        if shot:
+            # use the shot image_format
+            fps = shot.fps
+            imf = shot.image_format
+
+            # set frame ranges
+            self.set_frame_range(
+                start_frame=shot.cut_in,
+                end_frame=shot.cut_out,
+            )
+        else:
             # use the Project image_format
             fps = version.task.project.fps
             imf = version.task.project.image_format
-        else:
-            # use the shot image_format
-            if shot:
-                fps = shot.fps
-                imf = shot.image_format
-
-                # set frame ranges
-                self.set_frame_range(
-                    start_frame=shot.cut_in,
-                    end_frame=shot.cut_out,
-                )
 
         # set comp resolution and fps
         if imf:
@@ -402,6 +390,7 @@ class Fusion(EnvironmentBase):
              reference_depth=0, skip_update_check=False):
         """the open action for nuke environment
         """
+        import os
         version_full_path = os.path.normpath(version.absolute_full_path)
 
         # # delete all the comps and open new one
@@ -448,6 +437,7 @@ class Fusion(EnvironmentBase):
         :return: :class:`~oyProjectManager.models.version.Version`
         """
         # full_path = self._root.knob('name').value()
+        import os
         full_path = os.path.normpath(
             self.comp.GetAttrs()['COMPS_FileName']
         ).replace('\\', '/')
@@ -599,8 +589,7 @@ class Fusion(EnvironmentBase):
 
         saver_nodes = []
         for saver_node in all_saver_nodes:
-            if saver_node.GetAttrs('TOOLS_Name').startswith(
-               self._main_output_node_name):
+            if saver_node.GetAttrs('TOOLS_Name').startswith(self._main_output_node_name):
                 saver_nodes.append(saver_node)
 
         return saver_nodes
@@ -723,6 +712,7 @@ class Fusion(EnvironmentBase):
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
+        import os
         output_file_path = os.path.join(
             version.absolute_path,
             'Outputs',
@@ -758,6 +748,143 @@ class Fusion(EnvironmentBase):
     def output_node_name_generator(self, file_format):
         return '%s_%s' % (self._main_output_node_name, file_format)
 
+    def create_slate_node(self, version):
+        """Creates the slate node
+
+        :param version: A Stalker Version instance
+        :return:
+        """
+        # if the channels are animated, set new keyframes
+        current_frame = self.comp.CurrentTime
+
+        # first try to find the slate tool
+        slate_node = self.comp.FindTool("MainSlate")
+        if not slate_node:
+            # create one
+            self.comp.Lock()
+            self.comp.DoAction("AddSetting", {"filename": "Macros:/AnimaSlate.setting"})
+            slate_node = self.comp.FindTool("AnimaSlate1")
+            self.comp.Unlock()
+            slate_node.SetAttrs({"TOOLS_Name": "MainSlate", "TOOLB_Locked": False})
+
+        # set slate attributes
+        from anima.env.fusion import utils
+
+        # Thumbnail
+        shot = self.get_shot(version)
+        imf = None
+        if shot:
+            if shot.thumbnail:
+                import os
+                thumbnail_full_path = os.path.expandvars(shot.thumbnail.full_path)
+                slate_node.Input1[current_frame] = thumbnail_full_path
+
+            if shot:
+                imf = shot.image_format
+            else:
+                imf = version.task.project.image_format
+
+            # Shot Types
+            # TODO: For now use Netflix format, extend it later on
+            from anima.utils.report import NetflixReporter
+            slate_node.Input8[current_frame] = ", ".join(NetflixReporter.generate_shot_methodologies(shot))
+
+            # Shot Description
+            from anima.utils import text_splitter
+            split_description = text_splitter(shot.description, 40)
+            slate_node.Input9[current_frame] = "\n".join(split_description[0:3])
+            slate_node.Input10[current_frame] =  "\n".join(split_description[0:3])
+
+            # Submission Note
+            slate_node.Input11[current_frame] = ""
+
+            # Shot Name
+            slate_node.Input12[current_frame] = shot.name
+
+            # Episode and Sequence
+            seq = None
+            if shot.sequences:
+                seq = shot.sequences[0]
+                slate_node.Input14[current_frame] = seq.name
+                slate_node.Input15[current_frame] = seq.name
+
+            # Scene Name
+            # Use shot name for now
+            parts = shot.name.split("_")
+            scene_name = parts[2]
+            slate_node.Input16[current_frame] = scene_name
+
+            # Frames
+            slate_node.Input17[current_frame] = shot.cut_out - shot.cut_in + 1
+        else:
+            # Frames
+            slate_node.Input17[current_frame] = ""
+
+        # Resolution
+        # create a resize node or use the immediate resize node if any
+        # resize_node = slate_node.FindMainOutput(1)
+        resize_node = self.comp.FindTool("SlateResize")
+        if resize_node:
+            # check if this is a Resize node
+            if not resize_node.GetAttrs("TOOLS_RegID") == "BetterResize":
+                resize_node = None
+
+        if not resize_node:
+            # create a new one
+            resize_node = self.comp.BetterResize()
+            resize_node.SetAttrs({"TOOLS_Name": "SlateResize", "TOOLB_Locked": False})
+
+        resize_node.Input = slate_node
+        if imf:
+            resize_node.Width[current_frame] = int(3840 * float(imf.height) / 2160)
+            resize_node.Height[current_frame] = imf.height
+            resize_node.KeepAspect[current_frame] = True
+
+        # create the SlateMerge tool
+        slate_merge_node = self.comp.FindTool("SlateMerge")
+        if slate_merge_node:
+            # check if this is a Merge node
+            if not slate_merge_node.GetAttrs("TOOLS_RegID") == "Merge":
+                slate_merge_node = None
+
+        if not slate_merge_node:
+            # create a new one
+            slate_merge_node = self.comp.Merge()
+            slate_merge_node.SetAttrs({"TOOLS_Name": "SlateMerge", "TOOLB_Locked": False})
+
+        slate_merge_node.Foreground = resize_node
+        # Animate the slate_merge_node
+        slate_merge_node.Blend = self.comp.BezierSpline({})
+        if shot:
+            slate_merge_node.Blend[shot.cut_in - 1] = 1
+            slate_merge_node.Blend[shot.cut_in] = 0
+
+        # Show Name
+        slate_node.Input4[current_frame] = version.task.project.name
+
+        # Version Name
+        slate_node.Input5[current_frame] = "%s_v%03d" % (version.nice_name, version.version_number)
+
+        # Submitting For
+        slate_node.Input6[current_frame] = "Review"
+
+        # Date
+        import datetime
+        today = datetime.datetime.today()
+        date_time_format = "%Y-%m-%d"
+        slate_node.Input7[current_frame] = today.strftime(date_time_format)
+
+        # Vendor
+        from stalker import Studio
+        studio = Studio.query.first()
+        if studio:
+            slate_node.Input13[current_frame] = studio.name
+
+        # Media Color
+        slate_node.Input18[current_frame] = ""
+
+        return slate_node
+
     def create_main_saver_node(self, version):
         """Creates the default saver node if there is no created before.
 
@@ -769,6 +896,7 @@ class Fusion(EnvironmentBase):
             project = version.task.project
             fps = project.fps
 
+        import uuid
         random_ref_id = uuid.uuid4().hex
 
         output_format_data = [
@@ -1132,6 +1260,7 @@ class Fusion(EnvironmentBase):
                                 break
 
             try:
+                import os
                 os.makedirs(
                     os.path.dirname(
                         self.output_path_generator(version, format_name)
@@ -1172,7 +1301,7 @@ class Fusion(EnvironmentBase):
         :param str project_directory_in: the project directory
         :return:
         """
-
+        import os
         project_directory_in = os.path.normpath(project_directory_in)
         print('setting project directory to: %s' % project_directory_in)
 

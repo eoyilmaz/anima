@@ -2425,3 +2425,27 @@ def upload_thumbnail(task, thumbnail_full_path):
     DBSession.commit()
 
     return True
+
+
+def text_splitter(input_text, max_line_length=32):
+    """Splits the text from white spaces and the joins them word by word but in groups of max_characters length
+
+    :param str input_text: The text
+    :param int max_line_length: The max line length. Default 32.
+    :return:
+    """
+    lines = []
+    words = input_text.split(' ')
+    temp_line = ""
+    while words:
+        word = words.pop(0)
+        current_line_length = len(temp_line)
+        if current_line_length + len(word) <= max_line_length:
+            temp_line = "%s %s" % (temp_line, word)
+        else:
+            lines.append(temp_line)
+            temp_line = word
+    else:
+        lines.append(temp_line)
+
+    return lines
