@@ -1,0 +1,5397 @@
+Composition {
+	CurrentTime = 0,
+	RenderRange = { 0, 1000 },
+	GlobalRange = { 0, 1000 },
+	CurrentID = 588,
+	HiQ = true,
+	PlaybackUpdateMode = 0,
+	Version = "Fusion Studio 16.2.4 build 9",
+	SavedOutputs = 2,
+	HeldTools = 0,
+	DisabledTools = 1,
+	LockedTools = 0,
+	AudioOffset = 0,
+	AutoRenderRange = true,
+	Resumable = true,
+	OutputClips = {
+	},
+	Tools = {
+		Loader1_1 = Loader {
+			Clips = {
+				Clip {
+					ID = "Clip1",
+					Filename = "/home/eoyilmaz/Downloads/Netflix VFX Slate And Overlay Templates v0.0.6/Templates/Netflix_VFX_Template_Slate_v0.0.6.png",
+					FormatID = "PNGFormat",
+					StartFrame = 6,
+					LengthSetManually = true,
+					TrimIn = 0,
+					TrimOut = 0,
+					ExtendFirst = 0,
+					ExtendLast = 0,
+					Loop = 0,
+					AspectMode = 1,
+					Depth = 1,
+					TimeCode = 0,
+					GlobalStart = 0,
+					GlobalEnd = 0
+				}
+			},
+			Inputs = {
+				Depth = Input { Value = 1, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 4455, 82.5 } },
+		},
+		Loader1 = Loader {
+			Clips = {
+				Clip {
+					ID = "Clip1",
+					Filename = "/home/eoyilmaz/Downloads/Netflix VFX Slate And Overlay Templates v0.0.6/Templates/Netflix_VFX_Template_Slate_v0.0.6_without_value_fields.png",
+					FormatID = "PNGFormat",
+					StartFrame = -1,
+					LengthSetManually = true,
+					TrimIn = 0,
+					TrimOut = 0,
+					ExtendFirst = 0,
+					ExtendLast = 0,
+					Loop = 0,
+					AspectMode = 1,
+					Depth = 1,
+					TimeCode = 0,
+					GlobalStart = 0,
+					GlobalEnd = 0
+				}
+			},
+			Inputs = {
+				Depth = Input { Value = 1, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				["Clip1.PNGFormat.PostMultiply"] = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2255, -610.5 } },
+		},
+		Thumbnail = Loader {
+			Clips = {
+			},
+			NameSet = true,
+			Inputs = {
+				MissingFrames = Input { Value = 2, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1650, 16.5 } },
+		},
+		OCIOColorspace1 = OCIOColorSpace {
+			Inputs = {
+				OCIOConfig = Input { Value = "/mnt/T/DEV/OpenColorIO-Configs/aces_1.2/config.ocio", },
+				SourceSpace = Input { Value = FuID { "ACES - ACES2065-1" }, },
+				OutputSpace = Input { Value = FuID { "Utility - sRGB - Texture" }, },
+				Look = Input { Value = FuID { "None" }, },
+				Input = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 4125, 181.5 } },
+		},
+		OCIOColorspace1_1 = OCIOColorSpace {
+			Inputs = {
+				OCIOConfig = Input { Value = "LUTS:OpenColorIO-Configs/aces_1.2/config.ocio", },
+				SourceSpace = Input { Value = FuID { "Utility - sRGB - Texture" }, },
+				OutputSpace = Input { Value = FuID { "ACES - ACES2065-1" }, },
+				Look = Input { Value = FuID { "None" }, },
+				Input = Input {
+					SourceOp = "Loader1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2475, -511.5 } },
+		},
+		Merge1 = Merge {
+			PassThrough = true,
+			Inputs = {
+				Foreground = Input {
+					SourceOp = "OCIOColorspace1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2255, -478.5 } },
+		},
+		Rectangle2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.795964807543275, 0.784100846352502 }, },
+				Width = Input { Value = 0.380075135053803, },
+				Height = Input { Value = 0.381075731287114, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1650, 148.5 } },
+		},
+		Rectangle1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.30265, 0.90925 }, },
+				Width = Input { Value = 0.5771, },
+				Height = Input { Value = 0.00457, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -990, 181.5 } },
+		},
+		Rectangle1_2_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.490693168178343 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.0372145062822329, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 379.5 } },
+		},
+		Rectangle1_2_1_1_1_2 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.416514887238058 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.0372145062822329, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 346.5 } },
+		},
+		Rectangle1_2_1_1_1_2_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1_2",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.342418501695889 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.0372145062822329, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 313.5 } },
+		},
+		Rectangle1_2_1_1_1_2_1_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1_2_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.268532770316888 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.0372145062822329, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 280.5 } },
+		},
+		Rectangle1_2_1_1_1_2_1_1_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1_2_1_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.19415787275003 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.0372145062822329, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 247.5 } },
+		},
+		Rectangle1_2_1_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1_2_1_1_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.30265, 0.2495 }, },
+				Width = Input { Value = 0.5771, },
+				Height = Input { Value = 0.4071, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 214.5 } },
+		},
+		Rectangle1_2_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.30265, 0.652866078411186 }, },
+				Width = Input { Value = 0.5771, },
+				Height = Input { Value = 0.1338104, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 181.5 } },
+		},
+		Rectangle1_2 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.30265, 0.816005408217182 }, },
+				Width = Input { Value = 0.5771, },
+				Height = Input { Value = 0.0635, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 148.5 } },
+		},
+		Rectangle1_2_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.7959, 0.3611 }, },
+				Width = Input { Value = 0.381098125982384, },
+				Height = Input { Value = 0.370248581771791, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1210, 181.5 } },
+		},
+		Rectangle1_1 = RectangleMask {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2_1_1_1_1",
+					Source = "Mask",
+				},
+				Filter = Input { Value = FuID { "Fast Gaussian" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.30265, 0.477582 }, },
+				Width = Input { Value = 0.5771, },
+				Height = Input { Value = 0.8635544339749, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1210, 148.5 } },
+		},
+		Main_BG = Background {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 3840, },
+				Height = Input { Value = 2160, },
+				["Gamut.ColorSpaceNest"] = Input { Value = 1, },
+				["Gamut.ColorType"] = Input { Value = FuID { "Space" }, },
+				["Gamut.ColorSpace"] = Input { Value = FuID { "ACES" }, },
+				["Gamut.GammaSpaceNest"] = Input { Value = 1, },
+				["Gamut.GammaType"] = Input { Value = FuID { "Space" }, },
+				["Gamut.GammaSpace"] = Input { Value = FuID { "ACES" }, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.0176544189453125, },
+				TopLeftGreen = Input { Value = 0.0176544189453125, },
+				TopLeftBlue = Input { Value = 0.0176544189453125, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1375, 115.5 } },
+		},
+		BG_Dark = Background {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 3840, },
+				Height = Input { Value = 2160, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.0144424438476562, },
+				TopLeftGreen = Input { Value = 0.0144424438476562, },
+				TopLeftBlue = Input { Value = 0.0144424438476562, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1210, 49.5 } },
+		},
+		Merge5_2 = Merge {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_1",
+					Source = "Mask",
+				},
+				Background = Input {
+					SourceOp = "Main_BG",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "BG_Dark",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1210, 115.5 } },
+		},
+		BG_Light = Background {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 3840, },
+				Height = Input { Value = 2160, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.0193939208984375, },
+				TopLeftGreen = Input { Value = 0.0193939208984375, },
+				TopLeftBlue = Input { Value = 0.0193939208984375, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 49.5 } },
+		},
+		Merge5_1_1_1_1 = Merge {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1_2",
+					Source = "Mask",
+				},
+				Background = Input {
+					SourceOp = "Merge5_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "BG_Light",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -1100, 115.5 } },
+		},
+		BG_Red = Background {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 3840, },
+				Height = Input { Value = 2160, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -990, 49.5 } },
+		},
+		Merge5 = Merge {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle1",
+					Source = "Mask",
+				},
+				Background = Input {
+					SourceOp = "Merge5_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "BG_Red",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -990, 115.5 } },
+		},
+		Show_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 1.418576 }, },
+				Red1 = Input { Value = 0.2158203125, },
+				Green1 = Input { Value = 0.2158203125, },
+				Blue1 = Input { Value = 0.2158203125, },
+				StyledText = Input { Value = "Show", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -770, 49.5 } },
+		},
+		Merge2_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge5",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Show_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -770, 115.5 } },
+		},
+		Submitting_For_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.446835620264697, 1.418576 }, },
+				Red1 = Input { Value = 0.2158203125, },
+				Green1 = Input { Value = 0.2158203125, },
+				Blue1 = Input { Value = 0.2158203125, },
+				StyledText = Input { Value = "Submitting For", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -660, 49.5 } },
+		},
+		Merge3_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge2_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Submitting_For_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -660, 115.5 } },
+		},
+		Version_Name_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 1.290733 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Version Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -550, 49.5 } },
+		},
+		Merge4_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge3_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Version_Name_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -550, 115.5 } },
+		},
+		Date_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 1.1659274403183 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Date", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -440, 49.5 } },
+		},
+		Merge4_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Date_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -440, 115.5 } },
+		},
+		Shot_Types_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 1.033687 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Shot Types", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -330, 49.5 } },
+		},
+		Merge4_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Types_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -330, 115.5 } },
+		},
+		Shot_Description_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 0.9139627820019 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Shot\nDescription", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -220, 49.5 } },
+		},
+		Merge4_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Description_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -220, 115.5 } },
+		},
+		VFX_Scope_Of_Work_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 0.6530264811577 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "VFX Scope Of\nWork", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 49.5 } },
+		},
+		Merge4_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "VFX_Scope_Of_Work_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { -110, 115.5 } },
+		},
+		Submission_Note_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3155856897705, 0.3706013084792 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Submission\nNote", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Submission_Note_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 0, 115.5 } },
+		},
+		Vendor_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.569512843790702 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Vendor", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 220, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Vendor_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 220, 115.5 } },
+		},
+		Shot_Name_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.495682916302239 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Shot Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 330, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Name_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 330, 115.5 } },
+		},
+		Episode_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.421323941943264 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Episode", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 440, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Episode_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 440, 115.5 } },
+		},
+		Sequence_Name_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.34696496758429 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Sequence Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Sequence_Name_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, 115.5 } },
+		},
+		Scene_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.272605993225315 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Scene", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 660, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Scene_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 660, 115.5 } },
+		},
+		Frames_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.19739231801164 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Frames", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 770, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Frames_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 770, 115.5 } },
+		},
+		Media_Color_Label = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.886394564712859, 0.123888044507367 }, },
+				Red1 = Input { Value = 0.215686274509804, },
+				Green1 = Input { Value = 0.215686274509804, },
+				Blue1 = Input { Value = 0.215686274509804, },
+				StyledText = Input { Value = "Media Color", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = 1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Media_Color_Label",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, 115.5 } },
+		},
+		Background1_2 = Background {
+			Inputs = {
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 220, -82.5 } },
+		},
+		Rectangle3_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.159406008316346, 0.554580019219938 }, },
+				Width = Input { Value = 0.119339253258211, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 330, -148.5 } },
+		},
+		Background1_2_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.1, },
+				TopLeftGreen = Input { Value = 0.1, },
+				TopLeftBlue = Input { Value = 0.1, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 330, -115.5 } },
+		},
+		Merge7 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Background1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 330, -82.5 } },
+		},
+		Rectangle3_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.259717670271845, 0.554580019219938 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 440, -148.5 } },
+		},
+		Background1_2_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.2, },
+				TopLeftGreen = Input { Value = 0.2, },
+				TopLeftBlue = Input { Value = 0.2, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 440, -115.5 } },
+		},
+		Merge7_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 440, -82.5 } },
+		},
+		Rectangle3_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.360667106455379, 0.554580019219938 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, -148.5 } },
+		},
+		Background1_2_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.3, },
+				TopLeftGreen = Input { Value = 0.3, },
+				TopLeftBlue = Input { Value = 0.3, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, -115.5 } },
+		},
+		Merge7_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 550, -82.5 } },
+		},
+		Rectangle3_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.4610525793083, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 660, -148.5 } },
+		},
+		Background1_2_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.4, },
+				TopLeftGreen = Input { Value = 0.4, },
+				TopLeftBlue = Input { Value = 0.4, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 660, -115.5 } },
+		},
+		Merge7_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 660, -82.5 } },
+		},
+		Rectangle3_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.561626039938079, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 770, -148.5 } },
+		},
+		Background1_2_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.5, },
+				TopLeftGreen = Input { Value = 0.5, },
+				TopLeftBlue = Input { Value = 0.5, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 770, -115.5 } },
+		},
+		Merge7_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 770, -82.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.661447549460344, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, -148.5 } },
+		},
+		Background1_2_1_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.6, },
+				TopLeftGreen = Input { Value = 0.6, },
+				TopLeftBlue = Input { Value = 0.6, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, -115.5 } },
+		},
+		Merge7_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 880, -82.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.762396985643878, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 990, -148.5 } },
+		},
+		Background1_2_1_1_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.7, },
+				TopLeftGreen = Input { Value = 0.7, },
+				TopLeftBlue = Input { Value = 0.7, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 990, -115.5 } },
+		},
+		Merge7_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 990, -82.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.862970446273657, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1100, -148.5 } },
+		},
+		Background1_2_1_1_1_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.8, },
+				TopLeftGreen = Input { Value = 0.8, },
+				TopLeftBlue = Input { Value = 0.8, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1100, -115.5 } },
+		},
+		Merge7_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1100, -82.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.962791955795923, 0.5545800192199 }, },
+				Width = Input { Value = 0.123935580366578, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1210, -148.5 } },
+		},
+		Background1_2_1_1_1_1_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 1, },
+				TopLeftGreen = Input { Value = 1, },
+				TopLeftBlue = Input { Value = 1, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1210, -115.5 } },
+		},
+		Merge7_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1210, -82.5 } },
+		},
+		Merge6_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Merge7_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Center = Input { Value = { 0.795833333333333, 0.559259259259259 }, },
+				FilterMethod = Input { Value = 1, },
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1210, 115.5 } },
+		},
+		Background1_2_2 = Background {
+			Inputs = {
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.4970703125, },
+				TopLeftGreen = Input { Value = 0.4970703125, },
+				TopLeftBlue = Input { Value = 0.4970703125, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 385, -214.5 } },
+		},
+		Rectangle3_1_2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.230460529221421, 0.554580019219938 }, },
+				Width = Input { Value = 0.176514016354129, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 495, -280.5 } },
+		},
+		Background1_2_1_2 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_2",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.408935546875, },
+				TopLeftGreen = Input { Value = 0.448974609375, },
+				TopLeftBlue = Input { Value = 0.06414794921875, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 495, -247.5 } },
+		},
+		Merge7_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Background1_2_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_2",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 495, -214.5 } },
+		},
+		Rectangle3_1_1_2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.375098453350484, 0.554580019219938 }, },
+				Width = Input { Value = 0.18036400407505, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 605, -280.5 } },
+		},
+		Background1_2_1_1_2 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_2",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.278564453125, },
+				TopLeftGreen = Input { Value = 0.452392578125, },
+				TopLeftBlue = Input { Value = 0.48828125, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 605, -247.5 } },
+		},
+		Merge7_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_2",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 605, -214.5 } },
+		},
+		Rectangle3_1_1_1_2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.506736, 0.5545800192199 }, },
+				Width = Input { Value = 0.157383195941971, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 715, -280.5 } },
+		},
+		Background1_2_1_1_1_2 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_2",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.1903076171875, },
+				TopLeftGreen = Input { Value = 0.404296875, },
+				TopLeftBlue = Input { Value = 0.055450439453125, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 715, -247.5 } },
+		},
+		Merge7_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_2",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 715, -214.5 } },
+		},
+		Rectangle3_1_1_1_1_1_2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.652522635897211, 0.5545800192199 }, },
+				Width = Input { Value = 0.162270125971571, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 935, -280.5 } },
+		},
+		Background1_2_1_1_1_1_1_2 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_2",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.306640625, },
+				TopLeftGreen = Input { Value = 0.09271240234375, },
+				TopLeftBlue = Input { Value = 0.441650390625, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 935, -247.5 } },
+		},
+		Merge7_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 935, -214.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1_2 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.788507307252681, 0.5545800192199 }, },
+				Width = Input { Value = 0.146542070813991, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1045, -280.5 } },
+		},
+		Background1_2_1_1_1_1_1_1_2 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1_2",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.218505859375, },
+				TopLeftGreen = Input { Value = 0.04461669921875, },
+				TopLeftBlue = Input { Value = 0.00872039794921875, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1045, -247.5 } },
+		},
+		Merge7_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1045, -214.5 } },
+		},
+		Rectangle3_1_1_1_1_1_1_1_1_1_1 = RectangleMask {
+			Inputs = {
+				Filter = Input { Value = FuID { "Box" }, },
+				MaskWidth = Input { Value = 1920, },
+				MaskHeight = Input { Value = 1080, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				ClippingMode = Input { Value = FuID { "None" }, },
+				Center = Input { Value = { 0.931213, 0.5545800192199 }, },
+				Width = Input { Value = 0.1460984, },
+				Height = Input { Value = 1.2276629067512, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1375, -280.5 } },
+		},
+		Background1_2_1_1_1_1_1_1_1_1_1_1 = Background {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle3_1_1_1_1_1_1_1_1_1_1",
+					Source = "Mask",
+				},
+				Width = Input { Value = 1460, },
+				Height = Input { Value = 50, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				TopLeftRed = Input { Value = 0.088134765625, },
+				TopLeftGreen = Input { Value = 0.048095703125, },
+				TopLeftBlue = Input { Value = 0.432861328125, },
+				TopRightRed = Input { Value = 1, },
+				TopRightGreen = Input { Value = 1, },
+				TopRightBlue = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1375, -247.5 } },
+		},
+		Merge7_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge7_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Background1_2_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1375, -214.5 } },
+		},
+		Merge6_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge6_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Merge7_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				},
+				Center = Input { Value = { 0.795833333333333, 0.582407407407407 }, },
+				FilterMethod = Input { Value = 1, },
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1375, 115.5 } },
+		},
+		OCIOColorspace1_1_1 = OCIOColorSpace {
+			Inputs = {
+				OCIOConfig = Input { Value = "LUTS:OpenColorIO-Configs/aces_1.2/config.ocio", },
+				SourceSpace = Input { Value = FuID { "Utility - sRGB - Texture" }, },
+				OutputSpace = Input { Value = FuID { "ACES - ACES2065-1" }, },
+				Look = Input { Value = FuID { "None" }, },
+				Input = Input {
+					SourceOp = "Thumbnail",
+					Source = "Output",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 1650, 49.5 } },
+		},
+		Resize1 = BetterResize {
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				KeepAspect = Input { Value = 1, },
+				HiQOnly = Input { Value = 0, },
+				PixelAspect = Input { Value = { 1, 1 }, },
+				Input = Input {
+					SourceOp = "OCIOColorspace1_1_1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 1650, 82.5 } },
+		},
+		Merge6 = Merge {
+			Inputs = {
+				EffectMask = Input {
+					SourceOp = "Rectangle2",
+					Source = "Mask",
+				},
+				Background = Input {
+					SourceOp = "Merge6_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Resize1",
+					Source = "Output",
+				},
+				Center = Input { Value = { 0.796041666666667, 0.784444444444444 }, },
+				Size = Input { Value = 0.762, },
+				PerformDepthMerge = Input { Value = 0, },
+				ReferenceSize = Input { Value = 1, },
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				UseFrameFormatSettings = Input { Value = 1, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1650, 115.5 } },
+		},
+		Show_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 1.445597 }, },
+				StyledText = Input { Value = "Show", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 1925, 49.5 } },
+		},
+		Merge2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge6",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Show_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 1925, 115.5 } },
+		},
+		Submitting_For_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.4678127286028, 1.445597 }, },
+				StyledText = Input { Value = "Review", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2035, 49.5 } },
+		},
+		Merge3 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Submitting_For_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2035, 115.5 } },
+		},
+		Version_Name_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 1.29073310764834 }, },
+				StyledText = Input { Value = "Version Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2145, 49.5 } },
+		},
+		Merge4 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge3",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Version_Name_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2145, 115.5 } },
+		},
+		Date_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 1.17388453509508 }, },
+				StyledText = Input { Value = "Review", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2255, 49.5 } },
+		},
+		Merge4_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Date_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2255, 115.5 } },
+		},
+		Shot_Types_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 1.03368649650686 }, },
+				StyledText = Input { Value = "Shot Types", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2365, 49.5 } },
+		},
+		Merge4_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Types_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2365, 115.5 } },
+		},
+		Shot_Description_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 0.913962782001876 }, },
+				StyledText = Input { Value = "Shot Description", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2475, 49.5 } },
+		},
+		Merge4_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Description_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2475, 115.5 } },
+		},
+		VFX_Scope_Of_Work_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 0.653026481157671 }, },
+				StyledText = Input { Value = "VFX Scope Of Work", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2585, 49.5 } },
+		},
+		Merge4_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "VFX_Scope_Of_Work_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2585, 115.5 } },
+		},
+		Submission_Note_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { -0.3017556693489, 0.370601308479236 }, },
+				StyledText = Input { Value = "Submission Note", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.07, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2695, 49.5 } },
+		},
+		Merge4_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Submission_Note_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2695, 115.5 } },
+		},
+		Vendor_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.5695128437907 }, },
+				StyledText = Input { Value = "Vendor", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 2970, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Vendor_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 2970, 115.5 } },
+		},
+		Shot_Name_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.4956829163022 }, },
+				StyledText = Input { Value = "Shot Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3080, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Shot_Name_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3080, 115.5 } },
+		},
+		Episode_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.4213239419433 }, },
+				StyledText = Input { Value = "Episode", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3190, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Episode_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3190, 115.5 } },
+		},
+		Sequence_Name_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.3469649675843 }, },
+				StyledText = Input { Value = "Sequence Name", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3300, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Sequence_Name_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3300, 115.5 } },
+		},
+		Scene_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.2726059932253 }, },
+				StyledText = Input { Value = "Scene", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3410, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Scene_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3410, 115.5 } },
+		},
+		Frames_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.1973923180116 }, },
+				StyledText = Input { Value = "Frames", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3520, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1_1_2 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Frames_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3520, 115.5 } },
+		},
+		Media_Color_Value = TextPlus {
+			NameSet = true,
+			Inputs = {
+				Width = Input { Value = 1920, },
+				Height = Input { Value = 1080, },
+				["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+				Center = Input { Value = { 0.9087903980462, 0.1238880445074 }, },
+				StyledText = Input { Value = "Media Color", },
+				Font = Input { Value = "Open Sans", },
+				Style = Input { Value = "Bold", },
+				Size = Input { Value = 0.035, },
+				VerticalTopCenterBottom = Input { Value = -1, },
+				VerticalJustificationNew = Input { Value = 3, },
+				HorizontalLeftCenterRight = Input { Value = -1, },
+				HorizontalJustificationNew = Input { Value = 3, },
+				ManualFontKerningPlacement = Input {
+					Value = StyledText {
+						Array = {
+						},
+						Value = ""
+					},
+				},
+			},
+			ViewInfo = OperatorInfo { Pos = { 3630, 49.5 } },
+		},
+		Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_1 = Merge {
+			Inputs = {
+				Background = Input {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_2",
+					Source = "Output",
+				},
+				Foreground = Input {
+					SourceOp = "Media_Color_Value",
+					Source = "Output",
+				},
+				PerformDepthMerge = Input { Value = 0, },
+			},
+			ViewInfo = OperatorInfo { Pos = { 3630, 115.5 } },
+		},
+		AnimaSlate1 = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Thumbnail_1",
+					Source = "Clip",
+					Name = "Thumbnail Filename",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Main_BG_1",
+					Source = "Width",
+					Default = 3840,
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Main_BG_1",
+					Source = "Height",
+					Default = 2160,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Show_Value_1",
+					Source = "StyledText",
+					Name = "Show",
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Version_Name_Value_1",
+					Source = "StyledText",
+					Name = "Version Name",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Submitting_For_Value_1",
+					Source = "StyledText",
+					Name = "Submitting For",
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Date_Value_1",
+					Source = "StyledText",
+					Name = "Date",
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Shot_Types_Value_1",
+					Source = "StyledText",
+					Name = "Shot Types",
+				},
+				Input9 = InstanceInput {
+					SourceOp = "Shot_Description_Value_1",
+					Source = "StyledText",
+					Name = "Shot Description",
+				},
+				Input10 = InstanceInput {
+					SourceOp = "VFX_Scope_Of_Work_Value_1",
+					Source = "StyledText",
+					Name = "VFX Scope Of Work",
+				},
+				Input11 = InstanceInput {
+					SourceOp = "Submission_Note_Value_1",
+					Source = "StyledText",
+					Name = "Submission Note",
+				},
+				Input12 = InstanceInput {
+					SourceOp = "Shot_Name_Value_1",
+					Source = "StyledText",
+					Name = "Shot Name",
+				},
+				Input13 = InstanceInput {
+					SourceOp = "Vendor_Value_1",
+					Source = "StyledText",
+					Name = "Vendor",
+				},
+				Input14 = InstanceInput {
+					SourceOp = "Episode_Value_1",
+					Source = "StyledText",
+					Name = "Episode",
+				},
+				Input15 = InstanceInput {
+					SourceOp = "Sequence_Name_Value_1",
+					Source = "StyledText",
+					Name = "Sequence Name",
+				},
+				Input16 = InstanceInput {
+					SourceOp = "Scene_Value_1",
+					Source = "StyledText",
+					Name = "Scene",
+				},
+				Input17 = InstanceInput {
+					SourceOp = "Frames_Value_1",
+					Source = "StyledText",
+					Name = "Frames",
+				},
+				Input18 = InstanceInput {
+					SourceOp = "Media_Color_Value_1",
+					Source = "StyledText",
+					Name = "Media Color",
+				}
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 3795, 181.5 } },
+			Tools = ordered() {
+				Thumbnail_1 = Loader {
+					Clips = {
+						Clip {
+							ID = "Clip1",
+							Filename = "/mnt/T/PROJECTS/THE_CLUB/Episodes/EP101/SCN001/Shots/CLU_101_001_0010/Thumbnail/thumbnail.jpg",
+							FormatID = "JpegFormat",
+							StartFrame = -1,
+							LengthSetManually = true,
+							TrimIn = 0,
+							TrimOut = 0,
+							ExtendFirst = 0,
+							ExtendLast = 0,
+							Loop = 0,
+							AspectMode = 1,
+							Depth = 1,
+							TimeCode = 0,
+							GlobalStart = 0,
+							GlobalEnd = 0
+						}
+					},
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						MissingFrames = Input { Value = 2, },
+						Depth = Input { Value = 1, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 522, 303.758 } },
+				},
+				BG_Red_1 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 3840, },
+						Height = Input { Value = 2160, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2118, 336.758 } },
+				},
+				BG_Dark_1 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 3840, },
+						Height = Input { Value = 2160, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.0144424438477, },
+						TopLeftGreen = Input { Value = 0.0144424438477, },
+						TopLeftBlue = Input { Value = 0.0144424438477, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2338, 336.758 } },
+				},
+				BG_Light_1 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 3840, },
+						Height = Input { Value = 2160, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.0193939208984, },
+						TopLeftGreen = Input { Value = 0.0193939208984, },
+						TopLeftBlue = Input { Value = 0.0193939208984, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 336.758 } },
+				},
+				Merge5_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_3",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "Merge5_1_1_1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BG_Red_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2118, 402.758 } },
+				},
+				Show_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 1.418576 }, },
+						Red1 = Input { Value = 0.2158203125, },
+						Green1 = Input { Value = 0.2158203125, },
+						Blue1 = Input { Value = 0.2158203125, },
+						StyledText = Input { Value = "Show", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1898, 336.758 } },
+				},
+				Merge5_1_1_1_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_2",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "Merge5_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BG_Light_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 402.758 } },
+				},
+				Merge5_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_1_1",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "Main_BG_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "BG_Dark_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2338, 402.758 } },
+				},
+				Main_BG_1 = Background {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 3840, },
+						Height = Input { Value = 2160, },
+						["Gamut.ColorSpaceNest"] = Input { Value = 1, },
+						["Gamut.ColorType"] = Input { Value = FuID { "Space" }, },
+						["Gamut.ColorSpace"] = Input { Value = FuID { "ACES" }, },
+						["Gamut.GammaSpaceNest"] = Input { Value = 1, },
+						["Gamut.GammaType"] = Input { Value = FuID { "Space" }, },
+						["Gamut.GammaSpace"] = Input { Value = FuID { "ACES" }, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.0176544189453, },
+						TopLeftGreen = Input { Value = 0.0176544189453, },
+						TopLeftBlue = Input { Value = 0.0176544189453, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2503, 402.758 } },
+				},
+				Merge2_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge5_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Show_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1898, 402.758 } },
+				},
+				Submitting_For_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.446835620264697, 1.418576 }, },
+						Red1 = Input { Value = 0.2158203125, },
+						Green1 = Input { Value = 0.2158203125, },
+						Blue1 = Input { Value = 0.2158203125, },
+						StyledText = Input { Value = "Submitting For", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1788, 336.758 } },
+				},
+				Rectangle1_1_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_1_1",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.30265, 0.477582 }, },
+						Width = Input { Value = 0.5771, },
+						Height = Input { Value = 0.8635544339749, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2338, 435.758 } },
+				},
+				Merge3_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Submitting_For_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1788, 402.758 } },
+				},
+				Rectangle1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.30265, 0.90925 }, },
+						Width = Input { Value = 0.5771, },
+						Height = Input { Value = 0.00457, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2118, 468.758 } },
+				},
+				Merge4_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Date_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1568, 402.758 } },
+				},
+				Rectangle1_2_1_1_1_1_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.3611 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.3702485817718, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2338, 468.758 } },
+				},
+				Merge4_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge3_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Version_Name_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1678, 402.758 } },
+				},
+				Rectangle1_2_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_2_1_1_1_1",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.30265, 0.2495 }, },
+						Width = Input { Value = 0.5771, },
+						Height = Input { Value = 0.4071, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 501.758 } },
+				},
+				Rectangle1_2_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_2",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.30265, 0.652866078411186 }, },
+						Width = Input { Value = 0.5771, },
+						Height = Input { Value = 0.1338104, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 468.758 } },
+				},
+				Rectangle1_2_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_2",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.30265, 0.816005408217182 }, },
+						Width = Input { Value = 0.5771, },
+						Height = Input { Value = 0.0635, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 435.758 } },
+				},
+				Date_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 1.1659274403183 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Date", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1568, 336.758 } },
+				},
+				Version_Name_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 1.290733 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Version Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1678, 336.758 } },
+				},
+				Rectangle1_2_1_1_1_2_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_2_1_2",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.268532770316888 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.0372145062822, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 567.758 } },
+				},
+				Merge4_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Types_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1458, 402.758 } },
+				},
+				Merge4_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Description_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1348, 402.758 } },
+				},
+				Shot_Description_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 0.9139627820019 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Shot\nDescription", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1348, 336.758 } },
+				},
+				Shot_Types_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 1.033687 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Shot Types", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1458, 336.758 } },
+				},
+				Rectangle1_2_1_1_1_2_1_1_1_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_2_1_1_2",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.19415787275003 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.0372145062822, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 534.758 } },
+				},
+				Merge4_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "VFX_Scope_Of_Work_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1238, 402.758 } },
+				},
+				Rectangle1_2_1_1_1_2_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_2_2",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.342418501695889 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.0372145062822, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 600.758 } },
+				},
+				Submission_Note_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 0.3706013084792 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Submission\nNote", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1128, 336.758 } },
+				},
+				VFX_Scope_Of_Work_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3155856897705, 0.6530264811577 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "VFX Scope Of\nWork", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -1238, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Submission_Note_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -1128, 402.758 } },
+				},
+				Merge7_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background1_2_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -798, 204.758 } },
+				},
+				Background1_2_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -908, 204.758 } },
+				},
+				Rectangle1_2_1_1_1_2_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle1_2_1_1_1_3",
+							Source = "Mask",
+						},
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.416514887238058 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.0372145062822, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 633.758 } },
+				},
+				Vendor_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.569512843790702 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Vendor", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -908, 336.758 } },
+				},
+				Shot_Name_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.495682916302239 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Shot Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -798, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Name_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -798, 402.758 } },
+				},
+				Background1_2_1_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_3",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.1, },
+						TopLeftGreen = Input { Value = 0.1, },
+						TopLeftBlue = Input { Value = 0.1, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -798, 171.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Vendor_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -908, 402.758 } },
+				},
+				Rectangle1_2_1_1_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.7959, 0.490693168178343 }, },
+						Width = Input { Value = 0.3810981259824, },
+						Height = Input { Value = 0.0372145062822, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -2228, 666.758 } },
+				},
+				Rectangle3_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.159406008316346, 0.554580019219938 }, },
+						Width = Input { Value = 0.1193392532582, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -798, 138.758 } },
+				},
+				Merge7_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background1_2_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_2_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -633, 72.7576 } },
+				},
+				Background1_2_1_1_1_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_3",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.3, },
+						TopLeftGreen = Input { Value = 0.3, },
+						TopLeftBlue = Input { Value = 0.3, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -578, 171.758 } },
+				},
+				Rectangle3_1_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.259717670271845, 0.554580019219938 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -688, 138.758 } },
+				},
+				Merge7_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -688, 204.758 } },
+				},
+				Rectangle3_1_2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.230460529221421, 0.554580019219938 }, },
+						Width = Input { Value = 0.1765140163541, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -633, 6.75757 } },
+				},
+				Sequence_Name_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.34696496758429 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Sequence Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -578, 336.758 } },
+				},
+				Episode_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.421323941943264 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Episode", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -688, 336.758 } },
+				},
+				Background1_2_1_1_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_3",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.2, },
+						TopLeftGreen = Input { Value = 0.2, },
+						TopLeftBlue = Input { Value = 0.2, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -688, 171.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Episode_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -688, 402.758 } },
+				},
+				Rectangle3_1_1_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.360667106455379, 0.554580019219938 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -578, 138.758 } },
+				},
+				Merge7_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -578, 204.758 } },
+				},
+				Background1_2_1_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_2_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.408935546875, },
+						TopLeftGreen = Input { Value = 0.448974609375, },
+						TopLeftBlue = Input { Value = 0.0641479492188, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -633, 39.7576 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Sequence_Name_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -578, 402.758 } },
+				},
+				Background1_2_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.4970703125, },
+						TopLeftGreen = Input { Value = 0.4970703125, },
+						TopLeftBlue = Input { Value = 0.4970703125, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -743, 72.7576 } },
+				},
+				Merge7_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_2_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -523, 72.7576 } },
+				},
+				Frames_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.19739231801164 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Frames", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -358, 336.758 } },
+				},
+				Scene_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.272605993225315 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Scene", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -468, 336.758 } },
+				},
+				Rectangle3_1_1_2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.375098453350484, 0.554580019219938 }, },
+						Width = Input { Value = 0.180364004075, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -523, 6.75757 } },
+				},
+				Background1_2_1_1_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_2_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.278564453125, },
+						TopLeftGreen = Input { Value = 0.452392578125, },
+						TopLeftBlue = Input { Value = 0.48828125, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -523, 39.7576 } },
+				},
+				Rectangle3_1_1_1_2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.506736, 0.5545800192199 }, },
+						Width = Input { Value = 0.157383195942, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -413, 6.75757 } },
+				},
+				Merge7_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -358, 204.758 } },
+				},
+				Merge7_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -468, 204.758 } },
+				},
+				Background1_2_1_1_1_1_1_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_3",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.5, },
+						TopLeftGreen = Input { Value = 0.5, },
+						TopLeftBlue = Input { Value = 0.5, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -358, 171.758 } },
+				},
+				Background1_2_1_1_1_1_2 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_2",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.4, },
+						TopLeftGreen = Input { Value = 0.4, },
+						TopLeftBlue = Input { Value = 0.4, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -468, 171.758 } },
+				},
+				Rectangle3_1_1_1_1_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.561626039938079, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -358, 138.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Frames_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -358, 402.758 } },
+				},
+				Background1_2_1_1_1_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_2_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.1903076171875, },
+						TopLeftGreen = Input { Value = 0.404296875, },
+						TopLeftBlue = Input { Value = 0.0554504394531, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -413, 39.7576 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Scene_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -468, 402.758 } },
+				},
+				Merge7_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_2_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -413, 72.7576 } },
+				},
+				Rectangle3_1_1_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.4610525793083, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -468, 138.758 } },
+				},
+				Rectangle3_1_1_1_1_1_1_3 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.661447549460344, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -248, 138.758 } },
+				},
+				Rectangle3_1_1_1_1_1_1_2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.788507307252681, 0.5545800192199 }, },
+						Width = Input { Value = 0.146542070814, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -83, 6.75757 } },
+				},
+				Merge7_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -193, 72.7576 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Media_Color_Label_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -248, 402.758 } },
+				},
+				Background1_2_1_1_1_1_1_1_3 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_3",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.6, },
+						TopLeftGreen = Input { Value = 0.6, },
+						TopLeftBlue = Input { Value = 0.6, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -248, 171.758 } },
+				},
+				Rectangle3_1_1_1_1_1_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.762396985643878, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -138, 138.758 } },
+				},
+				Merge7_1_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -138, 204.758 } },
+				},
+				Rectangle3_1_1_1_1_1_2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.652522635897211, 0.5545800192199 }, },
+						Width = Input { Value = 0.1622701259716, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -193, 6.75757 } },
+				},
+				Media_Color_Label_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.886394564712859, 0.123888044507367 }, },
+						Red1 = Input { Value = 0.2156862745098, },
+						Green1 = Input { Value = 0.2156862745098, },
+						Blue1 = Input { Value = 0.2156862745098, },
+						StyledText = Input { Value = "Media Color", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = 1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -248, 336.758 } },
+				},
+				Background1_2_1_1_1_1_1_1_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_2_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.218505859375, },
+						TopLeftGreen = Input { Value = 0.0446166992188, },
+						TopLeftBlue = Input { Value = 0.0087203979492, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -83, 39.7576 } },
+				},
+				Background1_2_1_1_1_1_1_2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_2_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.306640625, },
+						TopLeftGreen = Input { Value = 0.0927124023438, },
+						TopLeftBlue = Input { Value = 0.441650390625, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -193, 39.7576 } },
+				},
+				Background1_2_1_1_1_1_1_1_1_2 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_1_2",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.7, },
+						TopLeftGreen = Input { Value = 0.7, },
+						TopLeftBlue = Input { Value = 0.7, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -138, 171.758 } },
+				},
+				Merge7_1_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_3",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -248, 204.758 } },
+				},
+				Merge7_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -83, 72.7576 } },
+				},
+				Rectangle3_1_1_1_1_1_1_1_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.962791955795923, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 82, 138.758 } },
+				},
+				Merge7_1_1_1_1_1_1_1_1_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_1_1_1_1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 247, 72.7576 } },
+				},
+				Background1_2_1_1_1_1_1_1_1_1_1_1_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_1_1_1_1_1",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.088134765625, },
+						TopLeftGreen = Input { Value = 0.048095703125, },
+						TopLeftBlue = Input { Value = 0.432861328125, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 247, 39.7576 } },
+				},
+				Rectangle3_1_1_1_1_1_1_1_1_2 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.862970446273657, 0.5545800192199 }, },
+						Width = Input { Value = 0.1239355803666, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -28, 138.758 } },
+				},
+				Merge6_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge7_1_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Center = Input { Value = { 0.795833333333333, 0.559259259259259 }, },
+						FilterMethod = Input { Value = 1, },
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 82, 402.758 } },
+				},
+				Merge7_1_1_1_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 82, 204.758 } },
+				},
+				Rectangle3_1_1_1_1_1_1_1_1_1_1_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Box" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.931213, 0.5545800192199 }, },
+						Width = Input { Value = 0.1460984, },
+						Height = Input { Value = 1.227663, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 247, 6.75757 } },
+				},
+				Merge7_1_1_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge7_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_2_1_1_1_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -28, 204.758 } },
+				},
+				Background1_2_1_1_1_1_1_1_1_1_2 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_1_1_2",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 0.8, },
+						TopLeftGreen = Input { Value = 0.8, },
+						TopLeftBlue = Input { Value = 0.8, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -28, 171.758 } },
+				},
+				Background1_2_1_1_1_1_1_1_1_1_1_2 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle3_1_1_1_1_1_1_1_1_1_2",
+							Source = "Mask",
+						},
+						Width = Input { Value = 1460, },
+						Height = Input { Value = 50, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftRed = Input { Value = 1, },
+						TopLeftGreen = Input { Value = 1, },
+						TopLeftBlue = Input { Value = 1, },
+						TopRightRed = Input { Value = 1, },
+						TopRightGreen = Input { Value = 1, },
+						TopRightBlue = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 82, 171.758 } },
+				},
+				Merge6_1_1_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge6_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Merge7_1_1_1_1_1_1_1_1_1_1",
+							Source = "Output",
+						},
+						Center = Input { Value = { 0.795833333333333, 0.582407407407407 }, },
+						FilterMethod = Input { Value = 1, },
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 247, 402.758 } },
+				},
+				Merge6_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						EffectMask = Input {
+							SourceOp = "Rectangle2_1",
+							Source = "Mask",
+						},
+						Background = Input {
+							SourceOp = "Merge6_1_1_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Resize1_1",
+							Source = "Output",
+						},
+						Center = Input { Value = { 0.796041666666667, 0.784444444444444 }, },
+						Size = Input { Value = 0.762, },
+						PerformDepthMerge = Input { Value = 0, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						UseFrameFormatSettings = Input { Value = 1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 522, 402.758 } },
+				},
+				Rectangle2_1 = RectangleMask {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Fast Gaussian" }, },
+						MaskWidth = Input { Value = 1920, },
+						MaskHeight = Input { Value = 1080, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						ClippingMode = Input { Value = FuID { "None" }, },
+						Center = Input { Value = { 0.795964807543275, 0.784100846352502 }, },
+						Width = Input { Value = 0.3800751350538, },
+						Height = Input { Value = 0.3810757312871, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 522, 435.758 } },
+				},
+				OCIOColorspace1_1_1_1 = OCIOColorSpace {
+					CtrlWShown = false,
+					Inputs = {
+						OCIOConfig = Input { Value = "LUTS:OpenColorIO-Configs/aces_1.2/config.ocio", },
+						SourceSpace = Input { Value = FuID { "Utility - sRGB - Texture" }, },
+						OutputSpace = Input { Value = FuID { "ACES - ACES2065-1" }, },
+						Look = Input { Value = FuID { "None" }, },
+						Input = Input {
+							SourceOp = "Thumbnail_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 522, 336.758 } },
+				},
+				Resize1_1 = BetterResize {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						KeepAspect = Input { Value = 1, },
+						HiQOnly = Input { Value = 0, },
+						PixelAspect = Input { Value = { 1, 1 }, },
+						Input = Input {
+							SourceOp = "OCIOColorspace1_1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 522, 369.758 } },
+				},
+				Show_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 1.445597 }, },
+						StyledText = Input { Value = "Show", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 797, 336.758 } },
+				},
+				Merge2_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge6_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Show_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 797, 402.758 } },
+				},
+				Version_Name_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 1.29073310764834 }, },
+						StyledText = Input { Value = "Version Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1017, 336.758 } },
+				},
+				Submitting_For_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.4678127286028, 1.445597 }, },
+						StyledText = Input { Value = "Review", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 907, 336.758 } },
+				},
+				Merge4_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge3_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Version_Name_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1017, 402.758 } },
+				},
+				Merge3_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge2_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Submitting_For_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 907, 402.758 } },
+				},
+				Date_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 1.17388453509508 }, },
+						StyledText = Input { Value = "Review", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1127, 336.758 } },
+				},
+				Shot_Types_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 1.03368649650686 }, },
+						StyledText = Input { Value = "Shot Types", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1237, 336.758 } },
+				},
+				Merge4_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Date_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1127, 402.758 } },
+				},
+				Merge4_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Types_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1237, 402.758 } },
+				},
+				Shot_Description_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 0.913962782001876 }, },
+						StyledText = Input { Value = "Shot Description", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1347, 336.758 } },
+				},
+				VFX_Scope_Of_Work_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 0.653026481157671 }, },
+						StyledText = Input { Value = "VFX Scope Of Work", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1457, 336.758 } },
+				},
+				Submission_Note_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { -0.3017556693489, 0.370601308479236 }, },
+						StyledText = Input { Value = "Submission Note", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.07, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1567, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_2 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Submission_Note_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1567, 402.758 } },
+				},
+				Merge4_1_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "VFX_Scope_Of_Work_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1457, 402.758 } },
+				},
+				Merge4_1_1_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Description_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1347, 402.758 } },
+				},
+				Shot_Name_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.4956829163022 }, },
+						StyledText = Input { Value = "Shot Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1952, 336.758 } },
+				},
+				Vendor_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.5695128437907 }, },
+						StyledText = Input { Value = "Vendor", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 1842, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_2",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Vendor_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1842, 402.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Shot_Name_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 1952, 402.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Episode_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2062, 402.758 } },
+				},
+				Episode_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.4213239419433 }, },
+						StyledText = Input { Value = "Episode", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2062, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Scene_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2282, 402.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Sequence_Name_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2172, 402.758 } },
+				},
+				Sequence_Name_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.3469649675843 }, },
+						StyledText = Input { Value = "Sequence Name", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2172, 336.758 } },
+				},
+				Scene_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.2726059932253 }, },
+						StyledText = Input { Value = "Scene", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2282, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_1_2_1 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Frames_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2392, 402.758 } },
+				},
+				Frames_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.1973923180116 }, },
+						StyledText = Input { Value = "Frames", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2392, 336.758 } },
+				},
+				Merge4_1_1_1_1_1_1_1_1_1_1_1_1_1_1_1 = Merge {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Merge4_1_1_1_1_1_1_1_1_1_1_1_1_2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Media_Color_Value_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 2502, 402.758 } },
+				},
+				Media_Color_Value_1 = TextPlus {
+					CtrlWShown = false,
+					NameSet = true,
+					Inputs = {
+						Width = Input { Value = 1920, },
+						Height = Input { Value = 1080, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Center = Input { Value = { 0.9087903980462, 0.1238880445074 }, },
+						StyledText = Input { Value = "Media Color", },
+						Font = Input { Value = "Open Sans", },
+						Style = Input { Value = "Bold", },
+						Size = Input { Value = 0.035, },
+						VerticalTopCenterBottom = Input { Value = -1, },
+						VerticalJustificationNew = Input { Value = 3, },
+						HorizontalLeftCenterRight = Input { Value = -1, },
+						HorizontalJustificationNew = Input { Value = 3, },
+						ManualFontKerningPlacement = Input {
+							Value = StyledText {
+								Array = {
+								},
+								Value = ""
+							},
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 2502, 336.758 } },
+				}
+			},
+		}
+	},
+	Frames = {
+		{
+			FrameTypeID = "ChildFrame",
+			Mode = 3,
+			LayoutPreset = 0,
+			Left = 0,
+			Top = 27,
+			Width = 2560,
+			Height = 1298,
+			ZoneInfo = {
+				["!Right"] = {
+				},
+				["!Left"] = {
+				},
+				AuxLeft = { Expanded = true },
+				Right = { Expanded = true, },
+				Left = { Expanded = false, },
+				AuxRight = { Expanded = true }
+			},
+			ViewInfo = {
+				Viewer1 = { Show = true, RatioY = 0.01, RatioX = 1.00046533271289, },
+				InnerLeft = {
+				},
+				MainSplit = {
+					RatioX = 100,
+					RatioY = 0.816901408450705,
+				},
+				CenterSplit = {
+					RatioX = 1.00608329433786,
+					RatioY = 100,
+				},
+				Viewer2 = { Show = true, RatioY = 0.01, RatioX = 0.99953466728711, },
+				Comments = { Show = false },
+				Time = { Show = true, PixelY = 83, RatioX = 100, },
+				InnerColumns = {
+					RatioX = 100,
+					RatioY = 1.1830985915493,
+				},
+				Keyframes = { Show = false, },
+				LayoutStrip = { Show = true, RatioX = 100, },
+				Inspector = { Show = true, RatioY = 1, RatioX = 100.018538483091, },
+				ActionStrip = { Show = true, RatioX = 100, },
+				InnerRight = {
+				},
+				OuterColumns = {
+					RatioX = 100,
+					RatioY = 1,
+				},
+				Effects = { Show = false, },
+				Clips = { Show = false, },
+				Metadata = { Show = false, },
+				OuterLeft = {
+				},
+				ViewerSplit = {
+					RatioX = 100,
+					RatioY = 1,
+				},
+				Nodes = { Show = true, RatioY = 99.917149958575, RatioX = 1, },
+				OuterRight = {
+					RatioY = 100,
+					PixelX = 407,
+				},
+				MediaPool = { Show = false, },
+				Spline = { Show = false, }
+			},
+			Views = ordered() {
+				Effects = MultiView {
+					Active = "EffectView",
+					ViewList = ordered() {
+						EffectView = "EffectView"
+					},
+				},
+				Nodes = MultiView {
+					Active = "FlowView",
+					ViewList = ordered() {
+						FlowView = "FlowView"
+					},
+					Names = {
+						FlowView = "FlowView"
+					},
+					FlowView = FlowView {
+						Flags = {
+							GridSnap = true,
+							ConnectedSnap = true,
+							PipesAlways = true,
+							ShowHidden = true,
+							AutoSnap = true,
+							FullIndicator = true,
+							RemoveRouters = true
+						},
+						NavigatorSize = { 200, 140 },
+						Direction = "Horizontal",
+						PipeStyle = "Direct",
+						RootScale = 0.799979,
+						RootOffset = { -1185.29, 45.7367 }
+					}
+				},
+				Keyframes = MultiView {
+					Active = "TimelineView",
+					ViewList = ordered() {
+						TimelineView = "TimelineView"
+					},
+					Names = {
+						TimelineView = "TimelineView"
+					},
+					TimelineView = TimelineView {
+						TreeControlState = {
+						},
+						DisplayMode = "All Tools",
+						ShowCurrentTimeTools = false,
+						Filter = "Show All",
+						ShowSelectedTools = false,
+						ShowAnimatedToolsOnly = false,
+						ShowEditBoxes = false,
+						KeyFrameView = {
+							Position = { Left = 232, Bottom = 320 },
+							ScaleX = 2.14424951267057,
+							OffsetX = -51.4619883040936,
+							OffsetY = 0,
+							AutoScaling = "scroll",
+							AutoSnapTo = "frame",
+							AutoSnapToGuidelines = false,
+							GuidelinesGrabEnabled = true,
+							GuidelinesSnapTo = "frame"
+						},
+						Spreadsheet = { LeftPos = 232, Visible = false }
+					}
+				},
+				Spline = MultiView {
+					Active = "SplineView",
+					ViewList = ordered() {
+						SplineView = "SplineEditorView"
+					},
+					Names = {
+						SplineView = "SplineView"
+					},
+					SplineView = SplineEditorView {
+						LeftPos = 264,
+						ScaleX = 0.2,
+						ScaleY = 0.00338983050847458,
+						OffsetX = -3.4,
+						OffsetY = 0,
+						AutoScaling = "scroll",
+						AutoSnapTo = "frame",
+						AutoSnapToGuidelines = false,
+						GuidelinesSnapTo = "frame",
+						ShowKeyMarkers = false,
+						IndependentHandles = false,
+						ShowNonSplineModifiers = false,
+						GuidelinesGrabEnabled = true,
+						ShowOneToolOnly = false,
+						ShowSelectedTools = false,
+						ShowAllInputs = false,
+						Filter = "Show All"
+					}
+				},
+				Inspector = MultiView {
+					Active = "Tools",
+					ViewList = ordered() {
+						Tools = "ControlView",
+						Modifiers = "ModifierView"
+					},
+				},
+				Viewer1 = MultiView {
+					Active = "LeftView",
+					ViewList = ordered() {
+						LeftView = "PreviewContainer"
+					},
+					Names = {
+						LeftView = "LeftView"
+					},
+				},
+				Viewer2 = MultiView {
+					Active = "RightView",
+					ViewList = ordered() {
+						RightView = "PreviewContainer"
+					},
+					Names = {
+						RightView = "RightView"
+					},
+				},
+				Time = "TimeView",
+				ActionStrip = "ActionStripView",
+				LayoutStrip = "LayoutStripView"
+			},
+			Layout = {
+				Rows = 2,
+				RatioX = 1,
+				RatioY = 1,
+				{ ID = "LayoutStrip", RatioX = 100, FixedY = 36, Flat = true },
+				{
+					Columns = 2,
+					RatioY = 1,
+					{
+						Rows = 3,
+						RatioX = 1.00608329433786,
+						RatioY = 100,
+						{
+							Rows = 2,
+							RatioX = 1,
+							RatioY = 100,
+							{
+								Columns = 2,
+								RatioX = 100,
+								RatioY = 1,
+								{ ID = "Viewer1", RatioX = 1.00046533271289, RatioY = 0.01 },
+								{ ID = "Viewer2", RatioX = 0.99953466728711 }
+							},
+							{ ID = "Time", FixedY = 83, Flat = true }
+						},
+						{ ID = "ActionStrip", FixedY = 50, Flat = true },
+						{ ID = "Nodes", RatioX = 1, RatioY = 99.917149958575 }
+					},
+					{ ID = "Inspector", RatioX = 100.018538483091, RatioY = 1 }
+				}
+			}
+		}
+	},
+	Prefs = {
+		Comp = {
+			Memory = {
+				FramesAtOnce = 10,
+				Render = {
+					SimultaneousBranching = true
+				},
+				Interactive = {
+					SimultaneousBranching = true,
+				}
+			},
+			NumberStyles = {
+				ClipFrame = 2
+			},
+			Views = {
+				RightView = {
+					Viewer = {
+						Smooth = false,
+						ScaleMode = 1,
+						Channel = 4294967295,
+						ShowControls = false,
+					},
+					SideB = {
+						PrevCtrlInactiveColor = 4278255360,
+						PickW = 1,
+						PickH = 1,
+						PrevCtrlActiveColor = 4278190335,
+						Viewer = {
+							EnableLUTs = false,
+							ScaleMode = 1,
+							FitMarginY = 0,
+							LUTPlugin = "FusionViewLUT",
+							FitMarginX = 0,
+							NearZ = 0,
+							FitMarginType = 0,
+							FarZ = -1000,
+							Smooth = false
+						}
+					},
+				},
+				LeftView = {
+					Viewer = {
+						ScaleMode = 1,
+						Smooth = false,
+						ShowControls = false,
+					},
+					SideB = {
+						PrevCtrlInactiveColor = 4278255360,
+						PickW = 1,
+						PickH = 1,
+						PrevCtrlActiveColor = 4278190335,
+						Viewer = {
+							EnableLUTs = false,
+							LUTPlugin = "FusionViewLUT",
+							NearZ = 0,
+							FitMarginX = 0,
+							FitMarginType = 0,
+							FarZ = -1000,
+							FitMarginY = 0
+						}
+					},
+				},
+				View1 = {
+					PrevCtrlInactiveColor = 4278255360,
+					PickW = 1,
+					PrevCtrlActiveColor = 4278190335,
+					PickH = 1,
+					SideB = {
+						PrevCtrlInactiveColor = 4278255360,
+						PickW = 1,
+						PickH = 1,
+						PrevCtrlActiveColor = 4278190335,
+						Viewer = {
+							EnableLUTs = false,
+							LUTPlugin = "FusionViewLUT",
+							NearZ = 0,
+							FitMarginX = 0,
+							FitMarginType = 0,
+							FarZ = -1000,
+							FitMarginY = 0
+						}
+					},
+					AlwaysOnTop = true,
+					FullScreen = false
+				},
+			},
+			FrameFormat = {
+				GuideRatio = 1.77777777777778,
+				DepthFull = 2,
+				DepthPreview = 2,
+				DepthInteractive = 2,
+				DepthLoader = 1,
+				AspectLoader = 1
+			},
+			LastFile = "Project:/Plate/Outputs/Main/v001/exr/CLU_102_064_0030_Main_v001.1001.exr",
+			Tweaks = {
+				GPU = {
+					Enable = 1,
+				}
+			},
+			Paths = {
+			},
+			DiskCache = {
+				CacheLoaders = {
+					Enable = true,
+					DiskCache = true,
+				}
+			},
+			FlowView = {
+				GridSnap = true,
+				ConnectedSnap = true,
+				PipesOnTop = true,
+				ShowHidden = true,
+				FullToolIndicator = true,
+			},
+			QuickTime = {
+				Compressor = "Apple ProRes 422 HQ_apch",
+			},
+		}
+	},
+}
+
+ 
