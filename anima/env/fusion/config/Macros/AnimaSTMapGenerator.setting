@@ -1,0 +1,127 @@
+{
+	Tools = ordered() {
+		AnimaSTMapGenerator11 = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Background2_1",
+					Source = "Width",
+					Default = 1920,
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Background2_1",
+					Source = "Height",
+					Default = 1080,
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge4",
+					Source = "Output",
+				}
+			},
+			ViewInfo = GroupInfo { Pos = { 0, 0 } },
+			Tools = ordered() {
+				Background2_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input {
+							SourceOp = "Publish1",
+							Source = "Value",
+						},
+						Height = Input {
+							SourceOp = "Publish2",
+							Source = "Value",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						TopLeftAlpha = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { -165, 610.5 } },
+				},
+				Publish1 = PublishNumber {
+					Inputs = {
+						Value = Input { Value = 2030, },
+					},
+				},
+				Publish2 = PublishNumber {
+					CtrlWZoom = false,
+					Inputs = {
+						Value = Input { Value = 1080, },
+					},
+				},
+				Merge4 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Background = Input {
+							SourceOp = "Background2_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "ChannelBooleans1_1",
+							Source = "Output",
+						},
+						PerformDepthMerge = Input { Value = 0, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 610.5 } },
+				},
+				ChannelBooleans1_1 = ChannelBoolean {
+					CtrlWShown = false,
+					Inputs = {
+						Operation = Input { Value = 1, },
+						ToAlpha = Input { Value = 15, },
+						Background = Input {
+							SourceOp = "Background1_5_1",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Background1_5",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, 577.5 } },
+				},
+				Background1_5 = Background {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input {
+							Value = 6090,
+							Expression = "Background2_1.Width*3",
+						},
+						Height = Input {
+							Value = 3240,
+							Expression = "Background2_1.Height*3",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Type = Input { Value = FuID { "Horizontal" }, },
+						TopLeftRed = Input { Value = -1, },
+						TopRightRed = Input { Value = 2, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 0, 544.5 } },
+				},
+				Background1_5_1 = Background {
+					CtrlWShown = false,
+					Inputs = {
+						Width = Input {
+							Value = 6090,
+							Expression = "Background2_1.Width*3",
+						},
+						Height = Input {
+							Value = 3240,
+							Expression = "Background2_1.Height*3",
+						},
+						Depth = Input { Value = 4, },
+						["Gamut.SLogVersion"] = Input { Value = FuID { "SLog2" }, },
+						Type = Input { Value = FuID { "Vertical" }, },
+						TopLeftGreen = Input { Value = 2, },
+						TopRightGreen = Input { Value = 2, },
+						BottomLeftGreen = Input { Value = -1, },
+					},
+					ViewInfo = OperatorInfo { Pos = { 110, 544.5 } },
+				}
+			},
+		}
+	},
+	ActiveTool = "AnimaSTMapGenerator11"
+}

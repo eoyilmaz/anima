@@ -1,0 +1,155 @@
+{
+	Tools = ordered() {
+		AnimaLightWrap1 = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Merge11_1_3",
+					Source = "ApplyMode",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "Merge11_1_3",
+					Source = "Operator",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "Merge11_1_3",
+					Source = "Gain",
+					Default = 0,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Merge11_1_3",
+					Source = "BlendClone",
+					Default = 0.25,
+				},
+				Input5 = InstanceInput {
+					SourceOp = "Merge11_1_3",
+					Source = "BackgroundSubtractiveAdditive",
+					Name = "Subtractive",
+					Default = 1,
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "PipeRouter1",
+					Source = "Input",
+					Name = "Background",
+				},
+				Input6 = InstanceInput {
+					SourceOp = "Defocus1",
+					Source = "XDefocusSize",
+					Name = "Background Blur",
+					MaxScale = 100,
+					Default = 10,
+				},
+				Input7 = InstanceInput {
+					SourceOp = "Defocus1",
+					Source = "UseOpenCL",
+					Default = 1,
+				},
+				Input8 = InstanceInput {
+					SourceOp = "Blur1_1_3",
+					Source = "XBlurSize",
+					Name = "Diffuse Size",
+					Default = 20,
+				},
+				MainInput2 = InstanceInput {
+					SourceOp = "PipeRouter1_1_3",
+					Source = "Input",
+					Name = "Foreground",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "Merge11_1_3",
+					Source = "Output",
+				},
+			},
+			ViewInfo = GroupInfo {
+				Name = "AnimaLightWrap",
+				Pos = { 0, 0, },
+			},
+			Tools = ordered() {
+				Merge11_1_3 = Merge {
+					CtrlWShown = false,
+					Inputs = {
+						Blend = Input { Value = 0.25, },
+						ApplyMode = Input { Value = FuID { "Screen", }, },
+						Gain = Input { Value = 0, },
+						PerformDepthMerge = Input { Value = 0, },
+						Background = Input {
+							SourceOp = "PipeRouter1_1_3",
+							Source = "Output",
+						},
+						Foreground = Input {
+							SourceOp = "Gain2_1_1_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, -16.5, }, },
+				},
+				PipeRouter1 = PipeRouter {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 715, 16.5, }, },
+				},
+				Defocus1 = Defocus {
+					CtrlWShown = false,
+					Inputs = {
+						XDefocusSize = Input { Value = 10, },
+						Input = Input {
+							SourceOp = "PipeRouter1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 715, -49.5, }, },
+				},
+				Gain2_2_3 = Fuse.SimpleGain {
+					CtrlWShown = false,
+					Inputs = {
+						Gain = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Defocus1",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "Blur1_1_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 797.5, -82.5, }, },
+				},
+				Gain2_1_1_3 = Fuse.SimpleGain {
+					CtrlWShown = false,
+					Inputs = {
+						ApplyMaskInverted = Input { Value = 1, },
+						Gain = Input { Value = 0, },
+						Input = Input {
+							SourceOp = "Gain2_2_3",
+							Source = "Output",
+						},
+						EffectMask = Input {
+							SourceOp = "PipeRouter1_1_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 962.5, -82.5, }, },
+				},
+				Blur1_1_3 = Blur {
+					CtrlWShown = false,
+					Inputs = {
+						Filter = Input { Value = FuID { "Multi-box", }, },
+						XBlurSize = Input { Value = 20, },
+						Input = Input {
+							SourceOp = "PipeRouter1_1_3",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 825, -148.5, }, },
+				},
+				PipeRouter1_1_3 = PipeRouter {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 907.5, -214.5, }, },
+				},
+			},
+		},
+	},
+	ActiveTool = "AnimaLightWrap1",
+}

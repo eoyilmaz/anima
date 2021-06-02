@@ -1,0 +1,670 @@
+{
+	Tools = ordered() {
+		FireflyHunter1111 = MacroOperator {
+			Inputs = ordered() {
+				Input1 = InstanceInput {
+					SourceOp = "Transform1_1_1",
+					Source = "Center",
+					Name = "Offset Right",
+				},
+				MainInput1 = InstanceInput {
+					SourceOp = "PipeRouter2_1",
+					Source = "Input",
+				},
+				Input3 = InstanceInput {
+					SourceOp = "CustomTool2_1",
+					Source = "NumberIn1",
+					Name = "Max Diff.",
+					MaxScale = 10,
+				},
+				Input4 = InstanceInput {
+					SourceOp = "Transform1_2",
+					Source = "Center",
+					Name = "Offset Left",
+				},
+				Input2 = InstanceInput {
+					SourceOp = "CustomTool2_1",
+					Source = "EffectMask",
+				},
+			},
+			Outputs = {
+				MainOutput1 = InstanceOutput {
+					SourceOp = "CustomTool2_1",
+					Source = "Output",
+				},
+			},
+			ViewInfo = GroupInfo {
+				Name = "FireflyHunter111",
+				Pos = { 0, 0, },
+			},
+			Tools = ordered() {
+				Transform1_1_1 = Transform {
+					CtrlWShown = false,
+					Inputs = {
+						Center = Input { Value = { 0.50048828125, 0.5, }, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 858, },
+						Input = Input {
+							SourceOp = "PipeRouter2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 220, -214.5, }, },
+				},
+				PipeRouter2_1 = PipeRouter {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					ViewInfo = PipeRouterInfo { Pos = { 55, -280.5, }, },
+				},
+				CustomTool2_1 = Custom {
+					CtrlWShown = false,
+					CustomData = {
+						Settings = {
+							[1] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										Name = "CustomTool2_1",
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										Name = "CustomTool2_1LUTIn1",
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										Name = "CustomTool2_1LUTIn2",
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										Name = "CustomTool2_1LUTIn3",
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										Name = "CustomTool2_1LUTIn4",
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+							[2] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+							[3] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+							[4] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+							[5] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+							[6] = {
+								Tools = ordered() {
+									CustomTool2_1 = Custom {
+										Inputs = {
+											LUTIn3 = Input {
+												SourceOp = "CustomTool2_1LUTIn3",
+												Source = "Value",
+											},
+											LUTIn4 = Input {
+												SourceOp = "CustomTool2_1LUTIn4",
+												Source = "Value",
+											},
+											Image2 = Input {
+												SourceOp = "Transform1_2",
+												Source = "Output",
+											},
+											RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+											GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+											LUTIn1 = Input {
+												SourceOp = "CustomTool2_1LUTIn1",
+												Source = "Value",
+											},
+											NumberIn1 = Input { Value = 1.5, },
+											LUTIn2 = Input {
+												SourceOp = "CustomTool2_1LUTIn2",
+												Source = "Value",
+											},
+											BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+											Image1 = Input {
+												SourceOp = "PipeRouter2_1",
+												Source = "Output",
+											},
+											Image3 = Input {
+												SourceOp = "Transform1_1_1",
+												Source = "Output",
+											},
+										},
+										CtrlWZoom = false,
+										ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+										CustomData = {
+										},
+									},
+									CustomTool2_1LUTIn1 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 0, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn2 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 0, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn3 = LUTBezier {
+										SplineColor = { Red = 0, Blue = 204, Green = 0, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+									CustomTool2_1LUTIn4 = LUTBezier {
+										SplineColor = { Red = 204, Blue = 204, Green = 204, },
+										KeyColorSplines = {
+											[0] = {
+												[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+												[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+											},
+										},
+										NameSet = true,
+									},
+								},
+							},
+						},
+					},
+					Inputs = {
+						NumberIn1 = Input { Value = 1.5, },
+						LUTIn1 = Input {
+							SourceOp = "CustomTool2_1LUTIn1",
+							Source = "Value",
+						},
+						LUTIn2 = Input {
+							SourceOp = "CustomTool2_1LUTIn2",
+							Source = "Value",
+						},
+						LUTIn3 = Input {
+							SourceOp = "CustomTool2_1LUTIn3",
+							Source = "Value",
+						},
+						LUTIn4 = Input {
+							SourceOp = "CustomTool2_1LUTIn4",
+							Source = "Value",
+						},
+						RedExpression = Input { Value = "if(r1*a2*a3  > (r2 + r3) * n1, (r2 + r3) * 0.5, r1)", },
+						GreenExpression = Input { Value = "if(g1*a2*a3 > (g2 + g3) * n1, (g2 + g3) * 0.5, g1)", },
+						BlueExpression = Input { Value = "if(b1*a2*a3  > (b2 + b3) * n1, (b2 + b3) * 0.5, b1)", },
+						Image1 = Input {
+							SourceOp = "PipeRouter2_1",
+							Source = "Output",
+						},
+						Image2 = Input {
+							SourceOp = "Transform1_2",
+							Source = "Output",
+						},
+						Image3 = Input {
+							SourceOp = "Transform1_1_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { 55, -181.5, }, },
+				},
+				CustomTool2_1LUTIn1 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+						},
+					},
+					SplineColor = { Red = 204, Green = 0, Blue = 0, },
+					CtrlWShown = false,
+				},
+				CustomTool2_1LUTIn2 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+						},
+					},
+					SplineColor = { Red = 0, Green = 204, Blue = 0, },
+					CtrlWShown = false,
+				},
+				CustomTool2_1LUTIn3 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+						},
+					},
+					SplineColor = { Red = 0, Green = 0, Blue = 204, },
+					CtrlWShown = false,
+				},
+				CustomTool2_1LUTIn4 = LUTBezier {
+					KeyColorSplines = {
+						[0] = {
+							[0] = { 0, RH = { 0.333333333333333, 0.333333333333333, }, Flags = { Linear = true, }, },
+							[1] = { 1, LH = { 0.666666666666667, 0.666666666666667, }, Flags = { Linear = true, }, },
+						},
+					},
+					SplineColor = { Red = 204, Green = 204, Blue = 204, },
+					CtrlWShown = false,
+				},
+				Transform1_2 = Transform {
+					CtrlWZoom = false,
+					CtrlWShown = false,
+					Inputs = {
+						Center = Input { Value = { 0.49951171875, 0.5, }, },
+						ReferenceSize = Input { Value = 1, },
+						Width = Input { Value = 2048, },
+						Height = Input { Value = 858, },
+						Input = Input {
+							SourceOp = "PipeRouter2_1",
+							Source = "Output",
+						},
+					},
+					ViewInfo = OperatorInfo { Pos = { -110, -214.5, }, },
+				},
+			},
+		},
+	},
+	ActiveTool = "FireflyHunter1111",
+}
