@@ -24,6 +24,8 @@ class ShotManager(object):
         return shot_clip.shot_code
 
     def get_current_shot(self):
+        """returns the current shot clip node
+        """
         timeline = self.get_current_timeline()
         clip = self.get_current_clip()
         shot_clip = ShotClip()
@@ -565,6 +567,37 @@ class ShotClip(object):
         if not match:
             raise ValueError("Shot code format is not valid: %s" % shot_code)
 
+    def create_slate(self):
+        """creates slate for this shot
+        """
+        shot = self.get_shot()
+        if not shot:
+            return
+
+        # Try to get a version with this clip path
+        version_output_name = self.clip.GetName()
+        version_file_name = version_output_name.split('.')[0]
+        from stalker import Version, Task
+        version = Version.query.join(Task, Version.task)\
+            .filter(Task.parent == shot)\
+            .filter(Version.full_path.contains(version_file_name))\
+            .first()
+        # .filter(Task.project == self.project)\
+
+        if not version:
+            return
+
+        # we should be in good shape
+        # create a new Fusion comp and run the magic commands
+        # fusion_clip = self.timeline.CreateFusionClip([])
+        fusion_clip = self.clip.AddFusionComp()
+        fusion_comp = self.clip.GetFusionCompByIndex(1)
+        from anima.env.fusion import Fusion
+        f = Fusion()
+        f.comp = fusion_comp
+        slate_node = f.create_slate_node(version)
+        return slate_node
+
 
 class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
     """The UI for the ShotManager
@@ -654,6 +687,11 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.main_layout.addWidget(update_shot_thumbnail_button)
 
+        # Create SLate button
+        create_slate_button = QtWidgets.QPushButton(self)
+        create_slate_button.setText("Create Slate")
+        self.main_layout.addWidget(create_slate_button)
+
         # Ok button
         ok_button = QtWidgets.QPushButton(self)
         ok_button.setText("OK")
@@ -702,6 +740,12 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
             update_shot_thumbnail_button,
             QtCore.SIGNAL("clicked()"),
             self.update_shot_thumbnail
+        )
+
+        QtCore.QObject.connect(
+            create_slate_button,
+            QtCore.SIGNAL("clicked()"),
+            self.create_slate
         )
 
     def project_changed(self, index):
@@ -837,3 +881,13 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
                 "Updated shot thumbnail 👍",
                 "Updated shot thumbnail 👍"
             )
+
+    def create_slate(self):
+        """creates slate for the current shot
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = ShotManager(project, sequence)
+        shot = im.get_current_shot()
+        if shot:
+            shot.create_slate()
