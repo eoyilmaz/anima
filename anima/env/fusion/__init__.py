@@ -811,7 +811,10 @@ class Fusion(EnvironmentBase):
             # Scene Name
             # Use shot name for now
             parts = shot.name.split("_")
-            scene_name = parts[2]
+            try:
+                scene_name = parts[2]
+            except IndexError:
+                scene_name = ''
             slate_node.Input16[current_frame] = scene_name
 
             # Frames
