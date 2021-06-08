@@ -14,6 +14,7 @@ class TaskStatusLabel(QtWidgets.QLabel):
         'WIP': 'orange',
         'HREV': 'purple',
         'DREV': 'dodgerblue',
+        'PREV': 'dodgerblue',
         'STOP': 'red',
         'OH': 'red',
         'CMPL': 'green',
