@@ -281,7 +281,7 @@ class ShotClip(object):
         anim_task.depends = [camera_task]
         lighting_task.depends = [anim_task, camera_task]
         cleanup_task.depends = [plate_task]
-        comp_task.depends = [lighting_task, cleanup_task]
+        comp_task.depends = [lighting_task, plate_task]
 
         DBSession.commit()
 
