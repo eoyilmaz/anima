@@ -96,6 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
         self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("last_viewed_task_id", self.task_dashboard_widget.task.id)
 
         self.settings.endGroup()
 
@@ -107,6 +108,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(self.settings.value('size', QtCore.QSize(800, 600)))
         self.move(self.settings.value('pos', QtCore.QPoint(100, 100)))
         self.restoreState(self.settings.value('windowState'))
+
+        from anima.ui.views.task import TaskTreeView
+        assert isinstance(self.tasks_tree_view, TaskTreeView)
+
+        task_id = self.settings.value('last_viewed_task_id')
+        if task_id:
+            from stalker import Task
+            task = Task.query.get(task_id)
+            self.tasks_tree_view.find_and_select_entity_item(task)
 
         self.settings.endGroup()
 
