@@ -1958,7 +1958,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if MULTI_VALUE_ENUM not in depends:
                     for task in self.tasks:
                         try:
-                            if task.depends != depends:
+                            if sorted(task.depends, key=lambda x: x.id) != sorted(depends, key=lambda x: x.id):
                                 task.depends = depends
                         except StatusError as e:
                             DBSession.rollback()
