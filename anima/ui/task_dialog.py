@@ -25,6 +25,9 @@ def UI(app_in=None, executor=None, **kwargs):
 class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Task Dialog
     """
+    __company_name__ = 'Erkan Ozgur Yilmaz'
+    __app_name__ = 'Project Dialog'
+
     CREATE_MODE = 'Create'
     UPDATE_MODE = 'Update'
 
@@ -34,6 +37,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # store the logged in user
         self.logged_in_user = None
+        self.settings = QtCore.QSettings(
+            self.__company_name__,
+            self.__app_name__
+        )
 
         self.parent_task = parent_task
 
@@ -466,7 +473,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         self.update_bid_check_box = QtWidgets.QCheckBox(self)
         self.update_bid_check_box.setText("")
-        self.update_bid_check_box.setChecked(True)
+        # self.update_bid_check_box.setChecked(True)
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
@@ -759,6 +766,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # schedule model
         self.schedule_model_combo_box.addItems(defaults.task_schedule_models)
+
+        # read the settings
+        self.read_settings()
+
+    def write_settings(self):
+        """stores the settings to persistent storage
+        """
+        self.settings.beginGroup("MainDialog")
+        self.settings.setValue("update_bid_last_state", self.update_bid_check_box.isChecked())
+        self.settings.endGroup()
+
+    def read_settings(self):
+        """restores the settings from persistent storage
+        """
+        self.settings.beginGroup("MainDialog")
+        # restore the last state
+        update_bid_last_state = self.settings.value("update_bid_last_state")
+        update_bid_last_state = True if update_bid_last_state in [True, 'True', 'true'] else False
+        self.update_bid_check_box.setChecked(update_bid_last_state)
+        self.settings.endGroup()
 
     @classmethod
     def get_merged_items(cls, items, attr):
@@ -1751,6 +1778,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def accept(self):
         """create/update the task
         """
+        # store the settings first
+        self.write_settings()
+
         # start with creating the task
         entity_type = self.entity_type_combo_box.currentText()
         project = self.get_project()
@@ -2002,3 +2032,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     )
 
         super(MainDialog, self).accept()
+
+    def reject(self):
+        """overridden reject method
+        """
+        # store the settings
+        self.write_settings()
+        super(MainDialog, self).reject()
