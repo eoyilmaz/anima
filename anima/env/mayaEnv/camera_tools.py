@@ -134,18 +134,29 @@ def camera_focus_plane_tool(camera):
     # transform the frame surface
     frame.tz.set(-10.0)
 
-    exp = """float $flen = %(camera)s.focalLength;
+    exp_scale = """float $flen = %(camera)s.focalLength;
     float $hfa = %(camera)s.horizontalFilmAperture * 25.4;
     %(frame)s.sx = -%(frame)s.translateZ * $hfa / $flen;
     %(frame)s.sy = %(frame)s.sx / defaultResolution.deviceAspectRatio;
-    %(camera)s.focusDistance = -%(frame)s.tz;
+    """ % {
+        'camera': camera_shape.name(),
+        'frame': frame.name()
+    }
+    exp_focus_distance = """%(camera)s.focusDistance = -%(frame)s.tz;
     %(camera)s.aiFocusDistance = %(camera)s.focusDistance;
     %(camera)s.aiApertureSize = %(camera)s.focalLength / %(camera)s.fStop * 0.1;
     """ % {
         'camera': camera_shape.name(),
         'frame': frame.name()
     }
-    pm.expression(s=exp, ae=1, uc="all")
+    try:
+        pm.expression(s=exp_scale, ae=1, uc="all")
+    except RuntimeError:
+        pass
+    try:
+        pm.expression(s=exp_focus_distance, ae=1, uc="all")
+    except RuntimeError:
+        pass
 
     # set material
     surface_shader = pm.shadingNode('surfaceShader', asShader=1)
