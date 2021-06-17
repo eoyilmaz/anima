@@ -17,10 +17,10 @@ class NetflixReporter(object):
         'WFD': 'Waiting To Start',
         'RTS': 'Waiting To Start',
         'WIP': 'In Progress',
-        'PREV': 'In Progress',
+        'PREV': 'Pending Netflix Review',
         'HREV': 'In Progress',
         'DREV': 'In Progress',
-        'CMPL': 'Pending Netflix Review',
+        'CMPL': 'Approved',
         'STOP': 'Omit',
         'OH': 'On Hold',
     }

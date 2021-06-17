@@ -996,42 +996,11 @@ order by cast("TimeLogs".start as date)
         task = self.tasks_combo_box.currentTask()
         resource = self.get_current_resource()
 
-        # war the user if the resource is not the logged_in_user
-        # if resource != self.logged_in_user:
-        #     msg_box = QtWidgets.QMessageBox(self)
-        #     msg_box.setWindowTitle(
-        #         'Entering TimeLog On Behalf of Somebody Else'
-        #     )
-        #     msg_box.setText(
-        #         "You're entering a TimeLog on behalf of somebody else???"
-        #     )
-        #     accept_button = msg_box.addButton(
-        #         'Accept the responsibility',
-        #         QtWidgets.QMessageBox.AcceptRole
-        #     )
-        #     cancel_button = msg_box.addButton(
-        #         'Cancel',
-        #         QtWidgets.QMessageBox.RejectRole
-        #     )
-        #     msg_box.setDefaultButton(cancel_button)
-        #     msg_box.exec_()
-        #     clicked_button = msg_box.clickedButton()
-        #     msg_box.deleteLater()
-        #     if clicked_button == cancel_button:
-        #         return
-
-        # description = self.description_plain_text_edit.toPlainText()
-        # revision_cause_text = self.revision_type_combo_box.currentText().replace(' ', '_')
-
         is_complete = self.set_as_complete_radio_button.isChecked()
         submit_to_final_review = self.submit_for_final_review_radio_button.isChecked()
 
         # get the revision Types
         from stalker import Type
-        # revision_type = Type.query\
-        #     .filter(Type.target_entity_type == 'Note')\
-        #     .filter(Type.name == revision_cause_text)\
-        #     .first()
 
         date = self.calendar_widget.selectedDate()
         start = self.start_time_edit.time()
