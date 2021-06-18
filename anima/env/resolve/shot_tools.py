@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Shot related tools
 """
-import anima.utils
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 
@@ -572,6 +571,7 @@ class ShotClip(object):
         """
         shot = self.get_shot()
         if not shot:
+            print("No valid shot!")
             return
 
         # Try to get a version with this clip path
@@ -585,17 +585,37 @@ class ShotClip(object):
         # .filter(Task.project == self.project)\
 
         if not version:
+            print("No version output: %s" % version_output_name)
             return
+        print("Found version from version_output: %s" % version)
 
         # we should be in good shape
         # create a new Fusion comp and run the magic commands
         # fusion_clip = self.timeline.CreateFusionClip([])
-        fusion_clip = self.clip.AddFusionComp()
-        fusion_comp = self.clip.GetFusionCompByIndex(1)
-        from anima.env.fusion import Fusion
-        f = Fusion()
+        # slate_item = self.timeline.InsertFusionTitleIntoTimeline("Zipper")
+        # slate_item = self.timeline.InsertFusionGeneratorIntoTimeline("Text+")
+        # slate_item = self.timeline.InsertFusionGeneratorIntoTimeline("Contours")
+        # print("slate_item: %s" % slate_item)
+
+        # media_pool_item = self.clip.GetMediaPoolItem()
+        # print("media_pool_item: %s" % media_pool_item)
+        # self.timeline.InsertMediaPoolItem
+
+        from anima.env import blackmagic
+        resolve = blackmagic.get_resolve()
+        current_page = resolve.GetCurrentPage()
+        resolve.OpenPage('fusion')
+        slate_item = self.clip
+        fusion_comp = slate_item.AddFusionComp()
+
+        print("Created fusion comp: %s" % fusion_comp)
+        from anima.env import fusion
+        reload(fusion)
+        f = fusion.Fusion()
         f.comp = fusion_comp
         slate_node = f.create_slate_node(version)
+
+        resolve.OpenPage(current_page)
         return slate_node
 
 

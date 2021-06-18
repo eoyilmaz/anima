@@ -95,66 +95,66 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         from anima.ui.utils import add_button
         # -------------------------------------------------------------------
         # Template
-        template_line_edit = QtWidgets.QLineEdit()
-        # template_line_edit.setPlaceHolder("Template")
-        template_line_edit.setText(GenericTools.default_output_template)
-
-        general_tab_vertical_layout.addWidget(template_line_edit)
-
-        # -------------------------------------------------------------------
-        # Per Clip Output Generator
-        # create a new layout
-        layout = QtWidgets.QHBoxLayout()
-        general_tab_vertical_layout.addLayout(layout)
-
-        per_clip_version_label = QtWidgets.QLabel()
-        per_clip_version_label.setText("Version")
-        per_clip_version_spinbox = QtWidgets.QSpinBox()
-        per_clip_version_spinbox.setMinimum(1)
-
-        def per_clip_output_generator_wrapper():
-            version_number = per_clip_version_spinbox.value()
-            template = template_line_edit.text()
-            GenericTools.per_clip_output_generator(version_number=version_number, template=template)
-
-        add_button(
-            'Per Clip Output Generator',
-            layout,
-            per_clip_output_generator_wrapper
-        )
-
-        layout.addWidget(per_clip_version_label)
-        layout.addWidget(per_clip_version_spinbox)
-
-        # Clip Output Generator
-        # create a new layout
-        layout = QtWidgets.QHBoxLayout()
-        general_tab_vertical_layout.addLayout(layout)
-
-        clip_index_label = QtWidgets.QLabel()
-        clip_index_label.setText("Clip Index")
-        clip_index_spinbox = QtWidgets.QSpinBox()
-        clip_index_spinbox.setMinimum(1)
-
-        version_label = QtWidgets.QLabel()
-        version_label.setText("Version")
-        version_spinbox = QtWidgets.QSpinBox()
-        version_spinbox.setMinimum(1)
-
-        def clip_output_generator_wrapper():
-            clip_index = clip_index_spinbox.value()
-            version_number = version_spinbox.value()
-            GenericTools.clip_output_generator(clip_index, version_number)
-
-        add_button(
-            'Clip Output Generator',
-            layout,
-            clip_output_generator_wrapper
-        )
-        layout.addWidget(clip_index_label)
-        layout.addWidget(clip_index_spinbox)
-        layout.addWidget(version_label)
-        layout.addWidget(version_spinbox)
+        # template_line_edit = QtWidgets.QLineEdit()
+        # # template_line_edit.setPlaceHolder("Template")
+        # template_line_edit.setText(GenericTools.default_output_template)
+        #
+        # general_tab_vertical_layout.addWidget(template_line_edit)
+        #
+        # # -------------------------------------------------------------------
+        # # Per Clip Output Generator
+        # # create a new layout
+        # layout = QtWidgets.QHBoxLayout()
+        # general_tab_vertical_layout.addLayout(layout)
+        #
+        # per_clip_version_label = QtWidgets.QLabel()
+        # per_clip_version_label.setText("Version")
+        # per_clip_version_spinbox = QtWidgets.QSpinBox()
+        # per_clip_version_spinbox.setMinimum(1)
+        #
+        # def per_clip_output_generator_wrapper():
+        #     version_number = per_clip_version_spinbox.value()
+        #     template = template_line_edit.text()
+        #     GenericTools.per_clip_output_generator(version_number=version_number, template=template)
+        #
+        # add_button(
+        #     'Per Clip Output Generator',
+        #     layout,
+        #     per_clip_output_generator_wrapper
+        # )
+        #
+        # layout.addWidget(per_clip_version_label)
+        # layout.addWidget(per_clip_version_spinbox)
+        #
+        # # Clip Output Generator
+        # # create a new layout
+        # layout = QtWidgets.QHBoxLayout()
+        # general_tab_vertical_layout.addLayout(layout)
+        #
+        # clip_index_label = QtWidgets.QLabel()
+        # clip_index_label.setText("Clip Index")
+        # clip_index_spinbox = QtWidgets.QSpinBox()
+        # clip_index_spinbox.setMinimum(1)
+        #
+        # version_label = QtWidgets.QLabel()
+        # version_label.setText("Version")
+        # version_spinbox = QtWidgets.QSpinBox()
+        # version_spinbox.setMinimum(1)
+        #
+        # def clip_output_generator_wrapper():
+        #     clip_index = clip_index_spinbox.value()
+        #     version_number = version_spinbox.value()
+        #     GenericTools.clip_output_generator(clip_index, version_number)
+        #
+        # add_button(
+        #     'Clip Output Generator',
+        #     layout,
+        #     clip_output_generator_wrapper
+        # )
+        # layout.addWidget(clip_index_label)
+        # layout.addWidget(clip_index_spinbox)
+        # layout.addWidget(version_label)
+        # layout.addWidget(version_spinbox)
 
         # add_button(
         #     "Get Shot Code",
