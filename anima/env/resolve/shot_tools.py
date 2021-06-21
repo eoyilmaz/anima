@@ -569,17 +569,16 @@ class ShotClip(object):
     def create_slate(self):
         """creates slate for this shot
         """
-        shot = self.get_shot()
-        if not shot:
-            print("No valid shot!")
-            return
+        # shot = self.get_shot()
+        # if not shot:
+        #     print("No valid shot!")
+        #     return
 
         # Try to get a version with this clip path
         version_output_name = self.clip.GetName()
         version_file_name = version_output_name.split('.')[0]
         from stalker import Version, Task
         version = Version.query.join(Task, Version.task)\
-            .filter(Task.parent == shot)\
             .filter(Version.full_path.contains(version_file_name))\
             .first()
         # .filter(Task.project == self.project)\
