@@ -87,74 +87,144 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # add the General Tab
         general_tab_widget = QtWidgets.QWidget(self.widget())
         general_tab_vertical_layout = QtWidgets.QVBoxLayout()
+        general_tab_form_layout = QtWidgets.QFormLayout()
+        general_tab_vertical_layout.addLayout(general_tab_form_layout)
         general_tab_widget.setLayout(general_tab_vertical_layout)
 
         main_tab_widget.addTab(general_tab_widget, 'Generic')
 
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
         # Create tools for general tab
         from anima.ui.utils import add_button
+        i = -1
+
+        # -------------------------------------------------------------------
+        # Common Controls
+        i += 1
+        common_output_controls_label = QtWidgets.QLabel()
+        common_output_controls_label.setText("=========== Common Output Controls ===========")
+        general_tab_form_layout.setWidget(i, field_role, common_output_controls_label)
+
         # -------------------------------------------------------------------
         # Template
-        # template_line_edit = QtWidgets.QLineEdit()
-        # # template_line_edit.setPlaceHolder("Template")
-        # template_line_edit.setText(GenericTools.default_output_template)
-        #
-        # general_tab_vertical_layout.addWidget(template_line_edit)
-        #
+        i += 1
+        template_label = QtWidgets.QLabel()
+        template_label.setText("Template")
+        general_tab_form_layout.setWidget(i, label_role, template_label)
+
+        template_line_edit = QtWidgets.QLineEdit()
+        template_line_edit.setText(GenericTools.default_output_template)
+        general_tab_form_layout.setWidget(i, field_role, template_line_edit)
+
+        # -------------------------------------------------------------------
+        # Extend Start/End Controls
+        i += 1
+
+        extend_start_label = QtWidgets.QLabel()
+        extend_start_label.setText("Extend Start")
+        general_tab_form_layout.setWidget(i, label_role, extend_start_label)
+
+        extend_start_spinbox = QtWidgets.QSpinBox()
+        extend_start_spinbox.setMinimum(0)
+        general_tab_form_layout.setWidget(i, field_role, extend_start_spinbox)
+
+        i += 1
+        extend_end_label = QtWidgets.QLabel()
+        extend_end_label.setText("Extend End")
+        general_tab_form_layout.setWidget(i, label_role, extend_end_label)
+
+        extend_end_spinbox = QtWidgets.QSpinBox()
+        extend_end_spinbox.setMinimum(0)
+        general_tab_form_layout.setWidget(i, field_role, extend_end_spinbox)
+
         # # -------------------------------------------------------------------
-        # # Per Clip Output Generator
-        # # create a new layout
-        # layout = QtWidgets.QHBoxLayout()
-        # general_tab_vertical_layout.addLayout(layout)
-        #
-        # per_clip_version_label = QtWidgets.QLabel()
-        # per_clip_version_label.setText("Version")
-        # per_clip_version_spinbox = QtWidgets.QSpinBox()
-        # per_clip_version_spinbox.setMinimum(1)
-        #
-        # def per_clip_output_generator_wrapper():
-        #     version_number = per_clip_version_spinbox.value()
-        #     template = template_line_edit.text()
-        #     GenericTools.per_clip_output_generator(version_number=version_number, template=template)
-        #
-        # add_button(
-        #     'Per Clip Output Generator',
-        #     layout,
-        #     per_clip_output_generator_wrapper
-        # )
-        #
-        # layout.addWidget(per_clip_version_label)
-        # layout.addWidget(per_clip_version_spinbox)
-        #
-        # # Clip Output Generator
-        # # create a new layout
-        # layout = QtWidgets.QHBoxLayout()
-        # general_tab_vertical_layout.addLayout(layout)
-        #
-        # clip_index_label = QtWidgets.QLabel()
-        # clip_index_label.setText("Clip Index")
-        # clip_index_spinbox = QtWidgets.QSpinBox()
-        # clip_index_spinbox.setMinimum(1)
-        #
+        # # Version
+        # i += 1
         # version_label = QtWidgets.QLabel()
         # version_label.setText("Version")
+        # general_tab_form_layout.setWidget(i, label_role, version_label)
+        #
         # version_spinbox = QtWidgets.QSpinBox()
         # version_spinbox.setMinimum(1)
-        #
-        # def clip_output_generator_wrapper():
-        #     clip_index = clip_index_spinbox.value()
-        #     version_number = version_spinbox.value()
-        #     GenericTools.clip_output_generator(clip_index, version_number)
-        #
-        # add_button(
-        #     'Clip Output Generator',
-        #     layout,
-        #     clip_output_generator_wrapper
-        # )
-        # layout.addWidget(clip_index_label)
-        # layout.addWidget(clip_index_spinbox)
-        # layout.addWidget(version_label)
-        # layout.addWidget(version_spinbox)
+        # general_tab_form_layout.setWidget(i, field_role, version_spinbox)
+
+        # -------------------------------------------------------------------
+        # Clip Output Generator
+        i += 1
+
+        def clip_output_generator_wrapper():
+            #  = version_spinbox.value()
+            template = template_line_edit.text()
+            extend_start = extend_start_spinbox.value()
+            extend_end = extend_end_spinbox.value()
+
+            from anima.env.resolve import shot_tools
+            clip = shot_tools.ShotManager.get_current_clip()
+
+            GenericTools.clip_output_generator(
+                clip=clip,
+                template=template,
+                extend_start=extend_start,
+                extend_end=extend_end
+            )
+
+        clip_output_generator_button = QtWidgets.QPushButton()
+        clip_output_generator_button.setText("Output - Current Clip")
+        clip_output_generator_button.clicked.connect(clip_output_generator_wrapper)
+
+        general_tab_form_layout.setWidget(i, field_role, clip_output_generator_button)
+
+        # -------------------------------------------------------------------
+        # Clip Output Generator By Index
+        i += 1
+        clip_index_label = QtWidgets.QLabel()
+        clip_index_label.setText("Clip Index")
+        general_tab_form_layout.setWidget(i, label_role, clip_index_label)
+
+        clip_index_spinbox = QtWidgets.QSpinBox()
+        clip_index_spinbox.setMinimum(1)
+        general_tab_form_layout.setWidget(i, field_role, clip_index_spinbox)
+
+        i += 1
+
+        def clip_output_generator_by_index_wrapper():
+            clip_index = clip_index_spinbox.value()
+            template = template_line_edit.text()
+            extend_start = extend_start_spinbox.value()
+            extend_end = extend_end_spinbox.value()
+            GenericTools.clip_output_generator_by_clip_index(
+                clip_index=clip_index,
+                template=template,
+                extend_start=extend_start,
+                extend_end=extend_end
+            )
+
+        output_clip_by_clip_index_push_button = QtWidgets.QPushButton()
+        output_clip_by_clip_index_push_button.setText('Output - Clip By Index')
+        output_clip_by_clip_index_push_button.clicked.connect(clip_output_generator_by_index_wrapper)
+        general_tab_form_layout.setWidget(i, field_role, output_clip_by_clip_index_push_button)
+
+        # -------------------------------------------------------------------
+        # Per Clip Output Generator
+        i += 1
+
+        def per_clip_output_generator_wrapper():
+            template = template_line_edit.text()
+            extend_start = extend_start_spinbox.value()
+            extend_end = extend_end_spinbox.value()
+            GenericTools.per_clip_output_generator(
+                template=template,
+                extend_start=extend_start,
+                extend_end=extend_end
+            )
+
+        per_clip_output_generator_push_button = QtWidgets.QPushButton()
+        per_clip_output_generator_push_button.setText("Output - Per Clip")
+        per_clip_output_generator_push_button.clicked.connect(per_clip_output_generator_wrapper)
+
+        general_tab_form_layout.setWidget(i, field_role, per_clip_output_generator_push_button)
 
         # add_button(
         #     "Get Shot Code",
@@ -212,10 +282,10 @@ class GenericTools(object):
     """Generic Tools
     """
 
-    default_output_template = "%{Timeline Name}_CL%{Clip #}_v{version_number:03i}"
+    default_output_template = "%{Timeline Name}_CL%{Clip #}_v001"
 
     @classmethod
-    def per_clip_output_generator(cls, version_number=1, template=""):
+    def per_clip_output_generator(cls, template="", extend_start=0, extend_end=0):
         """generates render tasks per clips on the current timeline
         """
         from anima.env import blackmagic
@@ -231,18 +301,45 @@ class GenericTools(object):
             template = cls.default_output_template
 
         for clip_index in clips:
-            GenericTools.clip_output_generator(
+            GenericTools.clip_output_generator_by_clip_index(
                 clip_index=clip_index,
-                version_number=version_number,
-                template=template
+                template=template,
+                extend_start=extend_start,
+                extend_end=extend_end
             )
 
     @classmethod
-    def clip_output_generator(cls, clip_index=1, version_number=1, template=""):
-        """generates render tasks for the clip with the given index
+    def clip_output_generator_by_clip_index(cls, clip_index=1, template="", extend_start=0, extend_end=0):
+        """Generators
 
-        :param int clip_index:
-        :param int version_number:
+        :param clip_index:
+        :param template:
+        :param int extend_start:
+        :param int extend_end:
+        :return:
+        """
+        from anima.env import blackmagic
+        resolve = blackmagic.get_resolve()
+
+        pm = resolve.GetProjectManager()
+        proj = pm.GetCurrentProject()
+        timeline = proj.GetCurrentTimeline()
+
+        clips = timeline.GetItemsInTrack("video", 1)
+        clip = clips[clip_index]
+
+        cls.clip_output_generator(
+            clip,
+            template=template,
+            extend_start=extend_start,
+            extend_end=extend_end
+        )
+
+    @classmethod
+    def clip_output_generator(cls, clip, template="", extend_start=0, extend_end=0):
+        """Generates render tasks for the clip with the given index
+
+        :param clip: A Resolve TimelineItem
         :param str template: Output template,
 
           The Resolve template variables can be directly used like:
@@ -500,6 +597,10 @@ class GenericTools(object):
             %{White Point}
 
           These will be passed to Resolve directly.
+
+        :param extend_start: Include this many frames at the start of the clip. Default is 0.
+        :param extend_end: Include this many frames at the end of the clip. Default is 0.
+
         """
 
         if template == "":
@@ -750,25 +851,27 @@ class GenericTools(object):
             'White Point': '%{White Point}',
         }
 
-        resolve_keywords.update({
-            'clip_number': clip_index,
-            'version_number': version_number
-        })
-
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
 
         pm = resolve.GetProjectManager()
         proj = pm.GetCurrentProject()
         timeline = proj.GetCurrentTimeline()
-
         clips = timeline.GetItemsInTrack("video", 1)
-        clip = clips[clip_index]
+
+        clip_index = -1
+        for i in range(len(clips)):
+            if clips[i + 1] == clip:
+                clip_index = i + 1
+
+        resolve_keywords.update({
+            'clip_number': clip_index,
+        })
 
         # create a new render output for each clip
         proj.SetRenderSettings({
-            'MarkIn': clip.GetStart(),
-            'MarkOut': clip.GetEnd()-1,
+            'MarkIn': clip.GetStart() - extend_start,
+            'MarkOut': clip.GetEnd() - 1 + extend_end,
             'CustomName': template
         })
 
