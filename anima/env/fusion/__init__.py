@@ -893,11 +893,18 @@ class Fusion(EnvironmentBase):
 
         # print("Using resolve setup!")
         # connect the output to MediaOut
-        media_out_node = self.comp.FindTool("MediaOut1")
-        if not media_out_node:
-            print("no MediaOut1 node")
-        else:
-            media_out_node.Input = resize_node
+        media_out_node = None
+        i = 0
+        import time
+        while not media_out_node and i < 10:
+            media_out_node = self.comp.FindTool("MediaOut1")
+            if not media_out_node:
+                print("no MediaOut1 node, waiting for 1 sec!")
+                time.sleep(1)
+            else:
+                print("found MediaOut1 node!")
+                media_out_node.Input = resize_node
+            i += 1
 
         return slate_node
 
