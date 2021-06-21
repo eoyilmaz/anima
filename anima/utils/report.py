@@ -186,3 +186,74 @@ class NetflixReporter(object):
 
         with open(csv_output_path, 'w') as f:
             f.write('\n'.join(data))
+
+
+class NetflixReview(object):
+    """Generates data for Netflix review process.
+
+    Generally it is used to generate CSVs suitable to upload to Netflix review process.
+    """
+
+    def __init__(self):
+        self.outputs = []
+
+    @classmethod
+    def get_version_from_output(cls, output_path):
+        """Returns the related Stalker Version from the given output path
+
+        :param str output_path:
+        :return:
+        """
+        import os
+        basename = os.path.basename(output_path)
+        version_name = basename.split(".")[0]
+        from anima.utils import do_db_setup
+        do_db_setup()
+
+        from stalker import Version
+        return Version.query.filter(Version.full_path.contains(version_name)).first()
+
+    def generate_csv(self, output_path="", vendor="", submission_note=""):
+        """outputs a CSV suitable to upload to Netflix review process
+        """
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from stalker import Shot
+        import os
+        data = [
+            "Version Name;Link;Scope Of Work;Vendor;Submitting For;Submission Note",
+        ]
+        for output in self.outputs:
+            version_data = list()
+            output_base_name = os.path.basename(output)
+            version = self.get_version_from_output(output)
+            if not version:
+                continue
+
+            # Version Name
+            version_data.append(output_base_name)
+
+            # Link
+            # Link the related shot
+            shot = version.task.parent
+            version_data.append(shot.name)
+
+            # Scope Of Work
+            version_data.append(shot.description)
+
+            # Vendor
+            version_data.append(vendor)
+
+            # Submitting For
+            submitting_for = "FINAL" if shot.status.name == "CMPL" else "WIP"
+            version_data.append(submitting_for)
+
+            # Submission Note
+            version_data.append(submission_note)
+
+            data.append(";".join(version_data))
+
+        print(data)
+
+        with open(output_path, "w+") as f:
+            f.write("\n".join(data))
