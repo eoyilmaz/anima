@@ -9,7 +9,7 @@ dialog = toolbox.UI()
 """
 import sys
 import os
-
+import functools
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtGui, QtWidgets
@@ -207,6 +207,100 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         general_tab_form_layout.setWidget(i, field_role, output_clip_by_clip_index_push_button)
 
         # -------------------------------------------------------------------
+        # Add Divider
+        i += 1
+        line = QtWidgets.QFrame()
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        general_tab_form_layout.setWidget(i, field_role, line)
+
+        # -------------------------------------------------------------------
+        from anima.env.resolve import shot_tools
+        timeline = shot_tools.ShotManager.get_current_timeline()
+        start_frame = timeline.GetStartFrame()
+        end_frame = timeline.GetEndFrame()
+
+        # Get In Point
+        i += 1
+        in_point_label = QtWidgets.QLabel()
+        in_point_label.setText("In Point")
+        general_tab_form_layout.setWidget(i, label_role, in_point_label)
+
+        layout = QtWidgets.QHBoxLayout()
+        general_tab_form_layout.setLayout(i, field_role, layout)
+
+        in_point_spin_box = QtWidgets.QSpinBox()
+        in_point_spin_box.setMaximum(99999999)
+        in_point_spin_box.setValue(start_frame)
+        layout.addWidget(in_point_spin_box)
+
+        get_in_point_push_button = QtWidgets.QPushButton()
+        get_in_point_push_button.setText("<<< In Point")
+        layout.addWidget(get_in_point_push_button)
+
+        def get_in_out_point_callback(spin_box):
+            from anima.env.resolve import shot_tools
+            timeline = shot_tools.ShotManager.get_current_timeline()
+            current_timecode = timeline.GetCurrentTimecode()
+            fps = timeline.GetSetting("timelineFrameRate")
+            import timecode
+            tc1 = timecode.Timecode(fps, current_timecode)
+            spin_box.setValue(tc1.frames - 1)
+
+        get_in_point_push_button.clicked.connect(functools.partial(get_in_out_point_callback, in_point_spin_box))
+
+        # Get Out Point
+        i += 1
+        out_point_label = QtWidgets.QLabel()
+        out_point_label.setText("Out Point")
+        general_tab_form_layout.setWidget(i, label_role, out_point_label)
+
+        layout = QtWidgets.QHBoxLayout()
+        general_tab_form_layout.setLayout(i, field_role, layout)
+
+        out_point_spin_box = QtWidgets.QSpinBox()
+        out_point_spin_box.setMaximum(99999999)
+        out_point_spin_box.setValue(end_frame)
+        layout.addWidget(out_point_spin_box)
+
+        get_out_point_push_button = QtWidgets.QPushButton()
+        get_out_point_push_button.setText("<<< Out Point")
+        layout.addWidget(get_out_point_push_button)
+
+        get_out_point_push_button.clicked.connect(functools.partial(get_in_out_point_callback, out_point_spin_box))
+
+        # Start Clip Number
+        i += 1
+        start_clip_number_label = QtWidgets.QLabel()
+        start_clip_number_label.setText("Start Clip #")
+        general_tab_form_layout.setWidget(i, label_role, start_clip_number_label)
+
+        start_clip_number_spin_box = QtWidgets.QSpinBox()
+        start_clip_number_spin_box.setMinimum(0)
+        start_clip_number_spin_box.setMaximum(1e7)
+        general_tab_form_layout.setWidget(i, field_role, start_clip_number_spin_box)
+
+        i += 1
+        clip_number_by_label = QtWidgets.QLabel()
+        clip_number_by_label.setText("Clip # By")
+        general_tab_form_layout.setWidget(i, label_role, clip_number_by_label)
+
+        clip_number_by_spin_box = QtWidgets.QSpinBox()
+        clip_number_by_spin_box.setValue(10)
+        clip_number_by_spin_box.setMaximum(99990)
+        general_tab_form_layout.setWidget(i, field_role, clip_number_by_spin_box)
+
+        # Padding
+        i += 1
+        padding_label = QtWidgets.QLabel()
+        general_tab_form_layout.setWidget(i, label_role, padding_label)
+
+        padding_spin_box = QtWidgets.QSpinBox()
+        padding_spin_box.setValue(4)
+        padding_spin_box.setMinimum(0)
+        padding_spin_box.setMaximum(10)
+        general_tab_form_layout.setWidget(i, field_role, padding_spin_box)
+
         # Per Clip Output Generator
         i += 1
 
@@ -214,10 +308,20 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             template = template_line_edit.text()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
+            start_clip_number = start_clip_number_spin_box.value()
+            clip_number_by = clip_number_by_spin_box.value()
+            start_frame = in_point_spin_box.value()
+            end_frame = out_point_spin_box.value()
+            padding = padding_spin_box.value()
             GenericTools.per_clip_output_generator(
                 template=template,
                 extend_start=extend_start,
-                extend_end=extend_end
+                extend_end=extend_end,
+                start_frame=start_frame,
+                end_frame=end_frame,
+                start_clip_number=start_clip_number,
+                clip_number_by=clip_number_by,
+                padding=padding
             )
 
         per_clip_output_generator_push_button = QtWidgets.QPushButton()
@@ -285,8 +389,17 @@ class GenericTools(object):
     default_output_template = "%{Timeline Name}_CL%{Clip #}_v001"
 
     @classmethod
-    def per_clip_output_generator(cls, template="", extend_start=0, extend_end=0):
+    def per_clip_output_generator(cls, template="", extend_start=0, extend_end=0, start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4):
         """generates render tasks per clips on the current timeline
+
+        :param str template:
+        :param int extend_start:
+        :param int extend_end:
+        :param int start_frame:
+        :param int end_frame:
+        :param int start_clip_number:
+        :param int clip_number_by:
+        :param int padding: Defaults to 4
         """
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
@@ -300,13 +413,22 @@ class GenericTools(object):
         if template == "":
             template = cls.default_output_template
 
+        i = 0
         for clip_index in clips:
-            GenericTools.clip_output_generator_by_clip_index(
-                clip_index=clip_index,
-                template=template,
-                extend_start=extend_start,
-                extend_end=extend_end
-            )
+            clip = clips[clip_index]
+            clip_start = clip.GetStart()
+            clip_end = clip.GetEnd()
+            if clip_start >= start_frame and clip_end <= end_frame:
+                calculated_clip_number = start_clip_number + clip_number_by * i
+                i += 1
+                calculated_clip_number_as_str = "%s" % calculated_clip_number
+                temp_template = template.replace("%{Clip #}", calculated_clip_number_as_str.zfill(padding))
+                GenericTools.clip_output_generator_by_clip_index(
+                    clip_index=clip_index,
+                    template=temp_template,
+                    extend_start=extend_start,
+                    extend_end=extend_end,
+                )
 
     @classmethod
     def clip_output_generator_by_clip_index(cls, clip_index=1, template="", extend_start=0, extend_end=0):
