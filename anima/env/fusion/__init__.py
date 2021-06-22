@@ -1296,6 +1296,11 @@ class Fusion(EnvironmentBase):
                     }
                 },
             ]
+            self.comp.SetPrefs({
+                # set project frame format to 32bit
+                "Comp.FrameFormat.DepthFull": 3.0,
+                "Comp.FrameFormat.DepthLock": True,
+            })
 
         # selectively generate output format
         saver_nodes = self.get_main_saver_node()
