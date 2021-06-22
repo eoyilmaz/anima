@@ -218,10 +218,9 @@ class NetflixReview(object):
         """
         from anima.utils import do_db_setup
         do_db_setup()
-        from stalker import Shot
         import os
         data = [
-            "Version Name;Link;Scope Of Work;Vendor;Submitting For;Submission Note",
+            "Version Name,Link,Scope Of Work,Vendor,Submitting Form,Submission Note",
         ]
         for output in self.outputs:
             version_data = list()
@@ -239,7 +238,7 @@ class NetflixReview(object):
             version_data.append(shot.name)
 
             # Scope Of Work
-            version_data.append(shot.description)
+            version_data.append('"%s"' % shot.description)
 
             # Vendor
             version_data.append(vendor)
@@ -251,7 +250,7 @@ class NetflixReview(object):
             # Submission Note
             version_data.append(submission_note)
 
-            data.append(";".join(version_data))
+            data.append(",".join(version_data))
 
         print(data)
 
