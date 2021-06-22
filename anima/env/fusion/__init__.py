@@ -1249,6 +1249,54 @@ class Fusion(EnvironmentBase):
                 },
             ]
 
+        if version.take_name == "STMap":
+            output_format_data = [
+                {
+                    'name': 'exr',
+                    'node_tree': {
+                        'type': 'Saver',
+                        'attr': {
+                            'TOOLS_Name': self.output_node_name_generator('exr'),
+                        },
+                        'input_list': {
+                            'Clip': self.output_path_generator(version, 'exr'),
+                            'CreateDir': 1,
+                            'ProcessRed': 1,
+                            'ProcessGreen': 1,
+                            'ProcessBlue': 1,
+                            'ProcessAlpha': 0,
+                            'OutputFormat': 'OpenEXRFormat',
+                            'OpenEXRFormat.Depth': 2,  # 32-bit float
+                            'OpenEXRFormat.RedEnable': 1,
+                            'OpenEXRFormat.GreenEnable': 1,
+                            'OpenEXRFormat.BlueEnable': 1,
+                            'OpenEXRFormat.AlphaEnable': 0,
+                            'OpenEXRFormat.ZEnable': 0,
+                            'OpenEXRFormat.CovEnable': 0,
+                            'OpenEXRFormat.ObjIDEnable': 0,
+                            'OpenEXRFormat.MatIDEnable': 0,
+                            'OpenEXRFormat.UEnable': 0,
+                            'OpenEXRFormat.VEnable': 0,
+                            'OpenEXRFormat.XNormEnable': 0,
+                            'OpenEXRFormat.YNormEnable': 0,
+                            'OpenEXRFormat.ZNormEnable': 0,
+                            'OpenEXRFormat.XVelEnable': 0,
+                            'OpenEXRFormat.YVelEnable': 0,
+                            'OpenEXRFormat.XRevVelEnable': 0,
+                            'OpenEXRFormat.YRevVelEnable': 0,
+                            'OpenEXRFormat.XPosEnable': 0,
+                            'OpenEXRFormat.YPosEnable': 0,
+                            'OpenEXRFormat.ZPosEnable': 0,
+                            'OpenEXRFormat.XDispEnable': 0,
+                            'OpenEXRFormat.YDispEnable': 0,
+                        },
+                        'connected_to': {
+                            'ref_id': random_ref_id
+                        }
+                    }
+                },
+            ]
+
         # selectively generate output format
         saver_nodes = self.get_main_saver_node()
 
