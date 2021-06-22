@@ -276,11 +276,11 @@ class Fusion(EnvironmentBase):
         import os
         self.project_directory = os.path.dirname(version.absolute_path)
 
-        # create the main write node
-        self.create_main_saver_node(version)
-
         # set range from the shot
         self.set_range_from_shot(version)
+
+        # create the main write node
+        self.create_main_saver_node(version)
 
         # replace read and write node paths
         # self.replace_external_paths()
