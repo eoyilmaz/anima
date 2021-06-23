@@ -1165,10 +1165,7 @@ order by cast("TimeLogs".start as date)
         elif submit_to_final_review:
             # clip the Task timing to current time logs
             from stalker import Task
-            schedule_timing, schedule_unit = \
-                task.least_meaningful_time_unit(
-                    task.total_logged_seconds
-                )
+            schedule_timing, schedule_unit = task.least_meaningful_time_unit(task.total_logged_seconds)
 
             task.schedule_timing = schedule_timing
             task.schedule_unit = schedule_unit
@@ -1193,14 +1190,19 @@ order by cast("TimeLogs".start as date)
                 review.created_by = review.updated_by = self.logged_in_user
                 review.date_created = utc_now
                 review.date_updated = utc_now
+
+                review.description = "<br/><b>%(resource_name)s :<b> %(note)s" % {
+                    'resource_name': self.logged_in_user.name,
+                    'note': "Created with Anima TimeLog dialog"
+                }
+
             DBSession.add_all(reviews)
 
             # and create a Note for the Task
-            request_review_note_type = \
-                Type.query\
-                    .filter(Type.target_entity_type == 'Note')\
-                    .filter(Type.name == 'Request Review')\
-                    .first()
+            request_review_note_type = Type.query\
+                .filter(Type.target_entity_type == 'Note')\
+                .filter(Type.name == 'Request Review')\
+                .first()
 
             from stalker import Note
             request_review_note = Note(
