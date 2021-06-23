@@ -220,7 +220,7 @@ class NetflixReview(object):
         do_db_setup()
         import os
         data = [
-            "Version Name,Link,Scope Of Work,Vendor,Submitting Form,Submission Note",
+            "Version Name,Link,Scope Of Work,Vendor,Submitting For,Submission Note",
         ]
         for output in self.outputs:
             version_data = list()
