@@ -139,17 +139,6 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         extend_end_spinbox.setMinimum(0)
         general_tab_form_layout.setWidget(i, field_role, extend_end_spinbox)
 
-        # # -------------------------------------------------------------------
-        # # Version
-        # i += 1
-        # version_label = QtWidgets.QLabel()
-        # version_label.setText("Version")
-        # general_tab_form_layout.setWidget(i, label_role, version_label)
-        #
-        # version_spinbox = QtWidgets.QSpinBox()
-        # version_spinbox.setMinimum(1)
-        # general_tab_form_layout.setWidget(i, field_role, version_spinbox)
-
         # -------------------------------------------------------------------
         # Clip Output Generator
         i += 1
@@ -216,9 +205,15 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # -------------------------------------------------------------------
         from anima.env.resolve import shot_tools
-        timeline = shot_tools.ShotManager.get_current_timeline()
-        start_frame = timeline.GetStartFrame()
-        end_frame = timeline.GetEndFrame()
+
+        start_frame = end_frame = 0
+        try:
+            timeline = shot_tools.ShotManager.get_current_timeline()
+            start_frame = timeline.GetStartFrame()
+            end_frame = timeline.GetEndFrame()
+        except AttributeError:
+            # Resolve is not open yet
+            pass
 
         # Get In Point
         i += 1
