@@ -604,12 +604,13 @@ class ShotClip(object):
         resolve = blackmagic.get_resolve()
         current_page = resolve.GetCurrentPage()
         resolve.OpenPage('fusion')
+        import time
+        time.sleep(1)
         slate_item = self.clip
         fusion_comp = slate_item.AddFusionComp()
 
         print("Created fusion comp: %s" % fusion_comp)
         from anima.env import fusion
-        reload(fusion)
         f = fusion.Fusion()
         f.comp = fusion_comp
         slate_node = f.create_slate_node(version)
