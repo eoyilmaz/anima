@@ -835,7 +835,7 @@ class Fusion(EnvironmentBase):
         slate_node.Input5[current_frame] = "%s_v%03d" % (version.nice_name, version.version_number)
 
         # Submitting For
-        slate_node.Input6[current_frame] = "Review"
+        slate_node.Input6[current_frame] = "WIP"
 
         # Date
         import datetime
@@ -855,22 +855,22 @@ class Fusion(EnvironmentBase):
         # Resolution
         # create a resize node or use the immediate resize node if any
         # resize_node = slate_node.FindMainOutput(1)
-        resize_node = self.comp.FindTool("SlateResize")
-        if resize_node:
-            # check if this is a Resize node
-            if not resize_node.GetAttrs("TOOLS_RegID") == "BetterResize":
-                resize_node = None
-
-        if not resize_node:
-            # create a new one
-            resize_node = self.comp.BetterResize()
-            resize_node.SetAttrs({"TOOLS_Name": "SlateResize", "TOOLB_Locked": False})
-
-        resize_node.Input = slate_node
-        if imf:
-            resize_node.Width[current_frame] = int(3840 * float(imf.height) / 2160)
-            resize_node.Height[current_frame] = imf.height
-            resize_node.KeepAspect[current_frame] = True
+        # resize_node = self.comp.FindTool("SlateResize")
+        # if resize_node:
+        #     # check if this is a Resize node
+        #     if not resize_node.GetAttrs("TOOLS_RegID") == "BetterResize":
+        #         resize_node = None
+        #
+        # if not resize_node:
+        #     # create a new one
+        #     resize_node = self.comp.BetterResize()
+        #     resize_node.SetAttrs({"TOOLS_Name": "SlateResize", "TOOLB_Locked": False})
+        #
+        # resize_node.Input = slate_node
+        # if imf:
+        #     resize_node.Width[current_frame] = int(3840 * float(imf.height) / 2160)
+        #     resize_node.Height[current_frame] = imf.height
+        #     resize_node.KeepAspect[current_frame] = True
 
         # # create the SlateMerge tool
         # slate_merge_node = self.comp.FindTool("SlateMerge")
@@ -903,7 +903,7 @@ class Fusion(EnvironmentBase):
                 time.sleep(1)
             else:
                 print("found MediaOut1 node!")
-                media_out_node.Input = resize_node
+                media_out_node.Input = slate_node
             i += 1
 
         return slate_node
