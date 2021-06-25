@@ -2,6 +2,8 @@
 
 __version__ = "1.1.0"
 
+import os
+
 
 class NetflixReporter(object):
     """Creates Netflix compliant reports of Episodes/Sequences
@@ -139,6 +141,10 @@ class NetflixReporter(object):
                 comp_or_cleanup_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Comp').first()
                 if not comp_or_cleanup_task:
                     comp_or_cleanup_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
+                if not comp_or_cleanup_task:
+                    # no comp or cleanup task, something wrong
+                    print("No Comp or CleanUp task in: %s" % shot.name)
+                    continue
 
                 vfx_final_version = ''
                 if comp_or_cleanup_task and comp_or_cleanup_task.status and comp_or_cleanup_task.status.code == 'CMPL':
@@ -183,6 +189,9 @@ class NetflixReporter(object):
 
         # we may have updated the schedule info
         DBSession.commit()
+
+        # make dirs
+        os.makedirs(os.path.dirname(csv_output_path), exist_ok=True)
 
         with open(csv_output_path, 'w') as f:
             f.write('\n'.join(data))
