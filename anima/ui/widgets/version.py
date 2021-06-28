@@ -168,7 +168,9 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item = QtWidgets.QTableWidgetItem()
             if version.created_with:
                 from anima.ui import utils as ui_utils
-                item.setIcon(ui_utils.get_icon(version.created_with.lower()))
+                app_icon = ui_utils.get_icon(version.created_with.lower())
+                if app_icon:
+                    item.setIcon(app_icon)
 
             if is_published:
                 set_published_font(item)
