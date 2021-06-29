@@ -604,12 +604,24 @@ class ShotClip(object):
         resolve = blackmagic.get_resolve()
         current_page = resolve.GetCurrentPage()
         resolve.OpenPage('fusion')
-        import time
-        time.sleep(1)
         slate_item = self.clip
-        fusion_comp = slate_item.AddFusionComp()
 
+        # Create the fusion comp
+        # Remove any previous fusion comps of that clip
+        fusion_comp_count = slate_item.GetFusionCompCount()
+        print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
+        if fusion_comp_count != 0:
+            print("Deleting all fusion compositions!")
+            for fusion_comp_name in slate_item.GetFusionCompNameList():
+                print("Deleting: %s" % fusion_comp_name)
+                slate_item.DeleteFusionCompByName(fusion_comp_name)
+            print("After deletion!")
+            fusion_comp_count = slate_item.GetFusionCompCount()
+            print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
+
+        fusion_comp = slate_item.AddFusionComp()
         print("Created fusion comp: %s" % fusion_comp)
+
         from anima.env import fusion
         f = fusion.Fusion()
         f.comp = fusion_comp
