@@ -759,8 +759,6 @@ class Fusion(EnvironmentBase):
         :return:
         """
         # if the channels are animated, set new keyframes
-        current_frame = self.comp.CurrentTime
-
         # first try to find the slate tool
         slate_node = self.comp.FindTool("MainSlate")
         if not slate_node:
@@ -781,7 +779,7 @@ class Fusion(EnvironmentBase):
             if shot.thumbnail:
                 import os
                 thumbnail_full_path = os.path.expandvars(shot.thumbnail.full_path)
-                slate_node.Input1[current_frame] = thumbnail_full_path
+                slate_node.Input1 = thumbnail_full_path
 
             if shot:
                 imf = shot.image_format
@@ -791,26 +789,26 @@ class Fusion(EnvironmentBase):
             # Shot Types
             # TODO: For now use Netflix format, extend it later on
             from anima.utils.report import NetflixReporter
-            slate_node.Input8[current_frame] = ", ".join(NetflixReporter.generate_shot_methodologies(shot))
+            slate_node.Input8 = ", ".join(NetflixReporter.generate_shot_methodologies(shot))
 
             # Shot Description
             from anima.utils import text_splitter
             split_description = text_splitter(shot.description, 40)
-            slate_node.Input9[current_frame] = "\n".join(split_description[0:3])
-            slate_node.Input10[current_frame] = "\n".join(split_description[0:3])
+            slate_node.Input9 = "\n".join(split_description[0:3])
+            slate_node.Input10 = "\n".join(split_description[0:3])
 
             # Submission Note
-            slate_node.Input11[current_frame] = ""
+            slate_node.Input11 = ""
 
             # Shot Name
-            slate_node.Input12[current_frame] = shot.name
+            slate_node.Input12 = shot.name
 
             # Episode and Sequence
             seq = None
             if shot.sequences:
                 seq = shot.sequences[0]
-                slate_node.Input14[current_frame] = seq.name
-                slate_node.Input15[current_frame] = seq.name
+                slate_node.Input14 = seq.name
+                slate_node.Input15 = seq.name
 
             # Scene Name
             # Use shot name for now
@@ -819,37 +817,37 @@ class Fusion(EnvironmentBase):
                 scene_name = parts[2]
             except IndexError:
                 scene_name = ''
-            slate_node.Input16[current_frame] = scene_name
+            slate_node.Input16 = scene_name
 
             # Frames
-            slate_node.Input17[current_frame] = shot.cut_out - shot.cut_in + 1
+            slate_node.Input17 = shot.cut_out - shot.cut_in + 1
         else:
             # Frames
-            slate_node.Input17[current_frame] = ""
+            slate_node.Input17 = ""
 
         # Show Name
-        slate_node.Input4[current_frame] = version.task.project.name
+        slate_node.Input4 = version.task.project.name
 
         # Version Name
-        slate_node.Input5[current_frame] = "%s_v%03d" % (version.nice_name, version.version_number)
+        slate_node.Input5 = "%s_v%03d" % (version.nice_name, version.version_number)
 
         # Submitting For
-        slate_node.Input6[current_frame] = "WIP"
+        slate_node.Input6 = "WIP"
 
         # Date
         import datetime
         today = datetime.datetime.today()
         date_time_format = "%Y-%m-%d"
-        slate_node.Input7[current_frame] = today.strftime(date_time_format)
+        slate_node.Input7 = today.strftime(date_time_format)
 
         # Vendor
         from stalker import Studio
         studio = Studio.query.first()
         if studio:
-            slate_node.Input13[current_frame] = studio.name
+            slate_node.Input13 = studio.name
 
         # Media Color
-        slate_node.Input18[current_frame] = ""
+        slate_node.Input18 = ""
 
         # Resolution
         # create a resize node or use the immediate resize node if any
@@ -867,9 +865,9 @@ class Fusion(EnvironmentBase):
         #
         # resize_node.Input = slate_node
         # if imf:
-        #     resize_node.Width[current_frame] = int(3840 * float(imf.height) / 2160)
-        #     resize_node.Height[current_frame] = imf.height
-        #     resize_node.KeepAspect[current_frame] = True
+        #     resize_node.Width = int(3840 * float(imf.height) / 2160)
+        #     resize_node.Height = imf.height
+        #     resize_node.KeepAspect = True
 
         # # create the SlateMerge tool
         # slate_merge_node = self.comp.FindTool("SlateMerge")
