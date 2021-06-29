@@ -797,7 +797,7 @@ class Fusion(EnvironmentBase):
             from anima.utils import text_splitter
             split_description = text_splitter(shot.description, 40)
             slate_node.Input9[current_frame] = "\n".join(split_description[0:3])
-            slate_node.Input10[current_frame] =  "\n".join(split_description[0:3])
+            slate_node.Input10[current_frame] = "\n".join(split_description[0:3])
 
             # Submission Note
             slate_node.Input11[current_frame] = ""
@@ -826,7 +826,6 @@ class Fusion(EnvironmentBase):
         else:
             # Frames
             slate_node.Input17[current_frame] = ""
-
 
         # Show Name
         slate_node.Input4[current_frame] = version.task.project.name

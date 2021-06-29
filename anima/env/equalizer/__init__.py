@@ -85,11 +85,21 @@ class TDE4Lens(object):
 
         self.dynamic_lens_distortion = data[2]
         self.distortion_model = data[3]
-        self.distortion_degree_2 = float(data[5])
-        self.u_degree_2 = float(data[8])
-        self.v_degree_2 = float(data[11])
-        self.distortion_degree_4 = float(data[14])  # Quartic distortion
-        self.u_degree_4 = float(data[17])
-        self.v_degree_4 = float(data[20])
-        self.phi = float(data[23])
-        self.beta = float(data[26])
+
+        def get_data(label):
+            max_search_length = 60
+            start_i = 0
+            while data[start_i] != label and start_i < max_search_length:
+                start_i += 1
+            start_i += 1
+            return data[start_i]
+
+        # Distortion - Degree 2
+        self.distortion_degree_2 = float(get_data('Distortion - Degree 2'))
+        self.u_degree_2 = float(get_data('U - Degree 2'))
+        self.v_degree_2 = float(get_data('V - Degree 2'))
+        self.distortion_degree_4 = float(get_data('Quartic Distortion - Degree 4'))
+        self.u_degree_4 = float(get_data('U - Degree 4'))
+        self.v_degree_4 = float(get_data('V - Degree 4'))
+        self.phi = float(get_data('Phi - Cylindric Direction'))
+        self.beta = float(get_data('B - Cylindric Bending'))
