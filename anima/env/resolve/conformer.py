@@ -800,7 +800,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         import datetime
 
         today = datetime.datetime.today()
-        now = '%s_%s_%s' % (today.hour, today.minute, today.second)
+        now = '%s%s%s_%s%s%s' % (today.year,
+                                 str(today.month).rjust(2, '0'),
+                                 str(today.day).rjust(2, '0'),
+                                 str(today.hour).rjust(2, '0'),
+                                 str(today.minute).rjust(2, '0'),
+                                 str(today.second).rjust(2, '0'))
         proj_name = self.get_name_from_data_text(self.project_combo_box.currentText())
         seq_name = self.get_name_from_data_text(self.seq_combo_box.currentText())
         scn_name = self.get_name_from_data_text(self.scene_combo_box.currentText())
@@ -988,6 +993,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             for shot in shots:
                 print('Checking Shot... - %s' % shot.name)
                 task = Task.query.filter(Task.parent == shot).filter(Task.name == t_name).first()
+                if not task and t_name == 'Comp':  # try Cleanup task
+                    task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
 
                 has_valid_status = True
                 if self.filter_statuses_check_box.isChecked():
@@ -1037,9 +1044,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                                                               local_time.tm_mday)
 
                         if modification_date >= query_date:
-                            update_info = '%s : %s > %s' % (
+                            update_info = '%s - %s : %s > %s' % (
                                 task.parent.name,
-                                modification_date,
+                                task.name,
+                                str(modification_date).split(' ')[0],
                                 last_version.updated_by.name
                             )
                             update_string = self.add_data_as_text_to_ui(update_info, shot.id)
