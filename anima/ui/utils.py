@@ -44,7 +44,7 @@ def get_icon(icon_name):
             import shutil
             try:
                 shutil.copy(icon_full_path, local_icon_full_path)
-            except OSError:
+            except (OSError, IOError):
                 # original icon doesn't exist
                 return None
         q_icon = QtGui.QIcon(local_icon_full_path)
