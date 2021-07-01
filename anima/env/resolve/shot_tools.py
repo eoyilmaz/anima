@@ -156,7 +156,8 @@ class ShotClip(object):
 
         # creat shot tasks
         # Anim
-        anim_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Anim').first()
+        with DBSession.no_autoflush:
+            anim_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Anim').first()
         if not anim_task:
             anim_task = Task(
                 name='Anim',
@@ -171,7 +172,8 @@ class ShotClip(object):
             DBSession.add(anim_task)
 
         # Camera
-        camera_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Camera').first()
+        with DBSession.no_autoflush:
+            camera_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Camera').first()
         if not camera_task:
             camera_task = Task(
                 name='Camera',
@@ -186,7 +188,8 @@ class ShotClip(object):
             DBSession.add(camera_task)
 
         # Cleanup
-        cleanup_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
+        with DBSession.no_autoflush:
+            cleanup_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
         if not cleanup_task:
             cleanup_task = Task(
                 name='Cleanup',
@@ -201,7 +204,8 @@ class ShotClip(object):
             DBSession.add(cleanup_task)
 
         # Comp
-        comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Comp').first()
+        with DBSession.no_autoflush:
+            comp_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Comp').first()
         if not comp_task:
             comp_task = Task(
                 name='Comp',
@@ -216,7 +220,8 @@ class ShotClip(object):
             DBSession.add(comp_task)
 
         # Lighting
-        lighting_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Lighting').first()
+        with DBSession.no_autoflush:
+            lighting_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Lighting').first()
         if not lighting_task:
             lighting_task = Task(
                 name='Lighting',
@@ -231,7 +236,8 @@ class ShotClip(object):
             DBSession.add(lighting_task)
 
         # Plate
-        plate_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Plate').first()
+        with DBSession.no_autoflush:
+            plate_task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Plate').first()
         if not plate_task:
             import datetime
             import pytz
@@ -254,7 +260,9 @@ class ShotClip(object):
 
         # Create a dummy version if there is non
         from stalker import Version
-        all_versions = Version.query.filter(Version.task == plate_task).all()
+        with DBSession.no_autoflush:
+            all_versions = Version.query.filter(Version.task == plate_task).all()
+
         if not all_versions:
             v = Version(
                 task=plate_task,
@@ -275,12 +283,46 @@ class ShotClip(object):
             cmpl = Status.query.filter(Status.code == 'CMPL').first()
             plate_task.status = cmpl
 
+        # Flush the DB first to prevent some empty id errors on already existing shots
+        DBSession.commit()
+
         # add dependency relation
-        camera_task.depends = [plate_task]
-        anim_task.depends = [camera_task]
-        lighting_task.depends = [anim_task, camera_task]
-        cleanup_task.depends = [plate_task]
-        comp_task.depends = [lighting_task, plate_task]
+        from stalker.exceptions import StatusError
+        with DBSession.no_autoflush:
+            try:
+                camera_task.depends = [plate_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
+
+            try:
+                anim_task.depends = [camera_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
+
+            try:
+                lighting_task.depends = [anim_task, camera_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
+
+            try:
+                cleanup_task.depends = [plate_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
+
+            try:
+                comp_task.depends = [lighting_task, plate_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
 
         DBSession.commit()
 
@@ -446,7 +488,7 @@ class ShotClip(object):
             print("Template loaded successfully: %s" % template_name)
 
         # get the shot
-        from stalker import Task, Shot, Type
+        from stalker import Task, Type
         # shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
         # if not shot:
         #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
@@ -457,7 +499,9 @@ class ShotClip(object):
         if not plate_type:
             raise RuntimeError("No plate type!!!")
 
-        plate_task = Task.query.filter(Task.parent == shot).filter(Task.type == plate_type).first()
+        from stalker.db.session import DBSession
+        with DBSession.no_autoflush:
+            plate_task = Task.query.filter(Task.parent == shot).filter(Task.type == plate_type).first()
         if not plate_task:
             raise RuntimeError("No plate task in shot: %s" % self.shot_code)
 
@@ -719,10 +763,16 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.main_layout.addWidget(update_shot_thumbnail_button)
 
-        # Create SLate button
+        # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self)
         create_slate_button.setText("Create Slate")
         self.main_layout.addWidget(create_slate_button)
+
+        # Fix Shot Clip Name
+        fix_shot_clip_name = QtWidgets.QPushButton(self)
+        fix_shot_clip_name.setText("Fix Shot Clip Names")
+        self.main_layout.addWidget(fix_shot_clip_name)
+        fix_shot_clip_name.clicked.connect(self.fix_shot_clip_name)
 
         # Ok button
         ok_button = QtWidgets.QPushButton(self)
@@ -731,54 +781,14 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
 
         # Signals
         self.project_changed(None)
-
-        QtCore.QObject.connect(
-            self.project_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.project_changed
-        )
-
-        QtCore.QObject.connect(
-            ok_button,
-            QtCore.SIGNAL("clicked()"),
-            self.close
-        )
-
-        QtCore.QObject.connect(
-            create_render_jobs_button,
-            QtCore.SIGNAL("clicked()"),
-            self.create_render_jobs
-        )
-
-        QtCore.QObject.connect(
-            get_shot_list_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.get_shot_list
-        )
-
-        QtCore.QObject.connect(
-            check_duplicate_shot_code_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.check_duplicate_shots
-        )
-
-        QtCore.QObject.connect(
-            validate_shots_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.validate_shot_codes
-        )
-
-        QtCore.QObject.connect(
-            update_shot_thumbnail_button,
-            QtCore.SIGNAL("clicked()"),
-            self.update_shot_thumbnail
-        )
-
-        QtCore.QObject.connect(
-            create_slate_button,
-            QtCore.SIGNAL("clicked()"),
-            self.create_slate
-        )
+        self.project_combo_box.currentIndexChanged.connect(self.project_changed)
+        ok_button.clicked.connect(self.close)
+        create_render_jobs_button.clicked.connect(self.create_render_jobs)
+        get_shot_list_push_button.clicked.connect(self.get_shot_list)
+        check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
+        validate_shots_push_button.clicked.connect(self.validate_shot_codes)
+        update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
+        create_slate_button.clicked.connect(self.create_slate)
 
     def project_changed(self, index):
         """runs when the current selected project has been changed
@@ -923,3 +933,17 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         shot = im.get_current_shot()
         if shot:
             shot.create_slate()
+
+    def fix_shot_clip_name(self):
+        """
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = ShotManager(project, sequence)
+        for clip in im.get_clips():
+            media_pool_item = clip.GetMediaPoolItem()
+            clip_name = media_pool_item.GetClipProperty("Clip Name")
+            print("clip_name: %s" % clip_name)
+            new_clip_name = clip_name.split(".")[0]
+            print("new_clip_name: %s" % new_clip_name)
+            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
