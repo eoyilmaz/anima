@@ -828,7 +828,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             f.write('    <resources>\n')
             f.write('        <format '
                     'id="r0" '
-                    'frameDuration="1/%ss"/>\n' % (height, width, fps))
+                    'frameDuration="1/%ss"/>\n' % fps)
             ind = 0
             seq_frames = 0
             tc_frame_numbers = []
