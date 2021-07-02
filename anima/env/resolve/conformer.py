@@ -826,8 +826,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             f.write('<!DOCTYPE fcpxml>\n')
             f.write('<fcpxml version="1.8">\n')
             f.write('    <resources>\n')
-            f.write('        <format height="%s" '
-                    'width="%s" id="r0" '
+            f.write('        <format '
+                    'id="r0" '
                     'frameDuration="1/%ss"/>\n' % (height, width, fps))
             ind = 0
             seq_frames = 0
