@@ -1518,12 +1518,36 @@ class MediaManager(object):
 
 class Exposure(object):
     """A class for photo exposure calculation
+
+    :param float, Fraction shutter: The shutter in seconds. 1/125 for 1/125 seconds.
+    :param float f_stop: The F-Stop number. 8 for f/8.
+    :param float iso: The ISO number. 100 for ISO 100.
     """
 
     def __init__(self, shutter=None, f_stop=None, iso=None):
+        self._shutter = None
         self.shutter = shutter
         self.f_stop = f_stop
         self.iso = iso
+
+    @property
+    def shutter(self):
+        """getter for the shutter
+        """
+        return self._shutter
+
+    @shutter.setter
+    def shutter(self, shutter):
+        """setter for the shutter
+
+        :param float shutter:
+        :return:
+        """
+        from fractions import Fraction
+        if not isinstance(shutter, Fraction):
+            self._shutter = Fraction(shutter)
+        else:
+            self._shutter = shutter
 
     def to(self, other_exp):
         """calculate the exposure to equalize this exposure to the the given
@@ -1535,8 +1559,14 @@ class Exposure(object):
         assert isinstance(other_exp, Exposure)
 
         import math
+        from fractions import Fraction
 
-        shutter = math.log(other_exp.shutter / self.shutter, 2)
+        # convert every thing to fractions
+        shutter = math.log(
+            float(other_exp.shutter.numerator) * float(self.shutter.denominator) /
+            (float(other_exp.shutter.denominator) * float(self.shutter.numerator)), 2
+        )
+
         f_stop = math.log(
             (float(self.f_stop) * float(self.f_stop)) /
             (float(other_exp.f_stop) * float(other_exp.f_stop)), 2)
