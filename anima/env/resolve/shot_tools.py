@@ -170,6 +170,7 @@ class ShotClip(object):
                 description='Autocreated by Resolve',
             )
             DBSession.add(anim_task)
+            DBSession.commit()
 
         # Camera
         with DBSession.no_autoflush:
@@ -186,6 +187,7 @@ class ShotClip(object):
                 description='Autocreated by Resolve',
             )
             DBSession.add(camera_task)
+            DBSession.commit()
 
         # Cleanup
         with DBSession.no_autoflush:
@@ -202,6 +204,7 @@ class ShotClip(object):
                 description='Autocreated by Resolve',
             )
             DBSession.add(cleanup_task)
+            DBSession.commit()
 
         # Comp
         with DBSession.no_autoflush:
@@ -218,6 +221,7 @@ class ShotClip(object):
                 description='Autocreated by Resolve',
             )
             DBSession.add(comp_task)
+            DBSession.commit()
 
         # Lighting
         with DBSession.no_autoflush:
@@ -234,6 +238,7 @@ class ShotClip(object):
                 description='Autocreated by Resolve',
             )
             DBSession.add(lighting_task)
+            DBSession.commit()
 
         # Plate
         with DBSession.no_autoflush:
@@ -257,6 +262,7 @@ class ShotClip(object):
                 duration=defaults.timing_resolution
             )
             DBSession.add(plate_task)
+            DBSession.commit()
 
         # Create a dummy version if there is non
         from stalker import Version
@@ -276,6 +282,7 @@ class ShotClip(object):
             version_info = resolve.GetVersion()
             v.created_with = 'Resolve%s.%s' % (version_info[0], version_info[1])
             DBSession.add(v)
+            DBSession.commit()
 
         # set the status the task
         with DBSession.no_autoflush:
@@ -385,6 +392,7 @@ class ShotClip(object):
             updated_by=logged_in_user,
         )
         DBSession.add(shot)
+        DBSession.commit()
         return shot
 
     def update_shot_thumbnail(self):
@@ -455,8 +463,10 @@ class ShotClip(object):
 
         :return:
         """
+        from stalker.db.session import DBSession
         from stalker import Type
-        type_instance = Type.query.filter(Type.name == type_name).first()
+        with DBSession.no_autoflush:
+            type_instance = Type.query.filter(Type.name == type_name).first()
         if not type_instance:
             logged_in_user = self.get_logged_in_user()
             type_instance = Type(
@@ -465,7 +475,6 @@ class ShotClip(object):
                 created_by=logged_in_user,
                 updated_by=logged_in_user
             )
-            from stalker.db.session import DBSession
             DBSession.add(type_instance)
             DBSession.commit()
         return type_instance
