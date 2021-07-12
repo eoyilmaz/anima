@@ -781,7 +781,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         create_slate_button.clicked.connect(self.create_slate)
 
-        # self.addStretch()
+        self.addStretch()
 
     def project_changed(self, index):
         """runs when the current selected project has been changed
