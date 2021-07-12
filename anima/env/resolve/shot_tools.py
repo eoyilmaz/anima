@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Shot related tools
 """
+from anima import logger
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 
@@ -11,10 +12,14 @@ class ShotManager(object):
     Contains the general logic
     """
 
-    def __init__(self, project, sequence):
-        self.project = project
-        self.sequence = sequence
-        self.timeline = self.get_current_timeline()
+    def __init__(self, project=None, sequence=None):
+        self.stalker_project = project
+        self.stalker_sequence = sequence
+
+        from anima.env import blackmagic
+        self.resolve = blackmagic.get_resolve()
+        self.project_manager = self.resolve.GetProjectManager()
+        self.resolve_project = self.project_manager.GetCurrentProject()
 
     def get_current_shot_code(self):
         """returns the current shot code
@@ -28,8 +33,8 @@ class ShotManager(object):
         timeline = self.get_current_timeline()
         clip = self.get_current_clip()
         shot_clip = ShotClip()
-        shot_clip.project = self.project
-        shot_clip.sequence = self.sequence
+        shot_clip.project = self.stalker_project
+        shot_clip.sequence = self.stalker_sequence
         shot_clip.timeline = timeline
         shot_clip.clip = clip
         return shot_clip
@@ -46,19 +51,13 @@ class ShotManager(object):
         shot_clip.clip = timeline.GetCurrentVideoItem()
         shot_clip.set_shot_code(shot_code)
 
-    @classmethod
-    def get_current_clip(cls):
-        timeline = cls.get_current_timeline()
+    def get_current_clip(self):
+        timeline = self.get_current_timeline()
         clip = timeline.GetCurrentVideoItem()
         return clip
 
-    @classmethod
-    def get_current_timeline(cls):
-        from anima.env import blackmagic
-        resolve = blackmagic.get_resolve()
-        pm = resolve.GetProjectManager()
-        proj = pm.GetCurrentProject()
-        timeline = proj.GetCurrentTimeline()
+    def get_current_timeline(self):
+        timeline = self.resolve_project.GetCurrentTimeline()
         return timeline
 
     def get_clips(self):
@@ -74,10 +73,91 @@ class ShotManager(object):
         shots = []
         clips = self.get_clips()
         for clip in clips:
-            pi = ShotClip(project=self.project, sequence=self.sequence, clip=clip, timeline=self.timeline)
+            pi = ShotClip(project=self.stalker_project, sequence=self.stalker_sequence, clip=clip, timeline=self.timeline)
             if pi.is_shot():
                 shots.append(pi)
         return shots
+
+    def generate_review_csv(self, output_path="", vendor=""):
+        """Generates review CSV from the current timeline
+
+        It searches for Fusion Clips and gathers information from the AnimaSlate nodes.
+
+        :param str output_path: The path to output the CSV to.
+        :param str vendor: The name of the vendor
+        """
+        from anima.utils import report
+        data = ["Version Name,Link,Scope Of Work,Vendor,Submitting For,Submission Note"]
+
+        clips = self.get_clips()
+        for clip in clips:
+            clip_data = list()
+            media_pool_item = clip.GetMediaPoolItem()
+            clip_name = media_pool_item.GetClipProperty("Clip Name")
+
+            logger.debug("-------------------------")
+            logger.debug("Checking: %s" % clip_name)
+
+            # check if the current clip has a Fusion comp
+            fusion_comp_count = clip.GetFusionCompCount()
+            fusion_comp_name_list = clip.GetFusionCompNameList()
+            logger.debug("fusion_comp_name_list: %s" % fusion_comp_name_list)
+            if fusion_comp_count == 0:
+                logger.debug("Fusion comp count: %s" % fusion_comp_count)
+                continue
+
+            slate_node = None
+            for fusion_comp_name in fusion_comp_name_list:
+                logger.debug("fusion_comp_count: %s" % fusion_comp_count)
+                fusion_comp = clip.GetFusionCompByName(fusion_comp_name)
+
+                if not fusion_comp:
+                    logger.debug("No fusion_comp!")
+                    continue
+                logger.debug("fusion_comp: %s" % fusion_comp)
+
+                # switch to Fusion tab
+                slate_node = fusion_comp.FindTool("MainSlate")
+                if slate_node:
+                    logger.debug("found slate on: %s" % fusion_comp_name)
+                    logger.debug("slate_node: %s" % slate_node)
+                    break
+                else:
+                    logger.debug("no slate_node: %s" % fusion_comp_name)
+
+            if slate_node is None:
+                logger.debug("Still no slate!: %s" % clip_name)
+                continue
+            logger.debug("slate_node: %s" % slate_node)
+
+            # Version Name
+            # Use the clip name
+            clip_data.append("%s.mov" % clip_name)
+
+            # Link
+            # Find the shot name
+            version = report.NetflixReview.get_version_from_output(clip_name)
+            shot = version.task.parent
+            clip_data.append(shot.name)
+
+            # Scope Of Work
+            clip_data.append('"%s"' % shot.description)
+
+            # Vendor
+            clip_data.append(vendor)
+
+            # Submitting For
+            clip_data.append(slate_node.Input6[0])
+
+            # Submission Note
+            clip_data.append(slate_node.Input11[0].replace('\n', ' '))
+
+            logger.debug("clip_data: %s" % clip_data)
+            data.append(",".join(clip_data))
+
+        logger.debug(data)
+        with open(output_path, "w+") as f:
+            f.write("\n".join(data))
 
     def check_duplicate_shots(self):
         """checks for duplicate shots
@@ -137,8 +217,8 @@ class ShotClip(object):
     """
 
     def __init__(self, project=None, sequence=None, clip=None, timeline=None):
-        self.project = project
-        self.sequence = sequence
+        self.stalker_project = project
+        self.stalker_sequence = sequence
         self.timeline = timeline
         self.clip = clip
         self._shot_code = None
@@ -339,7 +419,7 @@ class ShotClip(object):
         """returns the related Stalker Shot instance.
         """
         from stalker import Shot
-        shot = Shot.query.filter(Shot.project == self.project).filter(Shot.code == self.shot_code).first()
+        shot = Shot.query.filter(Shot.project == self.stalker_project).filter(Shot.code == self.shot_code).first()
         return shot
 
     def create_shot(self):
@@ -351,14 +431,14 @@ class ShotClip(object):
         logged_in_user = self.get_logged_in_user()
         # FP_001_001_0010
         scene_code = self.shot_code.split("_")[2]
-        scene_task = Task.query.filter(Task.parent == self.sequence).filter(Task.name.endswith(scene_code)).first()
+        scene_task = Task.query.filter(Task.parent == self.stalker_sequence).filter(Task.name.endswith(scene_code)).first()
         if not scene_task:
             # create the scene task
             scene_task = Task(
-                project=self.project,
+                project=self.stalker_project,
                 name='SCN%s' % scene_code,
                 type=self.get_type("Scene"),
-                parent=self.sequence,
+                parent=self.stalker_sequence,
                 description='Autocreated by Resolve',
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
@@ -369,7 +449,7 @@ class ShotClip(object):
         shots_task = Task.query.filter(Task.parent == scene_task).filter(Task.name == 'Shots').first()
         if not shots_task:
             shots_task = Task(
-                project=self.project,
+                project=self.stalker_project,
                 name='Shots',
                 parent=scene_task,
                 description='Autocreated by Resolve',
@@ -382,9 +462,9 @@ class ShotClip(object):
         shot = Shot(
             name=self.shot_code,
             code=self.shot_code,
-            project=self.project,
+            project=self.stalker_project,
             parent=shots_task,
-            sequences=[self.sequence],
+            sequences=[self.stalker_sequence],
             cut_in=1001,
             cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
             description='Autocreated by Resolve',
@@ -498,7 +578,7 @@ class ShotClip(object):
 
         # get the shot
         from stalker import Task, Type
-        # shot = Shot.query.filter(Shot.project==self.project).filter(Shot.code==self.shot_code).first()
+        # shot = Shot.query.filter(Shot.project==self.stalker_project).filter(Shot.code==self.shot_code).first()
         # if not shot:
         #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
         shot = self.create_shot_hierarchy()
@@ -634,7 +714,7 @@ class ShotClip(object):
         version = Version.query.join(Task, Version.task)\
             .filter(Version.full_path.contains(version_file_name))\
             .first()
-        # .filter(Task.project == self.project)\
+        # .filter(Task.project == self.stalker_project)\
 
         if not version:
             print("No version output: %s" % version_output_name)
@@ -770,6 +850,12 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.addWidget(fix_shot_clip_name)
         fix_shot_clip_name.clicked.connect(self.fix_shot_clip_name)
 
+        generate_review_csv_push_button = QtWidgets.QPushButton(self.parent())
+        generate_review_csv_push_button.setText("Generate Review CSV")
+        self.addWidget(generate_review_csv_push_button)
+        generate_review_csv_push_button.clicked.connect(self.generate_review_csv)
+
+        # ---------------------------------------------------------
         # Signals
         self.project_changed(None)
         self.project_combo_box.currentIndexChanged.connect(self.project_changed)
@@ -928,7 +1014,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             shot.create_slate()
 
     def fix_shot_clip_name(self):
-        """
+        """Removes the frame range part from the image sequence clips.
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
@@ -940,3 +1026,36 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             new_clip_name = clip_name.split(".")[0]
             print("new_clip_name: %s" % new_clip_name)
             media_pool_item.SetClipProperty("Clip Name", new_clip_name)
+
+    def generate_review_csv(self):
+        """generates review CSVs from the slate clips in the current timeline
+        """
+        import os
+        import tempfile
+        default_path_storage = os.path.join(tempfile.gettempdir(), "last_csv_file_path")
+        default_path = os.path.expanduser("~")
+        try:
+            with open(default_path_storage, "r") as f:
+                default_path = f.read()
+        except IOError:
+            pass
+
+        # show a file browser
+        csv_file_path = QtWidgets.QFileDialog.getSaveFileName(self.parent(), "Choose CSV Path", default_path, "CSV (*.csv)")[0]
+        print("csv_file_path: %s" % csv_file_path)
+
+        if not csv_file_path:
+            raise RuntimeError("no file path chosen!")
+
+        # save the path
+        with open(default_path_storage, "w") as f:
+            f.write(csv_file_path)
+
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from stalker import Studio
+        studio = Studio.query.first()
+        studio_name = studio.name if studio else ""
+
+        sm = ShotManager(None, None)
+        sm.generate_review_csv(output_path=csv_file_path, vendor=studio_name)

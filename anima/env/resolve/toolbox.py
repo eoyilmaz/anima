@@ -171,7 +171,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             extend_end = extend_end_spinbox.value()
 
             from anima.env.resolve import shot_tools
-            clip = shot_tools.ShotManager.get_current_clip()
+            sm = shot_tools.ShotManager()
+            clip = sm.get_current_clip()
 
             GenericTools.clip_output_generator(
                 clip=clip,
@@ -229,7 +230,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         start_frame = end_frame = 0
         try:
-            timeline = shot_tools.ShotManager.get_current_timeline()
+            shot_manager = shot_tools.ShotManager()
+            timeline = shot_manager.get_current_timeline()
             start_frame = timeline.GetStartFrame()
             end_frame = timeline.GetEndFrame()
         except AttributeError:
@@ -256,7 +258,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         def get_in_out_point_callback(spin_box):
             from anima.env.resolve import shot_tools
-            timeline = shot_tools.ShotManager.get_current_timeline()
+            shot_manager = shot_tools.ShotManager()
+            timeline = shot_manager.get_current_timeline()
             current_timecode = timeline.GetCurrentTimecode()
             fps = timeline.GetSetting("timelineFrameRate")
             import timecode
