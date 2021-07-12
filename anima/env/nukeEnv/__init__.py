@@ -132,6 +132,9 @@ class Nuke(EnvironmentBase):
         # replace paths
         self.replace_external_paths()
 
+        # update color management settings
+        self.update_color_management()
+
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
         from anima.env import empty_reference_resolution
