@@ -109,7 +109,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # add the shot tools
         from anima.env.resolve import shot_tools
-        st = shot_tools.ShotManagerLayout(self.widget())
+        st = shot_tools.ShotToolsLayout(self.widget())
         shot_tools_tab_widget.setLayout(st)
 
         label_role = QtWidgets.QFormLayout.LabelRole
@@ -974,5 +974,5 @@ class GenericTools(object):
         """
         from anima.env.resolve import shot_tools
         reload_lib(shot_tools)
-        shot_manager_ui = shot_tools.ShotManagerLayout(parent=parent_ui)
+        shot_manager_ui = shot_tools.ShotToolsLayout(parent=parent_ui)
         shot_manager_ui.show()

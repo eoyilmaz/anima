@@ -674,12 +674,12 @@ class ShotClip(object):
         return slate_node
 
 
-class ShotManagerLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
+class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     """The UI for the ShotManager
     """
 
     def __init__(self, *args, **kwargs):
-        super(ShotManagerLayout, self).__init__(*args, **kwargs)
+        super(ShotToolsLayout, self).__init__(*args, **kwargs)
         self.form_layout = None
         self.project_combo_box = None
         self.sequence_combo_box = None
