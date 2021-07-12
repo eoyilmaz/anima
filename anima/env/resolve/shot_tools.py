@@ -159,6 +159,74 @@ class ShotManager(object):
         with open(output_path, "w+") as f:
             f.write("\n".join(data))
 
+    def finalize_review_csv(self, review_path=None, csv_output_path=None, vendor=None):
+        """Finalizes the CSVs in the given review path by merging all the CSV's in to one and also generating data for
+        the missing movie files.
+
+        :param str review_path: The path to finalize.
+        :param str csv_output_path: The finalized CSV path.
+        :param str vendor: The vendor name
+        :return:
+        """
+        import os
+        import glob
+        from anima.utils import report
+
+        logger.debug("review_path    : %s" % review_path)
+        logger.debug("csv_output_path: %s" % csv_output_path)
+        logger.debug("vendor         : %s" % vendor)
+
+        # get all the MOV files
+        mov_files_in_folder = glob.glob("%s/*.mov" % review_path)
+        logger.debug("mov files in folder")
+        logger.debug("\n".join(mov_files_in_folder))
+
+        # get all the CSV files
+        csv_files = glob.glob("%s/*.csv" % review_path)
+        logger.debug("csv files: %s" % csv_files)
+
+        mov_files_from_csvs = []
+        for csv_file in csv_files:
+            with open(csv_file, 'r') as f:
+                csv_data = f.readlines()
+
+            for line in csv_data[1:]:
+                data = line.split(',')
+                video_file_name = data[0]
+                mov_files_from_csvs.append(video_file_name)
+
+        logger.debug("mov_files_from_csvs")
+        logger.debug('\n'.join(mov_files_from_csvs))
+
+        # skip all the files that are already listed in the CSV files
+        filtered_mov_files = []
+        for mov_file in mov_files_in_folder:
+            mov_file_name = os.path.basename(mov_file)
+            if mov_file_name not in mov_files_from_csvs:
+                filtered_mov_files.append(mov_file)
+
+        logger.debug("filtered_mov_files")
+        logger.debug("\n".join(filtered_mov_files))
+
+        nr = report.NetflixReview()
+        nr.outputs = filtered_mov_files
+        nr.generate_csv(csv_output_path, vendor=vendor, submission_note="")
+
+        # now combine all the CSVs in to one
+        combined_csv_data = ["Version Name,Link,Scope Of Work,Vendor,Submitting For,Submission Note"]
+        csv_files = glob.glob("%s/*.csv" % review_path)
+        for csv_file in csv_files:
+            with open(csv_file, 'r') as f:
+                csv_data = f.readlines()
+
+            if csv_data:
+                for line in csv_data[1:]:
+                    if line:
+                        combined_csv_data.append(line.strip())
+
+        with open(csv_output_path, "w") as f:
+            f.write("\n".join(combined_csv_data))
+
     def check_duplicate_shots(self):
         """checks for duplicate shots
         """
@@ -855,6 +923,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.addWidget(generate_review_csv_push_button)
         generate_review_csv_push_button.clicked.connect(self.generate_review_csv)
 
+        finalize_review_csv_push_button = QtWidgets.QPushButton(self.parent())
+        finalize_review_csv_push_button.setText("Finalize Review CSV")
+        self.addWidget(finalize_review_csv_push_button)
+        finalize_review_csv_push_button.clicked.connect(self.finalize_review_csv)
+
         # ---------------------------------------------------------
         # Signals
         self.project_changed(None)
@@ -1059,3 +1132,40 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         sm = ShotManager(None, None)
         sm.generate_review_csv(output_path=csv_file_path, vendor=studio_name)
+
+    def finalize_review_csv(self):
+        """finalizes the review CSVs in the given path
+        """
+        import os
+        import tempfile
+        default_path_storage = os.path.join(tempfile.gettempdir(), "last_csv_folder_path")
+        default_path = os.path.expanduser("~")
+        try:
+            with open(default_path_storage, "r") as f:
+                default_path = f.read()
+        except IOError:
+            pass
+
+        # show a file browser
+        csv_folder_path = QtWidgets.QFileDialog.getExistingDirectory(self.parent(), "Choose CSV Path", default_path)
+        print("csv_folder_path: %s" % csv_folder_path)
+
+        if not csv_folder_path:
+            raise RuntimeError("no folder path chosen!")
+
+        # save the path
+        with open(default_path_storage, "w") as f:
+            f.write(csv_folder_path)
+
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from stalker import Studio
+        studio = Studio.query.first()
+        studio_name = studio.name if studio else ""
+
+        # output to the same folder with the folder name as csv
+        dir_name = os.path.basename(csv_folder_path)
+        csv_output_path = os.path.join(csv_folder_path, "%s.csv" % dir_name)
+
+        sm = ShotManager(None, None)
+        sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
