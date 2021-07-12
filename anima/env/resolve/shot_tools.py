@@ -643,16 +643,6 @@ class ShotClip(object):
 
         # we should be in good shape
         # create a new Fusion comp and run the magic commands
-        # fusion_clip = self.timeline.CreateFusionClip([])
-        # slate_item = self.timeline.InsertFusionTitleIntoTimeline("Zipper")
-        # slate_item = self.timeline.InsertFusionGeneratorIntoTimeline("Text+")
-        # slate_item = self.timeline.InsertFusionGeneratorIntoTimeline("Contours")
-        # print("slate_item: %s" % slate_item)
-
-        # media_pool_item = self.clip.GetMediaPoolItem()
-        # print("media_pool_item: %s" % media_pool_item)
-        # self.timeline.InsertMediaPoolItem
-
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
         current_page = resolve.GetCurrentPage()
@@ -684,13 +674,12 @@ class ShotClip(object):
         return slate_node
 
 
-class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
+class ShotManagerLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     """The UI for the ShotManager
     """
 
     def __init__(self, *args, **kwargs):
-        super(ShotManagerUI, self).__init__(*args, **kwargs)
-        self.main_layout = None
+        super(ShotManagerLayout, self).__init__(*args, **kwargs)
         self.form_layout = None
         self.project_combo_box = None
         self.sequence_combo_box = None
@@ -705,15 +694,13 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         # get logged in user
         self.get_logged_in_user()
 
-        self.setWindowTitle("Shot Manager")
-
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.form_layout = QtWidgets.QFormLayout(self)
-        self.main_layout.addLayout(self.form_layout)
+        # self.setWindowTitle("Shot Manager")
+        self.form_layout = QtWidgets.QFormLayout(self.parent())
+        self.addLayout(self.form_layout)
 
         i = 0
         # Project
-        label = QtWidgets.QLabel(self)
+        label = QtWidgets.QLabel(self.parent())
         label.setText("Project")
         self.form_layout.setWidget(
             i,
@@ -722,7 +709,7 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         from anima.ui.widgets.project import ProjectComboBox
-        self.project_combo_box = ProjectComboBox(self)
+        self.project_combo_box = ProjectComboBox(self.parent())
         self.form_layout.setWidget(
             i,
             QtWidgets.QFormLayout.FieldRole,
@@ -731,7 +718,7 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
 
         # Sequence
         i += 1
-        label = QtWidgets.QLabel(self)
+        label = QtWidgets.QLabel(self.parent())
         label.setText("Sequence")
         self.form_layout.setWidget(
             i,
@@ -740,7 +727,7 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         from anima.ui.widgets.sequence import SequenceComboBox
-        self.sequence_combo_box = SequenceComboBox(self)
+        self.sequence_combo_box = SequenceComboBox(self.parent())
         self.form_layout.setWidget(
             i,
             QtWidgets.QFormLayout.FieldRole,
@@ -748,56 +735,53 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # Get Shot List button
-        get_shot_list_push_button = QtWidgets.QPushButton(self)
+        get_shot_list_push_button = QtWidgets.QPushButton(self.parent())
         get_shot_list_push_button.setText("Get Shot List")
-        self.main_layout.addWidget(get_shot_list_push_button)
+        self.addWidget(get_shot_list_push_button)
 
         # Check Duplicate Shot Code
-        validate_shots_push_button = QtWidgets.QPushButton(self)
+        validate_shots_push_button = QtWidgets.QPushButton(self.parent())
         validate_shots_push_button.setText("Validate Shots")
-        self.main_layout.addWidget(validate_shots_push_button)
+        self.addWidget(validate_shots_push_button)
 
         # Check Duplicate Shot Code
-        check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self)
+        check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self.parent())
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
-        self.main_layout.addWidget(check_duplicate_shot_code_push_button)
+        self.addWidget(check_duplicate_shot_code_push_button)
 
         # Create Render Jobs button
-        create_render_jobs_button = QtWidgets.QPushButton(self)
+        create_render_jobs_button = QtWidgets.QPushButton(self.parent())
         create_render_jobs_button.setText("Create Render Jobs")
-        self.main_layout.addWidget(create_render_jobs_button)
+        self.addWidget(create_render_jobs_button)
 
         # Update Shot Thumbnail button
-        update_shot_thumbnail_button = QtWidgets.QPushButton(self)
+        update_shot_thumbnail_button = QtWidgets.QPushButton(self.parent())
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
-        self.main_layout.addWidget(update_shot_thumbnail_button)
+        self.addWidget(update_shot_thumbnail_button)
 
         # Create Slate button
-        create_slate_button = QtWidgets.QPushButton(self)
+        create_slate_button = QtWidgets.QPushButton(self.parent())
         create_slate_button.setText("Create Slate")
-        self.main_layout.addWidget(create_slate_button)
+        self.addWidget(create_slate_button)
 
         # Fix Shot Clip Name
-        fix_shot_clip_name = QtWidgets.QPushButton(self)
+        fix_shot_clip_name = QtWidgets.QPushButton(self.parent())
         fix_shot_clip_name.setText("Fix Shot Clip Names")
-        self.main_layout.addWidget(fix_shot_clip_name)
+        self.addWidget(fix_shot_clip_name)
         fix_shot_clip_name.clicked.connect(self.fix_shot_clip_name)
-
-        # Ok button
-        ok_button = QtWidgets.QPushButton(self)
-        ok_button.setText("OK")
-        self.main_layout.addWidget(ok_button)
 
         # Signals
         self.project_changed(None)
         self.project_combo_box.currentIndexChanged.connect(self.project_changed)
-        ok_button.clicked.connect(self.close)
+
         create_render_jobs_button.clicked.connect(self.create_render_jobs)
         get_shot_list_push_button.clicked.connect(self.get_shot_list)
         check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
         validate_shots_push_button.clicked.connect(self.validate_shot_codes)
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         create_slate_button.clicked.connect(self.create_slate)
+
+        # self.addStretch()
 
     def project_changed(self, index):
         """runs when the current selected project has been changed
@@ -828,7 +812,7 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         sequence = self.sequence_combo_box.get_current_sequence()
         im = ShotManager(project, sequence)
 
-        message_box = QtWidgets.QMessageBox(self)
+        message_box = QtWidgets.QMessageBox(self.parent())
         # message_box.setTitle("Which Shots?")
         message_box.setText("Which Shots?")
 
@@ -850,14 +834,14 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
                 im.get_current_shot().create_render_job()
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
-                self,
+                self.parent(),
                 "Error",
                 str(e)
             )
             raise e
         finally:
             QtWidgets.QMessageBox.information(
-                self,
+                self.parent(),
                 "Created Shots and Render Jobs 👍",
                 "Created Shots and Render Jobs 👍"
             )
@@ -875,14 +859,14 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
 
         if invalid_shot_codes:
             QtWidgets.QMessageBox.critical(
-                self,
+                self.parent(),
                 "Invalid shot names!!!",
                 "There are invalid shot codes:<br>%s" % "<br>".join(invalid_shot_codes)
             )
             return False
         else:
             QtWidgets.QMessageBox.information(
-                self,
+                self.parent(),
                 "All shots valid 👍",
                 "All shots valid 👍"
             )
@@ -897,14 +881,14 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
         duplicate_shot_codes = im.check_duplicate_shots()
         if duplicate_shot_codes:
             QtWidgets.QMessageBox.critical(
-                self,
+                self.parent(),
                 "Duplicate Shot Codes!!!",
                 "There are duplicate shot codes:<br>%s" % "<br>".join(duplicate_shot_codes)
             )
             return False
         else:
             QtWidgets.QMessageBox.information(
-                self,
+                self.parent(),
                 "No Duplicate Shots 👍",
                 "No duplicate shots 👍"
             )
@@ -922,13 +906,13 @@ class ShotManagerUI(QtWidgets.QDialog, AnimaDialogBase):
             shot.update_shot_thumbnail()
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
-                self,
+                self.parent(),
                 "Shot thumbnail could not be updated",
                 str(e)
             )
         else:
             QtWidgets.QMessageBox.information(
-                self,
+                self.parent(),
                 "Updated shot thumbnail 👍",
                 "Updated shot thumbnail 👍"
             )

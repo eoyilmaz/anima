@@ -51,7 +51,7 @@ class ToolboxDialog(QtWidgets.QDialog):
     def setup_ui(self):
         """create the main
         """
-        tlb = ToolboxLayout()
+        tlb = ToolboxLayout(self)
         self.setLayout(tlb)
 
         # setup icon
@@ -85,13 +85,32 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         self.addWidget(main_tab_widget)
 
         # add the General Tab
-        general_tab_widget = QtWidgets.QWidget(self.widget())
-        general_tab_vertical_layout = QtWidgets.QVBoxLayout()
-        general_tab_form_layout = QtWidgets.QFormLayout()
-        general_tab_vertical_layout.addLayout(general_tab_form_layout)
-        general_tab_widget.setLayout(general_tab_vertical_layout)
+        # general_tab_widget = QtWidgets.QWidget(self.widget())
+        # general_tab_vertical_layout = QtWidgets.QVBoxLayout()
+        # general_tab_form_layout = QtWidgets.QFormLayout()
+        # general_tab_vertical_layout.addLayout(general_tab_form_layout)
+        # general_tab_widget.setLayout(general_tab_vertical_layout)
 
-        main_tab_widget.addTab(general_tab_widget, 'Generic')
+        # add the ShotTools Tab
+        shot_tools_tab_widget = QtWidgets.QWidget(self.widget())
+        conformer_tab_widget = QtWidgets.QWidget(self.widget())
+
+        # add the Output Tab
+        output_tab_widget = QtWidgets.QWidget(self.widget())
+        output_tab_vertical_layout = QtWidgets.QVBoxLayout(self.widget())
+        output_tab_form_layout = QtWidgets.QFormLayout(self.widget())
+        output_tab_vertical_layout.addLayout(output_tab_form_layout)
+        output_tab_widget.setLayout(output_tab_vertical_layout)
+
+        # main_tab_widget.addTab(general_tab_widget, 'Generic')
+        main_tab_widget.addTab(conformer_tab_widget, 'Conformer')
+        main_tab_widget.addTab(shot_tools_tab_widget, 'Shot Tools')
+        main_tab_widget.addTab(output_tab_widget, 'Output')
+
+        # add the shot tools
+        from anima.env.resolve import shot_tools
+        st = shot_tools.ShotManagerLayout(self.widget())
+        shot_tools_tab_widget.setLayout(st)
 
         label_role = QtWidgets.QFormLayout.LabelRole
         field_role = QtWidgets.QFormLayout.FieldRole
@@ -100,23 +119,25 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         from anima.ui.utils import add_button
         i = -1
 
+        current_vertical_layout = output_tab_vertical_layout
+        current_form_layout = output_tab_form_layout
         # -------------------------------------------------------------------
         # Common Controls
         i += 1
         common_output_controls_label = QtWidgets.QLabel()
         common_output_controls_label.setText("=========== Common Output Controls ===========")
-        general_tab_form_layout.setWidget(i, field_role, common_output_controls_label)
+        current_form_layout.setWidget(i, field_role, common_output_controls_label)
 
         # -------------------------------------------------------------------
         # Template
         i += 1
         template_label = QtWidgets.QLabel()
         template_label.setText("Template")
-        general_tab_form_layout.setWidget(i, label_role, template_label)
+        current_form_layout.setWidget(i, label_role, template_label)
 
         template_line_edit = QtWidgets.QLineEdit()
         template_line_edit.setText(GenericTools.default_output_template)
-        general_tab_form_layout.setWidget(i, field_role, template_line_edit)
+        current_form_layout.setWidget(i, field_role, template_line_edit)
 
         # -------------------------------------------------------------------
         # Extend Start/End Controls
@@ -124,20 +145,20 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         extend_start_label = QtWidgets.QLabel()
         extend_start_label.setText("Extend Start")
-        general_tab_form_layout.setWidget(i, label_role, extend_start_label)
+        current_form_layout.setWidget(i, label_role, extend_start_label)
 
         extend_start_spinbox = QtWidgets.QSpinBox()
         extend_start_spinbox.setMinimum(0)
-        general_tab_form_layout.setWidget(i, field_role, extend_start_spinbox)
+        current_form_layout.setWidget(i, field_role, extend_start_spinbox)
 
         i += 1
         extend_end_label = QtWidgets.QLabel()
         extend_end_label.setText("Extend End")
-        general_tab_form_layout.setWidget(i, label_role, extend_end_label)
+        current_form_layout.setWidget(i, label_role, extend_end_label)
 
         extend_end_spinbox = QtWidgets.QSpinBox()
         extend_end_spinbox.setMinimum(0)
-        general_tab_form_layout.setWidget(i, field_role, extend_end_spinbox)
+        current_form_layout.setWidget(i, field_role, extend_end_spinbox)
 
         # -------------------------------------------------------------------
         # Clip Output Generator
@@ -163,18 +184,18 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         clip_output_generator_button.setText("Output - Current Clip")
         clip_output_generator_button.clicked.connect(clip_output_generator_wrapper)
 
-        general_tab_form_layout.setWidget(i, field_role, clip_output_generator_button)
+        current_form_layout.setWidget(i, field_role, clip_output_generator_button)
 
         # -------------------------------------------------------------------
         # Clip Output Generator By Index
         i += 1
         clip_index_label = QtWidgets.QLabel()
         clip_index_label.setText("Clip Index")
-        general_tab_form_layout.setWidget(i, label_role, clip_index_label)
+        current_form_layout.setWidget(i, label_role, clip_index_label)
 
         clip_index_spinbox = QtWidgets.QSpinBox()
         clip_index_spinbox.setMinimum(1)
-        general_tab_form_layout.setWidget(i, field_role, clip_index_spinbox)
+        current_form_layout.setWidget(i, field_role, clip_index_spinbox)
 
         i += 1
 
@@ -193,7 +214,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         output_clip_by_clip_index_push_button = QtWidgets.QPushButton()
         output_clip_by_clip_index_push_button.setText('Output - Clip By Index')
         output_clip_by_clip_index_push_button.clicked.connect(clip_output_generator_by_index_wrapper)
-        general_tab_form_layout.setWidget(i, field_role, output_clip_by_clip_index_push_button)
+        current_form_layout.setWidget(i, field_role, output_clip_by_clip_index_push_button)
 
         # -------------------------------------------------------------------
         # Add Divider
@@ -201,7 +222,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         line = QtWidgets.QFrame()
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        general_tab_form_layout.setWidget(i, field_role, line)
+        current_form_layout.setWidget(i, field_role, line)
 
         # -------------------------------------------------------------------
         from anima.env.resolve import shot_tools
@@ -219,10 +240,10 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         i += 1
         in_point_label = QtWidgets.QLabel()
         in_point_label.setText("In Point")
-        general_tab_form_layout.setWidget(i, label_role, in_point_label)
+        current_form_layout.setWidget(i, label_role, in_point_label)
 
         layout = QtWidgets.QHBoxLayout()
-        general_tab_form_layout.setLayout(i, field_role, layout)
+        current_form_layout.setLayout(i, field_role, layout)
 
         in_point_spin_box = QtWidgets.QSpinBox()
         in_point_spin_box.setMaximum(99999999)
@@ -248,10 +269,10 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         i += 1
         out_point_label = QtWidgets.QLabel()
         out_point_label.setText("Out Point")
-        general_tab_form_layout.setWidget(i, label_role, out_point_label)
+        current_form_layout.setWidget(i, label_role, out_point_label)
 
         layout = QtWidgets.QHBoxLayout()
-        general_tab_form_layout.setLayout(i, field_role, layout)
+        current_form_layout.setLayout(i, field_role, layout)
 
         out_point_spin_box = QtWidgets.QSpinBox()
         out_point_spin_box.setMaximum(99999999)
@@ -268,33 +289,33 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         i += 1
         start_clip_number_label = QtWidgets.QLabel()
         start_clip_number_label.setText("Start Clip #")
-        general_tab_form_layout.setWidget(i, label_role, start_clip_number_label)
+        current_form_layout.setWidget(i, label_role, start_clip_number_label)
 
         start_clip_number_spin_box = QtWidgets.QSpinBox()
         start_clip_number_spin_box.setMinimum(0)
         start_clip_number_spin_box.setMaximum(1e7)
-        general_tab_form_layout.setWidget(i, field_role, start_clip_number_spin_box)
+        current_form_layout.setWidget(i, field_role, start_clip_number_spin_box)
 
         i += 1
         clip_number_by_label = QtWidgets.QLabel()
         clip_number_by_label.setText("Clip # By")
-        general_tab_form_layout.setWidget(i, label_role, clip_number_by_label)
+        current_form_layout.setWidget(i, label_role, clip_number_by_label)
 
         clip_number_by_spin_box = QtWidgets.QSpinBox()
         clip_number_by_spin_box.setValue(10)
         clip_number_by_spin_box.setMaximum(99990)
-        general_tab_form_layout.setWidget(i, field_role, clip_number_by_spin_box)
+        current_form_layout.setWidget(i, field_role, clip_number_by_spin_box)
 
         # Padding
         i += 1
         padding_label = QtWidgets.QLabel()
-        general_tab_form_layout.setWidget(i, label_role, padding_label)
+        current_form_layout.setWidget(i, label_role, padding_label)
 
         padding_spin_box = QtWidgets.QSpinBox()
         padding_spin_box.setValue(4)
         padding_spin_box.setMinimum(0)
         padding_spin_box.setMaximum(10)
-        general_tab_form_layout.setWidget(i, field_role, padding_spin_box)
+        current_form_layout.setWidget(i, field_role, padding_spin_box)
 
         # Per Clip Output Generator
         i += 1
@@ -323,58 +344,11 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         per_clip_output_generator_push_button.setText("Output - Per Clip")
         per_clip_output_generator_push_button.clicked.connect(per_clip_output_generator_wrapper)
 
-        general_tab_form_layout.setWidget(i, field_role, per_clip_output_generator_push_button)
-
-        # add_button(
-        #     "Get Shot Code",
-        #     general_tab_vertical_layout,
-        #     GenericTools.get_shot_code,
-        #     GenericTools.get_shot_code.__doc__
-        # )
-
-        # # -------------------------------------------------------------------
-        # # Set Shot Code
-        #
-        # layout = QtWidgets.QHBoxLayout()
-        # general_tab_vertical_layout.addLayout(layout)
-        #
-        # set_clip_code_label = QtWidgets.QLabel()
-        # set_clip_code_label.setText("Code")
-        # set_clip_code_line_edit = QtWidgets.QLineEdit()
-        #
-        # def set_shot_code_wrapper():
-        #     shot_code = set_clip_code_line_edit.text()
-        #     GenericTools.set_shot_code(shot_code)
-        #
-        # layout.addWidget(set_clip_code_label)
-        # layout.addWidget(set_clip_code_line_edit)
-        # add_button(
-        #     "Set Shot Code",
-        #     layout,
-        #     set_shot_code_wrapper,
-        #     GenericTools.set_shot_code.__doc__,
-        # )
-
-        def parent_ui_callback():
-            GenericTools.shot_manager(parent_ui=self.parent())
-
-        add_button(
-            "Shot Manager",
-            general_tab_vertical_layout,
-            parent_ui_callback,
-            GenericTools.shot_manager.__doc__
-        )
-
-        # add_button(
-        #     "Get Current Thumbnail",
-        #     general_tab_vertical_layout,
-        #     GenericTools.get_thumbnail,
-        #     GenericTools.get_thumbnail.__doc__
-        # )
+        current_form_layout.setWidget(i, field_role, per_clip_output_generator_push_button)
 
         # -------------------------------------------------------------------
         # Add the stretcher
-        general_tab_vertical_layout.addStretch()
+        current_vertical_layout.addStretch()
 
 
 class GenericTools(object):
@@ -1000,5 +974,5 @@ class GenericTools(object):
         """
         from anima.env.resolve import shot_tools
         reload_lib(shot_tools)
-        shot_manager_ui = shot_tools.ShotManagerUI(parent=parent_ui)
+        shot_manager_ui = shot_tools.ShotManagerLayout(parent=parent_ui)
         shot_manager_ui.show()
