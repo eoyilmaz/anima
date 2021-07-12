@@ -176,7 +176,7 @@ class NetflixReporter(object):
                     scope_of_work=shot.description,
                     vendors=', '.join(vendors),
                     vfx_turnover_to_vendor_date=vfx_turnover_to_vendor_date.strftime(self.date_time_format),
-                    vfx_next_studio_review_date=vfx_next_studio_review_date if comp_or_cleanup_task.status.code == 'CMPL' else '',
+                    vfx_next_studio_review_date=vfx_next_studio_review_date.strftime(self.date_time_format) if comp_or_cleanup_task.status.code == 'CMPL' else '',
                     vfx_final_delivery_date=shot.end.strftime(self.date_time_format),
                     vfx_final_version=vfx_final_version,
                     shot_cost='%0.2f' % (total_bid_seconds / 3600 * hourly_cost),
