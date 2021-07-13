@@ -849,46 +849,6 @@ class Fusion(EnvironmentBase):
         # Media Color
         slate_node.Input18 = ""
 
-        # Resolution
-        # create a resize node or use the immediate resize node if any
-        # resize_node = slate_node.FindMainOutput(1)
-        # resize_node = self.comp.FindTool("SlateResize")
-        # if resize_node:
-        #     # check if this is a Resize node
-        #     if not resize_node.GetAttrs("TOOLS_RegID") == "BetterResize":
-        #         resize_node = None
-        #
-        # if not resize_node:
-        #     # create a new one
-        #     resize_node = self.comp.BetterResize()
-        #     resize_node.SetAttrs({"TOOLS_Name": "SlateResize", "TOOLB_Locked": False})
-        #
-        # resize_node.Input = slate_node
-        # if imf:
-        #     resize_node.Width = int(3840 * float(imf.height) / 2160)
-        #     resize_node.Height = imf.height
-        #     resize_node.KeepAspect = True
-
-        # # create the SlateMerge tool
-        # slate_merge_node = self.comp.FindTool("SlateMerge")
-        # if slate_merge_node:
-        #     # check if this is a Merge node
-        #     if not slate_merge_node.GetAttrs("TOOLS_RegID") == "Merge":
-        #         slate_merge_node = None
-        #
-        # if not slate_merge_node:
-        #     # create a new one
-        #     slate_merge_node = self.comp.Merge()
-        #     slate_merge_node.SetAttrs({"TOOLS_Name": "SlateMerge", "TOOLB_Locked": False})
-        #
-        # slate_merge_node.Foreground = resize_node
-        # Animate the slate_merge_node
-        # slate_merge_node.Blend = self.comp.BezierSpline({})
-        # if shot:
-        #     slate_merge_node.Blend[shot.cut_in - 1] = 1
-        #     slate_merge_node.Blend[shot.cut_in] = 0
-
-        # print("Using resolve setup!")
         # connect the output to MediaOut
         media_out_node = None
         i = 0

@@ -84,13 +84,6 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         main_tab_widget = QtWidgets.QTabWidget(self.widget())
         self.addWidget(main_tab_widget)
 
-        # add the General Tab
-        # general_tab_widget = QtWidgets.QWidget(self.widget())
-        # general_tab_vertical_layout = QtWidgets.QVBoxLayout()
-        # general_tab_form_layout = QtWidgets.QFormLayout()
-        # general_tab_vertical_layout.addLayout(general_tab_form_layout)
-        # general_tab_widget.setLayout(general_tab_vertical_layout)
-
         # add the ShotTools Tab
         shot_tools_tab_widget = QtWidgets.QWidget(self.widget())
         conformer_tab_widget = QtWidgets.QWidget(self.widget())
