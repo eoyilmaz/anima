@@ -8,10 +8,10 @@ import os
 class NetflixReporter(object):
     """Creates Netflix compliant reports of Episodes/Sequences
     """
-    csv_header = "Episode;Shot Name;VFX Shot Status;Key Shot;Shot Methodologies;Scope of Work;Vendors;" \
+    csv_header = "Episode;Shot Name;VFX Shot Status;Shot Methodologies;Scope of Work;Vendors;" \
                  "VFX Turnover to Vendor Date;VFX Next Studio Review Date;VFX Final Delivery Date;VFX Final Version;" \
                  "Shot Cost;Currency;Report Date;Report Note"
-    csv_format = "{episode_number};{shot.code};{status};{key_shot};{shot_methodologies};{scope_of_work};{vendors};" \
+    csv_format = "{episode_number};{shot.code};{status};{shot_methodologies};{scope_of_work};{vendors};" \
                  "{vfx_turnover_to_vendor_date};{vfx_next_studio_review_date};{vfx_final_delivery_date};" \
                  "{vfx_final_version};{shot_cost};{currency};{report_date};{report_note}"
 
@@ -43,6 +43,116 @@ class NetflixReporter(object):
             status_code = status_code.code
 
         return self.status_lut[status_code]
+
+    @classmethod
+    def get_shot_status(cls, shot):
+        """calculates the shot status
+
+        :param shot:
+        :return:
+        """
+        # The problem here is that, because of the Plate task, all the shots seem to be WIP at the beginning
+        # also we can not use the Comp or Cleanup task status, because they may be WFD but the Camera or Lighting
+        # task could be CMPL
+        # so we need to calculate the shot status from scratch
+
+        from stalker.db.session import DBSession
+        with DBSession.no_autoflush:
+            wfd = shot.status_list['WFD']
+            rts = shot.status_list['RTS']
+            wip = shot.status_list['WIP']
+            cmpl = shot.status_list['CMPL']
+
+        parent_statuses_lut = [wfd, rts, wip, cmpl]
+
+        #   +--------- WFD
+        #   |+-------- RTS
+        #   ||+------- WIP
+        #   |||+------ PREV
+        #   ||||+----- HREV
+        #   |||||+---- DREV
+        #   ||||||+--- OH
+        #   |||||||+-- STOP
+        #   ||||||||+- CMPL
+        #   |||||||||
+        # 0b000000000
+
+        binary_status_codes = {
+            'WFD':  256,
+            'RTS':  128,
+            'WIP':  64,
+            'PREV': 32,
+            'HREV': 16,
+            'DREV': 8,
+            'OH':   4,
+            'STOP': 2,
+            'CMPL': 1
+        }
+
+        # use Python
+        # logger.debug('using pure Python to query children statuses')
+        binary_status = 0
+        children_statuses = []
+        for child in shot.children:
+            # skip Plate task
+            if child.type and child.type.name == 'Plate':
+                continue
+
+            # consider every status only once
+            if child.status not in children_statuses:
+                children_statuses.append(child.status)
+                binary_status += binary_status_codes[child.status.code]
+
+        #
+        # I know that the following list seems cryptic but the it shows the
+        # final status index in parent_statuses_lut[] list.
+        #
+        # So by using the cumulative statuses of children we got an index from
+        # the following table, and use the found element (integer) as the index
+        # for the parent_statuses_lut[] list, and we find the desired status
+        #
+        # We are doing it in this way for a couple of reasons:
+        #
+        #   1. We shouldn't hold the statuses in the following list,
+        #   2. Using a dictionary is another alternative, where the keys are
+        #      the cumulative binary status codes, but at the end the result of
+        #      this cumulative thing is a number between 0-511 so no need to
+        #      use a dictionary with integer keys
+        #
+        children_to_parent_statuses_lut = [
+            0, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 0, 2, 0, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2
+        ]
+
+        status_index = children_to_parent_statuses_lut[binary_status]
+        status = parent_statuses_lut[status_index]
+
+        # logger.debug('binary statuses value : %s' % binary_status)
+        # logger.debug('setting status to : %s' % status.code)
+
+        return status
 
     @classmethod
     def generate_shot_methodologies(cls, shot):
@@ -170,8 +280,7 @@ class NetflixReporter(object):
                     scene_number=scene.name[4:],
                     shot=shot,
                     task=comp_or_cleanup_task,
-                    status=self.map_status_code(comp_or_cleanup_task.status),
-                    key_shot='',
+                    status=self.map_status_code(self.get_shot_status(shot).code if comp_or_cleanup_task.status.code != 'PREV' else 'PREV'),
                     shot_methodologies=', '.join(self.generate_shot_methodologies(shot)),
                     scope_of_work=shot.description,
                     vendors=', '.join(vendors),
