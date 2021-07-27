@@ -380,8 +380,14 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 menu_style_sheet = ''
                 defaults_status_colors = defaults.status_colors
+
+                change_status_menu_actions_enabled = False
+                if defaults.is_power_user(logged_in_user):
+                    change_status_menu_actions_enabled = True
+
                 for status_code in defaults.status_colors:
                     change_status_menu_action = status_menu.addAction(status_code)
+                    change_status_menu_action.setEnabled(change_status_menu_actions_enabled)
 
                     change_status_menu_action.setObjectName('status_%s' % status_code)
 
