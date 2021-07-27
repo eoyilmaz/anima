@@ -1,5 +1,14 @@
 # -*- coding: utf-8 -*-
 """Shot related tools
+
+
+from anima.env import blackmagic
+resolve = blackmagic.get_resolve()
+project_manager = resolve.GetProjectManager()
+resolve_project = project_manager.GetCurrentProject()
+timeline = resolve_project.GetCurrentTimeline()
+clip = timeline.GetCurrentVideoItem()
+
 """
 from anima import logger
 from anima.ui.base import AnimaDialogBase
