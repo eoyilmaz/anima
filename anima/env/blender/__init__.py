@@ -2,7 +2,11 @@
 
 import bpy
 
+from anima import logger
 from anima.env.base import EnvironmentBase
+
+
+RENDER_FILE_PATH_STORAGE = ""
 
 
 class Blender(EnvironmentBase):
@@ -108,6 +112,9 @@ class Blender(EnvironmentBase):
 
         # leave it simple for now
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
+
+        # TODO: may be it is better just to make the handlers persistent
+        self.register_handlers()
 
         if not skip_update_check:
             return self.check_referenced_versions()
@@ -320,8 +327,10 @@ class Blender(EnvironmentBase):
             version,
             include_project_code=False
         )
-        output_filename_template = '//Outputs/renders/beauty/%(version_sig_name)s_beauty.####'
+        output_filename_template = '//Outputs/renders/{view_layer}/%(version_sig_name)s_{view_layer}.####'
         render_file_full_path = output_filename_template % {'version_sig_name': version_sig_name}
+
+        self.register_handlers()
 
         bpy.context.scene.render.filepath = render_file_full_path
 
@@ -334,6 +343,19 @@ class Blender(EnvironmentBase):
 
         bpy.context.scene.render.use_overwrite = False
         bpy.context.scene.render.use_placeholder = True
+
+    def register_handlers(self):
+        """registers handlers
+        """
+        print("registering render handlers for render file output")
+        handlers = [
+            [bpy.app.handlers.render_pre, render_variables_init],
+            [bpy.app.handlers.render_post, render_variables_restore],
+            [bpy.app.handlers.render_cancel, render_variables_restore]
+        ]
+        for handler, callback_func in handlers:
+            if callback_func not in handler:
+                handler.append(callback_func)
 
     def get_current_version(self):
         """returns the current open version
@@ -417,3 +439,56 @@ class Blender(EnvironmentBase):
                 movie_file_rel_path
             )
             open_browser_in_location(playblast_full_path)
+
+
+# @bpy.app.handlers.persistent
+def render_variables_init(scene):
+    """Introduce render variables
+
+    :param scene:
+    :return:
+    """
+    print("replacing render variables")
+    logger.debug("replacing render variables")
+    # first store the original path in this module
+    global RENDER_FILE_PATH_STORAGE
+    RENDER_FILE_PATH_STORAGE = scene.render.filepath
+
+    # print("bpy.context.view_layer.name: %s" % bpy.context.view_layer.name)
+    bpy.context.view_layer.update()
+
+    # print("bpy.context.view_layer.name: %s" % bpy.context.view_layer.name)
+    # print("bpy.context.window.view_layer.name: %s" % bpy.context.view_layer.name)
+
+    # now replace the
+    scene.render.filepath = RENDER_FILE_PATH_STORAGE.format(
+        file=bpy.data.filepath.rpartition('.')[0],
+        scene=scene.name,
+        camera=scene.camera.name,
+        view_layer=bpy.context.view_layer.name
+    )
+
+    # create the render path
+    import os
+    render_dir_name = os.path.dirname(bpy.path.abspath(scene.render.filepath))
+    print("creating render dir: %s" % render_dir_name)
+    logger.debug("creating render dir: %s" % render_dir_name)
+    os.makedirs(render_dir_name, exist_ok=True)
+
+    print("replacing render variables, DONE!")
+    logger.debug("replacing render variables, DONE!")
+
+
+# @bpy.app.handlers.persistent
+def render_variables_restore(scene):
+    """Restores the original render file path
+
+    :param scene:
+    :return:
+    """
+    print("restoring render path")
+    logger.debug("restoring render path")
+    global RENDER_FILE_PATH_STORAGE
+    scene.render.filepath = RENDER_FILE_PATH_STORAGE
+    print("restoring render path, DONE!")
+    logger.debug("restoring render path, DONE!")
