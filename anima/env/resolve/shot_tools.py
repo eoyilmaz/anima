@@ -544,6 +544,7 @@ class ShotClip(object):
             sequences=[self.stalker_sequence],
             cut_in=1001,
             cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
+            record_in=self.clip.GetStart(),
             description='Autocreated by Resolve',
             created_by=logged_in_user,
             updated_by=logged_in_user,
