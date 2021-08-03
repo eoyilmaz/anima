@@ -63,7 +63,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.description_plain_text_edit = None
         self.status_label = None
         self.not_finished_yet_radio_button = None
-        self.set_as_complete_radio_button = None
         self.submit_for_final_review_radio_button = None
         self.dialog_button_box = None
         self.tasks_combo_box = None
@@ -289,15 +288,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             i,
             QtWidgets.QFormLayout.FieldRole,
             self.not_finished_yet_radio_button
-        )
-
-        i += 1
-        self.set_as_complete_radio_button = QtWidgets.QRadioButton(self)
-        self.set_as_complete_radio_button.setText("Set As Completed")
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.set_as_complete_radio_button
         )
 
         i += 1
@@ -545,13 +535,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # also trigger an update to the side info bar
         self.calendar_widget_selection_changed()
-
-        # only allow is_complete to be selected if the resource is the responsible of the task
-        # or a power user
-        logged_in_user = self.get_logged_in_user()
-        from anima import defaults
-        if not defaults.is_power_user(logged_in_user) and logged_in_user not in self.task.responsible:
-            self.set_as_complete_radio_button.setEnabled(False)
 
     def fill_calendar_with_time_logs(self):
         """fill the calendar with daily time log info
@@ -996,7 +979,6 @@ order by cast("TimeLogs".start as date)
         task = self.tasks_combo_box.currentTask()
         resource = self.get_current_resource()
 
-        is_complete = self.set_as_complete_radio_button.isChecked()
         submit_to_final_review = self.submit_for_final_review_radio_button.isChecked()
 
         # get the revision Types
@@ -1140,29 +1122,7 @@ order by cast("TimeLogs".start as date)
                 DBSession.rollback()
                 return
 
-        if is_complete:
-            # set the status to complete
-            from stalker import Type, Status
-            status_cmpl = Status.query.filter(Status.code == 'CMPL').first()
-
-            forced_status_type = \
-                Type.query.filter(Type.name == 'Forced Status').first()
-
-            # also create a Note
-            from stalker import Note
-            new_note = Note(
-                content='%s has changed this task status to Completed' %
-                        resource.name,
-                type=forced_status_type,
-                created_by=self.logged_in_user,
-                date_created=utc_now
-            )
-            DBSession.add(new_note)
-            task.notes.append(new_note)
-            task.status = status_cmpl
-            DBSession.commit()
-
-        elif submit_to_final_review:
+        if submit_to_final_review:
             # clip the Task timing to current time logs
             from stalker import Task
             schedule_timing, schedule_unit = task.least_meaningful_time_unit(task.total_logged_seconds)
@@ -1245,4 +1205,3 @@ order by cast("TimeLogs".start as date)
 
         # if nothing bad happens close the dialog
         super(MainDialog, self).accept()
-
