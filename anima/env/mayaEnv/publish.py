@@ -213,6 +213,33 @@ def check_node_names_with_bad_characters(progress_controller=None):
         )
 
 
+@publisher('camera')
+def check_rs_stmap_path_is_relative(progress_controller=None):
+    """STMap paths must be relative.
+
+    checks if StMap path shown to RedshiftLensDistortion nodes are relative.
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    relative_lens_distortion_nodes = []
+
+    nodes_to_check = pm.ls(type='RedshiftLensDistortion')
+    progress_controller.maximum = len(nodes_to_check)
+
+    root_dir = pm.workspace(q=1, rd=1)
+    for rs_lens_node in nodes_to_check:
+        path = rs_lens_node.getAttr('LDimage')
+        if not path.startswith(root_dir):
+            relative_lens_distortion_nodes.append(rs_lens_node)
+        progress_controller.increment()
+
+    progress_controller.complete()
+    if relative_lens_distortion_nodes:
+        pm.select(relative_lens_distortion_nodes)
+        raise PublishError('STMap paths in selected RedshiftLensDistortion nodes are NOT relative!')
+
+
 @publisher(LOOK_DEV_TYPES)
 def check_all_geometry_is_referenced(progress_controller=None):
     """All geometry should be referenced
