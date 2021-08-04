@@ -41,12 +41,12 @@ class ShotManager(object):
         """
         timeline = self.get_current_timeline()
         clip = self.get_current_clip()
-        shot_clip = ShotClip()
-        shot_clip.project = self.stalker_project
-        shot_clip.sequence = self.stalker_sequence
-        shot_clip.timeline = timeline
-        shot_clip.clip = clip
-        return shot_clip
+        return ShotClip(
+            project=self.stalker_project,
+            sequence=self.stalker_sequence,
+            clip=clip,
+            timeline=timeline
+        )
 
     @classmethod
     def set_current_shot_code(cls, shot_code):
@@ -312,6 +312,11 @@ class ShotClip(object):
         if not shot:
             shot = self.create_shot()
 
+        # Update shot info
+        shot.cut_in = 1001
+        shot.cut_out = int(self.clip.GetEnd() - self.clip.GetStart() + 1000)
+        shot.record_in = self.clip.GetStart()
+
         # creat shot tasks
         # Anim
         with DBSession.no_autoflush:
@@ -543,9 +548,6 @@ class ShotClip(object):
             project=self.stalker_project,
             parent=shots_task,
             sequences=[self.stalker_sequence],
-            cut_in=1001,
-            cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
-            record_in=self.clip.GetStart(),
             description='Autocreated by Resolve',
             created_by=logged_in_user,
             updated_by=logged_in_user,
@@ -980,7 +982,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
+        shot_manager = ShotManager(project, sequence)
 
         message_box = QtWidgets.QMessageBox(self.parent())
         # message_box.setTitle("Which Shots?")
@@ -998,10 +1000,10 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             clicked_button = message_box.clickedButton()
             message_box.deleteLater()
             if clicked_button == all_shots:
-                for shot in im.get_shots():
+                for shot in shot_manager.get_shots():
                     shot.create_render_job()
             else:
-                im.get_current_shot().create_render_job()
+                shot_manager.get_current_shot().create_render_job()
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self.parent(),
