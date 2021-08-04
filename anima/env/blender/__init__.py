@@ -303,6 +303,8 @@ class Blender(EnvironmentBase):
         """
         bpy.context.scene.frame_start = start_frame
         bpy.context.scene.frame_end = end_frame
+        bpy.context.scene.frame_preview_start = start_frame
+        bpy.context.scene.frame_preview_end = end_frame
 
     def set_render_resolution(self, width, height, pixel_aspect=1.0):
         """Sets the render resolution for the current environment
