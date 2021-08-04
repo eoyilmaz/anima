@@ -81,10 +81,11 @@ class ShotManager(object):
         """
         shots = []
         clips = self.get_clips()
+        timeline = self.get_current_timeline()
         for clip in clips:
-            pi = ShotClip(project=self.stalker_project, sequence=self.stalker_sequence, clip=clip, timeline=self.timeline)
-            if pi.is_shot():
-                shots.append(pi)
+            shot_clip = ShotClip(project=self.stalker_project, sequence=self.stalker_sequence, clip=clip, timeline=timeline)
+            if shot_clip.is_shot():
+                shots.append(shot_clip)
         return shots
 
     def generate_review_csv(self, output_path="", vendor=""):
