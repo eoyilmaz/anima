@@ -1151,9 +1151,9 @@ order by cast("TimeLogs".start as date)
                 review.date_created = utc_now
                 review.date_updated = utc_now
 
-                review.description = "<br/><b>%(resource_name)s :<b> %(note)s" % {
+                review.description = "<b>%(resource_name)s:</b> %(note)s" % {
                     'resource_name': self.logged_in_user.name,
-                    'note': "Created with Anima TimeLog dialog"
+                    'note': "Created with TimeLog dialog"
                 }
 
             DBSession.add_all(reviews)
