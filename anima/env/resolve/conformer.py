@@ -801,7 +801,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return frame_number
 
     # TODO: XML creation must be done better with Anima pipeline's xml class
-    def clip_paths_to_xml(self, clip_path_list, xml_file_full_path):
+    def clip_paths_to_xml(self, clip_path_list, record_in_list, xml_file_full_path):
         """creates fcpxml1.8 compatible xml file from given Resolve image sequence paths
         """
         import math
@@ -840,6 +840,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             ind = 0
             seq_frames = 0
             tc_frame_numbers = []
+            rc_ins = []
             for clip_path in clip_path_list:
                 ind += 1
                 first_frame = int(clip_path.split('.')[-2].split('-')[0].strip('['))
@@ -848,8 +849,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 seq_frames += total_frames
                 str_first_frame = clip_path.split('.')[-2].split('-')[0].strip('[')
                 first_image_path = '%s.%s.%s' % ('.'.join(clip_path.split('.')[:-2]), str_first_frame, extension)
+
+                rc_in = None
+                if self.record_in_check_box.isChecked():
+                    for record_in_data in record_in_list:
+                        if record_in_data[0] == clip_path:
+                            rc_in = record_in_data[1]
+                            break
+                    rc_ins.append(rc_in)
+
                 st = self.get_timecode_from_image(fps, first_image_path)
                 tc_frame_numbers.append(st)
+
                 f.write('        <asset src="file://localhost/%s" '
                         'duration="%s/%ss" '
                         'hasVideo="1" '
@@ -872,9 +883,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 first_frame = int(clip_path.split('.')[-2].split('-')[0].strip('['))
                 last_frame = int(clip_path.split('.')[-2].split('-')[1].strip(']'))
                 total_frames = (last_frame - first_frame) + 1
-                st = tc_frame_numbers[ind-1]
                 if self.record_in_check_box.isChecked():
-                    offset_frame = st
+                    offset_frame = rc_ins[ind-1]
+                st = tc_frame_numbers[ind-1]
                 f.write('                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
                         'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
                         'name="%s" start="%s/%ss">\n' % (str(offset_frame), fps, str(total_frames), fps,
@@ -897,6 +908,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if shots:
             t_name = self.task_name_combo_box.currentText()
             extension = self.ext_name_combo_box.currentText()
+            record_in_list = []
             clip_path_list = []
             plate_path_list = []
             plate_not_found_list = []
@@ -920,8 +932,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         plate_path_list.append(clip_path)
                         plate_not_found_list.append(clip_path)
 
+                if self.record_in_check_box.isChecked():
+                    rc_in = shot.record_in
+                    if not rc_in:
+                        raise RuntimeError('%s -> does not have record in data! Turn off Record In check box...' % shot.name)
+                    record_in_list.append([clip_path, rc_in])
+
                 print('Checking Shot... - %s' % shot.name)
             clip_path_list.sort()
+            record_in_list.sort()
             none_path_list.sort()
             plate_path_list.sort()
             plate_not_found_list.sort()
@@ -967,7 +986,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 print('--------------------------------------------------------------------------')        
 
             if clip_path_list:
-                self.clip_paths_to_xml(clip_path_list, self.xml_path)
+                self.clip_paths_to_xml(clip_path_list, record_in_list, self.xml_path)
                 print('XML CREATED----------------------------')
 
                 media_pool = self.project.GetMediaPool()
@@ -975,7 +994,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 print('XML IMPORTED to Resolve')
                 if plate_path_list and self.plus_plates_check_box.isChecked():
                     print('CREATING + PLATES XML... Please Wait... ----------------------------')
-                    self.clip_paths_to_xml(plate_path_list, self.xml_path)
+                    self.clip_paths_to_xml(plate_path_list, record_in_list, self.xml_path)
                     print('+ PLATES XML CREATED----------------------------')
                     media_pool = self.project.GetMediaPool()
                     media_pool.ImportTimelineFromFile(self.xml_path)
