@@ -963,12 +963,3 @@ class GenericTools(object):
         })
 
         proj.AddRenderJob()
-
-    @classmethod
-    def shot_manager(cls, parent_ui):
-        """calls the Shot Manager UI
-        """
-        from anima.env.resolve import shot_tools
-        reload_lib(shot_tools)
-        shot_manager_ui = shot_tools.ShotToolsLayout(parent=parent_ui)
-        shot_manager_ui.show()

@@ -41,12 +41,12 @@ class ShotManager(object):
         """
         timeline = self.get_current_timeline()
         clip = self.get_current_clip()
-        shot_clip = ShotClip()
-        shot_clip.project = self.stalker_project
-        shot_clip.sequence = self.stalker_sequence
-        shot_clip.timeline = timeline
-        shot_clip.clip = clip
-        return shot_clip
+        return ShotClip(
+            project=self.stalker_project,
+            sequence=self.stalker_sequence,
+            clip=clip,
+            timeline=timeline
+        )
 
     @classmethod
     def set_current_shot_code(cls, shot_code):
@@ -81,10 +81,11 @@ class ShotManager(object):
         """
         shots = []
         clips = self.get_clips()
+        timeline = self.get_current_timeline()
         for clip in clips:
-            pi = ShotClip(project=self.stalker_project, sequence=self.stalker_sequence, clip=clip, timeline=self.timeline)
-            if pi.is_shot():
-                shots.append(pi)
+            shot_clip = ShotClip(project=self.stalker_project, sequence=self.stalker_sequence, clip=clip, timeline=timeline)
+            if shot_clip.is_shot():
+                shots.append(shot_clip)
         return shots
 
     def generate_review_csv(self, output_path="", vendor=""):
@@ -281,6 +282,13 @@ class ShotManager(object):
         thumbnail = shot_clip.get_clip_thumbnail()
         return thumbnail
 
+    def update_shot_record_in_info(self):
+        """updates Shot.record_in data from the current timeline
+        """
+        shots = self.get_shots()
+        for shot in shots:
+            shot.record_in = self.clip.GetStart()
+
 
 class ShotClip(object):
     """Manages Stalker Shots along with Resolve Clips
@@ -310,6 +318,11 @@ class ShotClip(object):
         shot = self.get_shot()
         if not shot:
             shot = self.create_shot()
+
+        # Update shot info
+        shot.cut_in = 1001
+        shot.cut_out = int(self.clip.GetEnd() - self.clip.GetStart() + 1000)
+        shot.record_in = self.clip.GetStart()
 
         # creat shot tasks
         # Anim
@@ -542,8 +555,6 @@ class ShotClip(object):
             project=self.stalker_project,
             parent=shots_task,
             sequences=[self.stalker_sequence],
-            cut_in=1001,
-            cut_out=int(self.clip.GetEnd() - self.clip.GetStart() + 1000),
             description='Autocreated by Resolve',
             created_by=logged_in_user,
             updated_by=logged_in_user,
@@ -830,6 +841,18 @@ class ShotClip(object):
         resolve.OpenPage(current_page)
         return slate_node
 
+    def update_record_in_info(self):
+        """updates the Shot.record_in from the current clip
+        """
+        stalker_shot = self.get_shot()
+        if stalker_shot:
+            record_in = self.clip.GetStart()
+            stalker_shot.record_in = record_in
+            print("%s: %s" % (stalker_shot.name, record_in))
+
+            from stalker.db.session import DBSession
+            DBSession.commit()
+
 
 class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     """The UI for the ShotManager
@@ -916,6 +939,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.addWidget(update_shot_thumbnail_button)
 
+        # Update Shot Record In button
+        update_shot_record_in_info_button = QtWidgets.QPushButton(self.parent())
+        update_shot_record_in_info_button.setText("Update Shot Record-In Info")
+        self.addWidget(update_shot_record_in_info_button)
+
         # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self.parent())
         create_slate_button.setText("Create Slate")
@@ -947,6 +975,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
         validate_shots_push_button.clicked.connect(self.validate_shot_codes)
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
+        update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
 
         self.addStretch()
@@ -978,7 +1007,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
+        shot_manager = ShotManager(project, sequence)
 
         message_box = QtWidgets.QMessageBox(self.parent())
         # message_box.setTitle("Which Shots?")
@@ -996,10 +1025,10 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             clicked_button = message_box.clickedButton()
             message_box.deleteLater()
             if clicked_button == all_shots:
-                for shot in im.get_shots():
+                for shot in shot_manager.get_shots():
                     shot.create_render_job()
             else:
-                im.get_current_shot().create_render_job()
+                shot_manager.get_current_shot().create_render_job()
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self.parent(),
@@ -1178,3 +1207,19 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         sm = ShotManager(None, None)
         sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
+
+    def update_shot_record_in_info(self):
+        """updates the Shot.record_in data from the current timeline
+        """
+        project = self.project_combo_box.get_current_project()
+        if not project:
+            raise RuntimeError("No project")
+
+        sequence = self.sequence_combo_box.get_current_sequence()
+        if not sequence:
+            raise RuntimeError("No sequence")
+
+        shot_manager = ShotManager(project=project, sequence=sequence)
+        shots = shot_manager.get_shots()
+        for shot in shots:
+            shot.update_record_in_info()

@@ -832,7 +832,7 @@ class Fusion(EnvironmentBase):
         slate_node.Input5 = "%s_v%03d" % (version.nice_name, version.version_number)
 
         # Submitting For
-        slate_node.Input6 = "WIP"
+        slate_node.Input6 = "FINAL"
 
         # Date
         import datetime

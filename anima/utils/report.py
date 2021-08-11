@@ -329,7 +329,7 @@ class NetflixReview(object):
         do_db_setup()
 
         from stalker import Version
-        return Version.query.filter(Version.full_path.contains(version_name)).first()
+        return Version.query.filter(Version.full_path.contains(version_name)).order_by(Version.full_path).first()
 
     def generate_csv(self, output_path="", vendor="", submission_note=""):
         """outputs a CSV suitable to upload to Netflix review process
