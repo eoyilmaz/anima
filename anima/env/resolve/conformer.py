@@ -219,6 +219,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         
         self.vertical_layout.addLayout(self.h_layout5)
 
+        self.h_layout6 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+
+        self.record_in_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
+        self.record_in_check_box.setText('Record In')
+        self.h_layout6.addWidget(self.record_in_check_box)
+
+        self.vertical_layout.addLayout(self.h_layout6)
+
         self.conform_button = QtWidgets.QPushButton(self.vertical_layout.widget())
         self.conform_button.setText('CONFORM ALL')
         self.vertical_layout.addWidget(self.conform_button)
@@ -865,6 +873,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 last_frame = int(clip_path.split('.')[-2].split('-')[1].strip(']'))
                 total_frames = (last_frame - first_frame) + 1
                 st = tc_frame_numbers[ind-1]
+                if self.record_in_check_box.isChecked():
+                    offset_frame = st
                 f.write('                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
                         'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
                         'name="%s" start="%s/%ss">\n' % (str(offset_frame), fps, str(total_frames), fps,
@@ -872,7 +882,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 f.write('                            <adjust-transform position="0 0" '
                         'anchor="0 0" scale="1 1"/>\n')
                 f.write('                        </asset-clip>\n')
-                offset_frame += total_frames
+                if not self.record_in_check_box.isChecked():
+                    offset_frame += total_frames
             f.write('                    </spine>\n')
             f.write('                </sequence>\n')
             f.write('            </project>\n')
