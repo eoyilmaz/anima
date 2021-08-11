@@ -282,6 +282,13 @@ class ShotManager(object):
         thumbnail = shot_clip.get_clip_thumbnail()
         return thumbnail
 
+    def update_shot_record_in_info(self):
+        """updates Shot.record_in data from the current timeline
+        """
+        shots = self.get_shots()
+        for shot in shots:
+            shot.record_in = self.clip.GetStart()
+
 
 class ShotClip(object):
     """Manages Stalker Shots along with Resolve Clips
@@ -834,6 +841,18 @@ class ShotClip(object):
         resolve.OpenPage(current_page)
         return slate_node
 
+    def update_record_in_info(self):
+        """updates the Shot.record_in from the current clip
+        """
+        stalker_shot = self.get_shot()
+        if stalker_shot:
+            record_in = self.clip.GetStart()
+            stalker_shot.record_in = record_in
+            print("%s: %s" % (stalker_shot.name, record_in))
+
+            from stalker.db.session import DBSession
+            DBSession.commit()
+
 
 class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     """The UI for the ShotManager
@@ -920,6 +939,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.addWidget(update_shot_thumbnail_button)
 
+        # Update Shot Record In button
+        update_shot_record_in_info_button = QtWidgets.QPushButton(self.parent())
+        update_shot_record_in_info_button.setText("Update Shot Record-In Info")
+        self.addWidget(update_shot_record_in_info_button)
+
         # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self.parent())
         create_slate_button.setText("Create Slate")
@@ -951,6 +975,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
         validate_shots_push_button.clicked.connect(self.validate_shot_codes)
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
+        update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
 
         self.addStretch()
@@ -1182,3 +1207,19 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         sm = ShotManager(None, None)
         sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
+
+    def update_shot_record_in_info(self):
+        """updates the Shot.record_in data from the current timeline
+        """
+        project = self.project_combo_box.get_current_project()
+        if not project:
+            raise RuntimeError("No project")
+
+        sequence = self.sequence_combo_box.get_current_sequence()
+        if not sequence:
+            raise RuntimeError("No sequence")
+
+        shot_manager = ShotManager(project=project, sequence=sequence)
+        shots = shot_manager.get_shots()
+        for shot in shots:
+            shot.update_record_in_info()
