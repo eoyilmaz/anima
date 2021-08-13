@@ -43,10 +43,11 @@ def camera_film_offset_tool():
     handle.enable >> camera_shape.panZoomEnabled
 
 
-def create_camera_space_locator(frustum_curve):
+def create_camera_space_locator(frustum_curve, use_limits=True):
     """Creates a locator under the given frame_curve
 
     :param frustum_curve:
+    :param use_limits: Limits the point translation, default is True.
     :return:
     """
     # create the locator
@@ -57,8 +58,10 @@ def create_camera_space_locator(frustum_curve):
     locator.rx.set(lock=True, keyable=False)
     locator.ry.set(lock=True, keyable=False)
     locator.rz.set(lock=True, keyable=False)
-    pm.transformLimits(locator, tx=(-0.5, 0.5), etx=(True, True))
-    pm.transformLimits(locator, ty=(-0.5, 0.5), ety=(True, True))
+    if use_limits:
+        pm.transformLimits(locator, tx=(-0.5, 0.5), etx=(True, True))
+        pm.transformLimits(locator, ty=(-0.5, 0.5), ety=(True, True))
+
     locator_shape.localScaleZ.set(0)
     return locator
 
@@ -254,7 +257,8 @@ def import_3dequalizer_points(width, height):
 
     # parse the file
     from anima import utils
-    man = utils.C3DEqualizerPointManager()
+    from anima.env.equalizer import TDE4PointManager
+    man = TDE4PointManager()
     man.read(path)
 
     # get the camera
@@ -267,7 +271,7 @@ def import_3dequalizer_points(width, height):
 
     for point in man.points:
         # create a locator
-        loc = create_camera_space_locator(frustum_curve)
+        loc = create_camera_space_locator(frustum_curve, use_limits=False)
         loc.rename('p%s' % point.name)
 
         # animate the locator

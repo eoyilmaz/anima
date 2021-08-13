@@ -1559,7 +1559,6 @@ class Exposure(object):
         assert isinstance(other_exp, Exposure)
 
         import math
-        from fractions import Fraction
 
         # convert every thing to fractions
         shutter = math.log(
@@ -1581,67 +1580,6 @@ class Exposure(object):
         :return:
         """
         return -self.to(other_exp)
-
-
-class C3DEqualizerPointManager(object):
-    """Manages 3DEqualizer points
-    """
-
-    def __init__(self):
-        self.points = []
-
-    def read(self, file_path):
-        """Read data from file
-
-        :param file_path:
-        :return:
-        """
-        with open(file_path, 'r') as f:
-            data = f.readlines()
-        self.reads(data)
-
-    def reads(self, data):
-        """Reads the data from textual input
-
-        :param data: lines of data
-        """
-        number_of_points = int(data[0])
-        cursor = 1
-        for i in range(number_of_points):
-            # gather individual point data
-            point_name = data[cursor]
-            cursor += 1
-            start = int(data[cursor])
-            cursor += 1
-            end = int(data[cursor])
-            length = end - start
-            cursor += 1
-            point_data = data[cursor: cursor+length]
-            # generate point
-            point = C3DEqualizerTrackPoint(point_name, point_data)
-            cursor += length
-            self.points.append(point)
-
-
-class C3DEqualizerTrackPoint(object):
-    """represents a 3DEqualizer track point
-    """
-
-    def __init__(self, name, data):
-        self.data = {}
-        self.parse_data(data)
-        self.name = name
-
-    def parse_data(self, data):
-        """Loads data from the given text
-
-        :param data: The data as text which is exported directly from
-          3DEqualizer
-        :return:
-        """
-        for i, pos in enumerate(data):
-            pos = map(float, pos.split(' '))
-            self.data[i] = pos[1:]
 
 
 def create_structure(entity):

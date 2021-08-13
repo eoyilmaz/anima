@@ -103,3 +103,77 @@ class TDE4Lens(object):
         self.v_degree_4 = float(get_data('V - Degree 4'))
         self.phi = float(get_data('Phi - Cylindric Direction'))
         self.beta = float(get_data('B - Cylindric Bending'))
+
+
+class TDE4Point(object):
+    """Represents a 3DEqualizer track point
+    """
+
+    def __init__(self, name, data):
+        self.data = {}
+        self.parse_data(data)
+        self.name = name
+
+    def parse_data(self, data):
+        """Loads data from the given text
+
+        :param data: The data as text which is exported directly from
+          3DEqualizer
+        :return:
+        """
+        for i, pos in enumerate(data):
+            pos = map(float, pos.split(' '))
+            self.data[int(pos[0])] = pos[1:]
+
+
+class TDE4PointManager(object):
+    """Manages 3DEqualizer points
+    """
+
+    def __init__(self):
+        self.points = []
+
+    def read(self, file_path):
+        """Read data from file
+
+        :param file_path:
+        :return:
+        """
+        with open(file_path, 'r') as f:
+            data = f.readlines()
+        self.reads(data)
+
+    def reads(self, data):
+        """Reads the data from textual input
+
+        :param data: lines of data
+        """
+        number_of_points = int(data[0])
+        cursor = 1
+        for i in range(number_of_points):
+            # gather individual point data
+            point_name = data[cursor]
+
+            # get start
+            cursor += 1
+            start = int(data[cursor])
+
+            # get end
+            cursor += 1
+            end = int(data[cursor])
+
+            # find the length
+            cursor += 1
+            data_start = cursor
+            length = 0
+            while " " in data[cursor] and cursor < len(data) - 1:
+                cursor += 1
+                length += 1
+
+            # length = end - start + 1
+            point_data = data[data_start:data_start + length]
+
+            # generate point
+            point = TDE4Point(point_name, point_data)
+
+            self.points.append(point)
