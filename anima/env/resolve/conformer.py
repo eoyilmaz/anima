@@ -225,6 +225,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.record_in_check_box.setText('Record In')
         self.h_layout6.addWidget(self.record_in_check_box)
 
+        self.slated_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
+        self.slated_check_box.setText('Include Slates')
+        self.h_layout6.addWidget(self.slated_check_box)
+
         self.vertical_layout.addLayout(self.h_layout6)
 
         self.conform_button = QtWidgets.QPushButton(self.vertical_layout.widget())
@@ -324,11 +328,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.task_name_combo_box_changed
         )
 
-        # filter statuses check_box is changed
+        # filter_statuses_check_box is changed
         QtCore.QObject.connect(
             self.filter_statuses_check_box,
             QtCore.SIGNAL('stateChanged(int)'),
             self.filter_statuses_check_box_changed
+        )
+
+        # slated_check_box is changed
+        QtCore.QObject.connect(
+            self.slated_check_box,
+            QtCore.SIGNAL('stateChanged(int)'),
+            self.slated_check_box_changed
+        )
+
+        # record_in_check_box is changed
+        QtCore.QObject.connect(
+            self.record_in_check_box,
+            QtCore.SIGNAL('stateChanged(int)'),
+            self.record_in_check_box_changed
         )
 
         # conform_button is clicked
@@ -610,6 +628,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.prev_check_box.setEnabled(1)
             self.completed_check_box.setEnabled(1)
 
+    def slated_check_box_changed(self, state):
+        """runs when the slated_check_box is changed
+        """
+        if state != 0:
+            self.record_in_check_box.setChecked(0)
+            self.record_in_check_box.setEnabled(0)
+        else:
+            self.record_in_check_box.setEnabled(1)
+
+    def record_in_check_box_changed(self, state):
+        """runs when the slated_check_box is changed
+        """
+        if state != 0:
+            self.slated_check_box.setChecked(0)
+            self.slated_check_box.setEnabled(0)
+        else:
+            self.slated_check_box.setEnabled(1)
+
     def get_shots_from_ui(self):
         """returns Stalker Shot instances as a list based on selection from UI
         """
@@ -886,6 +922,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if self.record_in_check_box.isChecked():
                     offset_frame = rc_ins[ind-1]
                 st = tc_frame_numbers[ind-1]
+                if self.slated_check_box.isChecked():
+                    if not self.record_in_check_box.isChecked():
+                        f.write('                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
+                                'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
+                                'name="%s" start="%s/%ss">\n' % (str(offset_frame), fps, '1', fps,
+                                                                 str(ind), os.path.basename(clip_path), str(st), fps))
+                        f.write('                            <adjust-transform position="0 0" '
+                                'anchor="0 0" scale="1 1"/>\n')
+                        f.write('                        </asset-clip>\n')
+                        offset_frame += 1
+                    else:
+                        slate_frame = offset_frame - 1
+                        f.write('                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
+                                'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
+                                'name="%s" start="%s/%ss">\n' % (str(slate_frame), fps, '1', fps,
+                                                                 str(ind), os.path.basename(clip_path), str(st), fps))
+                        f.write('                            <adjust-transform position="0 0" '
+                                'anchor="0 0" scale="1 1"/>\n')
+                        f.write('                        </asset-clip>\n')
                 f.write('                        <asset-clip offset="%s/%ss" duration="%s/%ss" '
                         'tcFormat="NDF" enabled="1" format="r0" ref="r%s" '
                         'name="%s" start="%s/%ss">\n' % (str(offset_frame), fps, str(total_frames), fps,
