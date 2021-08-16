@@ -196,6 +196,7 @@ class ShotManager(object):
         logger.debug("csv files: %s" % csv_files)
 
         mov_files_from_csvs = []
+        missing_mov_files_from_csvs = []
         for csv_file in csv_files:
             with open(csv_file, 'r') as f:
                 csv_data = f.readlines()
@@ -203,10 +204,17 @@ class ShotManager(object):
             for line in csv_data[1:]:
                 data = line.split(',')
                 video_file_name = data[0]
-                mov_files_from_csvs.append(video_file_name)
+                video_file_full_path = os.path.join(review_path, video_file_name)
+                if os.path.exists(video_file_full_path):
+                    mov_files_from_csvs.append(video_file_name)
+                else:
+                    missing_mov_files_from_csvs.append(video_file_name)
 
         logger.debug("mov_files_from_csvs")
         logger.debug('\n'.join(mov_files_from_csvs))
+
+        if missing_mov_files_from_csvs:
+            raise RuntimeError("The following files are missing\n\n%s" % "\n".join(missing_mov_files_from_csvs))
 
         # skip all the files that are already listed in the CSV files
         filtered_mov_files = []
@@ -1205,8 +1213,15 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         dir_name = os.path.basename(csv_folder_path)
         csv_output_path = os.path.join(csv_folder_path, "%s.csv" % dir_name)
 
-        sm = ShotManager(None, None)
-        sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
+        try:
+            sm = ShotManager(None, None)
+            sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
+        except RuntimeError as e:
+            QtWidgets.QMessageBox.critical(
+                self.parent(),
+                "Error",
+                str(e).replace("\n", "<br>")
+            )
 
     def update_shot_record_in_info(self):
         """updates the Shot.record_in data from the current timeline
