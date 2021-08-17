@@ -331,8 +331,14 @@ class NetflixReview(object):
         from stalker import Version
         return Version.query.filter(Version.full_path.contains(version_name)).order_by(Version.full_path).first()
 
-    def generate_csv(self, output_path="", vendor="", submission_note=""):
+    def generate_csv(self, output_path="", vendor="", submission_note="", submitting_for=""):
         """outputs a CSV suitable to upload to Netflix review process
+
+        :param output_path: The output path.
+        :param vendor: The vendor name.
+        :param submission_note: The submission note.
+        :param submitting_for: "FINAL" or "WIP". The default value comes from the related task, if the task status is
+          CMPL then it is set to "FINAL" else "WIP". If this argument is not empty then the value will be used directly.
         """
         from anima.utils import do_db_setup
         do_db_setup()
@@ -362,7 +368,8 @@ class NetflixReview(object):
             version_data.append(vendor)
 
             # Submitting For
-            submitting_for = "FINAL" if shot.status.name == "CMPL" else "WIP"
+            if submitting_for == "":
+                submitting_for = "FINAL" if shot.status.name == "CMPL" else "WIP"
             version_data.append(submitting_for)
 
             # Submission Note
