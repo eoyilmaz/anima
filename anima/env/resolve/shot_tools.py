@@ -228,7 +228,7 @@ class ShotManager(object):
 
         nr = report.NetflixReview()
         nr.outputs = filtered_mov_files
-        nr.generate_csv(csv_output_path, vendor=vendor, submission_note="")
+        nr.generate_csv(csv_output_path, vendor=vendor, submission_note="- Notes on singles", submitting_for="FINAL")
 
         # now combine all the CSVs in to one
         combined_csv_data = ["Version Name,Link,Scope Of Work,Vendor,Submitting For,Submission Note"]
