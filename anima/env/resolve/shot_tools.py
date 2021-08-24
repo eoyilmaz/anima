@@ -316,8 +316,11 @@ class ShotClip(object):
         self.clip = clip
         self._shot_code = None
 
-    def create_shot_hierarchy(self, take_name="Main"):
+    def create_shot_hierarchy(self, handle=0, take_name="Main"):
         """creates the related shot hierarchy
+
+        :param int handle: The handle on each side of the clip. The default value is 0.
+        :param str take_name: The take_name of the created Plate. The default value is "Main".
         """
         logged_in_user = self.get_logged_in_user()
 
@@ -329,7 +332,9 @@ class ShotClip(object):
 
         # Update shot info
         shot.cut_in = 1001
-        shot.cut_out = int(self.clip.GetEnd() - self.clip.GetStart() + 1000)
+        shot.source_in = shot.cut_in + handle
+        shot.cut_out = int(self.clip.GetEnd() - self.clip.GetStart() + 1000 + handle)
+        shot.source_out = shot.cut_out - handle
         shot.record_in = self.clip.GetStart()
 
         # creat shot tasks
@@ -660,11 +665,12 @@ class ShotClip(object):
             DBSession.commit()
         return type_instance
 
-    def create_render_job(self, take_name="Main", preset_name="PlateInjector"):
+    def create_render_job(self, handle=0, take_name="Main", preset_name="PlateInjector"):
         """creates render job for the clip
 
-        :param take_name: The take_name of the created Version
-        :param preset_name: The template name in Resolve to use when exporting the shot. The default is
+        :param int handle: The handles on each side of the clip. The default value is 0.
+        :param str take_name: The take_name of the created Version
+        :param str preset_name: The template name in Resolve to use when exporting the shot. The default is
           "PlateInjector".
         """
         # create a new render output for each clip
@@ -685,7 +691,7 @@ class ShotClip(object):
         # shot = Shot.query.filter(Shot.project==self.stalker_project).filter(Shot.code==self.shot_code).first()
         # if not shot:
         #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
-        shot = self.create_shot_hierarchy(take_name=take_name)
+        shot = self.create_shot_hierarchy(handle=handle, take_name=take_name)
 
         # get plate task
         plate_type = Type.query.filter(Type.name == 'Plate').first()
@@ -884,6 +890,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.form_layout = None
         self.project_combo_box = None
         self.sequence_combo_box = None
+        self.handle_spin_box = None
         self.take_name_line_edit = None
         self.render_preset_combo_box = None
 
@@ -959,6 +966,21 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self.parent())
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
         self.addWidget(check_duplicate_shot_code_push_button)
+
+        # Handle horizontal layout
+        handle_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
+        self.addLayout(handle_horizontal_layout)
+
+        handle_label = QtWidgets.QLabel(self.parent())
+        handle_label.setText("Handles")
+        handle_label.setMinimumWidth(120)
+        handle_label.setMaximumWidth(120)
+        handle_horizontal_layout.addWidget(handle_label)
+
+        self.handle_spin_box = QtWidgets.QSpinBox(self.parent())
+        self.handle_spin_box.setMinimum(0)
+        self.handle_spin_box.setValue(0)
+        handle_horizontal_layout.addWidget(self.handle_spin_box)
 
         # TakeName horizontal layout
         take_name_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
@@ -1038,6 +1060,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
+        self.handle_spin_box.valueChanged.connect(self.handle_changed)
         self.render_preset_combo_box.currentIndexChanged.connect(self.render_preset_changed)
         self.take_name_line_edit.textEdited.connect(self.take_name_changed)
 
@@ -1078,6 +1101,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         # update the combo box based on the current project
         # set the defaults
+        handle = 0
         take_name = "Main"
         render_preset = "PlateInjector"
 
@@ -1085,8 +1109,17 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         if project and project.id in self.project_based_settings_storage:
             storage = self.project_based_settings_storage[project.id]
             if storage:
-                take_name = storage['take_name']
-                render_preset = storage['render_preset']
+                if 'handle' in storage:
+                    handle = storage['handle']
+
+                if 'take_name' in storage:
+                    take_name = storage['take_name']
+
+                if 'render_preset' in storage:
+                    render_preset = storage['render_preset']
+
+        # update handle value
+        self.handle_spin_box.setValue(handle)
 
         # update the take line edit
         self.take_name_line_edit.setText(take_name)
@@ -1102,13 +1135,21 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         """updates the project_based_settings_storage
         """
         project = self.project_combo_box.get_current_project()
+        handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
         render_preset = self.render_preset_combo_box.currentText()
 
         self.project_based_settings_storage[project.id] = {
+            'handle': handle,
             'take_name': take_name,
             'render_preset': render_preset
         }
+
+    def handle_changed(self, value):
+        """runs when the handle value is changed
+        """
+        self.update_project_based_settings_storage()
+        self.write_settings()
 
     def take_name_changed(self, take_name):
         """runs when the take_name or render preset have changed
@@ -1152,8 +1193,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         sequence = self.sequence_combo_box.get_current_sequence()
         shot_manager = ShotManager(project, sequence)
 
-        preset_name = self.render_preset_combo_box.currentText()
+        handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
+        preset_name = self.render_preset_combo_box.currentText()
 
         message_box = QtWidgets.QMessageBox(self.parent())
         # message_box.setTitle("Which Shots?")
@@ -1172,11 +1214,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             message_box.deleteLater()
             if clicked_button == all_shots:
                 for shot in shot_manager.get_shots():
-                    shot.create_render_job(take_name=take_name, preset_name=preset_name)
+                    shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
             else:
                 shot = shot_manager.get_current_shot()
                 if shot:
-                    shot.create_render_job(take_name=take_name, preset_name=preset_name)
+                    shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self.parent(),
