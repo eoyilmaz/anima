@@ -332,9 +332,9 @@ class ShotClip(object):
 
         # Update shot info
         shot.cut_in = 1001
-        shot.source_in = shot.cut_in + handle
         shot.cut_out = int(self.clip.GetEnd() - self.clip.GetStart() + 1000 + handle)
         shot.source_out = shot.cut_out - handle
+        shot.source_in = shot.cut_in + handle
         shot.record_in = self.clip.GetStart()
 
         # creat shot tasks
