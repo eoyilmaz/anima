@@ -316,7 +316,7 @@ class ShotClip(object):
         self.clip = clip
         self._shot_code = None
 
-    def create_shot_hierarchy(self):
+    def create_shot_hierarchy(self, take_name="Main"):
         """creates the related shot hierarchy
         """
         logged_in_user = self.get_logged_in_user()
@@ -450,7 +450,7 @@ class ShotClip(object):
         if not all_versions:
             v = Version(
                 task=plate_task,
-                take_name='Main',  # TODO: use the track name as take
+                take_name=take_name,
                 created_by=logged_in_user,
                 updated_by=logged_in_user,
                 description='Autocreated by Resolve',
@@ -574,12 +574,11 @@ class ShotClip(object):
     def update_shot_thumbnail(self):
         """updates the related shot thumbnail
         """
-        thumbnail_full_path = self.get_clip_thumbnail()
         shot = self.get_shot()
-        if not shot:
-            shot = self.create_shot_hierarchy()
-        from anima import utils
-        return utils.upload_thumbnail(shot, thumbnail_full_path)
+        if shot:
+            from anima import utils
+            thumbnail_full_path = self.get_clip_thumbnail()
+            return utils.upload_thumbnail(shot, thumbnail_full_path)
 
     def get_clip_thumbnail(self):
         """saves the thumbnail from resolve to a temp path and returns the path of the JPG file
@@ -599,6 +598,12 @@ class ShotClip(object):
         # ms.RevealInStorage(self.clip.GetName())
 
         current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
+        if not current_media_thumbnail:
+            version_info = resolve.GetVersion()
+            if version_info[0] > 17 and version_info[1] >= 3:
+                self.timeline.GrabStill()  # This should solve the thumbnail problem
+                current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
+
         resolve.OpenPage(current_page)
 
         from PIL import Image
@@ -655,8 +660,12 @@ class ShotClip(object):
             DBSession.commit()
         return type_instance
 
-    def create_render_job(self):
+    def create_render_job(self, take_name="Main", preset_name="PlateInjector"):
         """creates render job for the clip
+
+        :param take_name: The take_name of the created Version
+        :param preset_name: The template name in Resolve to use when exporting the shot. The default is
+          "PlateInjector".
         """
         # create a new render output for each clip
         from anima.env import blackmagic
@@ -665,19 +674,18 @@ class ShotClip(object):
         pm = resolve.GetProjectManager()
         proj = pm.GetCurrentProject()
 
-        template_name = "PlateInjector"
-        result = proj.LoadRenderPreset(template_name)
+        result = proj.LoadRenderPreset(preset_name)
         if not result:
-            print("No template named: %s" % template_name)
+            print("No preset named: %s" % preset_name)
         else:
-            print("Template loaded successfully: %s" % template_name)
+            print("Preset loaded successfully: %s" % preset_name)
 
         # get the shot
         from stalker import Task, Type
         # shot = Shot.query.filter(Shot.project==self.stalker_project).filter(Shot.code==self.shot_code).first()
         # if not shot:
         #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
-        shot = self.create_shot_hierarchy()
+        shot = self.create_shot_hierarchy(take_name=take_name)
 
         # get plate task
         plate_type = Type.query.filter(Type.name == 'Plate').first()
@@ -866,11 +874,26 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     """The UI for the ShotManager
     """
 
+    __company_name__ = 'Erkan Ozgur Yilmaz'
+    __app_name__ = 'Shot Tools'
+    __version__ = '0.0.1'
+
     def __init__(self, *args, **kwargs):
         super(ShotToolsLayout, self).__init__(*args, **kwargs)
+
         self.form_layout = None
         self.project_combo_box = None
         self.sequence_combo_box = None
+        self.take_name_line_edit = None
+        self.render_preset_combo_box = None
+
+        self.project_based_settings_storage = {}
+
+        self.settings = QtCore.QSettings(
+            self.__company_name__,
+            self.__app_name__
+        )
+
         self.setup_ui()
 
     def setup_ui(self):
@@ -937,6 +960,36 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
         self.addWidget(check_duplicate_shot_code_push_button)
 
+        # TakeName horizontal layout
+        take_name_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
+        self.addLayout(take_name_horizontal_layout)
+
+        # The take name to use
+        take_name_label = QtWidgets.QLabel(self.parent())
+        take_name_label.setText("Take Name")
+        take_name_label.setMinimumWidth(120)
+        take_name_label.setMaximumWidth(120)
+        take_name_horizontal_layout.addWidget(take_name_label)
+
+        self.take_name_line_edit = QtWidgets.QLineEdit(self.parent())
+        self.take_name_line_edit.setText("Main")  # Uses the default take name
+        take_name_horizontal_layout.addWidget(self.take_name_line_edit)
+
+        # Render Preset list
+        render_preset_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
+        self.addLayout(render_preset_horizontal_layout)
+
+        render_preset_label = QtWidgets.QLabel(self.parent())
+        render_preset_label.setText("Render Preset")
+        render_preset_label.setMinimumWidth(120)
+        render_preset_label.setMaximumWidth(120)
+
+        render_preset_horizontal_layout.addWidget(render_preset_label)
+
+        self.render_preset_combo_box = QtWidgets.QComboBox(self.parent())
+        render_preset_horizontal_layout.addWidget(self.render_preset_combo_box)
+        self.fill_preset_combo_box()
+
         # Create Render Jobs button
         create_render_jobs_button = QtWidgets.QPushButton(self.parent())
         create_render_jobs_button.setText("Create Render Jobs")
@@ -985,13 +1038,95 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
+        self.render_preset_combo_box.currentIndexChanged.connect(self.render_preset_changed)
+        self.take_name_line_edit.textEdited.connect(self.take_name_changed)
 
         self.addStretch()
+
+    def fill_preset_combo_box(self):
+        """fills the preset comboBox
+        """
+        # self.render_preset_combo_box
+        shot_manager = ShotManager()
+        render_preset_list = shot_manager.resolve_project.GetRenderPresetList()
+        self.render_preset_combo_box.clear()
+        self.render_preset_combo_box.addItems(sorted(render_preset_list))
+
+        # select the last selected preset if available
+        self.read_settings()
+
+    def write_settings(self):
+        """stores the settings to persistent storage
+        """
+        self.settings.beginGroup("ShotToolsLayout")
+
+        # Project based settings storage
+        self.settings.setValue("project_based_settings_storage", self.project_based_settings_storage)
+
+        # self.settings.setValue("last_preset", self.render_preset_combo_box.currentText())
+
+        self.settings.endGroup()
+
+    def read_settings(self):
+        """read the settings from the persistent storage
+        """
+        self.settings.beginGroup("ShotToolsLayout")
+
+        project_based_settings_storage = self.settings.value("project_based_settings_storage")
+        if project_based_settings_storage:
+            self.project_based_settings_storage = project_based_settings_storage
+
+        # update the combo box based on the current project
+        # set the defaults
+        take_name = "Main"
+        render_preset = "PlateInjector"
+
+        project = self.project_combo_box.get_current_project()
+        if project and project.id in self.project_based_settings_storage:
+            storage = self.project_based_settings_storage[project.id]
+            if storage:
+                take_name = storage['take_name']
+                render_preset = storage['render_preset']
+
+        # update the take line edit
+        self.take_name_line_edit.setText(take_name)
+
+        # update the combo box
+        index = self.render_preset_combo_box.findText(render_preset, QtCore.Qt.MatchExactly)
+        if index:
+            self.render_preset_combo_box.setCurrentIndex(index)
+
+        self.settings.endGroup()
+
+    def update_project_based_settings_storage(self):
+        """updates the project_based_settings_storage
+        """
+        project = self.project_combo_box.get_current_project()
+        take_name = self.take_name_line_edit.text()
+        render_preset = self.render_preset_combo_box.currentText()
+
+        self.project_based_settings_storage[project.id] = {
+            'take_name': take_name,
+            'render_preset': render_preset
+        }
+
+    def take_name_changed(self, take_name):
+        """runs when the take_name or render preset have changed
+        """
+        self.update_project_based_settings_storage()
+        self.write_settings()
+
+    def render_preset_changed(self, current_item):
+        """runs when current index changed in render_preset_combo_box
+        """
+        self.update_project_based_settings_storage()
+        self.write_settings()
 
     def project_changed(self, index):
         """runs when the current selected project has been changed
         """
         self.sequence_combo_box.project = self.project_combo_box.get_current_project()
+        self.read_settings()
 
     def get_shot_list(self):
         """just prints the shot names
@@ -1017,6 +1152,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         sequence = self.sequence_combo_box.get_current_sequence()
         shot_manager = ShotManager(project, sequence)
 
+        preset_name = self.render_preset_combo_box.currentText()
+        take_name = self.take_name_line_edit.text()
+
         message_box = QtWidgets.QMessageBox(self.parent())
         # message_box.setTitle("Which Shots?")
         message_box.setText("Which Shots?")
@@ -1034,9 +1172,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             message_box.deleteLater()
             if clicked_button == all_shots:
                 for shot in shot_manager.get_shots():
-                    shot.create_render_job()
+                    shot.create_render_job(take_name=take_name, preset_name=preset_name)
             else:
-                shot_manager.get_current_shot().create_render_job()
+                shot = shot_manager.get_current_shot()
+                if shot:
+                    shot.create_render_job(take_name=take_name, preset_name=preset_name)
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self.parent(),
