@@ -26,6 +26,7 @@ import stat
 import tempfile
 import logging
 from anima.config import Config
+from stalker import SimpleEntity
 
 __version__ = "0.6.0"
 
@@ -34,6 +35,33 @@ if sys.version_info[0] >= 3:  # Python 3
     __string_types__ = tuple([str])
 else:  # Python 2
     __string_types__ = tuple([str, unicode])
+
+
+def get_generic_text_attr(self, attr):
+    """patch Simple entity to add new functionality
+    """
+    import json
+    attr_value = None
+    if self.generic_text:
+        data = json.loads(self.generic_text)
+        attr_value = data.get(attr)
+    return attr_value
+
+
+def set_generic_text_attr(self, attr, value):
+    """patch Simple entity to add new functionality
+    """
+    import json
+    data = {}
+    if self.generic_text:
+        data = json.loads(self.generic_text)
+    data[attr] = value
+    self.generic_text = json.dumps(data)
+
+
+SimpleEntity.get_generic_text_attr = get_generic_text_attr
+SimpleEntity.set_generic_text_attr = set_generic_text_attr
+
 
 # create logger
 # logging.basicConfig()
