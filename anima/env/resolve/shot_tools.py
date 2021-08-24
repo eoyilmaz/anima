@@ -893,6 +893,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.handle_spin_box = None
         self.take_name_line_edit = None
         self.render_preset_combo_box = None
+        self._shot_related_data_is_updating = False
 
         self.project_based_settings_storage = {}
 
@@ -1060,9 +1061,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
-        self.handle_spin_box.valueChanged.connect(self.handle_changed)
-        self.render_preset_combo_box.currentIndexChanged.connect(self.render_preset_changed)
-        self.take_name_line_edit.textEdited.connect(self.take_name_changed)
+        self.handle_spin_box.valueChanged.connect(self.shot_related_data_value_changed)
+        self.render_preset_combo_box.currentIndexChanged.connect(self.shot_related_data_value_changed)
+        self.take_name_line_edit.textEdited.connect(self.shot_related_data_value_changed)
 
         self.addStretch()
 
@@ -1145,29 +1146,24 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             'render_preset': render_preset
         }
 
-    def handle_changed(self, value):
-        """runs when the handle value is changed
+    def shot_related_data_value_changed(self, value):
+        """runs when the handle, take_name or preset value is changed
         """
-        self.update_project_based_settings_storage()
-        self.write_settings()
+        if self._shot_related_data_is_updating:
+            return
 
-    def take_name_changed(self, take_name):
-        """runs when the take_name or render preset have changed
-        """
+        self._shot_related_data_is_updating = True
         self.update_project_based_settings_storage()
         self.write_settings()
-
-    def render_preset_changed(self, current_item):
-        """runs when current index changed in render_preset_combo_box
-        """
-        self.update_project_based_settings_storage()
-        self.write_settings()
+        self._shot_related_data_is_updating = False
 
     def project_changed(self, index):
         """runs when the current selected project has been changed
         """
+        self._shot_related_data_is_updating = True
         self.sequence_combo_box.project = self.project_combo_box.get_current_project()
         self.read_settings()
+        self._shot_related_data_is_updating = False
 
     def get_shot_list(self):
         """just prints the shot names
