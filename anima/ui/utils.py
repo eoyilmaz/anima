@@ -353,3 +353,19 @@ class ColorList(object):
         """returns the current color values
         """
         return self.colors[self.index]
+
+
+def set_widget_bg_color(widget, color):
+    """Sets the bg color of the given widget to the given ColorList instance
+
+    :param widget: A QtWidget instance
+    :param color: A ColorList instance
+    :return:
+    """
+    widget.setStyleSheet(
+        "background-color: rgba(%s, %s, %s, 1);" % (
+            int(color.color[0] * 255),
+            int(color.color[1] * 255),
+            int(color.color[2] * 255)
+        )
+    )
