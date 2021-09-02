@@ -54,6 +54,6 @@ class SequenceComboBox(QtWidgets.QComboBox):
     def get_current_sequence(self):
         """returns the current sequence instance
         """
-        sequence_id = self.currentData()
+        sequence_id = self.itemData(self.currentIndex())
         from stalker import Sequence
         return Sequence.query.get(sequence_id)

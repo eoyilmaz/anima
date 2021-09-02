@@ -24,6 +24,6 @@ class ProjectComboBox(QtWidgets.QComboBox):
     def get_current_project(self):
         """returns the current project instance
         """
-        project_id = self.currentData()
+        project_id = self.itemData(self.currentIndex())
         from stalker import Project
         return Project.query.get(project_id)
