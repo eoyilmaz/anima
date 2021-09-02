@@ -18,11 +18,11 @@ class SequenceComboBox(QtWidgets.QComboBox):
     def __fill_ui(self):
         """fills the ui with project instances
         """
+        self.clear()
         if self.project is None:
             return
 
         from stalker import Sequence
-        self.clear()
         for sequence in Sequence.query.filter(Sequence.project==self.project).order_by(Sequence.name).all():
             self.addItem(sequence.name, sequence.id)
 

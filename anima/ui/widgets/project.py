@@ -18,6 +18,9 @@ class ProjectComboBox(QtWidgets.QComboBox):
         """
         from stalker import Project
         self.clear()
+
+        # add the default item
+        self.addItem("Select Project...", -1)
         for project in Project.query.order_by(Project.name).all():
             self.addItem(project.name, project.id)
 
@@ -25,5 +28,9 @@ class ProjectComboBox(QtWidgets.QComboBox):
         """returns the current project instance
         """
         project_id = self.itemData(self.currentIndex())
-        from stalker import Project
-        return Project.query.get(project_id)
+
+        if project_id != -1:
+            from stalker import Project
+            return Project.query.get(project_id)
+        else:
+            return None
