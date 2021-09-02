@@ -322,8 +322,8 @@ def add_line(layout):
     layout.addWidget(line)
 
 
-class Color(object):
-    """a simple color class
+class ColorList(object):
+    """a simple color list class
     """
     colors = [
         (1.000, 0.500, 0.666),

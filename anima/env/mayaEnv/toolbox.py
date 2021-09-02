@@ -14,7 +14,7 @@ from anima.env.mayaEnv.previs import Previs
 from anima.env.mayaEnv.reference import Reference
 from anima.env.mayaEnv.render import Render
 from anima.env.mayaEnv.rigging import Rigging
-from anima.ui.utils import Color
+from anima.ui.utils import ColorList
 
 
 __last_commands__ = []  # list of dictionaries
@@ -104,7 +104,7 @@ def UI():
     height = 650
     row_spacing = 3
 
-    color = Color()
+    color = ColorList()
 
     # init the __commands LUT
     global __commands__
@@ -761,7 +761,7 @@ def UI():
                         Modeling.set_texture_res,
                         128
                     ),
-                    bgc=Color.colors[0]
+                    bgc=ColorList.colors[0]
                 )
                 pm.button(
                     l="256",
@@ -769,7 +769,7 @@ def UI():
                         Modeling.set_texture_res,
                         256
                     ),
-                    bgc=Color.colors[1]
+                    bgc=ColorList.colors[1]
                 )
                 pm.button(
                     l="512",
@@ -777,7 +777,7 @@ def UI():
                         Modeling.set_texture_res,
                         512
                     ),
-                    bgc=Color.colors[2]
+                    bgc=ColorList.colors[2]
                 )
                 pm.button(
                     l="1024",
@@ -785,7 +785,7 @@ def UI():
                         Modeling.set_texture_res,
                         1024
                     ),
-                    bgc=Color.colors[3]
+                    bgc=ColorList.colors[3]
                 )
                 pm.button(
                     l='2048',
@@ -793,7 +793,7 @@ def UI():
                         Modeling.set_texture_res,
                         2048
                     ),
-                    bgc=Color.colors[4]
+                    bgc=ColorList.colors[4]
                 )
                 pm.button(
                     l='4096',
@@ -801,7 +801,7 @@ def UI():
                         Modeling.set_texture_res,
                         4096
                     ),
-                    bgc=Color.colors[5]
+                    bgc=ColorList.colors[5]
                 )
 
             pm.text(l='========== UV Tools =============')
