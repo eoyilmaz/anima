@@ -606,7 +606,8 @@ class ShotClip(object):
         current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
         if not current_media_thumbnail:
             version_info = resolve.GetVersion()
-            if version_info[0] > 17 and version_info[1] >= 3:
+            version_number = version_info[0] * 100 + version_info[1]
+            if version_number > 1703:
                 self.timeline.GrabStill()  # This should solve the thumbnail problem
                 current_media_thumbnail = self.timeline.GetCurrentClipThumbnailImage()
 
