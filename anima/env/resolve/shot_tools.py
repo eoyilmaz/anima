@@ -1033,6 +1033,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         create_slate_button.setText("Create Slate")
         self.addWidget(create_slate_button)
 
+        # Create Slate For All Shots button
+        create_slate_for_all_shots_button = QtWidgets.QPushButton(self.parent())
+        create_slate_for_all_shots_button.setText("Create Slate For All Shots")
+        self.addWidget(create_slate_for_all_shots_button)
+
         # Fix Shot Clip Name
         fix_shot_clip_name = QtWidgets.QPushButton(self.parent())
         fix_shot_clip_name.setText("Fix Shot Clip Names")
@@ -1061,6 +1066,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
         update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
         create_slate_button.clicked.connect(self.create_slate)
+        create_slate_for_all_shots_button.clicked.connect(self.create_slate_for_all_shots)
         self.handle_spin_box.valueChanged.connect(self.shot_related_data_value_changed)
         self.render_preset_combo_box.currentIndexChanged.connect(self.shot_related_data_value_changed)
         self.take_name_line_edit.textEdited.connect(self.shot_related_data_value_changed)
@@ -1309,6 +1315,38 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         shot = im.get_current_shot()
         if shot:
             shot.create_slate()
+
+    def create_slate_for_all_shots(self):
+        """creates slate for all shots
+        """
+        project = self.project_combo_box.get_current_project()
+        sequence = self.sequence_combo_box.get_current_sequence()
+        im = ShotManager(project, sequence)
+
+        clips = im.get_clips()
+        slate_clips = []
+        for clip in clips:
+            # if the length of the clip is 1 frame
+            # create slate for this clip
+            duration = clip.GetDuration()
+            if duration == 1:
+                slate_clips.append(clip)
+
+        print("found %s slate clips" % len(slate_clips))
+        print("slate_clips")
+        print("===========")
+
+        timeline = im.get_current_timeline()
+        for clip in slate_clips:
+            print(clip)
+            shot = ShotClip(
+                project=project,
+                sequence=sequence,
+                clip=clip,
+                timeline=timeline
+            )
+            shot.create_slate()
+            print("---")
 
     def fix_shot_clip_name(self):
         """Removes the frame range part from the image sequence clips.
