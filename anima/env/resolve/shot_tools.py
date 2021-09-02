@@ -13,6 +13,7 @@ clip = timeline.GetCurrentVideoItem()
 from anima import logger
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
+from anima.ui.utils import ColorList, set_widget_bg_color
 
 
 class ShotManager(object):
@@ -910,6 +911,8 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         from anima.utils import do_db_setup
         do_db_setup()
 
+        color_list = ColorList()
+
         # get logged in user
         self.get_logged_in_user()
 
@@ -957,16 +960,22 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         get_shot_list_push_button = QtWidgets.QPushButton(self.parent())
         get_shot_list_push_button.setText("Get Shot List")
         self.addWidget(get_shot_list_push_button)
+        set_widget_bg_color(get_shot_list_push_button, color_list)
+        color_list.next()
 
         # Check Duplicate Shot Code
         validate_shots_push_button = QtWidgets.QPushButton(self.parent())
         validate_shots_push_button.setText("Validate Shots")
         self.addWidget(validate_shots_push_button)
+        set_widget_bg_color(validate_shots_push_button, color_list)
+        color_list.next()
 
         # Check Duplicate Shot Code
         check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self.parent())
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
         self.addWidget(check_duplicate_shot_code_push_button)
+        set_widget_bg_color(check_duplicate_shot_code_push_button , color_list)
+        color_list.next()
 
         # Handle horizontal layout
         handle_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
@@ -1017,42 +1026,56 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         create_render_jobs_button = QtWidgets.QPushButton(self.parent())
         create_render_jobs_button.setText("Create Render Jobs")
         self.addWidget(create_render_jobs_button)
+        set_widget_bg_color(create_render_jobs_button, color_list)
+        color_list.next()
 
         # Update Shot Thumbnail button
         update_shot_thumbnail_button = QtWidgets.QPushButton(self.parent())
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.addWidget(update_shot_thumbnail_button)
+        set_widget_bg_color(update_shot_thumbnail_button, color_list)
+        color_list.next()
 
         # Update Shot Record In button
         update_shot_record_in_info_button = QtWidgets.QPushButton(self.parent())
         update_shot_record_in_info_button.setText("Update Shot Record-In Info")
         self.addWidget(update_shot_record_in_info_button)
+        set_widget_bg_color(update_shot_record_in_info_button, color_list)
+        color_list.next()
 
         # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self.parent())
         create_slate_button.setText("Create Slate")
         self.addWidget(create_slate_button)
+        set_widget_bg_color(create_slate_button, color_list)
 
         # Create Slate For All Shots button
         create_slate_for_all_shots_button = QtWidgets.QPushButton(self.parent())
         create_slate_for_all_shots_button.setText("Create Slate For All Shots")
         self.addWidget(create_slate_for_all_shots_button)
+        set_widget_bg_color(create_slate_for_all_shots_button, color_list)
+        color_list.next()
 
-        # Fix Shot Clip Name
+        # Fix Shot Clip Names
         fix_shot_clip_name = QtWidgets.QPushButton(self.parent())
         fix_shot_clip_name.setText("Fix Shot Clip Names")
         self.addWidget(fix_shot_clip_name)
         fix_shot_clip_name.clicked.connect(self.fix_shot_clip_name)
+        set_widget_bg_color(fix_shot_clip_name, color_list)
+        color_list.next()
 
         generate_review_csv_push_button = QtWidgets.QPushButton(self.parent())
         generate_review_csv_push_button.setText("Generate Review CSV")
         self.addWidget(generate_review_csv_push_button)
         generate_review_csv_push_button.clicked.connect(self.generate_review_csv)
+        set_widget_bg_color(generate_review_csv_push_button, color_list)
 
         finalize_review_csv_push_button = QtWidgets.QPushButton(self.parent())
         finalize_review_csv_push_button.setText("Finalize Review CSV")
         self.addWidget(finalize_review_csv_push_button)
         finalize_review_csv_push_button.clicked.connect(self.finalize_review_csv)
+        set_widget_bg_color(finalize_review_csv_push_button, color_list)
+        color_list.next()
 
         # ---------------------------------------------------------
         # Signals

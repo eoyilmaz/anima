@@ -13,6 +13,7 @@ import functools
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtGui, QtWidgets
+from anima.ui.utils import ColorList, set_widget_bg_color
 
 
 __here__ = os.path.abspath(__file__)
@@ -174,9 +175,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 extend_end=extend_end
             )
 
+        color_list = ColorList()
+
         clip_output_generator_button = QtWidgets.QPushButton()
         clip_output_generator_button.setText("Output - Current Clip")
         clip_output_generator_button.clicked.connect(clip_output_generator_wrapper)
+        set_widget_bg_color(clip_output_generator_button, color_list)
+        color_list.next()
 
         current_form_layout.setWidget(i, field_role, clip_output_generator_button)
 
@@ -209,6 +214,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         output_clip_by_clip_index_push_button.setText('Output - Clip By Index')
         output_clip_by_clip_index_push_button.clicked.connect(clip_output_generator_by_index_wrapper)
         current_form_layout.setWidget(i, field_role, output_clip_by_clip_index_push_button)
+        set_widget_bg_color(output_clip_by_clip_index_push_button, color_list)
+        color_list.next()
 
         # -------------------------------------------------------------------
         # Add Divider
@@ -248,6 +255,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         get_in_point_push_button = QtWidgets.QPushButton()
         get_in_point_push_button.setText("<<< In Point")
         layout.addWidget(get_in_point_push_button)
+        set_widget_bg_color(get_in_point_push_button, color_list)
 
         def get_in_out_point_callback(spin_box):
             from anima.env.resolve import shot_tools
@@ -278,6 +286,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         get_out_point_push_button = QtWidgets.QPushButton()
         get_out_point_push_button.setText("<<< Out Point")
         layout.addWidget(get_out_point_push_button)
+        set_widget_bg_color(get_out_point_push_button, color_list)
+        color_list.next()
 
         get_out_point_push_button.clicked.connect(functools.partial(get_in_out_point_callback, out_point_spin_box))
 
@@ -339,6 +349,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         per_clip_output_generator_push_button = QtWidgets.QPushButton()
         per_clip_output_generator_push_button.setText("Output - Per Clip")
         per_clip_output_generator_push_button.clicked.connect(per_clip_output_generator_wrapper)
+        set_widget_bg_color(per_clip_output_generator_push_button, color_list)
+        color_list.next()
 
         current_form_layout.setWidget(i, field_role, per_clip_output_generator_push_button)
 
