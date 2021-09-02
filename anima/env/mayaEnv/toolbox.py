@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
-import functools
 import os
+import functools
 
+import pymel.core as pm
+import maya.mel as mel
+
+from anima.env.mayaEnv import auxiliary, camera_tools
 from anima.env.mayaEnv.animation import Animation
 from anima.env.mayaEnv.general import General
 from anima.env.mayaEnv.modeling import Modeling
@@ -10,18 +14,11 @@ from anima.env.mayaEnv.previs import Previs
 from anima.env.mayaEnv.reference import Reference
 from anima.env.mayaEnv.render import Render
 from anima.env.mayaEnv.rigging import Rigging
-
-import pymel.core as pm
-import maya.mel as mel
-
-from anima.env.mayaEnv import auxiliary, camera_tools
+from anima.ui.utils import Color
 
 
 __last_commands__ = []  # list of dictionaries
-
 __last_tab__ = 'ANIMA_TOOLBOX_LAST_TAB_INDEX'
-
-
 __commands__ = []
 
 
@@ -70,39 +67,6 @@ def repeated_callback(callable_, *args, **kwargs):
     return pm.Callback(
         repeat_last, [callable_, args, kwargs]
     )
-
-
-class Color(object):
-    """a simple color class
-    """
-    colors = [
-        (1.000, 0.500, 0.666),
-        (1.000, 0.833, 0.500),
-        (0.666, 1.000, 0.500),
-        (0.500, 1.000, 0.833),
-        (0.500, 0.666, 1.000),
-        (0.833, 0.500, 1.000)
-    ]
-
-    def __init__(self, index=0):
-        self.index = index
-        self.max_colors = len(self.colors)
-
-    def change(self):
-        """updates the index to the next one
-        """
-        self.index = int((self.index + 1) % self.max_colors)
-
-    def reset(self):
-        """resets the color index
-        """
-        self.index = 0
-
-    @property
-    def color(self):
-        """returns the current color values
-        """
-        return self.colors[self.index]
 
 
 def filter_tools(search_text):
@@ -204,7 +168,7 @@ def UI():
             rs=row_spacing
         )
         with general_column_layout:
-            color.change()
+            color.next()
 
             pm.button(
                 'open_version_button',
@@ -222,7 +186,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'selectionManager_button',
                 l="Selection Manager",
@@ -231,7 +195,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'publishChecker_button',
                 l="Publish Checker",
@@ -240,7 +204,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'rename_unique_button',
                 l='Rename Unique',
@@ -267,7 +231,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'togglePolyMeshes_button',
                 l="toggle polymesh visibility",
@@ -277,7 +241,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'selectSetMembers_button',
                 l="select set members",
@@ -287,7 +251,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'delete_unused_intermediate_shapes_button',
                 l='Delete Unused Intermediate Shape Nodes',
@@ -296,7 +260,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'export_transform_info_button',
                 l='Export Transform Info',
@@ -313,7 +277,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'export_global_transform_info_button',
                 l='Export Global Transform Info',
@@ -330,7 +294,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'export_component_transform_info_button',
                 l='Export Component Transform Info',
@@ -347,7 +311,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'import_rsproxy_data_from_houdini_button',
                 l='Import RSProxy Data From Houdini',
@@ -356,7 +320,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'generate_thumbnail_button',
                 l='Generate Thumbnail',
@@ -365,7 +329,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'cleanup_light_cameras_button',
                 l='Cleanup Light Cameras',
@@ -374,7 +338,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             from anima.env.mayaEnv.general import unknown_plugin_cleaner_ui
             pm.button(
                 'cleanup_plugins_button',
@@ -384,7 +348,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'unshape_parent_node_button',
                 l='Unshape Parent Nodes',
@@ -412,7 +376,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'duplicate_selected_reference_button',
                 l='Duplicate Selected Reference',
@@ -421,7 +385,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'select_reference_in_reference_editor_button',
                 l='Select Reference In Reference Editor',
@@ -432,7 +396,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'get_selected_reference_path_button',
                 l='Get Selected Reference Path',
@@ -450,7 +414,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'publish_model_as_look_dev_button',
                 l='Model -> LookDev',
@@ -461,7 +425,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'fix_reference_namespace_button',
                 l='Fix Reference Namespace',
@@ -471,7 +435,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'fix_reference_paths_button',
                 l='Fix Reference Paths',
@@ -500,7 +464,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'archive_button',
                 l='Archive Current Scene',
@@ -537,7 +501,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'remove_selected_references_button',
                 l='Remove Selected References',
@@ -548,7 +512,7 @@ def UI():
 
 
 
-            color.change()
+            color.next()
             pm.text(l='===== Representation Tools =====')
 
             with pm.rowLayout(nc=2, adj=1):
@@ -585,7 +549,7 @@ def UI():
                 ann='Generates desired Representations of this scene',
                 bgc=color.color
             )
-            color.change()
+            color.next()
 
             with pm.rowLayout(nc=2, adj=1):
                 pm.radioButtonGrp(
@@ -631,7 +595,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'update_alembic_references_button',
                 l='Update Alembic References',
@@ -665,7 +629,7 @@ def UI():
                           "soften edge to all selected objects",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button(
                 'oyHierarchyInstancer_button',
                 l="hierarchy_instancer on selected",
@@ -674,7 +638,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'relax_verts_button',
                 l="Relax Vertices",
@@ -703,7 +667,7 @@ def UI():
                     max=100
                 )
 
-            color.change()
+            color.next()
             pm.button(
                 'create_curve_from_mesh_edges_button',
                 l="Curve From Mesh Edges",
@@ -712,7 +676,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'vertex_aligned_locator_button',
                 l="Vertex Aligned Locator",
@@ -721,7 +685,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             with pm.rowLayout(nc=8, rat=(1, "both", 0), adj=1):
                 pm.text('set_pivot_text', l='Set Pivot', bgc=color.color)
                 pm.button(
@@ -788,7 +752,7 @@ def UI():
                     bgc=(0.500, 0.666, 1.000)
                 )
 
-            color.change()
+            color.next()
             with pm.rowLayout(nc=7, rat=(1, "both", 0), adj=1):
                 pm.text(l='Text. Res', bgc=color.color)
                 pm.button(
@@ -842,7 +806,7 @@ def UI():
 
             pm.text(l='========== UV Tools =============')
 
-            color.change()
+            color.next()
             pm.button(
                 'fix_uvsets_button',
                 l="Fix UVSets (DiffuseUV -> map1)",
@@ -851,7 +815,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'select_zero_uv_area_faces_button',
                 l="Filter Zero UV Area Faces",
@@ -860,7 +824,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'create_auto_uvmap_button',
                 l='Create Auto UVMap',
@@ -911,7 +875,7 @@ def UI():
                     'T', w=button_with, al='left', ann='Topology'
                 )
 
-            color.change()
+            color.next()
             pm.text(l='======= Manipulator Tools =======')
             pm.button('set_to_point_button',
                       l="Set To Point",
@@ -931,7 +895,7 @@ def UI():
                       ann="Set manipulator to the face",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('create_bbox_from_selection_button',
                       l="Create BBOX from selection",
                       c=repeated_callback(Modeling.bbox_from_selection),
@@ -964,7 +928,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'IKFKLimbRigger_button',
                 l="IK/FK Limb Rigger",
@@ -1016,7 +980,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'create_axial_correction_group_button',
                 l="Create Axial Correction Groups",
@@ -1032,7 +996,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'setClustersToAbsolute_button',
                 l="set selected clusters to absolute",
@@ -1050,7 +1014,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'addControllerShape_button',
                 l="add controller shape",
@@ -1066,7 +1030,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
 
             def pin_controller_callback(color, *args):
                 """Creates Pin Controller on the selected Vertex
@@ -1123,7 +1087,7 @@ def UI():
                       ann="creates hair from curves",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('artPaintSkinWeightsTool_button',
                       l="paint weights tool",
                       c=repeated_callback(mel.eval, 'ArtPaintSkinWeightsTool'),
@@ -1163,7 +1127,7 @@ def UI():
                       ann="align to pole vector",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('oyResetCharSet_button', l="oyResetCharSet",
                       c=repeated_callback(mel.eval, 'oyResetCharSet'),
                       ann="reset char set",
@@ -1174,19 +1138,19 @@ def UI():
                       ann="export blend connections",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('createFollicles_button', l="create follicles",
                       c=repeated_callback(Rigging.create_follicles),
                       ann="create follicles",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('oyResetTweaks_button', l="reset tweaks",
                       c=repeated_callback(Rigging.reset_tweaks),
                       ann="reset tweaks",
                       bgc=color.color)
 
-            color.change()
+            color.next()
 
             def add_cacheable_attribute_callback():
                 """add <b>cacheable</b> attribute to the selected nodes
@@ -1213,7 +1177,7 @@ def UI():
         with render_columnLayout:
             color.reset()
 
-            color.change()
+            color.next()
             pm.button(
                 'update_render_settings_button',
                 l="Update Render Settings",
@@ -1222,7 +1186,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'delete_render_layers_button',
                 l="Delete Render Layers",
@@ -1247,7 +1211,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'delete_unused_shading_nodes_button',
                 l="Delete Unused Shading Nodes",
@@ -1256,7 +1220,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'duplicate_input_graph_button',
                 l="Duplicate Input Graph",
@@ -1272,7 +1236,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.text(l='=========== RedShift Tools ===========')
             pm.button(
                 'generate_rs_from_selection_button',
@@ -1306,7 +1270,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.text(l='===== RedShift IC + IPC Bake =====')
             pm.button(
                 'redshift_ic_ipc_bake_button',
@@ -1324,7 +1288,7 @@ def UI():
             )
             pm.text(l='======================================')
 
-            color.change()
+            color.next()
             pm.button(
                 'submit_afanasy_button',
                 l="Afanasy Job Submitter",
@@ -1333,7 +1297,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'open_node_in_browser_button',
                 l="Open node in browser",
@@ -1342,7 +1306,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button('auto_convert_to_redshift_button',
                       l="Auto Convert Scene To RedShift (BETA)",
                       c=repeated_callback(Render.auto_convert_to_redshift),
@@ -1391,14 +1355,14 @@ def UI():
                           c=repeated_callback(pm.renderThumbnailUpdate, 0),
                           bgc=(1, 0, 0))
 
-            color.change()
+            color.next()
             pm.button('replaceShadersWithLast_button',
                       l="replace shaders with last",
                       c=repeated_callback(Render.replace_shaders_with_last),
                       ann="replace shaders with last",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('createTextureRefObject_button',
                       l="create texture ref. object",
                       c=repeated_callback(Render.create_texture_ref_object),
@@ -1407,14 +1371,14 @@ def UI():
 
             pm.text(l='========== Texture Tools =============')
 
-            color.change()
+            color.next()
             pm.button('assign_substance_textures_button',
                       l="Assign Substance Textures",
                       c=repeated_callback(Render.assign_substance_textures),
                       ann=Render.assign_substance_textures.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('normalize_texture_paths_button',
                       l="Normalize Texture Paths (remove $)",
                       c=repeated_callback(Render.normalize_texture_paths),
@@ -1427,7 +1391,7 @@ def UI():
                       ann=Render.unnormalize_texture_paths.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('assign_random_material_color_button',
                       l="Assign Material with Random Color",
                       c=repeated_callback(Render.assign_random_material_color),
@@ -1440,7 +1404,7 @@ def UI():
                       ann=Render.randomize_material_color.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('import_image_as_plane_button',
                       l="Import Image as Plane",
                       c=repeated_callback(Render.import_image_as_plane),
@@ -1448,7 +1412,7 @@ def UI():
                       bgc=color.color)
 
             pm.text(l='============ Camera Tools ============')
-            color.change()
+            color.next()
             pm.button(
                 'CameraFilmOffsetTool_button',
                 l="Camera Film Offset Tool",
@@ -1481,7 +1445,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.text(l='===== Vertigo =====')
             pm.button('vertigo_setup_look_at_button',
                       l="Setup -> Look At",
@@ -1524,14 +1488,14 @@ def UI():
 
             pm.text(l='===================')
 
-            color.change()
+            color.next()
             pm.button('reloadFileTextures_button',
                       l="reload file textures",
                       c=repeated_callback(Render.reload_file_textures),
                       ann="reload file textures",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('transfer_shaders_button',
                       l="Transfer Shaders",
                       c=repeated_callback(Render.transfer_shaders),
@@ -1539,7 +1503,7 @@ def UI():
                           "for LookDev -> Alembic",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('fitPlacementToUV_button',
                       l="fit placement to UV",
                       c=repeated_callback(Render.fit_placement_to_UV),
@@ -1554,7 +1518,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             with pm.rowLayout(nc=2, adj=1):
                 def enable_subdiv_callback():
                     max_tess = pm.intField('enable_subdiv_int_field', q=1, v=1)
@@ -1599,7 +1563,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'export_shader_data_button',
                 l='Export Shader Attributes',
@@ -1615,7 +1579,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'export_shader_to_houdini_button',
                 l='Export Shader Assignments To Houdini',
@@ -1624,7 +1588,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'create_eye_shader_and_controls_button',
                 l='Create Eye Shader and Controls',
@@ -1654,7 +1618,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'create_generic_tooth_shader_button',
                 l='Create Generic TOOTH Shader',
@@ -1677,7 +1641,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button('convert_to_ai_image_button',
                       l="To aiImage",
                       c=repeated_callback(
@@ -1687,7 +1651,7 @@ def UI():
                           "node if necessary",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('to_bbox_button',
                       l="aiStandIn To BBox",
                       c=repeated_callback(Render.standin_to_bbox),
@@ -1700,7 +1664,7 @@ def UI():
                       ann="Convert selected stand ins to polywire",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             with pm.rowLayout(nc=3, adj=3, bgc=color.color):
                 min_range_field = pm.floatField(
                     minValue=1000,
@@ -1767,7 +1731,7 @@ def UI():
                     bgc=color.color
                 )
 
-            color.change()
+            color.next()
             pm.button(
                 ann="Create Reflection Curve",
                 l="Reflection Curve",
@@ -1777,7 +1741,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 ann="Import GPU Content",
                 l="Import GPU Content",
@@ -1787,7 +1751,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             with pm.rowLayout(nc=3, adj=3, bgc=color.color):
                 source_driver_field = pm.textField(
                     text='S:',
@@ -1833,28 +1797,28 @@ def UI():
                       ann=Previs.split_camera.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('shots_from_camera_button',
                       l="Shots From Camera",
                       c=repeated_callback(Previs.shots_from_cams),
                       ann=Previs.shots_from_cams.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('auto_rename_shots_button',
                       l="Auto Rename Shots",
                       c=repeated_callback(Previs.auto_rename_shots),
                       ann=Previs.auto_rename_shots.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('save_previs_to_shots_button',
                       l="Save Previs To Shots",
                       c=repeated_callback(Previs.save_previs_to_shots),
                       ann=Previs.save_previs_to_shots.__doc__,
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('very_nice_camera_rig_button',
                       l="Create a Very Nice Camera Rig",
                       c=repeated_callback(camera_tools.very_nice_camera_rig),
@@ -1875,7 +1839,7 @@ def UI():
         with animation_columnLayout:
             color.reset()
 
-            color.change()
+            color.next()
             from anima.env.mayaEnv import picker
 
             pm.text(l='===== Object Picker =====')
@@ -1906,7 +1870,7 @@ def UI():
                       ann="Explode Setup",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             from anima.env.mayaEnv import pivot_switcher
 
             pm.text(l='===== Pivot Switcher =====')
@@ -1926,7 +1890,7 @@ def UI():
                       ann="Toggle Pivot",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.text(l='===== Alembic Tools =====')
 
             pm.button('bake_all_constraints_button',
@@ -2027,7 +1991,7 @@ def UI():
             )
 
             pm.text(l='===== Playblast Tools =====')
-            color.change()
+            color.next()
             pm.button(
                 'playblast_on_farm_button',
                 l='PLayblast On Farm',
@@ -2037,7 +2001,7 @@ def UI():
             )
 
             pm.text(l='===== Exporters =====')
-            color.change()
+            color.next()
             rowLayout = pm.rowLayout(nc=3, adj=3, bgc=color.color)
             with rowLayout:
                 start = int(pm.playbackOptions(q=1, minTime=1))
@@ -2058,7 +2022,7 @@ def UI():
                           bgc=color.color)
 
             pm.text(l='===== Component Animation =====')
-            color.change()
+            color.next()
             smooth_selected_keyframes_text_fbg = pm.textFieldButtonGrp(
                 'smooth_selected_keyframes_text_fbg_button',
                 bl="Smooth Selected Keyframes",
@@ -2099,7 +2063,7 @@ def UI():
                 )
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'bake_component_animation_button',
                 l='Bake component animation to Locator',
@@ -2128,7 +2092,7 @@ def UI():
 
             pm.text(l='===== Generic Tools =====')
 
-            color.change()
+            color.next()
             pm.button(
                 'set_range_from_shot_node_button',
                 l='Range From Shot',
@@ -2137,7 +2101,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'delete_base_anim_layer_button',
                 l='Delete Base Anim Layer',
@@ -2165,14 +2129,14 @@ def UI():
                       ann="add miLabel to selected",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('connectFacingRatioToVCoord_button',
                       l="connect facingRatio to vCoord",
                       c=repeated_callback(
                           Render.connect_facingRatio_to_vCoord),
                       ann="connect facingRatio to vCoord",
                       bgc=color.color)
-            color.change()
+            color.next()
 
             with pm.rowLayout(nc=3, rat=(1, "both", 0), adj=1):
                 pm.text('miFinalGatherCast_text',
@@ -2224,7 +2188,7 @@ def UI():
                           c=repeated_callback(Render.set_finalGatherHide, 0),
                           bgc=(1, 0, 0))
 
-            color.change()
+            color.next()
             pm.button('convertToMRTexture_button',
                       l="use mib_texture_filter_lookup",
                       c=repeated_callback(
@@ -2245,7 +2209,7 @@ def UI():
                       ann="use image sequence for \nmentalrayTexture",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('oyAddToSelectedContainer_button',
                       l="add to selected container",
                       c=repeated_callback(Render.add_to_selected_container),
@@ -2257,14 +2221,14 @@ def UI():
                       ann="remove from selected container",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button('oySmedgeRenderSlicer_button',
                       l="oySmedgeRenderSlicer",
                       c=repeated_callback(mel.eval, 'oySmedgeRenderSlicer'),
                       ann="SmedgeRenderSlicer",
                       bgc=color.color)
 
-            color.change()
+            color.next()
             pm.button(
                 'exponentialSmooth_button',
                 l="exponential smooth",
@@ -2311,7 +2275,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'deleteAllSound_button', l="delete all sound",
                 c=repeated_callback(General.delete_all_sound),
@@ -2330,7 +2294,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'referenceSelectedObjects_button',
                 l="reference selected objects",
@@ -2351,7 +2315,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'oyDeReferencer_button', l="dereferencer",
                 c=repeated_callback(General.dereferencer),
@@ -2359,7 +2323,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             enable_matte_row_layout = pm.rowLayout(nc=6, adj=1)
             with enable_matte_row_layout:
                 pm.text(
@@ -2396,7 +2360,7 @@ def UI():
                     bgc=[0.5, 0.5, 0.5]
                 )
 
-            color.change()
+            color.next()
             pm.button(
                 'fix_render_layer_out_adjustment_errors_button',
                 l="fixRenderLayerOutAdjustmentErrors",
@@ -2406,7 +2370,7 @@ def UI():
             )
 
             pm.separator()
-            color.change()
+            color.next()
             with pm.rowLayout(nc=2, adj=2):
                 apply_to_hierarchy_checkBox = pm.checkBox(
                     'apply_to_hierarchy_checkBox',
@@ -2465,7 +2429,7 @@ def UI():
                     )
 
             pm.separator()
-            color.change()
+            color.next()
 
             pm.button(
                 l='Setup Z-Layer',
@@ -2481,7 +2445,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.text(l='===== BarnDoor Simulator =====')
 
             pm.button(
@@ -2510,7 +2474,7 @@ def UI():
                 bgc=color.color
             )
 
-            color.change()
+            color.next()
             pm.button(
                 'ai_skin_sss_to_ai_skin_button',
                 l='aiSkinSSS --> aiSkin',

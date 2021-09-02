@@ -320,3 +320,36 @@ def add_line(layout):
     line.setFrameShape(QtWidgets.QFrame.HLine)
     line.setFrameShadow(QtWidgets.QFrame.Sunken)
     layout.addWidget(line)
+
+
+class Color(object):
+    """a simple color class
+    """
+    colors = [
+        (1.000, 0.500, 0.666),
+        (1.000, 0.833, 0.500),
+        (0.666, 1.000, 0.500),
+        (0.500, 1.000, 0.833),
+        (0.500, 0.666, 1.000),
+        (0.833, 0.500, 1.000)
+    ]
+
+    def __init__(self, index=0):
+        self.index = index
+        self.max_colors = len(self.colors)
+
+    def next(self):
+        """updates the index to the next one
+        """
+        self.index = int((self.index + 1) % self.max_colors)
+
+    def reset(self):
+        """resets the color index
+        """
+        self.index = 0
+
+    @property
+    def color(self):
+        """returns the current color values
+        """
+        return self.colors[self.index]
