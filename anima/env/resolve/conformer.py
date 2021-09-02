@@ -742,7 +742,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         latest_task_name = None
         if task.versions:
-            latest_task_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main').order_by(Version.version_number.desc()).first()
+            latest_task_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main')\
+                .order_by(Version.version_number.desc()).first()
             if latest_task_version:
                 latest_task_name = os.path.splitext(latest_task_version.filename)[0]
 
@@ -767,31 +768,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 last_frame = re.findall(regex, last_dir_base)
                 resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
                 resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
-
-        if not resolve_path and task_name == 'Plate': # try to find path manually for plate tasks as they might not have default naming conventions or versions
+        # try to find path manually for plate tasks as they might not have default naming conventions or versions
+        if not resolve_path and task_name == 'Plate':
             version_numbers = []
             main_dir = os.path.join(shot.absolute_path, 'Plate', 'Outputs', 'Main')
             if os.path.isdir(main_dir):
                 dirs = glob.glob('%s/*' % main_dir)
                 for dir in dirs:
-                    if os.path.isdir(dir) and os.path.basename(dir)[0] == 'v' and os.path.basename(dir)[1:].isdigit() and len(os.path.basename(dir)) == 4:
+                    if os.path.isdir(dir) and os.path.basename(dir)[0] == 'v' \
+                            and os.path.basename(dir)[1:].isdigit() and len(os.path.basename(dir)) == 4:
                         version_numbers.append(int(os.path.basename(dir)[1:]))
-            latest_version_number = max(version_numbers)
-            latest_version_folder_name = 'v%s' % str(latest_version_number).rjust(3, '0')
-            plate_path = os.path.join(main_dir, latest_version_folder_name, ext)           
-            plate_path = os.path.normpath(plate_path).replace('\\', '/')
+            if version_numbers:
+                latest_version_number = max(version_numbers)
+                latest_version_folder_name = 'v%s' % str(latest_version_number).rjust(3, '0')
+                plate_path = os.path.join(main_dir, latest_version_folder_name, ext)
+                plate_path = os.path.normpath(plate_path).replace('\\', '/')
 
-            file_paths = glob.glob('%s/*.%s' %(plate_path, ext)) 
+                file_paths = glob.glob('%s/*.%s' %(plate_path, ext))
 
-            if file_paths:
-                regex = r'\d+$|#+$'
-                dir_base = file_paths[0].split('.')[0]
-                first_dir_base = os.path.splitext(file_paths[0])[0]
-                first_frame = re.findall(regex, first_dir_base)
-                last_dir_base = os.path.splitext(file_paths[-1])[0]
-                last_frame = re.findall(regex, last_dir_base)
-                resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
-                resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
+                if file_paths:
+                    regex = r'\d+$|#+$'
+                    dir_base = file_paths[0].split('.')[0]
+                    first_dir_base = os.path.splitext(file_paths[0])[0]
+                    first_frame = re.findall(regex, first_dir_base)
+                    last_dir_base = os.path.splitext(file_paths[-1])[0]
+                    last_frame = re.findall(regex, last_dir_base)
+                    resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
+                    resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
 
         return resolve_path
 
@@ -990,7 +993,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if self.record_in_check_box.isChecked():
                     rc_in = shot.record_in
                     if not rc_in:
-                        raise RuntimeError('%s -> does not have record in data! Turn off Record In check box...' % shot.name)
+                        raise RuntimeError('%s -> No record in data! Turn off Record In check box.' % shot.name)
                     record_in_list.append([clip_path, rc_in])
 
                 print('Checking Shot... - %s' % shot.name)
@@ -1097,7 +1100,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         continue
 
                     if task.versions:
-                        last_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main').order_by(Version.version_number.desc()).first()
+                        last_version = Version.query.filter(Version.task == task).filter(Version.take_name == 'Main')\
+                            .order_by(Version.version_number.desc()).first()
                     else:
                         continue
 
