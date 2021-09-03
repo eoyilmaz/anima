@@ -837,12 +837,16 @@ class ShotClip(object):
         # create a new Fusion comp and run the magic commands
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
+        print("Changing Page to Fusion!")
         current_page = resolve.GetCurrentPage()
+        print("Current Page: %s" % current_page)
         resolve.OpenPage('fusion')
+        print("Page is set to Fusion")
         slate_item = self.clip
 
         # Create the fusion comp
         # Remove any previous fusion comps of that clip
+        print("Getting fusion comp")
         fusion_comp_count = slate_item.GetFusionCompCount()
         print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
         if fusion_comp_count != 0:
@@ -1348,29 +1352,23 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         im = ShotManager(project, sequence)
 
         clips = im.get_clips()
-        slate_clips = []
+        timeline = im.get_current_timeline()
+
         for clip in clips:
             # if the length of the clip is 1 frame
             # create slate for this clip
             duration = clip.GetDuration()
             if duration == 1:
-                slate_clips.append(clip)
-
-        print("found %s slate clips" % len(slate_clips))
-        print("slate_clips")
-        print("===========")
-
-        timeline = im.get_current_timeline()
-        for clip in slate_clips:
-            print(clip)
-            shot = ShotClip(
-                project=project,
-                sequence=sequence,
-                clip=clip,
-                timeline=timeline
-            )
-            shot.create_slate()
-            print("---")
+                # print("found %s slate clips" % len(slate_clips))
+                print("==========")
+                print("slate_clip: %s" % clip)
+                shot = ShotClip(
+                    project=project,
+                    sequence=sequence,
+                    clip=clip,
+                    timeline=timeline
+                )
+                shot.create_slate()
 
     def fix_shot_clip_name(self):
         """Removes the frame range part from the image sequence clips.
