@@ -175,7 +175,11 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 extend_end=extend_end
             )
 
-        color_list = ColorList()
+        gamma = 1.0
+        if os.name == 'darwin':
+            gamma = 0.455
+
+        color_list = ColorList(gamma=gamma)
 
         clip_output_generator_button = QtWidgets.QPushButton()
         clip_output_generator_button.setText("Output - Current Clip")

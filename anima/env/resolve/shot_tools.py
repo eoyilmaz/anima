@@ -916,7 +916,12 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         from anima.utils import do_db_setup
         do_db_setup()
 
-        color_list = ColorList()
+        import os
+        gamma = 1.0
+        if os.name == 'darwin':
+            gamma = 0.455
+
+        color_list = ColorList(gamma=gamma)
 
         # get logged in user
         self.get_logged_in_user()
