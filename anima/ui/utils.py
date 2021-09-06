@@ -324,6 +324,9 @@ def add_line(layout):
 
 class ColorList(object):
     """a simple color list class
+
+    :param int index: The start index.
+    :param float gamma: The gamma. Defaults to 1.0.
     """
     colors = [
         (1.000, 0.500, 0.666),
@@ -334,8 +337,9 @@ class ColorList(object):
         (0.833, 0.500, 1.000)
     ]
 
-    def __init__(self, index=0):
+    def __init__(self, index=0, gamma=1.0):
         self.index = index
+        self.gamma = gamma
         self.max_colors = len(self.colors)
 
     def next(self):
@@ -352,7 +356,7 @@ class ColorList(object):
     def color(self):
         """returns the current color values
         """
-        return self.colors[self.index]
+        return list(map(lambda x: pow(x, self.gamma), self.colors[self.index]))
 
 
 def set_widget_bg_color(widget, color):
