@@ -54,6 +54,11 @@ class AnimaDialogBase(object):
     def get_logged_in_user(self):
         """returns the logged in user
         """
+        # Fix issues about this method being a part of a QLayout instead of a QDialog
+        parent = None
+        if isinstance(self, QtWidgets.QDialog):
+            parent = self
+
         local_session = LocalSession()
         from stalker.db.session import DBSession
         with DBSession.no_autoflush:
@@ -61,7 +66,7 @@ class AnimaDialogBase(object):
 
         if not logged_in_user:
             from anima.ui import login_dialog
-            dialog = login_dialog.MainDialog(parent=self)
+            dialog = login_dialog.MainDialog(parent=parent)
             # dialog.deleteLater()
             dialog.exec_()
             result = dialog.result()
