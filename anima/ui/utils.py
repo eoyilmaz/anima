@@ -337,8 +337,13 @@ class ColorList(object):
         (0.833, 0.500, 1.000)
     ]
 
-    def __init__(self, index=0, gamma=1.0):
+    def __init__(self, index=0, gamma=None):
         self.index = index
+        if gamma is None:
+            gamma = 1.0
+            import os
+            if os.name == 'darwin':
+                gamma = 0.455
         self.gamma = gamma
         self.max_colors = len(self.colors)
 
