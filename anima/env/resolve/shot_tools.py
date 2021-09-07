@@ -811,10 +811,11 @@ class ShotClip(object):
         if not match:
             raise ValueError("Shot code format is not valid: %s" % shot_code)
 
-    def create_slate(self, submission_note=""):
+    def create_slate(self, submitting_for="FINAL", submission_note=""):
         """creates slate for this shot
 
-        :param str submission_note: The submission note
+        :param str submitting_for: Submitting for "FINAL" or "WIP". Default is "FINAL".
+        :param str submission_note: The submission note.
         """
         # shot = self.get_shot()
         # if not shot:
@@ -866,7 +867,7 @@ class ShotClip(object):
         from anima.env import fusion
         f = fusion.Fusion()
         f.comp = fusion_comp
-        slate_node = f.create_slate_node(version, submission_note=submission_note)
+        slate_node = f.create_slate_node(version, submitting_for=submitting_for, submission_note=submission_note)
 
         resolve.OpenPage(current_page)
         return slate_node
@@ -901,6 +902,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.handle_spin_box = None
         self.take_name_line_edit = None
         self.render_preset_combo_box = None
+        self.submitting_for_combo_box = None
         self.submission_note_text_edit = None
         self._shot_related_data_is_updating = False
 
@@ -1056,7 +1058,26 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         set_widget_bg_color(update_shot_record_in_info_button, color_list)
         color_list.next()
 
-        # Create Slate button
+        # ----------------------------------
+        # Slate controls
+
+        # Submitting For
+        submitting_for_layout = QtWidgets.QHBoxLayout(self.parent())
+        self.addLayout(submitting_for_layout)
+
+        submitting_for_label = QtWidgets.QLabel(self.parent())
+        submitting_for_label.setText("Submitting For")
+        submitting_for_label.setMinimumWidth(120)
+        submitting_for_layout.addWidget(submitting_for_label)
+
+        self.submitting_for_combo_box = QtWidgets.QComboBox(self.parent())
+        self.submitting_for_combo_box.addItems(["FINAL", "WIP"])
+        submitting_for_layout.addWidget(self.submitting_for_combo_box)
+
+        submitting_for_layout.setStretch(0, 0)
+        submitting_for_layout.setStretch(1, 1)
+
+        # Submission Note
         submission_note_layout = QtWidgets.QHBoxLayout(self.parent())
         self.addLayout(submission_note_layout)
 
@@ -1067,9 +1088,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent())
         self.submission_note_text_edit.setPlaceholderText("Enter submission note")
-
         submission_note_layout.addWidget(self.submission_note_text_edit)
 
+        # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self.parent())
         create_slate_button.setText("Create Slate")
         self.addWidget(create_slate_button)
@@ -1360,11 +1381,12 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         """
         project = self.project_combo_box.get_current_project()
         sequence = self.sequence_combo_box.get_current_sequence()
+        submitting_for = self.submitting_for_combo_box.currentText()
         submission_note = self.submission_note_text_edit.toPlainText()
         im = ShotManager(project, sequence)
         shot = im.get_current_shot()
         if shot:
-            shot.create_slate(submission_note=submission_note)
+            shot.create_slate(submitting_for=submitting_for, submission_note=submission_note)
 
     def create_slate_for_all_shots(self):
         """creates slate for all shots
