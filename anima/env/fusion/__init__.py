@@ -752,10 +752,11 @@ class Fusion(EnvironmentBase):
     def output_node_name_generator(self, file_format):
         return '%s_%s' % (self._main_output_node_name, file_format)
 
-    def create_slate_node(self, version, submission_note=""):
+    def create_slate_node(self, version, submitting_for="FINAL", submission_note=""):
         """Creates the slate node
 
         :param version: A Stalker Version instance
+        :param str submitting_for: Submitting for "FINAL" or "WIP". Default is "FINAL".
         :param str submission_note: Submission note.
         :return:
         """
@@ -833,7 +834,7 @@ class Fusion(EnvironmentBase):
         slate_node.Input5 = "%s_v%03d" % (version.nice_name, version.version_number)
 
         # Submitting For
-        slate_node.Input6 = "FINAL"
+        slate_node.Input6 = submitting_for
 
         # Date
         import datetime
