@@ -752,10 +752,11 @@ class Fusion(EnvironmentBase):
     def output_node_name_generator(self, file_format):
         return '%s_%s' % (self._main_output_node_name, file_format)
 
-    def create_slate_node(self, version):
+    def create_slate_node(self, version, submission_note=""):
         """Creates the slate node
 
         :param version: A Stalker Version instance
+        :param str submission_note: Submission note.
         :return:
         """
         # if the channels are animated, set new keyframes
@@ -798,7 +799,7 @@ class Fusion(EnvironmentBase):
             slate_node.Input10 = "\n".join(split_description[0:3])
 
             # Submission Note
-            slate_node.Input11 = ""
+            slate_node.Input11 = submission_note
 
             # Shot Name
             slate_node.Input12 = shot.name
