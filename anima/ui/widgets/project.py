@@ -20,7 +20,7 @@ class ProjectComboBox(QtWidgets.QComboBox):
         self.clear()
 
         # add the default item
-        self.addItem("Select Project...", -1)
+        self.addItem("Select Project...", None)
         for project in Project.query.order_by(Project.name).all():
             self.addItem(project.name, project.id)
 
@@ -29,7 +29,7 @@ class ProjectComboBox(QtWidgets.QComboBox):
         """
         project_id = self.itemData(self.currentIndex())
 
-        if project_id != -1:
+        if project_id is not None:
             from stalker import Project
             return Project.query.get(project_id)
         else:
