@@ -129,9 +129,11 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         template_label.setText("Template")
         current_form_layout.setWidget(i, label_role, template_label)
 
-        template_line_edit = QtWidgets.QLineEdit()
-        template_line_edit.setText(GenericTools.default_output_template)
-        current_form_layout.setWidget(i, field_role, template_line_edit)
+        # template_line_edit.setText()
+        template_combo_box = QtWidgets.QComboBox()
+        template_combo_box.setEditable(True)
+        template_combo_box.addItems(GenericTools.default_output_templates)
+        current_form_layout.setWidget(i, field_role, template_combo_box)
 
         # -------------------------------------------------------------------
         # Extend Start/End Controls
@@ -160,7 +162,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         def clip_output_generator_wrapper():
             #  = version_spinbox.value()
-            template = template_line_edit.text()
+            template = template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
 
@@ -204,7 +206,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         def clip_output_generator_by_index_wrapper():
             clip_index = clip_index_spinbox.value()
-            template = template_line_edit.text()
+            template = template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
             GenericTools.clip_output_generator_by_clip_index(
@@ -331,7 +333,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         i += 1
 
         def per_clip_output_generator_wrapper():
-            template = template_line_edit.text()
+            template = template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
             start_clip_number = start_clip_number_spin_box.value()
@@ -367,7 +369,10 @@ class GenericTools(object):
     """Generic Tools
     """
 
-    default_output_template = "%{Timeline Name}_CL%{Clip #}_v001"
+    default_output_templates = [
+        "%{Clip Name}",
+        "%{Timeline Name}_CL%{Clip #}_v001"
+    ]
 
     @classmethod
     def per_clip_output_generator(cls, template="", extend_start=0, extend_end=0, start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4):
@@ -392,7 +397,7 @@ class GenericTools(object):
         clips = timeline.GetItemsInTrack("video", 1)
 
         if template == "":
-            template = cls.default_output_template
+            template = cls.default_output_templates[0]
 
         i = 0
         for clip_index in clips:
@@ -707,8 +712,7 @@ class GenericTools(object):
         """
 
         if template == "":
-            import copy
-            template = copy.copy(cls.default_output_template)
+            template = cls.default_output_templates[0]
 
         resolve_keywords = {
             'Angle': '%{Angle}',
