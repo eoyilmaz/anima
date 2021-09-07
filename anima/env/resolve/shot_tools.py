@@ -658,8 +658,9 @@ class ShotClip(object):
         if not type_instance:
             logged_in_user = self.get_logged_in_user()
             type_instance = Type(
-                entity_type='Task',
+                target_entity_type='Task',
                 name=type_name,
+                code=type_name,
                 created_by=logged_in_user,
                 updated_by=logged_in_user
             )
@@ -1038,10 +1039,10 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.fill_preset_combo_box()
 
         # Create Render Jobs button
-        create_render_jobs_button = QtWidgets.QPushButton(self.parent())
-        create_render_jobs_button.setText("Create Render Jobs")
-        self.addWidget(create_render_jobs_button)
-        set_widget_bg_color(create_render_jobs_button, color_list)
+        create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent())
+        create_shots_and_render_jobs_button.setText("Create Shots and Render Jobs")
+        self.addWidget(create_shots_and_render_jobs_button)
+        set_widget_bg_color(create_shots_and_render_jobs_button, color_list)
         color_list.next()
 
         # Update Shot Thumbnail button
@@ -1129,7 +1130,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.project_changed(None)
         self.project_combo_box.currentIndexChanged.connect(self.project_changed)
 
-        create_render_jobs_button.clicked.connect(self.create_render_jobs)
+        create_shots_and_render_jobs_button.clicked.connect(self.create_render_jobs)
         get_shot_list_push_button.clicked.connect(self.get_shot_list)
         check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
         validate_shots_push_button.clicked.connect(self.validate_shot_codes)
@@ -1212,6 +1213,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         """updates the project_based_settings_storage
         """
         project = self.project_combo_box.get_current_project()
+        if not project:
+            return
+
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
         render_preset = self.render_preset_combo_box.currentText()
@@ -1254,6 +1258,11 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     def create_render_jobs(self):
         """creates render jobs
         """
+        try:
+            project, sequence = self.get_project_and_sequence()
+        except RuntimeError:
+            return
+
         # first check duplicate shots
         if not self.check_duplicate_shots():
             return
@@ -1261,8 +1270,6 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         if not self.validate_shot_codes():
             return
 
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
         shot_manager = ShotManager(project, sequence)
 
         handle = self.handle_spin_box.value()
@@ -1275,7 +1282,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
 
         current_shot = QtWidgets.QPushButton("Current")
         all_shots = QtWidgets.QPushButton("All")
+        cancel_button = QtWidgets.QPushButton("Cancel")
 
+        message_box.addButton(cancel_button, QtWidgets.QMessageBox.NoRole)
         message_box.addButton(current_shot, QtWidgets.QMessageBox.YesRole)
         message_box.addButton(all_shots, QtWidgets.QMessageBox.NoRole)
 
@@ -1284,13 +1293,23 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         try:
             clicked_button = message_box.clickedButton()
             message_box.deleteLater()
+            success = False
             if clicked_button == all_shots:
                 for shot in shot_manager.get_shots():
                     shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
-            else:
+                success = True
+            elif clicked_button == current_shot:
                 shot = shot_manager.get_current_shot()
                 if shot:
                     shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
+                    success = True
+
+            if success:
+                QtWidgets.QMessageBox.information(
+                    self.parent(),
+                    "Created Shots and Render Jobs 👍",
+                    "Created Shots and Render Jobs 👍"
+                )
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
                 self.parent(),
@@ -1298,12 +1317,6 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
                 str(e)
             )
             raise e
-        finally:
-            QtWidgets.QMessageBox.information(
-                self.parent(),
-                "Created Shots and Render Jobs 👍",
-                "Created Shots and Render Jobs 👍"
-            )
 
     def validate_shot_codes(self):
         """validates the shot codes
@@ -1509,15 +1522,40 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     def update_shot_record_in_info(self):
         """updates the Shot.record_in data from the current timeline
         """
-        project = self.project_combo_box.get_current_project()
-        if not project:
-            raise RuntimeError("No project")
+        project, sequence = self.get_project_and_sequence()
 
-        sequence = self.sequence_combo_box.get_current_sequence()
-        if not sequence:
-            raise RuntimeError("No sequence")
+        answer = QtWidgets.QMessageBox.question(
+            self.parent(),
+            'Update shot record info!',
+            'This will update the shot record_in information of:<br/>'
+            '<br/>'
+            '%s - %s<br/>'
+            ' <br/>'
+            'Is this ok?' % (project.name, sequence.name),
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
 
-        shot_manager = ShotManager(project=project, sequence=sequence)
-        shots = shot_manager.get_shots()
-        for shot in shots:
-            shot.update_record_in_info()
+        if answer == QtWidgets.QMessageBox.Yes:
+            shot_manager = ShotManager(project=project, sequence=sequence)
+            shots = shot_manager.get_shots()
+            for shot in shots:
+                shot.update_record_in_info()
+
+    def get_project_and_sequence(self):
+        try:
+            project = self.project_combo_box.get_current_project()
+            if not project:
+                raise RuntimeError("No project selected!")
+
+            sequence = self.sequence_combo_box.get_current_sequence()
+            if not sequence:
+                raise RuntimeError("No sequence selected!")
+        except RuntimeError as e:
+            QtWidgets.QMessageBox.critical(
+                self.parent(),
+                "Error",
+                str(e).replace("\n", "<br>")
+            )
+            raise e
+        return project, sequence
