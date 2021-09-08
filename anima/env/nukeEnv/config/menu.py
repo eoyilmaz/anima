@@ -14,9 +14,10 @@ m.addCommand(
     "Pipeline/Version Dialog",
     """from anima.ui.scripts import nuke_ui as nuke_ui;nuke_ui.version_dialog();"""
 )
-m.addCommand('Pipeline/Create\/Update Output Nodes', 'from anima.env.nukeEnv import auxiliary; auxiliary.update_outputs()')
-# m.addCommand('Pipeline/Package Script', 'import packageScript; packageScript.Package_Proj();')
-# m.addCommand('Pipeline/Open Nodes in Browser', 'import pipeline; pipeline.open_selected_nodes_in_file_browser();')
+m.addCommand(
+    'Pipeline/Create/Update Output Nodes',
+    'from anima.env.nukeEnv import auxiliary; auxiliary.update_outputs()'
+)
 
 
 # Comp tools
