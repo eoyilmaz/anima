@@ -85,8 +85,10 @@ class AnimaDialogBase(object):
                 # close the ui
                 # logged_in_user = self.get_logged_in_user()
                 logger.debug("no logged in user")
-                self.close()
-        
+                if isinstance(self, QtWidgets.QDialog):
+                    self.close()
+                raise RuntimeError("no logged in user")
+
         return logged_in_user
 
 
