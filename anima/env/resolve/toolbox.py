@@ -20,7 +20,7 @@ __here__ = os.path.abspath(__file__)
 
 
 def reload_lib(lib):
-    """helper funtion to reload a lib
+    """helper function to reload a lib
     """
     if sys.version_info[0] >= 3:  # Python 3
         import importlib
@@ -82,29 +82,38 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         """add tools
         """
         # create the main tab layout
-        main_tab_widget = QtWidgets.QTabWidget(self.widget())
+        main_tab_widget = QtWidgets.QTabWidget()
         self.addWidget(main_tab_widget)
 
         # add the ShotTools Tab
-        shot_tools_tab_widget = QtWidgets.QWidget(self.widget())
-        conformer_tab_widget = QtWidgets.QWidget(self.widget())
+        conformer_tab_widget = QtWidgets.QWidget()
+        shot_tools_tab_widget = QtWidgets.QWidget()
+        review_tools_tab_widget = QtWidgets.QWidget()
 
         # add the Output Tab
-        output_tab_widget = QtWidgets.QWidget(self.widget())
-        output_tab_vertical_layout = QtWidgets.QVBoxLayout(self.widget())
-        output_tab_form_layout = QtWidgets.QFormLayout(self.widget())
+        output_tab_widget = QtWidgets.QWidget()
+        output_tab_vertical_layout = QtWidgets.QVBoxLayout()
+        output_tab_form_layout = QtWidgets.QFormLayout()
         output_tab_vertical_layout.addLayout(output_tab_form_layout)
         output_tab_widget.setLayout(output_tab_vertical_layout)
 
         # main_tab_widget.addTab(general_tab_widget, 'Generic')
         main_tab_widget.addTab(conformer_tab_widget, 'Conformer')
         main_tab_widget.addTab(shot_tools_tab_widget, 'Shot Tools')
+        main_tab_widget.addTab(review_tools_tab_widget, 'Review Tools')
         main_tab_widget.addTab(output_tab_widget, 'Output')
 
         # add the shot tools
-        from anima.env.resolve import shot_tools
-        st = shot_tools.ShotToolsLayout(self.widget())
-        shot_tools_tab_widget.setLayout(st)
+        from anima.env.resolve.shot_tools import ShotManagerUI, ReviewManagerUI
+
+        shot_tools_layout = QtWidgets.QVBoxLayout(shot_tools_tab_widget)
+        # shot_tools_tab_widget.setLayout(shot_tools_layout)
+        ShotManagerUI(shot_tools_layout)
+
+        # add review tools
+        review_tools_layout = QtWidgets.QVBoxLayout(review_tools_tab_widget)
+        # review_tools_tab_widget.setLayout(review_tools_layout)
+        ReviewManagerUI(review_tools_layout)
 
         label_role = QtWidgets.QFormLayout.LabelRole
         field_role = QtWidgets.QFormLayout.FieldRole

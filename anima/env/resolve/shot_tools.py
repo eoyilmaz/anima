@@ -11,15 +11,21 @@ clip = timeline.GetCurrentVideoItem()
 
 """
 from anima import logger
-from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import ColorList, set_widget_bg_color
+
+
+DEFAULT_TAKE_NAME = "Main"
+DEFAULT_RENDER_PRESET_NAME = "PlateInjector"
 
 
 class ShotManager(object):
     """Manager for plate injection process
 
     Contains the general logic
+
+    :param project: A Stalker.Project instance
+    :param sequence: A Stalker.Sequence instance
     """
 
     def __init__(self, project=None, sequence=None):
@@ -34,10 +40,10 @@ class ShotManager(object):
     def get_current_shot_code(self):
         """returns the current shot code
         """
-        shot_clip = self.get_current_shot()
+        shot_clip = self.get_current_shot_clip()
         return shot_clip.shot_code
 
-    def get_current_shot(self):
+    def get_current_shot_clip(self):
         """returns the current shot clip node
         """
         timeline = self.get_current_timeline()
@@ -49,13 +55,13 @@ class ShotManager(object):
             timeline=timeline
         )
 
-    @classmethod
-    def set_current_shot_code(cls, shot_code):
+    def set_current_shot_code(self, shot_code):
         """sets the current shot code
 
         :param str shot_code: The desired shot code
         """
-        timeline = cls.get_current_timeline()
+        # TODO: Update this code with the Resolve example
+        timeline = self.get_current_timeline()
 
         shot_clip = ShotClip()
         shot_clip.clip = timeline.GetCurrentVideoItem()
@@ -77,7 +83,7 @@ class ShotManager(object):
         clips = timeline.GetItemListInTrack('video', 1)
         return clips
 
-    def get_shots(self):
+    def get_shot_clips(self):
         """returns the shots in the current video track
         """
         shots = []
@@ -170,7 +176,8 @@ class ShotManager(object):
         with open(output_path, "w+") as f:
             f.write("\n".join(data))
 
-    def finalize_review_csv(self, review_path=None, csv_output_path=None, vendor=None):
+    @classmethod
+    def finalize_review_csv(cls, review_path=None, csv_output_path=None, vendor=None):
         """Finalizes the CSVs in the given review path by merging all the CSV's in to one and also generating data for
         the missing movie files.
 
@@ -249,7 +256,7 @@ class ShotManager(object):
     def check_duplicate_shots(self):
         """checks for duplicate shots
         """
-        shot_list = self.get_shots()
+        shot_list = self.get_shot_clips()
         shot_codes = []
         for shot in shot_list:
             shot_codes.append(shot.shot_code)
@@ -270,7 +277,7 @@ class ShotManager(object):
     def validate_shot_codes(self):
         """validate shot codes
         """
-        shots = self.get_shots()
+        shots = self.get_shot_clips()
         invalid_shots = []
         for shot in shots:
             try:
@@ -294,9 +301,22 @@ class ShotManager(object):
     def update_shot_record_in_info(self):
         """updates Shot.record_in data from the current timeline
         """
-        shots = self.get_shots()
+        shots = self.get_shot_clips()
         for shot in shots:
-            shot.record_in = self.clip.GetStart()
+            shot.record_in = shot.clip.GetStart()
+
+    @classmethod
+    def create_render_jobs(cls, shot_clips, handle=0, take_name=None, preset_name=None):
+        """creates render jobs
+        """
+        if take_name is None:
+            take_name = DEFAULT_TAKE_NAME
+
+        if preset_name is None:
+            preset_name = DEFAULT_RENDER_PRESET_NAME
+
+        for shot_clip in shot_clips:
+            shot_clip.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
 
 
 class ShotClip(object):
@@ -308,6 +328,9 @@ class ShotClip(object):
       * Generates render jobs that renders the VFX related clips in the current timeline to their respective shot
         folder.
       * Creates shot thumbnails that are visible through the system.
+
+    :param project: A Stalker.Project instance
+    :param sequence: A Stalker.Sequence instance
     """
 
     def __init__(self, project=None, sequence=None, clip=None, timeline=None):
@@ -317,12 +340,15 @@ class ShotClip(object):
         self.clip = clip
         self._shot_code = None
 
-    def create_shot_hierarchy(self, handle=0, take_name="Main"):
+    def create_shot_hierarchy(self, handle=0, take_name=None):
         """creates the related shot hierarchy
 
         :param int handle: The handle on each side of the clip. The default value is 0.
-        :param str take_name: The take_name of the created Plate. The default value is "Main".
+        :param str take_name: The take_name of the created Plate. The default value is DEFAULT_TAKE_NAME.
         """
+        if take_name is None:
+            take_name = DEFAULT_TAKE_NAME
+
         logged_in_user = self.get_logged_in_user()
 
         from stalker import Task
@@ -668,14 +694,20 @@ class ShotClip(object):
             DBSession.commit()
         return type_instance
 
-    def create_render_job(self, handle=0, take_name="Main", preset_name="PlateInjector"):
+    def create_render_job(self, handle=0, take_name=None, preset_name=None):
         """creates render job for the clip
 
         :param int handle: The handles on each side of the clip. The default value is 0.
-        :param str take_name: The take_name of the created Version
+        :param str take_name: The take_name of the created Version. Default value is DEFAULT_DEFAULT_TAKE_NAME.
         :param str preset_name: The template name in Resolve to use when exporting the shot. The default is
-          "PlateInjector".
+          DEFAULT_RENDER_PRESET_NAME.
         """
+        if take_name is None:
+            take_name = DEFAULT_TAKE_NAME
+
+        if preset_name is None:
+            preset_name = DEFAULT_RENDER_PRESET_NAME
+
         # create a new render output for each clip
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
@@ -747,7 +779,6 @@ class ShotClip(object):
         timeline_start_frame = self.timeline.GetStartFrame()
         markers = self.timeline.GetMarkers()
         if markers:
-            keys = markers.keys()
             frame_id = clip_start_frame - timeline_start_frame
             try:
                 marker = markers[frame_id]
@@ -826,11 +857,10 @@ class ShotClip(object):
         # Try to get a version with this clip path
         version_output_name = self.clip.GetName()
         version_file_name = version_output_name.split('.')[0]
-        from stalker import Version, Task
-        version = Version.query.join(Task, Version.task)\
+        from stalker import Version
+        version = Version.query\
             .filter(Version.full_path.contains(version_file_name))\
             .first()
-        # .filter(Task.project == self.stalker_project)\
 
         if not version:
             print("No version output: %s" % version_output_name)
@@ -886,7 +916,7 @@ class ShotClip(object):
             DBSession.commit()
 
 
-class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
+class ShotManagerUI(object):
     """The UI for the ShotManager
     """
 
@@ -894,17 +924,15 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
     __app_name__ = 'Shot Tools'
     __version__ = '0.0.1'
 
-    def __init__(self, *args, **kwargs):
-        super(ShotToolsLayout, self).__init__(*args, **kwargs)
-
+    def __init__(self, layout):
+        self.main_layout = layout
+        self.parent_widget = self.main_layout.parent()
         self.form_layout = None
         self.project_combo_box = None
         self.sequence_combo_box = None
         self.handle_spin_box = None
         self.take_name_line_edit = None
         self.render_preset_combo_box = None
-        self.submitting_for_combo_box = None
-        self.submission_note_text_edit = None
         self._shot_related_data_is_updating = False
 
         self.project_based_settings_storage = {}
@@ -922,23 +950,15 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         from anima.utils import do_db_setup
         do_db_setup()
 
-        import os
-        gamma = 1.0
-        if os.name == 'darwin':
-            gamma = 0.455
-
-        color_list = ColorList(gamma=gamma)
-
-        # get logged in user
-        self.get_logged_in_user()
+        color_list = ColorList()
 
         # self.setWindowTitle("Shot Manager")
-        self.form_layout = QtWidgets.QFormLayout(self.parent())
-        self.addLayout(self.form_layout)
+        self.form_layout = QtWidgets.QFormLayout()
+        self.main_layout.addLayout(self.form_layout)
 
         i = 0
         # Project
-        label = QtWidgets.QLabel(self.parent())
+        label = QtWidgets.QLabel(self.parent_widget)
         label.setText("Project")
         self.form_layout.setWidget(
             i,
@@ -946,17 +966,20 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             label
         )
 
+        import functools
+
         from anima.ui.widgets.project import ProjectComboBox
-        self.project_combo_box = ProjectComboBox(self.parent())
+        self.project_combo_box = ProjectComboBox(self.parent_widget)
         self.form_layout.setWidget(
             i,
             QtWidgets.QFormLayout.FieldRole,
             self.project_combo_box
         )
+        self.project_combo_box.currentIndexChanged.connect(functools.partial(self.project_changed))
 
         # Sequence
         i += 1
-        label = QtWidgets.QLabel(self.parent())
+        label = QtWidgets.QLabel(self.parent_widget)
         label.setText("Sequence")
         self.form_layout.setWidget(
             i,
@@ -965,7 +988,7 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         )
 
         from anima.ui.widgets.sequence import SequenceComboBox
-        self.sequence_combo_box = SequenceComboBox(self.parent())
+        self.sequence_combo_box = SequenceComboBox(self.parent_widget)
         self.form_layout.setWidget(
             i,
             QtWidgets.QFormLayout.FieldRole,
@@ -973,176 +996,107 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         )
 
         # Get Shot List button
-        get_shot_list_push_button = QtWidgets.QPushButton(self.parent())
+        get_shot_list_push_button = QtWidgets.QPushButton(self.parent_widget)
         get_shot_list_push_button.setText("Get Shot List")
-        self.addWidget(get_shot_list_push_button)
+        self.main_layout.addWidget(get_shot_list_push_button)
         set_widget_bg_color(get_shot_list_push_button, color_list)
+        get_shot_list_push_button.clicked.connect(functools.partial(self.get_shot_list_callback))
         color_list.next()
 
         # Check Duplicate Shot Code
-        validate_shots_push_button = QtWidgets.QPushButton(self.parent())
+        validate_shots_push_button = QtWidgets.QPushButton(self.parent_widget)
         validate_shots_push_button.setText("Validate Shots")
-        self.addWidget(validate_shots_push_button)
+        self.main_layout.addWidget(validate_shots_push_button)
         set_widget_bg_color(validate_shots_push_button, color_list)
+        validate_shots_push_button.clicked.connect(functools.partial(self.validate_shot_codes_callback))
         color_list.next()
 
         # Check Duplicate Shot Code
-        check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self.parent())
+        check_duplicate_shot_code_push_button = QtWidgets.QPushButton(self.parent_widget)
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
-        self.addWidget(check_duplicate_shot_code_push_button)
+        self.main_layout.addWidget(check_duplicate_shot_code_push_button)
         set_widget_bg_color(check_duplicate_shot_code_push_button , color_list)
+        check_duplicate_shot_code_push_button.clicked.connect(functools.partial(self.check_duplicate_shots_callback))
         color_list.next()
 
         # Handle horizontal layout
-        handle_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
-        self.addLayout(handle_horizontal_layout)
+        handle_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(handle_horizontal_layout)
 
-        handle_label = QtWidgets.QLabel(self.parent())
+        handle_label = QtWidgets.QLabel(self.parent_widget)
         handle_label.setText("Handles")
         handle_label.setMinimumWidth(120)
         handle_label.setMaximumWidth(120)
         handle_horizontal_layout.addWidget(handle_label)
 
-        self.handle_spin_box = QtWidgets.QSpinBox(self.parent())
+        self.handle_spin_box = QtWidgets.QSpinBox(self.parent_widget)
         self.handle_spin_box.setMinimum(0)
         self.handle_spin_box.setValue(0)
+        self.handle_spin_box.valueChanged.connect(functools.partial(self.shot_related_data_value_changed))
         handle_horizontal_layout.addWidget(self.handle_spin_box)
 
         # TakeName horizontal layout
-        take_name_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
-        self.addLayout(take_name_horizontal_layout)
+        take_name_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(take_name_horizontal_layout)
 
         # The take name to use
-        take_name_label = QtWidgets.QLabel(self.parent())
+        take_name_label = QtWidgets.QLabel(self.parent_widget)
         take_name_label.setText("Take Name")
         take_name_label.setMinimumWidth(120)
         take_name_label.setMaximumWidth(120)
         take_name_horizontal_layout.addWidget(take_name_label)
 
-        self.take_name_line_edit = QtWidgets.QLineEdit(self.parent())
-        self.take_name_line_edit.setText("Main")  # Uses the default take name
+        self.take_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
+        self.take_name_line_edit.setText(DEFAULT_TAKE_NAME)  # Uses the default take name
+        self.take_name_line_edit.textEdited.connect(functools.partial(self.shot_related_data_value_changed))
         take_name_horizontal_layout.addWidget(self.take_name_line_edit)
 
         # Render Preset list
-        render_preset_horizontal_layout = QtWidgets.QHBoxLayout(self.parent())
-        self.addLayout(render_preset_horizontal_layout)
+        render_preset_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(render_preset_horizontal_layout)
 
-        render_preset_label = QtWidgets.QLabel(self.parent())
+        render_preset_label = QtWidgets.QLabel(self.parent_widget)
         render_preset_label.setText("Render Preset")
         render_preset_label.setMinimumWidth(120)
         render_preset_label.setMaximumWidth(120)
 
         render_preset_horizontal_layout.addWidget(render_preset_label)
 
-        self.render_preset_combo_box = QtWidgets.QComboBox(self.parent())
+        self.render_preset_combo_box = QtWidgets.QComboBox(self.parent_widget)
         render_preset_horizontal_layout.addWidget(self.render_preset_combo_box)
         self.fill_preset_combo_box()
+        self.render_preset_combo_box.currentIndexChanged.connect(functools.partial(self.shot_related_data_value_changed))
 
         # Create Render Jobs button
-        create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent())
+        create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent_widget)
         create_shots_and_render_jobs_button.setText("Create Shots and Render Jobs")
-        self.addWidget(create_shots_and_render_jobs_button)
+        self.main_layout.addWidget(create_shots_and_render_jobs_button)
         set_widget_bg_color(create_shots_and_render_jobs_button, color_list)
+        create_shots_and_render_jobs_button.clicked.connect(functools.partial(self.create_render_jobs_callback))
         color_list.next()
 
         # Update Shot Thumbnail button
-        update_shot_thumbnail_button = QtWidgets.QPushButton(self.parent())
+        update_shot_thumbnail_button = QtWidgets.QPushButton(self.parent_widget)
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
-        self.addWidget(update_shot_thumbnail_button)
+        self.main_layout.addWidget(update_shot_thumbnail_button)
         set_widget_bg_color(update_shot_thumbnail_button, color_list)
+        update_shot_thumbnail_button.clicked.connect(functools.partial(self.update_shot_thumbnail_callback))
         color_list.next()
 
         # Update Shot Record In button
-        update_shot_record_in_info_button = QtWidgets.QPushButton(self.parent())
+        update_shot_record_in_info_button = QtWidgets.QPushButton(self.parent_widget)
         update_shot_record_in_info_button.setText("Update Shot Record-In Info")
-        self.addWidget(update_shot_record_in_info_button)
+        self.main_layout.addWidget(update_shot_record_in_info_button)
         set_widget_bg_color(update_shot_record_in_info_button, color_list)
+        update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info_callback)
         color_list.next()
 
-        # ----------------------------------
-        # Slate controls
-
-        # Submitting For
-        submitting_for_layout = QtWidgets.QHBoxLayout(self.parent())
-        self.addLayout(submitting_for_layout)
-
-        submitting_for_label = QtWidgets.QLabel(self.parent())
-        submitting_for_label.setText("Submitting For")
-        submitting_for_label.setMinimumWidth(120)
-        submitting_for_layout.addWidget(submitting_for_label)
-
-        self.submitting_for_combo_box = QtWidgets.QComboBox(self.parent())
-        self.submitting_for_combo_box.addItems(["FINAL", "WIP"])
-        submitting_for_layout.addWidget(self.submitting_for_combo_box)
-
-        submitting_for_layout.setStretch(0, 0)
-        submitting_for_layout.setStretch(1, 1)
-
-        # Submission Note
-        submission_note_layout = QtWidgets.QHBoxLayout(self.parent())
-        self.addLayout(submission_note_layout)
-
-        submission_note_label = QtWidgets.QLabel(self.parent())
-        submission_note_label.setText("Submission Note")
-        submission_note_label.setMinimumWidth(120)
-        submission_note_layout.addWidget(submission_note_label)
-
-        self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent())
-        self.submission_note_text_edit.setPlaceholderText("Enter submission note")
-        submission_note_layout.addWidget(self.submission_note_text_edit)
-
-        # Create Slate button
-        create_slate_button = QtWidgets.QPushButton(self.parent())
-        create_slate_button.setText("Create Slate")
-        self.addWidget(create_slate_button)
-        set_widget_bg_color(create_slate_button, color_list)
-
-        # Create Slate For All Shots button
-        create_slate_for_all_shots_button = QtWidgets.QPushButton(self.parent())
-        create_slate_for_all_shots_button.setText("Create Slate For All Shots")
-        self.addWidget(create_slate_for_all_shots_button)
-        set_widget_bg_color(create_slate_for_all_shots_button, color_list)
-        color_list.next()
-
-        # Fix Shot Clip Names
-        fix_shot_clip_name = QtWidgets.QPushButton(self.parent())
-        fix_shot_clip_name.setText("Fix Shot Clip Names")
-        self.addWidget(fix_shot_clip_name)
-        fix_shot_clip_name.clicked.connect(self.fix_shot_clip_name)
-        set_widget_bg_color(fix_shot_clip_name, color_list)
-        color_list.next()
-
-        generate_review_csv_push_button = QtWidgets.QPushButton(self.parent())
-        generate_review_csv_push_button.setText("Generate Review CSV")
-        self.addWidget(generate_review_csv_push_button)
-        generate_review_csv_push_button.clicked.connect(self.generate_review_csv)
-        set_widget_bg_color(generate_review_csv_push_button, color_list)
-
-        finalize_review_csv_push_button = QtWidgets.QPushButton(self.parent())
-        finalize_review_csv_push_button.setText("Finalize Review CSV")
-        self.addWidget(finalize_review_csv_push_button)
-        finalize_review_csv_push_button.clicked.connect(self.finalize_review_csv)
-        set_widget_bg_color(finalize_review_csv_push_button, color_list)
-        color_list.next()
+        # ---------------------------------------------------------
+        self.main_layout.addStretch()
 
         # ---------------------------------------------------------
         # Signals
         self.project_changed(None)
-        self.project_combo_box.currentIndexChanged.connect(self.project_changed)
-
-        create_shots_and_render_jobs_button.clicked.connect(self.create_render_jobs)
-        get_shot_list_push_button.clicked.connect(self.get_shot_list)
-        check_duplicate_shot_code_push_button.clicked.connect(self.check_duplicate_shots)
-        validate_shots_push_button.clicked.connect(self.validate_shot_codes)
-        update_shot_thumbnail_button.clicked.connect(self.update_shot_thumbnail)
-        update_shot_record_in_info_button.clicked.connect(self.update_shot_record_in_info)
-        create_slate_button.clicked.connect(self.create_slate)
-        create_slate_for_all_shots_button.clicked.connect(self.create_slate_for_all_shots)
-        self.handle_spin_box.valueChanged.connect(self.shot_related_data_value_changed)
-        self.render_preset_combo_box.currentIndexChanged.connect(self.shot_related_data_value_changed)
-        self.take_name_line_edit.textEdited.connect(self.shot_related_data_value_changed)
-
-        self.addStretch()
 
     def fill_preset_combo_box(self):
         """fills the preset comboBox
@@ -1173,15 +1127,20 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         """
         self.settings.beginGroup("ShotToolsLayout")
 
-        project_based_settings_storage = self.settings.value("project_based_settings_storage")
-        if project_based_settings_storage:
-            self.project_based_settings_storage = project_based_settings_storage
+        try:
+            project_based_settings_storage = self.settings.value("project_based_settings_storage")
+            if project_based_settings_storage:
+                self.project_based_settings_storage = project_based_settings_storage
+        except ValueError:
+            # It seems that current Python version is not the one that the
+            # settings has been created with
+            pass
 
         # update the combo box based on the current project
         # set the defaults
         handle = 0
-        take_name = "Main"
-        render_preset = "PlateInjector"
+        take_name = DEFAULT_TAKE_NAME
+        render_preset = DEFAULT_RENDER_PRESET_NAME
 
         project = self.project_combo_box.get_current_project()
         if project and project.id in self.project_based_settings_storage:
@@ -1245,38 +1204,145 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         self.read_settings()
         self._shot_related_data_is_updating = False
 
-    def get_shot_list(self):
+    def get_shot_list_callback(self):
         """just prints the shot names
         """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        for shot in im.get_shots():
+        project, sequence = self.get_project_and_sequence()
+        sm = ShotManager(project, sequence)
+        for shot in sm.get_shot_clips():
             isinstance(shot, ShotClip)
             print(shot.shot_code)
 
-    def create_render_jobs(self):
-        """creates render jobs
+    def update_shot_thumbnail_callback(self):
+        """callback function for update_shot_thumbnail_button
         """
+        project, sequence = self.get_project_and_sequence()
+        sm = ShotManager(project, sequence)
+        shot_clip = sm.get_current_shot_clip()
+
         try:
-            project, sequence = self.get_project_and_sequence()
-        except RuntimeError:
-            return
+            shot_clip.update_shot_thumbnail()
+        except BaseException as e:
+            QtWidgets.QMessageBox.critical(
+                self.parent_widget,
+                "Shot thumbnail could not be updated",
+                str(e)
+            )
+        else:
+            QtWidgets.QMessageBox.information(
+                self.parent_widget,
+                "Updated shot thumbnail 👍",
+                "Updated shot thumbnail 👍"
+            )
+
+    def update_shot_record_in_info_callback(self):
+        """callback function for update_shot_record_in_button
+        """
+        project, sequence = self.get_project_and_sequence()
+
+        answer = QtWidgets.QMessageBox.question(
+            self.parent_widget,
+            'Update shot record info!',
+            'This will update the shot record_in information of:<br/>'
+            '<br/>'
+            '%s - %s<br/>'
+            ' <br/>'
+            'Is this ok?' % (project.name, sequence.name),
+            QtWidgets.QMessageBox.Yes,
+            QtWidgets.QMessageBox.No
+        )
+
+        if answer == QtWidgets.QMessageBox.Yes:
+            shot_manager = ShotManager(project=project, sequence=sequence)
+            shots = shot_manager.get_shot_clips()
+            for shot in shots:
+                shot.update_record_in_info()
+            QtWidgets.QMessageBox.information(
+                self.parent_widget,
+                "Update shot record info!",
+                "Done"
+            )
+
+    def get_project_and_sequence(self):
+        try:
+            project = self.project_combo_box.get_current_project()
+            if not project:
+                raise RuntimeError("No project selected!")
+
+            sequence = self.sequence_combo_box.get_current_sequence()
+            if not sequence:
+                raise RuntimeError("No sequence selected!")
+        except RuntimeError as e:
+            QtWidgets.QMessageBox.critical(
+                self.parent_widget,
+                "Error",
+                str(e).replace("\n", "<br>")
+            )
+            raise e
+        return project, sequence
+
+    def check_duplicate_shots_callback(self):
+        """checks for duplicate shot code
+        """
+        sm = ShotManager()
+        duplicate_shot_codes = sm.check_duplicate_shots()
+        if duplicate_shot_codes:
+            QtWidgets.QMessageBox.critical(
+                self.parent_widget,
+                "Duplicate Shot Codes!!!",
+                "There are duplicate shot codes:<br>%s" % "<br>".join(duplicate_shot_codes)
+            )
+            return False
+        else:
+            QtWidgets.QMessageBox.information(
+                self.parent_widget,
+                "No Duplicate Shots 👍",
+                "No duplicate shots 👍"
+            )
+            return True
+
+    def validate_shot_codes_callback(self):
+        """callback function for validate_shot_codes_button
+        """
+        sm = ShotManager()
+        invalid_shot_codes = sm.validate_shot_codes()
+        if invalid_shot_codes:
+            QtWidgets.QMessageBox.critical(
+                self.parent_widget,
+                "Invalid shot names!!!",
+                "There are invalid shot codes:<br>%s" % "<br>".join(invalid_shot_codes)
+            )
+            return False
+        else:
+            QtWidgets.QMessageBox.information(
+                self.parent_widget,
+                "All shots valid 👍",
+                "All shots valid 👍"
+            )
+            return True
+
+    def create_render_jobs_callback(self):
+        """callback function for create_render_jobs_button
+        """
+        project, sequence = self.get_project_and_sequence()
 
         # first check duplicate shots
-        if not self.check_duplicate_shots():
+        sm = ShotManager()
+        if sm.check_duplicate_shots():
             return
 
-        if not self.validate_shot_codes():
+        if sm.validate_shot_codes():
             return
 
-        shot_manager = ShotManager(project, sequence)
+        # get logged in user
+        from anima.ui.base import AnimaDialogBase
+        AnimaDialogBase.get_logged_in_user(None)
 
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
         preset_name = self.render_preset_combo_box.currentText()
 
-        message_box = QtWidgets.QMessageBox(self.parent())
+        message_box = QtWidgets.QMessageBox(self.parent_widget)
         # message_box.setTitle("Which Shots?")
         message_box.setText("Which Shots?")
 
@@ -1289,195 +1355,128 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         message_box.addButton(all_shots, QtWidgets.QMessageBox.NoRole)
 
         message_box.exec_()
+        shot_manager = ShotManager(project, sequence)
 
+        clicked_button = message_box.clickedButton()
+        message_box.deleteLater()
+        success = False
+        shot_clips = []
+        if clicked_button == all_shots:
+            shot_clips = shot_manager.get_shot_clips()
+        elif clicked_button == current_shot:
+            shot_clip = shot_manager.get_current_shot_clip()
+            if shot_clip:
+                shot_clips.append(shot_clip)
         try:
-            clicked_button = message_box.clickedButton()
-            message_box.deleteLater()
-            success = False
-            if clicked_button == all_shots:
-                for shot in shot_manager.get_shots():
-                    shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
-                success = True
-            elif clicked_button == current_shot:
-                shot = shot_manager.get_current_shot()
-                if shot:
-                    shot.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
-                    success = True
-
+            shot_manager.create_render_jobs(shot_clips, handle, take_name, preset_name)
             if success:
                 QtWidgets.QMessageBox.information(
-                    self.parent(),
+                    self.parent_widget,
                     "Created Shots and Render Jobs 👍",
                     "Created Shots and Render Jobs 👍"
                 )
         except BaseException as e:
             QtWidgets.QMessageBox.critical(
-                self.parent(),
+                self.parent_widget,
                 "Error",
                 str(e)
             )
             raise e
 
-    def validate_shot_codes(self):
-        """validates the shot codes
+
+class ReviewManagerUI(object):
+    """A utility class that attaches the necessary controls to the given Qt
+    layout and has the callback functions
+
+    :param layout: A Qt layout.
+    """
+
+    def __init__(self, layout):
+        self.main_layout = layout
+        self.parent_widget = self.main_layout.parent()
+        self.submission_note_text_edit = None
+        self.submitting_for_combo_box = None
+        self.setup_ui()
+
+    def setup_ui(self):
         """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        invalid_shots = im.validate_shot_codes()
-        invalid_shot_codes = []
-        for shot in invalid_shots:
-            invalid_shot_codes.append(shot.shot_code)
-
-        if invalid_shot_codes:
-            QtWidgets.QMessageBox.critical(
-                self.parent(),
-                "Invalid shot names!!!",
-                "There are invalid shot codes:<br>%s" % "<br>".join(invalid_shot_codes)
-            )
-            return False
-        else:
-            QtWidgets.QMessageBox.information(
-                self.parent(),
-                "All shots valid 👍",
-                "All shots valid 👍"
-            )
-            return True
-
-    def check_duplicate_shots(self):
-        """checks for duplicate shot code
         """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        duplicate_shot_codes = im.check_duplicate_shots()
-        if duplicate_shot_codes:
-            QtWidgets.QMessageBox.critical(
-                self.parent(),
-                "Duplicate Shot Codes!!!",
-                "There are duplicate shot codes:<br>%s" % "<br>".join(duplicate_shot_codes)
-            )
-            return False
-        else:
-            QtWidgets.QMessageBox.information(
-                self.parent(),
-                "No Duplicate Shots 👍",
-                "No duplicate shots 👍"
-            )
-            return True
+        color_list = ColorList()
 
-    def update_shot_thumbnail(self):
-        """updates the current shot thumbnail with the clip thumbnail from resolve
+        # ----------------------------------
+        # Slate controls
+
+        # Submitting For
+        submitting_for_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(submitting_for_layout)
+
+        submitting_for_label = QtWidgets.QLabel(self.parent_widget)
+        submitting_for_label.setText("Submitting For")
+        submitting_for_label.setMinimumWidth(120)
+        submitting_for_layout.addWidget(submitting_for_label)
+
+        self.submitting_for_combo_box = QtWidgets.QComboBox(self.parent_widget)
+        self.submitting_for_combo_box.addItems(["FINAL", "WIP"])
+        submitting_for_layout.addWidget(self.submitting_for_combo_box)
+
+        submitting_for_layout.setStretch(0, 0)
+        submitting_for_layout.setStretch(1, 1)
+
+        # Submission Note
+        submission_note_layout = QtWidgets.QHBoxLayout()
+        self.main_layout.addLayout(submission_note_layout)
+
+        submission_note_label = QtWidgets.QLabel(self.parent_widget)
+        submission_note_label.setText("Submission Note")
+        submission_note_label.setMinimumWidth(120)
+        submission_note_layout.addWidget(submission_note_label)
+
+        self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent_widget)
+        self.submission_note_text_edit.setPlaceholderText("Enter submission note")
+        submission_note_layout.addWidget(self.submission_note_text_edit)
+
+        import functools
+
+        # Create Slate button
+        create_slate_button = QtWidgets.QPushButton(self.parent_widget)
+        create_slate_button.setText("Create Slate")
+        self.main_layout.addWidget(create_slate_button)
+        create_slate_button.clicked.connect(functools.partial(self.create_slate_callback))
+        set_widget_bg_color(create_slate_button, color_list)
+
+        # Create Slate For All Shots button
+        create_slate_for_all_shots_button = QtWidgets.QPushButton(self.parent_widget)
+        create_slate_for_all_shots_button.setText("Create Slate For All Shots")
+        self.main_layout.addWidget(create_slate_for_all_shots_button)
+        set_widget_bg_color(create_slate_for_all_shots_button, color_list)
+        create_slate_for_all_shots_button.clicked.connect(functools.partial(self.create_slate_for_all_shots_callback))
+        color_list.next()
+
+        # Fix Shot Clip Names
+        fix_shot_clip_name = QtWidgets.QPushButton(self.parent_widget)
+        fix_shot_clip_name.setText("Fix Shot Clip Names")
+        self.main_layout.addWidget(fix_shot_clip_name)
+        fix_shot_clip_name.clicked.connect(functools.partial(self.fix_shot_clip_name_callback))
+        set_widget_bg_color(fix_shot_clip_name, color_list)
+        color_list.next()
+
+        generate_review_csv_push_button = QtWidgets.QPushButton(self.parent_widget)
+        generate_review_csv_push_button.setText("Generate Review CSV")
+        self.main_layout.addWidget(generate_review_csv_push_button)
+        generate_review_csv_push_button.clicked.connect(functools.partial(self.generate_review_csv_callback))
+        set_widget_bg_color(generate_review_csv_push_button, color_list)
+
+        finalize_review_csv_push_button = QtWidgets.QPushButton(self.parent_widget)
+        finalize_review_csv_push_button.setText("Finalize Review CSV")
+        self.main_layout.addWidget(finalize_review_csv_push_button)
+        finalize_review_csv_push_button.clicked.connect(functools.partial(self.finalize_review_csv_callback))
+        set_widget_bg_color(finalize_review_csv_push_button, color_list)
+        color_list.next()
+
+    def finalize_review_csv_callback(self):
+        """callback function for the finalize_review_csv_button
         """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        shot = im.get_current_shot()
-
-        try:
-            shot.update_shot_thumbnail()
-        except BaseException as e:
-            QtWidgets.QMessageBox.critical(
-                self.parent(),
-                "Shot thumbnail could not be updated",
-                str(e)
-            )
-        else:
-            QtWidgets.QMessageBox.information(
-                self.parent(),
-                "Updated shot thumbnail 👍",
-                "Updated shot thumbnail 👍"
-            )
-
-    def create_slate(self):
-        """creates slate for the current shot
-        """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        submitting_for = self.submitting_for_combo_box.currentText()
-        submission_note = self.submission_note_text_edit.toPlainText()
-        im = ShotManager(project, sequence)
-        shot = im.get_current_shot()
-        if shot:
-            shot.create_slate(submitting_for=submitting_for, submission_note=submission_note)
-
-    def create_slate_for_all_shots(self):
-        """creates slate for all shots
-        """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        submission_note = self.submission_note_text_edit.toPlainText()
-
-        clips = im.get_clips()
-        timeline = im.get_current_timeline()
-
-        for clip in clips:
-            # if the length of the clip is 1 frame
-            # create slate for this clip
-            duration = clip.GetDuration()
-            if duration == 1:
-                # print("found %s slate clips" % len(slate_clips))
-                print("==========")
-                print("slate_clip: %s" % clip)
-                shot = ShotClip(
-                    project=project,
-                    sequence=sequence,
-                    clip=clip,
-                    timeline=timeline
-                )
-                shot.create_slate(submission_note=submission_note)
-
-    def fix_shot_clip_name(self):
-        """Removes the frame range part from the image sequence clips.
-        """
-        project = self.project_combo_box.get_current_project()
-        sequence = self.sequence_combo_box.get_current_sequence()
-        im = ShotManager(project, sequence)
-        for clip in im.get_clips():
-            media_pool_item = clip.GetMediaPoolItem()
-            clip_name = media_pool_item.GetClipProperty("Clip Name")
-            print("clip_name: %s" % clip_name)
-            new_clip_name = clip_name.split(".")[0]
-            print("new_clip_name: %s" % new_clip_name)
-            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
-
-    def generate_review_csv(self):
-        """generates review CSVs from the slate clips in the current timeline
-        """
-        import os
-        import tempfile
-        default_path_storage = os.path.join(tempfile.gettempdir(), "last_csv_file_path")
-        default_path = os.path.expanduser("~")
-        try:
-            with open(default_path_storage, "r") as f:
-                default_path = f.read()
-        except IOError:
-            pass
-
         # show a file browser
-        csv_file_path = QtWidgets.QFileDialog.getSaveFileName(self.parent(), "Choose CSV Path", default_path, "CSV (*.csv)")[0]
-        print("csv_file_path: %s" % csv_file_path)
-
-        if not csv_file_path:
-            raise RuntimeError("no file path chosen!")
-
-        # save the path
-        with open(default_path_storage, "w") as f:
-            f.write(csv_file_path)
-
-        from anima.utils import do_db_setup
-        do_db_setup()
-        from stalker import Studio
-        studio = Studio.query.first()
-        studio_name = studio.name if studio else ""
-
-        sm = ShotManager(None, None)
-        sm.generate_review_csv(output_path=csv_file_path, vendor=studio_name)
-
-    def finalize_review_csv(self):
-        """finalizes the review CSVs in the given path
-        """
         import os
         import tempfile
         default_path_storage = os.path.join(tempfile.gettempdir(), "last_csv_folder_path")
@@ -1488,10 +1487,9 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
         except IOError:
             pass
 
-        # show a file browser
-        csv_folder_path = QtWidgets.QFileDialog.getExistingDirectory(self.parent(), "Choose CSV Path", default_path)
-        print("csv_folder_path: %s" % csv_folder_path)
+        csv_folder_path = QtWidgets.QFileDialog.getExistingDirectory(self.parent_widget, "Choose CSV Path", default_path)
 
+        print("csv_folder_path: %s" % csv_folder_path)
         if not csv_folder_path:
             raise RuntimeError("no folder path chosen!")
 
@@ -1514,48 +1512,90 @@ class ShotToolsLayout(QtWidgets.QVBoxLayout, AnimaDialogBase):
             sm.finalize_review_csv(review_path=csv_folder_path, csv_output_path=csv_output_path, vendor=studio_name)
         except RuntimeError as e:
             QtWidgets.QMessageBox.critical(
-                self.parent(),
+                self.parent_widget,
                 "Error",
                 str(e).replace("\n", "<br>")
             )
 
-    def update_shot_record_in_info(self):
-        """updates the Shot.record_in data from the current timeline
+    def create_slate_callback(self):
+        """creates slate for the current shot clip
         """
-        project, sequence = self.get_project_and_sequence()
+        print("code is here 0")
+        submitting_for = self.submitting_for_combo_box.currentText()
+        submission_note = self.submission_note_text_edit.toPlainText()
+        sm = ShotManager()
+        shot_clip = sm.get_current_shot_clip()
+        print("code is here 1")
+        if shot_clip:
+            print("code is here 2")
+            shot_clip.create_slate(submitting_for=submitting_for, submission_note=submission_note)
+            print("code is here 3")
 
-        answer = QtWidgets.QMessageBox.question(
-            self.parent(),
-            'Update shot record info!',
-            'This will update the shot record_in information of:<br/>'
-            '<br/>'
-            '%s - %s<br/>'
-            ' <br/>'
-            'Is this ok?' % (project.name, sequence.name),
-            QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.No
-        )
+    def create_slate_for_all_shots_callback(self):
+        """creates slate for all shots
+        """
+        sm = ShotManager()
+        submission_note = self.submission_note_text_edit.toPlainText()
 
-        if answer == QtWidgets.QMessageBox.Yes:
-            shot_manager = ShotManager(project=project, sequence=sequence)
-            shots = shot_manager.get_shots()
-            for shot in shots:
-                shot.update_record_in_info()
+        clips = sm.get_clips()
+        timeline = sm.get_current_timeline()
 
-    def get_project_and_sequence(self):
+        for clip in clips:
+            # if the length of the clip is 1 frame
+            # create slate for this clip
+            duration = clip.GetDuration()
+            if duration == 1:
+                # print("found %s slate clips" % len(slate_clips))
+                print("==========")
+                print("slate_clip: %s" % clip)
+                shot = ShotClip(
+                    clip=clip,
+                    timeline=timeline
+                )
+                shot.create_slate(submission_note=submission_note)
+
+    def fix_shot_clip_name_callback(self):
+        """Removes the frame range part from the image sequence clips.
+        """
+        sm = ShotManager()
+        for clip in sm.get_clips():
+            media_pool_item = clip.GetMediaPoolItem()
+            clip_name = media_pool_item.GetClipProperty("Clip Name")
+            print("clip_name: %s" % clip_name)
+            new_clip_name = clip_name.split(".")[0]
+            print("new_clip_name: %s" % new_clip_name)
+            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
+
+    def generate_review_csv_callback(self):
+        """generates review CSVs from the slate clips in the current timeline
+        """
+        import os
+        import tempfile
+        default_path_storage = os.path.join(tempfile.gettempdir(), "last_csv_file_path")
+        default_path = os.path.expanduser("~")
         try:
-            project = self.project_combo_box.get_current_project()
-            if not project:
-                raise RuntimeError("No project selected!")
+            with open(default_path_storage, "r") as f:
+                default_path = f.read()
+        except IOError:
+            pass
 
-            sequence = self.sequence_combo_box.get_current_sequence()
-            if not sequence:
-                raise RuntimeError("No sequence selected!")
-        except RuntimeError as e:
-            QtWidgets.QMessageBox.critical(
-                self.parent(),
-                "Error",
-                str(e).replace("\n", "<br>")
-            )
-            raise e
-        return project, sequence
+        # show a file browser
+        csv_file_path = \
+            QtWidgets.QFileDialog.getSaveFileName(self.parent_widget, "Choose CSV Path", default_path, "CSV (*.csv)")[0]
+        print("csv_file_path: %s" % csv_file_path)
+
+        if not csv_file_path:
+            raise RuntimeError("no file path chosen!")
+
+        # save the path
+        with open(default_path_storage, "w") as f:
+            f.write(csv_file_path)
+
+        from anima.utils import do_db_setup
+        do_db_setup()
+        from stalker import Studio
+        studio = Studio.query.first()
+        studio_name = studio.name if studio else ""
+
+        sm = ShotManager(None, None)
+        sm.generate_review_csv(output_path=csv_file_path, vendor=studio_name)
