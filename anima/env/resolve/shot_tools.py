@@ -1473,6 +1473,9 @@ class ReviewManagerUI(object):
         set_widget_bg_color(finalize_review_csv_push_button, color_list)
         color_list.next()
 
+        # ---------------------------------------------------------
+        self.main_layout.addStretch()
+
     def finalize_review_csv_callback(self):
         """callback function for the finalize_review_csv_button
         """
