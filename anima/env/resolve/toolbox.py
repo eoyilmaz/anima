@@ -103,16 +103,19 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         main_tab_widget.addTab(review_tools_tab_widget, 'Review Tools')
         main_tab_widget.addTab(output_tab_widget, 'Output')
 
+        # add the conformer
+        conformer_layout = QtWidgets.QVBoxLayout(conformer_tab_widget)
+        from anima.env.resolve import conformer
+        conformer.ConformerUI(conformer_layout)
+
         # add the shot tools
         from anima.env.resolve.shot_tools import ShotManagerUI, ReviewManagerUI
 
         shot_tools_layout = QtWidgets.QVBoxLayout(shot_tools_tab_widget)
-        # shot_tools_tab_widget.setLayout(shot_tools_layout)
         ShotManagerUI(shot_tools_layout)
 
         # add review tools
         review_tools_layout = QtWidgets.QVBoxLayout(review_tools_tab_widget)
-        # review_tools_tab_widget.setLayout(review_tools_layout)
         ReviewManagerUI(review_tools_layout)
 
         label_role = QtWidgets.QFormLayout.LabelRole
