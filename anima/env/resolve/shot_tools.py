@@ -928,6 +928,7 @@ class ShotManagerUI(object):
         self.main_layout = layout
         self.parent_widget = self.main_layout.parent()
         self.form_layout = None
+        self.active_projects_only_check_box = None
         self.project_combo_box = None
         self.sequence_combo_box = None
         self.handle_spin_box = None
@@ -966,16 +967,32 @@ class ShotManagerUI(object):
             label
         )
 
-        import functools
+        from functools import partial
+
+        project_horizontal_layout = QtWidgets.QHBoxLayout()
+        self.form_layout.setLayout(
+            i,
+            QtWidgets.QFormLayout.FieldRole,
+            project_horizontal_layout
+        )
 
         from anima.ui.widgets.project import ProjectComboBox
         self.project_combo_box = ProjectComboBox(self.parent_widget)
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.project_combo_box
-        )
-        self.project_combo_box.currentIndexChanged.connect(functools.partial(self.project_changed))
+        project_horizontal_layout.addWidget(self.project_combo_box)
+        self.project_combo_box.currentIndexChanged.connect(partial(self.project_changed))
+
+        self.active_projects_only_check_box = QtWidgets.QCheckBox(self.parent_widget)
+        self.active_projects_only_check_box.setText("Active Projects Only")
+        self.active_projects_only_check_box.setChecked(True)
+        self.active_projects_only_check_box.setToolTip("Show active Projects only!")
+        self.active_projects_only_check_box.stateChanged.connect(partial(self.active_projects_only_check_box_callback))
+        project_horizontal_layout.addWidget(self.active_projects_only_check_box)
+
+        project_horizontal_layout.setStretch(0, 1)
+        project_horizontal_layout.setStretch(1, 0)
+
+        # refresh the project combo box
+        self.project_combo_box.__fill_ui()
 
         # Sequence
         i += 1
@@ -1000,7 +1017,7 @@ class ShotManagerUI(object):
         get_shot_list_push_button.setText("Get Shot List")
         self.main_layout.addWidget(get_shot_list_push_button)
         set_widget_bg_color(get_shot_list_push_button, color_list)
-        get_shot_list_push_button.clicked.connect(functools.partial(self.get_shot_list_callback))
+        get_shot_list_push_button.clicked.connect(partial(self.get_shot_list_callback))
         color_list.next()
 
         # Check Duplicate Shot Code
@@ -1008,7 +1025,7 @@ class ShotManagerUI(object):
         validate_shots_push_button.setText("Validate Shots")
         self.main_layout.addWidget(validate_shots_push_button)
         set_widget_bg_color(validate_shots_push_button, color_list)
-        validate_shots_push_button.clicked.connect(functools.partial(self.validate_shot_codes_callback))
+        validate_shots_push_button.clicked.connect(partial(self.validate_shot_codes_callback))
         color_list.next()
 
         # Check Duplicate Shot Code
@@ -1016,7 +1033,7 @@ class ShotManagerUI(object):
         check_duplicate_shot_code_push_button.setText("Check Duplicate Shot Code")
         self.main_layout.addWidget(check_duplicate_shot_code_push_button)
         set_widget_bg_color(check_duplicate_shot_code_push_button , color_list)
-        check_duplicate_shot_code_push_button.clicked.connect(functools.partial(self.check_duplicate_shots_callback))
+        check_duplicate_shot_code_push_button.clicked.connect(partial(self.check_duplicate_shots_callback))
         color_list.next()
 
         # Handle horizontal layout
@@ -1032,7 +1049,7 @@ class ShotManagerUI(object):
         self.handle_spin_box = QtWidgets.QSpinBox(self.parent_widget)
         self.handle_spin_box.setMinimum(0)
         self.handle_spin_box.setValue(0)
-        self.handle_spin_box.valueChanged.connect(functools.partial(self.shot_related_data_value_changed))
+        self.handle_spin_box.valueChanged.connect(partial(self.shot_related_data_value_changed))
         handle_horizontal_layout.addWidget(self.handle_spin_box)
 
         # TakeName horizontal layout
@@ -1048,7 +1065,7 @@ class ShotManagerUI(object):
 
         self.take_name_line_edit = QtWidgets.QLineEdit(self.parent_widget)
         self.take_name_line_edit.setText(DEFAULT_TAKE_NAME)  # Uses the default take name
-        self.take_name_line_edit.textEdited.connect(functools.partial(self.shot_related_data_value_changed))
+        self.take_name_line_edit.textEdited.connect(partial(self.shot_related_data_value_changed))
         take_name_horizontal_layout.addWidget(self.take_name_line_edit)
 
         # Render Preset list
@@ -1065,14 +1082,14 @@ class ShotManagerUI(object):
         self.render_preset_combo_box = QtWidgets.QComboBox(self.parent_widget)
         render_preset_horizontal_layout.addWidget(self.render_preset_combo_box)
         self.fill_preset_combo_box()
-        self.render_preset_combo_box.currentIndexChanged.connect(functools.partial(self.shot_related_data_value_changed))
+        self.render_preset_combo_box.currentIndexChanged.connect(partial(self.shot_related_data_value_changed))
 
         # Create Render Jobs button
         create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent_widget)
         create_shots_and_render_jobs_button.setText("Create Shots and Render Jobs")
         self.main_layout.addWidget(create_shots_and_render_jobs_button)
         set_widget_bg_color(create_shots_and_render_jobs_button, color_list)
-        create_shots_and_render_jobs_button.clicked.connect(functools.partial(self.create_render_jobs_callback))
+        create_shots_and_render_jobs_button.clicked.connect(partial(self.create_render_jobs_callback))
         color_list.next()
 
         # Update Shot Thumbnail button
@@ -1080,7 +1097,7 @@ class ShotManagerUI(object):
         update_shot_thumbnail_button.setText("Update Shot Thumbnail")
         self.main_layout.addWidget(update_shot_thumbnail_button)
         set_widget_bg_color(update_shot_thumbnail_button, color_list)
-        update_shot_thumbnail_button.clicked.connect(functools.partial(self.update_shot_thumbnail_callback))
+        update_shot_thumbnail_button.clicked.connect(partial(self.update_shot_thumbnail_callback))
         color_list.next()
 
         # Update Shot Record In button
@@ -1204,11 +1221,17 @@ class ShotManagerUI(object):
         self.read_settings()
         self._shot_related_data_is_updating = False
 
-    def get_shot_list_callback(self):
+    def active_projects_only_check_box_callback(self, state):
+        """
+        :return:
+        """
+        self.project_combo_box.show_active_projects = state
+
+    @classmethod
+    def get_shot_list_callback(cls):
         """just prints the shot names
         """
-        project, sequence = self.get_project_and_sequence()
-        sm = ShotManager(project, sequence)
+        sm = ShotManager()
         for shot in sm.get_shot_clips():
             isinstance(shot, ShotClip)
             print(shot.shot_code)
@@ -1336,7 +1359,8 @@ class ShotManagerUI(object):
 
         # get logged in user
         from anima.ui.base import AnimaDialogBase
-        AnimaDialogBase.get_logged_in_user(None)
+        anima_dialog_base = AnimaDialogBase()
+        anima_dialog_base.get_logged_in_user()
 
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
@@ -1351,8 +1375,8 @@ class ShotManagerUI(object):
         cancel_button = QtWidgets.QPushButton("Cancel")
 
         message_box.addButton(cancel_button, QtWidgets.QMessageBox.NoRole)
-        message_box.addButton(current_shot, QtWidgets.QMessageBox.YesRole)
         message_box.addButton(all_shots, QtWidgets.QMessageBox.NoRole)
+        message_box.addButton(current_shot, QtWidgets.QMessageBox.NoRole)
 
         message_box.exec_()
         shot_manager = ShotManager(project, sequence)
@@ -1435,13 +1459,13 @@ class ReviewManagerUI(object):
         self.submission_note_text_edit.setPlaceholderText("Enter submission note")
         submission_note_layout.addWidget(self.submission_note_text_edit)
 
-        import functools
+        from functools import partial
 
         # Create Slate button
         create_slate_button = QtWidgets.QPushButton(self.parent_widget)
         create_slate_button.setText("Create Slate")
         self.main_layout.addWidget(create_slate_button)
-        create_slate_button.clicked.connect(functools.partial(self.create_slate_callback))
+        create_slate_button.clicked.connect(partial(self.create_slate_callback))
         set_widget_bg_color(create_slate_button, color_list)
 
         # Create Slate For All Shots button
@@ -1449,27 +1473,27 @@ class ReviewManagerUI(object):
         create_slate_for_all_shots_button.setText("Create Slate For All Shots")
         self.main_layout.addWidget(create_slate_for_all_shots_button)
         set_widget_bg_color(create_slate_for_all_shots_button, color_list)
-        create_slate_for_all_shots_button.clicked.connect(functools.partial(self.create_slate_for_all_shots_callback))
+        create_slate_for_all_shots_button.clicked.connect(partial(self.create_slate_for_all_shots_callback))
         color_list.next()
 
         # Fix Shot Clip Names
         fix_shot_clip_name = QtWidgets.QPushButton(self.parent_widget)
         fix_shot_clip_name.setText("Fix Shot Clip Names")
         self.main_layout.addWidget(fix_shot_clip_name)
-        fix_shot_clip_name.clicked.connect(functools.partial(self.fix_shot_clip_name_callback))
+        fix_shot_clip_name.clicked.connect(partial(self.fix_shot_clip_name_callback))
         set_widget_bg_color(fix_shot_clip_name, color_list)
         color_list.next()
 
         generate_review_csv_push_button = QtWidgets.QPushButton(self.parent_widget)
         generate_review_csv_push_button.setText("Generate Review CSV")
         self.main_layout.addWidget(generate_review_csv_push_button)
-        generate_review_csv_push_button.clicked.connect(functools.partial(self.generate_review_csv_callback))
+        generate_review_csv_push_button.clicked.connect(partial(self.generate_review_csv_callback))
         set_widget_bg_color(generate_review_csv_push_button, color_list)
 
         finalize_review_csv_push_button = QtWidgets.QPushButton(self.parent_widget)
         finalize_review_csv_push_button.setText("Finalize Review CSV")
         self.main_layout.addWidget(finalize_review_csv_push_button)
-        finalize_review_csv_push_button.clicked.connect(functools.partial(self.finalize_review_csv_callback))
+        finalize_review_csv_push_button.clicked.connect(partial(self.finalize_review_csv_callback))
         set_widget_bg_color(finalize_review_csv_push_button, color_list)
         color_list.next()
 
@@ -1523,16 +1547,12 @@ class ReviewManagerUI(object):
     def create_slate_callback(self):
         """creates slate for the current shot clip
         """
-        print("code is here 0")
         submitting_for = self.submitting_for_combo_box.currentText()
         submission_note = self.submission_note_text_edit.toPlainText()
         sm = ShotManager()
         shot_clip = sm.get_current_shot_clip()
-        print("code is here 1")
         if shot_clip:
-            print("code is here 2")
             shot_clip.create_slate(submitting_for=submitting_for, submission_note=submission_note)
-            print("code is here 3")
 
     def create_slate_for_all_shots_callback(self):
         """creates slate for all shots
