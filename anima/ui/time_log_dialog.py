@@ -79,7 +79,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # -----------------------------
         # Setup Main Layout
-        self.main_layout = QtWidgets.QHBoxLayout(self)
+        self.main_layout = QtWidgets.QHBoxLayout()
 
         # create the left column
         self.left_layout = QtWidgets.QVBoxLayout()

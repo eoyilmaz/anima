@@ -108,7 +108,7 @@ class PublisherElement(object):
         :return:
         """
         # Create layout
-        self.layout = QtWidgets.QHBoxLayout(parent)
+        self.layout = QtWidgets.QHBoxLayout()
 
         # Create Icons
         self.publisher_state_ok_icon = parent.style() \
@@ -452,7 +452,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.resize(650, 850)
         # ----------------------------------------------------
         # Main Layout
-        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.main_layout = QtWidgets.QVBoxLayout()
 
         # ----------------------------------------------------
         # Dialog Label
@@ -520,7 +520,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # self.publisher_grid_layout = \
         #     QtWidgets.QGridLayout(self.main_layout.widget())
         self.scroll_area_widget = QtWidgets.QWidget(self)
-        self.publisher_vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.publisher_vertical_layout = QtWidgets.QVBoxLayout()
         self.scroll_area_widget.setLayout(self.publisher_vertical_layout)
 
         self.scroll_area = QtWidgets.QScrollArea(self)

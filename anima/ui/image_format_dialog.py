@@ -70,7 +70,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def setup_ui(self):
         self.resize(328, 184)
-        self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout = QtWidgets.QVBoxLayout()
         self.dialog_label = QtWidgets.QLabel(self)
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n"
                                         "font: 18pt;")
