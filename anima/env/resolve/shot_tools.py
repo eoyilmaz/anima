@@ -318,6 +318,17 @@ class ShotManager(object):
         for shot_clip in shot_clips:
             shot_clip.create_render_job(handle=handle, take_name=take_name, preset_name=preset_name)
 
+    def fix_shot_clip_names(self):
+        """Removes the .[####-####].exr part of the clip name for image sequences
+        """
+        for clip in self.get_clips():
+            media_pool_item = clip.GetMediaPoolItem()
+            clip_name = media_pool_item.GetClipProperty("Clip Name")
+            print("clip_name: %s" % clip_name)
+            new_clip_name = clip_name.split(".")[0]
+            print("new_clip_name: %s" % new_clip_name)
+            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
+
 
 class ShotClip(object):
     """Manages Stalker Shots along with Resolve Clips
@@ -1577,17 +1588,12 @@ class ReviewManagerUI(object):
                 )
                 shot.create_slate(submission_note=submission_note)
 
-    def fix_shot_clip_name_callback(self):
+    @classmethod
+    def fix_shot_clip_name_callback(cls):
         """Removes the frame range part from the image sequence clips.
         """
         sm = ShotManager()
-        for clip in sm.get_clips():
-            media_pool_item = clip.GetMediaPoolItem()
-            clip_name = media_pool_item.GetClipProperty("Clip Name")
-            print("clip_name: %s" % clip_name)
-            new_clip_name = clip_name.split(".")[0]
-            print("new_clip_name: %s" % new_clip_name)
-            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
+        sm.fix_shot_clip_names()
 
     def generate_review_csv_callback(self):
         """generates review CSVs from the slate clips in the current timeline

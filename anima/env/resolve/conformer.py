@@ -949,6 +949,10 @@ class ConformerUI(object):
                     media_pool = self.resolve_project.GetMediaPool()
                     media_pool.ImportTimelineFromFile(self.xml_path)
                     print('+ PLATES XML IMPORTED to Resolve')
+                # Fix shot clip names
+                from anima.env.resolve.shot_tools import ShotManager
+                sm = ShotManager()
+                sm.fix_shot_clip_names()
             else:
                 print('No Outputs found with given specs!')
 
