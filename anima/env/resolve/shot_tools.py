@@ -989,6 +989,7 @@ class ShotManagerUI(object):
 
         from anima.ui.widgets.project import ProjectComboBox
         self.project_combo_box = ProjectComboBox(self.parent_widget)
+        self.project_combo_box.show_active_projects = True
         project_horizontal_layout.addWidget(self.project_combo_box)
         self.project_combo_box.currentIndexChanged.connect(partial(self.project_changed))
 
@@ -1001,9 +1002,6 @@ class ShotManagerUI(object):
 
         project_horizontal_layout.setStretch(0, 1)
         project_horizontal_layout.setStretch(1, 0)
-
-        # refresh the project combo box
-        self.project_combo_box.__fill_ui()
 
         # Sequence
         i += 1
