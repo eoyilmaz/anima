@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import os
-import re
-import glob
-import tempfile
-from stalker import Project, Sequence, Scene, Shot, Task, Version
-
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
-from anima.env import blackmagic
-from anima.utils import do_db_setup
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -30,6 +22,28 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def __init__(self, *args, **kwargs):
         super(MainDialog, self).__init__(*args, **kwargs)
+        self.vertical_layout = None
+        self._setup_ui()
+
+    def _setup_ui(self):
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        conformer_ui = ConformerUI(self.vertical_layout)
+        self.setWindowTitle('Conformer')
+        self.resize(500, 100)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+
+
+class ConformerUI(object):
+    """The main class that creates the UI widgets
+    """
+
+    def __init__(self, layout):
+        import os
+        import tempfile
+        from anima.env import blackmagic
+        from anima.utils import do_db_setup
+
+        self.main_layout = layout
 
         self.resolve = blackmagic.get_resolve()
         self.project = self.resolve.GetProjectManager().GetCurrentProject()
@@ -42,38 +56,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         do_db_setup()
 
         self._setup_ui()
-
-        self._setup_signals()
-
         self._set_defaults()
 
     def _setup_ui(self):
         """setups UI
         """
+        from functools import partial
         try:
             _fromUtf8 = QtCore.QString.fromUtf8
         except AttributeError:
             _fromUtf8 = lambda s: s
 
+        self.parent_widget = self.main_layout.parent()
+
         bmgc_project_name = self.project.GetName()
         bmgc_project_fps = self.project.GetSetting('timelineFrameRate')
 
-        self.setWindowTitle('Conformer')
-        self.resize(500, 100)
-
-        self.vertical_layout = QtWidgets.QVBoxLayout(self)
-
-        self.bmgc_project_label = QtWidgets.QLabel(self.vertical_layout.widget())
+        self.bmgc_project_label = QtWidgets.QLabel(self.parent_widget)
         self.bmgc_project_label.setText('%s - [%s fps] / Resolve' % (bmgc_project_name, bmgc_project_fps))
         self.bmgc_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
-        self.vertical_layout.addWidget(self.bmgc_project_label)
+        self.main_layout .addWidget(self.bmgc_project_label)
 
-        line = QtWidgets.QFrame(self.vertical_layout.parent())
+        line = QtWidgets.QFrame(self.parent_widget)
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.vertical_layout.addWidget(line)
+        self.main_layout .addWidget(line)
 
-        self.h_layout1 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout1 = QtWidgets.QHBoxLayout()
 
         self.stalker_project_label = QtWidgets.QLabel(self.h_layout1.widget())
         self.stalker_project_label.setText('Stalker Project:')
@@ -82,11 +91,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.project_combo_box = QtWidgets.QComboBox(self.h_layout1.widget())
         self.project_combo_box.setSizePolicy(size_policy)
+        self.project_combo_box.currentIndexChanged.connect(partial(self.project_combo_box_changed))
         self.h_layout1.addWidget(self.project_combo_box)
 
-        self.vertical_layout.addLayout(self.h_layout1)
+        self.main_layout.addLayout(self.h_layout1)
 
-        self.h_layout2 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout2 = QtWidgets.QHBoxLayout()
 
         self.stalker_seq_label = QtWidgets.QLabel(self.h_layout2.widget())
         self.stalker_seq_label.setText('Stalker Seq:      ')
@@ -95,11 +105,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.seq_combo_box = QtWidgets.QComboBox(self.h_layout2.widget())
         self.seq_combo_box.setSizePolicy(size_policy)
+        self.seq_combo_box.currentIndexChanged.connect(partial(self.seq_combo_box_changed))
         self.h_layout2.addWidget(self.seq_combo_box)
 
-        self.vertical_layout.addLayout(self.h_layout2)
+        self.main_layout.addLayout(self.h_layout2)
 
-        self.h_layout3 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout3 = QtWidgets.QHBoxLayout()
 
         self.stalker_scene_label = QtWidgets.QLabel(self.h_layout3.widget())
         self.stalker_scene_label.setText('Stalker Scene:  ')
@@ -108,11 +119,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.scene_combo_box = QtWidgets.QComboBox(self.h_layout3.widget())
         self.scene_combo_box.setSizePolicy(size_policy)
+        self.scene_combo_box.currentIndexChanged.connect(partial(self.scene_combo_box_changed))
         self.h_layout3.addWidget(self.scene_combo_box)
 
-        self.vertical_layout.addLayout(self.h_layout3)
+        self.main_layout.addLayout(self.h_layout3)
 
-        self.h_layout_shots = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout_shots = QtWidgets.QHBoxLayout()
 
         self.shot_in_label = QtWidgets.QLabel(self.h_layout_shots.widget())
         self.shot_in_label.setText('Shot In:')
@@ -121,6 +133,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.shot_in_combo_box = QtWidgets.QComboBox(self.h_layout_shots.widget())
         self.shot_in_combo_box.setSizePolicy(size_policy)
+        self.shot_in_combo_box.currentIndexChanged.connect(partial(self.shot_in_combo_box_changed))
         self.h_layout_shots.addWidget(self.shot_in_combo_box)
 
         self.shot_out_label = QtWidgets.QLabel(self.h_layout_shots.widget())
@@ -130,11 +143,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.shot_out_combo_box = QtWidgets.QComboBox(self.h_layout_shots.widget())
         self.shot_out_combo_box.setSizePolicy(size_policy)
+        self.shot_out_combo_box.currentIndexChanged.connect(partial(self.shot_out_combo_box_changed))
         self.h_layout_shots.addWidget(self.shot_out_combo_box)
 
-        self.vertical_layout.addLayout(self.h_layout_shots)
+        self.main_layout.addLayout(self.h_layout_shots)
 
-        self.h_layout4 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout4 = QtWidgets.QHBoxLayout()
 
         self.width_label = QtWidgets.QLabel(self.h_layout4.widget())
         self.width_label.setText('Width:')
@@ -163,12 +177,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.fps_line.setEnabled(0)
         self.h_layout4.addWidget(self.fps_line)
 
-        self.vertical_layout.addLayout(self.h_layout4)
+        self.main_layout.addLayout(self.h_layout4)
 
-        self.h_layout4a = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout4a = QtWidgets.QHBoxLayout()
 
         self.filter_statuses_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
         self.filter_statuses_check_box.setText('Filter Statuses')
+        self.filter_statuses_check_box.stateChanged.connect(partial(self.filter_statuses_check_box_changed))
         self.h_layout4a.addWidget(self.filter_statuses_check_box)
 
         self.wip_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
@@ -187,9 +202,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.completed_check_box.setText('CMLT')
         self.h_layout4a.addWidget(self.completed_check_box)
 
-        self.vertical_layout.addLayout(self.h_layout4a)
+        self.main_layout.addLayout(self.h_layout4a)
 
-        self.h_layout5 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout5 = QtWidgets.QHBoxLayout()
 
         self.task_name_label = QtWidgets.QLabel(self.h_layout5.widget())
         self.task_name_label.setText('Task Name:')
@@ -198,6 +213,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.task_name_combo_box = QtWidgets.QComboBox(self.h_layout5.widget())
         self.task_name_combo_box.setSizePolicy(size_policy)
+        self.task_name_combo_box.currentIndexChanged.connect(partial(self.task_name_combo_box_changed))
         self.h_layout5.addWidget(self.task_name_combo_box)
 
         self.ext_name_label = QtWidgets.QLabel(self.h_layout5.widget())
@@ -217,30 +233,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.alpha_only_check_box.setText('Alpha Only')
         self.h_layout5.addWidget(self.alpha_only_check_box)
         
-        self.vertical_layout.addLayout(self.h_layout5)
+        self.main_layout.addLayout(self.h_layout5)
 
-        self.h_layout6 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout6 = QtWidgets.QHBoxLayout()
 
         self.record_in_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
         self.record_in_check_box.setText('Record In')
+        self.record_in_check_box.stateChanged.connect(partial(self.record_in_check_box_changed))
         self.h_layout6.addWidget(self.record_in_check_box)
 
         self.slated_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
         self.slated_check_box.setText('Include Slates')
+        self.slated_check_box.stateChanged.connect(partial(self.slated_check_box_changed))
         self.h_layout6.addWidget(self.slated_check_box)
 
-        self.vertical_layout.addLayout(self.h_layout6)
+        self.main_layout.addLayout(self.h_layout6)
 
-        self.conform_button = QtWidgets.QPushButton(self.vertical_layout.widget())
+        self.conform_button = QtWidgets.QPushButton(self.parent_widget)
         self.conform_button.setText('CONFORM ALL')
-        self.vertical_layout.addWidget(self.conform_button)
+        self.conform_button.clicked.connect(partial(self.conform))
+        self.main_layout .addWidget(self.conform_button)
 
-        line1 = QtWidgets.QFrame(self.vertical_layout.parent())
+        line1 = QtWidgets.QFrame(self.parent_widget)
         line1.setFrameShape(QtWidgets.QFrame.HLine)
         line1.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.vertical_layout.addWidget(line1)
+        self.main_layout .addWidget(line1)
 
-        self.h_layout6 = QtWidgets.QHBoxLayout(self.vertical_layout.widget())
+        self.h_layout6 = QtWidgets.QHBoxLayout()
 
         self.date_label = QtWidgets.QLabel(self.h_layout6.widget())
         self.date_label.setText('check From:')
@@ -258,123 +277,36 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.now_label.setAlignment(QtCore.Qt.AlignCenter)
         self.h_layout6.addWidget(self.now_label)
 
-        self.vertical_layout.addLayout(self.h_layout6)
+        self.main_layout.addLayout(self.h_layout6)
 
-        self.updated_shot_list = QtWidgets.QListWidget(self.vertical_layout.widget())
+        self.updated_shot_list = QtWidgets.QListWidget(self.parent_widget)
         self.updated_shot_list.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.vertical_layout.addWidget(self.updated_shot_list)
+        self.main_layout .addWidget(self.updated_shot_list)
 
-        self.status_button= QtWidgets.QPushButton(self.vertical_layout.widget())
+        self.status_button= QtWidgets.QPushButton(self.parent_widget)
         self.status_button.setText('LIST UPDATED SHOTS')
-        self.vertical_layout.addWidget(self.status_button)
+        self.status_button.clicked.connect(partial(self.list_shot_update_status))
+        self.main_layout .addWidget(self.status_button)
 
-        self.conform_updates_button= QtWidgets.QPushButton(self.vertical_layout.widget())
+        self.conform_updates_button = QtWidgets.QPushButton(self.parent_widget)
         self.conform_updates_button.setText('CONFORM UPDATED SHOTS ONLY')
-        self.vertical_layout.addWidget(self.conform_updates_button)
+        self.conform_updates_button.clicked.connect(partial(self.conform_updated_shots))
+        self.main_layout .addWidget(self.conform_updates_button)
 
-        line2 = QtWidgets.QFrame(self.vertical_layout.parent())
+        line2 = QtWidgets.QFrame(self.parent_widget)
         line2.setFrameShape(QtWidgets.QFrame.HLine)
         line2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.vertical_layout.addWidget(line2)
+        self.main_layout .addWidget(line2)
 
-        self.info_label = QtWidgets.QLabel(self.vertical_layout.widget())
+        self.info_label = QtWidgets.QLabel(self.parent_widget)
         self.info_label.setText('check Console for Progress Info...')
-        self.vertical_layout.addWidget(self.info_label)
+        self.main_layout .addWidget(self.info_label)
 
         self.fill_ui_with_stalker_projects()
-
-    def _setup_signals(self):
-        """setups signals
-        """
-        # project_combo_box is changed
-        QtCore.QObject.connect(
-            self.project_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.project_combo_box_changed
-        )
-
-        # seq_combo_box is changed
-        QtCore.QObject.connect(
-            self.seq_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.seq_combo_box_changed
-        )
-
-        # scene_combo_box is changed
-        QtCore.QObject.connect(
-            self.scene_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.scene_combo_box_changed
-        )
-
-        # shot_in_combo_box is changed
-        QtCore.QObject.connect(
-            self.shot_in_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.shot_in_combo_box_changed
-        )
-
-        # shot_out_combo_box is changed
-        QtCore.QObject.connect(
-            self.shot_out_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.shot_out_combo_box_changed
-        )
-        
-        # task_name_combo_box is changed
-        QtCore.QObject.connect(
-            self.task_name_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.task_name_combo_box_changed
-        )
-
-        # filter_statuses_check_box is changed
-        QtCore.QObject.connect(
-            self.filter_statuses_check_box,
-            QtCore.SIGNAL('stateChanged(int)'),
-            self.filter_statuses_check_box_changed
-        )
-
-        # slated_check_box is changed
-        QtCore.QObject.connect(
-            self.slated_check_box,
-            QtCore.SIGNAL('stateChanged(int)'),
-            self.slated_check_box_changed
-        )
-
-        # record_in_check_box is changed
-        QtCore.QObject.connect(
-            self.record_in_check_box,
-            QtCore.SIGNAL('stateChanged(int)'),
-            self.record_in_check_box_changed
-        )
-
-        # conform_button is clicked
-        QtCore.QObject.connect(
-            self.conform_button,
-            QtCore.SIGNAL("clicked()"),
-            self.conform
-        )
-
-        # status_button is clicked
-        QtCore.QObject.connect(
-            self.status_button,
-            QtCore.SIGNAL("clicked()"),
-            self.list_shot_update_status
-        )
-
-        # conform_updates_button is clicked
-        QtCore.QObject.connect(
-            self.conform_updates_button,
-            QtCore.SIGNAL("clicked()"),
-            self.conform_updated_shots
-        )
 
     def _set_defaults(self):
         """sets defaults for UI
         """
-        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
-
         self.seq_combo_box.clear()
         self.seq_combo_box.setEnabled(0)
 
@@ -431,6 +363,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def fill_ui_with_stalker_projects(self):
         """fills project_combo_box with stalker projects in UI
         """
+        from stalker import Project
         projects = Project.query.order_by(Project.name).all()
 
         self.project_combo_box.clear()
@@ -438,7 +371,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         for project in projects:
             self.project_combo_box.addItem(self.add_data_as_text_to_ui(project.name, project.id))
 
-    def project_combo_box_changed(self):
+    def project_combo_box_changed(self, *args):
         """runs when the project_combo_box is changed
         """
         self.updated_shot_list.clear()
@@ -452,6 +385,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(0)
         else:
+            from stalker import Project
             sequences = []
             stalker_project_text = self.project_combo_box.currentText()
             p_id = self.get_id_from_data_text(stalker_project_text)
@@ -474,7 +408,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.width_line.setText('%s' % stalker_project.image_format.width)
             self.height_line.setText('%s' % stalker_project.image_format.height)
 
-    def seq_combo_box_changed(self):
+    def seq_combo_box_changed(self, *args):
         """runs when the seq_combo_box is changed
         """
         self.updated_shot_list.clear()
@@ -491,6 +425,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             seq_id = self.get_id_from_data_text(stalker_seq_text)
             if seq_id:
                 scenes = []
+                from stalker import Sequence, Scene
                 stalker_seq = Sequence.query.get(seq_id)
 
                 self.scene_combo_box.clear()
@@ -511,7 +446,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 for item in scenes:
                     self.scene_combo_box.addItem(item)
 
-    def scene_combo_box_changed(self):
+    def scene_combo_box_changed(self, *args):
         """runs when the scene_combo_box is changed
         """
         self.updated_shot_list.clear()
@@ -519,6 +454,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         p_id = self.get_id_from_data_text(stalker_project_text)
 
         if p_id:
+            from stalker import Project
             stalker_project = Project.query.get(p_id)
 
             if self.scene_combo_box.currentText() == 'ALL':
@@ -536,6 +472,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 sc_id = self.get_id_from_data_text(scene_text)
 
                 if sc_id:
+                    from stalker import Task, Shot, Sequence
                     scene = Task.query.get(sc_id)
                     # shots under different scenes might have various res, fps properties under same seq or project
                     # set properties from first shot under Scene (assume all shots under scene have the same res,fps)
@@ -578,6 +515,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             seq_text = self.seq_combo_box.currentText()
             seq_id = self.get_id_from_data_text(seq_text)
             if s_id and sc_id and seq_id:
+                from stalker import Task, Shot, Sequence
                 shot_in = Shot.query.get(s_id)
                 shot_in_num = int(shot_in.name.split('_')[-1])
                 seq = Sequence.query.get(seq_id)
@@ -599,7 +537,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         self.updated_shot_list.clear()
 
-    def task_name_combo_box_changed(self):
+    def task_name_combo_box_changed(self, *args):
         """runs when the task_name_combo_box is changed
         """
         task_in_text = self.task_name_combo_box.currentText()
@@ -660,6 +598,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         shots = []
 
+        from stalker import Project, Sequence, Task, Shot
         stalker_project_text = self.project_combo_box.currentText()
         p_id = self.get_id_from_data_text(stalker_project_text)
         stalker_project = Project.query.get(p_id)
@@ -724,6 +663,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def get_latest_output_path(self, shot, task_name, ext='exr'):
         """returns the Output/Main outputs path for resolve from a given Shot stalker instance
         """
+        import os
+        import glob
+        import re
+        from stalker import Task, Version
         task = Task.query.filter(Task.parent == shot).filter(Task.name == task_name).first()
         if not task and task_name == 'Comp': # try Cleanup task
             task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
@@ -813,9 +756,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def get_timecode_from_image(self, fps, img_path):
         """queries timecode metadata from given image
         """
+        import os
         import subprocess
         import timecode
-  
+
         frame_number = 0
 
         info = {}
@@ -827,7 +771,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         for tag in process.stdout:
             line = tag.strip().split(':')
             info[line[0].strip()] = line[-1].strip()
-        
+
         try:
             tc_exif = info['Time Code'].split(' ')[0]
             t = timecode.Timecode('%s' % fps, start_timecode=int(tc_exif))
@@ -843,6 +787,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clip_paths_to_xml(self, clip_path_list, record_in_list, xml_file_full_path):
         """creates fcpxml1.8 compatible xml file from given Resolve image sequence paths
         """
+        import os
         import math
         import datetime
 
@@ -1013,6 +958,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 for i in range(0, len(clip_path_list)):
                     try:
+                        import os
                         clip_range = os.path.basename(clip_path_list[i]).split('.')[1]
                         plate_range = os.path.basename(plate_path_list[i]).split('.')[1]
                         print('Clip: %s -> Plate: %s' % (clip_range, plate_range))
@@ -1065,6 +1011,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def list_shot_update_status(self):
         """checks if shot outputs are updated based on version path modification date
         """
+        import os
+        import glob
         import time
         import datetime
 
@@ -1078,6 +1026,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if shots:
             update_list = []
             t_name = self.task_name_combo_box.currentText()
+            from stalker import Task, Version
             for shot in shots:
                 print('Checking Shot... - %s' % shot.name)
                 task = Task.query.filter(Task.parent == shot).filter(Task.name == t_name).first()
@@ -1163,6 +1112,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def conform_updated_shots(self):
         """conforms only updated shots from listWidget in UI
         """
+        from stalker import Shot
         items = []
         for ind in range(self.updated_shot_list.count()):
             items.append(self.updated_shot_list.item(ind).text())
