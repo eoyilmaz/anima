@@ -44,9 +44,36 @@ class ConformerUI(object):
         from anima.utils import do_db_setup
 
         self.main_layout = layout
-
         self.resolve = blackmagic.get_resolve()
         self.resolve_project = self.resolve.GetProjectManager().GetCurrentProject()
+
+        self.parent_widget = None
+        self.active_projects_only_check_box = None
+        self.project_combo_box = None
+        self.seq_combo_box = None
+        self.scene_combo_box = None
+        self.shot_in_combo_box = None
+        self.shot_out_label = None
+        self.shot_out_combo_box = None
+        self.width_line = None
+        self.height_line = None
+        self.fps_line = None
+        self.filter_statuses_check_box = None
+        self.wip_check_box = None
+        self.hrev_check_box = None
+        self.prev_check_box = None
+        self.completed_check_box = None
+        self.task_name_combo_box = None
+        self.ext_name_combo_box = None
+        self.plus_plates_check_box = None
+        self.alpha_only_check_box = None
+        self.record_in_check_box = None
+        self.slated_check_box = None
+        self.conform_button = None
+        self.start_date = None
+        self.updated_shot_list = None
+        self.status_button = None
+        self.conform_updates_button = None
 
         xml_path = tempfile.gettempdir()
         xml_file_name = 'conformer___temp__1.8_fcpxml.fcpxml'
@@ -55,10 +82,10 @@ class ConformerUI(object):
 
         do_db_setup()
 
-        self._setup_ui()
+        self.setup_ui()
         self._set_defaults()
 
-    def _setup_ui(self):
+    def setup_ui(self):
         """setups UI
         """
         from functools import partial
@@ -69,41 +96,54 @@ class ConformerUI(object):
 
         self.parent_widget = self.main_layout.parent()
 
-        self.resolve_project_label = QtWidgets.QLabel(self.parent_widget)
-        self.resolve_project_label.setText(
+        resolve_project_label = QtWidgets.QLabel(self.parent_widget)
+        resolve_project_label.setText(
             '%s - [%s fps] / Resolve' % (
                 self.resolve_project.GetName(),
                 self.resolve_project.GetSetting('timelineFrameRate'))
         )
-        self.resolve_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
-        self.main_layout.addWidget(self.resolve_project_label)
+        resolve_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
+        self.main_layout.addWidget(resolve_project_label)
 
         line = QtWidgets.QFrame(self.parent_widget)
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.main_layout.addWidget(line)
 
-        self.h_layout1 = QtWidgets.QHBoxLayout()
+        h_layout1 = QtWidgets.QHBoxLayout()
 
-        self.stalker_project_label = QtWidgets.QLabel(self.parent_widget)
-        self.stalker_project_label.setText('Stalker Project:')
-        self.h_layout1.addWidget(self.stalker_project_label)
-
+        stalker_project_label = QtWidgets.QLabel(self.parent_widget)
+        stalker_project_label.setText('Stalker Project:')
+        stalker_project_label.setFixedWidth(100)
+        h_layout1.addWidget(stalker_project_label)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        # self.project_combo_box = QtWidgets.QComboBox(self.parent_widget)
+
+        # Project Combo Box
         from anima.ui.widgets.project import ProjectComboBox
         self.project_combo_box = ProjectComboBox(self.parent_widget)
+        self.project_combo_box.show_active_projects = True
         self.project_combo_box.setSizePolicy(size_policy)
         self.project_combo_box.currentIndexChanged.connect(partial(self.project_combo_box_changed))
-        self.h_layout1.addWidget(self.project_combo_box)
+        h_layout1.addWidget(self.project_combo_box)
 
-        self.main_layout.addLayout(self.h_layout1)
+        self.active_projects_only_check_box = QtWidgets.QCheckBox(self.parent_widget)
+        self.active_projects_only_check_box.setText("Active Projects Only")
+        self.active_projects_only_check_box.setChecked(True)
+        self.active_projects_only_check_box.setToolTip("Show active Projects only!")
+        self.active_projects_only_check_box.stateChanged.connect(partial(self.active_projects_only_check_box_callback))
+        h_layout1.addWidget(self.active_projects_only_check_box)
 
-        self.h_layout2 = QtWidgets.QHBoxLayout()
+        # h_layout1.setStretch(0, 1)
+        # h_layout1.setStretch(1, 0)
 
-        self.stalker_seq_label = QtWidgets.QLabel(self.parent_widget)
-        self.stalker_seq_label.setText('Stalker Seq:      ')
-        self.h_layout2.addWidget(self.stalker_seq_label)
+        self.main_layout.addLayout(h_layout1)
+
+        h_layout2 = QtWidgets.QHBoxLayout()
+
+        stalker_seq_label = QtWidgets.QLabel(self.parent_widget)
+        stalker_seq_label.setText('Stalker Seq:')
+        stalker_seq_label.setFixedWidth(100)
+        h_layout2.addWidget(stalker_seq_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         from anima.ui.widgets.sequence import SequenceComboBox
@@ -111,148 +151,152 @@ class ConformerUI(object):
         self.seq_combo_box = SequenceComboBox(self.parent_widget)
         self.seq_combo_box.setSizePolicy(size_policy)
         self.seq_combo_box.currentIndexChanged.connect(partial(self.seq_combo_box_changed))
-        self.h_layout2.addWidget(self.seq_combo_box)
+        h_layout2.addWidget(self.seq_combo_box)
 
-        self.main_layout.addLayout(self.h_layout2)
+        self.main_layout.addLayout(h_layout2)
 
-        self.h_layout3 = QtWidgets.QHBoxLayout()
+        h_layout3 = QtWidgets.QHBoxLayout()
 
-        self.stalker_scene_label = QtWidgets.QLabel(self.parent_widget)
-        self.stalker_scene_label.setText('Stalker Scene:  ')
-        self.h_layout3.addWidget(self.stalker_scene_label)
+        stalker_scene_label = QtWidgets.QLabel(self.parent_widget)
+        stalker_scene_label.setText('Stalker Scene:')
+        stalker_scene_label.setFixedWidth(100)
+        h_layout3.addWidget(stalker_scene_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.scene_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.scene_combo_box.setSizePolicy(size_policy)
         self.scene_combo_box.currentIndexChanged.connect(partial(self.scene_combo_box_changed))
-        self.h_layout3.addWidget(self.scene_combo_box)
+        h_layout3.addWidget(self.scene_combo_box)
 
-        self.main_layout.addLayout(self.h_layout3)
+        self.main_layout.addLayout(h_layout3)
 
-        self.h_layout_shots = QtWidgets.QHBoxLayout()
+        h_layout_shots = QtWidgets.QHBoxLayout()
 
-        self.shot_in_label = QtWidgets.QLabel(self.parent_widget)
-        self.shot_in_label.setText('Shot In:')
-        self.h_layout_shots.addWidget(self.shot_in_label)
+        shot_in_label = QtWidgets.QLabel(self.parent_widget)
+        shot_in_label.setText('Shot In:')
+        shot_in_label.setFixedWidth(50)
+        h_layout_shots.addWidget(shot_in_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.shot_in_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.shot_in_combo_box.setSizePolicy(size_policy)
         self.shot_in_combo_box.currentIndexChanged.connect(partial(self.shot_in_combo_box_changed))
-        self.h_layout_shots.addWidget(self.shot_in_combo_box)
+        h_layout_shots.addWidget(self.shot_in_combo_box)
 
         self.shot_out_label = QtWidgets.QLabel(self.parent_widget)
         self.shot_out_label.setText('Shot Out:')
-        self.h_layout_shots.addWidget(self.shot_out_label)
+        h_layout_shots.addWidget(self.shot_out_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.shot_out_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.shot_out_combo_box.setSizePolicy(size_policy)
         self.shot_out_combo_box.currentIndexChanged.connect(partial(self.shot_out_combo_box_changed))
-        self.h_layout_shots.addWidget(self.shot_out_combo_box)
+        h_layout_shots.addWidget(self.shot_out_combo_box)
 
-        self.main_layout.addLayout(self.h_layout_shots)
+        self.main_layout.addLayout(h_layout_shots)
 
-        self.h_layout4 = QtWidgets.QHBoxLayout()
+        h_layout4 = QtWidgets.QHBoxLayout()
 
-        self.width_label = QtWidgets.QLabel(self.parent_widget)
-        self.width_label.setText('Width:')
-        self.h_layout4.addWidget(self.width_label)
+        width_label = QtWidgets.QLabel(self.parent_widget)
+        width_label.setText('Width:')
+        width_label.setFixedWidth(50)
+        h_layout4.addWidget(width_label)
 
         self.width_line = QtWidgets.QLineEdit(self.parent_widget)
         self.width_line.setText('-')
         self.width_line.setEnabled(0)
-        self.h_layout4.addWidget(self.width_line)
+        h_layout4.addWidget(self.width_line)
 
-        self.height_label = QtWidgets.QLabel(self.parent_widget)
-        self.height_label.setText('Height:')
-        self.h_layout4.addWidget(self.height_label)
+        height_label = QtWidgets.QLabel(self.parent_widget)
+        height_label.setText('Height:')
+        height_label.setFixedWidth(50)
+        h_layout4.addWidget(height_label)
 
         self.height_line = QtWidgets.QLineEdit(self.parent_widget)
         self.height_line.setText('-')
         self.height_line.setEnabled(0)
-        self.h_layout4.addWidget(self.height_line)
+        h_layout4.addWidget(self.height_line)
 
-        self.fps_label = QtWidgets.QLabel(self.parent_widget)
-        self.fps_label.setText('Fps:')
-        self.h_layout4.addWidget(self.fps_label)
+        fps_label = QtWidgets.QLabel(self.parent_widget)
+        fps_label.setText('Fps:')
+        h_layout4.addWidget(fps_label)
 
         self.fps_line = QtWidgets.QLineEdit(self.parent_widget)
         self.fps_line.setText('-')
         self.fps_line.setEnabled(0)
-        self.h_layout4.addWidget(self.fps_line)
+        h_layout4.addWidget(self.fps_line)
 
-        self.main_layout.addLayout(self.h_layout4)
+        self.main_layout.addLayout(h_layout4)
 
-        self.h_layout4a = QtWidgets.QHBoxLayout()
+        h_layout4a = QtWidgets.QHBoxLayout()
 
         self.filter_statuses_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.filter_statuses_check_box.setText('Filter Statuses')
         self.filter_statuses_check_box.stateChanged.connect(partial(self.filter_statuses_check_box_changed))
-        self.h_layout4a.addWidget(self.filter_statuses_check_box)
+        h_layout4a.addWidget(self.filter_statuses_check_box)
 
         self.wip_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.wip_check_box.setText('WIP')
-        self.h_layout4a.addWidget(self.wip_check_box)
+        h_layout4a.addWidget(self.wip_check_box)
 
         self.hrev_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.hrev_check_box.setText('HREV')
-        self.h_layout4a.addWidget(self.hrev_check_box)
+        h_layout4a.addWidget(self.hrev_check_box)
 
         self.prev_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.prev_check_box.setText('PREV')
-        self.h_layout4a.addWidget(self.prev_check_box)
+        h_layout4a.addWidget(self.prev_check_box)
 
         self.completed_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.completed_check_box.setText('CMLT')
-        self.h_layout4a.addWidget(self.completed_check_box)
+        h_layout4a.addWidget(self.completed_check_box)
 
-        self.main_layout.addLayout(self.h_layout4a)
+        self.main_layout.addLayout(h_layout4a)
 
-        self.h_layout5 = QtWidgets.QHBoxLayout()
+        h_layout5 = QtWidgets.QHBoxLayout()
 
-        self.task_name_label = QtWidgets.QLabel(self.parent_widget)
-        self.task_name_label.setText('Task Name:')
-        self.h_layout5.addWidget(self.task_name_label)
+        task_name_label = QtWidgets.QLabel(self.parent_widget)
+        task_name_label.setText('Task Name:')
+        h_layout5.addWidget(task_name_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.task_name_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.task_name_combo_box.setSizePolicy(size_policy)
         self.task_name_combo_box.currentIndexChanged.connect(partial(self.task_name_combo_box_changed))
-        self.h_layout5.addWidget(self.task_name_combo_box)
+        h_layout5.addWidget(self.task_name_combo_box)
 
-        self.ext_name_label = QtWidgets.QLabel(self.parent_widget)
-        self.ext_name_label.setText('Extension:')
-        self.h_layout5.addWidget(self.ext_name_label)
+        ext_name_label = QtWidgets.QLabel(self.parent_widget)
+        ext_name_label.setText('Extension:')
+        h_layout5.addWidget(ext_name_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
         self.ext_name_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.ext_name_combo_box.setSizePolicy(size_policy)
-        self.h_layout5.addWidget(self.ext_name_combo_box)
+        h_layout5.addWidget(self.ext_name_combo_box)
 
         self.plus_plates_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.plus_plates_check_box.setText('+ Plates')
-        self.h_layout5.addWidget(self.plus_plates_check_box)
+        h_layout5.addWidget(self.plus_plates_check_box)
 
         self.alpha_only_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.alpha_only_check_box.setText('Alpha Only')
-        self.h_layout5.addWidget(self.alpha_only_check_box)
+        h_layout5.addWidget(self.alpha_only_check_box)
         
-        self.main_layout.addLayout(self.h_layout5)
+        self.main_layout.addLayout(h_layout5)
 
-        self.h_layout6 = QtWidgets.QHBoxLayout()
+        h_layout6 = QtWidgets.QHBoxLayout()
 
         self.record_in_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.record_in_check_box.setText('Record In')
         self.record_in_check_box.stateChanged.connect(partial(self.record_in_check_box_changed))
-        self.h_layout6.addWidget(self.record_in_check_box)
+        h_layout6.addWidget(self.record_in_check_box)
 
         self.slated_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.slated_check_box.setText('Include Slates')
         self.slated_check_box.stateChanged.connect(partial(self.slated_check_box_changed))
-        self.h_layout6.addWidget(self.slated_check_box)
+        h_layout6.addWidget(self.slated_check_box)
 
-        self.main_layout.addLayout(self.h_layout6)
+        self.main_layout.addLayout(h_layout6)
 
         self.conform_button = QtWidgets.QPushButton(self.parent_widget)
         self.conform_button.setText('CONFORM ALL')
@@ -264,31 +308,31 @@ class ConformerUI(object):
         line1.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.main_layout.addWidget(line1)
 
-        self.h_layout6 = QtWidgets.QHBoxLayout()
+        h_layout6 = QtWidgets.QHBoxLayout()
 
-        self.date_label = QtWidgets.QLabel(self.parent_widget)
-        self.date_label.setText('check From:')
-        self.date_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.h_layout6.addWidget(self.date_label)
+        date_label = QtWidgets.QLabel(self.parent_widget)
+        date_label.setText('check From:')
+        date_label.setAlignment(QtCore.Qt.AlignCenter)
+        h_layout6.addWidget(date_label)
 
         self.start_date = QtWidgets.QDateEdit(self.parent_widget)
         self.start_date.setDate(QtCore.QDate.currentDate()) # setDate(QtCore.QDate(2021, 1, 1))
         self.start_date.setCurrentSection(QtWidgets.QDateTimeEdit.MonthSection)
         self.start_date.setCalendarPopup(True)
-        self.h_layout6.addWidget(self.start_date)
+        h_layout6.addWidget(self.start_date)
 
-        self.now_label = QtWidgets.QLabel(self.parent_widget)
-        self.now_label.setText(':until Now')
-        self.now_label.setAlignment(QtCore.Qt.AlignCenter)
-        self.h_layout6.addWidget(self.now_label)
+        now_label = QtWidgets.QLabel(self.parent_widget)
+        now_label.setText(':until Now')
+        now_label.setAlignment(QtCore.Qt.AlignCenter)
+        h_layout6.addWidget(now_label)
 
-        self.main_layout.addLayout(self.h_layout6)
+        self.main_layout.addLayout(h_layout6)
 
         self.updated_shot_list = QtWidgets.QListWidget(self.parent_widget)
         self.updated_shot_list.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.main_layout.addWidget(self.updated_shot_list)
 
-        self.status_button= QtWidgets.QPushButton(self.parent_widget)
+        self.status_button = QtWidgets.QPushButton(self.parent_widget)
         self.status_button.setText('LIST UPDATED SHOTS')
         self.status_button.clicked.connect(partial(self.list_shot_update_status))
         self.main_layout.addWidget(self.status_button)
@@ -303,9 +347,9 @@ class ConformerUI(object):
         line2.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.main_layout.addWidget(line2)
 
-        self.info_label = QtWidgets.QLabel(self.parent_widget)
-        self.info_label.setText('check Console for Progress Info...')
-        self.main_layout.addWidget(self.info_label)
+        info_label = QtWidgets.QLabel(self.parent_widget)
+        info_label.setText('check Console for Progress Info...')
+        self.main_layout.addWidget(info_label)
 
     def _set_defaults(self):
         """sets defaults for UI
@@ -336,6 +380,12 @@ class ConformerUI(object):
         self.prev_check_box.setEnabled(0)
         self.completed_check_box.setChecked(1)
         self.completed_check_box.setEnabled(0)
+
+    def active_projects_only_check_box_callback(self, state):
+        """
+        :return:
+        """
+        self.project_combo_box.show_active_projects = state
 
     # TODO: seeing stalker ids in UI might be confusing... keep id data hidden
     def add_data_as_text_to_ui(self, name, task_id):
@@ -992,9 +1042,9 @@ class ConformerUI(object):
                                 print('%s -> %s' % (shot.name, task.status.name))
                                 has_valid_status = False
                         except AttributeError:
-                            pass        
+                            pass
 
-                if has_valid_status is True:            
+                if has_valid_status is True:
                     if not task:
                         continue
 
@@ -1054,7 +1104,7 @@ class ConformerUI(object):
                 self.updated_shot_list.addItem('No Updated Shots found after specified date / ui specs.')
 
     def conform(self):
-        """conforms given Stalker Shot instances to a Timeline in Reolve
+        """conforms given Stalker Shot instances to a Timeline in Resolve
         """
         shots = self.get_shots_from_ui()
         self.conform_shots(shots)
