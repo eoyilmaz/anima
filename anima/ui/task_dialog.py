@@ -75,7 +75,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         self.setWindowTitle("Task Dialog")
         self.resize(550, 790)
-        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)

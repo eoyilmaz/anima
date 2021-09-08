@@ -70,10 +70,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         self.setWindowTitle("Create Shot Dialog")
         self.resize(550, 790)
-        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # ----------------------------------------------
-        # Dialog Label
+        # Dilog Label
         self.dialog_label = QtWidgets.QLabel(self)
         self.dialog_label.setText('Create Shot')
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")

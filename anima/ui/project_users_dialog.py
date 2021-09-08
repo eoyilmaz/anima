@@ -36,7 +36,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """create UI elements
         """
         self.resize(520, 550)
-        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # -------------------------
         # Dialog Label
