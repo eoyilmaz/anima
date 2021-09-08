@@ -27,7 +27,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def _setup_ui(self):
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
-        conformer_ui = ConformerUI(self.vertical_layout)
+        ConformerUI(self.vertical_layout)
         self.setWindowTitle('Conformer')
         self.resize(500, 100)
         self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
@@ -46,7 +46,7 @@ class ConformerUI(object):
         self.main_layout = layout
 
         self.resolve = blackmagic.get_resolve()
-        self.project = self.resolve.GetProjectManager().GetCurrentProject()
+        self.resolve_project = self.resolve.GetProjectManager().GetCurrentProject()
 
         xml_path = tempfile.gettempdir()
         xml_file_name = 'conformer___temp__1.8_fcpxml.fcpxml'
@@ -69,27 +69,30 @@ class ConformerUI(object):
 
         self.parent_widget = self.main_layout.parent()
 
-        bmgc_project_name = self.project.GetName()
-        bmgc_project_fps = self.project.GetSetting('timelineFrameRate')
-
-        self.bmgc_project_label = QtWidgets.QLabel(self.parent_widget)
-        self.bmgc_project_label.setText('%s - [%s fps] / Resolve' % (bmgc_project_name, bmgc_project_fps))
-        self.bmgc_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
-        self.main_layout .addWidget(self.bmgc_project_label)
+        self.resolve_project_label = QtWidgets.QLabel(self.parent_widget)
+        self.resolve_project_label.setText(
+            '%s - [%s fps] / Resolve' % (
+                self.resolve_project.GetName(),
+                self.resolve_project.GetSetting('timelineFrameRate'))
+        )
+        self.resolve_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
+        self.main_layout.addWidget(self.resolve_project_label)
 
         line = QtWidgets.QFrame(self.parent_widget)
         line.setFrameShape(QtWidgets.QFrame.HLine)
         line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout .addWidget(line)
+        self.main_layout.addWidget(line)
 
         self.h_layout1 = QtWidgets.QHBoxLayout()
 
-        self.stalker_project_label = QtWidgets.QLabel(self.h_layout1.widget())
+        self.stalker_project_label = QtWidgets.QLabel(self.parent_widget)
         self.stalker_project_label.setText('Stalker Project:')
         self.h_layout1.addWidget(self.stalker_project_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.project_combo_box = QtWidgets.QComboBox(self.h_layout1.widget())
+        # self.project_combo_box = QtWidgets.QComboBox(self.parent_widget)
+        from anima.ui.widgets.project import ProjectComboBox
+        self.project_combo_box = ProjectComboBox(self.parent_widget)
         self.project_combo_box.setSizePolicy(size_policy)
         self.project_combo_box.currentIndexChanged.connect(partial(self.project_combo_box_changed))
         self.h_layout1.addWidget(self.project_combo_box)
@@ -98,12 +101,14 @@ class ConformerUI(object):
 
         self.h_layout2 = QtWidgets.QHBoxLayout()
 
-        self.stalker_seq_label = QtWidgets.QLabel(self.h_layout2.widget())
+        self.stalker_seq_label = QtWidgets.QLabel(self.parent_widget)
         self.stalker_seq_label.setText('Stalker Seq:      ')
         self.h_layout2.addWidget(self.stalker_seq_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.seq_combo_box = QtWidgets.QComboBox(self.h_layout2.widget())
+        from anima.ui.widgets.sequence import SequenceComboBox
+        # self.seq_combo_box = QtWidgets.QComboBox(self.parent_widget)
+        self.seq_combo_box = SequenceComboBox(self.parent_widget)
         self.seq_combo_box.setSizePolicy(size_policy)
         self.seq_combo_box.currentIndexChanged.connect(partial(self.seq_combo_box_changed))
         self.h_layout2.addWidget(self.seq_combo_box)
@@ -112,12 +117,12 @@ class ConformerUI(object):
 
         self.h_layout3 = QtWidgets.QHBoxLayout()
 
-        self.stalker_scene_label = QtWidgets.QLabel(self.h_layout3.widget())
+        self.stalker_scene_label = QtWidgets.QLabel(self.parent_widget)
         self.stalker_scene_label.setText('Stalker Scene:  ')
         self.h_layout3.addWidget(self.stalker_scene_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.scene_combo_box = QtWidgets.QComboBox(self.h_layout3.widget())
+        self.scene_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.scene_combo_box.setSizePolicy(size_policy)
         self.scene_combo_box.currentIndexChanged.connect(partial(self.scene_combo_box_changed))
         self.h_layout3.addWidget(self.scene_combo_box)
@@ -126,22 +131,22 @@ class ConformerUI(object):
 
         self.h_layout_shots = QtWidgets.QHBoxLayout()
 
-        self.shot_in_label = QtWidgets.QLabel(self.h_layout_shots.widget())
+        self.shot_in_label = QtWidgets.QLabel(self.parent_widget)
         self.shot_in_label.setText('Shot In:')
         self.h_layout_shots.addWidget(self.shot_in_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.shot_in_combo_box = QtWidgets.QComboBox(self.h_layout_shots.widget())
+        self.shot_in_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.shot_in_combo_box.setSizePolicy(size_policy)
         self.shot_in_combo_box.currentIndexChanged.connect(partial(self.shot_in_combo_box_changed))
         self.h_layout_shots.addWidget(self.shot_in_combo_box)
 
-        self.shot_out_label = QtWidgets.QLabel(self.h_layout_shots.widget())
+        self.shot_out_label = QtWidgets.QLabel(self.parent_widget)
         self.shot_out_label.setText('Shot Out:')
         self.h_layout_shots.addWidget(self.shot_out_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.shot_out_combo_box = QtWidgets.QComboBox(self.h_layout_shots.widget())
+        self.shot_out_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.shot_out_combo_box.setSizePolicy(size_policy)
         self.shot_out_combo_box.currentIndexChanged.connect(partial(self.shot_out_combo_box_changed))
         self.h_layout_shots.addWidget(self.shot_out_combo_box)
@@ -150,29 +155,29 @@ class ConformerUI(object):
 
         self.h_layout4 = QtWidgets.QHBoxLayout()
 
-        self.width_label = QtWidgets.QLabel(self.h_layout4.widget())
+        self.width_label = QtWidgets.QLabel(self.parent_widget)
         self.width_label.setText('Width:')
         self.h_layout4.addWidget(self.width_label)
 
-        self.width_line = QtWidgets.QLineEdit(self.h_layout4.widget())
+        self.width_line = QtWidgets.QLineEdit(self.parent_widget)
         self.width_line.setText('-')
         self.width_line.setEnabled(0)
         self.h_layout4.addWidget(self.width_line)
 
-        self.height_label = QtWidgets.QLabel(self.h_layout4.widget())
+        self.height_label = QtWidgets.QLabel(self.parent_widget)
         self.height_label.setText('Height:')
         self.h_layout4.addWidget(self.height_label)
 
-        self.height_line = QtWidgets.QLineEdit(self.h_layout4.widget())
+        self.height_line = QtWidgets.QLineEdit(self.parent_widget)
         self.height_line.setText('-')
         self.height_line.setEnabled(0)
         self.h_layout4.addWidget(self.height_line)
 
-        self.fps_label = QtWidgets.QLabel(self.h_layout4.widget())
+        self.fps_label = QtWidgets.QLabel(self.parent_widget)
         self.fps_label.setText('Fps:')
         self.h_layout4.addWidget(self.fps_label)
 
-        self.fps_line = QtWidgets.QLineEdit(self.h_layout4.widget())
+        self.fps_line = QtWidgets.QLineEdit(self.parent_widget)
         self.fps_line.setText('-')
         self.fps_line.setEnabled(0)
         self.h_layout4.addWidget(self.fps_line)
@@ -181,24 +186,24 @@ class ConformerUI(object):
 
         self.h_layout4a = QtWidgets.QHBoxLayout()
 
-        self.filter_statuses_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.filter_statuses_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.filter_statuses_check_box.setText('Filter Statuses')
         self.filter_statuses_check_box.stateChanged.connect(partial(self.filter_statuses_check_box_changed))
         self.h_layout4a.addWidget(self.filter_statuses_check_box)
 
-        self.wip_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.wip_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.wip_check_box.setText('WIP')
         self.h_layout4a.addWidget(self.wip_check_box)
 
-        self.hrev_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.hrev_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.hrev_check_box.setText('HREV')
         self.h_layout4a.addWidget(self.hrev_check_box)
 
-        self.prev_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.prev_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.prev_check_box.setText('PREV')
         self.h_layout4a.addWidget(self.prev_check_box)
 
-        self.completed_check_box = QtWidgets.QCheckBox(self.h_layout4a.widget())
+        self.completed_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.completed_check_box.setText('CMLT')
         self.h_layout4a.addWidget(self.completed_check_box)
 
@@ -206,30 +211,30 @@ class ConformerUI(object):
 
         self.h_layout5 = QtWidgets.QHBoxLayout()
 
-        self.task_name_label = QtWidgets.QLabel(self.h_layout5.widget())
+        self.task_name_label = QtWidgets.QLabel(self.parent_widget)
         self.task_name_label.setText('Task Name:')
         self.h_layout5.addWidget(self.task_name_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.task_name_combo_box = QtWidgets.QComboBox(self.h_layout5.widget())
+        self.task_name_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.task_name_combo_box.setSizePolicy(size_policy)
         self.task_name_combo_box.currentIndexChanged.connect(partial(self.task_name_combo_box_changed))
         self.h_layout5.addWidget(self.task_name_combo_box)
 
-        self.ext_name_label = QtWidgets.QLabel(self.h_layout5.widget())
+        self.ext_name_label = QtWidgets.QLabel(self.parent_widget)
         self.ext_name_label.setText('Extension:')
         self.h_layout5.addWidget(self.ext_name_label)
 
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
-        self.ext_name_combo_box = QtWidgets.QComboBox(self.h_layout5.widget())
+        self.ext_name_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.ext_name_combo_box.setSizePolicy(size_policy)
         self.h_layout5.addWidget(self.ext_name_combo_box)
 
-        self.plus_plates_check_box = QtWidgets.QCheckBox(self.h_layout5.widget())
+        self.plus_plates_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.plus_plates_check_box.setText('+ Plates')
         self.h_layout5.addWidget(self.plus_plates_check_box)
 
-        self.alpha_only_check_box = QtWidgets.QCheckBox(self.h_layout5.widget())
+        self.alpha_only_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.alpha_only_check_box.setText('Alpha Only')
         self.h_layout5.addWidget(self.alpha_only_check_box)
         
@@ -237,12 +242,12 @@ class ConformerUI(object):
 
         self.h_layout6 = QtWidgets.QHBoxLayout()
 
-        self.record_in_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
+        self.record_in_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.record_in_check_box.setText('Record In')
         self.record_in_check_box.stateChanged.connect(partial(self.record_in_check_box_changed))
         self.h_layout6.addWidget(self.record_in_check_box)
 
-        self.slated_check_box = QtWidgets.QCheckBox(self.h_layout6.widget())
+        self.slated_check_box = QtWidgets.QCheckBox(self.parent_widget)
         self.slated_check_box.setText('Include Slates')
         self.slated_check_box.stateChanged.connect(partial(self.slated_check_box_changed))
         self.h_layout6.addWidget(self.slated_check_box)
@@ -252,27 +257,27 @@ class ConformerUI(object):
         self.conform_button = QtWidgets.QPushButton(self.parent_widget)
         self.conform_button.setText('CONFORM ALL')
         self.conform_button.clicked.connect(partial(self.conform))
-        self.main_layout .addWidget(self.conform_button)
+        self.main_layout.addWidget(self.conform_button)
 
         line1 = QtWidgets.QFrame(self.parent_widget)
         line1.setFrameShape(QtWidgets.QFrame.HLine)
         line1.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout .addWidget(line1)
+        self.main_layout.addWidget(line1)
 
         self.h_layout6 = QtWidgets.QHBoxLayout()
 
-        self.date_label = QtWidgets.QLabel(self.h_layout6.widget())
+        self.date_label = QtWidgets.QLabel(self.parent_widget)
         self.date_label.setText('check From:')
         self.date_label.setAlignment(QtCore.Qt.AlignCenter)
         self.h_layout6.addWidget(self.date_label)
 
-        self.start_date = QtWidgets.QDateEdit(self.h_layout6.widget())
+        self.start_date = QtWidgets.QDateEdit(self.parent_widget)
         self.start_date.setDate(QtCore.QDate.currentDate()) # setDate(QtCore.QDate(2021, 1, 1))
         self.start_date.setCurrentSection(QtWidgets.QDateTimeEdit.MonthSection)
         self.start_date.setCalendarPopup(True)
         self.h_layout6.addWidget(self.start_date)
 
-        self.now_label = QtWidgets.QLabel(self.h_layout6.widget())
+        self.now_label = QtWidgets.QLabel(self.parent_widget)
         self.now_label.setText(':until Now')
         self.now_label.setAlignment(QtCore.Qt.AlignCenter)
         self.h_layout6.addWidget(self.now_label)
@@ -281,28 +286,26 @@ class ConformerUI(object):
 
         self.updated_shot_list = QtWidgets.QListWidget(self.parent_widget)
         self.updated_shot_list.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.main_layout .addWidget(self.updated_shot_list)
+        self.main_layout.addWidget(self.updated_shot_list)
 
         self.status_button= QtWidgets.QPushButton(self.parent_widget)
         self.status_button.setText('LIST UPDATED SHOTS')
         self.status_button.clicked.connect(partial(self.list_shot_update_status))
-        self.main_layout .addWidget(self.status_button)
+        self.main_layout.addWidget(self.status_button)
 
         self.conform_updates_button = QtWidgets.QPushButton(self.parent_widget)
         self.conform_updates_button.setText('CONFORM UPDATED SHOTS ONLY')
         self.conform_updates_button.clicked.connect(partial(self.conform_updated_shots))
-        self.main_layout .addWidget(self.conform_updates_button)
+        self.main_layout.addWidget(self.conform_updates_button)
 
         line2 = QtWidgets.QFrame(self.parent_widget)
         line2.setFrameShape(QtWidgets.QFrame.HLine)
         line2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout .addWidget(line2)
+        self.main_layout.addWidget(line2)
 
         self.info_label = QtWidgets.QLabel(self.parent_widget)
         self.info_label.setText('check Console for Progress Info...')
-        self.main_layout .addWidget(self.info_label)
-
-        self.fill_ui_with_stalker_projects()
+        self.main_layout.addWidget(self.info_label)
 
     def _set_defaults(self):
         """sets defaults for UI
@@ -360,23 +363,14 @@ class ConformerUI(object):
             pass
         return name
 
-    def fill_ui_with_stalker_projects(self):
-        """fills project_combo_box with stalker projects in UI
-        """
-        from stalker import Project
-        projects = Project.query.order_by(Project.name).all()
-
-        self.project_combo_box.clear()
-        self.project_combo_box.addItem('Select Project...', -1)
-        for project in projects:
-            self.project_combo_box.addItem(self.add_data_as_text_to_ui(project.name, project.id))
-
     def project_combo_box_changed(self, *args):
         """runs when the project_combo_box is changed
         """
         self.updated_shot_list.clear()
-        if self.project_combo_box.currentText() == 'Select Project...':
-            self.seq_combo_box.clear()
+        stalker_project = self.project_combo_box.get_current_project()
+        self.seq_combo_box.project = stalker_project
+
+        if not stalker_project:
             self.seq_combo_box.setEnabled(0)
             self.scene_combo_box.clear()
             self.scene_combo_box.setEnabled(0)
@@ -385,24 +379,9 @@ class ConformerUI(object):
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(0)
         else:
-            from stalker import Project
-            sequences = []
-            stalker_project_text = self.project_combo_box.currentText()
-            p_id = self.get_id_from_data_text(stalker_project_text)
-            stalker_project = Project.query.get(p_id)
-
-            self.seq_combo_box.clear()
             self.seq_combo_box.setEnabled(1)
-            self.seq_combo_box.addItem('ALL', -1)
-            for sequence in stalker_project.sequences:
-                sequences.append(self.add_data_as_text_to_ui(sequence.name, sequence.id))
-
-            sequences.sort()
-            for item in sequences:
-                self.seq_combo_box.addItem(item)
-
-            self.scene_combo_box.clear()
-            self.scene_combo_box.setEnabled(0)
+            self.seq_combo_box.insertItem(0, 'ALL', -1)
+            self.seq_combo_box.setCurrentIndex(0)
 
             self.fps_line.setText('%s' % stalker_project.fps)
             self.width_line.setText('%s' % stalker_project.image_format.width)
@@ -413,7 +392,9 @@ class ConformerUI(object):
         """
         self.updated_shot_list.clear()
         # fill scene_combo_box with scenes only if a sequence is selected
-        if self.seq_combo_box.currentText() == 'ALL':
+
+        stalker_seq = self.seq_combo_box.get_current_sequence()
+        if not stalker_seq:
             self.scene_combo_box.clear()
             self.scene_combo_box.setEnabled(0)
             self.shot_in_combo_box.clear()
@@ -421,118 +402,89 @@ class ConformerUI(object):
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(0)
         else:
-            stalker_seq_text = self.seq_combo_box.currentText()
-            seq_id = self.get_id_from_data_text(stalker_seq_text)
-            if seq_id:
-                scenes = []
-                from stalker import Sequence, Scene
-                stalker_seq = Sequence.query.get(seq_id)
-
-                self.scene_combo_box.clear()
-                self.scene_combo_box.setEnabled(1)
-                self.scene_combo_box.addItem('ALL', -1)
-                # assume that scenes are 1st level children of sequences (default in Anima Pipeline Structure)
-                for task in stalker_seq.children:
-                    if isinstance(task, Scene):
-                        scenes.append(self.add_data_as_text_to_ui(task.name, task.id))
-                    else:
-                        try:
-                            if task.type.name == 'Scene':
-                                scenes.append(self.add_data_as_text_to_ui(task.name, task.id))
-                        except AttributeError:
-                            pass
-
-                scenes.sort()
-                for item in scenes:
-                    self.scene_combo_box.addItem(item)
+            self.scene_combo_box.clear()
+            self.scene_combo_box.setEnabled(1)
+            self.scene_combo_box.addItem('ALL', -1)
+            # assume that scenes are 1st level children of sequences (default in Anima Pipeline Structure)
+            from stalker import Task, Type
+            scene_type = Type.query.filter(Type.name == 'Scene').first()
+            all_scenes = Task.query\
+                .filter(Task.parent == stalker_seq)\
+                .filter(Task.type == scene_type)\
+                .order_by(Task.name)\
+                .all()
+            for task in all_scenes:
+                self.scene_combo_box.addItem(task.name, task.id)
 
     def scene_combo_box_changed(self, *args):
         """runs when the scene_combo_box is changed
         """
         self.updated_shot_list.clear()
-        stalker_project_text = self.project_combo_box.currentText()
-        p_id = self.get_id_from_data_text(stalker_project_text)
+        project = self.project_combo_box.get_current_project()
 
-        if p_id:
-            from stalker import Project
-            stalker_project = Project.query.get(p_id)
+        if project:
+            scene_id = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
 
-            if self.scene_combo_box.currentText() == 'ALL':
+            if scene_id in [-1, None]:
                 self.shot_in_combo_box.clear()
                 self.shot_in_combo_box.setEnabled(0)
                 self.shot_out_combo_box.clear()
                 self.shot_out_combo_box.setEnabled(0)
 
                 # Set properties from Project instance
-                self.fps_line.setText('%s' % stalker_project.fps)
-                self.width_line.setText('%s' % stalker_project.image_format.width)
-                self.height_line.setText('%s' % stalker_project.image_format.height)
+                self.fps_line.setText('%s' % project.fps)
+                self.width_line.setText('%s' % project.image_format.width)
+                self.height_line.setText('%s' % project.image_format.height)
             else:
-                scene_text = self.scene_combo_box.currentText()
-                sc_id = self.get_id_from_data_text(scene_text)
+                from stalker import Task, Shot, Sequence
+                scene = Task.query.get(scene_id)
+                # shots under different scenes might have various res, fps properties under same seq or project
+                # set properties from first shot under Scene (assume all shots under scene have the same res,fps)
+                for t in scene.walk_hierarchy():
+                    if isinstance(t, Shot):
+                        self.fps_line.setText('%s' % t.fps)
+                        self.width_line.setText('%s' % t.image_format.width)
+                        self.height_line.setText('%s' % t.image_format.height)
+                        break
 
-                if sc_id:
-                    from stalker import Task, Shot, Sequence
-                    scene = Task.query.get(sc_id)
-                    # shots under different scenes might have various res, fps properties under same seq or project
-                    # set properties from first shot under Scene (assume all shots under scene have the same res,fps)
-                    for t in scene.walk_hierarchy():
-                        if isinstance(t, Shot):
-                            self.fps_line.setText('%s' % t.fps)
-                            self.width_line.setText('%s' % t.image_format.width)
-                            self.height_line.setText('%s' % t.image_format.height)
-                            break
+                # fill shot_in_combo_box with shots
+                self.shot_in_combo_box.clear()
+                self.shot_in_combo_box.setEnabled(1)
+                self.shot_in_combo_box.addItem('ALL', -1)
 
-                    # fill shot_in_combo_box with shots
-                    shots = []
-                    stalker_seq_text = self.seq_combo_box.currentText()
-                    stalker_seq = Sequence.query.get(self.get_id_from_data_text(stalker_seq_text))
-                    for shot in stalker_seq.shots:
-                        if scene in shot.parents:
-                            shots.append(self.add_data_as_text_to_ui(shot.name, shot.id))
-                    shots.sort()
+                seq = self.seq_combo_box.get_current_sequence()
+                shots = Shot.query.filter(Shot.sequences.contains(seq)).order_by(Shot.name).all()
+                for shot in shots:
+                    if scene in shot.parents:
+                        self.shot_in_combo_box.addItem(shot.name, shot.id)
 
-                    self.shot_in_combo_box.clear()
-                    self.shot_in_combo_box.setEnabled(1)
-                    self.shot_in_combo_box.addItem('ALL', -1)
-                    for item in shots:
-                        self.shot_in_combo_box.addItem(item)
-
-    def shot_in_combo_box_changed(self):
+    def shot_in_combo_box_changed(self, *args):
         """runs when the shot_in_combo_box is changed
         """
         # fills shot_out_combo_box with shots
         self.updated_shot_list.clear()
-        shot_in_text = self.shot_in_combo_box.currentText()
-        s_id = self.get_id_from_data_text(shot_in_text)
-
-        if shot_in_text == 'ALL':
+        shot_id = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
+        if shot_id in [-1, None]:
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(0)
         else:
-            scene_text = self.scene_combo_box.currentText()
-            sc_id = self.get_id_from_data_text(scene_text)
-            seq_text = self.seq_combo_box.currentText()
-            seq_id = self.get_id_from_data_text(seq_text)
-            if s_id and sc_id and seq_id:
-                from stalker import Task, Shot, Sequence
-                shot_in = Shot.query.get(s_id)
-                shot_in_num = int(shot_in.name.split('_')[-1])
-                seq = Sequence.query.get(seq_id)
-                scene = Task.query.get(sc_id)
+            scene_id = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
+            seq_id = self.seq_combo_box.itemData(self.seq_combo_box.currentIndex())
 
-                shots = []
-                for shot in seq.shots:
-                    if scene in shot.parents and int(shot.name.split('_')[-1]) > shot_in_num:
-                        shots.append(self.add_data_as_text_to_ui(shot.name, shot.id))
-                shots.sort()
+            from stalker import Task, Shot, Sequence
+            shot_in = Shot.query.get(shot_id)
+            shot_in_num = int(shot_in.name.split('_')[-1])
+            seq = Sequence.query.get(seq_id)
+            scene = Task.query.get(scene_id)
 
-                self.shot_out_combo_box.clear()
-                self.shot_out_combo_box.setEnabled(1)
-                for item in shots:
-                    self.shot_out_combo_box.addItem(item)
+            self.shot_out_combo_box.clear()
+            self.shot_out_combo_box.setEnabled(1)
+            shots = Shot.query.filter(Shot.sequences.contains(seq)).order_by(Shot.name).all()
+            for shot in shots:
+                if scene in shot.parents and int(shot.name.split('_')[-1]) >= shot_in_num:
+                    self.shot_out_combo_box.addItem(shot.name, shot.id)
 
-    def shot_out_combo_box_changed(self):
+    def shot_out_combo_box_changed(self, *args):
         """runs when the shot_out_combo_box is changed
         """
         self.updated_shot_list.clear()
@@ -588,43 +540,35 @@ class ConformerUI(object):
         """returns Stalker Shot instances as a list based on selection from UI
         """
         # return if a project is not selected from ui
-        if self.project_combo_box.currentText() == 'Select Project...':
+        stalker_project = self.project_combo_box.get_current_project()
+        if not stalker_project:
             QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    'Please Select a Stalker Project.'
+                self.parent_widget,
+                'Error',
+                'Please Select a Stalker Project.'
             )
             return
 
         shots = []
 
-        from stalker import Project, Sequence, Task, Shot
-        stalker_project_text = self.project_combo_box.currentText()
-        p_id = self.get_id_from_data_text(stalker_project_text)
-        stalker_project = Project.query.get(p_id)
+        from stalker import Sequence, Task, Shot
 
         if self.seq_combo_box.currentText() == 'ALL':
             for sequence in stalker_project.sequences:
-                for shot in sequence.shots:
-                    shots.append(shot)
+                shots += sequence.shots
         else:
-            stalker_seq_text = self.seq_combo_box.currentText()
-            stalker_seq = Sequence.query.get(self.get_id_from_data_text(stalker_seq_text))
+            stalker_seq = self.seq_combo_box.get_current_sequence()
             if self.scene_combo_box.currentText() == 'ALL':
-                for shot in stalker_seq.shots:
-                    shots.append(shot)
+                shots += stalker_seq.shots
             else:
-                stalker_scene_text = self.scene_combo_box.currentText()
-                stalker_scene = Task.query.get(self.get_id_from_data_text(stalker_scene_text))
+                stalker_scene = Task.query.get(self.scene_combo_box.itemData(self.scene_combo_box.currentIndex()))
                 if self.shot_in_combo_box.currentText() == 'ALL':
                     for shot in stalker_seq.shots:
                         if stalker_scene in shot.parents:  # assume that a shot is always a parent of it's scene
                             shots.append(shot)
                 else:
-                    shot_in_text = self.shot_in_combo_box.currentText()
-                    shot_in_id = self.get_id_from_data_text(shot_in_text)
-                    shot_out_text = self.shot_out_combo_box.currentText()
-                    shot_out_id = self.get_id_from_data_text(shot_out_text)
+                    shot_in_id = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
+                    shot_out_id = self.shot_out_combo_box.itemData(self.shot_out_combo_box.currentIndex())
                     if shot_in_id and shot_out_id:
                         shot_in = Shot.query.get(shot_in_id)
                         shot_out = Shot.query.get(shot_out_id)
@@ -632,14 +576,16 @@ class ConformerUI(object):
                         shot_out_num = int(shot_out.name.split('_')[-1])
                         for shot in stalker_seq.shots:
                             shot_num = int(shot.name.split('_')[-1])
-                            if stalker_scene in shot.parents and shot_in_num <= shot_num <= shot_out_num:
+                            if stalker_scene in shot.parents \
+                               and shot_in_num <= shot_num <= shot_out_num \
+                               and shot not in shots:
                                 shots.append(shot)
 
         if not shots:
             QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    'No Valid Shots found!.'
+                self.parent_widget,
+                'Error',
+                'No Valid Shots found!.'
             )
 
         return shots
@@ -745,7 +691,7 @@ class ConformerUI(object):
         """creates timeline in resolve from given clip paths
         """
         print('---------Started creating Timeline----------')
-        media_pool = self.project.GetMediaPool()
+        media_pool = self.resolve_project.GetMediaPool()
         media_storage = self.resolve.GetMediaStorage()
 
         clips = media_storage.AddItemListToMediaPool(clip_paths)
@@ -993,14 +939,14 @@ class ConformerUI(object):
                 self.clip_paths_to_xml(clip_path_list, record_in_list, self.xml_path)
                 print('XML CREATED----------------------------')
 
-                media_pool = self.project.GetMediaPool()
+                media_pool = self.resolve_project.GetMediaPool()
                 media_pool.ImportTimelineFromFile(self.xml_path)
                 print('XML IMPORTED to Resolve')
                 if plate_path_list and self.plus_plates_check_box.isChecked():
                     print('CREATING + PLATES XML... Please Wait... ----------------------------')
                     self.clip_paths_to_xml(plate_path_list, record_in_list, self.xml_path)
                     print('+ PLATES XML CREATED----------------------------')
-                    media_pool = self.project.GetMediaPool()
+                    media_pool = self.resolve_project.GetMediaPool()
                     media_pool.ImportTimelineFromFile(self.xml_path)
                     print('+ PLATES XML IMPORTED to Resolve')
             else:
