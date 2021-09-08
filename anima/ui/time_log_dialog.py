@@ -427,7 +427,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.start_time_edit.setTime(current_time)
         self.end_time_edit.setTime(current_time.addSecs(TIMING_RESOLUTION * 60))
-        self.show_advanced_time_controls(False)
+        self.show_advanced_time_controls(True)
 
         self.calendar_widget.resource_id = -1
 
