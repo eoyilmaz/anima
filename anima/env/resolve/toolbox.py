@@ -140,9 +140,19 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         render_preset_label.setText("Render Preset")
         current_form_layout.setWidget(i, label_role, render_preset_label)
 
-        self.render_preset_combo_box = QtWidgets.QComboBox()
-        current_form_layout.setWidget(i, field_role, self.render_preset_combo_box)
+        render_preset_horizontal_layout = QtWidgets.QHBoxLayout()
+        current_form_layout.setLayout(i, field_role, render_preset_horizontal_layout)
+
+        self.render_presets_combo_box = QtWidgets.QComboBox()
         self.fill_preset_combo_box()
+        render_preset_horizontal_layout.addWidget(self.render_presets_combo_box)
+
+        from functools import partial
+        self.refresh_render_presets_button = QtWidgets.QPushButton()
+        self.refresh_render_presets_button.setIcon(self.parent().style().standardIcon(QtWidgets.QStyle.SP_BrowserReload))
+        self.refresh_render_presets_button.setFixedWidth(24)
+        self.refresh_render_presets_button.clicked.connect(partial(self.fill_preset_combo_box))
+        render_preset_horizontal_layout.addWidget(self.refresh_render_presets_button)
 
         # -------------------------------------------------------------------
         # Filename Template
@@ -198,7 +208,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             location_template = location_template_line_edit.text()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
-            render_preset = self.render_preset_combo_box.currentText()
+            render_preset = self.render_presets_combo_box.currentText()
 
             from anima.env.resolve import shot_tools
             sm = shot_tools.ShotManager()
@@ -239,7 +249,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             template = filename_template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
-            render_preset = self.render_preset_combo_box.currentText()
+            render_preset = self.render_presets_combo_box.currentText()
             GenericTools.clip_output_generator_by_clip_index(
                 clip_index=clip_index,
                 filename_template=template,
@@ -375,7 +385,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             start_frame = in_point_spin_box.value()
             end_frame = out_point_spin_box.value()
             padding = padding_spin_box.value()
-            render_preset = self.render_preset_combo_box.currentText()
+            render_preset = self.render_presets_combo_box.currentText()
 
             GenericTools.per_clip_output_generator(
                 filename_template=filename_template,
@@ -405,12 +415,17 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
     def fill_preset_combo_box(self):
         """fills the preset comboBox
         """
-        # self.render_preset_combo_box
         from anima.env.resolve.shot_tools import ShotManager
         shot_manager = ShotManager()
         render_preset_list = shot_manager.resolve_project.GetRenderPresetList()
-        self.render_preset_combo_box.clear()
-        self.render_preset_combo_box.addItems(sorted(render_preset_list))
+        current_text = self.render_presets_combo_box.currentText()
+        self.render_presets_combo_box.clear()
+        self.render_presets_combo_box.addItems(sorted(render_preset_list))
+        if current_text:
+            # select the previous preset
+            index = self.render_presets_combo_box.findText(current_text)
+            if index:
+                self.render_presets_combo_box.setCurrentIndex(index)
 
 
 class GenericTools(object):

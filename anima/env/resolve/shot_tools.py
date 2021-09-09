@@ -944,7 +944,8 @@ class ShotManagerUI(object):
         self.sequence_combo_box = None
         self.handle_spin_box = None
         self.take_name_line_edit = None
-        self.render_preset_combo_box = None
+        self.render_presets_combo_box = None
+        self.refresh_render_presets_button = None
         self._shot_related_data_is_updating = False
 
         self.project_based_settings_storage = {}
@@ -1088,10 +1089,16 @@ class ShotManagerUI(object):
 
         render_preset_horizontal_layout.addWidget(render_preset_label)
 
-        self.render_preset_combo_box = QtWidgets.QComboBox(self.parent_widget)
-        render_preset_horizontal_layout.addWidget(self.render_preset_combo_box)
+        self.render_presets_combo_box = QtWidgets.QComboBox(self.parent_widget)
+        render_preset_horizontal_layout.addWidget(self.render_presets_combo_box)
         self.fill_preset_combo_box()
-        self.render_preset_combo_box.currentIndexChanged.connect(partial(self.shot_related_data_value_changed))
+        self.render_presets_combo_box.currentIndexChanged.connect(partial(self.shot_related_data_value_changed))
+
+        self.refresh_render_presets_button = QtWidgets.QPushButton(self.parent_widget)
+        self.refresh_render_presets_button.setIcon(self.parent_widget.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload))
+        self.refresh_render_presets_button.setFixedWidth(24)
+        self.refresh_render_presets_button.clicked.connect(partial(self.fill_preset_combo_box))
+        render_preset_horizontal_layout.addWidget(self.refresh_render_presets_button)
 
         # Create Render Jobs button
         create_shots_and_render_jobs_button = QtWidgets.QPushButton(self.parent_widget)
@@ -1127,14 +1134,20 @@ class ShotManagerUI(object):
     def fill_preset_combo_box(self):
         """fills the preset comboBox
         """
-        # self.render_preset_combo_box
         shot_manager = ShotManager()
         render_preset_list = shot_manager.resolve_project.GetRenderPresetList()
-        self.render_preset_combo_box.clear()
-        self.render_preset_combo_box.addItems(sorted(render_preset_list))
+        current_text = self.render_presets_combo_box.currentText()
+        self.render_presets_combo_box.clear()
+        self.render_presets_combo_box.addItems(sorted(render_preset_list))
 
-        # select the last selected preset if available
-        self.read_settings()
+        if current_text:
+            # select the previous preset
+            index = self.render_presets_combo_box.findText(current_text)
+            if index:
+                self.render_presets_combo_box.setCurrentIndex(index)
+        else:
+            # select the last selected preset if available
+            self.read_settings()
 
     def write_settings(self):
         """stores the settings to persistent storage
@@ -1188,9 +1201,9 @@ class ShotManagerUI(object):
         self.take_name_line_edit.setText(take_name)
 
         # update the combo box
-        index = self.render_preset_combo_box.findText(render_preset, QtCore.Qt.MatchExactly)
+        index = self.render_presets_combo_box.findText(render_preset, QtCore.Qt.MatchExactly)
         if index:
-            self.render_preset_combo_box.setCurrentIndex(index)
+            self.render_presets_combo_box.setCurrentIndex(index)
 
         self.settings.endGroup()
 
@@ -1203,7 +1216,7 @@ class ShotManagerUI(object):
 
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
-        render_preset = self.render_preset_combo_box.currentText()
+        render_preset = self.render_presets_combo_box.currentText()
 
         self.project_based_settings_storage[project.id] = {
             'handle': handle,
@@ -1373,7 +1386,7 @@ class ShotManagerUI(object):
 
         handle = self.handle_spin_box.value()
         take_name = self.take_name_line_edit.text()
-        preset_name = self.render_preset_combo_box.currentText()
+        preset_name = self.render_presets_combo_box.currentText()
 
         message_box = QtWidgets.QMessageBox(self.parent_widget)
         # message_box.setTitle("Which Shots?")
@@ -1465,6 +1478,9 @@ class ReviewManagerUI(object):
         submission_note_layout.addWidget(submission_note_label)
 
         self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent_widget)
+        self.submission_note_text_edit.setSizePolicy(
+            QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed)
+        )
         try:
             self.submission_note_text_edit.setPlaceholderText("Enter submission note")
         except AttributeError:
