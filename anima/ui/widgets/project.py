@@ -29,7 +29,7 @@ class ProjectComboBox(QtWidgets.QComboBox):
             projects = Project.query.order_by(Project.name).all()
 
         for project in projects:
-            self.addItem(project.name, project.id)
+            self.addItem(project.name, project)
 
     @property
     def show_active_projects(self):
@@ -50,10 +50,4 @@ class ProjectComboBox(QtWidgets.QComboBox):
     def get_current_project(self):
         """returns the current project instance
         """
-        project_id = self.itemData(self.currentIndex())
-
-        if project_id is not None:
-            from stalker import Project
-            return Project.query.get(project_id)
-        else:
-            return None
+        return self.itemData(self.currentIndex())
