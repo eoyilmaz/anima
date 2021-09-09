@@ -542,6 +542,13 @@ class GenericTools(object):
         media_pool_item = clip.GetMediaPoolItem()
         clip_properties = media_pool_item.GetClipProperty()
 
+        from anima.env.resolve import shot_tools
+        shot_clip = shot_tools.ShotClip(clip=clip, timeline=timeline)
+        marker = shot_clip.get_shot_related_marker()
+        if marker:
+            clip_properties['Marker Name'] = marker['name']
+            clip_properties['Marker Note'] = marker['note']
+
         # Modify Clip Directory
         clip_properties['Clip Base Name'] = os.path.splitext(clip_properties['Clip Name'])[0]
         clip_properties['Clip Directory'] = os.path.dirname(clip_properties['File Path'])
