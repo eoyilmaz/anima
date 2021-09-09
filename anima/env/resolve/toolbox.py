@@ -7,9 +7,7 @@ reload(toolbox)
 dialog = toolbox.UI()
 
 """
-import sys
 import os
-import functools
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtGui, QtWidgets
@@ -22,6 +20,7 @@ __here__ = os.path.abspath(__file__)
 def reload_lib(lib):
     """helper function to reload a lib
     """
+    import sys
     if sys.version_info[0] >= 3:  # Python 3
         import importlib
         importlib.reload(lib)
@@ -81,6 +80,12 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
     def setup_ui(self):
         """add tools
         """
+        gamma = 1.0
+        if os.name == 'darwin':
+            gamma = 0.455
+
+        color_list = ColorList(gamma=gamma)
+
         # create the main tab layout
         main_tab_widget = QtWidgets.QTabWidget()
         self.addWidget(main_tab_widget)
@@ -122,30 +127,34 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         field_role = QtWidgets.QFormLayout.FieldRole
 
         # Create tools for general tab
-        from anima.ui.utils import add_button
+        from anima.ui.utils import create_button
         i = -1
 
         current_vertical_layout = output_tab_vertical_layout
         current_form_layout = output_tab_form_layout
-        # -------------------------------------------------------------------
-        # Common Controls
-        i += 1
-        common_output_controls_label = QtWidgets.QLabel()
-        common_output_controls_label.setText("=========== Common Output Controls ===========")
-        current_form_layout.setWidget(i, field_role, common_output_controls_label)
 
         # -------------------------------------------------------------------
-        # Template
+        # Filename Template
         i += 1
-        template_label = QtWidgets.QLabel()
-        template_label.setText("Template")
-        current_form_layout.setWidget(i, label_role, template_label)
+        filename_template_label = QtWidgets.QLabel()
+        filename_template_label.setText("Filename")
+        current_form_layout.setWidget(i, label_role, filename_template_label)
 
         # template_line_edit.setText()
-        template_combo_box = QtWidgets.QComboBox()
-        template_combo_box.setEditable(True)
-        template_combo_box.addItems(GenericTools.default_output_templates)
-        current_form_layout.setWidget(i, field_role, template_combo_box)
+        filename_template_combo_box = QtWidgets.QComboBox()
+        filename_template_combo_box.setEditable(True)
+        filename_template_combo_box.addItems(GenericTools.default_output_templates)
+        current_form_layout.setWidget(i, field_role, filename_template_combo_box)
+
+        # -------------------------------------------------------------------
+        # Output Template
+        i += 1
+        location_template_label = QtWidgets.QLabel()
+        location_template_label.setText("Location")
+        current_form_layout.setWidget(i, label_role, location_template_label)
+
+        location_template_line_edit = QtWidgets.QLineEdit()
+        current_form_layout.setWidget(i, field_role, location_template_line_edit)
 
         # -------------------------------------------------------------------
         # Extend Start/End Controls
@@ -174,7 +183,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         def clip_output_generator_wrapper():
             #  = version_spinbox.value()
-            template = template_combo_box.currentText()
+            filename_template = filename_template_combo_box.currentText()
+            location_template = location_template_line_edit.text()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
 
@@ -184,16 +194,11 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
             GenericTools.clip_output_generator(
                 clip=clip,
-                template=template,
+                filename_template=filename_template,
+                location_template=location_template,
                 extend_start=extend_start,
                 extend_end=extend_end
             )
-
-        gamma = 1.0
-        if os.name == 'darwin':
-            gamma = 0.455
-
-        color_list = ColorList(gamma=gamma)
 
         clip_output_generator_button = QtWidgets.QPushButton()
         clip_output_generator_button.setText("Output - Current Clip")
@@ -218,12 +223,12 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         def clip_output_generator_by_index_wrapper():
             clip_index = clip_index_spinbox.value()
-            template = template_combo_box.currentText()
+            template = filename_template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
             GenericTools.clip_output_generator_by_clip_index(
                 clip_index=clip_index,
-                template=template,
+                filename_template=template,
                 extend_start=extend_start,
                 extend_end=extend_end
             )
@@ -285,7 +290,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             tc1 = timecode.Timecode(fps, current_timecode)
             spin_box.setValue(tc1.frames - 1)
 
-        get_in_point_push_button.clicked.connect(functools.partial(get_in_out_point_callback, in_point_spin_box))
+        from functools import partial
+        get_in_point_push_button.clicked.connect(partial(get_in_out_point_callback, in_point_spin_box))
 
         # Get Out Point
         i += 1
@@ -307,7 +313,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         set_widget_bg_color(get_out_point_push_button, color_list)
         color_list.next()
 
-        get_out_point_push_button.clicked.connect(functools.partial(get_in_out_point_callback, out_point_spin_box))
+        get_out_point_push_button.clicked.connect(partial(get_in_out_point_callback, out_point_spin_box))
 
         # Start Clip Number
         i += 1
@@ -345,7 +351,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         i += 1
 
         def per_clip_output_generator_wrapper():
-            template = template_combo_box.currentText()
+            filename_template = filename_template_combo_box.currentText()
+            location_template = location_template_line_edit.text()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
             start_clip_number = start_clip_number_spin_box.value()
@@ -354,7 +361,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             end_frame = out_point_spin_box.value()
             padding = padding_spin_box.value()
             GenericTools.per_clip_output_generator(
-                template=template,
+                filename_template=filename_template,
+                location_template=location_template,
                 extend_start=extend_start,
                 extend_end=extend_end,
                 start_frame=start_frame,
@@ -387,10 +395,11 @@ class GenericTools(object):
     ]
 
     @classmethod
-    def per_clip_output_generator(cls, template="", extend_start=0, extend_end=0, start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4):
+    def per_clip_output_generator(cls, filename_template="", location_template="", extend_start=0, extend_end=0, start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4):
         """generates render tasks per clips on the current timeline
 
-        :param str template:
+        :param str filename_template:
+        :param str location_template:
         :param int extend_start:
         :param int extend_end:
         :param int start_frame:
@@ -408,8 +417,12 @@ class GenericTools(object):
 
         clips = timeline.GetItemsInTrack("video", 1)
 
-        if template == "":
-            template = cls.default_output_templates[0]
+        if filename_template == "":
+            filename_template = cls.default_output_templates[0]
+
+        import copy
+        from anima.env.resolve import template
+        resolve_template_vars = copy.copy(template.RESOLVE_TEMPLATE_VARS)
 
         i = 0
         for clip_index in clips:
@@ -420,20 +433,22 @@ class GenericTools(object):
                 calculated_clip_number = start_clip_number + clip_number_by * i
                 i += 1
                 calculated_clip_number_as_str = "%s" % calculated_clip_number
-                temp_template = template.replace("%{Clip #}", calculated_clip_number_as_str.zfill(padding))
+                resolve_template_vars["Clip #"] = calculated_clip_number_as_str.zfill(padding)
                 GenericTools.clip_output_generator_by_clip_index(
                     clip_index=clip_index,
-                    template=temp_template,
+                    filename_template=template.format_resolve_template(filename_template, resolve_template_vars),
+                    location_template=template.format_resolve_template(location_template, resolve_template_vars),
                     extend_start=extend_start,
                     extend_end=extend_end,
                 )
 
     @classmethod
-    def clip_output_generator_by_clip_index(cls, clip_index=1, template="", extend_start=0, extend_end=0):
+    def clip_output_generator_by_clip_index(cls, clip_index=1, filename_template="", location_template="", extend_start=0, extend_end=0):
         """Generators
 
-        :param clip_index:
-        :param template:
+        :param int clip_index:
+        :param str filename_template: The filename template.
+        :param str location_template: The output location template.
         :param int extend_start:
         :param int extend_end:
         :return:
@@ -450,525 +465,35 @@ class GenericTools(object):
 
         cls.clip_output_generator(
             clip,
-            template=template,
+            filename_template=filename_template,
+            location_template=location_template,
             extend_start=extend_start,
             extend_end=extend_end
         )
 
     @classmethod
-    def clip_output_generator(cls, clip, template="", extend_start=0, extend_end=0):
+    def clip_output_generator(cls, clip, filename_template="", location_template="", extend_start=0, extend_end=0):
         """Generates render tasks for the clip with the given index
 
         :param clip: A Resolve TimelineItem
-        :param str template: Output template,
+        :param str filename_template: Output template,
 
-          The Resolve template variables can be directly used like:
-
-            %{2nd Asst}
-            %{2nd Continuity}
-            %{2nd Dir Asst}
-            %{2nd Dir Reviewed}
-            %{2nd Dir}
-            %{2nd DIT}
-            %{2nd DOP Reviewed}
-            %{2nd DOP}
-            %{3D Rig ID #}
-            %{3D Rig Type}
-            %{Angle}
-            %{Asp Ratio Notes}
-            %{Associated Mattes}
-            %{Asst Director}
-            %{Asst Producer}
-            %{Audio Bit Depth}
-            %{Audio Channels}
-            %{Audio Dur TC}
-            %{Audio End TC}
-            %{Audio File Type}
-            %{Audio FPS}
-            %{Audio Media}
-            %{Audio Notes}
-            %{Audio Offset}
-            %{Audio Recorder}
-            %{Audio Sample Rate}
-            %{Audio Start TC}
-            %{Audio TC Type}
-            %{Aux 1}
-            %{Aux 2}
-            %{BG}
-            %{Bit Depth}
-            %{Bit Rate}
-            %{Cam #}
-            %{Cam Aperture}
-            %{Cam Asst}
-            %{Cam Firmware}
-            %{Cam Format}
-            %{Cam FPS}
-            %{Cam ID}
-            %{Cam Notes}
-            %{Cam Operator}
-            %{Cam Serial #}
-            %{Cam TC Type}
-            %{Cam Type}
-            %{Camera Aperture Type}
-            %{Camera Manufacturer}
-            %{CDL SAT}
-            %{CDL SOP}
-            %{Clip #}
-            %{Clip Directory}
-            %{Clip Name}
-            %{Clip Type}
-            %{Codec Bitrate}
-            %{Collaborative Update}
-            %{Color Chart}
-            %{Color Space Notes}
-            %{Colorist Asst}
-            %{Colorist Notes}
-            %{Colorist Reviewed}
-            %{Colorist}
-            %{Comments}
-            %{Continuity Reviewed}
-            %{Continuity}
-            %{Convergence Adj}
-            %{Crew Comments}
-            %{CV}
-            %{Dailies Colorist}
-            %{Data Level}
-            %{Data Wrangler}
-            %{Date Modified}
-            %{Date Recorded}
-            %{Day / Night}
-            %{Deck Firmware}
-            %{Deck Serial #}
-            %{Description}
-            %{Dialog Duration}
-            %{Dialog Notes}
-            %{Dialog Starts As}
-            %{Different Frame Rate}
-            %{Digital Tech}
-            %{Director Reviewed}
-            %{Director}
-            %{Distance}
-            %{DOP Reviewed}
-            %{DOP}
-            %{Drop Frame}
-            %{Duration TC}
-            %{Edit Sizing}
-            %{Editing Asst}
-            %{Editor}
-            %{EDL Clip Name}
-            %{EDL Event Number}
-            %{EDL Tape Number}
-            %{Embedded Audio}
-            %{End Dialog TC}
-            %{End Frame}
-            %{End TC}
-            %{Environment}
-            %{Episode #}
-            %{Episode Name}
-            %{Eye}
-            %{FG}
-            %{File Name}
-            %{File Path}
-            %{Filter}
-            %{Focal Point (mm)}
-            %{Focus Puller}
-            %{Focus Reviewed}
-            %{Format}
-            %{Frame Rate}
-            %{Frames}
-            %{Framing Chart}
-            %{FSD}
-            %{Fusion Composition}
-            %{Gamma Notes}
-            %{Genre}
-            %{Good Take}
-            %{Graded}
-            %{Grey Chart}
-            %{Group}
-            %{H-Flip}
-            %{Has Keyframes}
-            %{IA}
-            %{IDT}
-            %{Input Color Space}
-            %{Input LUT}
-            %{Input Sizing Preset}
-            %{Input Sizing}
-            %{In}
-            %{ISO}
-            %{Key Grip}
-            %{KeyKode}
-            %{Keywords}
-            %{Lab Roll #}
-            %{Lens #}
-            %{Lens Chart}
-            %{Lens Notes}
-            %{Lens Type}
-            %{Line Producer}
-            %{Location}
-            %{LUT 1}
-            %{LUT 2}
-            %{LUT 3}
-            %{LUT Used On Set}
-            %{LUT Used}
-            %{Marker Keywords}
-            %{Marker Name}
-            %{Marker Notes}
-            %{Matte Nodes}
-            %{Media Type}
-            %{Modified}
-            %{Mon Color Space}
-            %{Monitor LUT}
-            %{Move}
-            %{ND Filter}
-            %{Noise Reduction}
-            %{Out}
-            %{PAR Notes}
-            %{PAR}
-            %{People}
-            %{Post Producer}
-            %{Producer}
-            %{Production Asst}
-            %{Production Co}
-            %{Production Name}
-            %{Program Name}
-            %{Project Name}
-            %{RAW}
-            %{Reel Name}
-            %{Reel Number}
-            %{Render Codec}
-            %{Render Resolution}
-            %{Resolution}
-            %{Reviewers Notes}
-            %{Rig Inverted}
-            %{Roll Card #}
-            %{S3D Eye}
-            %{S3D Notes}
-            %{S3D Shot}
-            %{S3D Sync}
-            %{Safe Area}
-            %{Sample Rate (KHz)}
-            %{Scene}
-            %{Script Suprvisr}
-            %{Send to Studio}
-            %{Send to}
-            %{Sensor Area Captured}
-            %{Sensor}
-            %{Series #}
-            %{Setup}
-            %{Shared Nodes}
-            %{Shoot Day}
-            %{Shot During Ep}
-            %{Shot Type}
-            %{Shot}
-            %{Shutter Type}
-            %{Shutter}
-            %{Slate TC}
-            %{Sound Mixer}
-            %{Sound Reviewed}
-            %{Sound Roll #}
-            %{Source Name}
-            %{Start Dialog TC}
-            %{Start Frame}
-            %{Start TC}
-            %{Subclip}
-            %{Take}
-            %{Time-lapse Interval}
-            %{Timeline Index}
-            %{Timeline Name}
-            %{Tone}
-            %{Track 1}
-            %{Track 2}
-            %{Track 3}
-            %{Track 4}
-            %{Track 5}
-            %{Track 6}
-            %{Track 7}
-            %{Track 8}
-            %{Track 9}
-            %{Track 10}
-            %{Track 11}
-            %{Track 12}
-            %{Track 13}
-            %{Track 14}
-            %{Track 15}
-            %{Track 16}
-            %{Track 17}
-            %{Track 18}
-            %{Track 19}
-            %{Track 20}
-            %{Track Name}
-            %{Track Number}
-            %{Tracked}
-            %{Unit Manager}
-            %{Unit Name}
-            %{Unrendered}
-            %{Usage}
-            %{V-Flip}
-            %{Version}
-            %{VFX Grey Ball}
-            %{VFX Markers}
-            %{VFX Mirror Ball}
-            %{VFX Notes}
-            %{VFX Shot #}
-            %{VFX Svsr Reviewed}
-            %{Video Codec}
-            %{Wardrobe Reviewed}
-            %{White Balance Tint}
-            %{White Point}
+          See the ``anima.env.resolve.template.RESOLVE_TEMPLATE_VARS`` for Resolve template variables that can be
+          directly used like.
 
           These will be passed to Resolve directly.
 
+        :param location_template: The output location template.
         :param extend_start: Include this many frames at the start of the clip. Default is 0.
         :param extend_end: Include this many frames at the end of the clip. Default is 0.
-
         """
 
-        if template == "":
-            template = cls.default_output_templates[0]
+        if filename_template == "":
+            filename_template = cls.default_output_templates[0]
 
-        resolve_keywords = {
-            'Angle': '%{Angle}',
-            'Asp Ratio Notes': '%{Asp Ratio Notes}',
-            'Associated Mattes': '%{Associated Mattes}',
-            'Asst Director': '%{Asst Director}',
-            'Asst Producer': '%{Asst Producer}',
-            'Audio Bit Depth': '%{Audio Bit Depth}',
-            'Audio Channels': '%{Audio Channels}',
-            'Audio Dur TC': '%{Audio Dur TC}',
-            'Audio End TC': '%{Audio End TC}',
-            'Audio File Type': '%{Audio File Type}',
-            'Audio FPS': '%{Audio FPS}',
-            'Audio Media': '%{Audio Media}',
-            'Audio Notes': '%{Audio Notes}',
-            'Audio Offset': '%{Audio Offset}',
-            'Audio Recorder': '%{Audio Recorder}',
-            'Audio Sample Rate': '%{Audio Sample Rate}',
-            'Audio Start TC': '%{Audio Start TC}',
-            'Audio TC Type': '%{Audio TC Type}',
-            'Aux 1': '%{Aux 1}',
-            'Aux 2': '%{Aux 2}',
-            'BG': '%{BG}',
-            'Bit Depth': '%{Bit Depth}',
-            'Bit Rate': '%{Bit Rate}',
-            'Cam #': '%{Cam #}',
-            'Cam Aperture': '%{Cam Aperture}',
-            'Cam Asst': '%{Cam Asst}',
-            'Cam Firmware': '%{Cam Firmware}',
-            'Cam Format': '%{Cam Format}',
-            'Cam FPS': '%{Cam FPS}',
-            'Cam ID': '%{Cam ID}',
-            'Cam Notes': '%{Cam Notes}',
-            'Cam Operator': '%{Cam Operator}',
-            'Cam Serial #': '%{Cam Serial #}',
-            'Cam TC Type': '%{Cam TC Type}',
-            'Cam Type': '%{Cam Type}',
-            'Camera Aperture Type': '%{Camera Aperture Type}',
-            'Camera Manufacturer': '%{Camera Manufacturer}',
-            'CDL SAT': '%{CDL SAT}',
-            'CDL SOP': '%{CDL SOP}',
-            'Clip #': '%{Clip #}',
-            'Clip Directory': '%{Clip Directory}',
-            'Clip Name': '%{Clip Name}',
-            'Clip Type': '%{Clip Type}',
-            'Codec Bitrate': '%{Codec Bitrate}',
-            'Collaborative Update': '%{Collaborative Update}',
-            'Color Chart': '%{Color Chart}',
-            'Color Space Notes': '%{Color Space Notes}',
-            'Colorist Asst': '%{Colorist Asst}',
-            'Colorist Notes': '%{Colorist Notes}',
-            'Colorist Reviewed': '%{Colorist Reviewed}',
-            'Colorist': '%{Colorist}',
-            'Comments': '%{Comments}',
-            'Continuity Reviewed': '%{Continuity Reviewed}',
-            'Continuity': '%{Continuity}',
-            'Convergence Adj': '%{Convergence Adj}',
-            'Crew Comments': '%{Crew Comments}',
-            'CV': '%{CV}',
-            'Dailies Colorist': '%{Dailies Colorist}',
-            'Data Level': '%{Data Level}',
-            'Data Wrangler': '%{Data Wrangler}',
-            'Date Modified': '%{Date Modified}',
-            'Date Recorded': '%{Date Recorded}',
-            'Day / Night': '%{Day / Night}',
-            'Deck Firmware': '%{Deck Firmware}',
-            'Deck Serial #': '%{Deck Serial #}',
-            'Description': '%{Description}',
-            'Dialog Duration': '%{Dialog Duration}',
-            'Dialog Notes': '%{Dialog Notes}',
-            'Dialog Starts As': '%{Dialog Starts As}',
-            'Different Frame Rate': '%{Different Frame Rate}',
-            'Digital Tech': '%{Digital Tech}',
-            'Director Reviewed': '%{Director Reviewed}',
-            'Director': '%{Director}',
-            'Distance': '%{Distance}',
-            'DOP Reviewed': '%{DOP Reviewed}',
-            'DOP': '%{DOP}',
-            'Drop Frame': '%{Drop Frame}',
-            'Duration TC': '%{Duration TC}',
-            'Edit Sizing': '%{Edit Sizing}',
-            'Editing Asst': '%{Editing Asst}',
-            'Editor': '%{Editor}',
-            'EDL Clip Name': '%{EDL Clip Name}',
-            'EDL Event Number': '%{EDL Event Number}',
-            'EDL Tape Number': '%{EDL Tape Number}',
-            'Embedded Audio': '%{Embedded Audio}',
-            'End Dialog TC': '%{End Dialog TC}',
-            'End Frame': '%{End Frame}',
-            'End TC': '%{End TC}',
-            'Environment': '%{Environment}',
-            'Episode #': '%{Episode #}',
-            'Episode Name': '%{Episode Name}',
-            'Eye': '%{Eye}',
-            'FG': '%{FG}',
-            'File Name': '%{File Name}',
-            'File Path': '%{File Path}',
-            'Filter': '%{Filter}',
-            'Focal Point (mm)': '%{Focal Point (mm)}',
-            'Focus Puller': '%{Focus Puller}',
-            'Focus Reviewed': '%{Focus Reviewed}',
-            'Format': '%{Format}',
-            'Frame Rate': '%{Frame Rate}',
-            'Frames': '%{Frames}',
-            'Framing Chart': '%{Framing Chart}',
-            'FSD': '%{FSD}',
-            'Fusion Composition': '%{Fusion Composition}',
-            'Gamma Notes': '%{Gamma Notes}',
-            'Genre': '%{Genre}',
-            'Good Take': '%{Good Take}',
-            'Graded': '%{Graded}',
-            'Grey Chart': '%{Grey Chart}',
-            'Group': '%{Group}',
-            'H-Flip': '%{H-Flip}',
-            'Has Keyframes': '%{Has Keyframes}',
-            'IA': '%{IA}',
-            'IDT': '%{IDT}',
-            'Input Color Space': '%{Input Color Space}',
-            'Input LUT': '%{Input LUT}',
-            'Input Sizing Preset': '%{Input Sizing Preset}',
-            'Input Sizing': '%{Input Sizing}',
-            'In': '%{In}',
-            'ISO': '%{ISO}',
-            'Key Grip': '%{Key Grip}',
-            'KeyKode': '%{KeyKode}',
-            'Keywords': '%{Keywords}',
-            'Lab Roll #': '%{Lab Roll #}',
-            'Lens #': '%{Lens #}',
-            'Lens Chart': '%{Lens Chart}',
-            'Lens Notes': '%{Lens Notes}',
-            'Lens Type': '%{Lens Type}',
-            'Line Producer': '%{Line Producer}',
-            'Location': '%{Location}',
-            'LUT 1': '%{LUT 1}',
-            'LUT 2': '%{LUT 2}',
-            'LUT 3': '%{LUT 3}',
-            'LUT Used On Set': '%{LUT Used On Set}',
-            'LUT Used': '%{LUT Used}',
-            'Marker Keywords': '%{Marker Keywords}',
-            'Marker Name': '%{Marker Name}',
-            'Marker Notes': '%{Marker Notes}',
-            'Matte Nodes': '%{Matte Nodes}',
-            'Media Type': '%{Media Type}',
-            'Modified': '%{Modified}',
-            'Mon Color Space': '%{Mon Color Space}',
-            'Monitor LUT': '%{Monitor LUT}',
-            'Move': '%{Move}',
-            'ND Filter': '%{ND Filter}',
-            'Noise Reduction': '%{Noise Reduction}',
-            'Out': '%{Out}',
-            'PAR Notes': '%{PAR Notes}',
-            'PAR': '%{PAR}',
-            'People': '%{People}',
-            'Post Producer': '%{Post Producer}',
-            'Producer': '%{Producer}',
-            'Production Asst': '%{Production Asst}',
-            'Production Co': '%{Production Co}',
-            'Production Name': '%{Production Name}',
-            'Program Name': '%{Program Name}',
-            'Project Name': '%{Project Name}',
-            'RAW': '%{RAW}',
-            'Reel Name': '%{Reel Name}',
-            'Reel Number': '%{Reel Number}',
-            'Render Codec': '%{Render Codec}',
-            'Render Resolution': '%{Render Resolution}',
-            'Resolution': '%{Resolution}',
-            'Reviewers Notes': '%{Reviewers Notes}',
-            'Rig Inverted': '%{Rig Inverted}',
-            'Roll Card #': '%{Roll Card #}',
-            'S3D Eye': '%{S3D Eye}',
-            'S3D Notes': '%{S3D Notes}',
-            'S3D Shot': '%{S3D Shot}',
-            'S3D Sync': '%{S3D Sync}',
-            'Safe Area': '%{Safe Area}',
-            'Sample Rate (KHz)': '%{Sample Rate (KHz)}',
-            'Scene': '%{Scene}',
-            'Script Suprvisr': '%{Script Suprvisr}',
-            'Send to Studio': '%{Send to Studio}',
-            'Send to': '%{Send to}',
-            'Sensor Area Captured': '%{Sensor Area Captured}',
-            'Sensor': '%{Sensor}',
-            'Series #': '%{Series #}',
-            'Setup': '%{Setup}',
-            'Shared Nodes': '%{Shared Nodes}',
-            'Shoot Day': '%{Shoot Day}',
-            'Shot During Ep': '%{Shot During Ep}',
-            'Shot Type': '%{Shot Type}',
-            'Shot': '%{Shot}',
-            'Shutter Type': '%{Shutter Type}',
-            'Shutter': '%{Shutter}',
-            'Slate TC': '%{Slate TC}',
-            'Sound Mixer': '%{Sound Mixer}',
-            'Sound Reviewed': '%{Sound Reviewed}',
-            'Sound Roll #': '%{Sound Roll #}',
-            'Source Name': '%{Source Name}',
-            'Start Dialog TC': '%{Start Dialog TC}',
-            'Start Frame': '%{Start Frame}',
-            'Start TC': '%{Start TC}',
-            'Subclip': '%{Subclip}',
-            'Take': '%{Take}',
-            'Time-lapse Interval': '%{Time-lapse Interval}',
-            'Timeline Index': '%{Timeline Index}',
-            'Timeline Name': '%{Timeline Name}',
-            'Tone': '%{Tone}',
-            'Track 1': '%{Track 1}',
-            'Track 2': '%{Track 2}',
-            'Track 3': '%{Track 3}',
-            'Track 4': '%{Track 4}',
-            'Track 5': '%{Track 5}',
-            'Track 6': '%{Track 6}',
-            'Track 7': '%{Track 7}',
-            'Track 8': '%{Track 8}',
-            'Track 9': '%{Track 9}',
-            'Track 10': '%{Track 10}',
-            'Track 11': '%{Track 11}',
-            'Track 12': '%{Track 12}',
-            'Track 13': '%{Track 13}',
-            'Track 14': '%{Track 14}',
-            'Track 15': '%{Track 15}',
-            'Track 16': '%{Track 16}',
-            'Track 17': '%{Track 17}',
-            'Track 18': '%{Track 18}',
-            'Track 19': '%{Track 19}',
-            'Track 20': '%{Track 20}',
-            'Track Name': '%{Track Name}',
-            'Track Number': '%{Track Number}',
-            'Tracked': '%{Tracked}',
-            'Unit Manager': '%{Unit Manager}',
-            'Unit Name': '%{Unit Name}',
-            'Unrendered': '%{Unrendered}',
-            'Usage': '%{Usage}',
-            'V-Flip': '%{V-Flip}',
-            'Version': '%{Version}',
-            'VFX Grey Ball': '%{VFX Grey Ball}',
-            'VFX Markers': '%{VFX Markers}',
-            'VFX Mirror Ball': '%{VFX Mirror Ball}',
-            'VFX Notes': '%{VFX Notes}',
-            'VFX Shot #': '%{VFX Shot #}',
-            'VFX Svsr Reviewed': '%{VFX Svsr Reviewed}',
-            'Video Codec': '%{Video Codec}',
-            'Wardrobe Reviewed': '%{Wardrobe Reviewed}',
-            'White Balance Tint': '%{White Balance Tint}',
-            'White Point': '%{White Point}',
-        }
+        from anima.env.resolve import template
+        import copy
+        resolve_template_vars = copy.copy(template.RESOLVE_TEMPLATE_VARS)
 
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
@@ -977,21 +502,27 @@ class GenericTools(object):
         proj = pm.GetCurrentProject()
         timeline = proj.GetCurrentTimeline()
         clips = timeline.GetItemsInTrack("video", 1)
+        media_pool_item = clip.GetMediaPoolItem()
 
+        # Modify "Clip #" variable
         clip_index = -1
         for i in range(len(clips)):
             if clips[i + 1] == clip:
                 clip_index = i + 1
 
-        resolve_keywords.update({
-            'clip_number': clip_index,
+        resolve_template_vars.update({
+            'Clip #': clip_index,
         })
+
+        # update clip variables in Python side so that we can use it in folder template
+        resolve_template_vars.update(media_pool_item.GetClipProperty())
 
         # create a new render output for each clip
         proj.SetRenderSettings({
             'MarkIn': clip.GetStart() - extend_start,
             'MarkOut': clip.GetEnd() - 1 + extend_end,
-            'CustomName': template
+            'CustomName': template.format_resolve_template(filename_template, resolve_template_vars),
+            'TargetDir': template.format_resolve_template(location_template, resolve_template_vars)
         })
 
         proj.AddRenderJob()
