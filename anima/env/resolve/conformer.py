@@ -395,16 +395,6 @@ class ConformerUI(object):
             pass
         return task_id
 
-    def get_name_from_data_text(self, text):
-        """separates name from combo box texts added with add_data_as_text_to_ui() for this UI
-        """
-        name = None
-        try:
-            name = text.split(' - [')[0]
-        except IndexError:
-            pass
-        return name
-
     def project_combo_box_changed(self, *args):
         """runs when the project_combo_box is changed
         """
@@ -422,7 +412,7 @@ class ConformerUI(object):
             self.shot_out_combo_box.setEnabled(0)
         else:
             self.seq_combo_box.setEnabled(1)
-            self.seq_combo_box.insertItem(0, 'ALL', -1)
+            self.seq_combo_box.insertItem(0, 'ALL', None)
             self.seq_combo_box.setCurrentIndex(0)
 
             self.fps_line.setText('%s' % stalker_project.fps)
@@ -446,7 +436,7 @@ class ConformerUI(object):
         else:
             self.scene_combo_box.clear()
             self.scene_combo_box.setEnabled(1)
-            self.scene_combo_box.addItem('ALL', -1)
+            self.scene_combo_box.addItem('ALL', None)
             # assume that scenes are 1st level children of sequences (default in Anima Pipeline Structure)
             from stalker import Task, Type
             scene_type = Type.query.filter(Type.name == 'Scene').first()
@@ -456,7 +446,7 @@ class ConformerUI(object):
                 .order_by(Task.name)\
                 .all()
             for task in all_scenes:
-                self.scene_combo_box.addItem(task.name, task.id)
+                self.scene_combo_box.addItem(task.name, task)
 
     def scene_combo_box_changed(self, *args):
         """runs when the scene_combo_box is changed
@@ -465,9 +455,8 @@ class ConformerUI(object):
         project = self.project_combo_box.get_current_project()
 
         if project:
-            scene_id = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
-
-            if scene_id in [-1, None]:
+            scene = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
+            if not scene:
                 self.shot_in_combo_box.clear()
                 self.shot_in_combo_box.setEnabled(0)
                 self.shot_out_combo_box.clear()
@@ -479,7 +468,6 @@ class ConformerUI(object):
                 self.height_line.setText('%s' % project.image_format.height)
             else:
                 from stalker import Task, Shot, Sequence
-                scene = Task.query.get(scene_id)
                 # shots under different scenes might have various res, fps properties under same seq or project
                 # set properties from first shot under Scene (assume all shots under scene have the same res,fps)
                 for t in scene.walk_hierarchy():
@@ -492,39 +480,35 @@ class ConformerUI(object):
                 # fill shot_in_combo_box with shots
                 self.shot_in_combo_box.clear()
                 self.shot_in_combo_box.setEnabled(1)
-                self.shot_in_combo_box.addItem('ALL', -1)
+                self.shot_in_combo_box.addItem('ALL', None)
 
                 seq = self.seq_combo_box.get_current_sequence()
                 shots = Shot.query.filter(Shot.sequences.contains(seq)).order_by(Shot.name).all()
                 for shot in shots:
                     if scene in shot.parents:
-                        self.shot_in_combo_box.addItem(shot.name, shot.id)
+                        self.shot_in_combo_box.addItem(shot.name, shot)
 
     def shot_in_combo_box_changed(self, *args):
         """runs when the shot_in_combo_box is changed
         """
         # fills shot_out_combo_box with shots
         self.updated_shot_list.clear()
-        shot_id = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
-        if shot_id in [-1, None]:
+        shot_in = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
+        if not shot_in:
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(0)
         else:
-            scene_id = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
-            seq_id = self.seq_combo_box.itemData(self.seq_combo_box.currentIndex())
-
-            from stalker import Task, Shot, Sequence
-            shot_in = Shot.query.get(shot_id)
             shot_in_num = int(shot_in.name.split('_')[-1])
-            seq = Sequence.query.get(seq_id)
-            scene = Task.query.get(scene_id)
+            seq = self.seq_combo_box.itemData(self.seq_combo_box.currentIndex())
+            scene = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
 
             self.shot_out_combo_box.clear()
             self.shot_out_combo_box.setEnabled(1)
+            from stalker import Shot
             shots = Shot.query.filter(Shot.sequences.contains(seq)).order_by(Shot.name).all()
             for shot in shots:
                 if scene in shot.parents and int(shot.name.split('_')[-1]) >= shot_in_num:
-                    self.shot_out_combo_box.addItem(shot.name, shot.id)
+                    self.shot_out_combo_box.addItem(shot.name, shot)
 
     def shot_out_combo_box_changed(self, *args):
         """runs when the shot_out_combo_box is changed
@@ -603,17 +587,15 @@ class ConformerUI(object):
             if self.scene_combo_box.currentText() == 'ALL':
                 shots += stalker_seq.shots
             else:
-                stalker_scene = Task.query.get(self.scene_combo_box.itemData(self.scene_combo_box.currentIndex()))
+                stalker_scene = self.scene_combo_box.itemData(self.scene_combo_box.currentIndex())
                 if self.shot_in_combo_box.currentText() == 'ALL':
                     for shot in stalker_seq.shots:
                         if stalker_scene in shot.parents:  # assume that a shot is always a parent of it's scene
                             shots.append(shot)
                 else:
-                    shot_in_id = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
-                    shot_out_id = self.shot_out_combo_box.itemData(self.shot_out_combo_box.currentIndex())
-                    if shot_in_id and shot_out_id:
-                        shot_in = Shot.query.get(shot_in_id)
-                        shot_out = Shot.query.get(shot_out_id)
+                    shot_in = self.shot_in_combo_box.itemData(self.shot_in_combo_box.currentIndex())
+                    shot_out = self.shot_out_combo_box.itemData(self.shot_out_combo_box.currentIndex())
+                    if shot_in and shot_out:
                         shot_in_num = int(shot_in.name.split('_')[-1])
                         shot_out_num = int(shot_out.name.split('_')[-1])
                         for shot in stalker_seq.shots:
@@ -786,13 +768,11 @@ class ConformerUI(object):
                                  str(today.hour).rjust(2, '0'),
                                  str(today.minute).rjust(2, '0'),
                                  str(today.second).rjust(2, '0'))
-        proj_name = self.get_name_from_data_text(self.project_combo_box.currentText())
-        seq_name = self.get_name_from_data_text(self.seq_combo_box.currentText())
-        scn_name = self.get_name_from_data_text(self.scene_combo_box.currentText())
+        proj_name = self.project_combo_box.currentText()
+        seq_name = self.seq_combo_box.currentText()
+        scn_name = self.scene_combo_box.currentText()
         extension = self.ext_name_combo_box.currentText()
 
-        width = self.width_line.text()
-        height = self.height_line.text()
         fps = self.fps_line.text()
         # for some reason fcpxml does not like float fps like 24.0
         # if the decimal is .0 than fps must be integer 24 so...
@@ -1074,24 +1054,25 @@ class ConformerUI(object):
                                                               local_time.tm_mday)
 
                         if modification_date >= query_date:
-                            update_info = '%s - %s : %s > %s' % (
+                            item_label = '%s - %s : %s > %s' % (
                                 task.parent.name,
                                 task.name,
                                 str(modification_date).split(' ')[0],
                                 last_version.updated_by.name
                             )
-                            update_string = self.add_data_as_text_to_ui(update_info, shot.id)
-                            if not self.alpha_only_check_box.isChecked():
-                                update_list.append(update_string)
-                            elif has_alpha is True:
-                                update_list.append(update_string)    
+                            item_data = [item_label, shot]
+                            if not self.alpha_only_check_box.isChecked() or has_alpha is True:
+                                update_list.append(item_data)
+
                     except BaseException:
                         continue
 
             if update_list:
-                update_list.sort()
-                for update_string in update_list:
-                    self.updated_shot_list.addItem(update_string)
+                update_list.sort(key=lambda x: x[0])
+                for i, item_data in enumerate(update_list):
+                    self.updated_shot_list.addItem(item_data)
+                    item = self.updated_shot_list.item(i)
+                    item.setData(QtCore.Qt.EditRole, item_data[1])
             else:
                 self.updated_shot_list.addItem('No Updated Shots found after specified date / ui specs.')
 
@@ -1104,16 +1085,11 @@ class ConformerUI(object):
     def conform_updated_shots(self):
         """conforms only updated shots from listWidget in UI
         """
-        from stalker import Shot
-        items = []
-        for ind in range(self.updated_shot_list.count()):
-            items.append(self.updated_shot_list.item(ind).text())
-
         shots = []
-        for item in items:
-            sh_id = self.get_id_from_data_text(item)
-            if sh_id:
-                sh = Shot.query.get(sh_id)
-                shots.append(sh)
+        for i in range(self.updated_shot_list.count()):
+            item = self.updated_shot_list.item(i)
+            shot = item.data()
+            if shot:
+                shots.append(shot)
 
         self.conform_shots(shots)
