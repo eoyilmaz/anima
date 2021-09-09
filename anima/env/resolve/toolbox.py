@@ -134,6 +134,17 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         current_form_layout = output_tab_form_layout
 
         # -------------------------------------------------------------------
+        # Render Preset
+        i += 1
+        render_preset_label = QtWidgets.QLabel()
+        render_preset_label.setText("Render Preset")
+        current_form_layout.setWidget(i, label_role, render_preset_label)
+
+        self.render_preset_combo_box = QtWidgets.QComboBox()
+        current_form_layout.setWidget(i, field_role, self.render_preset_combo_box)
+        self.fill_preset_combo_box()
+
+        # -------------------------------------------------------------------
         # Filename Template
         i += 1
         filename_template_label = QtWidgets.QLabel()
@@ -187,6 +198,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             location_template = location_template_line_edit.text()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
+            render_preset = self.render_preset_combo_box.currentText()
 
             from anima.env.resolve import shot_tools
             sm = shot_tools.ShotManager()
@@ -197,7 +209,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 filename_template=filename_template,
                 location_template=location_template,
                 extend_start=extend_start,
-                extend_end=extend_end
+                extend_end=extend_end,
+                render_preset=render_preset
             )
 
         clip_output_generator_button = QtWidgets.QPushButton()
@@ -226,11 +239,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             template = filename_template_combo_box.currentText()
             extend_start = extend_start_spinbox.value()
             extend_end = extend_end_spinbox.value()
+            render_preset = self.render_preset_combo_box.currentText()
             GenericTools.clip_output_generator_by_clip_index(
                 clip_index=clip_index,
                 filename_template=template,
                 extend_start=extend_start,
-                extend_end=extend_end
+                extend_end=extend_end,
+                render_preset=render_preset
             )
 
         output_clip_by_clip_index_push_button = QtWidgets.QPushButton()
@@ -360,6 +375,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             start_frame = in_point_spin_box.value()
             end_frame = out_point_spin_box.value()
             padding = padding_spin_box.value()
+            render_preset = self.render_preset_combo_box.currentText()
+
             GenericTools.per_clip_output_generator(
                 filename_template=filename_template,
                 location_template=location_template,
@@ -369,7 +386,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 end_frame=end_frame,
                 start_clip_number=start_clip_number,
                 clip_number_by=clip_number_by,
-                padding=padding
+                padding=padding,
+                render_preset=render_preset
             )
 
         per_clip_output_generator_push_button = QtWidgets.QPushButton()
@@ -384,6 +402,16 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Add the stretcher
         current_vertical_layout.addStretch()
 
+    def fill_preset_combo_box(self):
+        """fills the preset comboBox
+        """
+        # self.render_preset_combo_box
+        from anima.env.resolve.shot_tools import ShotManager
+        shot_manager = ShotManager()
+        render_preset_list = shot_manager.resolve_project.GetRenderPresetList()
+        self.render_preset_combo_box.clear()
+        self.render_preset_combo_box.addItems(sorted(render_preset_list))
+
 
 class GenericTools(object):
     """Generic Tools
@@ -396,7 +424,9 @@ class GenericTools(object):
     ]
 
     @classmethod
-    def per_clip_output_generator(cls, filename_template="", location_template="", extend_start=0, extend_end=0, start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4):
+    def per_clip_output_generator(cls, filename_template="", location_template="", extend_start=0, extend_end=0,
+                                  start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4,
+                                  render_preset=""):
         """generates render tasks per clips on the current timeline
 
         :param str filename_template:
@@ -408,6 +438,7 @@ class GenericTools(object):
         :param int start_clip_number:
         :param int clip_number_by:
         :param int padding: Defaults to 4
+        :param str render_preset: Render preset name
         """
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
@@ -441,10 +472,12 @@ class GenericTools(object):
                     location_template=template.format_resolve_template(location_template, resolve_template_vars),
                     extend_start=extend_start,
                     extend_end=extend_end,
+                    render_preset=render_preset
                 )
 
     @classmethod
-    def clip_output_generator_by_clip_index(cls, clip_index=1, filename_template="", location_template="", extend_start=0, extend_end=0):
+    def clip_output_generator_by_clip_index(cls, clip_index=1, filename_template="", location_template="",
+                                            extend_start=0, extend_end=0, render_preset=""):
         """Generators
 
         :param int clip_index:
@@ -452,6 +485,7 @@ class GenericTools(object):
         :param str location_template: The output location template.
         :param int extend_start:
         :param int extend_end:
+        :param str render_preset: Render preset name.
         :return:
         """
         from anima.env import blackmagic
@@ -469,11 +503,13 @@ class GenericTools(object):
             filename_template=filename_template,
             location_template=location_template,
             extend_start=extend_start,
-            extend_end=extend_end
+            extend_end=extend_end,
+            render_preset=render_preset
         )
 
     @classmethod
-    def clip_output_generator(cls, clip, filename_template="", location_template="", extend_start=0, extend_end=0):
+    def clip_output_generator(cls, clip, filename_template="", location_template="", extend_start=0, extend_end=0,
+                              render_preset=""):
         """Generates render tasks for the clip with the given index
 
         :param clip: A Resolve TimelineItem
@@ -520,6 +556,12 @@ class GenericTools(object):
 
         # update clip variables in Python side so that we can use it in folder template
         resolve_template_vars.update(clip_properties)
+
+        result = proj.LoadRenderPreset(render_preset)
+        if not result:
+            print("No preset named: %s" % render_preset)
+        else:
+            print("Preset loaded successfully: %s" % render_preset)
 
         # create a new render output for each clip
         proj.SetRenderSettings({
