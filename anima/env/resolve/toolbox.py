@@ -391,7 +391,8 @@ class GenericTools(object):
 
     default_output_templates = [
         "%{Clip Name}",
-        "%{Timeline Name}_CL%{Clip #}_v001"
+        "%{Clip Base Name}_Denoised",
+        "%{Timeline Name}_CL%{Clip #}_v001",
     ]
 
     @classmethod
@@ -503,6 +504,11 @@ class GenericTools(object):
         timeline = proj.GetCurrentTimeline()
         clips = timeline.GetItemsInTrack("video", 1)
         media_pool_item = clip.GetMediaPoolItem()
+        clip_properties = media_pool_item.GetClipProperty()
+
+        # Modify Clip Directory
+        clip_properties['Clip Base Name'] = os.path.splitext(clip_properties['Clip Name'])[0]
+        clip_properties['Clip Directory'] = os.path.dirname(clip_properties['File Path'])
 
         # Modify "Clip #" variable
         clip_index = -1
@@ -510,12 +516,10 @@ class GenericTools(object):
             if clips[i + 1] == clip:
                 clip_index = i + 1
 
-        resolve_template_vars.update({
-            'Clip #': clip_index,
-        })
+        clip_properties['Clip #'] = clip_index
 
         # update clip variables in Python side so that we can use it in folder template
-        resolve_template_vars.update(media_pool_item.GetClipProperty())
+        resolve_template_vars.update(clip_properties)
 
         # create a new render output for each clip
         proj.SetRenderSettings({
