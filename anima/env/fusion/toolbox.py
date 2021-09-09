@@ -3,21 +3,13 @@
 import os
 from anima.ui.base import AnimaDialogBase
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import add_button, add_line
+from anima.ui.utils import create_button, create_separator
 
 __here__ = os.path.abspath(__file__)
 
 
 def UI(app_in=None, executor=None, **kwargs):
     """
-    :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
-      work in "environmentless" mode in which it only creates data in database
-      and copies the resultant version file path to clipboard.
-
-    :param mode: Runs the UI either in Read-Write (0) mode or in Read-Only (1)
-      mode.
-
     :param app_in: A Qt Application instance, which you can pass to let the UI
       be attached to the given applications event process.
 
@@ -99,7 +91,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # -------------------------------------------------------------------
         # Open Version
-        add_button(
+        create_button(
             'Open Version',
             general_tab_vertical_layout,
             GenericTools.version_dialog,
@@ -107,7 +99,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         )
 
         # Save As Version
-        add_button(
+        create_button(
             'Save As Version',
             general_tab_vertical_layout,
             GenericTools.version_dialog,
@@ -115,42 +107,42 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         )
 
         # Update Outputs
-        add_button(
+        create_button(
             'Update Savers',
             general_tab_vertical_layout,
             GenericTools.update_savers
         )
 
         # Loader Report
-        add_button(
+        create_button(
             'Loader Report',
             general_tab_vertical_layout,
             GenericTools.loader_report
         )
 
         # PassThrough All Saver nodes
-        add_button(
+        create_button(
             'PassThrough All Savers',
             general_tab_vertical_layout,
             GenericTools.pass_through_all_savers
         )
 
         # Insert Pipe Router
-        add_button(
+        create_button(
             'Insert Pipe Router',
             general_tab_vertical_layout,
             GenericTools.insert_pipe_router_to_selected_node
         )
 
         # Loader From Saver
-        add_button(
+        create_button(
             'Loader from Saver',
             general_tab_vertical_layout,
             GenericTools.loader_from_saver
         )
 
         # Delete Recent Comps
-        add_button(
+        create_button(
             'Delete Recent Comps',
             general_tab_vertical_layout,
             GenericTools.delete_recent_comps
@@ -164,7 +156,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         hbox_layout.addWidget(set_frames_at_once_label)
 
         for i in [1, 5, 10]:
-            button = add_button(
+            button = create_button(
                 '%s' % i,
                 hbox_layout,
                 GenericTools.set_frames_at_once,
@@ -172,26 +164,30 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             )
             button.setMinimumSize(QtCore.QSize(25, 0))
 
-        add_line(general_tab_vertical_layout)
+        general_tab_vertical_layout.addWidget(
+            create_separator(general_tab_vertical_layout.parent())
+        )
 
         # Range From Shot
-        add_button(
+        create_button(
             'Get Comp Range From Database',
             general_tab_vertical_layout,
             GenericTools.range_from_shot
         )
 
         # Shot From Range
-        add_button(
+        create_button(
             'Set Comp Range To Database',
             general_tab_vertical_layout,
             GenericTools.shot_from_range
         )
 
-        add_line(general_tab_vertical_layout)
+        general_tab_vertical_layout.addWidget(
+            create_separator(general_tab_vertical_layout.parent())
+        )
 
         # Render Merger
-        add_button(
+        create_button(
             'Render Merger',
             general_tab_vertical_layout,
             GenericTools.render_merger,
@@ -200,7 +196,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # Render Merger
         import functools
-        add_button(
+        create_button(
             '3DE4 Lens Distort',
             general_tab_vertical_layout,
             functools.partial(GenericTools.tde4_lens_distort_node_creator, self.parent()),

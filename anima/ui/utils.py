@@ -274,7 +274,7 @@ def load_font(font_filename):
     return font_family
 
 
-def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
+def create_button(label, layout, callback, tooltip='', callback_kwargs=None):
     """A wrapper for button creation
 
     :param label: The label of the button
@@ -309,17 +309,16 @@ def add_button(label, layout, callback, tooltip='', callback_kwargs=None):
     return button
 
 
-def add_line(layout):
-    """Adds a horizontal line
+def create_separator(parent):
+    """Creates a horizontal line
 
-    :param layout:
+    :param QtWidget parent: The parent widget
     :return:
     """
-
-    line = QtWidgets.QFrame(layout.parent())
+    line = QtWidgets.QFrame(parent)
     line.setFrameShape(QtWidgets.QFrame.HLine)
     line.setFrameShadow(QtWidgets.QFrame.Sunken)
-    layout.addWidget(line)
+    return line
 
 
 class ColorList(object):

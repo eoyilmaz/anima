@@ -54,15 +54,15 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # -------------------------------------------------------------------
         # Version Dialog
 
-        from anima.ui.utils import add_button
-        add_button(
+        from anima.ui.utils import create_button
+        create_button(
             'Open Version',
             general_tab_vertical_layout,
             GeneralTools.version_dialog,
             callback_kwargs={"mode": 1}
         )
 
-        add_button(
+        create_button(
             'Save As Version',
             general_tab_vertical_layout,
             GeneralTools.version_dialog,
@@ -70,28 +70,28 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         )
 
         # Browse $HIP
-        add_button(
+        create_button(
             'Browse $HIP',
             general_tab_vertical_layout,
             GeneralTools.browse_hip
         )
 
         # Copy Path
-        add_button(
+        create_button(
             'Copy Node Path',
             general_tab_vertical_layout,
             GeneralTools.copy_node_path
         )
 
         # Range from shot
-        add_button(
+        create_button(
             'Range From Shot',
             general_tab_vertical_layout,
             GeneralTools.range_from_shot
         )
 
         # Update render settings
-        add_button(
+        create_button(
             'Update Render Settings',
             general_tab_vertical_layout,
             GeneralTools.update_render_settings
@@ -117,7 +117,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 )
 
         # Export RSProxy Data As JSON
-        add_button(
+        create_button(
             'Export RSProxy Data As JSON',
             general_tab_vertical_layout,
             export_rsproxy_data_as_json_callback
@@ -148,21 +148,21 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 replace_in_child_nodes_check_box.isChecked()
             )
 
-        add_button(
+        create_button(
             "Search && Replace",
             batch_rename_layout,
             search_and_replace_callback
         )
 
         # Import Shaders From Maya
-        add_button(
+        create_button(
             'Import Shaders From Maya',
             general_tab_vertical_layout,
             GeneralTools.import_shaders_from_maya
         )
 
         # Create Focus Plane
-        add_button(
+        create_button(
             'Creat Focus Plane',
             general_tab_vertical_layout,
             GeneralTools.create_focus_plane
@@ -170,7 +170,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         # Create Focus Plane
         from anima.env.houdini import auxiliary
-        add_button(
+        create_button(
             'Create A Very Nice Camera Rig',
             general_tab_vertical_layout,
             auxiliary.very_nice_camera_rig
@@ -198,13 +198,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
         from anima.env.houdini import crowd_tools
         # Bake Setup
-        add_button(
+        create_button(
             'Create Bake Setup',
             crowd_tab_vertical_layout,
             crowd_tools.create_bake_setup
         )
         # Bake Setup
-        add_button(
+        create_button(
             'Create Render Setup',
             crowd_tab_vertical_layout,
             crowd_tools.create_render_setup
