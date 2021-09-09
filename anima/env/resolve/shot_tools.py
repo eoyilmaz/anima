@@ -1465,7 +1465,11 @@ class ReviewManagerUI(object):
         submission_note_layout.addWidget(submission_note_label)
 
         self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent_widget)
-        self.submission_note_text_edit.setPlaceholderText("Enter submission note")
+        try:
+            self.submission_note_text_edit.setPlaceholderText("Enter submission note")
+        except AttributeError:
+            # It should be PySide/PyQt4
+            pass
         submission_note_layout.addWidget(self.submission_note_text_edit)
 
         from functools import partial
