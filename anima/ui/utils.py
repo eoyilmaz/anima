@@ -300,11 +300,7 @@ def create_button(label, layout, callback, tooltip='', callback_kwargs=None):
         import functools
         callback = functools.partial(callback, **callback_kwargs)
 
-    QtCore.QObject.connect(
-        button,
-        QtCore.SIGNAL("clicked()"),
-        callback
-    )
+    button.clicked.connect(callback)
 
     return button
 
