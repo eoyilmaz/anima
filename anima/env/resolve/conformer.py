@@ -105,10 +105,8 @@ class ConformerUI(object):
         resolve_project_label.setStyleSheet(_fromUtf8("color: rgb(71, 143, 202);\n""font: 12pt;"))
         self.main_layout.addWidget(resolve_project_label)
 
-        line = QtWidgets.QFrame(self.parent_widget)
-        line.setFrameShape(QtWidgets.QFrame.HLine)
-        line.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout.addWidget(line)
+        from anima.ui.utils import create_separator
+        self.main_layout.addWidget(create_separator(self.parent_widget))
 
         h_layout1 = QtWidgets.QHBoxLayout()
 
@@ -303,10 +301,7 @@ class ConformerUI(object):
         self.conform_button.clicked.connect(partial(self.conform))
         self.main_layout.addWidget(self.conform_button)
 
-        line1 = QtWidgets.QFrame(self.parent_widget)
-        line1.setFrameShape(QtWidgets.QFrame.HLine)
-        line1.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout.addWidget(line1)
+        self.main_layout.addWidget(create_separator(self.parent_widget))
 
         h_layout6 = QtWidgets.QHBoxLayout()
 
@@ -342,10 +337,7 @@ class ConformerUI(object):
         self.conform_updates_button.clicked.connect(partial(self.conform_updated_shots))
         self.main_layout.addWidget(self.conform_updates_button)
 
-        line2 = QtWidgets.QFrame(self.parent_widget)
-        line2.setFrameShape(QtWidgets.QFrame.HLine)
-        line2.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.main_layout.addWidget(line2)
+        self.main_layout.addWidget(create_separator(self.parent_widget))
 
         info_label = QtWidgets.QLabel(self.parent_widget)
         info_label.setText('check Console for Progress Info...')
