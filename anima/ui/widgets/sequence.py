@@ -23,8 +23,8 @@ class SequenceComboBox(QtWidgets.QComboBox):
             return
 
         from stalker import Sequence
-        for sequence in Sequence.query.filter(Sequence.project==self.project).order_by(Sequence.name).all():
-            self.addItem(sequence.name, sequence.id)
+        for sequence in Sequence.query.filter(Sequence.project == self.project).order_by(Sequence.name).all():
+            self.addItem(sequence.name, sequence)
 
     @property
     def project(self):
@@ -54,7 +54,4 @@ class SequenceComboBox(QtWidgets.QComboBox):
     def get_current_sequence(self):
         """returns the current sequence instance
         """
-        sequence_id = self.itemData(self.currentIndex())
-        if sequence_id:
-            from stalker import Sequence
-            return Sequence.query.get(sequence_id)
+        return self.itemData(self.currentIndex())
