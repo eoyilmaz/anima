@@ -924,14 +924,14 @@ workspace -fr "translatorData" "Outputs/data";
                     try:
                         mrG = pm.PyNode("mentalrayGlobals")
                     except pm.general.MayaNodeError:
-                        # the renderer is set to mentalray but it is not loaded
-                        # so there is no mentalrayGlobals
-                        # create them
+                        #  the renderer is set to mentalray but it is not loaded
+                        #  so there is no mentalrayGlobals
+                        #  create them
 
                         # dirty little maya tricks
                         pm.mel.miCreateDefaultNodes()
 
-                        # get it again
+                        #  get it again
                         mrG = pm.PyNode("mentalrayGlobals")
 
                     mrG.imageCompression.set(4)
@@ -1004,8 +1004,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         pm.optionVar['playblastFile'] = playblast_full_path
         end = time.time()
-        logger.debug('set_playblast_file_name() took '
-                     '%f seconds' % (end - start))
+        logger.debug('set_playblast_file_name() took %f seconds' % (end - start))
 
     @classmethod
     def set_render_resolution(cls, width, height, pixel_aspect=1.0):

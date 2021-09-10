@@ -1802,8 +1802,7 @@ class Playblaster(object):
             camera_name = camera.name()
 
             try:
-                camera_flags = \
-                    self.user_view_options['camera_flags'][camera_name]
+                camera_flags = self.user_view_options['camera_flags'][camera_name]
             except KeyError:
                 continue
 
@@ -1916,8 +1915,8 @@ class Playblaster(object):
                 current_camera = self.get_active_panel_camera()
                 filename = "%s_%s" % (
                     os.path.splitext(self.version.filename)[0],
-                    current_camera.getParent().name()  # use the transform
-                )                                      # node name
+                    current_camera.getParent().name().split(":")[-1]  # use the transform
+                )                                                     # node name
             else:
                 # use the current scene name
                 filename = os.path.splitext(
@@ -1990,6 +1989,7 @@ class Playblaster(object):
         import glob
         # convert image sequences to h264
         new_result = []
+        original_image_sequence_path = ""
         for output in data:
             # convert each output to a mp4 if the output is a frame
             # sequence
@@ -2583,8 +2583,7 @@ def export_alembic_of_nodes(cacheable_nodes, handles=0, step=1, isolate=True, un
             start_frame, end_frame, cacheable_attr_value, copy_number, '.abc'
         )
 
-        output_full_path = \
-            os.path.join(output_path, output_filename).replace('\\', '/')
+        output_full_path = os.path.join(output_path, output_filename).replace('\\', '/')
         try:
             os.makedirs(os.path.dirname(output_full_path))
         except OSError:
