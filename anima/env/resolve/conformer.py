@@ -83,10 +83,10 @@ class ConformerUI(object):
 
         do_db_setup()
 
-        self.setup_ui()
+        self._setup_ui()
         self._set_defaults()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """setups UI
         """
         from functools import partial

@@ -955,9 +955,9 @@ class ShotManagerUI(object):
             self.__app_name__
         )
 
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """sets the ui up
         """
         from anima.utils import do_db_setup
@@ -1442,9 +1442,9 @@ class ReviewManagerUI(object):
         self.parent_widget = self.main_layout.parent()
         self.submission_note_text_edit = None
         self.submitting_for_combo_box = None
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """
         """
         color_list = ColorList()

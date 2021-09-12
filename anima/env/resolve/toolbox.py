@@ -46,9 +46,9 @@ class ToolboxDialog(QtWidgets.QDialog):
 
     def __init__(self, *args, **kwargs):
         super(ToolboxDialog, self).__init__(*args, **kwargs)
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """create the main
         """
         tlb = ToolboxLayout(self)
@@ -75,9 +75,9 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
     def __init__(self, *args, **kwargs):
         super(ToolboxLayout, self).__init__(*args, **kwargs)
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """add tools
         """
         gamma = 1.0
