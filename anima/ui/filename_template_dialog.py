@@ -33,7 +33,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self._setup_ui()
         if self.filename_template:
-            self._fill_ui_with_filename_template(self.filename_template)
+            self.fill_ui_with_filename_template(self.filename_template)
 
     def _setup_ui(self):
         """setup the ui elements
@@ -187,7 +187,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             else:
                 self.name_line_edit.set_valid()
 
-    def _fill_ui_with_filename_template(self, filename_template):
+    def fill_ui_with_filename_template(self, filename_template):
         """Fills the UI with the given filename template
 
         :param filename_template: A Stalker FilenameTemplate instance

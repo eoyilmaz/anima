@@ -28,10 +28,10 @@ class TaskTimingWidget(QtWidgets.QWidget):
         self.schedule_model_label = None
         self.schedule_model_field = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.task = task
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """creates the UI widgets
         """
         self.setStyleSheet("""

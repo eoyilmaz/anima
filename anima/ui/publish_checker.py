@@ -410,7 +410,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.last_run_date = 0
 
         self._setup_ui()
-        self._fill_ui()
+        self.fill_ui()
 
     def closeEvent(self, event):
         """if user tries to close the publish_checker dialog
@@ -569,7 +569,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # self.main_layout.setStretch(2, 1)
         # self.main_layout.setStretch(3, 1)
 
-    def _fill_ui(self):
+    def fill_ui(self):
         """fills the ui with default values
         """
         # just import the anima.publish module

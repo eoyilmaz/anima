@@ -25,9 +25,9 @@ class TaskStatusLabel(QtWidgets.QLabel):
         self._task = None
         self.task = task
 
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """setup the UI
         """
         # self.setMaximumWidth(75)

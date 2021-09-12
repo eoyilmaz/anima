@@ -42,7 +42,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.name_label = None
         self.button_box = None
 
-        self.setup_ui()
+        self._setup_ui()
 
         self.image_format = image_format
         self.mode = 'Create'
@@ -68,7 +68,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self.image_format:
             self.fill_ui_with_image_format(self.image_format)
 
-    def setup_ui(self):
+    def _setup_ui(self):
         self.resize(328, 184)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.dialog_label = QtWidgets.QLabel(self)

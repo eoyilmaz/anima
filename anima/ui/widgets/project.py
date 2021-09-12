@@ -11,9 +11,9 @@ class ProjectComboBox(QtWidgets.QComboBox):
     def __init__(self, *args, **kwargs):
         super(ProjectComboBox, self).__init__(*args, **kwargs)
         self._show_active_projects = False
-        self.__fill_ui()
+        self.fill_ui()
 
-    def __fill_ui(self):
+    def fill_ui(self):
         """fills the ui with project instances
         """
         from stalker import Project
@@ -45,7 +45,7 @@ class ProjectComboBox(QtWidgets.QComboBox):
         :return:
         """
         self._show_active_projects = bool(active_projects)
-        self.__fill_ui()
+        self.fill_ui()
 
     def get_current_project(self):
         """returns the current project instance

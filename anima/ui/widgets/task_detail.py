@@ -34,10 +34,10 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.cut_out_label = None
         self.cut_out_field = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.task = task
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """creates the UI widgets
         """
         self.setStyleSheet("""

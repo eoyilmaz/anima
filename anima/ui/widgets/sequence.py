@@ -13,9 +13,9 @@ class SequenceComboBox(QtWidgets.QComboBox):
         super(SequenceComboBox, self).__init__(*args, **kwargs)
         self._project = None
         self.project = project
-        self.__fill_ui()
+        self.fill_ui()
 
-    def __fill_ui(self):
+    def fill_ui(self):
         """fills the ui with project instances
         """
         self.clear()
@@ -49,7 +49,7 @@ class SequenceComboBox(QtWidgets.QComboBox):
             )
 
         self._project = project
-        self.__fill_ui()
+        self.fill_ui()
 
     def get_current_sequence(self):
         """returns the current sequence instance

@@ -69,7 +69,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
 
         self.setup_signals()
 
-        self._fill_UI()
+        self.fill_ui()
 
     def _validate_environment(self, environment):
         """validates the given environment value
@@ -185,7 +185,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
         self.versions_treeView_auto_fit_column()
         logger.debug('finished filling versions_treeView')
 
-    def _fill_UI(self):
+    def fill_ui(self):
         """fills the UI with the asset data
         """
         # set the row count
@@ -296,7 +296,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
                 self.environment.check_referenced_versions()
 
             # and then refresh the UI
-            self._fill_UI()
+            self.fill_ui()
 
     def update_versions(self):
         """updates the versions if it is checked in the UI

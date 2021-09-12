@@ -15,10 +15,10 @@ class NoteWidget(QtWidgets.QWidget):
         self.vertical_layout = None
         self.text = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.fill_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """creates UI widgets
         """
         self.vertical_layout = QtWidgets.QVBoxLayout(self)

@@ -44,9 +44,9 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         self.to_task_tree_view = None
         self.copy_push_button = None
 
-        self.setup_ui(self)
+        self.__setup_ui(self)
 
-    def setup_ui(self, dialog):
+    def __setup_ui(self, dialog):
         """Sets up the dialog
 
         :param dialog: QtGui.QDialog instance

@@ -56,7 +56,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.__company_name__,
             self.__app_name__
         )
-        self.setup_ui()
+        self._setup_ui()
 
     @classmethod
     def setup_db(cls):
@@ -65,7 +65,7 @@ class MainWindow(QtWidgets.QMainWindow):
         from anima.utils import do_db_setup
         do_db_setup()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """creates the UI widgets
         """
         self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))

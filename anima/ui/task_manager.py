@@ -30,7 +30,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self._setup_ui()
         self._setup_signals()
-        self._fill_ui()
+        self.fill_ui()
 
     def _setup_ui(self):
         """create the ui elements
@@ -216,7 +216,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.filter_push_button_clicked
         )
 
-    def _fill_ui(self):
+    def fill_ui(self):
         """fills the UI
         """
         from stalker import Project

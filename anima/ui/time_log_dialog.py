@@ -69,9 +69,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.formatted_date_label = None
         self.time_log_info_label = None
 
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """create UI widgets
         """
         self.resize(447, 546)

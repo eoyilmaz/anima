@@ -20,10 +20,10 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.thumbnail_graphics_view = None
         self.upload_thumbnail_button = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.task = task
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """create the UI widgets
         """
         self.vertical_layout = QtWidgets.QVBoxLayout(self)

@@ -33,10 +33,10 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_progress = None
         self.task_notes_widget = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.task = task
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """create the UI widgets
         """
         # we need a main layout

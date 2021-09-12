@@ -20,9 +20,9 @@ class ResponsibleInfoWidget(QtWidgets.QWidget):
         self.add_responsible_button = None
         self.responsible_grid_layout = None
 
-        self.setup_ui()
+        self._setup_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """create the UI widgets
         """
         self.vertical_layout = QtWidgets.QVBoxLayout(self)

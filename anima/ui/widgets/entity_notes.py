@@ -16,10 +16,10 @@ class EntityNotesWidgets(QtWidgets.QWidget):
         # storage for UI stuff
         self.vertical_layout = None
 
-        self.setup_ui()
+        self._setup_ui()
         self.fill_ui()
 
-    def setup_ui(self):
+    def _setup_ui(self):
         """creates the UI widgets
         """
         # the main layout
