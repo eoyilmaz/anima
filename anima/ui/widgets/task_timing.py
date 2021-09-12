@@ -4,14 +4,14 @@
 from anima.ui.lib import QtCore, QtWidgets
 
 
-class TaskTimingWidget(QtWidgets.QWidget):
+class TaskTimingInfoWidget(QtWidgets.QWidget):
     """Displays task timing details
     """
 
     def __init__(self, task=None, parent=None, **kwargs):
         self._task = None
         self.parent = parent
-        super(TaskTimingWidget, self).__init__(parent=parent)
+        super(TaskTimingInfoWidget, self).__init__(parent=parent)
 
         # storage for UI stuff
         self.vertical_layout = None

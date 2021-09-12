@@ -138,8 +138,8 @@ class TaskDashboardWidget(QtWidgets.QWidget):
 
         # --------------------------
         # Task Timing Info
-        from anima.ui.widgets.task_timing import TaskTimingWidget
-        self.task_timing_widget = TaskTimingWidget(task=self.task, parent=self)
+        from anima.ui.widgets.task_timing import TaskTimingInfoWidget
+        self.task_timing_widget = TaskTimingInfoWidget(task=self.task, parent=self)
 
         horizontal_layout2.addWidget(self.task_timing_widget)
 
