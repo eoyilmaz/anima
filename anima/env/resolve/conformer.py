@@ -373,6 +373,13 @@ class ConformerUI(object):
         self.completed_check_box.setChecked(1)
         self.completed_check_box.setEnabled(0)
 
+    def connect_to_resolve(self):
+        """connects to resolve
+        """
+        from anima.env import blackmagic
+        self.resolve = blackmagic.get_resolve()
+        self.resolve_project = self.resolve.GetProjectManager().GetCurrentProject()
+
     def active_projects_only_check_box_callback(self, state):
         """
         :return:
@@ -644,7 +651,7 @@ class ConformerUI(object):
             return None
 
         if self.filter_statuses_check_box.isChecked():
-            if task_name != 'Plate': # do not check status for plates
+            if task_name != 'Plate':  # do not check status for plates
                 valid_status_names = self.get_valid_statuses_from_ui()
                 if task.status.name not in valid_status_names:
                     print('%s -> %s' % (shot.name, task.status.name))
@@ -686,11 +693,11 @@ class ConformerUI(object):
             version_numbers = []
             main_dir = os.path.join(shot.absolute_path, 'Plate', 'Outputs', 'Main')
             if os.path.isdir(main_dir):
-                dirs = glob.glob('%s/*' % main_dir)
-                for dir in dirs:
-                    if os.path.isdir(dir) and os.path.basename(dir)[0] == 'v' \
-                            and os.path.basename(dir)[1:].isdigit() and len(os.path.basename(dir)) == 4:
-                        version_numbers.append(int(os.path.basename(dir)[1:]))
+                dir_names = glob.glob('%s/*' % main_dir)
+                for dir_name in dir_names:
+                    if os.path.isdir(dir_name) and os.path.basename(dir_name)[0] == 'v' \
+                       and os.path.basename(dir_name)[1:].isdigit() and len(os.path.basename(dir_name)) == 4:
+                        version_numbers.append(int(os.path.basename(dir_name)[1:]))
             if version_numbers:
                 latest_version_number = max(version_numbers)
                 latest_version_folder_name = 'v%s' % str(latest_version_number).rjust(3, '0')
@@ -961,6 +968,7 @@ class ConformerUI(object):
                 self.clip_paths_to_xml(clip_path_list, record_in_list, self.xml_path)
                 print('XML CREATED----------------------------')
 
+                self.connect_to_resolve()
                 media_pool = self.resolve_project.GetMediaPool()
                 media_pool.ImportTimelineFromFile(self.xml_path)
                 print('XML IMPORTED to Resolve')
