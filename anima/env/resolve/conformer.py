@@ -44,8 +44,9 @@ class ConformerUI(object):
         from anima.utils import do_db_setup
 
         self.main_layout = layout
-        self.resolve = blackmagic.get_resolve()
-        self.resolve_project = self.resolve.GetProjectManager().GetCurrentProject()
+        self.resolve = None
+        self.resolve_project = None
+        self.connect_to_resolve()
 
         self.parent_widget = None
         self.active_projects_only_check_box = None
@@ -1071,14 +1072,14 @@ class ConformerUI(object):
                             item_data = [item_label, shot]
                             if not self.alpha_only_check_box.isChecked() or has_alpha is True:
                                 update_list.append(item_data)
-
                     except BaseException:
                         continue
 
             if update_list:
+                print("update_list: %s" % update_list)
                 update_list.sort(key=lambda x: x[0])
                 for i, item_data in enumerate(update_list):
-                    self.updated_shot_list.addItem(item_data)
+                    self.updated_shot_list.addItem(item_data[0])
                     item = self.updated_shot_list.item(i)
                     item.setData(QtCore.Qt.EditRole, item_data[1])
             else:
