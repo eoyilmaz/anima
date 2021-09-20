@@ -213,6 +213,25 @@ def check_node_names_with_bad_characters(progress_controller=None):
         )
 
 
+@publisher("camera")
+def set_all_cameras_cacheable(progress_controller=None):
+    """sets all the cameras in the current scene to cacheable
+    """
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
+
+    all_cameras = pm.ls(type=pm.nt.Camera)
+    progress_controller.maximum = len(all_cameras)
+    for camera in all_cameras:
+        camera_transform = camera.getParent()
+        if camera_transform.name() not in ['persp', 'top', 'front', 'side']:
+            from anima.env.mayaEnv import rigging
+            rigging.Rigging.add_cacheable_attribute(camera_transform, cacheable_attr_value="camera")
+        progress_controller.increment()
+
+    progress_controller.complete()
+
+
 @publisher('camera')
 def check_rs_stmap_path_is_relative(progress_controller=None):
     """STMap paths must be relative.
