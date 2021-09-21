@@ -194,13 +194,22 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             tooltip="Creates comp setup to merge renders created with Render Slicer."
         )
 
-        # Render Merger
+        # 3DE4 Lens Distort Node
         import functools
         create_button(
             '3DE4 Lens Distort',
             general_tab_vertical_layout,
             functools.partial(GenericTools.tde4_lens_distort_node_creator, self.parent()),
             tooltip=GenericTools.tde4_lens_distort_node_creator.__doc__
+        )
+
+        # 3DE4 Track Point Importer
+        import functools
+        create_button(
+            '3DE4 Import Track Point',
+            general_tab_vertical_layout,
+            functools.partial(GenericTools.tde4_import_track_point, self.parent()),
+            tooltip=GenericTools.tde4_import_track_point.__doc__
         )
 
         # -------------------------------------------------------------------
@@ -445,3 +454,27 @@ class GenericTools(object):
             from anima.env.fusion.utils import TDE4LensDistortionImporter
             lens_importer = TDE4LensDistortionImporter()
             lens_importer.import_(file_path)
+
+    @classmethod
+    def tde4_import_track_point(cls, parent):
+        """imports 3DEqualizer track point as a Tracker
+        """
+        # show a file browser
+        dialog = QtWidgets.QFileDialog(parent, "Choose file")
+        dialog.setNameFilter("3DE4 Track Point (*.txt)")
+        dialog.setFileMode(QtWidgets.QFileDialog.ExistingFile)
+        if dialog.exec_():
+            file_path = dialog.selectedFiles()[0]
+            if not file_path:
+                return
+            from anima.env.fusion.utils import TDE4PointImporter
+
+            # use the project x and y resolution
+            from anima.env import fusion
+            f = fusion.Fusion()
+            comp = f.comp
+            width = comp.GetPrefs("Comp.FrameFormat.Width")
+            height = comp.GetPrefs("Comp.FrameFormat.Height")
+
+            lens_importer = TDE4PointImporter(xres=width, yres=height)
+            lens_importer.load_points(file_path)
