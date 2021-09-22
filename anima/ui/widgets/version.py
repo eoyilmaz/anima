@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from anima import logger
-from anima.ui.lib import QtGui, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class VersionsTableWidget(QtWidgets.QTableWidget):
@@ -294,3 +294,139 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
         logger.debug('VersionsTableWidget.update_content() is finished')
+
+
+class VersionDetailsWidget(QtWidgets.QWidget):
+    """Shows details about a Stalker Version
+    """
+
+    def __init__(self, version=None, *args, **kwargs):
+        super(VersionDetailsWidget, self).__init__(*args, **kwargs)
+
+        self._version = None
+
+        self.task_name_widget = None
+        self.version_file_name_widget = None
+        self.date_info_widget = None
+        self.created_by_widget = None
+        self.description_label_widget = None
+        self.warning_field = None
+
+        self._setup_ui()
+        self.version = version
+
+    def _setup_ui(self):
+        """set the ui
+        """
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.form_layout = QtWidgets.QFormLayout()
+        self.form_layout.setLabelAlignment(
+            QtCore.Qt.AlignRight |
+            QtCore.Qt.AlignTrailing |
+            QtCore.Qt.AlignVCenter
+        )
+        self.main_layout.addLayout(self.form_layout)
+
+        self.setStyleSheet("""
+            QLabel[labelField="true"] {
+                font-weight: bold;
+            }
+        """)
+
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        i = -1
+
+        # Task Name
+        i += 1
+        task_name_label = QtWidgets.QLabel(self)
+        task_name_label.setText("Task")
+        self.form_layout.setWidget(i, label_role, task_name_label)
+
+        self.task_name_widget = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(i, field_role, self.task_name_widget)
+
+        # Version File
+        i += 1
+        version_label = QtWidgets.QLabel(self)
+        version_label.setText("File")
+        self.form_layout.setWidget(i, label_role, version_label)
+
+        self.version_file_name_widget = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(i, field_role, self.version_file_name_widget)
+
+        # Date
+        i += 1
+        date_label = QtWidgets.QLabel(self)
+        date_label.setText("Date")
+        self.form_layout.setWidget(i, label_role, date_label)
+
+        self.date_info_widget = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(i, field_role, self.date_info_widget)
+
+        # Created By
+        i += 1
+        created_by_label = QtWidgets.QLabel(self)
+        created_by_label.setText("Created By")
+        self.form_layout.setWidget(i, label_role, created_by_label)
+
+        self.created_by_widget = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(i, field_role, self.created_by_widget)
+
+        # Description
+        i += 1
+        description_label = QtWidgets.QLabel(self)
+        description_label.setText("Description")
+        self.form_layout.setWidget(i, label_role, description_label)
+
+        self.description_label_widget = QtWidgets.QLabel(self)
+        self.form_layout.setWidget(i, field_role, self.description_label_widget)
+
+        # Warning
+        i += 1
+        self.warning_field = QtWidgets.QLabel(self)
+        self.main_layout.addWidget(self.warning_field)
+
+    def fill_ui(self):
+        """fills the ui with version info
+        """
+        if not self.version:
+            return
+
+        import os
+
+        self.task_name_widget.setText(self.version.task.name)
+        self.version_file_name_widget.setText(os.path.basename(self.version.fullpath))
+        self.date_info_widget.setText(self.version.date_created.strftime('%d-%m-%Y %H:%M'))
+        self.created_by_widget.setText(
+            self.version.created_by.name if self.version.created_by else "-- creator missing --"
+        )
+        self.description_label_widget.setText(self.version.description)
+
+    @property
+    def version(self):
+        """getter of the version property
+        """
+        return self._version
+
+    @version.setter
+    def version(self, version):
+        """setter for the version property
+
+        :param version: A Stalker Version instance
+        :return:
+        """
+        if not version:
+            return
+
+        from stalker import Version
+        if not isinstance(version, Version):
+            raise TypeError("%s.version should be set to a Stalker Version instance, not %s" % (
+                self.__class__.__name__, version.__class__.__name__
+            ))
+
+        self._version = version
+
+        # update ui elements
+        self.fill_ui()
