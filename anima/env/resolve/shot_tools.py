@@ -488,7 +488,7 @@ class ShotClip(object):
         # Create a dummy version if there is non
         from stalker import Version
         with DBSession.no_autoflush:
-            all_versions = Version.query.filter(Version.task == plate_task).all()
+            all_versions = Version.query.filter(Version.task == plate_task).filter(Version.take_name == take_name).all()
 
         if not all_versions:
             v = Version(
