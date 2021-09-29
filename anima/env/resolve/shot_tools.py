@@ -563,6 +563,26 @@ class ShotClip(object):
         shot = Shot.query.filter(Shot.project == self.stalker_project).filter(Shot.code == self.shot_code).first()
         return shot
 
+    def get_task(self):
+        """returns the related Stalker Task instance.
+        """
+        from stalker import Task, Type
+        task = None
+        shot = self.get_shot()
+        if shot:
+            clip_name = self.clip.GetName()
+            # TODO: the following will only work for our internal naming template
+            parts = clip_name.split("_")
+            type_code = parts[4]
+            task = Task.query \
+                .join(Type, Task.type) \
+                .filter(Task.project == self.stalker_project) \
+                .filter(Task.parent == shot) \
+                .filter(Type.code == type_code) \
+                .first()
+
+        return task
+
     def create_shot(self):
         """creates the related Stalker Shot entity with the current clip
         """
@@ -786,6 +806,9 @@ class ShotClip(object):
     def get_shot_related_marker(self):
         """returns the shot related marker data
         """
+        if not self.clip:
+            return None
+
         clip_start_frame = self.clip.GetStart()
         timeline_start_frame = self.timeline.GetStartFrame()
         markers = self.timeline.GetMarkers()
@@ -817,6 +840,14 @@ class ShotClip(object):
             marker = self.get_shot_related_marker()
             if marker:
                 self._shot_code = marker['note'].strip()
+            else:
+                # we don't have a marker
+                # try to use the clip name to infer the shot code
+                if self.clip:
+                    clip_name = self.clip.GetName()
+                    parts = clip_name.split("_")
+                    if len(parts) >= 4:
+                        self._shot_code = "_".join(parts[0:4])
 
         return self._shot_code
 
@@ -1442,6 +1473,7 @@ class ReviewManagerUI(object):
         self.parent_widget = self.main_layout.parent()
         self.submission_note_text_edit = None
         self.submitting_for_combo_box = None
+        self._shot_related_data_is_updating = False
         self._setup_ui()
 
     def _setup_ui(self):
@@ -1449,33 +1481,98 @@ class ReviewManagerUI(object):
         """
         color_list = ColorList()
 
+        self.form_layout = QtWidgets.QFormLayout()
+        self.main_layout.addLayout(self.form_layout)
+
+        i = -1
+
+        # ----------------------------------
+        # Project and Sequence Controls
+        # Project
+        i += 1
+        label = QtWidgets.QLabel(self.parent_widget)
+        label.setText("Project")
+        label_role = QtWidgets.QFormLayout.LabelRole
+        self.form_layout.setWidget(
+            i,
+            label_role,
+            label
+        )
+
+        from functools import partial
+
+        project_horizontal_layout = QtWidgets.QHBoxLayout()
+        field_role = QtWidgets.QFormLayout.FieldRole
+        self.form_layout.setLayout(
+            i,
+            field_role,
+            project_horizontal_layout
+        )
+
+        from anima.ui.widgets.project import ProjectComboBox
+        self.project_combo_box = ProjectComboBox(self.parent_widget)
+        self.project_combo_box.show_active_projects = True
+        project_horizontal_layout.addWidget(self.project_combo_box)
+        self.project_combo_box.currentIndexChanged.connect(partial(self.project_changed))
+
+        self.active_projects_only_check_box = QtWidgets.QCheckBox(self.parent_widget)
+        self.active_projects_only_check_box.setText("Active Projects Only")
+        self.active_projects_only_check_box.setChecked(True)
+        self.active_projects_only_check_box.setToolTip("Show active Projects only!")
+        self.active_projects_only_check_box.stateChanged.connect(partial(self.active_projects_only_check_box_callback))
+        project_horizontal_layout.addWidget(self.active_projects_only_check_box)
+
+        project_horizontal_layout.setStretch(0, 1)
+        project_horizontal_layout.setStretch(1, 0)
+
+        # Sequence
+        i += 1
+        label = QtWidgets.QLabel(self.parent_widget)
+        label.setText("Sequence")
+        self.form_layout.setWidget(
+            i,
+            label_role,
+            label
+        )
+
+        from anima.ui.widgets.sequence import SequenceComboBox
+        self.sequence_combo_box = SequenceComboBox(self.parent_widget)
+        self.form_layout.setWidget(
+            i,
+            field_role,
+            self.sequence_combo_box
+        )
+
         # ----------------------------------
         # Slate controls
 
         # Submitting For
-        submitting_for_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addLayout(submitting_for_layout)
-
+        i += 1
         submitting_for_label = QtWidgets.QLabel(self.parent_widget)
         submitting_for_label.setText("Submitting For")
-        submitting_for_label.setMinimumWidth(120)
-        submitting_for_layout.addWidget(submitting_for_label)
+        self.form_layout.setWidget(
+            i,
+            label_role,
+            submitting_for_label
+        )
 
         self.submitting_for_combo_box = QtWidgets.QComboBox(self.parent_widget)
         self.submitting_for_combo_box.addItems(["FINAL", "WIP"])
-        submitting_for_layout.addWidget(self.submitting_for_combo_box)
-
-        submitting_for_layout.setStretch(0, 0)
-        submitting_for_layout.setStretch(1, 1)
+        self.form_layout.setWidget(
+            i,
+            field_role,
+            self.submitting_for_combo_box
+        )
 
         # Submission Note
-        submission_note_layout = QtWidgets.QHBoxLayout()
-        self.main_layout.addLayout(submission_note_layout)
-
+        i += 1
         submission_note_label = QtWidgets.QLabel(self.parent_widget)
         submission_note_label.setText("Submission Note")
-        submission_note_label.setMinimumWidth(120)
-        submission_note_layout.addWidget(submission_note_label)
+        self.form_layout.setWidget(
+            i,
+            label_role,
+            submission_note_label
+        )
 
         self.submission_note_text_edit = QtWidgets.QTextEdit(self.parent_widget)
         self.submission_note_text_edit.setSizePolicy(
@@ -1486,7 +1583,11 @@ class ReviewManagerUI(object):
         except AttributeError:
             # It should be PySide/PyQt4
             pass
-        submission_note_layout.addWidget(self.submission_note_text_edit)
+        self.form_layout.setWidget(
+            i,
+            field_role,
+            self.submission_note_text_edit
+        )
 
         from functools import partial
 
@@ -1526,8 +1627,28 @@ class ReviewManagerUI(object):
         set_widget_bg_color(finalize_review_csv_push_button, color_list)
         color_list.next()
 
+        review_current_shot_task_push_button = QtWidgets.QPushButton(self.parent_widget)
+        review_current_shot_task_push_button.setText("Review Current Shot Task")
+        self.main_layout.addWidget(review_current_shot_task_push_button)
+        review_current_shot_task_push_button.clicked.connect(partial(self.review_current_shot_task_callback))
+        set_widget_bg_color(review_current_shot_task_push_button, color_list)
+        color_list.next()
+
         # ---------------------------------------------------------
         self.main_layout.addStretch()
+
+    def project_changed(self, index):
+        """runs when the current selected project has been changed
+        """
+        self._shot_related_data_is_updating = True
+        self.sequence_combo_box.project = self.project_combo_box.get_current_project()
+        self._shot_related_data_is_updating = False
+
+    def active_projects_only_check_box_callback(self, state):
+        """
+        :return:
+        """
+        self.project_combo_box.show_active_projects = state
 
     def finalize_review_csv_callback(self):
         """callback function for the finalize_review_csv_button
@@ -1650,3 +1771,36 @@ class ReviewManagerUI(object):
 
         sm = ShotManager(None, None)
         sm.generate_review_csv(output_path=csv_file_path, vendor=studio_name)
+
+    def review_current_shot_task_callback(self):
+        """runs when review current shot task button is clicked
+        """
+        # get the shot task first
+        from anima.utils import do_db_setup
+        do_db_setup()
+        project = self.project_combo_box.get_current_project()
+        sequence = self.project_combo_box.get_current_project()
+        sm = ShotManager(project, sequence)
+        shot_clip = sm.get_current_shot_clip()
+        task = shot_clip.get_task()
+        if task:
+            # check if the person trying to review the task is one of the responsible or a power user
+            logged_in_user = shot_clip.get_logged_in_user()
+            from anima import defaults
+            if logged_in_user in task.responsible or defaults.is_power_user(logged_in_user):
+                # initialize the Review Dialog
+                from anima.ui.widgets.review import APPROVE, REQUEST_REVISION
+                from anima.ui import review_dialog
+                dialog = review_dialog.ReviewDialog(
+                    review_type=REQUEST_REVISION,
+                    task=task,
+                    parent=self.parent_widget,
+                    reviewer=logged_in_user
+                )
+                dialog.exec_()
+            else:
+                QtWidgets.QMessageBox.critical(
+                    self,
+                    "Error!",
+                    "You are not a responsible or a Power User!!!"
+                )
