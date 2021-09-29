@@ -2417,3 +2417,49 @@ def text_splitter(input_text, max_line_length=32):
         lines.append(temp_line)
 
     return lines
+
+
+def to_unit(seconds, unit, model):
+    """converts the ``seconds`` value to the given ``unit``, depending on
+    to the ``schedule_model`` the value will differ. So if the
+    ``schedule_model`` is 'effort' or 'length' then the ``seconds`` and
+    ``schedule_unit`` values are interpreted as work time, if the
+    ``schedule_model`` is 'duration' then the ``seconds`` and
+    ``schedule_unit`` values are considered as calendar time.
+
+    :param int seconds: The seconds to convert
+    :param str unit: The unit value, one of 'min', 'h', 'd', 'w', 'm', 'y'
+    :param str model: The schedule model, one of 'effort', 'length' or
+      'duration'
+
+    # TODO: This is temporarily ported from Stalker 0.2.27
+    """
+    if not unit:
+        return None
+
+    lut = {
+        'min': 60,
+        'h': 3600,
+        'd': 86400,
+        'w': 604800,
+        'm': 2419200,
+        'y': 31536000
+    }
+
+    if model in ['effort', 'length']:
+        from stalker import defaults
+        day_wt = defaults.daily_working_hours * 3600
+        week_wt = defaults.weekly_working_days * day_wt
+        month_wt = 4 * week_wt
+        year_wt = int(defaults.yearly_working_days) * day_wt
+
+        lut = {
+            'min': 60,
+            'h': 3600,
+            'd': day_wt,
+            'w': week_wt,
+            'm': month_wt,
+            'y': year_wt
+        }
+
+    return seconds / lut[unit]
