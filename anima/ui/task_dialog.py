@@ -1074,6 +1074,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.remove_depending_task_push_button.setVisible(True)
 
             # schedule fields
+            # TODO: Update the schedule field so that it uses the new TimingWidget
             self.schedule_timing_label.setVisible(True)
             self.schedule_timing_spin_box.setVisible(True)
             self.schedule_unit_combo_box.setVisible(True)
