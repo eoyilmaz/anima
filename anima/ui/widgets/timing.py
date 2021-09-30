@@ -12,7 +12,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         timing_resolution = kwargs.pop("timing_resolution", None)
-        super(ScheduleTimingWidget, self).__init__(*args, *kwargs)
+        super(ScheduleTimingWidget, self).__init__(*args, **kwargs)
         self._timing_resolution = None
 
         self.main_layout = None
@@ -36,7 +36,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
 
         self.schedule_timing_widget = QtWidgets.QSpinBox(self)
         self.schedule_timing_widget.setMinimum(1)
-        self.schedule_timing_widget.setMaximum(9_999_999)
+        self.schedule_timing_widget.setMaximum(9999999)
         self.main_layout.addWidget(self.schedule_timing_widget)
 
         self.schedule_unit_widget = QtWidgets.QComboBox(self)
