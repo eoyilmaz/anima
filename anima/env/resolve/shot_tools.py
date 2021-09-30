@@ -846,8 +846,22 @@ class ShotClip(object):
                 if self.clip:
                     clip_name = self.clip.GetName()
                     parts = clip_name.split("_")
+
                     if len(parts) >= 4:
-                        self._shot_code = "_".join(parts[0:4])
+                        import re
+                        project_code_regex = re.compile("[A-Z]+")
+                        episode_code_regex = re.compile("[0-9]+")
+                        scene_code_regex = re.compile("[A-Z0-9]+")
+                        shot_code_regex = re.compile("[0-9]+")
+                        project_code, episode_code, scene_code, shot_code = parts[0:4]
+
+                        if re.match(project_code_regex, project_code) \
+                           and re.match(episode_code_regex, episode_code) \
+                           and re.match(scene_code_regex, scene_code) \
+                           and re.match(shot_code_regex, shot_code):
+                            self._shot_code = "_".join(parts[0:4])
+                        else:
+                            print("clip path doesn't match the shot format: %s" % clip_name)
 
         return self._shot_code
 
