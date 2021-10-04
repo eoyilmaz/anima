@@ -115,42 +115,31 @@ class FitStencilToView(Operator):
         # get the current camera view size relative to the current view
         # set it to the current brush stencil
         import bpy
-
+        # print("***************************************************")
         bpy.ops.view3d.view_center_camera()
 
         brush = bpy.data.brushes['TexDraw']
         stencil_dimension = brush.stencil_dimension
         stencil_pos = brush.stencil_pos
 
-        region = bpy.context.region
-        region_view_3d = bpy.context.region_data
-        # print("bpy.context.area.type    : %s" % bpy.context.area.type)
+        region = context.region
+        # region_view_3d = context.region_data
         # print("bpy.context.region       : %s" % region)
         # print("bpy.context.region       : %s" % region.__class__.__name__)
-        print("bpy.context.region.width       : %s" % region.width)
-        print("bpy.context.region.height      : %s" % region.height)
-
-        # print("bpy.context.region.x     : %s" % region.x)
-        # print("bpy.context.region.y     : %s" % region.y)
-        # print("bpy.context.region.y     : %s" % region.view_camera_offset)
-        # print("bpy.context.region.y     : %s" % region.view_camera_zoom)
-
-        # region_view_3d.view_camera_zoom = 0
-        # region_view_3d.view_camera_offset = [0, 0]
-        # print("dir(region_view_3d)")
+        # print("bpy.context.region_data  : %s" % region_view_3d)
+        # print("bpy.context.region_data  : %s" % region_view_3d.__class__.__name__)
         # print("-------------------")
-        # for a in dir(region_view_3d):
-        #     print(a)
-
-        import anima
-        setattr(anima, 'context', context)
-
-        # stencil_dimension.width = region_view_3d.view_camera_zoom
-        # stencil_dimension.height = region_view_3d.view_camera_zoom
-        # stencil_dimension.x = 2560/2
-        # stencil_dimension.y = 1440/2
-        # stencil_pos.x = region_view_3d.view_camera_offset[0]
-        # stencil_pos.y = region_view_3d.view_camera_offset[1]
+        # print("region_view_3d.view_camera_offset   : %s" % region_view_3d.view_camera_offset)
+        # print("region_view_3d.view_camera_offset[0]: %s" % region_view_3d.view_camera_offset[0])
+        # print("region_view_3d.view_camera_offset[1]: %s" % region_view_3d.view_camera_offset[1])
+        # print("region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom)
+        # print("-------------------")
+        # print("Estimated goal values:")
+        # print("stencil_dimension.x                   : %s" % stencil_dimension.x)
+        # print("stencil_dimension.y                   : %s" % stencil_dimension.y)
+        # print("stencil_pos.x                         : %s" % stencil_pos.x)
+        # print("stencil_pos.y                         : %s" % stencil_pos.y)
+        # print("-------------------")
 
         # make the stencil to use the image aspect
         bpy.ops.brush.stencil_fit_image_aspect()
@@ -159,25 +148,23 @@ class FitStencilToView(Operator):
         ratio = stencil_dimension.x / stencil_dimension.y
 
         # set the width of the stencil to the same size of the region
-        stencil_dimension.x = context.region.width * 0.5
+        stencil_dimension.x = region.width * 0.5 - 3
 
         # set the height of the image to the correct ratio
         stencil_dimension.y = stencil_dimension.x / ratio
 
         # center the image horizontally to the region
-        stencil_pos.x = stencil_dimension.x
+        stencil_pos.x = stencil_dimension.x + 1
 
         # center the image vertically to the region
-        stencil_pos.y = stencil_dimension.y  # context.region.height * 0.25 + stencil_dimension.y + 0.5
+        stencil_pos.y = region.height * 0.5
 
-        # print("======================")
-        # print("region_view_3d.view_camera_zoom       : %s" % region_view_3d.view_camera_zoom)
-        # print("region_view_3d.view_camera_offset[0]  : %s" % region_view_3d.view_camera_offset[0])
-        # print("region_view_3d.view_camera_offset[1]  : %s" % region_view_3d.view_camera_offset[1])
-        print("stencil_pos.x                         : %s" % stencil_pos.x)
-        print("stencil_pos.y                         : %s" % stencil_pos.y)
-        print("stencil_dimension.x                   : %s" % stencil_dimension.x)
-        print("stencil_dimension.y                   : %s" % stencil_dimension.y)
+        # print("context.region.height                 : %s" % region.height)
+        # print("context.region.width                  : %s" % region.width)
+        # print("stencil_pos.x                         : %s" % stencil_pos.x)
+        # print("stencil_pos.y                         : %s" % stencil_pos.y)
+        # print("stencil_dimension.x                   : %s" % stencil_dimension.x)
+        # print("stencil_dimension.y                   : %s" % stencil_dimension.y)
 
         return {'FINISHED'}
 
