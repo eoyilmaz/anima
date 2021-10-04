@@ -41,6 +41,7 @@ classes = (
     general.VersionUpdater,
     general.Playblast,
     general.RangeFromShot,
+    general.FitStencilToView,
     render.Render,
     render.SetImageTextureNodesToRAW,
     render.SetImageTextureNodesTosRGB,
