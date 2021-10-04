@@ -142,6 +142,7 @@ class FitStencilToView(Operator):
         # print("-------------------")
 
         # make the stencil to use the image aspect
+        bpy.ops.brush.stencil_reset_transform()
         bpy.ops.brush.stencil_fit_image_aspect()
 
         # store the image ratio first
