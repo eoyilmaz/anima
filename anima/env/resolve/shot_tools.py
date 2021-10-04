@@ -1395,12 +1395,14 @@ class ShotManagerUI(object):
         """callback function for validate_shot_codes_button
         """
         sm = ShotManager()
-        invalid_shot_codes = sm.validate_shot_codes()
-        if invalid_shot_codes:
+        invalid_shots = sm.validate_shot_codes()
+        if invalid_shots:
             QtWidgets.QMessageBox.critical(
                 self.parent_widget,
                 "Invalid shot names!!!",
-                "There are invalid shot codes:<br>%s" % "<br>".join(invalid_shot_codes)
+                "There are invalid shot codes:<br>%s" % "<br>".join(
+                    [shot_clip.shot_code for shot_clip in invalid_shots]
+                )
             )
             return False
         else:
