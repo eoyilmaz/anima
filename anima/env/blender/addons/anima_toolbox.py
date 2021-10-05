@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 bl_info = {
-    "name": "Anima Toolobx",
+    "name": "Anima Toolbox",
     "author": "Erkan Ozgur Yilmaz",
     "location": "View3D > Sidebar > View Tab",
     "version": (1, 0, 0),
@@ -42,6 +42,10 @@ classes = (
     general.Playblast,
     general.RangeFromShot,
     general.FitStencilToView,
+    general.NudgeStencilToUp,
+    general.NudgeStencilToLeft,
+    general.NudgeStencilToRight,
+    general.NudgeStencilToDown,
     render.Render,
     render.SetImageTextureNodesToRAW,
     render.SetImageTextureNodesTosRGB,

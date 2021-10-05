@@ -17,7 +17,8 @@ class General(Panel):
 
         box = layout.box()
         # box.label(text="Box Label")
-        operators = [OpenVersion, SaveAsVersion, VersionUpdater, Playblast, RangeFromShot, FitStencilToView]
+        operators = [OpenVersion, SaveAsVersion, VersionUpdater, Playblast, RangeFromShot, FitStencilToView,
+                     NudgeStencilToUp, NudgeStencilToDown, NudgeStencilToLeft, NudgeStencilToRight]
         for op in operators:
             row = box.row()
             row.operator(op.bl_idname, text=op.bl_label)
@@ -116,30 +117,26 @@ class FitStencilToView(Operator):
         # set it to the current brush stencil
         import bpy
         # print("***************************************************")
-        bpy.ops.view3d.view_center_camera()
 
         brush = bpy.data.brushes['TexDraw']
         stencil_dimension = brush.stencil_dimension
         stencil_pos = brush.stencil_pos
 
         region = context.region
-        # region_view_3d = context.region_data
-        # print("bpy.context.region       : %s" % region)
-        # print("bpy.context.region       : %s" % region.__class__.__name__)
-        # print("bpy.context.region_data  : %s" % region_view_3d)
-        # print("bpy.context.region_data  : %s" % region_view_3d.__class__.__name__)
-        # print("-------------------")
-        # print("region_view_3d.view_camera_offset   : %s" % region_view_3d.view_camera_offset)
-        # print("region_view_3d.view_camera_offset[0]: %s" % region_view_3d.view_camera_offset[0])
-        # print("region_view_3d.view_camera_offset[1]: %s" % region_view_3d.view_camera_offset[1])
-        # print("region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom)
-        # print("-------------------")
-        # print("Estimated goal values:")
-        # print("stencil_dimension.x                   : %s" % stencil_dimension.x)
-        # print("stencil_dimension.y                   : %s" % stencil_dimension.y)
-        # print("stencil_pos.x                         : %s" % stencil_pos.x)
-        # print("stencil_pos.y                         : %s" % stencil_pos.y)
-        # print("-------------------")
+        region_view_3d = context.region_data
+        print("region_view_3d.view_camera_offset   : %s" % region_view_3d.view_camera_offset)
+        print("region_view_3d.view_camera_offset[0]: %s" % region_view_3d.view_camera_offset[0])
+        print("region_view_3d.view_camera_offset[1]: %s" % region_view_3d.view_camera_offset[1])
+        print("region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom)
+        print("-------------------")
+        print("Estimated goal values:")
+        print("stencil_dimension.x                   : %s" % stencil_dimension.x)
+        print("stencil_dimension.y                   : %s" % stencil_dimension.y)
+        print("stencil_pos.x                         : %s" % stencil_pos.x)
+        print("stencil_pos.y                         : %s" % stencil_pos.y)
+        print("-------------------")
+
+        bpy.ops.view3d.view_center_camera()
 
         # make the stencil to use the image aspect
         bpy.ops.brush.stencil_reset_transform()
@@ -170,3 +167,69 @@ class FitStencilToView(Operator):
         return {'FINISHED'}
 
 
+class NudgeStencilToLeft(Operator):
+    bl_idname = "anima.general_nudge_stencil_to_left"
+    bl_label = "Nudge Stencil To Left"
+    bl_description = "Nudges the stencil 1 pixel to left"
+
+    def execute(self, context):
+        """
+        :param context:
+        :return:
+        """
+        import bpy
+        brush = bpy.data.brushes['TexDraw']
+        stencil_pos = brush.stencil_pos
+        stencil_pos.x -= 1
+        return {'FINISHED'}
+
+
+class NudgeStencilToRight(Operator):
+    bl_idname = "anima.general_nudge_stencil_to_right"
+    bl_label = "Nudge Stencil To Right"
+    bl_description = "Nudges the stencil 1 pixel to right"
+
+    def execute(self, context):
+        """
+        :param context:
+        :return:
+        """
+        import bpy
+        brush = bpy.data.brushes['TexDraw']
+        stencil_pos = brush.stencil_pos
+        stencil_pos.x += 1
+        return {'FINISHED'}
+
+
+class NudgeStencilToUp(Operator):
+    bl_idname = "anima.general_nudge_stencil_to_up"
+    bl_label = "Nudge Stencil To Up"
+    bl_description = "Nudges the stencil 1 pixel to up"
+
+    def execute(self, context):
+        """
+        :param context:
+        :return:
+        """
+        import bpy
+        brush = bpy.data.brushes['TexDraw']
+        stencil_pos = brush.stencil_pos
+        stencil_pos.y += 1
+        return {'FINISHED'}
+
+
+class NudgeStencilToDown(Operator):
+    bl_idname = "anima.general_nudge_stencil_to_down"
+    bl_label = "Nudge Stencil To Down"
+    bl_description = "Nudges the stencil 1 pixel to Down"
+
+    def execute(self, context):
+        """
+        :param context:
+        :return:
+        """
+        import bpy
+        brush = bpy.data.brushes['TexDraw']
+        stencil_pos = brush.stencil_pos
+        stencil_pos.y -= 1
+        return {'FINISHED'}
