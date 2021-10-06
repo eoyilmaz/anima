@@ -212,6 +212,15 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             tooltip=GenericTools.tde4_import_track_point.__doc__
         )
 
+        # Create slate for Current Version
+        import functools
+        create_button(
+            'Create Slate for Current version',
+            general_tab_vertical_layout,
+            functools.partial(GenericTools.create_slate_for_current_version),
+            tooltip=GenericTools.create_slate_for_current_version.__doc__
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -478,3 +487,12 @@ class GenericTools(object):
 
             lens_importer = TDE4PointImporter(xres=width, yres=height)
             lens_importer.load_points(file_path)
+
+    @classmethod
+    def create_slate_for_current_version(cls):
+        """creates slate for the current version
+        """
+        from anima.env import fusion
+        f = fusion.Fusion()
+        v = f.get_current_version()
+        f.create_slate_node(v)
