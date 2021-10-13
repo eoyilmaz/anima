@@ -951,6 +951,10 @@ class ShotClip(object):
         fusion_comp = slate_item.AddFusionComp()
         print("Created fusion comp: %s" % fusion_comp)
 
+        # change clip color to Orange for Slates
+        print("Setting slate item color to Orange!")
+        slate_item.SetClipColor("Orange")
+
         from anima.env import fusion
         f = fusion.Fusion()
         f.comp = fusion_comp
@@ -1724,6 +1728,7 @@ class ReviewManagerUI(object):
         """creates slate for all shots
         """
         sm = ShotManager()
+        submitting_for = self.submitting_for_combo_box.currentText()
         submission_note = self.submission_note_text_edit.toPlainText()
 
         clips = sm.get_clips()
@@ -1741,7 +1746,7 @@ class ReviewManagerUI(object):
                     clip=clip,
                     timeline=timeline
                 )
-                shot.create_slate(submission_note=submission_note)
+                shot.create_slate(submitting_for=submitting_for, submission_note=submission_note)
 
     @classmethod
     def fix_shot_clip_name_callback(cls):
