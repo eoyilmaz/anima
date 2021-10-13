@@ -1767,13 +1767,12 @@ class ReviewManagerUI(object):
         csv_file_path = \
             QtWidgets.QFileDialog.getSaveFileName(self.parent_widget, "Choose CSV Path", default_path, "CSV (*.csv)")[0]
 
-        # add .csv extension no matter what filename has been given
-        csv_file_path = "%s.csv" % csv_file_path.split(".")[0]
-
-        print("csv_file_path: %s" % csv_file_path)
-
         if not csv_file_path:
             raise RuntimeError("no file path chosen!")
+
+        # add .csv extension no matter what filename has been given
+        csv_file_path = "%s.csv" % csv_file_path.split(".")[0]
+        print("csv_file_path: %s" % csv_file_path)
 
         # save the path
         with open(default_path_storage, "w") as f:
