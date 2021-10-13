@@ -568,7 +568,7 @@ class SequenceManagerExtension(object):
         seq.rate = Rate(timebase=str(fps), ntsc=False)
         seq.timecode = str(timecode.Timecode(
             framerate=seq.rate.timebase,
-            frames=time.timecodeProductionStart.get() + 1
+            frames=int(time.timecodeProductionStart.get() + 1)
         ))
         seq.duration = sequencer.duration
 
