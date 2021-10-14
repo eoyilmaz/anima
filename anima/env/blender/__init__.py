@@ -114,7 +114,8 @@ class Blender(EnvironmentBase):
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
 
         # TODO: may be it is better just to make the handlers persistent
-        self.register_handlers()
+        # self.register_handlers()
+        self.set_render_filename(version)
 
         if not skip_update_check:
             return self.check_referenced_versions()
@@ -329,10 +330,13 @@ class Blender(EnvironmentBase):
             version,
             include_project_code=False
         )
-        output_filename_template = '//Outputs/renders/{view_layer}/%(version_sig_name)s_{view_layer}.####'
-        render_file_full_path = output_filename_template % {'version_sig_name': version_sig_name}
+        view_layer = bpy.context.view_layer.name
 
-        self.register_handlers()
+        output_filename_template = f'//Outputs/renders/{view_layer}/{version_sig_name}_{view_layer}.####'
+
+        render_file_full_path = output_filename_template
+
+        # self.register_handlers()
 
         bpy.context.scene.render.filepath = render_file_full_path
 
