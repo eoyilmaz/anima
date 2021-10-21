@@ -324,10 +324,13 @@ class ShotManager(object):
         for clip in self.get_clips():
             media_pool_item = clip.GetMediaPoolItem()
             clip_name = media_pool_item.GetClipProperty("Clip Name")
-            print("clip_name: %s" % clip_name)
             new_clip_name = clip_name.split(".")[0]
-            print("new_clip_name: %s" % new_clip_name)
-            media_pool_item.SetClipProperty("Clip Name", new_clip_name)
+
+            if clip_name != new_clip_name:
+                print("----")
+                print("clip_name    : %s" % clip_name)
+                print("new_clip_name: %s" % new_clip_name)
+                media_pool_item.SetClipProperty("Clip Name", new_clip_name)
 
 
 class ShotClip(object):

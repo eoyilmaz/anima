@@ -364,6 +364,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Padding
         i += 1
         padding_label = QtWidgets.QLabel()
+        padding_label.setText("Padding")
         current_form_layout.setWidget(i, label_role, padding_label)
 
         padding_spin_box = QtWidgets.QSpinBox()
@@ -481,7 +482,7 @@ class GenericTools(object):
                 i += 1
                 calculated_clip_number_as_str = "%s" % calculated_clip_number
                 resolve_template_vars["Clip #"] = calculated_clip_number_as_str.zfill(padding)
-                GenericTools.clip_output_generator_by_clip_index(
+                cls.clip_output_generator_by_clip_index(
                     clip_index=clip_index,
                     filename_template=template.format_resolve_template(filename_template, resolve_template_vars),
                     location_template=template.format_resolve_template(location_template, resolve_template_vars),

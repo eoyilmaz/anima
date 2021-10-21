@@ -765,29 +765,15 @@ class ConformerUI(object):
     def clip_paths_to_xml(self, clip_path_list, record_in_list, xml_file_full_path):
         """creates fcpxml1.8 compatible xml file from given Resolve image sequence paths
         """
-        import os
         import math
-        import datetime
-
-        today = datetime.datetime.today()
-        now = '%s%s%s_%s%s%s' % (today.year,
-                                 str(today.month).rjust(2, '0'),
-                                 str(today.day).rjust(2, '0'),
-                                 str(today.hour).rjust(2, '0'),
-                                 str(today.minute).rjust(2, '0'),
-                                 str(today.second).rjust(2, '0'))
-        proj_name = self.project_combo_box.currentText()
-        seq_name = self.seq_combo_box.currentText()
-        scn_name = self.scene_combo_box.currentText()
+        import os
+        timeline_name = self.generate_timeline_name()
         extension = self.ext_name_combo_box.currentText()
-
         fps = self.fps_line.text()
         # for some reason fcpxml does not like float fps like 24.0
         # if the decimal is .0 than fps must be integer 24 so...
         if float(fps)/math.trunc(float(fps)) == 1.0:
             fps = '%s' % math.trunc(float(fps))
-
-        timeline_name = '%s_%s_%s_%s' % (proj_name, seq_name, scn_name, now)
 
         with open(xml_file_full_path, 'w') as f:
             f.write('<?xml version="1.0" encoding="UTF-8"?>\n')
@@ -881,6 +867,23 @@ class ConformerUI(object):
             f.write('    </library>\n')
             f.write('</fcpxml>')
 
+    def generate_timeline_name(self):
+        """Generates a timeline name according to the UI input
+        """
+        import datetime
+        today = datetime.datetime.today()
+        now = '%s%s%s_%s%s%s' % (today.year,
+                                 str(today.month).rjust(2, '0'),
+                                 str(today.day).rjust(2, '0'),
+                                 str(today.hour).rjust(2, '0'),
+                                 str(today.minute).rjust(2, '0'),
+                                 str(today.second).rjust(2, '0'))
+        proj_name = self.project_combo_box.currentText()
+        seq_name = self.seq_combo_box.currentText()
+        scn_name = self.scene_combo_box.currentText()
+        timeline_name = '%s_%s_%s_%s' % (proj_name, seq_name, scn_name, now)
+        return timeline_name
+
     def conform_shots(self, shots):
         """conforms given Stalker Shot instances from UI to a Timeline for Resolve
         """
@@ -895,7 +898,7 @@ class ConformerUI(object):
             none_path_list = []
             for shot in shots:
                 clip_path = self.get_latest_output_path(shot, t_name, ext=extension)
-                if t_name == 'Comp' and clip_path is None: # look for Cleanup task
+                if t_name == 'Comp' and clip_path is None:  # look for Cleanup task
                     clip_path = self.get_latest_output_path(shot, 'Cleanup', ext=extension)       
                 
                 if clip_path:
@@ -907,7 +910,7 @@ class ConformerUI(object):
                     plate_path = self.get_latest_output_path(shot, 'Plate', ext=extension)
                     if plate_path:
                         plate_path_list.append(plate_path)
-                    elif clip_path: # add comp or cleanup clip to match timelines
+                    elif clip_path:  # add comp or cleanup clip to match timelines
                         plate_path_list.append(clip_path)
                         plate_not_found_list.append(clip_path)
 
@@ -971,7 +974,20 @@ class ConformerUI(object):
 
                 self.connect_to_resolve()
                 media_pool = self.resolve_project.GetMediaPool()
-                media_pool.ImportTimelineFromFile(self.xml_path)
+                # media_pool.ImportTimelineFromFile(self.xml_path)
+                timeline_name = self.generate_timeline_name()
+
+                print("Creating new timeline with name: %s" % timeline_name)
+                timeline = media_pool.CreateEmptyTimeline(timeline_name)
+
+                print("Importing XML to Timeline!")
+                timeline.ImportIntoTimeline(
+                    self.xml_path,
+                    {
+                        'useSizingInfo': False,
+                    }
+                )
+
                 print('XML IMPORTED to Resolve')
                 if plate_path_list and self.plus_plates_check_box.isChecked():
                     print('CREATING + PLATES XML... Please Wait... ----------------------------')
@@ -984,6 +1000,7 @@ class ConformerUI(object):
                 from anima.env.resolve.shot_tools import ShotManager
                 sm = ShotManager()
                 sm.fix_shot_clip_names()
+
             else:
                 print('No Outputs found with given specs!')
 
