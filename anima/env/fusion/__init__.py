@@ -547,6 +547,7 @@ class Fusion(EnvironmentBase):
             if os.path.sep not in path:
                 # replace '\\' with os.path.sep
                 path = path.replace('/', '\\').replace('\\', os.path.sep)
+                # TODO: Also replace absolute paths with proper paths for the current OS
                 self.set_node_input_entry_by_name(loader, 'Clip', path)
 
     def get_node_input_entry_by_name(self, node, key):
@@ -855,7 +856,7 @@ class Fusion(EnvironmentBase):
         media_out_node = None
         i = 0
         import time
-        while not media_out_node and i < 10:
+        while not media_out_node and i < 2:
             media_out_node = self.comp.FindTool("MediaOut1")
             if not media_out_node:
                 print("no MediaOut1 node, waiting for 1 sec!")
