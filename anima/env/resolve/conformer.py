@@ -585,8 +585,6 @@ class ConformerUI(object):
 
         shots = []
 
-        from stalker import Sequence, Task, Shot
-
         if self.seq_combo_box.currentText() == 'ALL':
             for sequence in stalker_project.sequences:
                 shots += sequence.shots
@@ -638,7 +636,7 @@ class ConformerUI(object):
         
         return valid_status_names
 
-    def get_latest_output_path(self, shot, task_name, ext='exr'):
+    def get_latest_output_path(self, shot, task_name, ext='exr', return_raw_values=False):
         """returns the Output/Main outputs path for resolve from a given Shot stalker instance
         """
         import os
@@ -646,7 +644,7 @@ class ConformerUI(object):
         import re
         from stalker import Task, Version
         task = Task.query.filter(Task.parent == shot).filter(Task.name == task_name).first()
-        if not task and task_name == 'Comp': # try Cleanup task
+        if not task and task_name == 'Comp':  # try Cleanup task
             task = Task.query.filter(Task.parent == shot).filter(Task.name == 'Cleanup').first()
         if not task:
             return None
@@ -669,6 +667,10 @@ class ConformerUI(object):
                 latest_task_name = os.path.splitext(latest_task_version.filename)[0]
 
         resolve_path = None
+        resolve_raw_path = None
+        start_frame = None
+        end_frame = None
+        file_paths = None
         if latest_task_name:
             if not self.alpha_only_check_box.isChecked():
                 file_paths = glob.glob("%s/*/%s/*%s.*.%s" % (output_path, ext, latest_task_name, ext))
@@ -680,15 +682,6 @@ class ConformerUI(object):
                 if not file_paths:  # try outputs with no version folders
                     file_paths = glob.glob("%s/%s/*%s*%s.*.%s" % (output_path, ext, 'alpha', version_folder, ext))
 
-            if file_paths:
-                regex = r'\d+$|#+$'
-                dir_base = file_paths[0].split('.')[0]
-                first_dir_base = os.path.splitext(file_paths[0])[0]
-                first_frame = re.findall(regex, first_dir_base)
-                last_dir_base = os.path.splitext(file_paths[-1])[0]
-                last_frame = re.findall(regex, last_dir_base)
-                resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
-                resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
         # try to find path manually for plate tasks as they might not have default naming conventions or versions
         if not resolve_path and task_name == 'Plate':
             version_numbers = []
@@ -705,19 +698,23 @@ class ConformerUI(object):
                 plate_path = os.path.join(main_dir, latest_version_folder_name, ext)
                 plate_path = os.path.normpath(plate_path).replace('\\', '/')
 
-                file_paths = glob.glob('%s/*.%s' %(plate_path, ext))
+                file_paths = glob.glob('%s/*.%s' % (plate_path, ext))
 
-                if file_paths:
-                    regex = r'\d+$|#+$'
-                    dir_base = file_paths[0].split('.')[0]
-                    first_dir_base = os.path.splitext(file_paths[0])[0]
-                    first_frame = re.findall(regex, first_dir_base)
-                    last_dir_base = os.path.splitext(file_paths[-1])[0]
-                    last_frame = re.findall(regex, last_dir_base)
-                    resolve_path = '%s.[%s-%s].%s' % (dir_base, first_frame[0], last_frame[0], ext)
-                    resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
+        if file_paths:
+            regex = r'\d+$|#+$'
+            dir_base = file_paths[0].split('.')[0]
+            first_dir_base = os.path.splitext(file_paths[0])[0]
+            last_dir_base = os.path.splitext(file_paths[-1])[0]
+            start_frame = int(re.findall(regex, first_dir_base)[0])
+            end_frame = int(re.findall(regex, last_dir_base)[0])
+            resolve_path = '%s.[%s-%s].%s' % (dir_base, start_frame, end_frame, ext)
+            resolve_raw_path = '%s.%s.%s' % (dir_base, '%0{digits}d'.format(digits=len(str(start_frame))), ext)
+            resolve_path = os.path.normpath(resolve_path).replace('\\', '/')
 
-        return resolve_path
+        if return_raw_values:
+            return [resolve_raw_path, start_frame, end_frame]
+        else:
+            return resolve_path
 
     def create_resolve_timeline_from_clips(self, timeline_name, clip_paths):
         """creates timeline in resolve from given clip paths
@@ -974,20 +971,8 @@ class ConformerUI(object):
 
                 self.connect_to_resolve()
                 media_pool = self.resolve_project.GetMediaPool()
-                # media_pool.ImportTimelineFromFile(self.xml_path)
-                timeline_name = self.generate_timeline_name()
-
-                print("Creating new timeline with name: %s" % timeline_name)
-                timeline = media_pool.CreateEmptyTimeline(timeline_name)
-
+                media_pool.ImportTimelineFromFile(self.xml_path)
                 print("Importing XML to Timeline!")
-                timeline.ImportIntoTimeline(
-                    self.xml_path,
-                    {
-                        'useSizingInfo': False,
-                    }
-                )
-
                 print('XML IMPORTED to Resolve')
                 if plate_path_list and self.plus_plates_check_box.isChecked():
                     print('CREATING + PLATES XML... Please Wait... ----------------------------')
@@ -996,6 +981,155 @@ class ConformerUI(object):
                     media_pool = self.resolve_project.GetMediaPool()
                     media_pool.ImportTimelineFromFile(self.xml_path)
                     print('+ PLATES XML IMPORTED to Resolve')
+                # Fix shot clip names
+                from anima.env.resolve.shot_tools import ShotManager
+                sm = ShotManager()
+                sm.fix_shot_clip_names()
+
+            else:
+                print('No Outputs found with given specs!')
+
+            # self.create_resolve_timeline_from_clips(timeline_name, clip_path_list)
+
+    def conform_shots_new(self, shots, include_slates=False):
+        """conforms given Stalker Shot instances from UI to a Timeline for Resolve
+        """
+        if shots:
+            t_name = self.task_name_combo_box.currentText()
+            extension = self.ext_name_combo_box.currentText()
+            record_in_list = []
+            clip_path_list = []
+            plate_path_list = []
+            plate_not_found_list = []
+            plate_range_mismatch_list = []
+            none_path_list = []
+            for shot in shots:
+                clip_info, start_index, end_index = self.get_latest_output_path(
+                    shot, t_name, ext=extension, return_raw_values=True
+                )
+                if t_name == 'Comp' and clip_info is None:  # look for Cleanup task
+                    clip_info, start_index, end_index = self.get_latest_output_path(
+                        shot, 'Cleanup', ext=extension, return_raw_values=True
+                    )
+
+                if clip_info:
+                    clip_path_list.append([clip_info, start_index, end_index])
+                elif clip_info is None:
+                    none_path_list.append('%s -> No Outputs/Main found.' % shot.name)
+
+                if t_name == 'Comp' and clip_info and self.plus_plates_check_box.isChecked():
+                    plate_path, p_start_frame, p_end_frame = self.get_latest_output_path(
+                        shot, 'Plate', ext=extension, return_raw_values=True
+                    )
+                    if plate_path:
+                        plate_path_list.append([plate_path, p_start_frame, p_end_frame])
+                    elif clip_info:  # add comp or cleanup clip to match timelines
+                        plate_path_list.append([clip_info, start_index, end_index])
+                        plate_not_found_list.append(clip_info)
+
+                if self.record_in_check_box.isChecked():
+                    rc_in = shot.record_in
+                    if not rc_in:
+                        raise RuntimeError('%s -> No record in data! Turn off Record In check box.' % shot.name)
+                    record_in_list.append([clip_info, start_index, end_index, rc_in])
+
+                print('Checking Shot... - %s' % shot.name)
+            clip_path_list.sort()
+            record_in_list.sort()
+            none_path_list.sort()
+            plate_path_list.sort()
+            plate_not_found_list.sort()
+            plate_range_mismatch_list.sort()
+
+            if plate_path_list and self.plus_plates_check_box.isChecked():
+                if len(clip_path_list) != len(plate_path_list):
+                    print('--------------------------------------------------------------------------')
+                    print('ERROR: Comp / Plate mismatch! Contact Supervisor.')
+                    print('--------------------------------------------------------------------------')
+                    raise RuntimeError('Comp / Plate mismatch! Contact Supervisor.')
+
+                for i in range(0, len(clip_path_list)):
+                    try:
+                        import os
+                        clip_range = [clip_path_list[i][1], clip_path_list[i][2]]
+                        plate_range = [plate_path_list[i][1], plate_path_list[i][2]]
+                        print('Clip: %s -> Plate: %s' % (clip_range, plate_range))
+                        if clip_range != plate_range:
+                            plate_range_mismatch_list.append(clip_path_list[i])
+                    except IndexError:
+                        pass
+
+            print('--------------------------------------------------------------------------')
+            for i in range(0, len(clip_path_list)):
+                if plate_path_list and self.plus_plates_check_box.isChecked():
+                    print('%s  +  %s' % (clip_path_list[i][0], plate_path_list[i][0]))
+                else:
+                    print(clip_path_list[i][0])
+            print('--------------------------------------------------------------------------')
+            if none_path_list:
+                for none_path in none_path_list:
+                    print(none_path)
+                print('--------------------------------------------------------------------------')
+            if plate_not_found_list:
+                print('--------------------------PLATES NOT FOUND--------------------------------')
+                for p_path in plate_not_found_list:
+                    print(p_path)
+                print('--------------------------------------------------------------------------')
+            if plate_range_mismatch_list:
+                print('-----------------------PLATES RANGE MISMATCH------------------------------')
+                for p_path in plate_range_mismatch_list:
+                    print(p_path)
+                print('--------------------------------------------------------------------------')
+
+            if clip_path_list:
+                # self.clip_paths_to_xml(clip_path_list, record_in_list, self.xml_path)
+                # print('XML CREATED----------------------------')
+                #
+                self.connect_to_resolve()
+                media_pool = self.resolve_project.GetMediaPool()
+                # media_pool.ImportTimelineFromFile(self.xml_path)
+                timeline_name = self.generate_timeline_name()
+
+                print("Creating new timeline with name: %s" % timeline_name)
+                timeline = media_pool.CreateEmptyTimeline(timeline_name)
+
+                for clip_info in clip_path_list:
+                    clip_path = clip_info[0]
+                    start_index = clip_info[1]
+                    end_index = clip_info[2]
+                    print("clip_path  : %s" % clip_path)
+                    print("start frame: %s" % start_index)
+                    print("end frame  : %s" % end_index)
+                    media_pool_item = media_pool.ImportMedia([
+                        {
+                            "FilePath": clip_path,
+                            "StartIndex": start_index,
+                            "EndIndex": end_index
+                        }
+                    ])[0]
+                    if include_slates:
+                        print("including slate for: %s" % clip_path)
+                        print("media_pool_item.GetClipProperty(): %s" % media_pool_item.GetClipProperty()['Video Codec'])
+                        # include one frame for the slates
+                        sub_clip = {
+                            "mediaPoolItem": media_pool_item,
+                            "startFrame": 0,
+                            "endFrame": 0
+                        }
+                        slate_clip = media_pool.AppendToTimeline([sub_clip])[0]
+                        print("Setting slate item color to Orange!")
+                        slate_clip.SetClipColor("Orange")
+
+                    media_pool.AppendToTimeline([media_pool_item])
+
+                # if plate_path_list and self.plus_plates_check_box.isChecked():
+                #     print('CREATING + PLATES XML... Please Wait... ----------------------------')
+                #     self.clip_paths_to_xml(plate_path_list, record_in_list, self.xml_path)
+                #     print('+ PLATES XML CREATED----------------------------')
+                #     media_pool = self.resolve_project.GetMediaPool()
+                #     media_pool.ImportTimelineFromFile(self.xml_path)
+                #     print('+ PLATES XML IMPORTED to Resolve')
+
                 # Fix shot clip names
                 from anima.env.resolve.shot_tools import ShotManager
                 sm = ShotManager()
@@ -1106,7 +1240,12 @@ class ConformerUI(object):
         """conforms given Stalker Shot instances to a Timeline in Resolve
         """
         shots = self.get_shots_from_ui()
-        self.conform_shots(shots)
+        include_slates = self.slated_check_box.isChecked()
+        record_in = self.record_in_check_box.isChecked()
+        if record_in:
+            self.conform_shots(shots)
+        else:
+            self.conform_shots_new(shots, include_slates=include_slates)
 
     def conform_updated_shots(self):
         """conforms only updated shots from listWidget in UI

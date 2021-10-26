@@ -6,6 +6,7 @@ from anima.env import blackmagic
 resolve = blackmagic.get_resolve()
 project_manager = resolve.GetProjectManager()
 resolve_project = project_manager.GetCurrentProject()
+media_pool = resolve_project.GetMediaPool()
 timeline = resolve_project.GetCurrentTimeline()
 clip = timeline.GetCurrentVideoItem()
 
