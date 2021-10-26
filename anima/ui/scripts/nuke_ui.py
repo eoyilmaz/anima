@@ -10,7 +10,7 @@ def set_qt_lib():
         SET_PYSIDE()
 
 
-def version_dialog():
+def version_dialog(mode=2):
     """Helper function for version_dialog UI for Nuke
     """
     # connect to db
@@ -34,4 +34,4 @@ def version_dialog():
     logging.getLogger("anima.env.nuke").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
-    version_dialog.UI(environment=n)
+    version_dialog.UI(environment=n, mode=mode)

@@ -124,7 +124,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     :param mode: The mode parameter has changed meaning. It is now to define if
       the UI is in **Save/Create** mode or in **Open/Read** mode. It will
-      discern the Open and Save functionality, which was previously both exist
+      discern the Open and Save functionality, which previously both exist
       at the same time and still can be by setting the mode to 2, which is the
       default value for now, but it will deprecate in later versions.
 

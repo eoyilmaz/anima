@@ -11,8 +11,12 @@ m = toolbar.addMenu("Anima")
 
 # Pipeline tools
 m.addCommand(
-    "Pipeline/Version Dialog",
-    """from anima.ui.scripts import nuke_ui as nuke_ui;nuke_ui.version_dialog();"""
+    "Pipeline/Open Version",
+    """from anima.ui.scripts import nuke_ui as nuke_ui;nuke_ui.version_dialog(1);"""
+)
+m.addCommand(
+    "Pipeline/Save As Version",
+    """from anima.ui.scripts import nuke_ui as nuke_ui;nuke_ui.version_dialog(0);"""
 )
 m.addCommand(
     'Pipeline/Create/Update Output Nodes',
