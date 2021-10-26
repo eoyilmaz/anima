@@ -70,6 +70,7 @@ class ConformerUI(object):
         self.alpha_only_check_box = None
         self.record_in_check_box = None
         self.slated_check_box = None
+        self.use_current_timeline = None
         self.conform_button = None
         self.start_date = None
         self.updated_shot_list = None
@@ -294,6 +295,10 @@ class ConformerUI(object):
         self.slated_check_box.setText('Include Slates')
         self.slated_check_box.stateChanged.connect(partial(self.slated_check_box_changed))
         h_layout6.addWidget(self.slated_check_box)
+
+        self.use_current_timeline = QtWidgets.QCheckBox(self.parent_widget)
+        self.use_current_timeline.setText('Use Current Timeline')
+        h_layout6.addWidget(self.use_current_timeline)
 
         self.main_layout.addLayout(h_layout6)
 
@@ -991,7 +996,7 @@ class ConformerUI(object):
 
             # self.create_resolve_timeline_from_clips(timeline_name, clip_path_list)
 
-    def conform_shots_new(self, shots, include_slates=False):
+    def conform_shots_new(self, shots, include_slates=False, use_current_timeline=False):
         """conforms given Stalker Shot instances from UI to a Timeline for Resolve
         """
         if shots:
@@ -1087,11 +1092,13 @@ class ConformerUI(object):
                 #
                 self.connect_to_resolve()
                 media_pool = self.resolve_project.GetMediaPool()
-                # media_pool.ImportTimelineFromFile(self.xml_path)
-                timeline_name = self.generate_timeline_name()
 
-                print("Creating new timeline with name: %s" % timeline_name)
-                timeline = media_pool.CreateEmptyTimeline(timeline_name)
+                if not use_current_timeline:
+                    timeline_name = self.generate_timeline_name()
+                    print("Creating new timeline with name: %s" % timeline_name)
+                    timeline = media_pool.CreateEmptyTimeline(timeline_name)
+                else:
+                    print("Using current timeline!")
 
                 for clip_info in clip_path_list:
                     clip_path = clip_info[0]
@@ -1108,8 +1115,6 @@ class ConformerUI(object):
                         }
                     ])[0]
                     if include_slates:
-                        print("including slate for: %s" % clip_path)
-                        print("media_pool_item.GetClipProperty(): %s" % media_pool_item.GetClipProperty()['Video Codec'])
                         # include one frame for the slates
                         sub_clip = {
                             "mediaPoolItem": media_pool_item,
@@ -1117,7 +1122,6 @@ class ConformerUI(object):
                             "endFrame": 0
                         }
                         slate_clip = media_pool.AppendToTimeline([sub_clip])[0]
-                        print("Setting slate item color to Orange!")
                         slate_clip.SetClipColor("Orange")
 
                     media_pool.AppendToTimeline([media_pool_item])
@@ -1242,10 +1246,11 @@ class ConformerUI(object):
         shots = self.get_shots_from_ui()
         include_slates = self.slated_check_box.isChecked()
         record_in = self.record_in_check_box.isChecked()
+        use_current_timeline = self.use_current_timeline.isChecked()
         if record_in:
             self.conform_shots(shots)
         else:
-            self.conform_shots_new(shots, include_slates=include_slates)
+            self.conform_shots_new(shots, include_slates=include_slates, use_current_timeline=use_current_timeline)
 
     def conform_updated_shots(self):
         """conforms only updated shots from listWidget in UI
