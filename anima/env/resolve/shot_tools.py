@@ -774,7 +774,7 @@ class ShotClip(object):
         if not plate_task:
             raise RuntimeError("No plate task in shot: %s" % self.shot_code)
 
-        proj.SetCurrentRenderFormatAndCodec('exr', 'RGBHalfZIP')
+        # proj.SetCurrentRenderFormatAndCodec('exr', 'RGBHalfZIP')
 
         version = plate_task.versions[-1]
         from stalker import Version
