@@ -933,16 +933,16 @@ class ShotClip(object):
         resolve = blackmagic.get_resolve()
         print("Changing Page to Fusion!")
         current_page = resolve.GetCurrentPage()
+        print("Current Page: %s" % current_page)
+
+        print("Setting Page to Edit!")
+        resolve.OpenPage('edit')
 
         # store current timecode to return back to this moment
         # something that has been broken in 17.4.0
         timecode = self.timeline.GetCurrentTimecode()
 
-        print("Current Page: %s" % current_page)
-        resolve.OpenPage('fusion')
-        print("Page is set to Fusion")
         slate_item = self.clip
-
         # Create the fusion comp
         # Remove any previous fusion comps of that clip
         print("Getting fusion comp")
@@ -957,7 +957,10 @@ class ShotClip(object):
             fusion_comp_count = slate_item.GetFusionCompCount()
             print("slate_item.GetFusionCompCount(): %s" % fusion_comp_count)
 
-        fusion_comp = slate_item.AddFusionComp()
+        print("Setting page to Fusion!")
+        resolve.OpenPage('fusion')
+
+        fusion_comp = slate_item.GetFusionCompByIndex(1)
         print("Created fusion comp: %s" % fusion_comp)
 
         # change clip color to Orange for Slates
