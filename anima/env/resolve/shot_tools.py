@@ -972,10 +972,9 @@ class ShotClip(object):
         f.comp = fusion_comp
         slate_node = f.create_slate_node(version, submitting_for=submitting_for, submission_note=submission_note)
 
-        resolve.OpenPage(current_page)
-
         # Set the current timecode
         try:
+            resolve.OpenPage('edit')
             print("Setting current timecode to: %s" % timecode)
             self.timeline.SetCurrentTimecode(timecode)
         except TypeError:
@@ -983,6 +982,8 @@ class ShotClip(object):
             print("Could not set playhead!")
             print("Resolve version is lower than 17.4.0!")
             pass
+
+        resolve.OpenPage(current_page)
 
         return slate_node
 
