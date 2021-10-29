@@ -933,6 +933,11 @@ class ShotClip(object):
         resolve = blackmagic.get_resolve()
         print("Changing Page to Fusion!")
         current_page = resolve.GetCurrentPage()
+
+        # store current timecode to return back to this moment
+        # something that has been broken in 17.4.0
+        timecode = self.timeline.GetCurrentTimecode()
+
         print("Current Page: %s" % current_page)
         resolve.OpenPage('fusion')
         print("Page is set to Fusion")
@@ -965,6 +970,17 @@ class ShotClip(object):
         slate_node = f.create_slate_node(version, submitting_for=submitting_for, submission_note=submission_note)
 
         resolve.OpenPage(current_page)
+
+        # Set the current timecode
+        try:
+            print("Setting current timecode to: %s" % timecode)
+            self.timeline.SetCurrentTimecode(timecode)
+        except TypeError:
+            # Resolve version is lower than v17.4.0
+            print("Could not set playhead!")
+            print("Resolve version is lower than 17.4.0!")
+            pass
+
         return slate_node
 
     def update_record_in_info(self):
