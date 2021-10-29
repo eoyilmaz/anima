@@ -36,7 +36,7 @@ class ArchiverBase(object):
 
         return project_path
 
-    def flatten(self, path, project_name='DefaultProject'):
+    def flatten(self, path, project_name='DefaultProject', tempdir=None):
         """Flattens the given scene in to a new default project.
 
         It will also flatten all the referenced files, textures, image planes,
@@ -44,18 +44,19 @@ class ArchiverBase(object):
 
         :param path: The path to the file which wanted to be flattened.
         :param project_name: The new project name.
+        :param tempdir: The temporary dir to flatten the project to, the default is ``tempfile.gettempdir()``.
         :return:
         """
         # create a new Default Project
         import tempfile
         import os
 
-        tempdir = tempfile.gettempdir()
+        if not tempdir:
+            tempdir = tempfile.gettempdir()
         from stalker import Repository
         all_repos = Repository.query.all()
 
-        default_project_path = \
-            self.create_default_project(path=tempdir, name=project_name)
+        default_project_path = self.create_default_project(path=tempdir, name=project_name)
 
         logger.debug('creating new default project at: %s' % default_project_path)
 
@@ -64,8 +65,7 @@ class ArchiverBase(object):
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
 
-            if self.exclude_mask \
-                    and os.path.splitext(ref_path)[1] in self.exclude_mask:
+            if self.exclude_mask and os.path.splitext(ref_path)[1] in self.exclude_mask:
                 logger.debug('skipping: %s' % ref_path)
                 continue
 
@@ -105,17 +105,22 @@ class ArchiverBase(object):
         raise NotImplementedError("This method needs to be implemented by the derived class")
 
     @classmethod
-    def archive(cls, path):
+    def archive(cls, path, tempdir=None):
         """Creates a zip file containing the given directory.
 
         :param path: Path to the archived directory.
+        :param tempdir: The temporary dir to use for ZIP creation, the default value is ``tempfile.gettempdir()``.
         :return:
         """
         import zipfile
         import os
         import tempfile
+
+        if not tempdir:
+            tempdir = tempfile.gettempdir()
+
         dir_name = os.path.basename(path)
-        zip_path = os.path.join(tempfile.gettempdir(), '%s.zip' % dir_name)
+        zip_path = os.path.join(tempdir, '%s.zip' % dir_name)
 
         parent_path = os.path.dirname(path) + '/'
 
@@ -142,6 +147,7 @@ def archive_current_scene(version, archiver):
     """
     import os
     import shutil
+    import tempfile
     import anima
     from anima.ui.lib import QtWidgets
 
@@ -159,6 +165,15 @@ def archive_current_scene(version, archiver):
     if answer == QtWidgets.QMessageBox.No:
         return
 
+    input_dialog = QtWidgets.QInputDialog(None)
+    tempdir, ok = input_dialog.getText(
+        None,
+        "Temporary dir to use?",
+        "Please choose a temporary directory:",
+        QtWidgets.QLineEdit.Normal,
+        tempfile.gettempdir()
+    )
+
     if version:
         path = version.absolute_full_path
         task = version.task
@@ -172,11 +187,10 @@ def archive_current_scene(version, archiver):
                 version.absolute_full_path
             )
         )[0]
-        project_path = archiver.flatten(path, project_name=project_name)
+        project_path = archiver.flatten(path, project_name=project_name, tempdir=tempdir)
 
         # append link file
-        stalker_link_file_path = \
-            os.path.join(project_path, 'scenes/stalker_links.txt')
+        stalker_link_file_path = os.path.join(project_path, 'scenes/stalker_links.txt')
         version_upload_link = '%s/tasks/%s/versions/list' % (
             anima.defaults.stalker_server_external_address,
             task.id
@@ -190,7 +204,7 @@ def archive_current_scene(version, archiver):
                 "Version Upload Link: %s\n"
                 "Request Review Link: %s\n" % (version_upload_link, request_review_link)
             )
-        zip_path = archiver.archive(project_path)
+        zip_path = archiver.archive(project_path, tempdir=tempdir)
         new_zip_path = os.path.join(
             version.absolute_path,
             os.path.basename(zip_path)
