@@ -1008,14 +1008,25 @@ class ConformerUI(object):
             plate_not_found_list = []
             plate_range_mismatch_list = []
             none_path_list = []
+            clip_info = None
+            start_index = None
+            end_index = None
             for shot in shots:
-                clip_info, start_index, end_index = self.get_latest_output_path(
+                result = self.get_latest_output_path(
                     shot, t_name, ext=extension, return_raw_values=True
                 )
+                if result:
+                    clip_info = result[0]
+                    start_index = result[1]
+                    end_index = result[2]
                 if t_name == 'Comp' and clip_info is None:  # look for Cleanup task
-                    clip_info, start_index, end_index = self.get_latest_output_path(
+                    result = self.get_latest_output_path(
                         shot, 'Cleanup', ext=extension, return_raw_values=True
                     )
+                    if result:
+                        clip_info = result[0]
+                        start_index = result[1]
+                        end_index = result[2]
 
                 if clip_info:
                     clip_path_list.append([clip_info, start_index, end_index])
