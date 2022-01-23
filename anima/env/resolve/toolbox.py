@@ -51,8 +51,11 @@ class ToolboxDialog(QtWidgets.QDialog):
     def _setup_ui(self):
         """create the main
         """
-        tlb = ToolboxLayout(self)
-        self.setLayout(tlb)
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+
+        tlb = ToolboxWidget(self)
+        layout.addWidget(tlb)
 
         # setup icon
         global __here__
@@ -69,12 +72,12 @@ class ToolboxDialog(QtWidgets.QDialog):
         self.setWindowTitle("DaVinci Resolve Toolbox")
 
 
-class ToolboxLayout(QtWidgets.QVBoxLayout):
+class ToolboxWidget(QtWidgets.QWidget):
     """The toolbox layout
     """
 
     def __init__(self, *args, **kwargs):
-        super(ToolboxLayout, self).__init__(*args, **kwargs)
+        super(ToolboxWidget, self).__init__(*args, **kwargs)
         self._setup_ui()
 
     def _setup_ui(self):
@@ -85,10 +88,12 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             gamma = 0.455
 
         color_list = ColorList(gamma=gamma)
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
 
         # create the main tab layout
         main_tab_widget = QtWidgets.QTabWidget()
-        self.addWidget(main_tab_widget)
+        main_layout.addWidget(main_tab_widget)
 
         # add the ShotTools Tab
         conformer_tab_widget = QtWidgets.QWidget()
@@ -373,6 +378,13 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         padding_spin_box.setMaximum(10)
         current_form_layout.setWidget(i, field_role, padding_spin_box)
 
+        # Use
+        i += 1
+        current_form_layout.setWidget(i, label_role, QtWidgets.QLabel('Use Relative Clip Index'))
+        use_relative_clip_index_check_box = QtWidgets.QCheckBox()
+        use_relative_clip_index_check_box.setChecked(False)
+        current_form_layout.setWidget(i, field_role, use_relative_clip_index_check_box)
+
         # Per Clip Output Generator
         i += 1
 
@@ -386,6 +398,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             start_frame = in_point_spin_box.value()
             end_frame = out_point_spin_box.value()
             padding = padding_spin_box.value()
+            use_relative_clip_index = use_relative_clip_index_check_box.isChecked()
             render_preset = self.render_presets_combo_box.currentText()
 
             GenericTools.per_clip_output_generator(
@@ -398,7 +411,8 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
                 start_clip_number=start_clip_number,
                 clip_number_by=clip_number_by,
                 padding=padding,
-                render_preset=render_preset
+                render_preset=render_preset,
+                use_relative_clip_index=use_relative_clip_index
             )
 
         per_clip_output_generator_push_button = QtWidgets.QPushButton()
@@ -442,7 +456,7 @@ class GenericTools(object):
     @classmethod
     def per_clip_output_generator(cls, filename_template="", location_template="", extend_start=0, extend_end=0,
                                   start_frame=None, end_frame=None, start_clip_number=10, clip_number_by=10, padding=4,
-                                  render_preset=""):
+                                  render_preset="", use_relative_clip_index=False):
         """generates render tasks per clips on the current timeline
 
         :param str filename_template:
@@ -455,6 +469,8 @@ class GenericTools(object):
         :param int clip_number_by:
         :param int padding: Defaults to 4
         :param str render_preset: Render preset name
+        :param bool use_relative_clip_index: If True, a relative clip index will be used which is the clip index in the
+          current export, meaning if disabled clips are present, the index will not be incremented for those clips.
         """
         from anima.env import blackmagic
         resolve = blackmagic.get_resolve()
@@ -469,17 +485,25 @@ class GenericTools(object):
             filename_template = cls.default_output_templates[0]
 
         import copy
-        from anima.env.resolve import template
+        from anima.env.resolve import template, shot_tools
         resolve_template_vars = copy.copy(template.RESOLVE_TEMPLATE_VARS)
 
         i = 0
         for clip_index in clips:
             clip = clips[clip_index]
+            shot_clip = shot_tools.ShotClip(clip=clip, timeline=timeline)
+            if not shot_clip.is_enabled():
+                continue
+
             clip_start = clip.GetStart()
             clip_end = clip.GetEnd()
             if clip_start >= start_frame and clip_end <= end_frame:
-                calculated_clip_number = start_clip_number + clip_number_by * i
-                i += 1
+                if use_relative_clip_index:
+                    calculated_clip_number = start_clip_number + clip_number_by * i
+                    i += 1
+                else:
+                    calculated_clip_number = start_clip_number + clip_number_by * (int(clip_index) - 1)
+
                 calculated_clip_number_as_str = "%s" % calculated_clip_number
                 resolve_template_vars["Clip #"] = calculated_clip_number_as_str.zfill(padding)
                 cls.clip_output_generator_by_clip_index(
