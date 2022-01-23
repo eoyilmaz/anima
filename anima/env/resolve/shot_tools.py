@@ -834,6 +834,45 @@ class ShotClip(object):
         else:
             return False
 
+    def is_enabled(self):
+        """returns True if the current clip is enabled
+        """
+        import tempfile
+        from anima.env import blackmagic
+        temp_xml_file_path = tempfile.mktemp(suffix='.xml')
+        resolve = blackmagic.get_resolve()
+        self.timeline.Export(temp_xml_file_path, resolve.EXPORT_FCPXML_1_8)
+
+        # get current clip index at current timeline
+        clip_index = -1
+        all_clips = self.timeline.GetItemListInTrack('video', 1)
+        for i, clip in enumerate(all_clips):
+            if all_clips[i].GetStart() == self.clip.GetStart():
+                clip_index = i
+                break
+
+        if clip_index == -1:
+            raise RuntimeError('Can not find current clip')
+
+        from xml.etree import ElementTree
+        tree = ElementTree.parse(temp_xml_file_path)
+        # delete the unnecessary XML file
+        import os
+        try:
+            os.remove(temp_xml_file_path)
+        except (IOError, OSError):
+            pass
+
+        root = tree.getroot()
+        library = root.find('library')
+        event = library.find('event')
+        project = event.find('project')
+        sequence = project.find('sequence')
+        spine = sequence.find('spine')
+        clips = spine.findall('clip')
+
+        return clips[clip_index].attrib['enabled'] == '1'
+
     @property
     def shot_code(self):
         """Returns the shot code of the given clip
