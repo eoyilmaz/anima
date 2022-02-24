@@ -5,17 +5,17 @@ import os
 
 
 class RecentFileManager(object):
-    """Manages recent files list per environment
+    """Manages recent files list per DCC
 
-    A storage manager for recent file list per environment.
+    A storage manager for recent file list per DCC.
 
     To add a new file to the recent files list, the
-    :meth:`.add(env_name, file)` can be used.
+    :meth:`.add(dcc_name, file)` can be used.
 
     And the recent files list can be retrieved through
-    :meth:`.recent_files(env_name)` method.
+    :meth:`.recent_files(dcc_name)` method.
 
-    An environment is not always required, which will save the data under the
+    An DCC is not always required, which will save the data under the
     "Generic" name.
 
     The data is held as a dictionary and the resultant RecentFileManager
@@ -95,36 +95,36 @@ class RecentFileManager(object):
             self.recent_files[env] = \
                 self.recent_files[env][:defaults.max_recent_files]
 
-    def add(self, env_name, file_path):
-        """Saves the given file_path under the given environment name
+    def add(self, dcc_name, file_path):
+        """Saves the given file_path under the given DCC name
 
-        :param env_name: The name of the environment
+        :param dcc_name: The name of the DCC
         :param file_path: The file_path
         :return: None
         """
-        if env_name not in self.recent_files:
-            self.recent_files[env_name] = []
+        if dcc_name not in self.recent_files:
+            self.recent_files[dcc_name] = []
 
-        if file_path in self.recent_files[env_name]:
-            self.recent_files[env_name].remove(file_path)
+        if file_path in self.recent_files[dcc_name]:
+            self.recent_files[dcc_name].remove(file_path)
 
-        self.recent_files[env_name].insert(0, file_path)
+        self.recent_files[dcc_name].insert(0, file_path)
 
         # clamp max files stored
         from anima import defaults
-        self.recent_files[env_name] = \
-            self.recent_files[env_name][:defaults.max_recent_files]
+        self.recent_files[dcc_name] = \
+            self.recent_files[dcc_name][:defaults.max_recent_files]
 
         self.save()
 
-    def remove(self, env_name, file_path):
+    def remove(self, dcc_name, file_path):
         """Removes the given path from the recent files list
         """
-        self[env_name].remove(file_path)
+        self[dcc_name].remove(file_path)
 
     def __getitem__(self, item):
         """
-        :param str item: The name of the environment
+        :param str item: The name of the DCC
         :return:
         """
         return self.recent_files[item]
@@ -132,7 +132,7 @@ class RecentFileManager(object):
     def __setitem__(self, key, value):
         """
 
-        :param str key: The name of the environment
+        :param str key: The name of the DCC
         :param list value: the value
         :return:
         """

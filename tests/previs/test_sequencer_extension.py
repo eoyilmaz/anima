@@ -6,7 +6,7 @@ import unittest
 # prepare for test
 os.environ['ANIMA_TEST_SETUP'] = ""
 
-from anima.env import mayaEnv  # to setup maya extensions
+from anima.dcc import mayaEnv  # to setup maya extensions
 
 import pymel.core
 

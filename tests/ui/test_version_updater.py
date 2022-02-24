@@ -7,7 +7,7 @@ import logging
 
 import unittest
 
-from anima.env.testing import TestEnvironment
+from anima.dcc.testing import TestEnvironment
 
 
 logger = logging.getLogger('anima.ui.version_updater')

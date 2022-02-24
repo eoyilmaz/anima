@@ -47,7 +47,7 @@ class RecentFileManagerTestCase(unittest.TestCase):
             )
 
     def test_add_method_with_a_new_environment_name(self):
-        """testing if the add method is able to add files to a new environment
+        """testing if the add method is able to add files to a new DCC
         """
         rfm = RecentFileManager()
         rfm.add('New Env', 'some path')
@@ -130,7 +130,7 @@ class RecentFileManagerTestCase(unittest.TestCase):
 
     def test_RecentFileManager_is_indexable(self):
         """testing if the RecentFileManager instance is indexable with the
-        environment name
+        DCC name
         """
         rfm1 = RecentFileManager()
         rfm1.add('Env1', 'Path1')
@@ -151,7 +151,7 @@ class RecentFileManagerTestCase(unittest.TestCase):
         )
 
     def test_remove_method_removes_files_from_given_env(self):
-        """testing if the given path will be removed from the given environment
+        """testing if the given path will be removed from the given DCC
         """
         rfm1 = RecentFileManager()
         rfm1.add('Env1', 'Path1')

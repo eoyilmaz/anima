@@ -5,7 +5,7 @@ import os
 
 # prepare for test
 os.environ['ANIMA_TEST_SETUP'] = ""
-from anima.env import mayaEnv  # to setup maya extensions
+from anima.dcc import mayaEnv  # to setup maya extensions
 
 import pymel.core
 from anima.edit import Sequence, Media, Video, Track, Clip, File
@@ -720,7 +720,7 @@ class SequenceManagerTestCase(unittest.TestCase):
         """testing if generate_sequence_structure() method is working properly
         """
         sm = pymel.core.PyNode('sequenceManager1')
-        from anima.env import mayaEnv
+        from anima.dcc import mayaEnv
         mayaEnv.Maya.set_fps(fps=24)
 
         sm.set_shot_name_template('<Sequence>_<Shot>_<Version>')

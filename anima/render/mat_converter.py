@@ -26,9 +26,9 @@ class ConversionManagerBase(object):
         self.node_creator_factory = None
 
     def get_node_type(self, node):
-        """Returns the node type for this environment
+        """Returns the node type for this DCC
 
-        :param node: A node familiar to the host environment
+        :param node: A node familiar to the host DCC
         :return:
         """
         raise NotImplementedError()
@@ -36,7 +36,7 @@ class ConversionManagerBase(object):
     def list_nodes(self, type_):
         """lists the node of given type
 
-        :param type_: A type object or string that the environment need
+        :param type_: A type object or string that the DCC need
         :return:
         """
         raise NotImplementedError()

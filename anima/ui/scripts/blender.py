@@ -30,7 +30,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     ui.SET_PYSIDE2()
 
     from anima.ui import version_dialog
-    from anima.env import blender as blender_env
+    from anima.dcc import blender as blender_env
     b = blender_env.Blender()
 
     logger.setLevel(logging_level)
@@ -51,7 +51,7 @@ def version_updater(logging_level=logging.WARNING):
     ui.SET_PYSIDE2()
 
     from anima.ui import version_updater
-    from anima.env import blender
+    from anima.dcc import blender
     b = blender.Blender()
 
     logger.setLevel(logging_level)

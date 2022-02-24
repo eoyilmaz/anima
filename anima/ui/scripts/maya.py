@@ -30,7 +30,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     set_qt_lib()
 
     from anima.ui import version_dialog
-    from anima.env import mayaEnv
+    from anima.dcc import mayaEnv
     m = mayaEnv.Maya()
 
     import pymel
@@ -53,7 +53,7 @@ def version_updater(logging_level=logging.WARNING):
     set_qt_lib()
 
     from anima.ui import version_updater
-    from anima.env import mayaEnv
+    from anima.dcc import mayaEnv
     m = mayaEnv.Maya()
 
     import pymel
@@ -95,7 +95,7 @@ def project_manager(logging_level=logging.WARNING):
     set_qt_lib()
 
     from anima.ui import project_manager
-    from anima.env import mayaEnv
+    from anima.dcc import mayaEnv
 
     # set the parent object to the maya main window
     project_manager.ui_caller(None, None, project_manager.MainWindow)

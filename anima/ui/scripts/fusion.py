@@ -25,7 +25,7 @@ def version_dialog(lib='PySide', logging_level=logging.WARNING, parent=None):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.env import fusion
+    from anima.dcc import fusion
     fusion_env = fusion.Fusion()
     fusion_env.name = 'Fusion'
 

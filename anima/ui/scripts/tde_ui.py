@@ -16,7 +16,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     ui.SET_PYSIDE2()
 
     from anima.ui import version_dialog
-    from anima.env import equalizer
+    from anima.dcc import equalizer
     e = equalizer.Equalizer()
     e.name = tde4.get3DEVersion().split(" ")[0]
 

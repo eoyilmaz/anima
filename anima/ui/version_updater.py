@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from anima import logger
-from anima.env import empty_reference_resolution
+from anima.dcc import empty_reference_resolution
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models.version import VersionTreeModel
 from anima.ui.lib import QtGui, QtCore, QtWidgets
@@ -19,7 +19,7 @@ elif IS_PYQT4():
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
+      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
       work in "environmentless" mode in which it only creates data in database
       and copies the resultant version file path to clipboard.
 
@@ -38,7 +38,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
     The version_tuple list consist of a Version instance and a reference
     object.
 
-    For Maya environment the reference object is the PyMel Reference node,
+    For Maya DCC the reference object is the PyMel Reference node,
     for other environments reference object type will be as native as it can be
     """
 
@@ -72,7 +72,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
         self.fill_ui()
 
     def _validate_environment(self, environment):
-        """validates the given environment value
+        """validates the given DCC value
         """
         if environment:
             current_version = environment.get_current_version()
@@ -265,7 +265,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
                 self.open_version(selected_action.version)
 
     def open_version(self, version):
-        """opens the given version in a new environment
+        """opens the given version in a new DCC
 
         :param version: :class:`~stalker.model.version.Version` instance.
         """

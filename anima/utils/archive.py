@@ -143,7 +143,7 @@ def archive_current_scene(version, archiver):
     """Helper function for archiver
 
     :param version: A ``stalker.models.version.Version`` instance to get information about the project and etc.
-    :param archiver: The ``anima.utils.archive.ArchiverBase`` derivative properly implemented for the current environment.
+    :param archiver: The ``anima.utils.archive.ArchiverBase`` derivative properly implemented for the current DCC.
     """
     import os
     import shutil

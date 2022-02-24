@@ -21,7 +21,7 @@ def version_dialog(mode=2):
     set_qt_lib()
 
     from anima.ui import version_dialog
-    from anima.env import nukeEnv
+    from anima.dcc import nukeEnv
     import nuke
     n = nukeEnv.Nuke()
     n.name = "nuke%s.%s" % (nuke.NUKE_VERSION_MAJOR, nuke.NUKE_VERSION_MINOR)
@@ -31,7 +31,7 @@ def version_dialog(mode=2):
     logging.getLogger(version_dialog.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.env.nuke").setLevel(logging.WARNING)
+    logging.getLogger("anima.dcc.nuke").setLevel(logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 
     version_dialog.UI(environment=n, mode=mode)

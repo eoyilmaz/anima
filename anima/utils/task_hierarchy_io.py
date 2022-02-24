@@ -177,14 +177,15 @@ class StalkerEntityEncoder(json.JSONEncoder):
 class StalkerEntityDecoder(object):
     """Decoder for Stalker classes
     """
-    def __init__(self, project, parent=None):
+    def __init__(self, project):
         self.project = project
-        self.parent = None
+        self.objects_created = {}
 
     def loads(self, data, parent=None):
         """Decodes Stalker data
 
         :param data:
+        :param parent: A Stalker Entity that the loaded data will be parented on
         :return:
         """
         from stalker.db.session import DBSession

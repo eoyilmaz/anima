@@ -22,7 +22,7 @@ def version_dialog(logging_level=logging.WARNING):
     set_qt_lib()
 
     from anima.ui import version_dialog
-    from anima.env import motion_builder
+    from anima.dcc import motion_builder
     mb = motion_builder.MotionBuilder()
 
     logger.setLevel(logging_level)

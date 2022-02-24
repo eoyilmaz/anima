@@ -71,7 +71,7 @@ SAVE_AS_AND_OPEN_MODE = 2
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
+      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
       work in "environmentless" mode in which it only creates data in database
       and copies the resultant version file path to clipboard.
 
@@ -101,7 +101,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     :param environment: It is an object which supplies **methods** like
       ``open``, ``save``, ``export``,  ``import`` or ``reference``. The most
       basic way to do this is to pass an instance of a class which is derived
-      from the :class:`~stalker.models.env.EnvironmentBase` which has all this
+      from the :class:`~anima.dcc.base.DCCBase` which has all this
       methods but produces ``NotImplementedError``\ s if the child class has
       not implemented these actions.
 
@@ -140,7 +140,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def __init__(self, environment=None, parent=None, mode=SAVE_AS_AND_OPEN_MODE):
         logger.debug("initializing the interface")
         super(MainDialog, self).__init__(parent)
-        self.environment = environment
+        self.dcc = environment
 
         self.mode = None
         self.window_title = ""
@@ -182,7 +182,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
 
         # TODO: This is a very dirty fix, do it properly
-        if self.environment.name.lower().startswith("houdini"):
+        if self.dcc.name.lower().startswith("houdini"):
             style_sheet += """QGroupBox{
                 margin: 0px;
             }
@@ -397,7 +397,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Publish Push Button
         self.publish_push_button = QtWidgets.QPushButton(self)
         self.publish_push_button.setText("Publish")
-        if not self.environment.has_publishers:
+        if not self.dcc.has_publishers:
             self.publish_push_button.setText("Publish")
         self.save_as_buttons_layout.addWidget(self.publish_push_button)
 
@@ -634,14 +634,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_version_secondary_controls_layout.addWidget(self.representations_label)
 
         self.representations_comboBox = QtWidgets.QComboBox(self)
-        self.representations_comboBox.setToolTip("Choose Representation (if supported by the environment)")
+        self.representations_comboBox.setToolTip("Choose Representation (if supported by the DCC)")
 
         self.previous_version_secondary_controls_layout.addWidget(self.representations_comboBox)
         self.reference_depth_label = QtWidgets.QLabel(self)
         self.reference_depth_label.setText("Refs")
         self.previous_version_secondary_controls_layout.addWidget(self.reference_depth_label)
         self.ref_depth_combo_box = QtWidgets.QComboBox(self)
-        self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by environment)")
+        self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by DCC)")
         self.previous_version_secondary_controls_layout.addWidget(self.ref_depth_combo_box)
         spacer_item3 = QtWidgets.QSpacerItem(
             40, 20,
@@ -744,13 +744,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     QtWidgets.QDialog.close(self)
 
     def update_window_title(self):
-        """updates the window title depending on the environment and mode
+        """updates the window title depending on the DCC and mode
         """
         import anima
         window_title = "Anima Pipeline v%s " % anima.__version__
 
-        if self.environment:
-            window_title = "%s | %s" % (window_title, self.environment.name)
+        if self.dcc:
+            window_title = "%s | %s" % (window_title, self.dcc.name)
         else:
             window_title = "%s | No Environment" % window_title
 
@@ -1275,8 +1275,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # update version info
                 # set to the base extension
                 version.update_paths()
-                version.extension = self.environment.extensions[0]
-                version.created_with = self.environment.name
+                version.extension = self.dcc.extensions[0]
+                version.created_with = self.dcc.name
 
                 from stalker.db.session import DBSession
                 try:
@@ -1346,10 +1346,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def clear_recent_files(self):
         """clears the recent files
         """
-        if self.environment:
+        if self.dcc:
             from anima.recent import RecentFileManager
             rfm = RecentFileManager()
-            rfm[self.environment.name] = []
+            rfm[self.dcc.name] = []
             rfm.save()
 
     def clear_recent_file_push_button_clicked(self):
@@ -1379,11 +1379,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.recent_files_combo_box.addItem("--- No Recent Files ---")
 
         # update recent files list
-        if self.environment:
+        if self.dcc:
             from anima.recent import RecentFileManager
             rfm = RecentFileManager()
             try:
-                recent_files = rfm[self.environment.name]
+                recent_files = rfm[self.dcc.name]
 
                 if len(recent_files):
                     self.recent_files_combo_box.clear()
@@ -1584,16 +1584,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.search_task_line_edit.setVisible(False)
 
         # fill programs list
-        from anima.env.external import ExternalEnvFactory
-        env_factory = ExternalEnvFactory()
+        from anima.dcc.external import ExternalDCCFactory
+        env_factory = ExternalDCCFactory()
         env_names = env_factory.get_env_names(
             name_format=self.environment_name_format
         )
         self.environment_combo_box.addItems(env_names)
 
         is_external_env = False
-        env = self.environment
-        if not self.environment:
+        env = self.dcc
+        if not self.dcc:
             is_external_env = True
             # just get one random environment
             env = env_factory.get_env(env_names[0])
@@ -1608,7 +1608,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         for r in ref_depth_res:
             self.ref_depth_combo_box.addItem(r)
 
-        logger.debug("restoring the ui with the version from environment")
+        logger.debug("restoring the ui with the version from DCC")
 
         # get the last version from the environment
         version_from_env = env.get_last_version()
@@ -1657,10 +1657,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # select the version in the previous version list
         self.previous_versions_table_widget.select_version(version)
 
-        if not self.environment:
+        if not self.dcc:
             # set the environment_comboBox
-            from anima.env.external import ExternalEnvFactory
-            env_factory = ExternalEnvFactory()
+            from anima.dcc.external import ExternalDCCFactory
+            env_factory = ExternalDCCFactory()
             try:
                 env = env_factory.get_env(version.created_with)
             except ValueError:
@@ -1855,9 +1855,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         # call the environments export_as method
-        if self.environment is not None:
+        if self.dcc is not None:
             try:
-                self.environment.export_as(new_version)
+                self.dcc.export_as(new_version)
             except RuntimeError as e:
                 error_message = "%s" % e
                 print(error_message)
@@ -1912,7 +1912,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
         if answer == QtWidgets.QMessageBox.Yes:
             new_version = self.get_new_version(publish=True)
-            if self.environment and self.environment.has_publishers:
+            if self.dcc and self.dcc.has_publishers:
                 import functools
                 callback = functools.partial(
                     self.save_as_wrapper,
@@ -1923,7 +1923,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 from anima.ui import publish_checker
                 self.close()
                 dialog = publish_checker.UI(
-                    environment=self.environment,
+                    environment=self.dcc,
                     publish_callback=callback,
                     version=new_version,
                     parent=self.parent()
@@ -1963,12 +1963,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # call the environments save_as method
         from stalker.db.session import DBSession
         is_external_env = False
-        environment = self.environment
+        environment = self.dcc
         if not environment:
             # get the environment
             env_name = self.environment_combo_box.currentText()
-            from anima.env.external import ExternalEnvFactory
-            env_factory = ExternalEnvFactory()
+            from anima.dcc.external import ExternalDCCFactory
+            env_factory = ExternalDCCFactory()
             environment = env_factory.get_env(
                 env_name,
                 self.environment_name_format
@@ -2126,21 +2126,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # close the dialog
         # TODO: Please, please, please fix the following code!
         is_blender = False
-        if self.environment and self.environment.name.lower().startswith('blender'):
+        if self.dcc and self.dcc.name.lower().startswith('blender'):
             is_blender = True
 
         if not is_blender:
             self.close()
 
         # call the environments open method
-        if self.environment is not None:
+        if self.dcc is not None:
             repr_name = self.representations_comboBox.currentText()
             ref_depth = ref_depth_res.index(self.ref_depth_combo_box.currentText())
 
             # environment can throw RuntimeError for unsaved changes
             try:
                 reference_resolution = \
-                    self.environment.open(
+                    self.dcc.open(
                         old_version,
                         representation=repr_name,
                         reference_depth=ref_depth,
@@ -2161,7 +2161,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 if answer == QtWidgets.QMessageBox.Yes:
                     reference_resolution =\
-                        self.environment.open(
+                        self.dcc.open(
                             old_version,
                             True,
                             representation=repr_name,
@@ -2178,7 +2178,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 from anima.ui import version_updater
                 version_updater_main_dialog = \
                     version_updater.MainDialog(
-                        environment=self.environment,
+                        environment=self.dcc,
                         parent=self,
                         reference_resolution=reference_resolution
                     )
@@ -2243,7 +2243,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         logger.debug("referencing version with id: %s" % previous_version.id)
         # call the environments reference method
-        if self.environment is not None:
+        if self.dcc is not None:
             # get the use namespace state
             use_namespace = self.use_namespace_check_box.isChecked()
 
@@ -2266,7 +2266,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     )
                 setattr(base_button, "repr_version", previous_version)
 
-                for repr_name in self.environment.representations:
+                for repr_name in self.dcc.representations:
                     repr_str = "%{take}{repr_separator}{repr_name}%".format(
                         take=previous_version.take_name,
                         repr_name=repr_name,
@@ -2300,7 +2300,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     return
 
             try:
-                self.environment.reference(previous_version, use_namespace)
+                self.dcc.reference(previous_version, use_namespace)
 
                 # inform the user about what happened
                 if logger.level != logging.DEBUG:
@@ -2334,11 +2334,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # logger.debug("importing version %s" % previous_version)
 
         # call the environments import_ method
-        if self.environment is not None:
+        if self.dcc is not None:
             # get the use namespace state
             use_namespace = self.use_namespace_check_box.isChecked()
 
-            self.environment.import_(previous_version, use_namespace)
+            self.dcc.import_(previous_version, use_namespace)
 
             # inform the user about what happened
             if logger.level != logging.DEBUG:
@@ -2471,7 +2471,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param path:
         :return:
         """
-        from anima.env.base import EnvironmentBase
+        from anima.dcc.base import EnvironmentBase
         env = EnvironmentBase()
         if path:
             version = env.get_version_from_full_path(path)

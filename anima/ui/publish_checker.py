@@ -238,7 +238,7 @@ class PublisherElement(object):
         if m.clickedButton() == m.defaultButton():
             fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
             try:
-                from anima.env.mayaEnv import publish
+                from anima.dcc.mayaEnv import publish
                 fix_func = publish.__dict__[fix_def_name]
                 fix_func()
             except KeyError:
@@ -372,7 +372,7 @@ class PublisherElement(object):
                 # disable fix button if fix definition does not exist
                 fix_def_name = '%s%s' % (self.publisher.__name__, self.fix_identifier)
 
-                from anima.env.mayaEnv import publish
+                from anima.dcc.mayaEnv import publish
                 # disable by default
                 self.fix_push_button.setDisabled(True)
                 self.fix_push_button.setStyleSheet('background-color: None')

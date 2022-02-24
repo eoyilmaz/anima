@@ -21,7 +21,7 @@ def version_dialog(lib='PySide'):
     elif lib == 'PyQt4':
         SET_PYQT4()
 
-    from anima.env import photoshop
+    from anima.dcc import photoshop
     reload(photoshop)
     p = photoshop.Photoshop()
 
@@ -32,7 +32,7 @@ def version_dialog(lib='PySide'):
     logging.getLogger(version_dialog.__name__).setLevel(logging.WARNING)
     logging.getLogger("anima.ui").setLevel(logging.WARNING)
     logging.getLogger("anima.ui.models").setLevel(logging.WARNING)
-    logging.getLogger("anima.env.photoshop").setLevel(
+    logging.getLogger("anima.dcc.photoshop").setLevel(
         logging.WARNING)
     logging.getLogger("stalker.db").setLevel(logging.WARNING)
 

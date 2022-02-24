@@ -4,7 +4,7 @@
 import hou
 
 from anima import logger
-from anima.env.houdini.utils import Executor
+from anima.dcc.houdini.utils import Executor
 
 if hou.applicationVersion()[0] <= 15:
     from anima.ui import SET_PYSIDE
@@ -27,7 +27,7 @@ def version_dialog(mode=2):
     log.logging_level = logging.WARNING
 
     from anima.ui import version_dialog
-    from anima.env import houdini
+    from anima.dcc import houdini
     reload(houdini)
     reload(version_dialog)
 

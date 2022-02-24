@@ -74,7 +74,7 @@ environment variable to include the path that contains the `anima` library.
 Then you should be able to run the following inside Maya for example:
 
 ```python
-from anima.env import mayaEnv
+from anima.dcc import mayaEnv
 m = mayaEnv.Maya()
 ```
 

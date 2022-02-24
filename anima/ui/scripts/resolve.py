@@ -25,7 +25,7 @@ def toolbox(lib='PySide', logging_level=logging.WARNING, parent=None):
     # elif lib == 'PyQt4':
     #     SET_PYQT4()
     #
-    # from anima.env import fusion
+    # from anima.dcc import fusion
     # reload(fusion)
     # fusion_env = fusion.Fusion()
     # fusion_env.name = 'Fusion'
@@ -37,7 +37,7 @@ def toolbox(lib='PySide', logging_level=logging.WARNING, parent=None):
     from anima import ui
     ui.SET_PYSIDE2()
 
-    from anima.env.resolve import toolbox
+    from anima.dcc.resolve import toolbox
     reload(toolbox)
     dialog = toolbox.UI()
     return dialog

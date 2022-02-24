@@ -22,7 +22,7 @@ elif IS_PYQT4():
 def UI(app_in=None, executor=None, **kwargs):
     """
     :param environment: The
-      :class:`~stalker.models.env.EnvironmentBase` can be None to let the UI to
+      :class:`~anima.dcc.base.DCCBase` can be None to let the UI to
       work in "environmentless" mode in which it only creates data in database
       and copies the resultant version file path to clipboard.
 
