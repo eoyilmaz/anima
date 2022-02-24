@@ -838,7 +838,7 @@ class ShotClip(object):
         """returns True if the current clip is enabled
         """
         import tempfile
-        from anima.env import blackmagic
+        from anima.dcc import blackmagic
         temp_xml_file_path = tempfile.mktemp(suffix='.xml')
         resolve = blackmagic.get_resolve()
         self.timeline.Export(temp_xml_file_path, resolve.EXPORT_FCPXML_1_8)
