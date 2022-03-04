@@ -398,8 +398,8 @@ class ExternalEnvFactoryTestCase(unittest.TestCase):
         """testing if ExternalDCCFactory.get_env_names() method will
         return all the DCC names as a list of strings
         """
-        from anima.dcc.external import external_environments
-        expected_result = external_environments.keys()
+        from anima.dcc.external import external_dccs
+        expected_result = external_dccs.keys()
         ext_env_factory = ExternalDCCFactory()
         result = ext_env_factory.get_env_names()
         self.assertEqual(expected_result, result)

@@ -377,8 +377,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.new_version_main_layout.addWidget(self.description_text_edit)
 
         self.save_as_buttons_layout = QtWidgets.QHBoxLayout()
-        self.environment_combo_box = QtWidgets.QComboBox(self)
-        self.save_as_buttons_layout.addWidget(self.environment_combo_box)
+        self.dcc_combo_box = QtWidgets.QComboBox(self)
+        self.save_as_buttons_layout.addWidget(self.dcc_combo_box)
 
         # ===================
         # Save As
@@ -1589,7 +1589,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         env_names = env_factory.get_env_names(
             name_format=self.environment_name_format
         )
-        self.environment_combo_box.addItems(env_names)
+        self.dcc_combo_box.addItems(env_names)
 
         is_external_env = False
         dcc = self.dcc
@@ -1622,7 +1622,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.reference_push_button.setVisible(False)
             self.import_push_button.setVisible(False)
         else:
-            self.environment_combo_box.setVisible(False)
+            self.dcc_combo_box.setVisible(False)
 
         # update description field
         self.description_text_edit.setText("")
@@ -1668,12 +1668,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             else:
                 # find it in the comboBox
                 index = \
-                    self.environment_combo_box.findText(
+                    self.dcc_combo_box.findText(
                         dcc.name,
                         QtCore.Qt.MatchContains
                     )
                 if index:
-                    self.environment_combo_box.setCurrentIndex(index)
+                    self.dcc_combo_box.setCurrentIndex(index)
 
     def takes_list_widget_changed(self, index):
         """runs when the takes_listWidget has changed
@@ -1966,16 +1966,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         environment = self.dcc
         if not environment:
             # get the environment
-            env_name = self.environment_combo_box.currentText()
+            dcc_name = self.dcc_combo_box.currentText()
             from anima.dcc.external import ExternalDCCFactory
             env_factory = ExternalDCCFactory()
             environment = env_factory.get_env(
-                env_name,
+                dcc_name,
                 self.environment_name_format
             )
             is_external_env = True
             if not environment:
-                logger.debug("no env found with name: %s" % env_name)
+                logger.debug("no DCC found with name: %s" % dcc_name)
                 DBSession.rollback()
                 return
             logger.debug("env: %s" % environment.name)

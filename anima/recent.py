@@ -91,9 +91,9 @@ class RecentFileManager(object):
 
         # limit maximum recent files
         from anima import defaults
-        for env in self.recent_files:
-            self.recent_files[env] = \
-                self.recent_files[env][:defaults.max_recent_files]
+        for dcc in self.recent_files:
+            self.recent_files[dcc] = \
+                self.recent_files[dcc][:defaults.max_recent_files]
 
     def add(self, dcc_name, file_path):
         """Saves the given file_path under the given DCC name

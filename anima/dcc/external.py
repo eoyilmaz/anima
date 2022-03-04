@@ -6,7 +6,7 @@ from anima import logger
 from anima.dcc.base import DCCBase
 
 
-external_environments = {
+external_dccs = {
     'MudBox': {
         'name': 'MudBox',
         'icon': 'mudbox.png',
@@ -284,8 +284,8 @@ class ExternalDCCFactory(object):
         :return list: list
         """
         env_names = []
-        for env_name in external_environments.keys():
-            env_data = external_environments[env_name]
+        for env_name in external_dccs.keys():
+            env_data = external_dccs[env_name]
             env_names.append(
                 name_format
                 .replace('%n', env_data['name'])
@@ -319,16 +319,16 @@ class ExternalDCCFactory(object):
         logger.debug('pattern : %s' % pattern)
 
         match = re.search(pattern, name)
-        env_name = None
+        dcc_name = None
         if match:
-            env_name = match.group('name').strip()
+            dcc_name = match.group('name').strip()
 
-        env_names = external_environments.keys()
-        if env_name not in env_names:
+        dcc_names = external_dccs.keys()
+        if dcc_name not in dcc_names:
             raise ValueError(
                 '%s is not in '
                 'anima.dcc.externalEnv.environment_names list, '
-                'please supply a value from %s' % (name, env_names))
+                'please supply a value from %s' % (name, dcc_names))
 
-        env = external_environments[env_name]
-        return ExternalDCC(**env)
+        dcc = external_dccs[dcc_name]
+        return ExternalDCC(**dcc)
