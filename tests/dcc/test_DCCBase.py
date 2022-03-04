@@ -7,7 +7,7 @@ from stalker import (db, Repository, Project, Structure, FilenameTemplate,
                      Status, StatusList, Task, Version)
 from stalker.db import DBSession
 
-from anima.dcc.base import EnvironmentBase
+from anima.dcc.base import DCCBase
 
 
 logger = logging.getLogger(__name__)
@@ -150,52 +150,52 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         logger.debug('version2.full_path : %s' % version2.full_path)
 
         # now try to get the versions with an DCCBase instance
-        env = EnvironmentBase()
+        dcc = DCCBase()
 
         # version1
-        version1_found = env.get_version_from_full_path(
+        version1_found = dcc.get_version_from_full_path(
             '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version1_found, version1)
 
         # version2
-        version2_found = env.get_version_from_full_path(
+        version2_found = dcc.get_version_from_full_path(
             '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version2_found, version2)
 
         # version1 in windows
-        version1_found = env.get_version_from_full_path(
+        version1_found = dcc.get_version_from_full_path(
             'T:/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version1_found, version1)
 
         # version2 in windows
-        version2_found = env.get_version_from_full_path(
+        version2_found = dcc.get_version_from_full_path(
             'S:/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version2_found, version2)
 
         # version1 in linux
-        version1_found = env.get_version_from_full_path(
+        version1_found = dcc.get_version_from_full_path(
             '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version1_found, version1)
 
         # version2 in linux
-        version2_found = env.get_version_from_full_path(
+        version2_found = dcc.get_version_from_full_path(
             '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version2_found, version2)
 
         # version1 in osx
-        version1_found = env.get_version_from_full_path(
+        version1_found = dcc.get_version_from_full_path(
             '/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version1_found, version1)
 
         # version2 in osx
-        version2_found = env.get_version_from_full_path(
+        version2_found = dcc.get_version_from_full_path(
             '/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(version2_found, version2)
@@ -204,11 +204,11 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         """testing if no errors will be raised for a path which is None or an
         empty string
         """
-        env = EnvironmentBase()
-        versions = env.get_versions_from_path('')
+        dcc = DCCBase()
+        versions = dcc.get_versions_from_path('')
         self.assertEqual(versions, [])
 
-        versions = env.get_versions_from_path(None)
+        versions = dcc.get_versions_from_path(None)
         self.assertEqual(versions, [])
 
     def test_get_versions_from_path_with_multiple_repositories(self):
@@ -339,52 +339,52 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         logger.debug('version4.full_path : %s' % version2.full_path)
 
         # now try to get the versions with an DCCBase instance
-        env = EnvironmentBase()
+        dcc = DCCBase()
 
         # version1, version2
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/mnt/T/TP1/Test_Task_1'
         )
         self.assertEqual(versions_found, [version1, version2])
 
         # version3, version4
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/mnt/S/TP2/Test_Task_1'
         )
         self.assertEqual(versions_found, [version3, version4])
 
         # version1, version2 in windows
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             'T:/TP1/Test_Task_1'
         )
         self.assertEqual(versions_found, [version1, version2])
 
         # version3, version4 in windows
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             'S:/TP2/Test_Task_1'
         )
         self.assertEqual(versions_found, [version3, version4])
 
         # version1, version2 in linux
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/mnt/T/TP1/Test_Task_1'
         )
         self.assertEqual(versions_found, [version1, version2])
 
         # version3, version4 in linux
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/mnt/S/TP2/Test_Task_1'
         )
         self.assertEqual(versions_found, [version3, version4])
 
         # version1, version2 in osx
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/Volumes/T/TP1/Test_Task_1'
         )
         self.assertEqual(versions_found, [version1, version2])
 
         # version3, version4 in linux
-        versions_found = env.get_versions_from_path(
+        versions_found = dcc.get_versions_from_path(
             '/Volumes/S/TP2/Test_Task_1'
         )
         self.assertEqual(versions_found, [version3, version4])
@@ -483,10 +483,7 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         DBSession.commit()
 
         # now create versions
-        version1 = Version(
-            task=task1,
-            status_list=version_status_list
-        )
+        version1 = Version(task=task1)
         DBSession.add(version1)
         DBSession.commit()
         version1.update_paths()
@@ -513,55 +510,55 @@ class EnvironmentBaseTestCase(unittest.TestCase):
         logger.debug('version4.full_path : %s' % version2.full_path)
 
         # now try to get the versions with an DCCBase instance
-        env = EnvironmentBase()
+        dcc = DCCBase()
 
         expected_value1 = 'TP1/Test_Task_1/Test_Task_1_Main_v001'
         expected_value2 = 'TP2/Test_Task_1/Test_Task_1_Main_v001'
 
         # version1 native
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value1)
 
         # version2 native
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value2)
 
         # version1 windows
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             'T:/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value1)
 
         # version2 windows
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             'S:/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value2)
 
         # version1 linux
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/mnt/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value1)
 
         # version2 linux
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/mnt/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value2)
 
         # version1 osx
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/Volumes/T/TP1/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value1)
 
         # version2 osx
-        trimmed_path = env.trim_repo_path(
+        trimmed_path = dcc.trim_repo_path(
             '/Volumes/S/TP2/Test_Task_1/Test_Task_1_Main_v001'
         )
         self.assertEqual(trimmed_path, expected_value2)

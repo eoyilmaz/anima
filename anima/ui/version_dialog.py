@@ -1592,14 +1592,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.environment_combo_box.addItems(env_names)
 
         is_external_env = False
-        env = self.dcc
+        dcc = self.dcc
         if not self.dcc:
             is_external_env = True
             # just get one random environment
-            env = env_factory.get_env(env_names[0])
+            dcc = env_factory.get_env(env_names[0])
 
         # get all the representations available for this environment
-        reprs = env.representations
+        reprs = dcc.representations
         # add them to the representations comboBox
         for r in reprs:
             self.representations_comboBox.addItem(r)
@@ -1611,7 +1611,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("restoring the ui with the version from DCC")
 
         # get the last version from the environment
-        version_from_env = env.get_last_version()
+        version_from_env = dcc.get_last_version()
 
         logger.debug("version_from_env: %s" % version_from_env)
         self.restore_ui(version_from_env)
@@ -1660,16 +1660,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.dcc:
             # set the environment_comboBox
             from anima.dcc.external import ExternalDCCFactory
-            env_factory = ExternalDCCFactory()
+            dcc_factory = ExternalDCCFactory()
             try:
-                env = env_factory.get_env(version.created_with)
+                dcc = dcc_factory.get_env(version.created_with)
             except ValueError:
                 pass
             else:
                 # find it in the comboBox
                 index = \
                     self.environment_combo_box.findText(
-                        env.name,
+                        dcc.name,
                         QtCore.Qt.MatchContains
                     )
                 if index:
@@ -2471,10 +2471,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param path:
         :return:
         """
-        from anima.dcc.base import EnvironmentBase
-        env = EnvironmentBase()
+        from anima.dcc.base import DCCBase
+        dcc = DCCBase()
         if path:
-            version = env.get_version_from_full_path(path)
+            version = dcc.get_version_from_full_path(path)
             self.restore_ui(version)
 
     def find_from_path_push_button_clicked(self):
