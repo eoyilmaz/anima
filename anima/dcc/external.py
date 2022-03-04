@@ -135,9 +135,9 @@ class ExternalDCC(DCCBase):
                              structure.__class__.__name__))
 
         for item in structure:
-            if not isinstance(item, basestring):
+            if not isinstance(item, str):
                 raise TypeError('All items in %s.structure should be an '
-                                'instance of basestring, an not %s' % 
+                                'instance of str, an not %s' %
                                 (self.__class__.__name__,
                                  item.__class__.__name__))
 
@@ -304,7 +304,7 @@ class ExternalDCCFactory(object):
         """
         if not isinstance(name, str):
             raise TypeError('"name" argument in %s.get_env() should be an '
-                            'instance of basestring, not %s' %
+                            'instance of str, not %s' %
                             (cls.__name__, name.__class__.__name__))
 
         # filter the name

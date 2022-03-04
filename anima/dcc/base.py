@@ -601,7 +601,7 @@ class DCCBase(object):
         :param bool include_project_code: Include project code.
         :param bool include_version_number: Include version number
 
-        :rtype : basestring
+        :rtype : str
         """
         if include_project_code:
             sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
