@@ -5,7 +5,7 @@ from anima.dcc.base import DCCBase
 
 class Equalizer(DCCBase):
 
-    name = '3DEqualizer4'
+    name = "3DEqualizer4"
 
     def save_as(self, version, run_pre_publishers=True):
         """runs when saving a document
@@ -20,8 +20,14 @@ class Equalizer(DCCBase):
         tde4.setProjectPath(version.absolute_full_path)
         tde4.saveProject(version.absolute_full_path)
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
         """
 
         :param version:
@@ -34,13 +40,13 @@ class Equalizer(DCCBase):
         import tde4
 
         from stalker import Version
+
         assert isinstance(version, Version)
         td4.loadProject(version.absolute_full_path)
 
 
 class TDE4Lens(object):
-    """Holds information about the 3DE4 lens
-    """
+    """Holds information about the 3DE4 lens"""
 
     def __init__(self):
         self.lens_name = None
@@ -70,11 +76,11 @@ class TDE4Lens(object):
         """
         output_data = {}
         with open(lens_file_path) as f:
-            data = f.read().split('\n')
+            data = f.read().split("\n")
 
         self.lens_name = data[0]
 
-        sensor_info = data[1].split(' ')
+        sensor_info = data[1].split(" ")
         self.horizontal_aperture = float(sensor_info[0]) * 10
         self.vertical_aperture = float(sensor_info[1]) * 10
         self.focal_length = float(sensor_info[2]) * 10
@@ -95,19 +101,18 @@ class TDE4Lens(object):
             return data[start_i]
 
         # Distortion - Degree 2
-        self.distortion_degree_2 = float(get_data('Distortion - Degree 2'))
-        self.u_degree_2 = float(get_data('U - Degree 2'))
-        self.v_degree_2 = float(get_data('V - Degree 2'))
-        self.distortion_degree_4 = float(get_data('Quartic Distortion - Degree 4'))
-        self.u_degree_4 = float(get_data('U - Degree 4'))
-        self.v_degree_4 = float(get_data('V - Degree 4'))
-        self.phi = float(get_data('Phi - Cylindric Direction'))
-        self.beta = float(get_data('B - Cylindric Bending'))
+        self.distortion_degree_2 = float(get_data("Distortion - Degree 2"))
+        self.u_degree_2 = float(get_data("U - Degree 2"))
+        self.v_degree_2 = float(get_data("V - Degree 2"))
+        self.distortion_degree_4 = float(get_data("Quartic Distortion - Degree 4"))
+        self.u_degree_4 = float(get_data("U - Degree 4"))
+        self.v_degree_4 = float(get_data("V - Degree 4"))
+        self.phi = float(get_data("Phi - Cylindric Direction"))
+        self.beta = float(get_data("B - Cylindric Bending"))
 
 
 class TDE4Point(object):
-    """Represents a 3DEqualizer track point
-    """
+    """Represents a 3DEqualizer track point"""
 
     def __init__(self, name, data):
         self.data = {}
@@ -122,13 +127,12 @@ class TDE4Point(object):
         :return:
         """
         for i, pos in enumerate(data):
-            pos = map(float, pos.split(' '))
+            pos = map(float, pos.split(" "))
             self.data[int(pos[0])] = pos[1:]
 
 
 class TDE4PointManager(object):
-    """Manages 3DEqualizer points
-    """
+    """Manages 3DEqualizer points"""
 
     def __init__(self):
         self.points = []
@@ -139,7 +143,7 @@ class TDE4PointManager(object):
         :param file_path:
         :return:
         """
-        with open(file_path, 'r') as f:
+        with open(file_path, "r") as f:
             data = f.readlines()
         self.reads(data)
 
@@ -171,7 +175,7 @@ class TDE4PointManager(object):
                 length += 1
 
             # length = end - start + 1
-            point_data = data[data_start:data_start + length]
+            point_data = data[data_start : data_start + length]
 
             # generate point
             point = TDE4Point(point_name, point_data)

@@ -20,258 +20,240 @@ from anima import logger
 # This is used in publish scripts and in representation generation
 #
 RENDER_RELATED_NODE_TYPES = [
-
     # generic
-    'shadingEngine',
-    'displacementShader',
-
+    "shadingEngine",
+    "displacementShader",
     # materials
-    'anisotropic',
-    'blinn',
-    'lambert',
-    'layeredShader',
-    'oceanShader',
-    'phong',
-    'phongE',
-    'rampShader',
-    'shadingMap',
-    'surfaceShader',
-    'useBackground',
-
+    "anisotropic",
+    "blinn",
+    "lambert",
+    "layeredShader",
+    "oceanShader",
+    "phong",
+    "phongE",
+    "rampShader",
+    "shadingMap",
+    "surfaceShader",
+    "useBackground",
     # volumetricMaterials
-    'envFog',
-    'fluidShape',
-    'lightFog',
-    'particleCloud',
-    'volumeFog',
-    'volumeShader',
-
+    "envFog",
+    "fluidShape",
+    "lightFog",
+    "particleCloud",
+    "volumeFog",
+    "volumeShader",
     # 2DTextures
-    'bulge',            # +
-    'checker',          # +
-    'cloth',            # +
-    'file',             # +
-    'fluidTexture2D',   # +
-    'fractal',          # +
-    'grid',             # +
-    'mandelbrot',       # +
-    'mountain',         # +
-    'movie',            # +
-    'noise',            # +
-    'ocean',            # +
-    'psdFileTex',       # +
-    'ramp',             # +
-    'water',            # +
-    'layeredTexture',   # + this is not a 2d texture but will be listed here
-    'imagePlane',       # +
-
+    "bulge",  # +
+    "checker",  # +
+    "cloth",  # +
+    "file",  # +
+    "fluidTexture2D",  # +
+    "fractal",  # +
+    "grid",  # +
+    "mandelbrot",  # +
+    "mountain",  # +
+    "movie",  # +
+    "noise",  # +
+    "ocean",  # +
+    "psdFileTex",  # +
+    "ramp",  # +
+    "water",  # +
+    "layeredTexture",  # + this is not a 2d texture but will be listed here
+    "imagePlane",  # +
     # 3DTextures
-    'brownian',         # +
-    'cloud',            # +
-    'crater',           # +
-    'fluidTexture3D',   # +
-    'granite',          # +
-    'leather',          # +
-    'mandelbrot3D',     # +
-    'marble',           # +
-    'rock',             # +
-    'snow',             # +
-    'solidFractal',     # +
-    'stucco',           # +
-    'volumeNoise',      # +
-    'wood',             # +
-
+    "brownian",  # +
+    "cloud",  # +
+    "crater",  # +
+    "fluidTexture3D",  # +
+    "granite",  # +
+    "leather",  # +
+    "mandelbrot3D",  # +
+    "marble",  # +
+    "rock",  # +
+    "snow",  # +
+    "solidFractal",  # +
+    "stucco",  # +
+    "volumeNoise",  # +
+    "wood",  # +
     # environmentTextures
-    'envBall',
-    'envChrome',
-    'envCube',
-    'envSky',
-    'envSphere',
-
+    "envBall",
+    "envChrome",
+    "envCube",
+    "envSky",
+    "envSphere",
     # generalUtilities
-    'arrayMapper',
-    'bump2d',            # +
-    'bump3d',            # +
-    'composeMatrix',
-    'condition',
-    'decomposeMatrix',
-    'distanceBetween',
-    'eulerToQuat',
-    'heightField',
-    'inverseMatrix',
-    'lightInfo',
-    'multiplyDivide',
-    'place2dTexture',    # +
-    'place3dTexture',    # +
-    'plusMinusAverage',  # +
-    'projection',        # +
-    'quatAdd',
-    'quatConjugate',
-    'quatInvert',
-    'quatNegate',
-    'quatNormalize',
-    'quatProd',
-    'quatSub',
-    'quatToEuler',
-    'reverse',
-    'samplerInfo',       # +
-    'setRange',
-    'stencil',           # +
-    'transposeMatrix',
-    'uvChooser',         # +
-    'vectorProduct',
-
+    "arrayMapper",
+    "bump2d",  # +
+    "bump3d",  # +
+    "composeMatrix",
+    "condition",
+    "decomposeMatrix",
+    "distanceBetween",
+    "eulerToQuat",
+    "heightField",
+    "inverseMatrix",
+    "lightInfo",
+    "multiplyDivide",
+    "place2dTexture",  # +
+    "place3dTexture",  # +
+    "plusMinusAverage",  # +
+    "projection",  # +
+    "quatAdd",
+    "quatConjugate",
+    "quatInvert",
+    "quatNegate",
+    "quatNormalize",
+    "quatProd",
+    "quatSub",
+    "quatToEuler",
+    "reverse",
+    "samplerInfo",  # +
+    "setRange",
+    "stencil",  # +
+    "transposeMatrix",
+    "uvChooser",  # +
+    "vectorProduct",
     # scalarUtilities
-    'addDoubleLinear',
-    'addMatrix',
-    'angleBetween',
-    'blendTwoAttr',
-    'choice',
-    'chooser',
-    'curveInfo',
-    'fourByFourMatrix',
-    'frameCache',
-    'multDoubleLinear',
-    'multMatrix',
-    'surfaceInfo',       # +
-    'unitConversion',
-    'wtAddMatrix',
-
+    "addDoubleLinear",
+    "addMatrix",
+    "angleBetween",
+    "blendTwoAttr",
+    "choice",
+    "chooser",
+    "curveInfo",
+    "fourByFourMatrix",
+    "frameCache",
+    "multDoubleLinear",
+    "multMatrix",
+    "surfaceInfo",  # +
+    "unitConversion",
+    "wtAddMatrix",
     # switchUtilities
-    'doubleShadingSwitch',
-    'quadShadingSwitch',
-    'singleShadingSwitch',
-    'tripleShadingSwitch',
-
+    "doubleShadingSwitch",
+    "quadShadingSwitch",
+    "singleShadingSwitch",
+    "tripleShadingSwitch",
     # colorUtilities
-    'blendColors',      # +
-    'clamp',            # +
-    'colorProfile',
-    'contrast',         # +
-    'gammaCorrect',     # +
+    "blendColors",  # +
+    "clamp",  # +
+    "colorProfile",
+    "contrast",  # +
+    "gammaCorrect",  # +
     #'grade_tm',
-    'hsvToRgb',         # +
-    'luminance',        # +
-    'remapColor',       # +
-    'remapHsv',         # +
-    'remapValue',       # +
-    'rgbToHsv',         # +
-    'surfaceLuminance', # +
-
+    "hsvToRgb",  # +
+    "luminance",  # +
+    "remapColor",  # +
+    "remapHsv",  # +
+    "remapValue",  # +
+    "rgbToHsv",  # +
+    "surfaceLuminance",  # +
     # particleUtilities
-    'particleSamplerInfo',
-
+    "particleSamplerInfo",
     # glow
-    'opticalFX',
-
+    "opticalFX",
     # arnoldTexture
-    'aiImage',       # +
-    'aiNoise',       # +
-
+    "aiImage",  # +
+    "aiNoise",  # +
     # arnoldShaderSurface
-    'aiAmbientOcclusion',
-    'aiHair',
-    'aiRaySwitch',
-    'aiShadowCatcher',
-    'aiSkin',
-    'aiStandard',
-    'aiStandardSurface',
-    'aiUtility',
-    'aiWireframe',
-
+    "aiAmbientOcclusion",
+    "aiHair",
+    "aiRaySwitch",
+    "aiShadowCatcher",
+    "aiSkin",
+    "aiStandard",
+    "aiStandardSurface",
+    "aiUtility",
+    "aiWireframe",
     # arnoldShaderUtility
-    'aiBump2d',
-    'aiBump3d',
-    'aiMotionVector',
-    'aiUserDataBool',
-    'aiUserDataColor',
-    'aiUserDataFloat',
-    'aiUserDataInt',
-    'aiUserDataPnt2',
-    'aiUserDataString',
-    'aiUserDataVector',
-    'aiVolumeCollector',
-    'aiWriteColor',
-    'aiWriteFloat',
-
+    "aiBump2d",
+    "aiBump3d",
+    "aiMotionVector",
+    "aiUserDataBool",
+    "aiUserDataColor",
+    "aiUserDataFloat",
+    "aiUserDataInt",
+    "aiUserDataPnt2",
+    "aiUserDataString",
+    "aiUserDataVector",
+    "aiVolumeCollector",
+    "aiWriteColor",
+    "aiWriteFloat",
     # arnoldShaderVolume
-    'aiDensity',
-    'aiFog',
-    'aiVolumeScattering',
-
+    "aiDensity",
+    "aiFog",
+    "aiVolumeScattering",
     # arnoldTextureEnvironment
-    'aiPhysicalSky',
-    'aiSky',
-
+    "aiPhysicalSky",
+    "aiSky",
     # Redshift Materials
-    'RedshiftAmbientOcclusion',
-    'RedshiftArchitectural',
-    'RedshiftAttributeLookup',
-    'RedshiftBokeh',
-    'RedshiftBumpBlender',
-    'RedshiftBumpMap',
-    'RedshiftCameraMap',
-    'RedshiftCarPaint',
-    'RedshiftCurvature',
-    'RedshiftDisplacement',
-    'RedshiftDisplacementBlender',
-    'RedshiftDomeLight',
-    'RedshiftEnvironment',
-    'RedshiftFresnel',
-    'RedshiftLightGobo',
-    'RedshiftIESLight',
-    'RedshiftIncandescent',
-    'RedshiftLensDistortion',
-    'RedshiftMaterial',
-    'RedshiftMaterialBlender',
-    'RedshiftNormalMap',
-    'RedshiftHair',
-    'RedshiftHairPosition',
-    'RedshiftHairRandomColor',
-    'RedshiftMatteShadowCatcher',
-    'RedshiftPhotographicExposure',
-    'RedshiftPhysicalLight',
-    'RedshiftPhysicalSky',
-    'RedshiftPhysicalSun',
-    'RedshiftPortalLight',
-    'RedshiftRaySwitch',
-    'RedshiftRoundCorners',
-    'RedshiftShaderSwitch',
-    'RedshiftSkin',
-    'RedshiftSprite',
-    'RedshiftState',
-    'RedshiftSubSurfaceScatter',
-    'RedshiftUserDataColor',
-    'RedshiftUserDataInteger',
-    'RedshiftUserDataVector',
-    'RedshiftUserDataScalar',
-    'RedshiftVertexColor',
-    'RedshiftVolume',
-    'RedshiftVolumeScattering',
-    'RedshiftWireFrame',
+    "RedshiftAmbientOcclusion",
+    "RedshiftArchitectural",
+    "RedshiftAttributeLookup",
+    "RedshiftBokeh",
+    "RedshiftBumpBlender",
+    "RedshiftBumpMap",
+    "RedshiftCameraMap",
+    "RedshiftCarPaint",
+    "RedshiftCurvature",
+    "RedshiftDisplacement",
+    "RedshiftDisplacementBlender",
+    "RedshiftDomeLight",
+    "RedshiftEnvironment",
+    "RedshiftFresnel",
+    "RedshiftLightGobo",
+    "RedshiftIESLight",
+    "RedshiftIncandescent",
+    "RedshiftLensDistortion",
+    "RedshiftMaterial",
+    "RedshiftMaterialBlender",
+    "RedshiftNormalMap",
+    "RedshiftHair",
+    "RedshiftHairPosition",
+    "RedshiftHairRandomColor",
+    "RedshiftMatteShadowCatcher",
+    "RedshiftPhotographicExposure",
+    "RedshiftPhysicalLight",
+    "RedshiftPhysicalSky",
+    "RedshiftPhysicalSun",
+    "RedshiftPortalLight",
+    "RedshiftRaySwitch",
+    "RedshiftRoundCorners",
+    "RedshiftShaderSwitch",
+    "RedshiftSkin",
+    "RedshiftSprite",
+    "RedshiftState",
+    "RedshiftSubSurfaceScatter",
+    "RedshiftUserDataColor",
+    "RedshiftUserDataInteger",
+    "RedshiftUserDataVector",
+    "RedshiftUserDataScalar",
+    "RedshiftVertexColor",
+    "RedshiftVolume",
+    "RedshiftVolumeScattering",
+    "RedshiftWireFrame",
 ]
 
 READ_ONLY_NODE_NAMES = [
-    'lambert1',
-    'particleCloud1',
-    'shaderGlow1',
-    'initialParticleSE',
-    'initialShadingGroup'
+    "lambert1",
+    "particleCloud1",
+    "shaderGlow1",
+    "initialParticleSE",
+    "initialShadingGroup",
 ]
 
 
 class RepresentationGenerator(object):
-    """Generates different representations of the current scene
-    """
+    """Generates different representations of the current scene"""
 
     def __init__(self, version=None):
         local_session = LocalSession()
         self.logged_in_user = local_session.logged_in_user
 
         if not self.logged_in_user:
-            raise RuntimeError('Please login first!')
+            raise RuntimeError("Please login first!")
 
         from anima.dcc.mayaEnv import Maya
+
         self.maya_env = Maya()
 
         self.base_take_name = None
@@ -279,10 +261,10 @@ class RepresentationGenerator(object):
 
     @classmethod
     def get_local_root_nodes(cls):
-        """returns the root nodes that are not referenced
-        """
-        return [node for node in auxiliary.get_root_nodes()
-                if node.referenceFile() is None]
+        """returns the root nodes that are not referenced"""
+        return [
+            node for node in auxiliary.get_root_nodes() if node.referenceFile() is None
+        ]
 
     def get_latest_repr_version(self, take_name):
         """returns the latest published version or creates a new version
@@ -293,19 +275,20 @@ class RepresentationGenerator(object):
         from stalker import Version
 
         # filter to get the latest published version
-        v = Version.query\
-            .filter(Version.task == self.version.task)\
-            .filter(Version.take_name == take_name)\
-            .filter(Version.is_published == True)\
-            .order_by(Version.version_number.desc())\
+        v = (
+            Version.query.filter(Version.task == self.version.task)
+            .filter(Version.take_name == take_name)
+            .filter(Version.is_published == True)
+            .order_by(Version.version_number.desc())
             .first()
+        )
 
         if v is None:
             # create a new version
             v = Version(
                 created_by=self.logged_in_user,
                 task=self.version.task,
-                take_name=take_name
+                take_name=take_name,
             )
             v.is_published = True
         else:
@@ -323,11 +306,11 @@ class RepresentationGenerator(object):
         task_type = task.type
         if task_type:
             # check the task type name
-            if task_type.name.lower() in ['model']:
+            if task_type.name.lower() in ["model"]:
                 return True
         else:
             # check the task name
-            if task.name.lower() in ['model']:
+            if task.name.lower() in ["model"]:
                 return True
 
         # if we came here it must not be a model task
@@ -342,11 +325,11 @@ class RepresentationGenerator(object):
         task_type = task.type
         if task_type:
             # check the task type name
-            if task_type.name.lower() in ['look development']:
+            if task_type.name.lower() in ["look development"]:
                 return True
         else:
             # check the task name
-            if task.name.lower() in ['look_dev', 'lookdev', 'look dev']:
+            if task.name.lower() in ["look_dev", "lookdev", "look dev"]:
                 return True
 
         # if we came here it must not be a look dev task task
@@ -361,11 +344,11 @@ class RepresentationGenerator(object):
         task_type = task.type
         if task_type:
             # check the task type name
-            if task_type.name.lower() in ['scene assembly']:
+            if task_type.name.lower() in ["scene assembly"]:
                 return True
         else:
             # check the task name
-            if task.name.lower() in ['scene assembly']:
+            if task.name.lower() in ["scene assembly"]:
                 return True
 
         # if we came here it must not be a scene assembly task task
@@ -380,11 +363,11 @@ class RepresentationGenerator(object):
         task_type = task.type
         if task_type:
             # check the task type name
-            if task_type.name.lower() in ['vegetation']:
+            if task_type.name.lower() in ["vegetation"]:
                 return True
         else:
             # check the task name
-            if task.name.lower() in ['vegetation']:
+            if task.name.lower() in ["vegetation"]:
                 return True
 
         # if we came here it must not be a vegetation task task
@@ -399,15 +382,22 @@ class RepresentationGenerator(object):
         :return:
         """
 
-        if task.type and task.type.name.lower() == 'layout':
+        if task.type and task.type.name.lower() == "layout":
             parent = task.parent
-            if task.name.lower() == 'hires':
-                if parent and parent.parent and parent.parent.type \
-                   and parent.parent.type.name.lower() in ['exterior', 'interior']:
+            if task.name.lower() == "hires":
+                if (
+                    parent
+                    and parent.parent
+                    and parent.parent.type
+                    and parent.parent.type.name.lower() in ["exterior", "interior"]
+                ):
                     return True
-            elif task.name.lower() == 'layout':
-                if parent and parent.type \
-                   and parent.type.name.lower() in ['exterior', 'interior']:
+            elif task.name.lower() == "layout":
+                if (
+                    parent
+                    and parent.type
+                    and parent.type.name.lower() in ["exterior", "interior"]
+                ):
                     return True
 
         return False
@@ -419,14 +409,13 @@ class RepresentationGenerator(object):
         :return:
         """
         if not version:
-            raise RuntimeError(
-                'Please supply a valid Stalker Version object!'
-            )
+            raise RuntimeError("Please supply a valid Stalker Version object!")
 
         from stalker import Version
+
         if not isinstance(version, Version):
             raise TypeError(
-                'version should be a stalker.models.version.Version instance'
+                "version should be a stalker.models.version.Version instance"
             )
 
         r = Representation(version=version)
@@ -434,8 +423,8 @@ class RepresentationGenerator(object):
         self.base_take_name = r.get_base_take_name(version)
         if not r.is_base():
             raise RuntimeError(
-                'This is not a Base take for this representation series, '
-                'please open the base (%s) take!!!' % self.base_take_name
+                "This is not a Base take for this representation series, "
+                "please open the base (%s) take!!!" % self.base_take_name
             )
 
         return version
@@ -448,9 +437,9 @@ class RepresentationGenerator(object):
         """
         current_v = self.maya_env.get_current_version()
         if current_v is not version:
-            self.maya_env.open(version, force=True,
-                               skip_update_check=True,
-                               reference_depth=3)
+            self.maya_env.open(
+                version, force=True, skip_update_check=True, reference_depth=3
+            )
 
     @classmethod
     def make_unique(cls, filename, force=True):
@@ -465,7 +454,7 @@ class RepresentationGenerator(object):
         def generate_filename():
             random_part = uuid.uuid4().hex[-4:]
             data = os.path.splitext(filename)
-            return '%s_%s%s' % (data[0], random_part, data[1])
+            return "%s_%s%s" % (data[0], random_part, data[1])
 
         if not force:
             if os.path.exists(filename):
@@ -479,15 +468,13 @@ class RepresentationGenerator(object):
             return generate_filename()
 
     def generate_all(self):
-        """generates all representations at once
-        """
+        """generates all representations at once"""
         # self.generate_gpu()
         # self.generate_ass()
         self.generate_rs()
 
     def generate_bbox(self):
-        """generates the BBox representation of the current scene
-        """
+        """generates the BBox representation of the current scene"""
         # validate the version first
         self.version = self._validate_version(self.version)
 
@@ -502,14 +489,14 @@ class RepresentationGenerator(object):
         # check if all references have an BBOX repr first
         refs_with_no_bbox_repr = []
         for ref in pm.listReferences():
-            if ref.version and not ref.has_repr('BBOX'):
+            if ref.version and not ref.has_repr("BBOX"):
                 refs_with_no_bbox_repr.append(ref)
 
         if len(refs_with_no_bbox_repr):
             raise RuntimeError(
-                'Please generate the BBOX Representation of the references '
-                'first!!!\n%s' %
-                '\n'.join(map(lambda x: str(x.path), refs_with_no_bbox_repr))
+                "Please generate the BBOX Representation of the references "
+                "first!!!\n%s"
+                % "\n".join(map(lambda x: str(x.path), refs_with_no_bbox_repr))
             )
 
         # do different things for Vegetation tasks
@@ -519,7 +506,7 @@ class RepresentationGenerator(object):
                 ref.load()
 
             # find the _pfxPolygons node
-            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+            pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
 
             all_children = []
             for node in pfx_polygons_node.getChildren():
@@ -529,13 +516,13 @@ class RepresentationGenerator(object):
             auxiliary.replace_with_bbox(all_children)
 
             # clean up other nodes
-            pm.delete('kks___vegetation_pfxStrokes')
-            pm.delete('kks___vegetation_paintableGeos')
+            pm.delete("kks___vegetation_pfxStrokes")
+            pm.delete("kks___vegetation_paintableGeos")
         elif self.is_scene_assembly_task(task):
             # reload all references
             # replace all root references with their BBOX representation
             for ref in pm.listReferences():
-                ref.to_repr('BBOX')
+                ref.to_repr("BBOX")
         else:
             # find all non referenced root nodes
             root_nodes = self.get_local_root_nodes()
@@ -551,7 +538,7 @@ class RepresentationGenerator(object):
             # reload all references
             # replace all root references with their BBOX representation
             for ref in pm.listReferences():
-                ref.to_repr('BBOX')
+                ref.to_repr("BBOX")
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
         if self.is_exterior_or_interior_task(task):
@@ -566,8 +553,10 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@BBOX
         # use maya
-        take_name = '%s%s%s' % (
-            self.base_take_name, Representation.repr_separator, 'BBOX'
+        take_name = "%s%s%s" % (
+            self.base_take_name,
+            Representation.repr_separator,
+            "BBOX",
         )
         v = self.get_latest_repr_version(take_name)
 
@@ -577,36 +566,36 @@ class RepresentationGenerator(object):
         pm.newFile(force=True)
 
     def generate_proxy(self):
-        """generates the Proxy representation of the current scene
-        """
+        """generates the Proxy representation of the current scene"""
         pass
 
     def generate_gpu(self):
-        """generates the GPU representation of the current scene
-        """
+        """generates the GPU representation of the current scene"""
         # validate the version first
         self.version = self._validate_version(self.version)
 
         if not os.path.exists(self.version.absolute_full_path):
-            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
+            raise RuntimeError(
+                "Path doesn't exists: %s" % self.version.absolute_full_path
+            )
         self.open_version(self.version)
 
         # load necessary plugins
-        pm.loadPlugin('gpuCache')
-        pm.loadPlugin('AbcExport')
-        pm.loadPlugin('AbcImport')
+        pm.loadPlugin("gpuCache")
+        pm.loadPlugin("AbcExport")
+        pm.loadPlugin("AbcImport")
 
         # check if all references have an GPU repr first
         refs_with_no_gpu_repr = []
         for ref in pm.listReferences():
-            if ref.version and not ref.has_repr('GPU'):
+            if ref.version and not ref.has_repr("GPU"):
                 refs_with_no_gpu_repr.append(ref)
 
         if len(refs_with_no_gpu_repr):
             raise RuntimeError(
-                'Please generate the GPU Representation of the references '
-                'first!!!\n%s' %
-                '\n'.join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
+                "Please generate the GPU Representation of the references "
+                "first!!!\n%s"
+                % "\n".join(map(lambda x: str(x.path), refs_with_no_gpu_repr))
             )
 
         # unload all references
@@ -615,29 +604,30 @@ class RepresentationGenerator(object):
 
         # for local models generate an ABC file
         output_path = os.path.join(
-            self.version.absolute_path,
-            'Outputs/alembic/'
-        ).replace('\\', '/')
+            self.version.absolute_path, "Outputs/alembic/"
+        ).replace("\\", "/")
 
-        gpu_command = \
-            'gpuCache -startTime %(start_frame)s -endTime %(end_frame)s '\
-            '-optimize -optimizationThreshold 40000 '\
-            '-writeMaterials ' \
-            '-dataFormat ogawa '\
-            '-directory "%(path)s" '\
-            '-fileName "%(filename)s" ' \
-            '%(node)s;'
+        gpu_command = (
+            "gpuCache -startTime %(start_frame)s -endTime %(end_frame)s "
+            "-optimize -optimizationThreshold 40000 "
+            "-writeMaterials "
+            "-dataFormat ogawa "
+            '-directory "%(path)s" '
+            '-fileName "%(filename)s" '
+            "%(node)s;"
+        )
 
         # do not use the -dataFormat flag if it is earlier than Maya2014 Ext1
         if pm.versions.current() < 201450:
-            gpu_command = \
-                'gpuCache -startTime %(start_frame)s ' \
-                '-endTime %(end_frame)s ' \
-                '-optimize -optimizationThreshold 40000 ' \
-                '-writeMaterials ' \
-                '-directory "%(path)s" ' \
-                '-fileName "%(filename)s" ' \
-                '%(node)s;'
+            gpu_command = (
+                "gpuCache -startTime %(start_frame)s "
+                "-endTime %(end_frame)s "
+                "-optimize -optimizationThreshold 40000 "
+                "-writeMaterials "
+                '-directory "%(path)s" '
+                '-fileName "%(filename)s" '
+                "%(node)s;"
+            )
 
         start_frame = end_frame = int(pm.currentTime(q=1))
 
@@ -654,23 +644,19 @@ class RepresentationGenerator(object):
 
                 # find the _pfxPolygons node
                 try:
-                    pfx_polygons_node = \
-                        pm.PyNode('kks___vegetation_pfxPolygons')
+                    pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
                 except pm.MayaNodeError:
                     pfx_polygons_node = None
 
                 try:
-                    pfx_polygons_node = \
-                        pm.PyNode('kks___vegetation_pfxPolygons')
-                    pfx_polygons_node_children = \
-                        pfx_polygons_node.getChildren()
+                    pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
+                    pfx_polygons_node_children = pfx_polygons_node.getChildren()
                 except pm.MayaNodeError:
                     pfx_polygons_node_children = []
 
                 for node in pfx_polygons_node_children:
                     for child_node in node.getChildren():
-                        child_node_name = \
-                            child_node.name().split('___')[-1]
+                        child_node_name = child_node.name().split("___")[-1]
                         child_node_shape = child_node.getShape()
                         child_node_shape_name = None
 
@@ -678,49 +664,44 @@ class RepresentationGenerator(object):
                             child_node_shape_name = child_node_shape.name()
 
                         pm.select(child_node)
-                        temp_output_fullpath = \
-                            tempfile.mktemp().replace('\\', '/')
-                        temp_output_path, temp_output_filename = \
-                            os.path.split(temp_output_fullpath)
+                        temp_output_fullpath = tempfile.mktemp().replace("\\", "/")
+                        temp_output_path, temp_output_filename = os.path.split(
+                            temp_output_fullpath
+                        )
 
-                        output_filename = '%s_%s' % (
+                        output_filename = "%s_%s" % (
                             self.version.nice_name,
-                            child_node_name.split(':')[-1]
-                            .replace(':', '_')
-                            .replace('|', '_')
+                            child_node_name.split(":")[-1]
+                            .replace(":", "_")
+                            .replace("|", "_"),
                         )
 
                         # run the mel command
                         # check if file exists
                         pm.mel.eval(
-                            gpu_command % {
-                                'start_frame': start_frame,
-                                'end_frame': start_frame,  # end_frame,
-                                'node': child_node.fullPath(),
-                                'path': temp_output_path,
-                                'filename': temp_output_filename
+                            gpu_command
+                            % {
+                                "start_frame": start_frame,
+                                "end_frame": start_frame,  # end_frame,
+                                "node": child_node.fullPath(),
+                                "path": temp_output_path,
+                                "filename": temp_output_filename,
                             }
                         )
 
-                        cache_file_full_path = \
-                            os.path\
-                            .join(output_path, output_filename + '.abc')\
-                            .replace('\\', '/')
+                        cache_file_full_path = os.path.join(
+                            output_path, output_filename + ".abc"
+                        ).replace("\\", "/")
 
                         # create the intermediate directories
                         try:
-                            os.makedirs(
-                                os.path.dirname(cache_file_full_path)
-                            )
+                            os.makedirs(os.path.dirname(cache_file_full_path))
                         except OSError:
                             # directory exists
                             pass
 
                         # now move in to its place
-                        shutil.move(
-                            temp_output_fullpath + '.abc',
-                            cache_file_full_path
-                        )
+                        shutil.move(temp_output_fullpath + ".abc", cache_file_full_path)
 
                         # set rotate and scale pivots
                         rp = pm.xform(child_node, q=1, ws=1, rp=1)
@@ -732,7 +713,7 @@ class RepresentationGenerator(object):
 
                         # check if file exists and create nodes
                         if os.path.exists(cache_file_full_path):
-                            gpu_node = pm.createNode('gpuCache')
+                            gpu_node = pm.createNode("gpuCache")
                             gpu_node_tra = gpu_node.getParent()
 
                             pm.parent(gpu_node_tra, node)
@@ -745,30 +726,25 @@ class RepresentationGenerator(object):
                             pm.xform(gpu_node_tra, ws=1, sp=sp)
 
                             gpu_node.setAttr(
-                                'cacheFileName',
-                                cache_file_full_path,
-                                type="string"
+                                "cacheFileName", cache_file_full_path, type="string"
                             )
                         else:
-                            print(
-                                'File not found!: %s' %
-                                cache_file_full_path
-                            )
+                            print("File not found!: %s" % cache_file_full_path)
 
                 # clean up other nodes
                 try:
-                    pm.delete('kks___vegetation_pfxStrokes')
+                    pm.delete("kks___vegetation_pfxStrokes")
                 except pm.MayaNodeError:
                     pass
 
                 try:
-                    pm.delete('kks___vegetation_paintableGeos')
+                    pm.delete("kks___vegetation_paintableGeos")
                 except pm.MayaNodeError:
                     pass
 
                 # Check RedshiftProxyMesh nodes in the scene
                 rs_proxy_lut = {}
-                rs_proxy_meshes = pm.ls(type='RedshiftProxyMesh')
+                rs_proxy_meshes = pm.ls(type="RedshiftProxyMesh")
                 for rs_proxy_mesh in rs_proxy_meshes:
                     # this scene is not a regular Vegetation task
                     # it is the new Proxy file type that is converted from
@@ -779,17 +755,13 @@ class RepresentationGenerator(object):
 
                     # for the same rsproxy use the same gpuproxy
                     rs_proxy_mesh_file_path = rs_proxy_mesh.fileName.get()
-                    rs_proxy_mesh_file_name = \
-                        os.path.basename(rs_proxy_mesh_file_path)
+                    rs_proxy_mesh_file_name = os.path.basename(rs_proxy_mesh_file_path)
                     cache_file_full_path = None
                     if rs_proxy_mesh_file_path in rs_proxy_lut:
-                        cache_file_full_path = \
-                            rs_proxy_lut[rs_proxy_mesh_file_path]
+                        cache_file_full_path = rs_proxy_lut[rs_proxy_mesh_file_path]
 
-                    child_node = \
-                        rs_proxy_mesh.outputs(type='mesh')[0]
-                    child_shape = \
-                        child_node.getShape()
+                    child_node = rs_proxy_mesh.outputs(type="mesh")[0]
+                    child_shape = child_node.getShape()
                     root_node = child_node.getParent()
                     child_name = child_node.name()
                     child_shape_name = None
@@ -803,17 +775,17 @@ class RepresentationGenerator(object):
 
                     # do not generate the cache_file_path if it exists
                     if cache_file_full_path is None:
-                        temp_output_fullpath = \
-                            tempfile.mktemp().replace('\\', '/')
-                        temp_output_path, temp_output_filename = \
-                            os.path.split(temp_output_fullpath)
+                        temp_output_fullpath = tempfile.mktemp().replace("\\", "/")
+                        temp_output_path, temp_output_filename = os.path.split(
+                            temp_output_fullpath
+                        )
 
-                        output_filename = '%s.abc' % \
-                            os.path.splitext(
-                                os.path.basename(
-                                    rs_proxy_mesh_file_name
-                                )
+                        output_filename = (
+                            "%s.abc"
+                            % os.path.splitext(
+                                os.path.basename(rs_proxy_mesh_file_name)
                             )[0]
+                        )
 
                         # generate at origin
                         pm.parent(child_node, world=1)
@@ -827,12 +799,13 @@ class RepresentationGenerator(object):
                         # run the mel command
                         # check if file exists
                         pm.mel.eval(
-                            gpu_command % {
-                                'start_frame': start_frame,
-                                'end_frame': end_frame,
-                                'node': child_node.fullPath(),
-                                'path': temp_output_path,
-                                'filename': temp_output_filename
+                            gpu_command
+                            % {
+                                "start_frame": start_frame,
+                                "end_frame": end_frame,
+                                "node": child_node.fullPath(),
+                                "path": temp_output_path,
+                                "filename": temp_output_filename,
                             }
                         )
 
@@ -842,37 +815,29 @@ class RepresentationGenerator(object):
                         child_node.r.set(rot)
                         child_node.s.set(sca)
 
-                        cache_file_full_path = \
-                            os.path.join(
-                                output_path,
-                                output_filename
-                            ).replace('\\', '/')
+                        cache_file_full_path = os.path.join(
+                            output_path, output_filename
+                        ).replace("\\", "/")
 
                         # store the cache_file_full_path
-                        rs_proxy_lut[rs_proxy_mesh_file_path] = \
-                            cache_file_full_path
+                        rs_proxy_lut[rs_proxy_mesh_file_path] = cache_file_full_path
 
                         # create the intermediate directories
                         try:
-                            os.makedirs(
-                                os.path.dirname(cache_file_full_path)
-                            )
+                            os.makedirs(os.path.dirname(cache_file_full_path))
                         except OSError:
                             # directory exists
                             pass
 
                         # now move in to its place
-                        shutil.move(
-                            temp_output_fullpath + '.abc',
-                            cache_file_full_path
-                        )
+                        shutil.move(temp_output_fullpath + ".abc", cache_file_full_path)
 
                     # delete the child and add a GPU node instead
                     pm.delete(child_node)
 
                     # check if file exists
                     if os.path.exists(cache_file_full_path):
-                        gpu_node = pm.createNode('gpuCache')
+                        gpu_node = pm.createNode("gpuCache")
                         gpu_node_tra = gpu_node.getParent()
 
                         pm.parent(gpu_node_tra, root_node)
@@ -887,9 +852,7 @@ class RepresentationGenerator(object):
                         gpu_node_tra.s.set(sca)
 
                         gpu_node.setAttr(
-                            'cacheFileName',
-                            cache_file_full_path,
-                            type="string"
+                            "cacheFileName", cache_file_full_path, type="string"
                         )
             else:
                 root_nodes = self.get_local_root_nodes()
@@ -911,65 +874,55 @@ class RepresentationGenerator(object):
                             if child_shape:
                                 child_shape_name = child_shape.name()
 
-                            child_full_path = \
-                                child_node.fullPath()[1:].replace('|', '_')
+                            child_full_path = child_node.fullPath()[1:].replace(
+                                "|", "_"
+                            )
 
-                            temp_output_fullpath = \
-                                tempfile.mktemp().replace('\\', '/')
-                            temp_output_path, temp_output_filename = \
-                                os.path.split(temp_output_fullpath)
+                            temp_output_fullpath = tempfile.mktemp().replace("\\", "/")
+                            temp_output_path, temp_output_filename = os.path.split(
+                                temp_output_fullpath
+                            )
 
-                            output_filename =\
-                                '%s_%s' % (
-                                    self.version.nice_name,
-                                    child_full_path
-                                )
+                            output_filename = "%s_%s" % (
+                                self.version.nice_name,
+                                child_full_path,
+                            )
 
                             # before doing anything smooth any polygon objects
                             # under this node if aiSubdivType is not 0
-                            for node in child_node.listRelatives(ad=1, type='mesh'):
-                                if node.getAttr('aiSubdivType') != 0:
+                            for node in child_node.listRelatives(ad=1, type="mesh"):
+                                if node.getAttr("aiSubdivType") != 0:
                                     node.displaySmoothMesh.set(2)
                                     # set it equal to aiSubdivIterations
-                                    node.smoothLevel.set(
-                                        node.aiSubdivIterations.get()
-                                    )
+                                    node.smoothLevel.set(node.aiSubdivIterations.get())
 
                             # run the mel command
                             # check if file exists
                             pm.mel.eval(
-                                gpu_command % {
-                                    'start_frame': start_frame,
-                                    'end_frame': end_frame,
-                                    'node': child_node.fullPath(),
-                                    'path': temp_output_path,
-                                    'filename': temp_output_filename
+                                gpu_command
+                                % {
+                                    "start_frame": start_frame,
+                                    "end_frame": end_frame,
+                                    "node": child_node.fullPath(),
+                                    "path": temp_output_path,
+                                    "filename": temp_output_filename,
                                 }
                             )
 
-                            cache_file_full_path = \
-                                os.path\
-                                .join(
-                                    output_path,
-                                    '%s.abc' % (
-                                        output_filename
-                                    )
-                                )\
-                                .replace('\\', '/')
+                            cache_file_full_path = os.path.join(
+                                output_path, "%s.abc" % (output_filename)
+                            ).replace("\\", "/")
 
                             # create the intermediate directories
                             try:
-                                os.makedirs(
-                                    os.path.dirname(cache_file_full_path)
-                                )
+                                os.makedirs(os.path.dirname(cache_file_full_path))
                             except OSError:
                                 # directory exists
                                 pass
 
                             # now move in to its place
                             shutil.move(
-                                temp_output_fullpath + '.abc',
-                                cache_file_full_path
+                                temp_output_fullpath + ".abc", cache_file_full_path
                             )
 
                             # set rotate and scale pivots
@@ -982,7 +935,7 @@ class RepresentationGenerator(object):
 
                             # check if file exists
                             if os.path.exists(cache_file_full_path):
-                                gpu_node = pm.createNode('gpuCache')
+                                gpu_node = pm.createNode("gpuCache")
                                 gpu_node_tra = gpu_node.getParent()
 
                                 pm.parent(gpu_node_tra, root_node)
@@ -996,17 +949,15 @@ class RepresentationGenerator(object):
                                 # child_node.setRotatePivotTranslation(rpt)
 
                                 gpu_node.setAttr(
-                                    'cacheFileName',
-                                    cache_file_full_path,
-                                    type="string"
+                                    "cacheFileName", cache_file_full_path, type="string"
                                 )
 
         # load all references again
         # convert all references to GPU
-        logger.debug('converting all references to GPU')
+        logger.debug("converting all references to GPU")
         for ref in pm.listReferences():
             # check if this is a Model reference
-            ref.to_repr('GPU')
+            ref.to_repr("GPU")
             ref.load()
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
@@ -1014,7 +965,7 @@ class RepresentationGenerator(object):
 
         is_exterior_or_interior_task = self.is_exterior_or_interior_task(task)
         if is_exterior_or_interior_task:
-            logger.debug('importing all references')
+            logger.debug("importing all references")
             # and import all of the references
             all_refs = pm.listReferences()
             while len(all_refs) != 0:
@@ -1025,80 +976,72 @@ class RepresentationGenerator(object):
                 all_refs = pm.listReferences()
 
             # assign lambert1 to all GPU nodes
-            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+            pm.sets("initialShadingGroup", e=1, fe=auxiliary.get_root_nodes())
 
             # clean up
             self.clean_up()
 
         # 6. save the scene as {{original_take}}@GPU
         # use maya
-        take_name = '%s%s%s' % (
-            self.base_take_name, Representation.repr_separator, 'GPU'
+        take_name = "%s%s%s" % (
+            self.base_take_name,
+            Representation.repr_separator,
+            "GPU",
         )
         v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
 
         # export the root nodes under the same file
         if is_exterior_or_interior_task:
-            logger.debug('exporting root nodes')
+            logger.debug("exporting root nodes")
             pm.select(auxiliary.get_root_nodes())
-            pm.exportSelected(
-                v.absolute_full_path,
-                type='mayaAscii',
-                force=True
-            )
+            pm.exportSelected(v.absolute_full_path, type="mayaAscii", force=True)
 
-        logger.debug('renewing scene')
+        logger.debug("renewing scene")
         # clear scene
         pm.newFile(force=True)
 
     def make_tx(self, texture_path):
-        """converts the given texture to TX
-        """
+        """converts the given texture to TX"""
         # check if it is tiled
         tile_path = texture_path
-        orig_path_as_tx = ''.join([os.path.splitext(texture_path)[0], '.tx'])
+        orig_path_as_tx = "".join([os.path.splitext(texture_path)[0], ".tx"])
 
-        if '<' in tile_path:
+        if "<" in tile_path:
             # replace any <U> and <V> with an *
-            tile_path = tile_path.replace('<U>', '*')
-            tile_path = tile_path.replace('<V>', '*')
-            tile_path = tile_path.replace('<UDIM>', '*')
+            tile_path = tile_path.replace("<U>", "*")
+            tile_path = tile_path.replace("<V>", "*")
+            tile_path = tile_path.replace("<UDIM>", "*")
 
         import glob
+
         files_to_process = glob.glob(tile_path)
 
         for tile_path in files_to_process:
-            tx_path = ''.join([os.path.splitext(tile_path)[0], '.tx'])
+            tx_path = "".join([os.path.splitext(tile_path)[0], ".tx"])
             # generate if not exists
             if not os.path.exists(tx_path):
                 # TODO: Consider Color Management
                 cmd = 'maketx -o "%s" -u --oiio %s' % (tx_path, tile_path)
 
-                if os.name == 'nt':
+                if os.name == "nt":
                     proc = subprocess.Popen(
-                        cmd,
-                        creationflags=subprocess.SW_HIDE,
-                        shell=True
+                        cmd, creationflags=subprocess.SW_HIDE, shell=True
                     )
                 else:
-                    proc = subprocess.Popen(
-                        cmd,
-                        shell=True
-                    )
-    
+                    proc = subprocess.Popen(cmd, shell=True)
+
                 proc.wait()
 
         return orig_path_as_tx
 
     @classmethod
     def clean_up(self):
-        """cleans up the scene
-        """
-        num_of_items_deleted = pm.mel.eval('MLdeleteUnused')
+        """cleans up the scene"""
+        num_of_items_deleted = pm.mel.eval("MLdeleteUnused")
 
-        logger.debug('deleting unknown references')
-        delete_nodes_types = ['reference', 'unknown']
+        logger.debug("deleting unknown references")
+        delete_nodes_types = ["reference", "unknown"]
         for node in pm.ls(type=delete_nodes_types):
             node.unlock()
 
@@ -1120,7 +1063,7 @@ class RepresentationGenerator(object):
         # add Stand-in nodes and parent them under the referenced models
 
         # load necessary plugins
-        pm.loadPlugin('mtoa')
+        pm.loadPlugin("mtoa")
 
         # disable "show plugin shapes"
         active_panel = auxiliary.Playblaster.get_active_panel()
@@ -1131,7 +1074,9 @@ class RepresentationGenerator(object):
         self.version = self._validate_version(self.version)
 
         if not os.path.exists(self.version.absolute_full_path):
-            raise RuntimeError("Path doesn't exists: %s" % self.version.absolute_full_path)
+            raise RuntimeError(
+                "Path doesn't exists: %s" % self.version.absolute_full_path
+            )
         self.open_version(self.version)
 
         task = self.version.task
@@ -1140,26 +1085,28 @@ class RepresentationGenerator(object):
         #                  '-lightLinks 0 -compressed -boundingBox ' \
         #                  '-shadowLinks 0 -cam perspShape;'
 
-        export_command = 'arnoldExportAss -f "%(path)s" -s -mask 60' \
-                         '-lightLinks 1 -compressed -boundingBox ' \
-                         '-shadowLinks 1 -cam perspShape;'
+        export_command = (
+            'arnoldExportAss -f "%(path)s" -s -mask 60'
+            "-lightLinks 1 -compressed -boundingBox "
+            "-shadowLinks 1 -cam perspShape;"
+        )
 
         # calculate output path
-        output_path = \
-            os.path.join(self.version.absolute_path, 'Outputs/ass/')\
-            .replace('\\', '/')
+        output_path = os.path.join(self.version.absolute_path, "Outputs/ass/").replace(
+            "\\", "/"
+        )
 
         # check if all references have an ASS repr first
         refs_with_no_ass_repr = []
         for ref in pm.listReferences():
-            if ref.version and not ref.has_repr('ASS'):
+            if ref.version and not ref.has_repr("ASS"):
                 refs_with_no_ass_repr.append(ref)
 
         if len(refs_with_no_ass_repr):
             raise RuntimeError(
-                'Please generate the ASS Representation of the references '
-                'first!!!\n%s' %
-                '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                "Please generate the ASS Representation of the references "
+                "first!!!\n%s"
+                % "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
             )
 
         if self.is_look_dev_task(task):
@@ -1187,16 +1134,15 @@ class RepresentationGenerator(object):
             maya_version = int(pm.about(v=1))
             if maya_version == 2014:
                 types_and_attrs = {
-                    'aiImage': 'filename',
-                    'file': 'fileTextureName',
-                    'imagePlane': 'imageName'
+                    "aiImage": "filename",
+                    "file": "fileTextureName",
+                    "imagePlane": "imageName",
                 }
             else:
                 types_and_attrs = {
-                    'aiImage': 'filename',
-                    'file': ('computedFileTextureNamePattern',
-                             'fileTextureName'),
-                    'imagePlane': 'imageName'
+                    "aiImage": "filename",
+                    "file": ("computedFileTextureNamePattern", "fileTextureName"),
+                    "imagePlane": "imageName",
                 }
 
             for node_type in types_and_attrs.keys():
@@ -1208,11 +1154,7 @@ class RepresentationGenerator(object):
 
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(
-                        r'(\$REPO[0-9/]+)',
-                        '',
-                        orig_path
-                    )
+                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
                     tx_path = self.make_tx(path)
                     inputs = node.attr(set_attr_name).inputs(p=1)
 
@@ -1226,13 +1168,14 @@ class RepresentationGenerator(object):
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
             all_render_related_nodes = [
-                node for node in pm.ls()
-                if node.type() in RENDER_RELATED_NODE_TYPES
+                node for node in pm.ls() if node.type() in RENDER_RELATED_NODE_TYPES
             ]
             for node in all_render_related_nodes:
-                if node.referenceFile() is None and \
-                   node.name() not in READ_ONLY_NODE_NAMES:
-                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+                if (
+                    node.referenceFile() is None
+                    and node.name() not in READ_ONLY_NODE_NAMES
+                ):
+                    node.rename("%s_%s" % (node.name(), uuid.uuid4().hex))
 
             nodes_to_ass_files = {}
 
@@ -1249,35 +1192,29 @@ class RepresentationGenerator(object):
                     # randomize child node name
                     # TODO: This is not working as intended, node names are like |NS:node1|NS:node2
                     #       resulting a child_node_name as "node2"
-                    child_node_name = child_node\
-                        .fullPath()\
-                        .replace('|', '_')\
-                        .split(':')[-1]
+                    child_node_name = (
+                        child_node.fullPath().replace("|", "_").split(":")[-1]
+                    )
 
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
-                    child_node.rename(
-                        '%s_%s' % (child_node.name(), uuid.uuid4().hex)
+                    child_node.rename("%s_%s" % (child_node.name(), uuid.uuid4().hex))
+
+                    output_filename = "%s_%s.ass" % (
+                        self.version.nice_name,
+                        child_node_name,
                     )
 
-                    output_filename =\
-                        '%s_%s.ass' % (
-                            self.version.nice_name,
-                            child_node_name
-                        )
-
-                    output_full_path = \
-                        os.path.join(output_path, output_filename)
+                    output_full_path = os.path.join(output_path, output_filename)
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {
-                            'path': output_full_path.replace('\\', '/')
-                        }
+                        export_command % {"path": output_full_path.replace("\\", "/")}
                     )
-                    nodes_to_ass_files[child_node_full_path] = \
-                        '%s.gz' % output_full_path
+                    nodes_to_ass_files[child_node_full_path] = (
+                        "%s.gz" % output_full_path
+                    )
                     # print('%s -> %s' % (
                     #     child_node_full_path,
                     #     output_full_path)
@@ -1290,18 +1227,17 @@ class RepresentationGenerator(object):
             # convert all references to ASS
             # we are doing it a little bit early here, but we need to
             for ref in pm.listReferences():
-                ref.to_repr('ASS')
+                ref.to_repr("ASS")
 
-            all_stand_ins = pm.ls(type='aiStandIn')
+            all_stand_ins = pm.ls(type="aiStandIn")
             for ass_node in all_stand_ins:
                 ass_tra = ass_node.getParent()
                 full_path = ass_tra.fullPath()
                 if full_path in nodes_to_ass_files:
-                    ass_file_path = \
-                        Repository.to_os_independent_path(
-                            nodes_to_ass_files[full_path]
-                        )
-                    ass_node.setAttr('dso', ass_file_path)
+                    ass_file_path = Repository.to_os_independent_path(
+                        nodes_to_ass_files[full_path]
+                    )
+                    ass_node.setAttr("dso", ass_file_path)
 
         elif self.is_vegetation_task(task):
             # in vegetation files, we export the ASS files directly from the
@@ -1319,16 +1255,15 @@ class RepresentationGenerator(object):
             maya_version = int(pm.about(v=1))
             if maya_version == 2014:
                 types_and_attrs = {
-                    'aiImage': 'filename',
-                    'file': 'fileTextureName',
-                    'imagePlane': 'imageName'
+                    "aiImage": "filename",
+                    "file": "fileTextureName",
+                    "imagePlane": "imageName",
                 }
             else:
                 types_and_attrs = {
-                    'aiImage': 'filename',
-                    'file': ('computedFileTextureNamePattern',
-                             'fileTextureName'),
-                    'imagePlane': 'imageName'
+                    "aiImage": "filename",
+                    "file": ("computedFileTextureNamePattern", "fileTextureName"),
+                    "imagePlane": "imageName",
                 }
 
             for node_type in types_and_attrs.keys():
@@ -1340,11 +1275,7 @@ class RepresentationGenerator(object):
 
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(
-                        r'(\$REPO[0-9/]+)',
-                        '',
-                        orig_path
-                    )
+                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
                     tx_path = self.make_tx(path)
                     inputs = node.attr(set_attr_name).inputs(p=1)
 
@@ -1364,42 +1295,39 @@ class RepresentationGenerator(object):
             # randomize all render node names
             # This is needed to prevent clashing of materials in a bigger scene
             all_render_related_nodes = [
-                node for node in pm.ls()
-                if node.type() in RENDER_RELATED_NODE_TYPES
+                node for node in pm.ls() if node.type() in RENDER_RELATED_NODE_TYPES
             ]
             for node in all_render_related_nodes:
-                if node.referenceFile() is None and \
-                   node.name() not in READ_ONLY_NODE_NAMES:
-                    node.rename('%s_%s' % (node.name(), uuid.uuid4().hex))
+                if (
+                    node.referenceFile() is None
+                    and node.name() not in READ_ONLY_NODE_NAMES
+                ):
+                    node.rename("%s_%s" % (node.name(), uuid.uuid4().hex))
 
             # find the _pfxPolygons node
-            pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+            pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
 
             for node in pfx_polygons_node.getChildren():
                 for child_node in node.getChildren():
-                    #print('processing %s' % child_node.name())
-                    child_node_name = child_node.name().split('___')[-1]
+                    # print('processing %s' % child_node.name())
+                    child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)
-                    output_filename =\
-                        '%s_%s.ass' % (
-                            self.version.nice_name,
-                            child_node_name.replace(':', '_').replace('|', '_')
-                        )
+                    output_filename = "%s_%s.ass" % (
+                        self.version.nice_name,
+                        child_node_name.replace(":", "_").replace("|", "_"),
+                    )
 
-                    output_full_path = \
-                        os.path.join(output_path, output_filename)
+                    output_full_path = os.path.join(output_path, output_filename)
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {
-                            'path': output_full_path.replace('\\', '/')
-                        }
+                        export_command % {"path": output_full_path.replace("\\", "/")}
                     )
 
                     # generate an aiStandIn node and set the path
                     ass_node = auxiliary.create_arnold_stand_in(
-                        path='%s.gz' % output_full_path
+                        path="%s.gz" % output_full_path
                     )
                     ass_tra = ass_node.getParent()
 
@@ -1420,11 +1348,11 @@ class RepresentationGenerator(object):
                     pm.delete(child_node)
 
                     # give it the same name with the original
-                    ass_tra.rename('%s' % child_node_name)
+                    ass_tra.rename("%s" % child_node_name)
 
             # clean up other nodes
-            pm.delete('kks___vegetation_pfxStrokes')
-            pm.delete('kks___vegetation_paintableGeos')
+            pm.delete("kks___vegetation_pfxStrokes")
+            pm.delete("kks___vegetation_paintableGeos")
 
         elif self.is_model_task(task):
             # convert all children of the root node
@@ -1441,7 +1369,7 @@ class RepresentationGenerator(object):
 
                     pm.delete(child_node)
 
-                    ass_node = auxiliary.create_arnold_stand_in(path='')
+                    ass_node = auxiliary.create_arnold_stand_in(path="")
                     ass_tra = ass_node.getParent()
                     pm.parent(ass_tra, root_node)
                     ass_tra.rename(child_node_name)
@@ -1452,19 +1380,19 @@ class RepresentationGenerator(object):
 
                     # because there will be possible material assignments
                     # in look dev disable overrideShaders
-                    ass_node.setAttr('overrideShaders', False)
+                    ass_node.setAttr("overrideShaders", False)
 
                     # we definitely do not use light linking in our studio,
                     # which seems to create more problems then it solves.
-                    ass_node.setAttr('overrideLightLinking', False)
+                    ass_node.setAttr("overrideLightLinking", False)
 
         # convert all references to ASS
         for ref in pm.listReferences():
-            ref.to_repr('ASS')
+            ref.to_repr("ASS")
             ref.load()
 
         # fix an arnold bug
-        for node_name in ['initialShadingGroup', 'initialParticleSE']:
+        for node_name in ["initialShadingGroup", "initialParticleSE"]:
             node = pm.PyNode(node_name)
             node.setAttr("ai_surface_shader", (0, 0, 0), type="float3")
             node.setAttr("ai_volume_shader", (0, 0, 0), type="float3")
@@ -1482,18 +1410,19 @@ class RepresentationGenerator(object):
                 all_refs = pm.listReferences()
 
             # assign lambert1 to all GPU nodes
-            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+            pm.sets("initialShadingGroup", e=1, fe=auxiliary.get_root_nodes())
 
             # now remove them from the group
-            pm.sets('initialShadingGroup', e=1, rm=pm.ls())
+            pm.sets("initialShadingGroup", e=1, rm=pm.ls())
 
             # and to make sure that no override is enabled
-            [node.setAttr('overrideLightLinking', False)
-             for node in pm.ls(type='aiStandIn')]
+            [
+                node.setAttr("overrideLightLinking", False)
+                for node in pm.ls(type="aiStandIn")
+            ]
 
             # make sure motion blur is disabled
-            [node.setAttr('motionBlur', False)
-             for node in pm.ls(type='aiStandIn')]
+            [node.setAttr("motionBlur", False) for node in pm.ls(type="aiStandIn")]
 
             # clean up
             self.clean_up()
@@ -1501,26 +1430,24 @@ class RepresentationGenerator(object):
         # check if all aiStandIn nodes are included in
         # ArnoldStandInDefaultLightSet set
         try:
-            arnold_stand_in_default_light_set = \
-                pm.PyNode('ArnoldStandInDefaultLightSet')
+            arnold_stand_in_default_light_set = pm.PyNode(
+                "ArnoldStandInDefaultLightSet"
+            )
         except pm.MayaNodeError:
             # just create it
-            arnold_stand_in_default_light_set = \
-                pm.createNode(
-                    'objectSet',
-                    name='ArnoldStandInDefaultLightSet'
-                )
+            arnold_stand_in_default_light_set = pm.createNode(
+                "objectSet", name="ArnoldStandInDefaultLightSet"
+            )
 
         pm.select(None)
-        pm.sets(
-            arnold_stand_in_default_light_set,
-            fe=pm.ls(type='aiStandIn')
-        )
+        pm.sets(arnold_stand_in_default_light_set, fe=pm.ls(type="aiStandIn"))
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        take_name = '%s%s%s' % (
-            self.base_take_name, Representation.repr_separator, 'ASS'
+        take_name = "%s%s%s" % (
+            self.base_take_name,
+            Representation.repr_separator,
+            "ASS",
         )
         v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
@@ -1528,11 +1455,7 @@ class RepresentationGenerator(object):
         # export the root nodes under the same file
         if is_exterior_or_interior_task:
             pm.select(auxiliary.get_root_nodes())
-            pm.exportSelected(
-                v.absolute_full_path,
-                type='mayaAscii',
-                force=True
-            )
+            pm.exportSelected(v.absolute_full_path, type="mayaAscii", force=True)
 
         # new scene
         pm.newFile(force=True)
@@ -1554,7 +1477,7 @@ class RepresentationGenerator(object):
 
         # load necessary plugins
         try:
-            pm.loadPlugin('redshift4maya')
+            pm.loadPlugin("redshift4maya")
         except RuntimeError:
             # Redshift For maya is not installed
             return
@@ -1562,7 +1485,7 @@ class RepresentationGenerator(object):
         # somehow the above check is not raising a normal Python error
         # trying different measures
         try:
-            pm.pluginInfo('redshift4maya', query=True, vendor=True)
+            pm.pluginInfo("redshift4maya", query=True, vendor=True)
         except RuntimeError:
             # now we are sure that the plugin is not loaded
             return
@@ -1586,21 +1509,21 @@ class RepresentationGenerator(object):
         export_command = 'rsProxy -fp "%(path)s" -c -z -sl;'
 
         # calculate output path
-        output_path = \
-            os.path.join(self.version.absolute_path, 'Outputs/rs/')\
-            .replace('\\', '/')
+        output_path = os.path.join(self.version.absolute_path, "Outputs/rs/").replace(
+            "\\", "/"
+        )
 
         # check if all references have an ASS repr first
         refs_with_no_ass_repr = []
         for ref in pm.listReferences():
-            if ref.version and not ref.has_repr('RS'):
+            if ref.version and not ref.has_repr("RS"):
                 refs_with_no_ass_repr.append(ref)
 
         if len(refs_with_no_ass_repr):
             raise RuntimeError(
-                'Please generate the RS Representation of the references '
-                'first!!!\n%s' %
-                '\n'.join(map(lambda x: str(x.path), refs_with_no_ass_repr))
+                "Please generate the RS Representation of the references "
+                "first!!!\n%s"
+                % "\n".join(map(lambda x: str(x.path), refs_with_no_ass_repr))
             )
 
         # from anima.dcc.mayaEnv.redshift import RedShiftTextureProcessor
@@ -1627,20 +1550,16 @@ class RepresentationGenerator(object):
             #
             # This is needed to properly render textures with any OS
             types_and_attrs = {
-                'aiImage': 'filename',
-                'file': 'computedFileTextureNamePattern',
-                'imagePlane': 'imageName'
+                "aiImage": "filename",
+                "file": "computedFileTextureNamePattern",
+                "imagePlane": "imageName",
             }
 
             for node_type in types_and_attrs.keys():
                 attr_name = types_and_attrs[node_type]
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(
-                        r'(\$REPO[0-9/]+)',
-                        '',
-                        orig_path
-                    )
+                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
                     # RedShiftTextureProcessor(path).convert()
 
             # randomize all render node names
@@ -1663,29 +1582,23 @@ class RepresentationGenerator(object):
                         continue
 
                     # randomize child node name
-                    child_node_name = child_node\
-                        .fullPath()\
-                        .replace('|', '_')\
-                        .split(':')[-1]
+                    child_node_name = (
+                        child_node.fullPath().replace("|", "_").split(":")[-1]
+                    )
 
                     child_node_full_path = child_node.fullPath()
 
                     pm.select(child_node)
-                    child_node.rename(
-                        '%s_%s' % (child_node.name(), uuid.uuid4().hex)
+                    child_node.rename("%s_%s" % (child_node.name(), uuid.uuid4().hex))
+
+                    output_filename = "%s_%s.rs" % (
+                        self.version.nice_name,
+                        child_node_name,
                     )
 
-                    output_filename =\
-                        '%s_%s.rs' % (
-                            self.version.nice_name,
-                            child_node_name
-                        )
+                    output_full_path = os.path.join(output_path, output_filename)
 
-                    output_full_path = \
-                        os.path.join(output_path, output_filename)
-
-                    temp_full_path = \
-                        tempfile.mktemp(suffix='.rs')
+                    temp_full_path = tempfile.mktemp(suffix=".rs")
 
                     # create path
                     try:
@@ -1697,9 +1610,7 @@ class RepresentationGenerator(object):
                     # run the mel command with temp file path
                     try:
                         pm.mel.eval(
-                            export_command % {
-                                'path': temp_full_path.replace('\\', '/')
-                            }
+                            export_command % {"path": temp_full_path.replace("\\", "/")}
                         )
                         # then move it to the original place
                         try:
@@ -1709,14 +1620,13 @@ class RepresentationGenerator(object):
                             # if source and target files are under different
                             # file systems. So simply remove the target
                             # and move the source again
-                            if os.name == 'posix':
+                            if os.name == "posix":
                                 # remove the target
                                 os.remove(output_full_path)
                                 # then move the file again
                                 shutil.move(temp_full_path, output_full_path)
 
-                        nodes_to_rs_files[child_node_full_path] = \
-                            output_full_path
+                        nodes_to_rs_files[child_node_full_path] = output_full_path
                     except pm.MelError:
                         # not exportable group
                         pass
@@ -1728,9 +1638,9 @@ class RepresentationGenerator(object):
             # convert all references to RS
             # we are doing it a little bit early here, but we need to
             for ref in pm.listReferences():
-                ref.to_repr('RS')
+                ref.to_repr("RS")
 
-            all_proxies = pm.ls(type='RedshiftProxyMesh')
+            all_proxies = pm.ls(type="RedshiftProxyMesh")
             for rs_proxy_node in all_proxies:
                 # somehow the output of the RedshiftProxyNode is the Transform
                 # node
@@ -1741,7 +1651,7 @@ class RepresentationGenerator(object):
                     # Repository.to_os_independent_path(
                     #     nodes_to_rs_files[full_path]
                     # )
-                    rs_proxy_node.setAttr('fileName', proxy_file_path)
+                    rs_proxy_node.setAttr("fileName", proxy_file_path)
 
         elif self.is_vegetation_task(task):
             # in vegetation files, we export the RS files directly from the
@@ -1757,20 +1667,16 @@ class RepresentationGenerator(object):
             #
             # This is needed to properly render textures with any OS
             types_and_attrs = {
-                'aiImage': 'filename',
-                'file': 'computedFileTextureNamePattern',
-                'imagePlane': 'imageName'
+                "aiImage": "filename",
+                "file": "computedFileTextureNamePattern",
+                "imagePlane": "imageName",
             }
 
             for node_type in types_and_attrs.keys():
                 attr_name = types_and_attrs[node_type]
                 for node in pm.ls(type=node_type):
                     orig_path = node.getAttr(attr_name).replace("\\", "/")
-                    path = re.sub(
-                        r'(\$REPO[0-9/]+)',
-                        '',
-                        orig_path
-                    )
+                    path = re.sub(r"(\$REPO[0-9/]+)", "", orig_path)
                     # RedShiftTextureProcessor(path).convert()
 
             # import shaders that are referenced to this scene
@@ -1792,7 +1698,7 @@ class RepresentationGenerator(object):
 
             # find the _pfxPolygons node
             try:
-                pfx_polygons_node = pm.PyNode('kks___vegetation_pfxPolygons')
+                pfx_polygons_node = pm.PyNode("kks___vegetation_pfxPolygons")
                 pfx_polygons_node_children = pfx_polygons_node.getChildren()
             except pm.MayaNodeError:
                 pfx_polygons_node_children = []
@@ -1800,17 +1706,15 @@ class RepresentationGenerator(object):
             for node in pfx_polygons_node_children:
                 for child_node in node.getChildren():
                     # print('processing %s' % child_node.name())
-                    child_node_name = child_node.name().split('___')[-1]
+                    child_node_name = child_node.name().split("___")[-1]
 
                     pm.select(child_node)
-                    output_filename =\
-                        '%s_%s.rs' % (
-                            self.version.nice_name,
-                            child_node_name.replace(':', '_').replace('|', '_')
-                        )
+                    output_filename = "%s_%s.rs" % (
+                        self.version.nice_name,
+                        child_node_name.replace(":", "_").replace("|", "_"),
+                    )
 
-                    output_full_path = \
-                        os.path.join(output_path, output_filename)
+                    output_full_path = os.path.join(output_path, output_filename)
 
                     # create path
                     try:
@@ -1821,14 +1725,14 @@ class RepresentationGenerator(object):
 
                     # run the mel command
                     pm.mel.eval(
-                        export_command % {
-                            'path': output_full_path.replace('\\', '/')
-                        }
+                        export_command % {"path": output_full_path.replace("\\", "/")}
                     )
 
                     # generate an aiStandIn node and set the path
-                    rs_proxy_mesh_node, rs_proxy_mesh_shape = \
-                        auxiliary.create_rs_proxy_node(path=output_full_path)
+                    (
+                        rs_proxy_mesh_node,
+                        rs_proxy_mesh_shape,
+                    ) = auxiliary.create_rs_proxy_node(path=output_full_path)
                     rs_proxy_tra = rs_proxy_mesh_shape.getParent()
 
                     # parent the rs_proxy_mesh_shape under the current node
@@ -1848,7 +1752,7 @@ class RepresentationGenerator(object):
                     pm.delete(child_node)
 
                     # give it the same name with the original
-                    rs_proxy_tra.rename('%s' % child_node_name)
+                    rs_proxy_tra.rename("%s" % child_node_name)
 
                     # set the drawing overrides
                     rs_proxy_tra.overrideEnabled.set(1)
@@ -1856,12 +1760,12 @@ class RepresentationGenerator(object):
 
             # clean up other nodes
             try:
-                pm.delete('kks___vegetation_pfxStrokes')
+                pm.delete("kks___vegetation_pfxStrokes")
             except pm.MayaNodeError:
                 pass
 
             try:
-                pm.delete('kks___vegetation_paintableGeos')
+                pm.delete("kks___vegetation_paintableGeos")
             except pm.MayaNodeError:
                 pass
 
@@ -1880,8 +1784,9 @@ class RepresentationGenerator(object):
 
                     pm.delete(child_node)
 
-                    rs_proxy_node, rs_proxy_mesh = \
-                        auxiliary.create_rs_proxy_node(path='')
+                    rs_proxy_node, rs_proxy_mesh = auxiliary.create_rs_proxy_node(
+                        path=""
+                    )
                     rs_proxy_tra = rs_proxy_mesh.getParent()
                     pm.parent(rs_proxy_tra, root_node)
                     rs_proxy_tra.rename(child_node_name)
@@ -1896,7 +1801,7 @@ class RepresentationGenerator(object):
 
         # convert all references to RS
         for ref in pm.listReferences():
-            ref.to_repr('RS')
+            ref.to_repr("RS")
             ref.load()
 
         # if this is an Exterior/Interior -> Layout -> Hires task flatten it
@@ -1912,7 +1817,7 @@ class RepresentationGenerator(object):
                 all_refs = pm.listReferences()
 
             # assign lambert1 to all RS nodes
-            pm.sets('initialShadingGroup', e=1, fe=auxiliary.get_root_nodes())
+            pm.sets("initialShadingGroup", e=1, fe=auxiliary.get_root_nodes())
 
             # # now remove them from the group
             # pm.sets('initialShadingGroup', e=1, rm=pm.ls())
@@ -1922,8 +1827,10 @@ class RepresentationGenerator(object):
 
         # save the scene as {{original_take}}@ASS
         # use maya
-        take_name = '%s%s%s' % (
-            self.base_take_name, Representation.repr_separator, 'RS'
+        take_name = "%s%s%s" % (
+            self.base_take_name,
+            Representation.repr_separator,
+            "RS",
         )
         v = self.get_latest_repr_version(take_name)
         self.maya_env.save_as(v)
@@ -1931,11 +1838,7 @@ class RepresentationGenerator(object):
         # export the root nodes under the same file
         if is_exterior_or_interior_task:
             pm.select(auxiliary.get_root_nodes())
-            pm.exportSelected(
-                v.absolute_full_path,
-                type='mayaAscii',
-                force=True
-            )
+            pm.exportSelected(v.absolute_full_path, type="mayaAscii", force=True)
 
         # new scene
         pm.newFile(force=True)

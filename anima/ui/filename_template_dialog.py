@@ -20,30 +20,28 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
-    """The FilenameTemplate Dialog
-    """
+    """The FilenameTemplate Dialog"""
 
     def __init__(self, parent=None, filename_template=None):
         super(MainDialog, self).__init__(parent=parent)
 
         self.filename_template = filename_template
-        self.mode = 'Create'
+        self.mode = "Create"
         if self.filename_template:
-            self.mode = 'Update'
+            self.mode = "Update"
 
         self._setup_ui()
         if self.filename_template:
             self.fill_ui_with_filename_template(self.filename_template)
 
     def _setup_ui(self):
-        """setup the ui elements
-        """
+        """setup the ui elements"""
         self.resize(750, 180)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText('%s Filename Template' % self.mode)
+        self.dialog_label.setText("%s Filename Template" % self.mode)
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
 
@@ -56,9 +54,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Form Layout
         self.form_layout = QtWidgets.QFormLayout()
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
         self.vertical_layout.addLayout(self.form_layout)
 
@@ -66,8 +62,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Target Entity Type Field
 
         # label
-        self.target_entity_type_label = \
-            QtWidgets.QLabel('Target Entity Type', self)
+        self.target_entity_type_label = QtWidgets.QLabel("Target Entity Type", self)
         self.form_layout.setWidget(
             0, QtWidgets.QFormLayout.LabelRole, self.target_entity_type_label
         )
@@ -75,40 +70,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # field
         self.target_entity_type_combo_box = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
-            0, QtWidgets.QFormLayout.FieldRole,
-            self.target_entity_type_combo_box
+            0, QtWidgets.QFormLayout.FieldRole, self.target_entity_type_combo_box
         )
 
         # ------------------------------------------------
         # Name Field
-        self.name_label = QtWidgets.QLabel('Name', self)
-        self.form_layout.setWidget(
-            1, QtWidgets.QFormLayout.LabelRole, self.name_label
-        )
+        self.name_label = QtWidgets.QLabel("Name", self)
+        self.form_layout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.name_label)
         self.name_fields_vertical_layout = QtWidgets.QVBoxLayout()
         self.name_validator_label = QtWidgets.QLabel(self)
-        self.name_validator_label.setStyleSheet('color: rgb(255, 0, 0);')
+        self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         from anima.ui.widgets import ValidatedLineEdit
+
         self.name_line_edit = ValidatedLineEdit(
-            self,
-            message_field=self.name_validator_label
+            self, message_field=self.name_validator_label
         )
 
         self.name_fields_vertical_layout.addWidget(self.name_line_edit)
         self.name_fields_vertical_layout.addWidget(self.name_validator_label)
         self.form_layout.setLayout(
-            1,
-            QtWidgets.QFormLayout.FieldRole,
-            self.name_fields_vertical_layout
+            1, QtWidgets.QFormLayout.FieldRole, self.name_fields_vertical_layout
         )
 
         # ------------------------------------------------
         # Path Code Field
-        self.path_label = QtWidgets.QLabel('Path', self)
-        self.form_layout.setWidget(
-            2, QtWidgets.QFormLayout.LabelRole, self.path_label
-        )
+        self.path_label = QtWidgets.QLabel("Path", self)
+        self.form_layout.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.path_label)
 
         self.path_line_edit = QtWidgets.QLineEdit(self)
         # set the default value to something useful
@@ -118,7 +106,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ------------------------------------------------
         # Filename Code Field
-        self.filename_label = QtWidgets.QLabel('Filename', self)
+        self.filename_label = QtWidgets.QLabel("Filename", self)
         self.form_layout.setWidget(
             3, QtWidgets.QFormLayout.LabelRole, self.filename_label
         )
@@ -133,8 +121,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.button_box = QtWidgets.QDialogButtonBox(self)
         self.button_box.setOrientation(QtCore.Qt.Horizontal)
         self.button_box.setStandardButtons(
-            QtWidgets.QDialogButtonBox.Cancel |
-            QtWidgets.QDialogButtonBox.Ok
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
         )
         self.vertical_layout.addWidget(self.button_box)
         self.vertical_layout.setStretch(2, 1)
@@ -142,13 +129,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ------------------------------------------------
         # Default values
         self.target_entity_type_combo_box.addItems(
-            ['Task', 'Asset', 'Shot', 'Sequence']
+            ["Task", "Asset", "Shot", "Sequence"]
         )
         self.name_line_edit.set_invalid()  # Empty field is not valid
         self.path_line_edit.setText(
-            '$REPO{{project.repository.code}}/{{project.code}}/'
-            '{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}'
-            '/{%- endfor -%}'
+            "$REPO{{project.repository.code}}/{{project.code}}/"
+            "{%- for parent_task in parent_tasks -%}{{parent_task.nice_name}}"
+            "/{%- endfor -%}"
         )
         self.filename_line_edit.setText(
             '{{version.nice_name}}_v{{"%03d"|format(version.version_number)}}'
@@ -156,7 +143,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # ------------------------------------------------
         # Disable Fields
-        if self.mode == 'Update':
+        if self.mode == "Update":
             self.target_entity_type_combo_box.setEnabled(False)
 
         # ------------------------------------------------
@@ -164,8 +151,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Name
         QtCore.QObject.connect(
             self.name_line_edit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.name_line_edit_changed
+            QtCore.SIGNAL("textChanged(QString)"),
+            self.name_line_edit_changed,
         )
 
         # Button box
@@ -177,13 +164,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
     def name_line_edit_changed(self, text):
-        """runs when the name_line_edit text has changed
-        """
-        if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
-            self.name_line_edit.set_invalid('Invalid character')
+        """runs when the name_line_edit text has changed"""
+        if re.findall(r"[^a-zA-Z0-9\-_ ]+", text):
+            self.name_line_edit.set_invalid("Invalid character")
         else:
-            if text == '':
-                self.name_line_edit.set_invalid('Enter a name')
+            if text == "":
+                self.name_line_edit.set_invalid("Enter a name")
             else:
                 self.name_line_edit.set_valid()
 
@@ -195,6 +181,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         if False:
             from stalker import FilenameTemplate
+
             assert isinstance(filename_template, FilenameTemplate)
 
         self.name_line_edit.setText(filename_template.name)
@@ -202,62 +189,53 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.filename_line_edit.setText(filename_template.filename)
 
     def accept(self):
-        """the overridden accept method
-        """
+        """the overridden accept method"""
         target_entity_type = self.target_entity_type_combo_box.currentText()
 
         if not self.name_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please fix <b>name</b> field!'
+                self, "Error", "Please fix <b>name</b> field!"
             )
             return
         name = self.name_line_edit.text()
 
         path = self.path_line_edit.text()
-        if path == '':
+        if path == "":
             QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please fix <b>path</b> field!'
+                self, "Error", "Please fix <b>path</b> field!"
             )
             return
 
         filename = self.filename_line_edit.text()
-        if path == '':
+        if path == "":
             QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please fix <b>filename</b> field!'
+                self, "Error", "Please fix <b>filename</b> field!"
             )
             return
 
         logged_in_user = self.get_logged_in_user()
         from stalker.db.session import DBSession
-        if self.mode == 'Create':
+
+        if self.mode == "Create":
             try:
                 from stalker import FilenameTemplate
+
                 # create a new FilenameTemplate
                 ft = FilenameTemplate(
                     name=name,
                     path=path,
                     filename=filename,
                     target_entity_type=target_entity_type,
-                    created_by=logged_in_user
+                    created_by=logged_in_user,
                 )
                 self.filename_template = ft
                 DBSession.add(ft)
                 DBSession.commit()
             except Exception as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
-        elif self.mode == 'Update':
+        elif self.mode == "Update":
             try:
                 self.filename_template.name = name
                 self.filename_template.path = path
@@ -267,11 +245,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 DBSession.commit()
             except Exception as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
 
         super(MainDialog, self).accept()

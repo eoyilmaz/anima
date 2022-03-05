@@ -36,7 +36,6 @@ class Nodes(object):
     def controllers(self):
         self.deleter(self.controllers)
 
-
     @property
     def joints(self):
         return self._joints
@@ -48,7 +47,6 @@ class Nodes(object):
     @joints.deleter
     def joints(self):
         self.deleter(self.joints)
-
 
     @property
     def utilities(self):
@@ -62,9 +60,8 @@ class Nodes(object):
     def utilities(self):
         self.deleter(self.utilities)
 
-
     def appendObject(self, nodeType, object_in):
-        #appends the given objects to the node Network
+        # appends the given objects to the node Network
         if isinstance(object_in, (list)):
             for obj in object_in:
                 if isinstance(obj, (list)):
@@ -74,7 +71,6 @@ class Nodes(object):
                     self.append_to(nodeType, obj)
         else:
             self.append_to(nodeType, object_in)
-
 
     def checkMembers(self, nodeType, object_in):
         if nodeType == object_in:

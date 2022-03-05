@@ -30,8 +30,7 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class ReviewDialog(QtWidgets.QDialog, AnimaDialogBase):
-    """review dialog
-    """
+    """review dialog"""
 
     def __init__(self, task=None, reviewer=None, review_type=None, parent=None):
         super(ReviewDialog, self).__init__(parent=parent)
@@ -43,14 +42,14 @@ class ReviewDialog(QtWidgets.QDialog, AnimaDialogBase):
         self._setup_ui()
 
     def _setup_ui(self):
-        """set up the ui elements
-        """
+        """set up the ui elements"""
         self.setWindowTitle("Review Dialog")
         self.resize(550, 350)
         self.main_layout = QtWidgets.QVBoxLayout(self)
 
         # Review
         from anima.ui.widgets.review import ReviewWidget
+
         self.review_widget = ReviewWidget(
             parent=self,
             task=self.task,
@@ -63,28 +62,23 @@ class ReviewDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.button_box = QtWidgets.QDialogButtonBox(self)
         self.button_box.setOrientation(QtCore.Qt.Horizontal)
         self.button_box.setStandardButtons(
-            QtWidgets.QDialogButtonBox.Cancel |
-            QtWidgets.QDialogButtonBox.Ok
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
         )
         self.main_layout.addWidget(self.button_box)
 
         # setup signals
         from functools import partial
+
         self.button_box.accepted.connect(partial(self.accept))
         self.button_box.rejected.connect(partial(self.reject))
 
     def accept(self):
-        """runs when the dialog is accepted
-        """
+        """runs when the dialog is accepted"""
         # finalize the review
         review = self.review_widget.finalize_review()
 
         if review:
-            QtWidgets.QMessageBox.information(
-                self,
-                "Success",
-                "Review is created!"
-            )
+            QtWidgets.QMessageBox.information(self, "Success", "Review is created!")
 
         # do the default behaviour
         super(ReviewDialog, self).accept()

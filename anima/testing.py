@@ -18,12 +18,12 @@ def count_calls(f):
 
         function_name = f.__name__
         if function_name not in self.test_data:
-            self.test_data[function_name] = {'call_count': 0, 'data': []}
+            self.test_data[function_name] = {"call_count": 0, "data": []}
 
         d = self.test_data[function_name]
 
-        d['call_count'] += 1
-        d['data'] = {'args': args[1:], 'kwargs': kwargs}
+        d["call_count"] += 1
+        d["data"] = {"args": args[1:], "kwargs": kwargs}
 
         return f(*args, **kwargs)
 
@@ -41,8 +41,13 @@ class CallInfo(object):
     def __init__(self):
         self.call_info = {}
         self.patched_func_names = [
-            'setRange', 'setValue', 'setLabelText', 'show', 'close',
-            'labelText', 'setLabelText'
+            "setRange",
+            "setValue",
+            "setLabelText",
+            "show",
+            "close",
+            "labelText",
+            "setLabelText",
         ]
 
         self.register_functions()
@@ -53,10 +58,11 @@ class CallInfo(object):
         :param name: the name of the desired method
         :return: function object
         """
+
         def call_recorder(*args, **kwargs):
-            """records the call to a function along with its arguments
-            """
+            """records the call to a function along with its arguments"""
             self.call_info[name] = [args, kwargs]
+
         return call_recorder
 
     def register_functions(self):

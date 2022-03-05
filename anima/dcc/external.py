@@ -7,17 +7,17 @@ from anima.dcc.base import DCCBase
 
 
 external_dccs = {
-    'MudBox': {
-        'name': 'MudBox',
-        'icon': 'mudbox.png',
-        'executable': {
-            'linux': 'mudbox',
-            'windows': 'mudbox.exe',
+    "MudBox": {
+        "name": "MudBox",
+        "icon": "mudbox.png",
+        "executable": {
+            "linux": "mudbox",
+            "windows": "mudbox.exe",
         },
-        'extensions': ['.mud'],
-        'structure': [
-            'Outputs',
-        ]
+        "extensions": [".mud"],
+        "structure": [
+            "Outputs",
+        ],
     },
     #'ZBrush Project' : {
     #    'name': 'ZBrush Project',
@@ -26,17 +26,17 @@ external_dccs = {
     #    'structure': [
     #        'Outputs',
     #    ]
-    #},
-    'ZBrush': {
-        'name': 'ZBrush',
-        'icon': 'zbrush.png',
-        'executable': {
-            'windows': 'zbrush.exe',
+    # },
+    "ZBrush": {
+        "name": "ZBrush",
+        "icon": "zbrush.png",
+        "executable": {
+            "windows": "zbrush.exe",
         },
-        'extensions': ['.ztl'],
-        'structure': [
-            'Outputs',
-        ]
+        "extensions": [".ztl"],
+        "structure": [
+            "Outputs",
+        ],
     },
 }
 
@@ -68,11 +68,11 @@ class ExternalDCC(DCCBase):
 
     def _validate_extensions(self, extensions):
         if not extensions:
-            raise TypeError('%s.extension can not be None' % self.__class__.__name__)
+            raise TypeError("%s.extension can not be None" % self.__class__.__name__)
 
         for i, extension in enumerate(extensions):
-            if not extension.startswith('.'):
-                extension = '.%s' % extension
+            if not extension.startswith("."):
+                extension = ".%s" % extension
                 extensions[i] = extension
 
         return extensions
@@ -92,12 +92,11 @@ class ExternalDCC(DCCBase):
         :return: str
         """
         from anima import __string_types__
+
         if not isinstance(name, __string_types__):
             raise TypeError(
-                '%s.name should be an instance of str, not %s' % (
-                    self.__class__.__name__,
-                    name.__class__.__name__
-                )
+                "%s.name should be an instance of str, not %s"
+                % (self.__class__.__name__, name.__class__.__name__)
             )
         return name
 
@@ -129,17 +128,19 @@ class ExternalDCC(DCCBase):
             structure = []
 
         if not isinstance(structure, list):
-            raise TypeError('%s.structure should be a list of strings, '
-                            'showing the folder structure, not %s' % 
-                            (self.__class__.__name__,
-                             structure.__class__.__name__))
+            raise TypeError(
+                "%s.structure should be a list of strings, "
+                "showing the folder structure, not %s"
+                % (self.__class__.__name__, structure.__class__.__name__)
+            )
 
         for item in structure:
             if not isinstance(item, str):
-                raise TypeError('All items in %s.structure should be an '
-                                'instance of str, an not %s' %
-                                (self.__class__.__name__,
-                                 item.__class__.__name__))
+                raise TypeError(
+                    "All items in %s.structure should be an "
+                    "instance of str, an not %s"
+                    % (self.__class__.__name__, item.__class__.__name__)
+                )
 
         return structure
 
@@ -161,21 +162,22 @@ class ExternalDCC(DCCBase):
         self._structure = self._validate_structure(structure)
 
     def conform(self, version):
-        """Conforms the version to this DCC by setting its extension.
-        """
-        logger.debug('conforming version')
+        """Conforms the version to this DCC by setting its extension."""
+        logger.debug("conforming version")
         from stalker import Version
+
         if not isinstance(version, Version):
-            raise TypeError('version argument should be a '
-                            'stalker.version.Version instance, not %s' %
-                            version.__class__.__name__)
+            raise TypeError(
+                "version argument should be a "
+                "stalker.version.Version instance, not %s" % version.__class__.__name__
+            )
         version.update_paths()
         version.extension = self.extensions[0]
         version.created_with = self.name
-        logger.debug('version.absolute_full_path : %s' %
-                     version.absolute_full_path)
-        logger.debug('finished conforming version extension to: %s' %
-                     self.extensions[0])
+        logger.debug("version.absolute_full_path : %s" % version.absolute_full_path)
+        logger.debug(
+            "finished conforming version extension to: %s" % self.extensions[0]
+        )
 
     def initialize_structure(self, version):
         """Initializes the DCC folder structure
@@ -184,13 +186,12 @@ class ExternalDCC(DCCBase):
         """
         # check version type
         from stalker import Version
+
         if not isinstance(version, Version):
             raise TypeError(
                 '"version" argument in %s.initialize_structureshould be a '
-                'stalker.version.Version instance, not %s' % (
-                    self.__class__.__name__,
-                    version.__class__.__name__
-                )
+                "stalker.version.Version instance, not %s"
+                % (self.__class__.__name__, version.__class__.__name__)
             )
 
         # create the folder in version.absolute_path
@@ -199,7 +200,7 @@ class ExternalDCC(DCCBase):
         version.extension = extension
         for folder in self.structure:
             folder_path = os.path.join(version.absolute_path, folder)
-            logger.debug('creating: %s' % folder_path)
+            logger.debug("creating: %s" % folder_path)
             try:
                 os.makedirs(folder_path)
             except OSError:
@@ -226,8 +227,8 @@ class ExternalDCC(DCCBase):
         :return:
         """
         # append to .atrc file
-        atrc_path = os.path.expanduser('~/.atrc/')
-        last_version_filename = 'last_version'
+        atrc_path = os.path.expanduser("~/.atrc/")
+        last_version_filename = "last_version"
         return os.path.join(atrc_path, last_version_filename)
 
     def append_to_recent_files(self, version):
@@ -237,31 +238,33 @@ class ExternalDCC(DCCBase):
         :return:
         """
         from stalker import Version
+
         if not isinstance(version, Version):
-            raise TypeError('"version" argument in %s.append_to_recent_files '
-                            'method should be an instance of '
-                            'stalker.models.version.Version, not %s' %
-                            (self.__class__.__name__,
-                             version.__class__.__name__))
+            raise TypeError(
+                '"version" argument in %s.append_to_recent_files '
+                "method should be an instance of "
+                "stalker.models.version.Version, not %s"
+                % (self.__class__.__name__, version.__class__.__name__)
+            )
         last_version_file_full_path = self.get_settings_file_path()
         try:
             os.makedirs(os.path.dirname(last_version_file_full_path))
         except OSError:
             pass
 
-        with open(last_version_file_full_path, 'w') as f:
+        with open(last_version_file_full_path, "w") as f:
             f.write(str(version.id))
 
     def get_last_version(self):
-        """returns the current version
-        """
+        """returns the current version"""
         last_version_file_full_path = self.get_settings_file_path()
         try:
-            with open(last_version_file_full_path, 'r') as f:
+            with open(last_version_file_full_path, "r") as f:
                 lines = f.readlines()
                 vid = lines[0]
             from stalker import Version
-            return Version.query.filter(Version.id==vid).first()
+
+            return Version.query.filter(Version.id == vid).first()
         except (IOError, IndexError):
             return None
 
@@ -287,9 +290,9 @@ class ExternalDCCFactory(object):
         for env_name in external_dccs.keys():
             env_data = external_dccs[env_name]
             env_names.append(
-                name_format
-                .replace('%n', env_data['name'])
-                .replace('%e', env_data['extensions'][0])
+                name_format.replace("%n", env_data["name"]).replace(
+                    "%e", env_data["extensions"][0]
+                )
             )
         return env_names
 
@@ -303,32 +306,34 @@ class ExternalDCCFactory(object):
         :return ExternalDCC: ExternalDCC instance
         """
         if not isinstance(name, str):
-            raise TypeError('"name" argument in %s.get_env() should be an '
-                            'instance of str, not %s' %
-                            (cls.__name__, name.__class__.__name__))
+            raise TypeError(
+                '"name" argument in %s.get_env() should be an '
+                "instance of str, not %s" % (cls.__name__, name.__class__.__name__)
+            )
 
         # filter the name
         import re
 
         # replace anything that doesn't start with '%' with [\s\(\)\-]+
-        pattern = re.sub(r'[^%\w]+', '[\s\(\)\-]+', name_format)
+        pattern = re.sub(r"[^%\w]+", "[\s\(\)\-]+", name_format)
 
-        pattern = pattern\
-            .replace('%n', '(?P<name>[\w\s]+)')\
-            .replace('%e', '(?P<extension>\.\w+)')
-        logger.debug('pattern : %s' % pattern)
+        pattern = pattern.replace("%n", "(?P<name>[\w\s]+)").replace(
+            "%e", "(?P<extension>\.\w+)"
+        )
+        logger.debug("pattern : %s" % pattern)
 
         match = re.search(pattern, name)
         dcc_name = None
         if match:
-            dcc_name = match.group('name').strip()
+            dcc_name = match.group("name").strip()
 
         dcc_names = external_dccs.keys()
         if dcc_name not in dcc_names:
             raise ValueError(
-                '%s is not in '
-                'anima.dcc.externalEnv.environment_names list, '
-                'please supply a value from %s' % (name, dcc_names))
+                "%s is not in "
+                "anima.dcc.externalEnv.environment_names list, "
+                "please supply a value from %s" % (name, dcc_names)
+            )
 
         dcc = external_dccs[dcc_name]
         return ExternalDCC(**dcc)

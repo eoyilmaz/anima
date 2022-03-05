@@ -14,6 +14,7 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName(_fromUtf8("Dialog"))
@@ -27,7 +28,9 @@ class Ui_Dialog(object):
         self.horizontalLayout.addWidget(self.listView)
         self.verticalLayout_2 = QtGui.QVBoxLayout()
         self.verticalLayout_2.setObjectName(_fromUtf8("verticalLayout_2"))
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtGui.QSpacerItem(
+            20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding
+        )
         self.verticalLayout_2.addItem(spacerItem)
         self.pushButton_2 = QtGui.QPushButton(Dialog)
         self.pushButton_2.setObjectName(_fromUtf8("pushButton_2"))
@@ -35,7 +38,9 @@ class Ui_Dialog(object):
         self.pushButton = QtGui.QPushButton(Dialog)
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
         self.verticalLayout_2.addWidget(self.pushButton)
-        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem1 = QtGui.QSpacerItem(
+            20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding
+        )
         self.verticalLayout_2.addItem(spacerItem1)
         self.horizontalLayout.addLayout(self.verticalLayout_2)
         self.listView_2 = QtGui.QListView(Dialog)
@@ -44,17 +49,34 @@ class Ui_Dialog(object):
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(
+            QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok
+        )
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject
+        )
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtGui.QApplication.translate("Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_2.setText(QtGui.QApplication.translate("Dialog", ">>", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton.setText(QtGui.QApplication.translate("Dialog", "<<", None, QtGui.QApplication.UnicodeUTF8))
-
+        Dialog.setWindowTitle(
+            QtGui.QApplication.translate(
+                "Dialog", "Dialog", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushButton_2.setText(
+            QtGui.QApplication.translate(
+                "Dialog", ">>", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushButton.setText(
+            QtGui.QApplication.translate(
+                "Dialog", "<<", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )

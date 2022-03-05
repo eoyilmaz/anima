@@ -11,23 +11,18 @@ def get_max_version():
 
     :return:
     """
-    versions_LUT = {
-        17000: '2015',
-        18000: '2016',
-        19000: '2017'
-    }
+    versions_LUT = {17000: "2015", 18000: "2016", 19000: "2017"}
 
-    c = MaxPlus.Core.EvalMAXScript('maxVersion()')
+    c = MaxPlus.Core.EvalMAXScript("maxVersion()")
     l = c.GetIntList()
     return versions_LUT[l.GetItem(0)]
 
 
 class Max(DCCBase):
-    """The 3dsmax DCC class
-    """
+    """The 3dsmax DCC class"""
 
     name = "3dsMax%s" % get_max_version()
-    extensions = ['.max']
+    extensions = [".max"]
 
     def get_current_version(self):
         """Returns the current Stalker version from the open scene
@@ -39,13 +34,19 @@ class Max(DCCBase):
         # pm.env.sceneName() always uses "/"
         full_path = MaxPlus.FileManager.GetFileNameAndPath()
         # try to get it from the current open scene
-        if full_path != '':
+        if full_path != "":
             version = self.get_version_from_full_path(full_path)
 
         return version
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
         """Opens the given version file
 
         :param version: The Stalker version instance
@@ -73,6 +74,7 @@ class Max(DCCBase):
             return self.check_referenced_versions()
         else:
             from anima.dcc import empty_reference_resolution
+
             return empty_reference_resolution()
 
     def save_as(self, version, run_pre_publishers=True):
@@ -102,6 +104,7 @@ class Max(DCCBase):
         is_shot_related_task = False
         shot = None
         from stalker import Shot
+
         for task in version.task.parents:
             if isinstance(task, Shot):
                 is_shot_related_task = True
@@ -126,18 +129,22 @@ class Max(DCCBase):
             self.set_fps(shot.fps)
 
             # set render resolution
-            self.set_resolution(shot.image_format.width,
-                                shot.image_format.height,
-                                shot.image_format.pixel_aspect)
+            self.set_resolution(
+                shot.image_format.width,
+                shot.image_format.height,
+                shot.image_format.pixel_aspect,
+            )
             # set the render range if it is the first version
             if version.version_number == 1:
                 self.set_frame_range(shot.cut_in, shot.cut_out)
         else:
             # set render resolution
             if version.version_number == 1:
-                self.set_resolution(project.image_format.width,
-                                    project.image_format.height,
-                                    project.image_format.pixel_aspect)
+                self.set_resolution(
+                    project.image_format.width,
+                    project.image_format.height,
+                    project.image_format.pixel_aspect,
+                )
             self.set_fps(project.fps)
 
         # set the render file name and version
@@ -146,6 +153,7 @@ class Max(DCCBase):
         # create the folders beforehand
         try:
             import os
+
             os.makedirs(version.absolute_path)
         except OSError:
             pass
@@ -157,12 +165,11 @@ class Max(DCCBase):
             version.parent = current_version
 
         from stalker.db.session import DBSession
+
         DBSession.add(version)
 
         # append it to the recent file list
-        self.append_to_recent_files(
-            version.absolute_full_path
-        )
+        self.append_to_recent_files(version.absolute_full_path)
 
         DBSession.commit()
 
@@ -171,9 +178,9 @@ class Max(DCCBase):
         return True
 
     def export_as(self, version):
-        """the export action for max DCC
-        """
+        """the export action for max DCC"""
         import MaxPlus
+
         # check if there is something selected
         if MaxPlus.SelectionManager.GetCount() < 1:
             raise RuntimeError("There is nothing selected to export")
@@ -182,9 +189,9 @@ class Max(DCCBase):
         if version.is_published and not self.allow_publish_on_export:
             # it is not allowed to publish the first version (desdur)
             raise RuntimeError(
-                'It is not allowed to Publish while export!!!'
-                '<br><br>'
-                'Export it normally. Then open the file and publish it.'
+                "It is not allowed to Publish while export!!!"
+                "<br><br>"
+                "Export it normally. Then open the file and publish it."
             )
 
         # do not save if there are local files
@@ -199,6 +206,7 @@ class Max(DCCBase):
 
         # create the folder if it doesn't exists
         import os
+
         try:
             os.makedirs(version.absolute_path)
         except OSError:
@@ -216,6 +224,7 @@ class Max(DCCBase):
 
         # save the version to database
         from stalker.db.session import DBSession
+
         DBSession.add(version)
         DBSession.commit()
 
@@ -233,6 +242,7 @@ class Max(DCCBase):
         :param bool use_namespace: use namespace or not.
         """
         from pymxs import runtime as rt
+
         rt.mergeMAXFile(version.absolute_full_path)
         return True
 
@@ -246,6 +256,7 @@ class Max(DCCBase):
         import os
         from anima.representation import Representation
         import pymxs
+
         rt = pymxs.runtime
 
         file_full_path = version.absolute_full_path
@@ -266,6 +277,7 @@ class Max(DCCBase):
         if current_version:
             current_version.inputs.append(version)
             from stalker.db.session import DBSession
+
             DBSession.commit()
 
         # append it to reference path
@@ -274,8 +286,7 @@ class Max(DCCBase):
         return xref
 
     def deep_version_inputs_update(self):
-        """updates the inputs of the references of the current scene
-        """
+        """updates the inputs of the references of the current scene"""
         # first update with data from first level references
         self.update_version_inputs()
 
@@ -286,6 +297,7 @@ class Max(DCCBase):
         :return:
         """
         from pymxs import runtime as rt
+
         xref_file_names = []
         versions = []
 
@@ -377,6 +389,7 @@ class Max(DCCBase):
 
         # list only first level references
         from pymxs import runtime as rt
+
         record_count = rt.objXRefMgr.recordCount
         references = []
         for i in range(record_count):
@@ -395,7 +408,7 @@ class Max(DCCBase):
                 full_path = previous_full_path
             else:
                 version = self.get_version_from_full_path(path)
-                if version in reference_resolution['update']:
+                if version in reference_resolution["update"]:
                     latest_published_version = version.latest_published_version
                     full_path = latest_published_version.absolute_full_path
                 else:
@@ -413,8 +426,9 @@ class Max(DCCBase):
         This removes any empty records
         """
         from pymxs import runtime as rt
+
         record_count = rt.objXRefMgr.recordCount
-        print('record count: %s' % record_count)
+        print("record count: %s" % record_count)
         records = []
         for i in range(record_count):
             records.append(rt.objXRefMgr.GetRecord(i + 1))
@@ -438,23 +452,22 @@ class Max(DCCBase):
         rs.UpdateDialogParameters()
 
     def set_render_filename(self, version):
-        """sets the render file name
-        """
+        """sets the render file name"""
         import os
+
         render_output_folder = os.path.join(
-            version.absolute_path,
-            'Outputs',
-            'renders'
+            version.absolute_path, "Outputs", "renders"
         ).replace("\\", "/")
         version_sig_name = self.get_significant_name(version)
 
-        render_file_full_path = \
-            '%(render_output_folder)s/masterLayer/' \
-            '%(version_sig_name)s.0000.exr' % \
-            {
-                'render_output_folder': render_output_folder,
-                'version_sig_name': version_sig_name
+        render_file_full_path = (
+            "%(render_output_folder)s/masterLayer/"
+            "%(version_sig_name)s.0000.exr"
+            % {
+                "render_output_folder": render_output_folder,
+                "version_sig_name": version_sig_name,
             }
+        )
 
         rs = MaxPlus.RenderSettings
         # rs.SetTimeType(1)  # Active Time Segment
@@ -467,6 +480,7 @@ class Max(DCCBase):
         # also set any RenderElement to the same path so a MultiPart OpenEXR
         # file is written (saving to a different file is not working for now)
         from pymxs import runtime as rt
+
         rem = rt.maxOps.GetCurRenderElementMgr()
         if rem:
             num_res = rem.NumRenderElements()
@@ -477,18 +491,15 @@ class Max(DCCBase):
 
         # create the output folder
         import os
+
         try:
-            os.makedirs(
-                os.path.dirname(render_file_full_path)
-            )
+            os.makedirs(os.path.dirname(render_file_full_path))
         except OSError:
             # folder already exists
             pass
 
-    def set_frame_range(self, start_frame=0, end_frame=100,
-                        adjust_frame_range=False):
-        """sets the start and end frame range
-        """
+    def set_frame_range(self, start_frame=0, end_frame=100, adjust_frame_range=False):
+        """sets the start and end frame range"""
         # set the playback range
         anim = MaxPlus.Animation
         ticks_per_frame = anim.GetTicksPerFrame()
@@ -502,15 +513,13 @@ class Max(DCCBase):
         rs.SetEnd(end_frame)
 
     def get_fps(self):
-        """returns the fps of this DCC
-        """
+        """returns the fps of this DCC"""
         anim = MaxPlus.Animation
         return anim.GetFrameRate()
 
     @classmethod
     def set_fps(cls, fps=25.0):
-        """sets the fps of the DCC
-        """
+        """sets the fps of the DCC"""
         anim = MaxPlus.Animation
         anim.SetFrameRate(int(fps))
 
@@ -525,27 +534,27 @@ class Max(DCCBase):
 
         # Set all the auxiliary paths
         project_structure = {
-            'Animation': 'Outputs/sceneassets/animations',
-            'Archives': 'Outputs/archives',
-            'Autoback': 'Outputs/autoback',
-            'CFD': 'Outputs/sceneassets/CFD',
-            'Download': 'Outputs/downloads',
-            'Export': 'Outputs/export',
-            'Expression': 'Outputs/express',
-            'Image': 'Outputs/sceneassets/images',
-            'Import': 'Outputs/import',
-            'Matlib': 'Outputs/materiallibraries',
-            'Photometric': 'Outputs/sceneassets/photometric',
-            'Preview': 'Outputs/previews',
-            'ProjectFolder': '',
-            'Proxies': 'Outputs/proxies',
-            'RenderAssets': 'Outputs/sceneassets/renderassets',
-            'RenderOutput': 'Outputs/renderoutput',
-            'RenderPresets': 'Outputs/renderpresets',
-            'Scene': '',
-            'Sound': 'Outputs/sceneassets/sounds',
-            'UserStartupTemplates': 'Outputs/startuptemplates',
-            'Vpost': 'Outputs/vpost',
+            "Animation": "Outputs/sceneassets/animations",
+            "Archives": "Outputs/archives",
+            "Autoback": "Outputs/autoback",
+            "CFD": "Outputs/sceneassets/CFD",
+            "Download": "Outputs/downloads",
+            "Export": "Outputs/export",
+            "Expression": "Outputs/express",
+            "Image": "Outputs/sceneassets/images",
+            "Import": "Outputs/import",
+            "Matlib": "Outputs/materiallibraries",
+            "Photometric": "Outputs/sceneassets/photometric",
+            "Preview": "Outputs/previews",
+            "ProjectFolder": "",
+            "Proxies": "Outputs/proxies",
+            "RenderAssets": "Outputs/sceneassets/renderassets",
+            "RenderOutput": "Outputs/renderoutput",
+            "RenderPresets": "Outputs/renderpresets",
+            "Scene": "",
+            "Sound": "Outputs/sceneassets/sounds",
+            "UserStartupTemplates": "Outputs/startuptemplates",
+            "Vpost": "Outputs/vpost",
         }
 
     def set_system_units(self):
@@ -555,11 +564,12 @@ class Max(DCCBase):
         :return:
         """
         import pymxs
+
         rt = pymxs.runtime
-        metric = rt.name('metric')
+        metric = rt.name("metric")
         rt.units.SystemType = metric
         rt.units.DisplayType = metric
-        rt.units.MetricType = rt.name('centimeters')
+        rt.units.MetricType = rt.name("centimeters")
 
     def set_gamma_settings(self, in_=2.2, out=1.0):
         """Sets the system gamma settings

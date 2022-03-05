@@ -17,8 +17,7 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class ClipFieldGrp(object):
-    """A class to organize clip fields
-    """
+    """A class to organize clip fields"""
 
     def __init__(self):
         self.parent = None
@@ -110,31 +109,30 @@ class ClipFieldGrp(object):
         QtCore.QObject.connect(
             self.fbx_choose_button,
             QtCore.SIGNAL("clicked()"),
-            functools.partial(self.fbx_choose_button_clicked)
+            functools.partial(self.fbx_choose_button_clicked),
         )
 
         # Choose Video Push Button
         QtCore.QObject.connect(
             self.video_choose_button,
             QtCore.SIGNAL("clicked()"),
-            functools.partial(self.video_choose_button_clicked)
+            functools.partial(self.video_choose_button_clicked),
         )
 
         QtCore.QObject.connect(
             self.delete_push_button,
             QtCore.SIGNAL("clicked()"),
-            functools.partial(self.delete)
+            functools.partial(self.delete),
         )
 
         QtCore.QObject.connect(
             self.video_file_field,
             QtCore.SIGNAL("editingFinished()"),
-            functools.partial(self.video_file_field_changed)
+            functools.partial(self.video_file_field_changed),
         )
 
     def fbx_choose_button_clicked(self):
-        """runs when the FBX push button is clicked
-        """
+        """runs when the FBX push button is clicked"""
         dialog = QtWidgets.QFileDialog(self.parent, "Choose FBX File")
         result = dialog.getOpenFileName()
         file_path = result[0]
@@ -142,8 +140,7 @@ class ClipFieldGrp(object):
             self.fbx_file_field.setText(file_path)
 
     def video_choose_button_clicked(self):
-        """runs when the Video push button is clicked
-        """
+        """runs when the Video push button is clicked"""
         dialog = QtWidgets.QFileDialog(self.parent, "Choose Video File")
         result = dialog.getOpenFileName()
         file_path = result[0]
@@ -158,37 +155,34 @@ class ClipFieldGrp(object):
         """
         file_path = self.video_file_field.text()
         import os
+
         if not os.path.exists(file_path):
             return
 
         # read video in out
         # use MediaManager
         from anima.utils import MediaManager
+
         mm = MediaManager()
         video_info = mm.get_video_info(file_path)
-        number_of_frames = int(
-            video_info['stream_info'][0].get('nb_frames', 0)
-        )
+        number_of_frames = int(video_info["stream_info"][0].get("nb_frames", 0))
 
         # get the fps
-        fps_str = video_info['stream_info'][0].get('avg_frame_rate', 25)
-        if '/' in fps_str:
-            fps_data = fps_str.split('/')
+        fps_str = video_info["stream_info"][0].get("avg_frame_rate", 25)
+        if "/" in fps_str:
+            fps_data = fps_str.split("/")
             fps = float(fps_data[0]) / float(fps_data[1])
         else:
             fps = float(fps_str)
         self.fps_field.setValue(fps)
 
         # update the cut_out to be cut_in + number_of_frames
-        self.cut_out_field.setValue(
-            self.cut_in_field.value() + number_of_frames
-        )
+        self.cut_out_field.setValue(self.cut_in_field.value() + number_of_frames)
         # and trigger an update
         self.update_cut_in_out_from_neighbours()
 
     def delete(self):
-        """delete self
-        """
+        """delete self"""
         # join previous and next video fields
         if self.previous_field:
             self.previous_field.next_field = self.next_field
@@ -211,8 +205,7 @@ class ClipFieldGrp(object):
 
     @property
     def previous_field(self):
-        """return the previous field
-        """
+        """return the previous field"""
         return self._previous_field
 
     @previous_field.setter
@@ -228,8 +221,7 @@ class ClipFieldGrp(object):
 
     @property
     def next_field(self):
-        """returns the next field
-        """
+        """returns the next field"""
         return self._next_field
 
     @next_field.setter
@@ -244,17 +236,12 @@ class ClipFieldGrp(object):
             self.next_field.update_cut_in_out_from_neighbours()
 
     def update_cut_in_out_from_neighbours(self):
-        """updates the cut_in and cut_out info with neighbour fields
-        """
+        """updates the cut_in and cut_out info with neighbour fields"""
         duration = self.cut_out_field.value() - self.cut_in_field.value() + 1
         if self.previous_field:
-            self.cut_in_field.setValue(
-                self.previous_field.cut_out_field.value()
-            )
+            self.cut_in_field.setValue(self.previous_field.cut_out_field.value())
 
-        self.cut_out_field.setValue(
-            self.cut_in_field.value() + duration - 1
-        )
+        self.cut_out_field.setValue(self.cut_in_field.value() + duration - 1)
 
         # also trigger an update for the next fields
         if self.next_field:
@@ -275,8 +262,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self._setup_ui()
 
     def _setup_ui(self):
-        """create the UI elements
-        """
+        """create the UI elements"""
         # Create the main layout
         self.resize(850, 650)
 
@@ -308,12 +294,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.scroll_area_widget.setLayout(self.clip_vertical_layout)
 
         self.scroll_area = QtWidgets.QScrollArea(self)
-        self.scroll_area.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded
-        )
-        self.scroll_area.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAsNeeded
-        )
+        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setWidget(self.scroll_area_widget)
 
@@ -329,19 +311,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.add_clip_field_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.add_clip_field
+            self.add_clip_field,
         )
 
         # Create Push Button
         QtCore.QObject.connect(
-            self.create_shots_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.create_shots
+            self.create_shots_push_button, QtCore.SIGNAL("clicked()"), self.create_shots
         )
 
     def add_clip_field(self):
-        """Adds a new clip field
-        """
+        """Adds a new clip field"""
         new_clip_field = ClipFieldGrp()
         new_clip_field.create(self)
         self.clip_vertical_layout.addLayout(new_clip_field.layout)
@@ -359,15 +338,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             new_clip_field.previous_field = previous_field
             previous_field.next_field = new_clip_field
 
-        new_clip_field.shot_name_field.setText(
-            str(len(self.clip_fields) * 10).zfill(4)
-        )
+        new_clip_field.shot_name_field.setText(str(len(self.clip_fields) * 10).zfill(4))
 
     def create_shots(self):
-        """creates shots
-        """
+        """creates shots"""
         clip_data = []
         from anima.dcc.motion_builder import ClipData
+
         for clip_field in self.clip_fields:
             assert isinstance(clip_field, ClipFieldGrp)
 
@@ -383,6 +360,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
 
         from anima.dcc import motion_builder
+
         mb = motion_builder.MotionBuilder()
         mb.create_story(clip_data)
 

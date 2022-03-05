@@ -15,13 +15,11 @@ toolbox.Toolbox.bake_3d_to_2d()
 
 
 class Toolbox(object):
-    """toolbox for 3DEqualizer
-    """
+    """toolbox for 3DEqualizer"""
 
     @classmethod
     def bake_3d_to_2d(cls):
-        """bakes the selected points projected 3D position with distortion to the 2D space
-        """
+        """bakes the selected points projected 3D position with distortion to the 2D space"""
         import tde4
 
         camera_id = tde4.getCurrentCamera()
@@ -37,9 +35,15 @@ class Toolbox(object):
             for frame in range(calc_range[0], calc_range[1] + 1):
                 # tde4.setCurrentFrame(frame)
                 # only apply when point position is valid in this frame
-                is_point_pos_2d_valid = tde4.isPointPos2DValid(pgroup_id, point_id, camera_id, frame)
+                is_point_pos_2d_valid = tde4.isPointPos2DValid(
+                    pgroup_id, point_id, camera_id, frame
+                )
                 if is_point_pos_2d_valid == 1:
-                    point_pos = tde4.calcPointBackProjection2D(pgroup_id, point_id, camera_id, frame, True)
-                    tde4.setPointPosition2D(pgroup_id, point_id, camera_id, frame, point_pos)
+                    point_pos = tde4.calcPointBackProjection2D(
+                        pgroup_id, point_id, camera_id, frame, True
+                    )
+                    tde4.setPointPosition2D(
+                        pgroup_id, point_id, camera_id, frame, point_pos
+                    )
 
         print("Done!")

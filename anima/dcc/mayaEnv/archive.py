@@ -90,7 +90,7 @@ sound
 sourceimages
 sourceimages/3dPaintTextures"""
 
-    def create_default_project(self, path, name='DefaultProject'):
+    def create_default_project(self, path, name="DefaultProject"):
         """Creates default maya project structure along with a suitable
         workspace.mel file.
 
@@ -103,8 +103,8 @@ sourceimages/3dPaintTextures"""
         project_path = super(Archiver, self).create_default_project(path, name)
 
         # create the workspace.mel
-        workspace_mel_path = os.path.join(project_path, 'workspace.mel')
-        with open(workspace_mel_path, 'w+') as f:
+        workspace_mel_path = os.path.join(project_path, "workspace.mel")
+        with open(workspace_mel_path, "w+") as f:
             f.writelines(self.default_workspace_content)
 
         return project_path
@@ -119,7 +119,7 @@ sourceimages/3dPaintTextures"""
         import os
         import re
 
-        path_regex = r'\$REPO[\w\d\/_\.@]+'
+        path_regex = r"\$REPO[\w\d\/_\.@]+"
         # so we have all the data
         # extract references
         ref_paths = re.findall(path_regex, data)
@@ -127,17 +127,21 @@ sourceimages/3dPaintTextures"""
         # also check for any paths that is starting with any of the $REPO
         # variable value
         for k in os.environ.keys():
-            if k.startswith('REPO'):
+            if k.startswith("REPO"):
                 # consider this as a repository path and find all of the paths
                 # starting with this value
                 repo_path = os.environ[k]
-                path_regex = r'\%s[\w\d\/_\.@]+' % repo_path
+                path_regex = r"\%s[\w\d\/_\.@]+" % repo_path
                 temp_ref_paths = re.findall(path_regex, data)
                 ref_paths += temp_ref_paths
 
-        return filter(lambda x: os.path.splitext(x)[1] not in self.exclude_mask, ref_paths)
+        return filter(
+            lambda x: os.path.splitext(x)[1] not in self.exclude_mask, ref_paths
+        )
 
-    def _move_file_and_fix_references(self, path, project_path, scenes_folder='', refs_folder=''):
+    def _move_file_and_fix_references(
+        self, path, project_path, scenes_folder="", refs_folder=""
+    ):
         """Moves the given file to the given project path and moves any references of it too
 
         :param str path: The path of the scene file
@@ -159,23 +163,20 @@ sourceimages/3dPaintTextures"""
         logger.debug("new_file_path: %s" % new_file_path)
 
         scenes_folder_lut = {
-            '.ma': 'scenes/refs',
-
+            ".ma": "scenes/refs",
             # alembic cache
-            '.abc': 'scenes/refs',
-
+            ".abc": "scenes/refs",
             # image files
-            '.jpg': 'sourceimages',
-            '.png': 'sourceimages',
-            '.tif': 'sourceimages',
-            '.tiff': 'sourceimages',
-            '.tga': 'sourceimages',
-            '.exr': 'sourceimages',
-            '.hdr': 'sourceimages',
-
+            ".jpg": "sourceimages",
+            ".png": "sourceimages",
+            ".tif": "sourceimages",
+            ".tiff": "sourceimages",
+            ".tga": "sourceimages",
+            ".exr": "sourceimages",
+            ".hdr": "sourceimages",
             # RSProxy and arnold proxies
-            '.rs': 'sourceimages',
-            '.ass': 'sourceimages',
+            ".rs": "sourceimages",
+            ".ass": "sourceimages",
         }
 
         ref_paths = []
@@ -185,7 +186,7 @@ sourceimages/3dPaintTextures"""
             return ref_paths
 
         # only get new ref paths for '.ma' files
-        if path.endswith('.ma'):
+        if path.endswith(".ma"):
             # read the data of the original file
             with open(path) as f:
                 data = f.read()
@@ -196,14 +197,15 @@ sourceimages/3dPaintTextures"""
                 ref_ext = os.path.splitext(ref_path)[-1]
                 data = data.replace(
                     ref_path,
-                    '%s/%s' % (
+                    "%s/%s"
+                    % (
                         scenes_folder_lut.get(ref_ext, refs_folder),
-                        os.path.basename(ref_path)
-                    )
+                        os.path.basename(ref_path),
+                    ),
                 )
 
             # now write all the data back to a new temp scene
-            with open(new_file_path, 'w+') as f:
+            with open(new_file_path, "w+") as f:
                 f.write(data)
         else:
             # fix for UDIM texture paths
@@ -215,25 +217,21 @@ sourceimages/3dPaintTextures"""
             # along with the RedshiftProxy files
             file_extension = os.path.splitext(path)[1]
 
-            new_file_path = \
-                os.path.join(
-                    project_path,
-                    scenes_folder_lut.get(
-                        file_extension,
-                        refs_folder
-                    ),
-                    original_file_name
-                )
+            new_file_path = os.path.join(
+                project_path,
+                scenes_folder_lut.get(file_extension, refs_folder),
+                original_file_name,
+            )
 
             import glob
+
             new_file_paths = [new_file_path]
-            if '1001' in new_file_path or 'u1_v1' in new_file_path.lower():
+            if "1001" in new_file_path or "u1_v1" in new_file_path.lower():
                 # get the rest of the textures
                 new_file_paths = glob.glob(
-                    new_file_path
-                    .replace('1001', '*')
-                    .replace('u1_v1', 'u*_v*')
-                    .replace('U1_V1', 'U*_V*')
+                    new_file_path.replace("1001", "*")
+                    .replace("u1_v1", "u*_v*")
+                    .replace("U1_V1", "U*_V*")
                 )
                 if new_file_paths:
                     logger.debug("found UDIM textures:")
@@ -290,18 +288,16 @@ sourceimages/3dPaintTextures"""
 
             # try to find a corresponding Stalker Version instance with it
             from stalker import Version
-            version = Version.query\
-                .filter(Version.full_path.endswith(ref_file_name))\
-                .first()
+
+            version = Version.query.filter(
+                Version.full_path.endswith(ref_file_name)
+            ).first()
 
             if version:
                 # replace it
-                data = data.replace(
-                    ref_path,
-                    version.full_path
-                )
+                data = data.replace(ref_path, version.full_path)
 
         if len(ref_paths):
             # save the file over itself
-            with open(path, 'w+') as f:
+            with open(path, "w+") as f:
                 f.write(data)

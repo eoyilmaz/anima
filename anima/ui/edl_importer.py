@@ -40,8 +40,7 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class LineEdit(QtWidgets.QLineEdit):
-    """Custom Plain text edit that handles drag and drop
-    """
+    """Custom Plain text edit that handles drag and drop"""
 
     def __init__(self, *args, **kwargs):
         super(LineEdit, self).__init__(*args, **kwargs)
@@ -49,26 +48,25 @@ class LineEdit(QtWidgets.QLineEdit):
 
     def dragEnterEvent(self, e):
         mime_data = e.mimeData()
-        if mime_data.hasFormat('text/plain') or mime_data.hasUrls():
+        if mime_data.hasFormat("text/plain") or mime_data.hasUrls():
             e.accept()
         else:
             e.ignore()
 
     def dropEvent(self, e):
         mime_data = e.mimeData()
-        path = ''
-        if mime_data.hasFormat('text/plain'):
+        path = ""
+        if mime_data.hasFormat("text/plain"):
             # on linux
-            path = mime_data().text().replace('file://', '').strip()
+            path = mime_data().text().replace("file://", "").strip()
         elif mime_data.hasUrls():
             # on windows
             url = mime_data.urls()[0]
-            path = url.toString().replace('file:///', '').strip()
+            path = url.toString().replace("file:///", "").strip()
         self.setText(path)
 
 
-class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
-                 AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
     """The Main Window for EDL Importer.
 
     This is mainly written for AVID Media Composer. It makes it easy to import
@@ -84,13 +82,13 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
 
         from anima import defaults
 
-        self.media_files_path = ''
+        self.media_files_path = ""
         self.cache_file_full_path = os.path.normpath(
             os.path.expanduser(
                 os.path.expandvars(
                     os.path.join(
                         defaults.local_cache_folder,
-                        defaults.avid_media_file_path_storage
+                        defaults.avid_media_file_path_storage,
                     )
                 )
             )
@@ -99,9 +97,7 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
         self.edl_path_lineEdit = LineEdit()
 
         self.formLayout.setWidget(
-            1,
-            QtWidgets.QFormLayout.FieldRole,
-            self.edl_path_lineEdit
+            1, QtWidgets.QFormLayout.FieldRole, self.edl_path_lineEdit
         )
 
         self.setup_signals()
@@ -111,24 +107,19 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
         do_db_setup()
 
     def setup_signals(self):
-        """setting up signals
-        """
+        """setting up signals"""
         QtCore.QObject.connect(
             self.media_files_path_lineEdit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.store_media_file_path
+            QtCore.SIGNAL("textChanged(QString)"),
+            self.store_media_file_path,
         )
 
         QtCore.QObject.connect(
-            self.edl_path_lineEdit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.open_edl
+            self.edl_path_lineEdit, QtCore.SIGNAL("textChanged(QString)"), self.open_edl
         )
 
         QtCore.QObject.connect(
-            self.send_pushButton,
-            QtCore.SIGNAL('clicked()'),
-            self.send
+            self.send_pushButton, QtCore.SIGNAL("clicked()"), self.send
         )
 
     def open_edl(self, path):
@@ -150,23 +141,18 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
             with open(path) as f:
                 edl_content = f.read()
         except IOError:
-            edl_content = ''
+            edl_content = ""
 
         return edl_content
 
     def send(self):
-        """Sends the edl content to
-        """
+        """Sends the edl content to"""
         edl_path = self.edl_path_lineEdit.text()
         media_path = self.media_files_path_lineEdit.text()
 
         # error if media_path does not exist
         if not os.path.exists(media_path):
-            QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                "Media path doesn't exists"
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", "Media path doesn't exists")
             return
         else:
             self.send_edl(edl_path, media_path)
@@ -180,7 +166,8 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
         """
         # get the source clips from edl
         import edl
-        parser = edl.Parser('24')  # just use some random frame rate
+
+        parser = edl.Parser("24")  # just use some random frame rate
         with open(edl_path) as f:
             l = parser.parse(f)
 
@@ -188,7 +175,7 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
 
         progress_dialog = QtWidgets.QProgressDialog(self)
         progress_dialog.setRange(0, total_item_count)
-        progress_dialog.setLabelText('Copying MXF files...')
+        progress_dialog.setLabelText("Copying MXF files...")
         progress_dialog.show()
 
         step = 0
@@ -198,28 +185,22 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
             # assert isinstance(event, edl.Event)
             mov_full_path = event.source_file
             mxf_full_path = os.path.expandvars(
-                os.path.splitext(mov_full_path)[0] + '.mxf'
+                os.path.splitext(mov_full_path)[0] + ".mxf"
             )
             target_mxf_path = os.path.expandvars(
-                os.path.join(
-                    media_path,
-                    os.path.basename(mxf_full_path)
-                )
+                os.path.join(media_path, os.path.basename(mxf_full_path))
             )
 
-            shutil.copy(
-                mxf_full_path,
-                target_mxf_path
-            )
+            shutil.copy(mxf_full_path, target_mxf_path)
 
             step += 1
             progress_dialog.setValue(step)
 
         # and call EDL_Manager.exe with the edl_path
-        progress_dialog.setLabelText('Calling EDL Manager...')
+        progress_dialog.setLabelText("Calling EDL Manager...")
         step += 1
         progress_dialog.setValue(step)
-        subprocess.call(['EDL_Mgr', os.path.normcase(edl_path)], shell=False)
+        subprocess.call(["EDL_Mgr", os.path.normcase(edl_path)], shell=False)
 
     def store_media_file_path(self, path):
         """stores the given path as the avid media file path in anima cache
@@ -234,12 +215,11 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog,
         except OSError:
             pass  # file already exists
         finally:
-            with open(self.cache_file_full_path, 'w') as f:
+            with open(self.cache_file_full_path, "w") as f:
                 f.write(path)
 
     def restore_media_file_path(self):
-        """restores the media file path
-        """
+        """restores the media file path"""
         try:
             with open(self.cache_file_full_path) as f:
                 media_file_path = f.read()

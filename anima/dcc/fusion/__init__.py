@@ -18,6 +18,7 @@ except exceptions:
         import BlackmagicFusion as bmf
     except exceptions:
         from anima.dcc import blackmagic as bmd
+
         bmf = bmd.get_bmd()
 
 
@@ -28,11 +29,10 @@ from anima.recent import RecentFileManager
 
 
 class Fusion(DCCBase):
-    """the fusion DCC class
-    """
+    """the fusion DCC class"""
 
     name = "Fusion"
-    extensions = ['.comp']
+    extensions = [".comp"]
 
     fusion_formats = {
         "Multimedia": {
@@ -41,7 +41,7 @@ class Fusion(DCCBase):
             "Height": 240,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 15.0
+            "Rate": 15.0,
         },
         "NTSC (D1)": {
             "id": 1,
@@ -49,7 +49,7 @@ class Fusion(DCCBase):
             "Height": 486,
             "AspectX": 0.9,
             "AspectY": 1.0,
-            "Rate": 29.97
+            "Rate": 29.97,
         },
         "NTSC (DV)": {
             "id": 2,
@@ -57,7 +57,7 @@ class Fusion(DCCBase):
             "Height": 480,
             "AspectX": 0.9,
             "AspectY": 1.0,
-            "Rate": 29.97
+            "Rate": 29.97,
         },
         "NTSC (Perception)": {
             "id": 3,
@@ -65,7 +65,7 @@ class Fusion(DCCBase):
             "Height": 480,
             "AspectX": 0.9,
             "AspectY": 1.0,
-            "Rate": 29.97
+            "Rate": 29.97,
         },
         "NTSC (Square Pixel)": {
             "id": 4,
@@ -73,7 +73,7 @@ class Fusion(DCCBase):
             "Height": 480,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 29.97
+            "Rate": 29.97,
         },
         "NTSC 16:9": {
             "id": 5,
@@ -81,7 +81,7 @@ class Fusion(DCCBase):
             "Height": 486,
             "AspectX": 1.2,
             "AspectY": 1.0,
-            "Rate": 29.97
+            "Rate": 29.97,
         },
         "PAL / SECAM (D1)": {
             "id": 6,
@@ -89,7 +89,7 @@ class Fusion(DCCBase):
             "Height": 576,
             "AspectX": 1.0,
             "AspectY": 0.9375,
-            "Rate": 25
+            "Rate": 25,
         },
         "PAL / SECAM (Square Pixel)": {
             "id": 7,
@@ -97,7 +97,7 @@ class Fusion(DCCBase):
             "Height": 576,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 25
+            "Rate": 25,
         },
         "PALplus 16:9": {
             "id": 8,
@@ -105,7 +105,7 @@ class Fusion(DCCBase):
             "Height": 576,
             "AspectX": 1.0,
             "AspectY": 0.703125,
-            "Rate": 25
+            "Rate": 25,
         },
         "HDTV 720": {
             "id": 9,
@@ -113,7 +113,7 @@ class Fusion(DCCBase):
             "Height": 720,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 30
+            "Rate": 30,
         },
         "HDTV 1080": {
             "id": 10,
@@ -121,7 +121,7 @@ class Fusion(DCCBase):
             "Height": 1080,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 30
+            "Rate": 30,
         },
         "D16": {
             "id": 11,
@@ -129,7 +129,7 @@ class Fusion(DCCBase):
             "Height": 2304,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "2K Full Aperture (Super 35)": {
             "id": 12,
@@ -137,7 +137,7 @@ class Fusion(DCCBase):
             "Height": 1556,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "4K Full Aperture (Super 35)": {
             "id": 13,
@@ -145,7 +145,7 @@ class Fusion(DCCBase):
             "Height": 3112,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "2K Academy (Regular 35)": {
             "id": 14,
@@ -153,7 +153,7 @@ class Fusion(DCCBase):
             "Height": 1332,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "4K Academy (Regular 35)": {
             "id": 15,
@@ -161,7 +161,7 @@ class Fusion(DCCBase):
             "Height": 2664,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "2K Academy in Full Aperture": {
             "id": 16,
@@ -169,7 +169,7 @@ class Fusion(DCCBase):
             "Height": 1556,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "4K Academy in Full Aperture": {
             "id": 17,
@@ -177,7 +177,7 @@ class Fusion(DCCBase):
             "Height": 3112,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "2K Anamorphic (CinemaScope)": {
             "id": 18,
@@ -185,7 +185,7 @@ class Fusion(DCCBase):
             "Height": 1556,
             "AspectX": 2.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "4K Anamorphic (CinemaScope)": {
             "id": 19,
@@ -193,7 +193,7 @@ class Fusion(DCCBase):
             "Height": 3112,
             "AspectX": 2.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "2K 1.85": {
             "id": 20,
@@ -201,7 +201,7 @@ class Fusion(DCCBase):
             "Height": 988,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "4K 1.85": {
             "id": 21,
@@ -209,7 +209,7 @@ class Fusion(DCCBase):
             "Height": 1976,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "3K VistaVision": {
             "id": 22,
@@ -217,7 +217,7 @@ class Fusion(DCCBase):
             "Height": 2048,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "6K VistaVision": {
             "id": 23,
@@ -225,7 +225,7 @@ class Fusion(DCCBase):
             "Height": 4096,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
         "5K IMAX 70mm": {
             "id": 24,
@@ -233,13 +233,12 @@ class Fusion(DCCBase):
             "Height": 4096,
             "AspectX": 1.0,
             "AspectY": 1.0,
-            "Rate": 24
+            "Rate": 24,
         },
     }
 
-    def __init__(self, name='', version=None):
-        """fusion specific init
-        """
+    def __init__(self, name="", version=None):
+        """fusion specific init"""
         super(Fusion, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
 
@@ -247,13 +246,13 @@ class Fusion(DCCBase):
         # self.fusion = bmd.get_fusion()
 
         self.fusion = bmf.scriptapp("Fusion")
-        self.fusion_prefs = self.fusion.GetPrefs()['Global']
+        self.fusion_prefs = self.fusion.GetPrefs()["Global"]
 
         # update name with version
-        self.name = 'Fusion%s' % self.fusion.GetAttrs("FUSIONS_Version").split('.')[0]
+        self.name = "Fusion%s" % self.fusion.GetAttrs("FUSIONS_Version").split(".")[0]
 
         self.comp = self.fusion.GetCurrentComp()
-        self.comp_prefs = self.comp.GetPrefs()['Comp']
+        self.comp_prefs = self.comp.GetPrefs()["Comp"]
 
         self._main_output_node_name = "Main_Output"
 
@@ -266,6 +265,7 @@ class Fusion(DCCBase):
         # refresh the current comp
         self.comp = self.fusion.GetCurrentComp()
         from stalker import Version
+
         assert isinstance(version, Version)
         # its a new version please update the paths
         version.update_paths()
@@ -274,6 +274,7 @@ class Fusion(DCCBase):
 
         # set project_directory
         import os
+
         self.project_directory = os.path.dirname(version.absolute_path)
 
         # set range from the shot
@@ -295,7 +296,11 @@ class Fusion(DCCBase):
         version_full_path = os.path.normpath(version.absolute_full_path)
 
         self.comp.Lock()
-        self.comp.Save(version_full_path if sys.version_info[0] >= 3 else version_full_path.encode())
+        self.comp.Save(
+            version_full_path
+            if sys.version_info[0] >= 3
+            else version_full_path.encode()
+        )
         self.comp.Unlock()
 
         # create a local copy
@@ -333,20 +338,20 @@ class Fusion(DCCBase):
 
         # set comp resolution and fps
         if imf:
-            self.comp.SetPrefs({
-                # Image Format
-                "Comp.FrameFormat.Width": imf.width,
-                "Comp.FrameFormat.Height": imf.height,
-                "Comp.FrameFormat.AspectY": imf.pixel_aspect,
-                "Comp.FrameFormat.AspectX": imf.pixel_aspect,
-
-                # FPS
-                "Comp.FrameFormat.Rate": fps,
-
-                # set project frame format to 16bit
-                "Comp.FrameFormat.DepthFull": 2.0,
-                "Comp.FrameFormat.DepthLock": True,
-            })
+            self.comp.SetPrefs(
+                {
+                    # Image Format
+                    "Comp.FrameFormat.Width": imf.width,
+                    "Comp.FrameFormat.Height": imf.height,
+                    "Comp.FrameFormat.AspectY": imf.pixel_aspect,
+                    "Comp.FrameFormat.AspectX": imf.pixel_aspect,
+                    # FPS
+                    "Comp.FrameFormat.Rate": fps,
+                    # set project frame format to 16bit
+                    "Comp.FrameFormat.DepthFull": 2.0,
+                    "Comp.FrameFormat.DepthLock": True,
+                }
+            )
 
     def set_shot_from_range(self, version):
         """sets the Shot.cut_in and Shot.cut_out attributes from the current frame range if the current task is related
@@ -359,6 +364,7 @@ class Fusion(DCCBase):
         is_shot_related_task = False
         shot = None
         from stalker import Shot
+
         for task in version.task.parents:
             if isinstance(task, Shot):
                 is_shot_related_task = True
@@ -371,30 +377,34 @@ class Fusion(DCCBase):
             shot.cut_in = int(cut_in)
             shot.cut_out = int(cut_out)
             from stalker.db.session import DBSession
+
             DBSession.add(shot)
             DBSession.commit()
 
     def export_as(self, version):
-        """the export action for nuke DCC
-        """
+        """the export action for nuke DCC"""
         # its a new version please update the paths
         version.update_paths()
         # set the extension to '.comp'
         version.extension = self.extensions[0]
         version.created_with = self.name
 
-        raise NotImplementedError(
-            'export_as() is not implemented yet for Fusion'
-        )
+        raise NotImplementedError("export_as() is not implemented yet for Fusion")
 
         # # create a local copy
         # self.create_local_copy(version)
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
-        """the open action for nuke DCC
-        """
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
+        """the open action for nuke DCC"""
         import os
+
         version_full_path = os.path.normpath(version.absolute_full_path)
 
         # # delete all the comps and open new one
@@ -402,7 +412,11 @@ class Fusion(DCCBase):
         # for comp_ in comps:
         #     comp_.Close()
 
-        self.fusion.LoadComp(version_full_path if sys.version_info[0] >= 3 else version_full_path.encode())
+        self.fusion.LoadComp(
+            version_full_path
+            if sys.version_info[0] >= 3
+            else version_full_path.encode()
+        )
 
         self.comp.Lock()
 
@@ -428,8 +442,7 @@ class Fusion(DCCBase):
         return empty_reference_resolution()
 
     def import_(self, version):
-        """the import action for nuke DCC
-        """
+        """the import action for nuke DCC"""
         # nuke.nodePaste(version.absolute_full_path)
         return True
 
@@ -442,9 +455,10 @@ class Fusion(DCCBase):
         """
         # full_path = self._root.knob('name').value()
         import os
-        full_path = os.path.normpath(
-            self.comp.GetAttrs()['COMPS_FileName']
-        ).replace('\\', '/')
+
+        full_path = os.path.normpath(self.comp.GetAttrs()["COMPS_FileName"]).replace(
+            "\\", "/"
+        )
         return self.get_version_from_full_path(full_path)
 
     def get_version_from_recent_files(self):
@@ -465,7 +479,7 @@ class Fusion(DCCBase):
         try:
             recent_files = rfm[self.name]
         except KeyError:
-            logger.debug('no recent files')
+            logger.debug("no recent files")
             recent_files = None
 
         if recent_files is not None:
@@ -492,8 +506,7 @@ class Fusion(DCCBase):
         return version
 
     def get_last_version(self):
-        """gets the file name from nuke
-        """
+        """gets the file name from fusion"""
         version = self.get_current_version()
 
         # read the recent file list
@@ -507,16 +520,13 @@ class Fusion(DCCBase):
         return version
 
     def get_frame_range(self):
-        """returns the current frame range
-        """
-        start_frame = self.comp.GetAttrs()['COMPN_RenderStart']
-        end_frame = self.comp.GetAttrs()['COMPN_RenderEnd']
+        """returns the current frame range"""
+        start_frame = self.comp.GetAttrs()["COMPN_RenderStart"]
+        end_frame = self.comp.GetAttrs()["COMPN_RenderEnd"]
         return start_frame, end_frame
 
-    def set_frame_range(self, start_frame=1, end_frame=100,
-                        adjust_frame_range=False):
-        """sets the start and end frame range
-        """
+    def set_frame_range(self, start_frame=1, end_frame=100, adjust_frame_range=False):
+        """sets the start and end frame range"""
         self.comp.SetAttrs(
             {
                 "COMPN_GlobalStart": start_frame,
@@ -527,28 +537,25 @@ class Fusion(DCCBase):
         )
 
     def set_fps(self, fps=25):
-        """sets the current fps
-        """
+        """sets the current fps"""
         pass
 
     def get_fps(self):
-        """returns the current fps
-        """
+        """returns the current fps"""
         return None
 
     def fix_loader_paths(self):
-        """fixes loader paths mainly from one OS to another
-        """
+        """fixes loader paths mainly from one OS to another"""
         import os
 
         # get all loaders
-        for loader in self.comp.GetToolList(False, 'Loader').values():
-            path = self.get_node_input_entry_value_by_name(loader, 'Clip')
+        for loader in self.comp.GetToolList(False, "Loader").values():
+            path = self.get_node_input_entry_value_by_name(loader, "Clip")
             if os.path.sep not in path:
                 # replace '\\' with os.path.sep
-                path = path.replace('/', '\\').replace('\\', os.path.sep)
+                path = path.replace("/", "\\").replace("\\", os.path.sep)
                 # TODO: Also replace absolute paths with proper paths for the current OS
-                self.set_node_input_entry_by_name(loader, 'Clip', path)
+                self.set_node_input_entry_by_name(loader, "Clip", path)
 
     def get_node_input_entry_by_name(self, node, key):
         """returns the Input List entry by input list entry name
@@ -560,7 +567,7 @@ class Fusion(DCCBase):
         node_input_list = node.GetInputList()
         for input_entry_key in node_input_list.keys():
             input_entry = node_input_list[input_entry_key]
-            input_id = input_entry.GetAttrs()['INPS_ID']
+            input_id = input_entry.GetAttrs()["INPS_ID"]
             if input_id == key:
                 return input_entry
 
@@ -590,11 +597,13 @@ class Fusion(DCCBase):
         :return: list
         """
         # list all the saver nodes in the current file
-        all_saver_nodes = self.comp.GetToolList(False, 'Saver').values()
+        all_saver_nodes = self.comp.GetToolList(False, "Saver").values()
 
         saver_nodes = []
         for saver_node in all_saver_nodes:
-            if saver_node.GetAttrs('TOOLS_Name').startswith(self._main_output_node_name):
+            if saver_node.GetAttrs("TOOLS_Name").startswith(
+                self._main_output_node_name
+            ):
                 saver_nodes.append(saver_node)
 
         return saver_nodes
@@ -631,20 +640,18 @@ class Fusion(DCCBase):
         if isinstance(node_tree, list):
             created_root_nodes = []
             for item in node_tree:
-                created_root_nodes.append(
-                    self.create_node_tree(item)
-                )
+                created_root_nodes.append(self.create_node_tree(item))
             return created_root_nodes
 
-        node_type = node_tree['type']
+        node_type = node_tree["type"]
 
         self.comp.Lock()
         node = self.comp.AddTool(node_type)
         self.comp.Unlock()
 
         # attributes
-        if 'attr' in node_tree:
-            attributes = node_tree['attr']
+        if "attr" in node_tree:
+            attributes = node_tree["attr"]
             for key in attributes:
                 value = attributes[key]
                 if isinstance(value, dict):
@@ -654,37 +661,37 @@ class Fusion(DCCBase):
                     node.SetAttrs({key: value})
 
         # input lists
-        if 'input_list' in node_tree:
-            input_list = node_tree['input_list']
+        if "input_list" in node_tree:
+            input_list = node_tree["input_list"]
             for key in input_list:
                 node_input_list = node.GetInputList()
                 for input_entry_key in node_input_list.keys():
                     input_entry = node_input_list[input_entry_key]
-                    input_id = input_entry.GetAttrs()['INPS_ID']
+                    input_id = input_entry.GetAttrs()["INPS_ID"]
                     if input_id == key:
                         value = input_list[key]
                         input_entry[0] = value
                         break
 
         # ref_id
-        if 'ref_id' in node_tree:
-            node.SetData('ref_id', node_tree['ref_id'])
+        if "ref_id" in node_tree:
+            node.SetData("ref_id", node_tree["ref_id"])
 
         # connected to
-        if 'connected_to' in node_tree:
-            connected_to = node_tree['connected_to']
-            if 'Input' in connected_to:
-                input_node = self.create_node_tree(connected_to['Input'])
+        if "connected_to" in node_tree:
+            connected_to = node_tree["connected_to"]
+            if "Input" in connected_to:
+                input_node = self.create_node_tree(connected_to["Input"])
                 node.Input = input_node
-            elif 'ref_id' in node_tree['connected_to']:
-                ref_id = node_tree['connected_to']['ref_id']
-                print('ref_id: %s' % ref_id)
+            elif "ref_id" in node_tree["connected_to"]:
+                ref_id = node_tree["connected_to"]["ref_id"]
+                print("ref_id: %s" % ref_id)
                 # find a node with ref_id equals to ref_id that is given in the
                 # node tree
                 all_nodes = self.comp.GetToolList().values()
                 for r_node in all_nodes:
-                    node_ref_id = r_node.GetData('ref_id')
-                    print('node_ref_id: %s' % node_ref_id)
+                    node_ref_id = r_node.GetData("ref_id")
+                    print("node_ref_id: %s" % node_ref_id)
                     if node_ref_id == ref_id:
                         node.Input = r_node
                         break
@@ -705,25 +712,27 @@ class Fusion(DCCBase):
         template_kwargs = {}
 
         # if this is a shot related task set it to shots resolution
-        version_sig_name = self.get_significant_name(version, include_project_code=False)
+        version_sig_name = self.get_significant_name(
+            version, include_project_code=False
+        )
 
-        file_name_buffer.append('%(version_sig_name)s.001.%(format)s')
-        template_kwargs.update({
-            'version_sig_name': version_sig_name,
-            'format': file_format
-        })
+        file_name_buffer.append("%(version_sig_name)s.001.%(format)s")
+        template_kwargs.update(
+            {"version_sig_name": version_sig_name, "format": file_format}
+        )
 
-        output_file_name = ''.join(file_name_buffer) % template_kwargs
+        output_file_name = "".join(file_name_buffer) % template_kwargs
 
         # check if it is a stereo comp
         # if it is enable separate view rendering
         import os
+
         output_file_path = os.path.join(
             version.absolute_path,
-            'Outputs',
+            "Outputs",
             version.take_name,
-            'v%03d' % version.version_number,
-            file_format
+            "v%03d" % version.version_number,
+            file_format,
         )
 
         # create the dir
@@ -734,24 +743,22 @@ class Fusion(DCCBase):
             pass
 
         output_file_full_path = os.path.join(
-            output_file_path,
-            output_file_name
-        ).replace('\\', '/')
+            output_file_path, output_file_name
+        ).replace("\\", "/")
 
         # make the path Project: relative
-        output_file_full_path = 'Project:%s' % os.path.relpath(
-            output_file_full_path,
-            os.path.dirname(version.absolute_path)
+        output_file_full_path = "Project:%s" % os.path.relpath(
+            output_file_full_path, os.path.dirname(version.absolute_path)
         )
 
         # set the output path
         if sys.version_info[0] >= 3:
-            return '%s' % os.path.normpath(output_file_full_path)
+            return "%s" % os.path.normpath(output_file_full_path)
         else:
-            return '%s' % os.path.normpath(output_file_full_path).encode()
+            return "%s" % os.path.normpath(output_file_full_path).encode()
 
     def output_node_name_generator(self, file_format):
-        return '%s_%s' % (self._main_output_node_name, file_format)
+        return "%s_%s" % (self._main_output_node_name, file_format)
 
     def create_slate_node(self, version, submitting_for="FINAL", submission_note=""):
         """Creates the slate node
@@ -781,6 +788,7 @@ class Fusion(DCCBase):
         if shot:
             if shot.thumbnail:
                 import os
+
                 thumbnail_full_path = os.path.expandvars(shot.thumbnail.full_path)
                 slate_node.Input1 = thumbnail_full_path
 
@@ -792,10 +800,14 @@ class Fusion(DCCBase):
             # Shot Types
             # TODO: For now use Netflix format, extend it later on
             from anima.utils.report import NetflixReporter
-            slate_node.Input8 = ", ".join(NetflixReporter.generate_shot_methodologies(shot))
+
+            slate_node.Input8 = ", ".join(
+                NetflixReporter.generate_shot_methodologies(shot)
+            )
 
             # Shot Description
             from anima.utils import text_splitter
+
             split_description = text_splitter(shot.description, 40)
             slate_node.Input9 = "\n".join(split_description[0:3])
             slate_node.Input10 = "\n".join(split_description[0:3])
@@ -819,7 +831,7 @@ class Fusion(DCCBase):
             try:
                 scene_name = parts[2]
             except IndexError:
-                scene_name = ''
+                scene_name = ""
             slate_node.Input16 = scene_name
 
             # Frames
@@ -839,12 +851,14 @@ class Fusion(DCCBase):
 
         # Date
         import datetime
+
         today = datetime.datetime.today()
         date_time_format = "%Y-%m-%d"
         slate_node.Input7 = today.strftime(date_time_format)
 
         # Vendor
         from stalker import Studio
+
         studio = Studio.query.first()
         if studio:
             slate_node.Input13 = studio.name
@@ -856,6 +870,7 @@ class Fusion(DCCBase):
         media_out_node = None
         i = 0
         import time
+
         while not media_out_node and i < 2:
             media_out_node = self.comp.FindTool("MediaOut1")
             if not media_out_node:
@@ -880,28 +895,29 @@ class Fusion(DCCBase):
             fps = project.fps
 
         import uuid
+
         random_ref_id = uuid.uuid4().hex
 
         output_format_data = [
             {
-                'name': 'jpg',
-                'node_tree': {
-                    'type': 'Saver',
-                    'attr': {
-                        'TOOLS_Name': self.output_node_name_generator('jpg'),
+                "name": "jpg",
+                "node_tree": {
+                    "type": "Saver",
+                    "attr": {
+                        "TOOLS_Name": self.output_node_name_generator("jpg"),
                     },
-                    'input_list': {
-                        'Clip': self.output_path_generator(version, 'jpg'),
-                        'CreateDir': 1,
-                        'ProcessRed': 1,
-                        'ProcessGreen': 1,
-                        'ProcessBlue': 1,
-                        'ProcessAlpha': 0,
-                        'OutputFormat': 'JPEGFormat',
-                        'JpegFormat.Quality': 85,
+                    "input_list": {
+                        "Clip": self.output_path_generator(version, "jpg"),
+                        "CreateDir": 1,
+                        "ProcessRed": 1,
+                        "ProcessGreen": 1,
+                        "ProcessBlue": 1,
+                        "ProcessAlpha": 0,
+                        "OutputFormat": "JPEGFormat",
+                        "JpegFormat.Quality": 85,
                     },
-                    'connected_to': {
-                        'Input': {
+                    "connected_to": {
+                        "Input": {
                             "type": "OCIOColorSpace",
                             "ref_id": random_ref_id,
                             "input_list": {
@@ -909,8 +925,8 @@ class Fusion(DCCBase):
                                 "SourceSpace": "ACES - ACES2065-1",
                                 "OutputSpace": "Output - Rec.709",
                             },
-                            'connected_to': {
-                                'Input': {
+                            "connected_to": {
+                                "Input": {
                                     "type": "OCIOColorSpace",
                                     "input_list": {
                                         "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
@@ -918,178 +934,167 @@ class Fusion(DCCBase):
                                         "OutputSpace": "ACES - ACES2065-1",
                                     },
                                 }
-                            }
+                            },
                         }
-                    }
+                    },
                 },
             },
             {
-                'name': 'tga',
-                'node_tree': {
-                    'type': 'Saver',
-                    'attr': {
-                        'TOOLS_Name': self.output_node_name_generator('tga'),
+                "name": "tga",
+                "node_tree": {
+                    "type": "Saver",
+                    "attr": {
+                        "TOOLS_Name": self.output_node_name_generator("tga"),
                     },
-                    'input_list': {
-                        'Clip': self.output_path_generator(version, 'tga'),
-                        'CreateDir': 1,
-                        'ProcessRed': 1,
-                        'ProcessGreen': 1,
-                        'ProcessBlue': 1,
-                        'ProcessAlpha': 0,
-                        'OutputFormat': 'TGAFormat',
+                    "input_list": {
+                        "Clip": self.output_path_generator(version, "tga"),
+                        "CreateDir": 1,
+                        "ProcessRed": 1,
+                        "ProcessGreen": 1,
+                        "ProcessBlue": 1,
+                        "ProcessAlpha": 0,
+                        "OutputFormat": "TGAFormat",
                     },
-                    'connected_to': {
-                        'ref_id': random_ref_id
-                    }
+                    "connected_to": {"ref_id": random_ref_id},
                 },
             },
             {
-                'name': 'exr',
-                'node_tree': {
-                    'type': 'Saver',
-                    'attr': {
-                        'TOOLS_Name': self.output_node_name_generator('exr'),
+                "name": "exr",
+                "node_tree": {
+                    "type": "Saver",
+                    "attr": {
+                        "TOOLS_Name": self.output_node_name_generator("exr"),
                     },
-                    'input_list': {
-                        'Clip': self.output_path_generator(version, 'exr'),
-                        'CreateDir': 1,
-                        'ProcessRed': 1,
-                        'ProcessGreen': 1,
-                        'ProcessBlue': 1,
-                        'ProcessAlpha': 0,
-                        'OutputFormat': 'OpenEXRFormat',
-                        'OpenEXRFormat.Depth': 1,  # 16-bit float
-                        'OpenEXRFormat.RedEnable': 1,
-                        'OpenEXRFormat.GreenEnable': 1,
-                        'OpenEXRFormat.BlueEnable': 1,
-                        'OpenEXRFormat.AlphaEnable': 0,
-                        'OpenEXRFormat.ZEnable': 0,
-                        'OpenEXRFormat.CovEnable': 0,
-                        'OpenEXRFormat.ObjIDEnable': 0,
-                        'OpenEXRFormat.MatIDEnable': 0,
-                        'OpenEXRFormat.UEnable': 0,
-                        'OpenEXRFormat.VEnable': 0,
-                        'OpenEXRFormat.XNormEnable': 0,
-                        'OpenEXRFormat.YNormEnable': 0,
-                        'OpenEXRFormat.ZNormEnable': 0,
-                        'OpenEXRFormat.XVelEnable': 0,
-                        'OpenEXRFormat.YVelEnable': 0,
-                        'OpenEXRFormat.XRevVelEnable': 0,
-                        'OpenEXRFormat.YRevVelEnable': 0,
-                        'OpenEXRFormat.XPosEnable': 0,
-                        'OpenEXRFormat.YPosEnable': 0,
-                        'OpenEXRFormat.ZPosEnable': 0,
-                        'OpenEXRFormat.XDispEnable': 0,
-                        'OpenEXRFormat.YDispEnable': 0,
+                    "input_list": {
+                        "Clip": self.output_path_generator(version, "exr"),
+                        "CreateDir": 1,
+                        "ProcessRed": 1,
+                        "ProcessGreen": 1,
+                        "ProcessBlue": 1,
+                        "ProcessAlpha": 0,
+                        "OutputFormat": "OpenEXRFormat",
+                        "OpenEXRFormat.Depth": 1,  # 16-bit float
+                        "OpenEXRFormat.RedEnable": 1,
+                        "OpenEXRFormat.GreenEnable": 1,
+                        "OpenEXRFormat.BlueEnable": 1,
+                        "OpenEXRFormat.AlphaEnable": 0,
+                        "OpenEXRFormat.ZEnable": 0,
+                        "OpenEXRFormat.CovEnable": 0,
+                        "OpenEXRFormat.ObjIDEnable": 0,
+                        "OpenEXRFormat.MatIDEnable": 0,
+                        "OpenEXRFormat.UEnable": 0,
+                        "OpenEXRFormat.VEnable": 0,
+                        "OpenEXRFormat.XNormEnable": 0,
+                        "OpenEXRFormat.YNormEnable": 0,
+                        "OpenEXRFormat.ZNormEnable": 0,
+                        "OpenEXRFormat.XVelEnable": 0,
+                        "OpenEXRFormat.YVelEnable": 0,
+                        "OpenEXRFormat.XRevVelEnable": 0,
+                        "OpenEXRFormat.YRevVelEnable": 0,
+                        "OpenEXRFormat.XPosEnable": 0,
+                        "OpenEXRFormat.YPosEnable": 0,
+                        "OpenEXRFormat.ZPosEnable": 0,
+                        "OpenEXRFormat.XDispEnable": 0,
+                        "OpenEXRFormat.YDispEnable": 0,
                     },
-                    'connected_to': {
-                        'ref_id': random_ref_id
-                    }
-                }
+                    "connected_to": {"ref_id": random_ref_id},
+                },
             },
             {
-                'name': 'mp4',
-                'node_tree': {
-                    'type': 'Saver',
-                    'attr': {
-                        'TOOLS_Name': self.output_node_name_generator('mp4'),
+                "name": "mp4",
+                "node_tree": {
+                    "type": "Saver",
+                    "attr": {
+                        "TOOLS_Name": self.output_node_name_generator("mp4"),
                     },
-                    'input_list': {
-                        'Clip': self.output_path_generator(version, 'mp4'),
-                        'CreateDir': 1,
-                        'ProcessRed': 1,
-                        'ProcessGreen': 1,
-                        'ProcessBlue': 1,
-                        'ProcessAlpha': 0,
-                        'OutputFormat': 'QuickTimeMovies',
-                        'ProcessMode': 'Auto',
-                        'SaveFrames': 'Full',
-                        'QuickTimeMovies.Compression': 'H.264_avc1',
-                        'QuickTimeMovies.Quality': 95.0,
-                        'QuickTimeMovies.FrameRateFps': fps,
-                        'QuickTimeMovies.KeyFrames': 5,
-                        'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
-                        'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
+                    "input_list": {
+                        "Clip": self.output_path_generator(version, "mp4"),
+                        "CreateDir": 1,
+                        "ProcessRed": 1,
+                        "ProcessGreen": 1,
+                        "ProcessBlue": 1,
+                        "ProcessAlpha": 0,
+                        "OutputFormat": "QuickTimeMovies",
+                        "ProcessMode": "Auto",
+                        "SaveFrames": "Full",
+                        "QuickTimeMovies.Compression": "H.264_avc1",
+                        "QuickTimeMovies.Quality": 95.0,
+                        "QuickTimeMovies.FrameRateFps": fps,
+                        "QuickTimeMovies.KeyFrames": 5,
+                        "StartRenderScript": 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                        "EndRenderScript": 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                     },
-                    'connected_to': {
-                        'ref_id': random_ref_id
-                    }
-                }
+                    "connected_to": {"ref_id": random_ref_id},
+                },
             },
             {
-                'name': 'mov',
-                'node_tree': {
-                    'type': 'Saver',
-                    'attr': {
-                        'TOOLS_Name': self.output_node_name_generator('mov'),
+                "name": "mov",
+                "node_tree": {
+                    "type": "Saver",
+                    "attr": {
+                        "TOOLS_Name": self.output_node_name_generator("mov"),
                     },
-                    'input_list': {
-                        'Clip': self.output_path_generator(version, 'mov'),
-                        'CreateDir': 1,
-                        'ProcessRed': 1,
-                        'ProcessGreen': 1,
-                        'ProcessBlue': 1,
-                        'ProcessAlpha': 0,
-                        'OutputFormat': 'QuickTimeMovies',
-                        'ProcessMode': 'Auto',
-                        'SaveFrames': 'Full',
-                        'QuickTimeMovies.Compression': 'Apple ProRes 422 HQ_apch',
-                        'QuickTimeMovies.Quality': 95.0,
-                        'QuickTimeMovies.FrameRateFps': fps,
-                        'QuickTimeMovies.KeyFrames': 5,
-
-                        'QuickTimeMovies.LimitDataRate': 0.0,
-                        'QuickTimeMovies.DataRateK': 1000.0,
-                        'QuickTimeMovies.Advanced': 1.0,
-                        'QuickTimeMovies.Primaries': 0.0,
-                        'QuickTimeMovies.Transfer': 0.0,
-                        'QuickTimeMovies.Matrix': 0.0,
-                        'QuickTimeMovies.PixelAspectRatio': 0.0,
-                        'QuickTimeMovies.ErrorDiffusion': 1.0,
-                        'QuickTimeMovies.SaveAlphaChannel': 1.0,
-
-                        'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
-                        'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
-
+                    "input_list": {
+                        "Clip": self.output_path_generator(version, "mov"),
+                        "CreateDir": 1,
+                        "ProcessRed": 1,
+                        "ProcessGreen": 1,
+                        "ProcessBlue": 1,
+                        "ProcessAlpha": 0,
+                        "OutputFormat": "QuickTimeMovies",
+                        "ProcessMode": "Auto",
+                        "SaveFrames": "Full",
+                        "QuickTimeMovies.Compression": "Apple ProRes 422 HQ_apch",
+                        "QuickTimeMovies.Quality": 95.0,
+                        "QuickTimeMovies.FrameRateFps": fps,
+                        "QuickTimeMovies.KeyFrames": 5,
+                        "QuickTimeMovies.LimitDataRate": 0.0,
+                        "QuickTimeMovies.DataRateK": 1000.0,
+                        "QuickTimeMovies.Advanced": 1.0,
+                        "QuickTimeMovies.Primaries": 0.0,
+                        "QuickTimeMovies.Transfer": 0.0,
+                        "QuickTimeMovies.Matrix": 0.0,
+                        "QuickTimeMovies.PixelAspectRatio": 0.0,
+                        "QuickTimeMovies.ErrorDiffusion": 1.0,
+                        "QuickTimeMovies.SaveAlphaChannel": 1.0,
+                        "StartRenderScript": 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                        "EndRenderScript": 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                     },
-                    'connected_to': {
-                        'ref_id': random_ref_id
-                    }
-                }
+                    "connected_to": {"ref_id": random_ref_id},
+                },
             },
         ]
 
-        if version.task.type and version.task.type.name == 'Plate':
+        if version.task.type and version.task.type.name == "Plate":
             # create a different type of outputs
             output_format_data = [
                 {
-                    'name': 'jpg',
-                    'node_tree': {
-                        'type': 'Saver',
-                        'attr': {
-                            'TOOLS_Name': self.output_node_name_generator('jpg'),
+                    "name": "jpg",
+                    "node_tree": {
+                        "type": "Saver",
+                        "attr": {
+                            "TOOLS_Name": self.output_node_name_generator("jpg"),
                         },
-                        'input_list': {
-                            'Clip': self.output_path_generator(version, 'jpg'),
-                            'CreateDir': 1,
-                            'ProcessRed': 1,
-                            'ProcessGreen': 1,
-                            'ProcessBlue': 1,
-                            'ProcessAlpha': 0,
-                            'OutputFormat': 'JPEGFormat',
-                            'JpegFormat.Quality': 85,
+                        "input_list": {
+                            "Clip": self.output_path_generator(version, "jpg"),
+                            "CreateDir": 1,
+                            "ProcessRed": 1,
+                            "ProcessGreen": 1,
+                            "ProcessBlue": 1,
+                            "ProcessAlpha": 0,
+                            "OutputFormat": "JPEGFormat",
+                            "JpegFormat.Quality": 85,
                         },
-                        'connected_to': {
-                            'Input': {
+                        "connected_to": {
+                            "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
                                     "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - sRGB",
                                 },
-                                'connected_to': {
-                                    'Input': {
+                                "connected_to": {
+                                    "Input": {
                                         "type": "OCIOColorSpace",
                                         "ref_id": random_ref_id,
                                         "input_list": {
@@ -1098,113 +1103,111 @@ class Fusion(DCCBase):
                                             "OutputSpace": "ACES - ACES2065-1",
                                         },
                                     }
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                 },
                 {
-                    'name': 'exr',
-                    'node_tree': {
-                        'type': 'Saver',
-                        'attr': {
-                            'TOOLS_Name': self.output_node_name_generator('exr'),
+                    "name": "exr",
+                    "node_tree": {
+                        "type": "Saver",
+                        "attr": {
+                            "TOOLS_Name": self.output_node_name_generator("exr"),
                         },
-                        'input_list': {
-                            'Clip': self.output_path_generator(version, 'exr'),
-                            'CreateDir': 1,
-                            'ProcessRed': 1,
-                            'ProcessGreen': 1,
-                            'ProcessBlue': 1,
-                            'ProcessAlpha': 0,
-                            'OutputFormat': 'OpenEXRFormat',
-                            'OpenEXRFormat.Depth': 1,  # 16-bit float
-                            'OpenEXRFormat.RedEnable': 1,
-                            'OpenEXRFormat.GreenEnable': 1,
-                            'OpenEXRFormat.BlueEnable': 1,
-                            'OpenEXRFormat.AlphaEnable': 0,
-                            'OpenEXRFormat.ZEnable': 0,
-                            'OpenEXRFormat.CovEnable': 0,
-                            'OpenEXRFormat.ObjIDEnable': 0,
-                            'OpenEXRFormat.MatIDEnable': 0,
-                            'OpenEXRFormat.UEnable': 0,
-                            'OpenEXRFormat.VEnable': 0,
-                            'OpenEXRFormat.XNormEnable': 0,
-                            'OpenEXRFormat.YNormEnable': 0,
-                            'OpenEXRFormat.ZNormEnable': 0,
-                            'OpenEXRFormat.XVelEnable': 0,
-                            'OpenEXRFormat.YVelEnable': 0,
-                            'OpenEXRFormat.XRevVelEnable': 0,
-                            'OpenEXRFormat.YRevVelEnable': 0,
-                            'OpenEXRFormat.XPosEnable': 0,
-                            'OpenEXRFormat.YPosEnable': 0,
-                            'OpenEXRFormat.ZPosEnable': 0,
-                            'OpenEXRFormat.XDispEnable': 0,
-                            'OpenEXRFormat.YDispEnable': 0,
+                        "input_list": {
+                            "Clip": self.output_path_generator(version, "exr"),
+                            "CreateDir": 1,
+                            "ProcessRed": 1,
+                            "ProcessGreen": 1,
+                            "ProcessBlue": 1,
+                            "ProcessAlpha": 0,
+                            "OutputFormat": "OpenEXRFormat",
+                            "OpenEXRFormat.Depth": 1,  # 16-bit float
+                            "OpenEXRFormat.RedEnable": 1,
+                            "OpenEXRFormat.GreenEnable": 1,
+                            "OpenEXRFormat.BlueEnable": 1,
+                            "OpenEXRFormat.AlphaEnable": 0,
+                            "OpenEXRFormat.ZEnable": 0,
+                            "OpenEXRFormat.CovEnable": 0,
+                            "OpenEXRFormat.ObjIDEnable": 0,
+                            "OpenEXRFormat.MatIDEnable": 0,
+                            "OpenEXRFormat.UEnable": 0,
+                            "OpenEXRFormat.VEnable": 0,
+                            "OpenEXRFormat.XNormEnable": 0,
+                            "OpenEXRFormat.YNormEnable": 0,
+                            "OpenEXRFormat.ZNormEnable": 0,
+                            "OpenEXRFormat.XVelEnable": 0,
+                            "OpenEXRFormat.YVelEnable": 0,
+                            "OpenEXRFormat.XRevVelEnable": 0,
+                            "OpenEXRFormat.YRevVelEnable": 0,
+                            "OpenEXRFormat.XPosEnable": 0,
+                            "OpenEXRFormat.YPosEnable": 0,
+                            "OpenEXRFormat.ZPosEnable": 0,
+                            "OpenEXRFormat.XDispEnable": 0,
+                            "OpenEXRFormat.YDispEnable": 0,
                         },
-                        'connected_to': {
-                            'Input': {
+                        "connected_to": {
+                            "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
                                     "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "ACES - ACES2065-1",
                                 },
-                                'connected_to': {
+                                "connected_to": {
                                     "ref_id": random_ref_id,
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                 },
                 {
-                    'name': 'mov',
-                    'node_tree': {
-                        'type': 'Saver',
-                        'attr': {
-                            'TOOLS_Name': self.output_node_name_generator('mov'),
+                    "name": "mov",
+                    "node_tree": {
+                        "type": "Saver",
+                        "attr": {
+                            "TOOLS_Name": self.output_node_name_generator("mov"),
                         },
-                        'input_list': {
-                            'Clip': self.output_path_generator(version, 'mov'),
-                            'CreateDir': 1,
-                            'ProcessRed': 1,
-                            'ProcessGreen': 1,
-                            'ProcessBlue': 1,
-                            'ProcessAlpha': 0,
-                            'OutputFormat': 'QuickTimeMovies',
-                            'ProcessMode': 'Auto',
-                            'SaveFrames': 'Full',
-                            'QuickTimeMovies.Compression': 'Apple ProRes 422 HQ_apch',
-                            'QuickTimeMovies.Quality': 95.0,
-                            'QuickTimeMovies.FrameRateFps': fps,
-                            'QuickTimeMovies.KeyFrames': 5,
-
-                            'QuickTimeMovies.LimitDataRate': 0.0,
-                            'QuickTimeMovies.DataRateK': 1000.0,
-                            'QuickTimeMovies.Advanced': 1.0,
-                            'QuickTimeMovies.Primaries': 0.0,
-                            'QuickTimeMovies.Transfer': 0.0,
-                            'QuickTimeMovies.Matrix': 0.0,
-                            'QuickTimeMovies.PixelAspectRatio': 0.0,
-                            'QuickTimeMovies.ErrorDiffusion': 1.0,
-                            'QuickTimeMovies.SaveAlphaChannel': 1.0,
-
-                            'StartRenderScript': 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
-                            'EndRenderScript': 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
+                        "input_list": {
+                            "Clip": self.output_path_generator(version, "mov"),
+                            "CreateDir": 1,
+                            "ProcessRed": 1,
+                            "ProcessGreen": 1,
+                            "ProcessBlue": 1,
+                            "ProcessAlpha": 0,
+                            "OutputFormat": "QuickTimeMovies",
+                            "ProcessMode": "Auto",
+                            "SaveFrames": "Full",
+                            "QuickTimeMovies.Compression": "Apple ProRes 422 HQ_apch",
+                            "QuickTimeMovies.Quality": 95.0,
+                            "QuickTimeMovies.FrameRateFps": fps,
+                            "QuickTimeMovies.KeyFrames": 5,
+                            "QuickTimeMovies.LimitDataRate": 0.0,
+                            "QuickTimeMovies.DataRateK": 1000.0,
+                            "QuickTimeMovies.Advanced": 1.0,
+                            "QuickTimeMovies.Primaries": 0.0,
+                            "QuickTimeMovies.Transfer": 0.0,
+                            "QuickTimeMovies.Matrix": 0.0,
+                            "QuickTimeMovies.PixelAspectRatio": 0.0,
+                            "QuickTimeMovies.ErrorDiffusion": 1.0,
+                            "QuickTimeMovies.SaveAlphaChannel": 1.0,
+                            "StartRenderScript": 'frames_at_once = comp:GetPrefs("Comp.Memory.FramesAtOnce")\ncomp:SetPrefs("Comp.Memory.FramesAtOnce", 1)',
+                            "EndRenderScript": 'comp:SetPrefs("Comp.Memory.FramesAtOnce", frames_at_once)',
                         },
-                        'connected_to': {
-                            'Input': {
+                        "connected_to": {
+                            "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
                                     "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - Rec.709",
                                 },
-                                'connected_to': {
+                                "connected_to": {
                                     "ref_id": random_ref_id,
-                                }
+                                },
                             }
-                        }
+                        },
                     },
                 },
             ]
@@ -1212,68 +1215,68 @@ class Fusion(DCCBase):
         if version.take_name == "STMap":
             output_format_data = [
                 {
-                    'name': 'exr',
-                    'node_tree': {
-                        'type': 'Saver',
-                        'attr': {
-                            'TOOLS_Name': self.output_node_name_generator('exr'),
+                    "name": "exr",
+                    "node_tree": {
+                        "type": "Saver",
+                        "attr": {
+                            "TOOLS_Name": self.output_node_name_generator("exr"),
                         },
-                        'input_list': {
-                            'Clip': self.output_path_generator(version, 'exr'),
-                            'CreateDir': 1,
-                            'ProcessRed': 1,
-                            'ProcessGreen': 1,
-                            'ProcessBlue': 1,
-                            'ProcessAlpha': 0,
-                            'OutputFormat': 'OpenEXRFormat',
-                            'OpenEXRFormat.Depth': 2,  # 32-bit float
-                            'OpenEXRFormat.RedEnable': 1,
-                            'OpenEXRFormat.GreenEnable': 1,
-                            'OpenEXRFormat.BlueEnable': 1,
-                            'OpenEXRFormat.AlphaEnable': 0,
-                            'OpenEXRFormat.ZEnable': 0,
-                            'OpenEXRFormat.CovEnable': 0,
-                            'OpenEXRFormat.ObjIDEnable': 0,
-                            'OpenEXRFormat.MatIDEnable': 0,
-                            'OpenEXRFormat.UEnable': 0,
-                            'OpenEXRFormat.VEnable': 0,
-                            'OpenEXRFormat.XNormEnable': 0,
-                            'OpenEXRFormat.YNormEnable': 0,
-                            'OpenEXRFormat.ZNormEnable': 0,
-                            'OpenEXRFormat.XVelEnable': 0,
-                            'OpenEXRFormat.YVelEnable': 0,
-                            'OpenEXRFormat.XRevVelEnable': 0,
-                            'OpenEXRFormat.YRevVelEnable': 0,
-                            'OpenEXRFormat.XPosEnable': 0,
-                            'OpenEXRFormat.YPosEnable': 0,
-                            'OpenEXRFormat.ZPosEnable': 0,
-                            'OpenEXRFormat.XDispEnable': 0,
-                            'OpenEXRFormat.YDispEnable': 0,
+                        "input_list": {
+                            "Clip": self.output_path_generator(version, "exr"),
+                            "CreateDir": 1,
+                            "ProcessRed": 1,
+                            "ProcessGreen": 1,
+                            "ProcessBlue": 1,
+                            "ProcessAlpha": 0,
+                            "OutputFormat": "OpenEXRFormat",
+                            "OpenEXRFormat.Depth": 2,  # 32-bit float
+                            "OpenEXRFormat.RedEnable": 1,
+                            "OpenEXRFormat.GreenEnable": 1,
+                            "OpenEXRFormat.BlueEnable": 1,
+                            "OpenEXRFormat.AlphaEnable": 0,
+                            "OpenEXRFormat.ZEnable": 0,
+                            "OpenEXRFormat.CovEnable": 0,
+                            "OpenEXRFormat.ObjIDEnable": 0,
+                            "OpenEXRFormat.MatIDEnable": 0,
+                            "OpenEXRFormat.UEnable": 0,
+                            "OpenEXRFormat.VEnable": 0,
+                            "OpenEXRFormat.XNormEnable": 0,
+                            "OpenEXRFormat.YNormEnable": 0,
+                            "OpenEXRFormat.ZNormEnable": 0,
+                            "OpenEXRFormat.XVelEnable": 0,
+                            "OpenEXRFormat.YVelEnable": 0,
+                            "OpenEXRFormat.XRevVelEnable": 0,
+                            "OpenEXRFormat.YRevVelEnable": 0,
+                            "OpenEXRFormat.XPosEnable": 0,
+                            "OpenEXRFormat.YPosEnable": 0,
+                            "OpenEXRFormat.ZPosEnable": 0,
+                            "OpenEXRFormat.XDispEnable": 0,
+                            "OpenEXRFormat.YDispEnable": 0,
                         },
-                        'connected_to': {
-                            'ref_id': random_ref_id
-                        }
-                    }
+                        "connected_to": {"ref_id": random_ref_id},
+                    },
                 },
             ]
-            self.comp.SetPrefs({
-                # set project frame format to 32bit
-                "Comp.FrameFormat.DepthFull": 3.0,
-                "Comp.FrameFormat.DepthLock": True,
-            })
+            self.comp.SetPrefs(
+                {
+                    # set project frame format to 32bit
+                    "Comp.FrameFormat.DepthFull": 3.0,
+                    "Comp.FrameFormat.DepthLock": True,
+                }
+            )
 
         # selectively generate output format
         saver_nodes = self.get_main_saver_node()
 
         for data in output_format_data:
-            format_name = data['name']
-            node_tree = data['node_tree']
+            format_name = data["name"]
+            node_tree = data["node_tree"]
 
             # now check if a node with the same name exists
             format_node = None
             format_node_name = self.output_node_name_generator(format_name)
             for node in saver_nodes:
-                node_name = node.GetAttrs('TOOLS_Name')
+                node_name = node.GetAttrs("TOOLS_Name")
                 if node_name.startswith(format_node_name):
                     format_node = node
                     break
@@ -1283,13 +1286,13 @@ class Fusion(DCCBase):
                 self.create_node_tree(node_tree)
             else:
                 # just update the input_lists
-                if 'input_list' in node_tree:
-                    input_list = node_tree['input_list']
+                if "input_list" in node_tree:
+                    input_list = node_tree["input_list"]
                     for key in input_list:
                         node_input_list = format_node.GetInputList()
                         for input_entry_key in node_input_list.keys():
                             input_entry = node_input_list[input_entry_key]
-                            input_id = input_entry.GetAttrs()['INPS_ID']
+                            input_id = input_entry.GetAttrs()["INPS_ID"]
                             if input_id == key:
                                 value = input_list[key]
                                 input_entry[0] = value
@@ -1297,10 +1300,9 @@ class Fusion(DCCBase):
 
             try:
                 import os
+
                 os.makedirs(
-                    os.path.dirname(
-                        self.output_path_generator(version, format_name)
-                    )
+                    os.path.dirname(self.output_path_generator(version, format_name))
                 )
             except OSError:
                 # path already exists
@@ -1318,9 +1320,9 @@ class Fusion(DCCBase):
         # search for Project path
 
         project_dir = None
-        maps = self.comp_prefs['Paths'].get('Map', None)
+        maps = self.comp_prefs["Paths"].get("Map", None)
         if maps:
-            project_dir = maps.get('Project:', None)
+            project_dir = maps.get("Project:", None)
 
         # if not project_dir:
         #     # set the map for the project dir
@@ -1338,14 +1340,17 @@ class Fusion(DCCBase):
         :return:
         """
         import os
+
         project_directory_in = os.path.normpath(project_directory_in)
-        print('setting project directory to: %s' % project_directory_in)
+        print("setting project directory to: %s" % project_directory_in)
 
         # set a path map
         self.comp.SetPrefs(
             {
-                'Comp.Paths.Map': {
-                    'Project:': project_directory_in if sys.version_info[0] >= 3 else project_directory_in.encode()
+                "Comp.Paths.Map": {
+                    "Project:": project_directory_in
+                    if sys.version_info[0] >= 3
+                    else project_directory_in.encode()
                 }
             }
         )

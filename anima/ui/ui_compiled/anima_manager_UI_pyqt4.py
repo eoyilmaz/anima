@@ -14,6 +14,7 @@ try:
 except AttributeError:
     _fromUtf8 = lambda s: s
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName(_fromUtf8("MainWindow"))
@@ -56,7 +57,9 @@ class Ui_MainWindow(object):
         self.pushButton = QtGui.QPushButton(self.dockWidgetContents)
         self.pushButton.setObjectName(_fromUtf8("pushButton"))
         self.verticalLayout.addWidget(self.pushButton)
-        spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        spacerItem = QtGui.QSpacerItem(
+            20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding
+        )
         self.verticalLayout.addItem(spacerItem)
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
@@ -107,23 +110,101 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "Anima Manager", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuEdit.setTitle(QtGui.QApplication.translate("MainWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuView.setTitle(QtGui.QApplication.translate("MainWindow", "View", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_2.setText(QtGui.QApplication.translate("MainWindow", "My Projects", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_3.setText(QtGui.QApplication.translate("MainWindow", "My Tasks", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton.setText(QtGui.QApplication.translate("MainWindow", "My Vacations", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionConnect_To_Server.setText(QtGui.QApplication.translate("MainWindow", "Connect To Server...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionAbout_AnimaMan.setText(QtGui.QApplication.translate("MainWindow", "About AnimaMan ...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionLogin.setText(QtGui.QApplication.translate("MainWindow", "Login...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionLogout.setText(QtGui.QApplication.translate("MainWindow", "Logout", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionExit.setText(QtGui.QApplication.translate("MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionUndo.setText(QtGui.QApplication.translate("MainWindow", "Undo", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionRedo.setText(QtGui.QApplication.translate("MainWindow", "Redo", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionCopy.setText(QtGui.QApplication.translate("MainWindow", "Copy", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionPaste.setText(QtGui.QApplication.translate("MainWindow", "Paste", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionFind.setText(QtGui.QApplication.translate("MainWindow", "Find...", None, QtGui.QApplication.UnicodeUTF8))
-        self.actionHelp.setText(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
-
+        MainWindow.setWindowTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Anima Manager", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuFile.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuEdit.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Edit", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuHelp.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.menuView.setTitle(
+            QtGui.QApplication.translate(
+                "MainWindow", "View", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushButton_2.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "My Projects", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushButton_3.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "My Tasks", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.pushButton.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "My Vacations", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionConnect_To_Server.setText(
+            QtGui.QApplication.translate(
+                "MainWindow",
+                "Connect To Server...",
+                None,
+                QtGui.QApplication.UnicodeUTF8,
+            )
+        )
+        self.actionAbout_AnimaMan.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "About AnimaMan ...", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionLogin.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Login...", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionLogout.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Logout", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionExit.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Exit", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionUndo.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Undo", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionRedo.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Redo", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionCopy.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Copy", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionPaste.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Paste", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionFind.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Find...", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )
+        self.actionHelp.setText(
+            QtGui.QApplication.translate(
+                "MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8
+            )
+        )

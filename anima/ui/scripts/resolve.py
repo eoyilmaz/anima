@@ -5,7 +5,7 @@ import logging
 from anima import logger
 
 
-def toolbox(lib='PySide', logging_level=logging.WARNING, parent=None):
+def toolbox(lib="PySide", logging_level=logging.WARNING, parent=None):
     """Helper function for version_dialog UI for Resolve
 
     It uses with PySide by default you can opt to use PyQt4 instead by setting
@@ -35,9 +35,11 @@ def toolbox(lib='PySide', logging_level=logging.WARNING, parent=None):
     # version_dialog.UI(environment=fusion_env, parent=parent)
 
     from anima import ui
+
     ui.SET_PYSIDE2()
 
     from anima.dcc.resolve import toolbox
+
     reload(toolbox)
     dialog = toolbox.UI()
     return dialog

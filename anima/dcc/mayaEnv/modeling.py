@@ -5,13 +5,11 @@ from pymel import core as pm
 
 
 class Modeling(object):
-    """Modeling tools
-    """
+    """Modeling tools"""
 
     @classmethod
     def smooth_edges(cls, iteration=1):
-        """Smooths the selected edge loops
-        """
+        """Smooths the selected edge loops"""
         orig_selection = pm.selected()
 
         vtxs = pm.ls(pm.polyListComponentConversion(toVertex=1), fl=1)
@@ -25,7 +23,7 @@ class Modeling(object):
             in_list = 0
             indeces = vtx.connectedVertices().indices()
             for cvtx_index in indeces:
-                cvtx = pm.PyNode('%s.vtx[%s]' % (shape.name(), cvtx_index))
+                cvtx = pm.PyNode("%s.vtx[%s]" % (shape.name(), cvtx_index))
                 if cvtx in vtxs:
                     in_list += 1
             if in_list == 1:
@@ -41,7 +39,7 @@ class Modeling(object):
 
             cvtx_indeces = current_vtx.connectedVertices().indices()
             for cvtx_index in cvtx_indeces:
-                cvtx = pm.PyNode('%s.vtx[%s]' % (shape.name(), cvtx_index))
+                cvtx = pm.PyNode("%s.vtx[%s]" % (shape.name(), cvtx_index))
                 if cvtx in vtxs:
                     vtxs.remove(cvtx)
                     bucket.append(cvtx)
@@ -50,18 +48,17 @@ class Modeling(object):
             i += 1
 
         # get the vertex positions
-        ordered_vtx_positions = [pm.dt.Vector(pm.xform(vtx, q=1, ws=1, t=1))
-                                 for vtx in ordered_vtxs]
+        ordered_vtx_positions = [
+            pm.dt.Vector(pm.xform(vtx, q=1, ws=1, t=1)) for vtx in ordered_vtxs
+        ]
 
         # smooth the positions
         from anima import utils
-        ordered_vtx_positions = utils.smooth_array(
-            ordered_vtx_positions, iteration
-        )
+
+        ordered_vtx_positions = utils.smooth_array(ordered_vtx_positions, iteration)
 
         # set it back
-        map(lambda x, y: pm.xform(y, ws=1, t=x), ordered_vtx_positions,
-            ordered_vtxs)
+        map(lambda x, y: pm.xform(y, ws=1, t=x), ordered_vtx_positions, ordered_vtxs)
 
         # reselect original selection
         pm.select(orig_selection)
@@ -88,7 +85,7 @@ class Modeling(object):
 
         lut = auxiliary.match_hierarchy(source, target)
 
-        for source, target in lut['match']:
+        for source, target in lut["match"]:
             pm.transferAttributes(
                 source,
                 target,
@@ -97,11 +94,11 @@ class Modeling(object):
                 transferUVs=2,
                 transferColors=2,
                 sampleSpace=sample_space,
-                sourceUvSpace='map1',
+                sourceUvSpace="map1",
                 targetUvSpace="map1",
                 searchMethod=0,
                 flipUVs=0,
-                colorBorders=1
+                colorBorders=1,
             )
         # restore selection
         pm.select(selection)
@@ -114,8 +111,7 @@ class Modeling(object):
         selection_list = pm.selected()
         for node in selection_list:
             pm.polyAutoProjection(
-                node,
-                lm=0, pb=0, ibd=1, cm=0, l=2, sc=1, o=1, p=6, ps=0.2, ws=0
+                node, lm=0, pb=0, ibd=1, cm=0, l=2, sc=1, o=1, p=6, ps=0.2, ws=0
             )
 
             pm.select(node)
@@ -127,45 +123,52 @@ class Modeling(object):
 
             pm.select(node)
             try:
-                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1))
+                pm.u3dLayout(
+                    node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1)
+                )
             except RuntimeError as e:
-                if 'non-manifold UVs' in str(e) or 'Mesh has unconnected vertices' in str(e):
+                if "non-manifold UVs" in str(
+                    e
+                ) or "Mesh has unconnected vertices" in str(e):
                     pm.mel.eval('Unfold3DFixNonManifold({"nonManifoldUV"})')
-                pm.u3dLayout(node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1))
+                pm.u3dLayout(
+                    node, res=256, scl=3, spc=0.0078125, mar=0.0078125, box=(0, 1, 0, 1)
+                )
 
             pm.select(node)
-            pm.mel.eval('DeleteHistory;')
+            pm.mel.eval("DeleteHistory;")
 
         pm.select(selection_list)
 
     @classmethod
     def fix_uvsets(cls):
-        """Fixes uvSets (DiffuseUV -> map1)
-        """
+        """Fixes uvSets (DiffuseUV -> map1)"""
         for node in pm.selected():
             shape = node.getShape()
 
             # get current uvset
             uvset_names = pm.polyUVSet(shape, query=True, allUVSets=True)
 
-            if 'DiffuseUV' in uvset_names:
+            if "DiffuseUV" in uvset_names:
                 if len(uvset_names) == 1:
                     # Copy values of uvset "DiffuseUV" to "map1"
-                    pm.polyUVSet(shape, copy=True, nuv='map1', uvSet='DiffuseUV')
+                    pm.polyUVSet(shape, copy=True, nuv="map1", uvSet="DiffuseUV")
 
                     # set current uvset to map1
-                    pm.polyUVSet(shape, currentUVSet=True, uvSet='map1')
+                    pm.polyUVSet(shape, currentUVSet=True, uvSet="map1")
 
                     # delete uv set
                     # pm.polyUVSet( shape, delete=True, uvSet='DiffuseUV')
                 else:
-                    if 'map1' in uvset_names:
+                    if "map1" in uvset_names:
                         # set current uvset to map1
-                        uvs = shape.getUVs(uvSet='map1')
+                        uvs = shape.getUVs(uvSet="map1")
 
                         if len(uvs[0]) == 0:
                             # Copy values of uvset "DiffuseUV" to "map1"
-                            pm.polyUVSet(shape, copy=True, nuv='map1', uvSet='DiffuseUV')
+                            pm.polyUVSet(
+                                shape, copy=True, nuv="map1", uvSet="DiffuseUV"
+                            )
 
     @classmethod
     def reverse_normals(cls):
@@ -190,21 +193,35 @@ class Modeling(object):
         selection = pm.ls(sl=1)
         for item in selection:
             pm.polySmooth(
-                item, mth=method, dv=1, c=1, kb=0, ksb=0, khe=0, kt=1, kmb=0,
-                suv=1, peh=0, sl=1, dpe=1, ps=0.1, ro=1, ch=1
+                item,
+                mth=method,
+                dv=1,
+                c=1,
+                kb=0,
+                ksb=0,
+                khe=0,
+                kt=1,
+                kmb=0,
+                suv=1,
+                peh=0,
+                sl=1,
+                dpe=1,
+                ps=0.1,
+                ro=1,
+                ch=1,
             )
         pm.select(selection)
 
     @classmethod
     def activate_deActivate_smooth(cls, nodeState):
-        selection = pm.ls(type='polySmoothFace')
+        selection = pm.ls(type="polySmoothFace")
         for item in selection:
             item.nodeState.set(nodeState)
 
     @classmethod
     def delete_smooth(cls):
         Modeling.activate_deActivate_smooth(0)
-        selection = pm.ls(type='polySmoothFace')
+        selection = pm.ls(type="polySmoothFace")
         if len(selection) > 0:
             pm.delete(selection)
 
@@ -215,13 +232,14 @@ class Modeling(object):
         for item in selection:
             hist = pm.listHistory(item)
             for i in range(0, len(hist)):
-                if hist[i].type() == 'polySmoothFace':
+                if hist[i].type() == "polySmoothFace":
                     deleteList.append(hist[i])
         pm.delete(deleteList)
 
     @classmethod
     def hierarchy_instancer(cls):
         from anima.dcc.mayaEnv import hierarchy_instancer
+
         new_nodes = []
 
         instancer = hierarchy_instancer.HierarchyInstancer()
@@ -233,16 +251,15 @@ class Modeling(object):
     @classmethod
     def relax_vertices(cls):
         from anima.dcc.mayaEnv import relax_vertices
+
         relax_vertices.relax()
 
     @classmethod
     def create_curve_from_mesh_edges(cls):
-        """creates 3rd degree curves from the selected mesh edges
-        """
+        """creates 3rd degree curves from the selected mesh edges"""
 
         def order_edges(edge_list):
-            """orders the given edge list according to their connectivity
-            """
+            """orders the given edge list according to their connectivity"""
             edge_list = pm.ls(edge_list, fl=1)
 
             # find a starting edge
@@ -284,8 +301,7 @@ class Modeling(object):
             return ordered_edges
 
         def order_vertices(ordered_edges):
-            """orders the vertices of the given ordered edge list
-            """
+            """orders the vertices of the given ordered edge list"""
             # now get an ordered list of vertices
             ordered_vertices = []
 
@@ -293,7 +309,7 @@ class Modeling(object):
                 v0, v1 = pm.ls(e.connectedVertices(), fl=1)
 
                 # get the connected edges of v0
-                if ordered_edges[i+1] not in pm.ls(v0.connectedEdges(), fl=1):
+                if ordered_edges[i + 1] not in pm.ls(v0.connectedEdges(), fl=1):
                     # v0 is the first vertex
                     ordered_vertices.append(v0)
                 else:
@@ -319,30 +335,26 @@ class Modeling(object):
         ordered_vertices = order_vertices(ordered_edges)
 
         # now create a curve from the given vertices
-        pm.curve(
-            p=map(lambda x: x.getPosition(space='world'), ordered_vertices),
-            d=3
-        )
+        pm.curve(p=map(lambda x: x.getPosition(space="world"), ordered_vertices), d=3)
 
     @classmethod
     def vertex_aligned_locator(cls):
-        """creates vertex aligned locator, select 3 vertices
-        """
+        """creates vertex aligned locator, select 3 vertices"""
         selection = pm.ls(os=1, fl=1)
 
         # get the axises
-        p0 = selection[0].getPosition(space='world')
-        p1 = selection[1].getPosition(space='world')
-        p2 = selection[2].getPosition(space='world')
+        p0 = selection[0].getPosition(space="world")
+        p1 = selection[1].getPosition(space="world")
+        p2 = selection[2].getPosition(space="world")
 
         v1 = p0 - p1
         v2 = p2 - p1
-        #v3 = p0 - p2
+        # v3 = p0 - p2
 
         v1.normalize()
         v2.normalize()
 
-        dcm = pm.createNode('decomposeMatrix')
+        dcm = pm.createNode("decomposeMatrix")
 
         x = v1
         z = v2
@@ -350,10 +362,9 @@ class Modeling(object):
         y.normalize()
 
         dcm.inputMatrix.set(
-            [x[0], x[1], x[2], 0,
-             y[0], y[1], y[2], 0,
-             z[0], z[1], z[2], 0,
-                0,    0,    0, 1], type='matrix')
+            [x[0], x[1], x[2], 0, y[0], y[1], y[2], 0, z[0], z[1], z[2], 0, 0, 0, 0, 1],
+            type="matrix",
+        )
 
         loc = pm.spaceLocator()
 
@@ -364,31 +375,30 @@ class Modeling(object):
 
     @classmethod
     def select_zero_uv_area_faces(cls):
-        """selects faces with zero UV area
-        """
+        """selects faces with zero UV area"""
+
         def area(p):
-            return 0.5 * abs(sum(x0 * y1 - x1 * y0
-                                 for ((x0, y0), (x1, y1)) in segments(p)))
+            return 0.5 * abs(
+                sum(x0 * y1 - x1 * y0 for ((x0, y0), (x1, y1)) in segments(p))
+            )
 
         def segments(p):
             return zip(p, p[1:] + [p[0]])
 
-        all_meshes = pm.ls(
-            [node.getShape() for node in pm.ls(sl=1)],
-            type='mesh'
-        )
+        all_meshes = pm.ls([node.getShape() for node in pm.ls(sl=1)], type="mesh")
 
         mesh_count = len(all_meshes)
 
         from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
         from anima.ui.progress_dialog import ProgressDialogManager
+
         wrp = MayaMainProgressBarWrapper()
         pdm = ProgressDialogManager(dialog=wrp)
 
         if not pm.general.about(batch=1) and mesh_count:
             pdm.use_ui = True
 
-        caller = pdm.register(mesh_count, 'check_uvs()')
+        caller = pdm.register(mesh_count, "check_uvs()")
 
         faces_with_zero_uv_area = []
         for node in all_meshes:
@@ -404,17 +414,15 @@ class Modeling(object):
                         # meshes_with_zero_uv_area.append(node)
                         # break
                         faces_with_zero_uv_area.append(
-                            '%s.f[%s]' % (node.fullPath(), i)
+                            "%s.f[%s]" % (node.fullPath(), i)
                         )
                 except RuntimeError:
-                    faces_with_zero_uv_area.append(
-                        '%s.f[%s]' % (node.fullPath(), i)
-                    )
+                    faces_with_zero_uv_area.append("%s.f[%s]" % (node.fullPath(), i))
 
             caller.step()
 
         if len(faces_with_zero_uv_area) == 0:
-            pm.warning('No Zero UV area polys found!!!')
+            pm.warning("No Zero UV area polys found!!!")
             return []
         else:
             pm.select(faces_with_zero_uv_area)
@@ -432,18 +440,18 @@ class Modeling(object):
           pivot point to
         """
         from maya.OpenMaya import MBoundingBox, MPoint
+
         if not 0 <= axis <= 6:
             return
 
         for node in pm.ls(sl=1):
             # check if the node has children
-            children = pm.ls(sl=1)[0].getChildren(ad=1, type='transform')
+            children = pm.ls(sl=1)[0].getChildren(ad=1, type="transform")
             # get the bounding box points
             # bbox = node.boundingBox()
             bbox = pm.xform(node, q=1, ws=1, boundingBox=1)
             bbox = MBoundingBox(
-                MPoint(bbox[0], bbox[1], bbox[2]),
-                MPoint(bbox[3], bbox[4], bbox[5])
+                MPoint(bbox[0], bbox[1], bbox[2]), MPoint(bbox[3], bbox[4], bbox[5])
             )
 
             if len(children):
@@ -454,7 +462,7 @@ class Modeling(object):
                         child_bbox = pm.xform(child, q=1, ws=1, boundingBox=1)
                         child_bbox = MBoundingBox(
                             MPoint(child_bbox[0], child_bbox[1], child_bbox[2]),
-                            MPoint(child_bbox[3], child_bbox[4], child_bbox[5])
+                            MPoint(child_bbox[3], child_bbox[4], child_bbox[5]),
                         )
                         bbox.expand(child_bbox.min())
                         bbox.expand(child_bbox.max())
@@ -507,7 +515,7 @@ class Modeling(object):
                 # not a DAG object with shape
                 return
 
-            shading_engines = shape.outputs(type='shadingEngine')
+            shading_engines = shape.outputs(type="shadingEngine")
             if not len(shading_engines):
                 # not an object either
                 # so what the fuck are you amk
@@ -523,8 +531,7 @@ class Modeling(object):
 
     @classmethod
     def bbox_from_selection(cls):
-        """creates the bbox of the selected objects as a real polyCube
-        """
+        """creates the bbox of the selected objects as a real polyCube"""
         bbox = pm.dt.BoundingBox()
         for node in pm.selected():
             bbox2 = node.boundingBox()
@@ -536,4 +543,3 @@ class Modeling(object):
             depth=bbox.depth(),
         )
         cube_transform.t.set(bbox.center())
-

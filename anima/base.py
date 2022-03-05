@@ -2,8 +2,7 @@
 
 
 class Singleton(type):
-    """Metaclass for singletons
-    """
+    """Metaclass for singletons"""
 
     def __init__(cls, name, bases, dict):
         super(Singleton, cls).__init__(name, bases, dict)

@@ -5,138 +5,120 @@ import pymel.core as pm
 from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
 CONVERSION_SPEC_SHEET = {
-    'aiStandard': {
+    "aiStandard": {
         # rsMaterial
-        'node_type': 'RedshiftMaterial',
-        'secondary_type': 'shader',
-
-        'call_after': lambda x, y: y.outColor >>
-                                   x.outputs(type='shadingEngine', p=1)[0]
-        if x.outputs(type='shadingEngine', p=1) else None,
-
+        "node_type": "RedshiftMaterial",
+        "secondary_type": "shader",
+        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+        if x.outputs(type="shadingEngine", p=1)
+        else None,
         # aiStandard material attributes
-        'attributes': {
-            'color': [
-                'diffuse_color',
-                'transl_color',  # backlight color should be same with the
-            ],                   # diffuse color
-            'Kd': 'diffuse_weight',
-            'diffuseRoughness': 'diffuse_roughness',
-
+        "attributes": {
+            "color": [
+                "diffuse_color",
+                "transl_color",  # backlight color should be same with the
+            ],  # diffuse color
+            "Kd": "diffuse_weight",
+            "diffuseRoughness": "diffuse_roughness",
             # BackLight
-            'Kb': 'transl_weight',
-
+            "Kb": "transl_weight",
             # Extended Controls for Diffuse
-            'directDiffuse': 'diffuse_direct',
-            'indirectDiffuse': 'diffuse_indirect',
-
+            "directDiffuse": "diffuse_direct",
+            "indirectDiffuse": "diffuse_indirect",
             # Specular
-            'KsColor': 'refl_color',
-            'Ks': 'refl_weight',
-            'specularRoughness': 'refl_roughness',
-            'specularAnisotropy': {
-                'refl_aniso': lambda x: (x - 0.5) * 2,
+            "KsColor": "refl_color",
+            "Ks": "refl_weight",
+            "specularRoughness": "refl_roughness",
+            "specularAnisotropy": {
+                "refl_aniso": lambda x: (x - 0.5) * 2,
             },
-            'specularRotation': 'refl_aniso_rotation',
-            'specularDistribution': 'refl_brdf',
-            'specularFresnel': {
+            "specularRotation": "refl_aniso_rotation",
+            "specularDistribution": "refl_brdf",
+            "specularFresnel": {
                 # set it do "Color + Edge Tint"
-                'refl_fresnel_mode': lambda x: 1 if x == 1 else 3
+                "refl_fresnel_mode": lambda x: 1
+                if x == 1
+                else 3
             },
-            'Ksn': {
+            "Ksn": {
                 # setting the ref_reflectivity to 0 kills all the
                 # reflection, so set it to a very small number instead
                 # to mimic Arnold's fresnel
-                'refl_reflectivity':
-                    lambda x: (x, x, x) if x > 0 else (0.001, 0.001, 0.001),
-                'refl_edge_tint': (1, 1, 1)
+                "refl_reflectivity": lambda x: (x, x, x)
+                if x > 0
+                else (0.001, 0.001, 0.001),
+                "refl_edge_tint": (1, 1, 1),
             },
-
             # Extended Controls for Specular
-            'directSpecular': 'refl_direct',
-            'indirectSpecular': 'refl_indirect',
-
+            "directSpecular": "refl_direct",
+            "indirectSpecular": "refl_indirect",
             # Just skip any Reflection attribute
             # KrColor, Kr, enableInternalReflections, Fresnel, Krn,
             # reflectionExitUseEnvironment, reflectionExitColor
-
             # Refraction
-            'KtColor': 'refr_color',
-            'Kt': 'refr_weight',
-            'IOR': {
-                'refr_ior': lambda x: x if x >= 1.0 else 1.0
-            },
-            'FresnelUseIOR': 'refr_use_base_IOR',
-            'dispersionAbbe': 'refr_abbe',
-            'refractionRoughness': 'refr_roughness',
-            'transmittance': 'refr_transmittance',
-            'opacity': 'opacity_color',
-
+            "KtColor": "refr_color",
+            "Kt": "refr_weight",
+            "IOR": {"refr_ior": lambda x: x if x >= 1.0 else 1.0},
+            "FresnelUseIOR": "refr_use_base_IOR",
+            "dispersionAbbe": "refr_abbe",
+            "refractionRoughness": "refr_roughness",
+            "transmittance": "refr_transmittance",
+            "opacity": "opacity_color",
             # Skip refractionExitUseEnvironment, refractionExitColor
-
             # Bump
-            'normalCamera': 'bump_input',
-
+            "normalCamera": "bump_input",
             # SSS
             # Use the first layer of RSMaterial for the SSS
-            'KsssColor': 'ms_color0',
-            'Ksss': 'ms_amount',
-            'sssRadius': {
+            "KsssColor": "ms_color0",
+            "Ksss": "ms_amount",
+            "sssRadius": {
                 # set to the mean value of the sssRadius which is a color in
                 # Arnold
-                'ms_radius0': lambda x: (x[0] + x[1] + x[2]) / 3.0
+                "ms_radius0": lambda x: (x[0] + x[1] + x[2])
+                / 3.0
             },
             # skip sssProfile
-
-            'emissionColor': 'emission_color',
-            'emission': 'emission_weight',
-
+            "emissionColor": "emission_color",
+            "emission": "emission_weight",
             # skip caustics attributes
             # enableGlossyCaustics, enableReflectiveCaustics,
             # enableRefractiveCaustics
-        }
+        },
     },
-
-    'aiStandardSurface': {
+    "aiStandardSurface": {
         # rsMaterial
-        'node_type': 'RedshiftMaterial',
-        'secondary_type': 'shader',
-
-        'call_after': lambda x, y: y.outColor >>
-                                   x.outputs(type='shadingEngine', p=1)[0]
-        if x.outputs(type='shadingEngine', p=1) else None,
-
+        "node_type": "RedshiftMaterial",
+        "secondary_type": "shader",
+        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+        if x.outputs(type="shadingEngine", p=1)
+        else None,
         # aiStandard material attributes
-        'attributes': {
-            'baseColor': [
-                'diffuse_color',
-                'transl_color',  # backlight color should be same with the
+        "attributes": {
+            "baseColor": [
+                "diffuse_color",
+                "transl_color",  # backlight color should be same with the
             ],  # diffuse color
-            'base': 'diffuse_weight',
-            'diffuseRoughness': 'diffuse_roughness',
-
+            "base": "diffuse_weight",
+            "diffuseRoughness": "diffuse_roughness",
             # # BackLight
             # 'Kb': 'transl_weight',
-
             # Extended Controls for Diffuse
             # 'directDiffuse': 'diffuse_direct',
-            'indirectDiffuse': 'diffuse_indirect',
-
+            "indirectDiffuse": "diffuse_indirect",
             # Specular
-            'specular': 'refl_weight',
-            'specularColor': 'refl_color',
-            'specularRoughness': 'refl_roughness',
-            'specularIOR': 'refl_ior',
-            'specularAnisotropy': 'refl_aniso',
-            'specularRotation': 'refl_aniso_rotation',
-
-            'metalness': {
-                'refl_metalness': lambda x, y, z:
-                connect_input(y, 'metalness', z, 'refl_metalness'),
-                'refl_fresnel_mode': 2,
-                'refl_brdf': 1,  # set to GGX
+            "specular": "refl_weight",
+            "specularColor": "refl_color",
+            "specularRoughness": "refl_roughness",
+            "specularIOR": "refl_ior",
+            "specularAnisotropy": "refl_aniso",
+            "specularRotation": "refl_aniso_rotation",
+            "metalness": {
+                "refl_metalness": lambda x, y, z: connect_input(
+                    y, "metalness", z, "refl_metalness"
+                ),
+                "refl_fresnel_mode": 2,
+                "refl_brdf": 1,  # set to GGX
             },
-
             # 'specularDistribution': 'refl_brdf',
             # 'specularFresnel': {
             #     # set it do "Color + Edge Tint"
@@ -150,271 +132,216 @@ CONVERSION_SPEC_SHEET = {
             #         lambda x: (x, x, x) if x > 0 else (0.001, 0.001, 0.001),
             #     'refl_edge_tint': (1, 1, 1)
             # },
-
             # Extended Controls for Specular
             # 'directSpecular': 'refl_direct',
-            'indirectSpecular': 'refl_indirect',
-
+            "indirectSpecular": "refl_indirect",
             # Just skip any Reflection attribute
             # KrColor, Kr, enableInternalReflections, Fresnel, Krn,
             # reflectionExitUseEnvironment, reflectionExitColor
-
             # Refraction
-            'transmission': 'refr_weight',
-            'transmissionColor': 'refr_color',
+            "transmission": "refr_weight",
+            "transmissionColor": "refr_color",
             # 'IOR': {
             #     'refr_ior': lambda x: x if x >= 1.0 else 1.0
             # },
-            'transmissionScatter': 'ss_scatter_coeff',
-            'transmissionDispersion': 'refr_abbe',
-            'thinWalled': 'refr_thin_walled',
-
+            "transmissionScatter": "ss_scatter_coeff",
+            "transmissionDispersion": "refr_abbe",
+            "thinWalled": "refr_thin_walled",
             # For now skip SSS attributes
             # 'subsurface': 'ss_amount',
             # 'subsurfaceColor': 'ss_scatter_coeff',
             # 'subsurfaceScale': ''
-
-
             # Skip refractionExitUseEnvironment, refractionExitColor
-
             # Bump
-            'normalCamera': 'bump_input',
-
+            "normalCamera": "bump_input",
             # SSS
             # Use the first layer of RSMaterial for the SSS
-            'subsurface': 'ms_amount',
-            'subsurfaceColor': 'ms_color0',
-            'subsurfaceRadius': {
+            "subsurface": "ms_amount",
+            "subsurfaceColor": "ms_color0",
+            "subsurfaceRadius": {
                 # set to the mean value of the sssRadius which is a color in
                 # Arnold
-                'ms_radius0': lambda x: (x[0] + x[1] + x[2]) / 3.0
+                "ms_radius0": lambda x: (x[0] + x[1] + x[2])
+                / 3.0
             },
             # skip sssProfile
-
-            'emissionColor': 'emission_color',
-            'emission': 'emission_weight',
-
+            "emissionColor": "emission_color",
+            "emission": "emission_weight",
             # skip caustics attributes
             # enableGlossyCaustics, enableReflectiveCaustics,
             # enableRefractiveCaustics
-        }
+        },
     },
-
-    'aiSkin': {
+    "aiSkin": {
         # rsMaterial
-        'node_type': 'RedshiftSkin',
-        'secondary_type': 'shader',
-
-        'call_after': lambda x, y: y.outColor >> x.outputs(type='shadingEngine', p=1)[0]
-            if x.outputs(type='shadingEngine', p=1) else None,
-
+        "node_type": "RedshiftSkin",
+        "secondary_type": "shader",
+        "call_after": lambda x, y: y.outColor >> x.outputs(type="shadingEngine", p=1)[0]
+        if x.outputs(type="shadingEngine", p=1)
+        else None,
         # aiSkin material attributes
-        'attributes': {
-            'sssWeight': 'overall_scale',
-            'globalSssRadiusMultiplier': 'radius_scale',
-
-            'shallowScatterColor': 'shallow_color',
-            'shallowScatterWeight': 'shallow_weight',
-            'shallowScatterRadius': 'shallow_radius',
-
-            'midScatterColor': 'mid_color',
-            'midScatterWeight': 'mid_weight',
-            'midScatterRadius': 'mid_radius',
-
-            'deepScatterColor': 'deep_color',
-            'deepScatterWeight': 'deep_weight',
-            'deepScatterRadius': 'deep_radius',
-
-            'specularColor': 'refl_color0',
-            'specularWeight': 'refl_weight0',
-            'specularRoughness': 'refl_gloss0',
-            'specularIor': 'refl_ior0',
-
-            'sheenColor': 'refl_color1',
-            'sheenWeight': 'refl_weight1',
-            'sheenRoughness': 'refl_gloss1',
-            'sheenIor': 'refl_ior1',
-
+        "attributes": {
+            "sssWeight": "overall_scale",
+            "globalSssRadiusMultiplier": "radius_scale",
+            "shallowScatterColor": "shallow_color",
+            "shallowScatterWeight": "shallow_weight",
+            "shallowScatterRadius": "shallow_radius",
+            "midScatterColor": "mid_color",
+            "midScatterWeight": "mid_weight",
+            "midScatterRadius": "mid_radius",
+            "deepScatterColor": "deep_color",
+            "deepScatterWeight": "deep_weight",
+            "deepScatterRadius": "deep_radius",
+            "specularColor": "refl_color0",
+            "specularWeight": "refl_weight0",
+            "specularRoughness": "refl_gloss0",
+            "specularIor": "refl_ior0",
+            "sheenColor": "refl_color1",
+            "sheenWeight": "refl_weight1",
+            "sheenRoughness": "refl_gloss1",
+            "sheenIor": "refl_ior1",
             # 'opacity': None,
             # 'opacityColor': None,
             # 'specularInSecondaryRays': None,
             # 'fresnelAffectSss': None,
-
-            'normalCamera': 'bump_input',
-        }
+            "normalCamera": "bump_input",
+        },
     },
-
-    'aiAmbientOcclusion': {
-        'node_type': 'RedshiftAmbientOcclusion',
-        'secondary_type': 'utility',
-
-        'call_after': lambda x, y: y.outColor >> x.outColor.outputs(p=1)[0],
-
-        'attributes': {
-            'white': 'bright',
-            'black': 'dark',
-            'spread': 'spread',
-            'falloff': {
-                'fallOff': lambda x: x + 1
-            },
-            'farClip': 'maxDistance',
-            'invertNormals': 'invert',
-        }
+    "aiAmbientOcclusion": {
+        "node_type": "RedshiftAmbientOcclusion",
+        "secondary_type": "utility",
+        "call_after": lambda x, y: y.outColor >> x.outColor.outputs(p=1)[0],
+        "attributes": {
+            "white": "bright",
+            "black": "dark",
+            "spread": "spread",
+            "falloff": {"fallOff": lambda x: x + 1},
+            "farClip": "maxDistance",
+            "invertNormals": "invert",
+        },
     },
-
-    'aiNormalMap': {
-        'node_type': 'RedshiftBumpMap',
-        'secondary_type': 'texture',
-
-        'call_after': lambda old_node, new_node:
-            connect_output(old_node, 'outValue', new_node, 'out'),
-
-        'attributes': {
-            'input': 'input',
-            'strength': {
-                'scale': lambda x: x,  # set the strength directly
-                'inputType': lambda x: 1,  # set to normal map
+    "aiNormalMap": {
+        "node_type": "RedshiftBumpMap",
+        "secondary_type": "texture",
+        "call_after": lambda old_node, new_node: connect_output(
+            old_node, "outValue", new_node, "out"
+        ),
+        "attributes": {
+            "input": "input",
+            "strength": {
+                "scale": lambda x: x,  # set the strength directly
+                "inputType": lambda x: 1,  # set to normal map
             },
         },
     },
-
-    'aiColorCorrect': {
-        'node_type': 'RedshiftColorCorrection',
-        'secondary_type': 'utility',
-
-        'call_after': lambda old_node, new_node:
-            connect_output(old_node, 'outColor', new_node, 'outColor'),
-
-        'attributes': {
-            'input': 'input',
-            'gamma': 'gamma',
-            'hueShift': {
-                'hue': lambda x: (x * 360) % 360,
+    "aiColorCorrect": {
+        "node_type": "RedshiftColorCorrection",
+        "secondary_type": "utility",
+        "call_after": lambda old_node, new_node: connect_output(
+            old_node, "outColor", new_node, "outColor"
+        ),
+        "attributes": {
+            "input": "input",
+            "gamma": "gamma",
+            "hueShift": {
+                "hue": lambda x: (x * 360) % 360,
             },
-            'saturation': 'saturation',
-            'contrast': {
-                'contrast': lambda x: x * 0.5,
+            "saturation": "saturation",
+            "contrast": {
+                "contrast": lambda x: x * 0.5,
             },
-            'exposure': {
-                'level': lambda x: pow(2, x)
-            }
-        }
-
+            "exposure": {"level": lambda x: pow(2, x)},
+        },
     },
-
-    'aiRoundCorners': {
-        'node_type': 'RedshiftRoundCorners',
-        'secondary_type': 'texture',
-
-        'call_after': lambda old_node, new_node:
-            connect_output(old_node, 'outValue', new_node, 'out'),
-
-        'attributes': {
-            'samples': 'numSamples',
-            'radius': 'radius',
-            'selfOnly': 'sameObjectOnly'
-        }
-
+    "aiRoundCorners": {
+        "node_type": "RedshiftRoundCorners",
+        "secondary_type": "texture",
+        "call_after": lambda old_node, new_node: connect_output(
+            old_node, "outValue", new_node, "out"
+        ),
+        "attributes": {
+            "samples": "numSamples",
+            "radius": "radius",
+            "selfOnly": "sameObjectOnly",
+        },
     },
-
-    'aiImage': {
-        'node_type': 'file',
-        'secondary_type': 'texture',
-
-        'call_after': lambda old_node, new_node:
-        connect_output(old_node, 'outColor', new_node, 'outColor'),
-
-        'attributes': {
-            'filename': 'fileTextureName'
-        }
+    "aiImage": {
+        "node_type": "file",
+        "secondary_type": "texture",
+        "call_after": lambda old_node, new_node: connect_output(
+            old_node, "outColor", new_node, "outColor"
+        ),
+        "attributes": {"filename": "fileTextureName"},
     },
-
     # LIGHTS
-    'areaLight': {
-        'attributes': {
-            'aiExposure': {
-                'intensity': lambda x: 2 ** x
+    "areaLight": {
+        "attributes": {
+            "aiExposure": {"intensity": lambda x: 2**x},
+            "aiSamples": {"shadowRays": 1},
+            "aiDecayType": {"decayRate": lambda x: 0 if x == 0 else 2},
+            "aiColorTemperature": {
+                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr("aiUseColorTemperature")
+                else y.getAttr("color")
             },
-            'aiSamples': {
-                'shadowRays': 1
-            },
-            'aiDecayType': {
-                'decayRate': lambda x: 0 if x == 0 else 2
-            },
-            'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
-            },
-            'color': 'color',
+            "color": "color",
         }
     },
-
-    'aiSkyDomeLight': {
-        'node_type': 'RedshiftDomeLight',
-        'secondary_type': 'light',
-
-        'attributes': {
-            'color': {
-                'tex0': lambda x, y:
-                y.attr('color').inputs()[0].getAttr('fileTextureName')
-                if y.type() == 'file' else
-                y.attr('color').inputs()[0].getAttr('filename')
+    "aiSkyDomeLight": {
+        "node_type": "RedshiftDomeLight",
+        "secondary_type": "light",
+        "attributes": {
+            "color": {
+                "tex0": lambda x, y: y.attr("color")
+                .inputs()[0]
+                .getAttr("fileTextureName")
+                if y.type() == "file"
+                else y.attr("color").inputs()[0].getAttr("filename")
             }
         },
     },
-
-    'pointLight': {
-        'attributes': {
-            'aiExposure': {
-                'intensity': lambda x: 2 ** x
+    "pointLight": {
+        "attributes": {
+            "aiExposure": {"intensity": lambda x: 2**x},
+            "aiSamples": {"shadowRays": 1},
+            "aiDecayType": {"decayRate": lambda x: 0 if x == 0 else 2},
+            "aiColorTemperature": {
+                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr("aiUseColorTemperature")
+                else y.getAttr("color")
             },
-            'aiSamples': {
-                'shadowRays': 1
-            },
-            'aiDecayType': {
-                'decayRate': lambda x: 0 if x == 0 else 2
-            },
-            'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
-            },
-            'aiRadius': 'lightRadius',
-            'color': 'color',
+            "aiRadius": "lightRadius",
+            "color": "color",
         }
     },
-
-    'directionalLight': {
-        'attributes': {
-            'aiExposure': {
-                'intensity': lambda x: 2 ** x
+    "directionalLight": {
+        "attributes": {
+            "aiExposure": {"intensity": lambda x: 2**x},
+            "aiSamples": {"shadowRays": 1},
+            "aiColorTemperature": {
+                "color": lambda x, y: pm.arnoldTemperatureToColor(x)
+                if y.getAttr("aiUseColorTemperature")
+                else y.getAttr("color")
             },
-            'aiSamples': {
-                'shadowRays': 1
-            },
-            'aiColorTemperature': {
-                'color': lambda x, y: pm.arnoldTemperatureToColor(x)
-                if y.getAttr('aiUseColorTemperature') else y.getAttr('color')
-            },
-            'aiAngle': 'lightAngle',
-            'color': 'color',
+            "aiAngle": "lightAngle",
+            "color": "color",
         }
     },
-
-    'mesh': {
-        'attributes': {
-            'aiSubdivType': {
-                'rsEnableSubdivision': lambda x: 1 if x > 0 else 0,
-                'rsSubdivisionRule': 0,
-                'rsDoSmoothSubdivision': lambda x: 0 if x == 2 else 1
+    "mesh": {
+        "attributes": {
+            "aiSubdivType": {
+                "rsEnableSubdivision": lambda x: 1 if x > 0 else 0,
+                "rsSubdivisionRule": 0,
+                "rsDoSmoothSubdivision": lambda x: 0 if x == 2 else 1,
             },
-            'aiSubdivAdaptiveSpace': {
-                'rsScreenSpaceAdaptive': lambda x: 1 - x,
+            "aiSubdivAdaptiveSpace": {
+                "rsScreenSpaceAdaptive": lambda x: 1 - x,
             },
-            'aiSubdivIterations': 'rsMaxTessellationSubdivs',
-            'aiDispHeight': 'rsDisplacementScale',
-            'aiDispAutobump': 'rsAutoBumpMap',
+            "aiSubdivIterations": "rsMaxTessellationSubdivs",
+            "aiDispHeight": "rsDisplacementScale",
+            "aiDispAutobump": "rsAutoBumpMap",
         }
-    }
+    },
 }
 
 
@@ -432,13 +359,10 @@ def connect_input(source_node, source_attr_name, target_node, target_attr_name):
         inputs[0] >> target_node.attr(target_attr_name)
     else:
         # or set it to the same value
-        target_node.attr(target_attr_name).set(
-            source_node.attr(source_attr_name).get()
-        )
+        target_node.attr(target_attr_name).set(source_node.attr(source_attr_name).get())
 
 
-def connect_output(old_node, old_attr_name,
-                   new_node, new_attr_name):
+def connect_output(old_node, old_attr_name, new_node, new_attr_name):
     """Connects the new_node.new_attr_name to the same inputs that the old_node
     was connecting
 
@@ -454,8 +378,7 @@ def connect_output(old_node, old_attr_name,
 
 
 class ConversionManager(ConversionManagerBase):
-    """Manages the conversion from Arnold to RedShift
-    """
+    """Manages the conversion from Arnold to RedShift"""
 
     def __init__(self):
         super(ConversionManager, self).__init__()
@@ -463,8 +386,7 @@ class ConversionManager(ConversionManagerBase):
         self.node_creator_factory = NodeCreator
 
     def get_node_type(self, node):
-        """overridden get_node_type method
-        """
+        """overridden get_node_type method"""
         return pm.nodeType(node)
 
     def list_nodes(self, type_):
@@ -485,8 +407,7 @@ class ConversionManager(ConversionManagerBase):
         node.rename(new_name)
 
     def get_node_name(self, node):
-        """returns the node name
-        """
+        """returns the node name"""
         return node.name()
 
     def get_node_inputs(self, node, attr=None):
@@ -522,6 +443,7 @@ class ConversionManager(ConversionManagerBase):
         :return:
         """
         from pymel.core import MayaAttributeError
+
         try:
             return node.getAttr(attr)
         except MayaAttributeError:
@@ -542,30 +464,28 @@ class ConversionManager(ConversionManagerBase):
 
 
 class NodeCreator(NodeCreatorBase):
-    """Creates nodes according to the given specs
-    """
+    """Creates nodes according to the given specs"""
 
     def create(self):
-        """creates the node
-        """
-        node_type = self.specs.get('node_type')
-        secondary_type = self.specs.get('secondary_type')
+        """creates the node"""
+        node_type = self.specs.get("node_type")
+        secondary_type = self.specs.get("secondary_type")
 
-        if secondary_type == 'shader':
+        if secondary_type == "shader":
             shader, shading_engine = pm.createSurfaceShader(node_type)
             return shader
-        elif secondary_type == 'utility':
+        elif secondary_type == "utility":
             shader = pm.shadingNode(node_type, asUtility=1)
             return shader
-        elif secondary_type == 'texture':
+        elif secondary_type == "texture":
             shader = pm.shadingNode(node_type, asTexture=1)
             return shader
-        elif secondary_type == 'light':
+        elif secondary_type == "light":
             light_transform = pm.shadingNode(node_type, asLight=1)
             return light_transform.getShape()
 
 
 class TextureProcessorQueue(object):
-    """A queue to convert textures
-    """
+    """A queue to convert textures"""
+
     queue = None

@@ -4,23 +4,20 @@ from anima.base import Singleton
 
 
 class ProgressCaller(object):
-    """A simple object to hold caller data for ProgressDialogManager
-    """
+    """A simple object to hold caller data for ProgressDialogManager"""
 
-    def __init__(self, max_steps=0, title=''):
+    def __init__(self, max_steps=0, title=""):
         self.max_steps = max_steps
         self.title = title
         self.current_step = 0
         self.manager = None
 
-    def step(self, step_size=1, message=''):
-        """A shortcut for the ProgressDialogManager.step() method
-        """
+    def step(self, step_size=1, message=""):
+        """A shortcut for the ProgressDialogManager.step() method"""
         self.manager.step(self, step=step_size, message=message)
 
     def end_progress(self):
-        """A shortcut fro the ProgressDialogManager.end_progress() method
-        """
+        """A shortcut fro the ProgressDialogManager.end_progress() method"""
         self.manager.end_progress(self)
 
 
@@ -51,25 +48,24 @@ class ProgressDialogManager(object):
         self.dialog = dialog
         self.callers = []
 
-        if not hasattr(self, 'use_ui'):
+        if not hasattr(self, "use_ui"):
             # prevent resetting the use_ui to True
             self.use_ui = True
 
         self.parent = parent
 
-        self.title = ''
+        self.title = ""
         self.max_steps = 0
         self.current_step = 0
 
     def create_dialog(self):
-        """creates the progressWindow
-        """
+        """creates the progressWindow"""
         if self.use_ui:
             if self.dialog is None:
                 from anima.ui.lib import QtWidgets
-                self.dialog = \
-                    QtWidgets.QProgressDialog(self.parent)
-                    # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
+
+                self.dialog = QtWidgets.QProgressDialog(self.parent)
+                # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
                 # self.dialog.setMinimumDuration(2000)
                 self.dialog.setRange(0, self.max_steps)
                 self.dialog.setLabelText(self.title)
@@ -87,15 +83,14 @@ class ProgressDialogManager(object):
         return False
 
     def close(self):
-        """kills the progressWindow
-        """
+        """kills the progressWindow"""
         if self.dialog is not None:
             self.dialog.close()
 
         # re initialize self
         self.__init__(dialog=self.dialog)
 
-    def register(self, max_iteration, title=''):
+    def register(self, max_iteration, title=""):
         """registers a new caller
 
         :return: ProgressCaller instance
@@ -120,10 +115,10 @@ class ProgressDialogManager(object):
         return caller
 
     def center_window(self):
-        """recenters the dialog window to the screen
-        """
+        """recenters the dialog window to the screen"""
         if self.dialog is not None:
             from anima.ui.lib import QtGui, QtWidgets
+
             desktop = QtWidgets.QApplication.desktop()
             cursor_pos = QtGui.QCursor.pos()
             desktop_number = desktop.screenNumber(cursor_pos)
@@ -138,10 +133,10 @@ class ProgressDialogManager(object):
                 dr_top = desktop_rect.top()
                 self.dialog.move(
                     (dr_width - size.width()) * 0.5 + dr_left,
-                    (dr_height - size.height()) * 0.5 + dr_top
+                    (dr_height - size.height()) * 0.5 + dr_top,
                 )
 
-    def step(self, caller, step=1, message=''):
+    def step(self, caller, step=1, message=""):
         """Increments the progress by the given mount
 
         :param caller: A :class:`.ProgressCaller` instance, generally returned
@@ -153,7 +148,7 @@ class ProgressDialogManager(object):
         self.current_step += step
         if self.dialog:
             self.dialog.setValue(self.current_step)
-            self.dialog.setLabelText('%s : %s' % (caller.title, message))
+            self.dialog.setLabelText("%s : %s" % (caller.title, message))
             # self.center_window()
 
         if caller.current_step >= caller.max_steps:
@@ -161,6 +156,7 @@ class ProgressDialogManager(object):
             self.end_progress(caller)
 
         from anima.ui.lib import QtWidgets
+
         try:
             qApp = QtWidgets.qApp
         except AttributeError:

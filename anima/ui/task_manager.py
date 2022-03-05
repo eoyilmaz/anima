@@ -26,21 +26,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def __init__(self, parent=None):
         super(MainDialog, self).__init__(parent=parent)
 
-        self.generic_selection_text = '== ALL =='
+        self.generic_selection_text = "== ALL =="
 
         self._setup_ui()
         self._setup_signals()
         self.fill_ui()
 
     def _setup_ui(self):
-        """create the ui elements
-        """
+        """create the ui elements"""
         self.resize(1350, 950)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText('Task Manager')
+        self.dialog_label.setText("Task Manager")
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
 
@@ -62,29 +61,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Filters Form Layout
         self.filters_form_layout = QtWidgets.QFormLayout()
         self.filters_form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
         self.vertical_layout.addLayout(self.filters_form_layout)
 
         # Filer By Label
         i = 0
         self.filter_by_label = QtWidgets.QLabel(self)
-        self.filter_by_label.setText('Filter By')
-        self.filters_form_layout.setWidget(
-            i, field_role, self.filter_by_label
-        )
+        self.filter_by_label.setText("Filter By")
+        self.filters_form_layout.setWidget(i, field_role, self.filter_by_label)
         i += 1
 
         # Project
         #   Label
         self.filter_by_project_label = QtWidgets.QLabel(self)
-        self.filter_by_project_label.setText('Project')
+        self.filter_by_project_label.setText("Project")
 
-        self.filters_form_layout.setWidget(
-            i, label_role, self.filter_by_project_label
-        )
+        self.filters_form_layout.setWidget(i, label_role, self.filter_by_project_label)
 
         #   Field
         self.filter_by_project_combo_box = QtWidgets.QComboBox(self)
@@ -99,7 +92,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Entity Type
         #   Label
         self.filter_by_entity_type_label = QtWidgets.QLabel(self)
-        self.filter_by_entity_type_label.setText('Entity Type')
+        self.filter_by_entity_type_label.setText("Entity Type")
         self.filters_form_layout.setWidget(
             i, label_role, self.filter_by_entity_type_label
         )
@@ -115,7 +108,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Task Type
         #   Label
         self.filter_by_task_type_label = QtWidgets.QLabel(self)
-        self.filter_by_task_type_label.setText('Task Type')
+        self.filter_by_task_type_label.setText("Task Type")
         self.filters_form_layout.setWidget(
             i, label_role, self.filter_by_task_type_label
         )
@@ -132,10 +125,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         #   Only visible when entity type is Shot
         #   Label
         self.filter_by_sequence_label = QtWidgets.QLabel(self)
-        self.filter_by_sequence_label.setText('Sequence')
-        self.filters_form_layout.setWidget(
-            i, label_role, self.filter_by_sequence_label
-        )
+        self.filter_by_sequence_label.setText("Sequence")
+        self.filters_form_layout.setWidget(i, label_role, self.filter_by_sequence_label)
 
         #   Field
         self.filter_by_sequence_combo_box = QtWidgets.QComboBox(self)
@@ -148,10 +139,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Resource
         #   Label
         self.filter_by_resource_label = QtWidgets.QLabel(self)
-        self.filter_by_resource_label.setText('Resource')
-        self.filters_form_layout.setWidget(
-            i, label_role, self.filter_by_resource_label
-        )
+        self.filter_by_resource_label.setText("Resource")
+        self.filters_form_layout.setWidget(i, label_role, self.filter_by_resource_label)
 
         #   Field
         self.filter_by_resource_combo_box = QtWidgets.QComboBox(self)
@@ -169,7 +158,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         self.filter_push_button = QtWidgets.QPushButton(self)
-        self.filter_push_button.setText('-> Apply Filter <-')
+        self.filter_push_button.setText("-> Apply Filter <-")
         self.filter_button_horizontal_layout.addWidget(self.filter_push_button)
 
         # spacer
@@ -195,43 +184,37 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout.addWidget(self.data_table_widget)
 
     def _setup_signals(self):
-        """setup signals
-        """
+        """setup signals"""
         # Filter By Project ComboBox
         QtCore.QObject.connect(
             self.filter_by_project_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.filter_by_project_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.filter_by_project_combo_box_changed,
         )
 
         QtCore.QObject.connect(
             self.filter_by_entity_type_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.filter_by_entity_type_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.filter_by_entity_type_combo_box_changed,
         )
 
         QtCore.QObject.connect(
             self.filter_push_button,
-            QtCore.SIGNAL('clicked()'),
-            self.filter_push_button_clicked
+            QtCore.SIGNAL("clicked()"),
+            self.filter_push_button_clicked,
         )
 
     def fill_ui(self):
-        """fills the UI
-        """
+        """fills the UI"""
         from stalker import Project
-        self.filter_by_project_combo_box.addItem(
-            self.generic_selection_text,
-            -1
-        )
+
+        self.filter_by_project_combo_box.addItem(self.generic_selection_text, -1)
         for p in Project.query.order_by(Project.name).all():
-            self.filter_by_project_combo_box.addItem(
-                p.name, p.id
-            )
+            self.filter_by_project_combo_box.addItem(p.name, p.id)
 
         self.filter_by_entity_type_combo_box.addItems(
             # [self.generic_selection_text, 'Task', 'Asset', 'Shot', 'Sequence']
-            [self.generic_selection_text, 'Asset', 'Shot', 'Sequence']
+            [self.generic_selection_text, "Asset", "Shot", "Sequence"]
         )
 
         # disable the task type field by default
@@ -239,8 +222,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.filter_by_sequence_combo_box.setEnabled(False)
 
     def get_project_id(self):
-        """returns the current project id
-        """
+        """returns the current project id"""
         project_id = -1
         try:
             project_id = self.filter_by_project_combo_box.currentData()
@@ -250,50 +232,48 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return project_id
 
     def get_project(self):
-        """returns the project from the filter combo box
-        """
+        """returns the project from the filter combo box"""
         project_id = self.get_project_id()
         from stalker import Project
+
         return Project.query.get(project_id)
 
     def filter_by_project_combo_box_changed(self, text):
-        """runs when the selection in filter_by_project_combo_box has changed
-        """
+        """runs when the selection in filter_by_project_combo_box has changed"""
         # get project
         project_id = self.get_project_id()
         from stalker import db, User
+
         if project_id == -1:
             resources = db.DBSession.query(User.id, User.name).all()
         else:
             from stalker import ProjectUser
-            resources = db.DBSession\
-                .query(User.id, User.name)\
-                .join(ProjectUser)\
-                .filter(ProjectUser.project_id == project_id)\
-                .order_by(User.name)\
+
+            resources = (
+                db.DBSession.query(User.id, User.name)
+                .join(ProjectUser)
+                .filter(ProjectUser.project_id == project_id)
+                .order_by(User.name)
                 .all()
+            )
 
         self.filter_by_resource_combo_box.clear()
-        self.filter_by_resource_combo_box.addItem(
-            self.generic_selection_text,
-            -1
-        )
+        self.filter_by_resource_combo_box.addItem(self.generic_selection_text, -1)
         for u in resources:
             self.filter_by_resource_combo_box.addItem(u.name, u.id)
 
         # sequence combo box
         self.filter_by_sequence_combo_box.clear()
-        self.filter_by_sequence_combo_box.addItem(
-            self.generic_selection_text,
-            -1
-        )
+        self.filter_by_sequence_combo_box.addItem(self.generic_selection_text, -1)
         if project_id != -1:
             from stalker import Sequence
-            seqs = db.DBSession\
-                .query(Sequence.id, Sequence.name)\
-                .filter(Sequence.project_id == project_id)\
-                .order_by(Sequence.name)\
+
+            seqs = (
+                db.DBSession.query(Sequence.id, Sequence.name)
+                .filter(Sequence.project_id == project_id)
+                .order_by(Sequence.name)
                 .all()
+            )
             for seq in seqs:
                 self.filter_by_sequence_combo_box.addItem(seq.name, seq.id)
 
@@ -307,33 +287,25 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if entity_type == self.generic_selection_text:
             # disable task type field
             self.filter_by_task_type_combo_box.clear()
-            self.filter_by_task_type_combo_box.addItem(
-                self.generic_selection_text,
-                -1
-            )
+            self.filter_by_task_type_combo_box.addItem(self.generic_selection_text, -1)
             self.filter_by_task_type_combo_box.setEnabled(False)
         else:
             # get all the unique types from the database for that entity type
             from stalker import Type
-            all_types = Type.query\
-                .filter(Type.target_entity_type == entity_type)\
-                .all()
+
+            all_types = Type.query.filter(Type.target_entity_type == entity_type).all()
             self.filter_by_task_type_combo_box.clear()
             self.filter_by_task_type_combo_box.setEnabled(True)
-            self.filter_by_task_type_combo_box.addItem(
-                self.generic_selection_text,
-                -1
-            )
+            self.filter_by_task_type_combo_box.addItem(self.generic_selection_text, -1)
             for t in all_types:
                 self.filter_by_task_type_combo_box.addItem(t.name, t.id)
 
-            if entity_type == 'Shot':
+            if entity_type == "Shot":
                 # enable the sequence field
                 self.filter_by_sequence_combo_box.setEnabled(True)
 
     def get_sequence_id(self):
-        """returns the current sequence_id
-        """
+        """returns the current sequence_id"""
         try:
             sequence_id = self.filter_by_sequence_combo_box.currentData()
         except AttributeError:
@@ -342,8 +314,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return sequence_id
 
     def get_task_type_id(self):
-        """returns the task_type_id
-        """
+        """returns the task_type_id"""
         try:
             task_type_id = self.filter_by_task_type_combo_box.currentData()
         except AttributeError:
@@ -352,8 +323,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return task_type_id
 
     def get_resource_id(self):
-        """returns the resource_id
-        """
+        """returns the resource_id"""
         try:
             resource_id = self.filter_by_resource_combo_box.currentData()
         except AttributeError:
@@ -362,8 +332,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return resource_id
 
     def get_filtered_entities(self):
-        """returns the filtered entities according to the filter selection
-        """
+        """returns the filtered entities according to the filter selection"""
         project_id = self.get_project_id()
         entity_type = self.filter_by_entity_type_combo_box.currentText()
         sequence_id = self.get_sequence_id()
@@ -372,6 +341,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker import db, Task
         from stalker.db.session import DBSession
+
         query = DBSession.query(Task.id, Task.name)
 
         if project_id != -1:
@@ -393,17 +363,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return query.all()
 
     def filter_push_button_clicked(self):
-        """runs when the filter_push_button is clicked
-        """
+        """runs when the filter_push_button is clicked"""
         self.fill_table_widget()
 
     def fill_table_widget(self):
-        """fills the table widget with data
-        """
+        """fills the table widget with data"""
         task_data = self.get_filtered_entities()
         self.data_table_widget.clear()
         self.data_table_widget.setRowCount(len(task_data))
         for i, t_data in enumerate(task_data):
             item = QtWidgets.QTableWidgetItem(t_data.name)
             self.data_table_widget.setItem(i, 0, item)
-

@@ -5,19 +5,18 @@ from anima.ui.lib import QtWidgets
 
 
 class TaskStatusLabel(QtWidgets.QLabel):
-    """A label for showing task statuses with color codes
-    """
+    """A label for showing task statuses with color codes"""
 
     status_colors = {
-        'WFD': 'grey',
-        'RTS': 'red',
-        'WIP': 'orange',
-        'HREV': 'purple',
-        'DREV': 'dodgerblue',
-        'PREV': 'dodgerblue',
-        'STOP': 'red',
-        'OH': 'red',
-        'CMPL': 'green',
+        "WFD": "grey",
+        "RTS": "red",
+        "WIP": "orange",
+        "HREV": "purple",
+        "DREV": "dodgerblue",
+        "PREV": "dodgerblue",
+        "STOP": "red",
+        "OH": "red",
+        "CMPL": "green",
     }
 
     def __init__(self, task=None, **kwargs):
@@ -28,13 +27,13 @@ class TaskStatusLabel(QtWidgets.QLabel):
         self._setup_ui()
 
     def _setup_ui(self):
-        """setup the UI
-        """
+        """setup the UI"""
         # self.setMaximumWidth(75)
         # self.setMinimumWidth(75)
         self.setMaximumHeight(16)
 
         from anima.ui.lib import QtCore
+
         self.setAlignment(QtCore.Qt.AlignCenter)
 
     @property
@@ -49,6 +48,7 @@ class TaskStatusLabel(QtWidgets.QLabel):
         :return:
         """
         from stalker import Task
+
         if isinstance(task, Task):
             self._task = task
             status_color = self.status_colors[self.task.status.code]
@@ -59,12 +59,13 @@ class TaskStatusLabel(QtWidgets.QLabel):
                     text-align: center;
                     padding-left: 0.5em;
                     padding-right: 0.5em;
-                """ % status_color
+                """
+                % status_color
             )
             self.setText(self.task.status.name)
         else:
             self._task = None
-            self.setText('No Task')
+            self.setText("No Task")
             self.setStyleSheet(
                 """
                     background-color: grey;

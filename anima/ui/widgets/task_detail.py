@@ -5,8 +5,7 @@ from anima.ui.lib import QtWidgets
 
 
 class TaskDetailWidget(QtWidgets.QWidget):
-    """Displays simple task details
-    """
+    """Displays simple task details"""
 
     def __init__(self, task=None, parent=None, **kwargs):
         self._task = None
@@ -38,24 +37,24 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.task = task
 
     def _setup_ui(self):
-        """creates the UI widgets
-        """
-        self.setStyleSheet("""
+        """creates the UI widgets"""
+        self.setStyleSheet(
+            """
         QLabel[labelField="true"] {
             font-weight: bold;
         }
-        """)
+        """
+        )
 
         # the main layout
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # the form layout
         from anima.ui.lib import QtCore
+
         self.form_layout = QtWidgets.QFormLayout()
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
         self.vertical_layout.addLayout(self.form_layout)
 
@@ -69,16 +68,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
 
         self.name_field = QtWidgets.QLineEdit(self)
 
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.name_label
-        )
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.name_field
-        )
+        self.form_layout.setWidget(i, QtWidgets.QFormLayout.LabelRole, self.name_label)
+        self.form_layout.setWidget(i, QtWidgets.QFormLayout.FieldRole, self.name_field)
 
         # -------------------------------------------------------------
         # Type Field
@@ -89,16 +80,8 @@ class TaskDetailWidget(QtWidgets.QWidget):
 
         self.type_field = QtWidgets.QComboBox(self)
 
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.type_label
-        )
-        self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.type_field
-        )
+        self.form_layout.setWidget(i, QtWidgets.QFormLayout.LabelRole, self.type_label)
+        self.form_layout.setWidget(i, QtWidgets.QFormLayout.FieldRole, self.type_field)
 
         # -------------------------------------------------------------
         # Created By Field
@@ -110,14 +93,10 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.created_by_field = QtWidgets.QLabel(self)
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.created_by_label
+            i, QtWidgets.QFormLayout.LabelRole, self.created_by_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.created_by_field
+            i, QtWidgets.QFormLayout.FieldRole, self.created_by_field
         )
 
         # -------------------------------------------------------------
@@ -130,14 +109,10 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.updated_by_field = QtWidgets.QLabel(self)
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.updated_by_label
+            i, QtWidgets.QFormLayout.LabelRole, self.updated_by_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.updated_by_field
+            i, QtWidgets.QFormLayout.FieldRole, self.updated_by_field
         )
 
         # -------------------------------------------------------------
@@ -148,17 +123,13 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.timing_label.setProperty("labelField", True)
 
         self.timing_field = QtWidgets.QLabel(self)
-        self.timing_field.setText('23 Hours ago -> an Hour ago!')
+        self.timing_field.setText("23 Hours ago -> an Hour ago!")
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.timing_label
+            i, QtWidgets.QFormLayout.LabelRole, self.timing_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.timing_field
+            i, QtWidgets.QFormLayout.FieldRole, self.timing_field
         )
 
         # -------------------------------------------------------------
@@ -169,17 +140,13 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.priority_label.setProperty("labelField", True)
 
         self.priority_field = QtWidgets.QLabel(self)
-        self.priority_field.setText('950')
+        self.priority_field.setText("950")
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.priority_label
+            i, QtWidgets.QFormLayout.LabelRole, self.priority_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.priority_field
+            i, QtWidgets.QFormLayout.FieldRole, self.priority_field
         )
 
         # -------------------------------------------------------------
@@ -190,17 +157,13 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.cut_in_label.setProperty("labelField", True)
 
         self.cut_in_field = QtWidgets.QLabel(self)
-        self.cut_in_field.setText('1')
+        self.cut_in_field.setText("1")
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.cut_in_label
+            i, QtWidgets.QFormLayout.LabelRole, self.cut_in_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.cut_in_field
+            i, QtWidgets.QFormLayout.FieldRole, self.cut_in_field
         )
 
         # -------------------------------------------------------------
@@ -211,30 +174,25 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.cut_out_label.setProperty("labelField", True)
 
         self.cut_out_field = QtWidgets.QLabel(self)
-        self.cut_out_field.setText('1')
+        self.cut_out_field.setText("1")
 
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.LabelRole,
-            self.cut_out_label
+            i, QtWidgets.QFormLayout.LabelRole, self.cut_out_label
         )
         self.form_layout.setWidget(
-            i,
-            QtWidgets.QFormLayout.FieldRole,
-            self.cut_out_field
+            i, QtWidgets.QFormLayout.FieldRole, self.cut_out_field
         )
 
         # Create signals
         QtCore.QObject.connect(
             self.type_field,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.type_field_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.type_field_changed,
         )
 
     @property
     def task(self):
-        """fill the ui with the data
-        """
+        """fill the ui with the data"""
         return self._task
 
     @task.setter
@@ -244,6 +202,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         :return:
         """
         from stalker import Task
+
         if isinstance(task, Task):
             self._task = task
             self.name_field.setText(task.name)
@@ -257,18 +216,20 @@ class TaskDetailWidget(QtWidgets.QWidget):
                 self.updated_by_field.setText(task.updated_by.name)
 
             self.timing_field.setText(
-                '%s - %s' % (
-                    task.start.strftime('%d-%m-%Y %H:%M'),
-                    task.end.strftime('%d-%m-%Y %H:%M')
+                "%s - %s"
+                % (
+                    task.start.strftime("%d-%m-%Y %H:%M"),
+                    task.end.strftime("%d-%m-%Y %H:%M"),
                 )
             )
 
-            self.priority_field.setText('%s' % task.priority)
+            self.priority_field.setText("%s" % task.priority)
 
             from stalker import Shot
+
             if isinstance(task, Shot):
-                self.cut_in_field.setText('%s' % task.cut_in)
-                self.cut_out_field.setText('%s' % task.cut_out)
+                self.cut_in_field.setText("%s" % task.cut_in)
+                self.cut_out_field.setText("%s" % task.cut_out)
                 self.cut_in_label.setVisible(True)
                 self.cut_in_field.setVisible(True)
                 self.cut_out_label.setVisible(True)
@@ -282,22 +243,23 @@ class TaskDetailWidget(QtWidgets.QWidget):
             self._task = None
 
     def _fill_task_type_widget(self):
-        """fills the task type widget
-        """
+        """fills the task type widget"""
         if self.task is None:
             return
 
         # get the types
         from stalker import Type
         from stalker.db.session import DBSession
-        all_types = \
-            DBSession.query(Type.id, Type.name)\
-                .filter(Type.target_entity_type == self.task.entity_type)\
-                .all()
+
+        all_types = (
+            DBSession.query(Type.id, Type.name)
+            .filter(Type.target_entity_type == self.task.entity_type)
+            .all()
+        )
 
         self.type_field_is_updating = True
         self.type_field.clear()
-        self.type_field.addItem('-- No Type --', -1)
+        self.type_field.addItem("-- No Type --", -1)
         for type_data in all_types:
             self.type_field.addItem(type_data.name, type_data.id)
 
@@ -309,8 +271,7 @@ class TaskDetailWidget(QtWidgets.QWidget):
         self.type_field_is_updating = False
 
     def type_field_changed(self):
-        """runs when the type field has changed
-        """
+        """runs when the type field has changed"""
         if self.task is None:
             return
 
@@ -324,7 +285,9 @@ class TaskDetailWidget(QtWidgets.QWidget):
 
         if type_id != -1:
             from stalker import Type
+
             type_ = Type.query.get(type_id)
             self.task.type = type_
             from stalker.db.session import DBSession
+
             DBSession.save(self.task)

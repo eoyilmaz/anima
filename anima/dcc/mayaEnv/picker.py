@@ -132,13 +132,12 @@ from anima.dcc.mayaEnv import auxiliary
 
 
 class PickedObject(object):
-    """PickedObject class to setup picking and releasing of objects
-    """
+    """PickedObject class to setup picking and releasing of objects"""
 
     def __init__(self, node):
         # the object
         self._object = pm.nodetypes.DagNode(node)
-        assert(isinstance(self._object, pm.nodetypes.Transform))
+        assert isinstance(self._object, pm.nodetypes.Transform)
 
         # the data
         self._constrained_parent = None
@@ -151,12 +150,11 @@ class PickedObject(object):
         self.read_settings()
 
     def save_settings(self):
-        """saves settings inside objects oyPickerData attribute
-        """
-        # 
+        """saves settings inside objects oyPickerData attribute"""
+        #
         # data to be save :
         # -----------------
-        # 
+        #
         # constrainedPrarent node
         # stabilizerParent node
         # parentConstraint node
@@ -166,32 +164,41 @@ class PickedObject(object):
         self.create_data_attribute()
 
         # connect constrainedParent node
-        pm.connectAttr(self._constrained_parent.name() + ".message",
-                       self._object.attr("pickedData.constrainedParent"),
-                       f=True)
+        pm.connectAttr(
+            self._constrained_parent.name() + ".message",
+            self._object.attr("pickedData.constrainedParent"),
+            f=True,
+        )
 
         # connect constrainedParent node
-        pm.connectAttr(self._stabilizer_parent.name() + ".message",
-                       self._object.attr("pickedData.stabilizerParent"),
-                       f=True)
+        pm.connectAttr(
+            self._stabilizer_parent.name() + ".message",
+            self._object.attr("pickedData.stabilizerParent"),
+            f=True,
+        )
 
         # connect parentConstraint node
-        pm.connectAttr(self._parent_constraint.name() + ".message",
-                       self._object.attr("pickedData.parentConstraint"),
-                       f=True)
+        pm.connectAttr(
+            self._parent_constraint.name() + ".message",
+            self._object.attr("pickedData.parentConstraint"),
+            f=True,
+        )
 
         # connect localParent node
-        pm.connectAttr(self._local_parent.name() + ".message",
-                       self._object.attr("pickedData.localParent"), f=True)
+        pm.connectAttr(
+            self._local_parent.name() + ".message",
+            self._object.attr("pickedData.localParent"),
+            f=True,
+        )
 
         # set stabilizer parent values
-        tra = self._stabilizer_parent.getAttr('t')
-        rot = self._stabilizer_parent.getAttr('r')
-        sca = self._stabilizer_parent.getAttr('s')
+        tra = self._stabilizer_parent.getAttr("t")
+        rot = self._stabilizer_parent.getAttr("r")
+        sca = self._stabilizer_parent.getAttr("s")
 
-        self._object.setAttr('pickedData.stabilizerParentInitialData.sPIDposition', tra)
-        self._object.setAttr('pickedData.stabilizerParentInitialData.sPIDrotation', rot)
-        self._object.setAttr('pickedData.stabilizerParentInitialData.sPIDscale', sca)
+        self._object.setAttr("pickedData.stabilizerParentInitialData.sPIDposition", tra)
+        self._object.setAttr("pickedData.stabilizerParentInitialData.sPIDrotation", rot)
+        self._object.setAttr("pickedData.stabilizerParentInitialData.sPIDscale", sca)
 
     def read_settings(self):
         """reads settings from objects pickedData attribute\n
@@ -200,20 +207,24 @@ class PickedObject(object):
         # check if it has pickedData attribute
         if self._object.hasAttr("pickedData"):
             # get stabilizerParent node
-            self._stabilizer_parent = pm.nodetypes.DagNode(pm.listConnections(
-                self._object.attr("pickedData.stabilizerParent"))[0])
+            self._stabilizer_parent = pm.nodetypes.DagNode(
+                pm.listConnections(self._object.attr("pickedData.stabilizerParent"))[0]
+            )
 
             # get constrainedParent node
-            self._constrained_parent = pm.nodetypes.DagNode(pm.listConnections(
-                self._object.attr("pickedData.constrainedParent"))[0])
+            self._constrained_parent = pm.nodetypes.DagNode(
+                pm.listConnections(self._object.attr("pickedData.constrainedParent"))[0]
+            )
 
             # get parentConstraint node
-            self._parent_constraint = pm.nodetypes.DagNode(pm.listConnections(
-                self._object.attr("pickedData.parentConstraint"))[0])
+            self._parent_constraint = pm.nodetypes.DagNode(
+                pm.listConnections(self._object.attr("pickedData.parentConstraint"))[0]
+            )
 
             # get localParent node
-            self._local_parent = pm.nodetypes.DagNode(pm.listConnections(
-                self._object.attr("pickedData.localParent"))[0])
+            self._local_parent = pm.nodetypes.DagNode(
+                pm.listConnections(self._object.attr("pickedData.localParent"))[0]
+            )
 
             # set isSetup flag
             self._is_setup = True
@@ -223,68 +234,80 @@ class PickedObject(object):
         return False
 
     def create_data_attribute(self):
-        """creates attribute in self._object to hold the rawData
-        """
+        """creates attribute in self._object to hold the rawData"""
         if not self._object.hasAttr("pickedData"):
             pm.addAttr(self._object, ln="pickedData", at="compound", nc=6)
 
         if not self._object.hasAttr("constrainedParent"):
-            pm.addAttr(self._object, ln="constrainedParent", at="message",
-                       p="pickedData")
+            pm.addAttr(
+                self._object, ln="constrainedParent", at="message", p="pickedData"
+            )
 
         if not self._object.hasAttr("stabilizerParent"):
-            pm.addAttr(self._object, ln="stabilizerParent", at="message",
-                       p="pickedData")
+            pm.addAttr(
+                self._object, ln="stabilizerParent", at="message", p="pickedData"
+            )
 
         if not self._object.hasAttr("parentConstraint"):
-            pm.addAttr(self._object, ln="parentConstraint", at="message",
-                       p="pickedData")
+            pm.addAttr(
+                self._object, ln="parentConstraint", at="message", p="pickedData"
+            )
 
         if not self._object.hasAttr("localParent"):
-            pm.addAttr(self._object, ln="localParent", at="message",
-                       p="pickedData")
+            pm.addAttr(self._object, ln="localParent", at="message", p="pickedData")
 
         if not self._object.hasAttr("createdNodes"):
-            pm.addAttr(self._object, ln="createdNodes", at="message", m=1,
-                       p="pickedData")
+            pm.addAttr(
+                self._object, ln="createdNodes", at="message", m=1, p="pickedData"
+            )
 
         if not self._object.hasAttr("stabilizerParentInitialData"):
             # this attribute should store the default position of the
             # stabilizer parent when the setup is exploded the stabilizer
             # parent should be returned to this local position
-            pm.addAttr(self._object, ln="stabilizerParentInitialData",
-                       at="compound", nc=3, p="pickedData")
+            pm.addAttr(
+                self._object,
+                ln="stabilizerParentInitialData",
+                at="compound",
+                nc=3,
+                p="pickedData",
+            )
 
-            pm.addAttr(self._object, ln="sPIDposition", at="compound", nc=3,
-                       p="stabilizerParentInitialData")
-            pm.addAttr(self._object, ln="sPIDpositionX", at="float",
-                       p="sPIDposition")
-            pm.addAttr(self._object, ln="sPIDpositionY", at="float",
-                       p="sPIDposition")
-            pm.addAttr(self._object, ln="sPIDpositionZ", at="float",
-                       p="sPIDposition")
+            pm.addAttr(
+                self._object,
+                ln="sPIDposition",
+                at="compound",
+                nc=3,
+                p="stabilizerParentInitialData",
+            )
+            pm.addAttr(self._object, ln="sPIDpositionX", at="float", p="sPIDposition")
+            pm.addAttr(self._object, ln="sPIDpositionY", at="float", p="sPIDposition")
+            pm.addAttr(self._object, ln="sPIDpositionZ", at="float", p="sPIDposition")
 
-            pm.addAttr(self._object, ln="sPIDrotation", at="compound", nc=3,
-                       p="stabilizerParentInitialData")
-            pm.addAttr(self._object, ln="sPIDrotationX", at="float",
-                       p="sPIDrotation")
-            pm.addAttr(self._object, ln="sPIDrotationY", at="float",
-                       p="sPIDrotation")
-            pm.addAttr(self._object, ln="sPIDrotationZ", at="float",
-                       p="sPIDrotation")
+            pm.addAttr(
+                self._object,
+                ln="sPIDrotation",
+                at="compound",
+                nc=3,
+                p="stabilizerParentInitialData",
+            )
+            pm.addAttr(self._object, ln="sPIDrotationX", at="float", p="sPIDrotation")
+            pm.addAttr(self._object, ln="sPIDrotationY", at="float", p="sPIDrotation")
+            pm.addAttr(self._object, ln="sPIDrotationZ", at="float", p="sPIDrotation")
 
-            pm.addAttr(self._object, ln="sPIDscale", at="compound", nc=3,
-                       p="stabilizerParentInitialData")
-            pm.addAttr(self._object, ln="sPIDscaleX", at="float",
-                       p="sPIDscale")
-            pm.addAttr(self._object, ln="sPIDscaleY", at="float",
-                       p="sPIDscale")
-            pm.addAttr(self._object, ln="sPIDscaleZ", at="float",
-                       p="sPIDscale")
+            pm.addAttr(
+                self._object,
+                ln="sPIDscale",
+                at="compound",
+                nc=3,
+                p="stabilizerParentInitialData",
+            )
+            pm.addAttr(self._object, ln="sPIDscaleX", at="float", p="sPIDscale")
+            pm.addAttr(self._object, ln="sPIDscaleY", at="float", p="sPIDscale")
+            pm.addAttr(self._object, ln="sPIDscaleZ", at="float", p="sPIDscale")
 
     def setup_to_be_picked_up(self):
-        """setups specified object for pick/release sequence
-        """
+        """setups specified object for pick/release sequence"""
 
         # if it is setup before, don't do anything
         if self._is_setup:
@@ -294,7 +317,7 @@ class PickedObject(object):
 
         # if it is a referenced object and it is not on top of its
         # hierarchy the parents can't be created
-        # 
+        #
         # so ask the user to use the function
         # in the original scene
         is_ref = self.is_referenced(self._object)
@@ -322,7 +345,7 @@ class PickedObject(object):
                 self._stabilizer_parent = pm.nodetypes.DagNode(parents[0])
                 self._constrained_parent = pm.nodetypes.DagNode(parents[1])
 
-        else: # is not referenced
+        else:  # is not referenced
             # create the parents
             self.create_stabilizer_parent()
             self.create_constrained_parent()
@@ -343,8 +366,7 @@ class PickedObject(object):
         # self.add_default_options_to_DAG_menu()
 
     def explode_setup(self):
-        """breaks all the setup objects
-        """
+        """breaks all the setup objects"""
         if not self._is_setup:
             return
 
@@ -352,49 +374,87 @@ class PickedObject(object):
         pm.delete(self._parent_constraint)
 
         # delete stabilizer parent animation curves
-        pm.delete(self._stabilizer_parent.attr('tx').inputs(),
-                  self._stabilizer_parent.attr('ty').inputs(),
-                  self._stabilizer_parent.attr('tz').inputs(),
-                  self._stabilizer_parent.attr('rx').inputs(),
-                  self._stabilizer_parent.attr('ry').inputs(),
-                  self._stabilizer_parent.attr('rz').inputs(),
-                  self._stabilizer_parent.attr('sx').inputs(),
-                  self._stabilizer_parent.attr('sy').inputs(),
-                  self._stabilizer_parent.attr('sz').inputs(), )
+        pm.delete(
+            self._stabilizer_parent.attr("tx").inputs(),
+            self._stabilizer_parent.attr("ty").inputs(),
+            self._stabilizer_parent.attr("tz").inputs(),
+            self._stabilizer_parent.attr("rx").inputs(),
+            self._stabilizer_parent.attr("ry").inputs(),
+            self._stabilizer_parent.attr("rz").inputs(),
+            self._stabilizer_parent.attr("sx").inputs(),
+            self._stabilizer_parent.attr("sy").inputs(),
+            self._stabilizer_parent.attr("sz").inputs(),
+        )
 
         # move the stabilizer parent to its default position
         # ( if there is a stabilizerParentInitialData attr )
-        if self._object.hasAttr('stabilizerParentInitialData'):
+        if self._object.hasAttr("stabilizerParentInitialData"):
             # position
-            self._stabilizer_parent.setAttr('tx', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionX'))
-            self._stabilizer_parent.setAttr('ty', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionY'))
-            self._stabilizer_parent.setAttr('tz', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionZ'))
+            self._stabilizer_parent.setAttr(
+                "tx",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionX"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "ty",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionY"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "tz",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDposition.sPIDpositionZ"
+                ),
+            )
 
             # rotation
-            self._stabilizer_parent.setAttr('rx', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationX'))
-            self._stabilizer_parent.setAttr('ry', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationY'))
-            self._stabilizer_parent.setAttr('rz', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationZ'))
+            self._stabilizer_parent.setAttr(
+                "rx",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationX"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "ry",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationY"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "rz",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDrotation.sPIDrotationZ"
+                ),
+            )
 
             # scale
-            self._stabilizer_parent.setAttr('sx', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleX'))
-            self._stabilizer_parent.setAttr('sy', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleY'))
-            self._stabilizer_parent.setAttr('sz', self._object.getAttr(
-                'pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleZ'))
+            self._stabilizer_parent.setAttr(
+                "sx",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleX"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "sy",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleY"
+                ),
+            )
+            self._stabilizer_parent.setAttr(
+                "sz",
+                self._object.getAttr(
+                    "pickedData.stabilizerParentInitialData.sPIDscale.sPIDscaleZ"
+                ),
+            )
 
-        if self._object.hasAttr('pickedData.createdNodes'):
+        if self._object.hasAttr("pickedData.createdNodes"):
             # delete created nodes
             object_to_parent = None
             parent_obj = None
 
-            nodes_to_delete = self._object.attr('pickedData.createdNodes').inputs()
+            nodes_to_delete = self._object.attr("pickedData.createdNodes").inputs()
             if self._constrained_parent in nodes_to_delete:
                 # parent the stabilizer parent to the constrained parents
                 # parent
@@ -413,20 +473,16 @@ class PickedObject(object):
             pm.delete(nodes_to_delete)
 
         # delete picked data attribute on the object
-        self._object.attr('pickedData').delete()
+        self._object.attr("pickedData").delete()
 
         # also delete special commands
-        self._object.attr('specialCommands').delete()
-        self._object.attr('specialCommandLabels').delete()
+        self._object.attr("specialCommands").delete()
+        self._object.attr("specialCommandLabels").delete()
 
     def create_local_parent(self):
-        """creates local parent and axial correction group of local parent
-        """
+        """creates local parent and axial correction group of local parent"""
         # create the localParent group
-        self._local_parent = pm.group(
-            em=True,
-            n=self._object.name() + "_local_parent"
-        )
+        self._local_parent = pm.group(em=True, n=self._object.name() + "_local_parent")
 
         # move it to the same place where constrainedParent is
         matrix = pm.xform(self._constrained_parent, q=True, ws=True, m=True)
@@ -440,18 +496,17 @@ class PickedObject(object):
             self._local_parent = temp[0]
 
         self._local_parent = pm.nodetypes.DagNode(self._local_parent)
-        index = self._object.attr('pickedData.createdNodes').numElements()
-        self._local_parent.attr('message') >> \
-            self._object.attr('pickedData.createdNodes[' + str(index) + ']')
+        index = self._object.attr("pickedData.createdNodes").numElements()
+        self._local_parent.attr("message") >> self._object.attr(
+            "pickedData.createdNodes[" + str(index) + "]"
+        )
 
     def create_parent_constraint(self):
         """creates parentConstraint between _local_parent and the
         _constrained_parent
         """
         self._parent_constraint = pm.parentConstraint(
-            self._local_parent,
-            self._constrained_parent,
-            w=1
+            self._local_parent, self._constrained_parent, w=1
         )
 
         # set also a keyframe for the localParent to weight 1
@@ -466,24 +521,22 @@ class PickedObject(object):
         self.set_stabilizer_keyframe(frame)
 
     def set_stabilizer_keyframe(self, frame):
-        """sets keyframe for stabilizer at the current values
-        """
+        """sets keyframe for stabilizer at the current values"""
         # set keyframes for stabilizerParent
-        self._stabilizer_parent.attr('tx').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('ty').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('tz').setKey(t=frame, ott='step')
+        self._stabilizer_parent.attr("tx").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("ty").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("tz").setKey(t=frame, ott="step")
 
-        self._stabilizer_parent.attr('rx').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('ry').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('rz').setKey(t=frame, ott='step')
+        self._stabilizer_parent.attr("rx").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("ry").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("rz").setKey(t=frame, ott="step")
 
-        self._stabilizer_parent.attr('sx').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('sy').setKey(t=frame, ott='step')
-        self._stabilizer_parent.attr('sz').setKey(t=frame, ott='step')
+        self._stabilizer_parent.attr("sx").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("sy").setKey(t=frame, ott="step")
+        self._stabilizer_parent.attr("sz").setKey(t=frame, ott="step")
 
     def get_parents(self, node):
-        """returns hierarchical parents of the given node
-        """
+        """returns hierarchical parents of the given node"""
         node = pm.nodetypes.DagNode(node)
 
         # TODO: fix this when they fix pymel
@@ -506,33 +559,28 @@ class PickedObject(object):
         return node.isReferenced()
 
     def create_stabilizer_parent(self):
-        """creates the stabilizer parent
-        """
+        """creates the stabilizer parent"""
         # the new stabilizer parent should be at the origin of the original
         # objects parent so that the keyframes of the object should not be altered
 
         self._stabilizer_parent = pm.nodetypes.DagNode(
-            auxiliary.axial_correction_group(
-                self._object,
-                to_parents_origin=True
-            )
+            auxiliary.axial_correction_group(self._object, to_parents_origin=True)
         )
 
         self._stabilizer_parent = pm.nodetypes.DagNode(
             pm.rename(
-                self._stabilizer_parent,
-                self._object.name() + "_stabilizer_parent"
+                self._stabilizer_parent, self._object.name() + "_stabilizer_parent"
             )
         )
 
         # connect it to the created nodes attribute
-        index = self._object.attr('pickedData.createdNodes').numElements()
-        self._stabilizer_parent.attr('message') >> \
-            self._object.attr('pickedData.createdNodes[' + str(index) + ']')
+        index = self._object.attr("pickedData.createdNodes").numElements()
+        self._stabilizer_parent.attr("message") >> self._object.attr(
+            "pickedData.createdNodes[" + str(index) + "]"
+        )
 
     def create_constrained_parent(self):
-        """creates parents for the object
-        """
+        """creates parents for the object"""
         # check if there is a stabilizerParent
         try:
             pm.nodetypes.DagNode(self._stabilizer_parent)
@@ -540,26 +588,28 @@ class PickedObject(object):
             return
 
         self._constrained_parent = pm.nodetypes.DagNode(
-            auxiliary.axial_correction_group(self._stabilizer_parent))
+            auxiliary.axial_correction_group(self._stabilizer_parent)
+        )
         self._constrained_parent = pm.nodetypes.DagNode(
-            pm.rename(self._constrained_parent,
-                      self._object.name() + "_constrained_parent"))
+            pm.rename(
+                self._constrained_parent, self._object.name() + "_constrained_parent"
+            )
+        )
 
-        index = self._object.attr('pickedData.createdNodes').numElements()
-        self._constrained_parent.attr('message') >> \
-            self._object.attr('pickedData.createdNodes[' + str(index) + ']')
+        index = self._object.attr("pickedData.createdNodes").numElements()
+        self._constrained_parent.attr("message") >> self._object.attr(
+            "pickedData.createdNodes[" + str(index) + "]"
+        )
 
     def get_weight_alias_list(self):
-        """returns weight alias list
-        """
+        """returns weight alias list"""
         if not self._is_setup:
             return
 
         return self._parent_constraint.getWeightAliasList()
 
     def get_active_parent(self):
-        """returns the current parent
-        """
+        """returns the current parent"""
         if not self._is_setup:
             return
 
@@ -574,8 +624,7 @@ class PickedObject(object):
         return None
 
     def get_parent_list(self):
-        """returns parent list
-        """
+        """returns parent list"""
         if not self._is_setup:
             return
 
@@ -605,8 +654,7 @@ class PickedObject(object):
         return weight_alias
 
     def add_new_parent(self, parent):
-        """adds a new parent
-        """
+        """adds a new parent"""
         if not self._is_setup:
             return
 
@@ -618,8 +666,7 @@ class PickedObject(object):
 
         # check if there is a cycle between parent and self._object
         if self.check_cycle(parent):
-            pm.PopupError(
-                "Cycle Warning!!!\nnode is one of the special objects")
+            pm.PopupError("Cycle Warning!!!\nnode is one of the special objects")
             return
 
         # create parent constraint between new parent and constrained parent
@@ -627,7 +674,7 @@ class PickedObject(object):
 
         # set a keyframe for the new parent
         weight_alias = self.get_weight_alias(parent)
-        weight_alias.setKey(t=0, v=0, ott='step')
+        weight_alias.setKey(t=0, v=0, ott="step")
 
         # add the parent to the DAG Menu
         self.add_parent_to_dag_menu(parent)
@@ -645,13 +692,17 @@ class PickedObject(object):
         if parent_index == -1:
             return
 
-        command_string = "{\n \
-        int $parentIndex = " + str(parent_index) + ";\n \
-        string $parentConstraint[] = `listConnections (\"%s.pickedData.parentConstraint\")`;\n \
+        command_string = (
+            "{\n \
+        int $parentIndex = "
+            + str(parent_index)
+            + ';\n \
+        string $parentConstraint[] = `listConnections ("%s.pickedData.parentConstraint")`;\n \
         string $parents[] = `parentConstraint -q -tl $parentConstraint[0]`;\n \
         string $parentName = $parents[ $parentIndex ];\n \
-        python(\"import oyObjectPicker as oyOP; oyOP.set_objects_parent( '%s', '\"+$parentName+\"')\");\n \
-        }"
+        python("import oyObjectPicker as oyOP; oyOP.set_objects_parent( \'%s\', \'"+$parentName+"\')");\n \
+        }'
+        )
 
         # pm.mel.source("oyAddDAGMenuCommands")
         # pm.mel.oyADMC_addSpecialCommandsToObject(
@@ -669,30 +720,25 @@ class PickedObject(object):
         command_label = "oyObjectPicker --> release object"
         command_string = "python(\"import oyObjectPicker as oyOP; oyOP.relaseObjectWithName('%s')\");"
         pm.mel.oyADMC_addSpecialCommandsToObject(
-            self._object.name(),
-            command_label,
-            command_string
+            self._object.name(), command_label, command_string
         )
 
         command_label = "oyObjectPicker --> edit_keyframes"
         command_string = "python(\"import oyObjectPicker as oyOP; oyOP.edit_keyframes_of_object('%s')\");"
         pm.mel.oyADMC_addSpecialCommandsToObject(
-            self._object.name(),
-            command_label,
-            command_string
+            self._object.name(), command_label, command_string
         )
 
         command_label = "oyObjectPicker --> fix jump"
-        command_string = "python(\"import oyObjectPicker as oyOP; oyOP.fix_jump_on_object('%s')\");"
+        command_string = (
+            "python(\"import oyObjectPicker as oyOP; oyOP.fix_jump_on_object('%s')\");"
+        )
         pm.mel.oyADMC_addSpecialCommandsToObject(
-            self._object.name(),
-            command_label,
-            command_string
+            self._object.name(), command_label, command_string
         )
 
     def get_parent_index(self, parent):
-        """returns the given parents index
-        """
+        """returns the given parents index"""
         parent = pm.nodetypes.DagNode(parent)
 
         parents = self.get_parent_list()
@@ -752,17 +798,18 @@ class PickedObject(object):
         """
         node = pm.nodetypes.DagNode(node)
 
-        if node == self._object or\
-           node == self._constrained_parent or\
-           node == self._local_parent or\
-           node == self._stabilizer_parent:
+        if (
+            node == self._object
+            or node == self._constrained_parent
+            or node == self._local_parent
+            or node == self._stabilizer_parent
+        ):
             return True
         else:
             return False
 
     def set_active_parent(self, parent):
-        """sets specified parent as the active parent
-        """
+        """sets specified parent as the active parent"""
         if not self._is_setup:
             return
 
@@ -803,14 +850,11 @@ class PickedObject(object):
         stabilizerParent
         """
         pm.dgdirty(
-            self._parent_constraint,
-            self._constrained_parent,
-            self._stabilizer_parent
+            self._parent_constraint, self._constrained_parent, self._stabilizer_parent
         )
 
     def set_parent_weight(self, parent):
-        """sets the weight of the parent to 1 and the others to 0
-        """
+        """sets the weight of the parent to 1 and the others to 0"""
         parent = pm.nodetypes.DagNode(parent)
 
         # get the weightAlias of the parent
@@ -828,8 +872,7 @@ class PickedObject(object):
                     weightAlias.setKey(v=0, ott="step")
 
     def release_object(self):
-        """release the object
-        """
+        """release the object"""
         if not self._is_setup:
             return
 
@@ -837,8 +880,7 @@ class PickedObject(object):
         self.set_active_parent(self._local_parent)
 
     def fix_jump(self):
-        """fixes the jump in current frame
-        """
+        """fixes the jump in current frame"""
         if not self._is_setup:
             return
 
@@ -852,13 +894,11 @@ class PickedObject(object):
         self.set_active_parent(parent)
 
     def get_stabilizer_matrix(self):
-        """returns stabilizer matrix
-        """
+        """returns stabilizer matrix"""
         return pm.xform(self._stabilizer_parent, q=True, ws=True, m=True)
 
     def set_stabilizer_matrix(self, matrix):
-        """sets stabilizer matrix to matrix
-        """
+        """sets stabilizer matrix to matrix"""
         pm.xform(self._stabilizer_parent, ws=True, m=matrix)
 
     def select_anim_curves(self):
@@ -870,15 +910,15 @@ class PickedObject(object):
 
         pm.select(
             auxiliary.get_anim_curves(self._parent_constraint),
-            auxiliary.get_anim_curves(self._stabilizer_parent)
+            auxiliary.get_anim_curves(self._stabilizer_parent),
         )
 
     def set_keyframe_colors(self):
-        """sets the keyframe colors for the parentConstraint and stabilizerParent
-        """
+        """sets the keyframe colors for the parentConstraint and stabilizerParent"""
         # get all anim_curves
-        anim_curves = auxiliary.get_anim_curves(self._parent_constraint) + \
-            auxiliary.get_anim_curves(self._stabilizer_parent)
+        anim_curves = auxiliary.get_anim_curves(
+            self._parent_constraint
+        ) + auxiliary.get_anim_curves(self._stabilizer_parent)
 
         color = [0, 1, 0]  # green
 
@@ -887,8 +927,7 @@ class PickedObject(object):
             auxiliary.set_anim_curve_color(animCurve, color)
 
     def delete_parent_key(self, frame):
-        """deletes parent keyframes at the given keyframe
-        """
+        """deletes parent keyframes at the given keyframe"""
         if not self._is_setup:
             return
 
@@ -896,12 +935,11 @@ class PickedObject(object):
             self._parent_constraint,
             self._stabilizer_parent,
             cl=True,
-            time=(frame, frame)
+            time=(frame, frame),
         )
 
     def delete_current_parent_key(self):
-        """deletes parent keyframes at the current keyframe
-        """
+        """deletes parent keyframes at the current keyframe"""
         current_frame = pm.currentTime(q=True)
         self.delete_parent_key(current_frame)
 
@@ -916,8 +954,7 @@ def set_parent():
         set_objects_parent(_object, parent)
 
     else:
-        pm.PopupError(
-            "please select first the parent, secondly the child object!!!")
+        pm.PopupError("please select first the parent, secondly the child object!!!")
 
 
 def set_objects_parent(object_, parent):
@@ -930,8 +967,8 @@ def set_objects_parent(object_, parent):
         object_ = pm.nodetypes.DagNode(object_)
         parent = pm.nodetypes.DagNode(parent)
         pm.PopupError(
-            "CYCLE ERROR!!!\n%s is a parent or special object for %s" %
-            (object_.name(), parent.name())
+            "CYCLE ERROR!!!\n%s is a parent or special object for %s"
+            % (object_.name(), parent.name())
         )
         # do not setup any object
         return

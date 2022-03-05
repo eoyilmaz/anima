@@ -8,22 +8,22 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 def get_icon(icon_name):
-    """Returns an icon from ui library
-    """
+    """Returns an icon from ui library"""
     import time
+
     start_time = time.time()
     # get the icon from cache if possible
     from anima.ui import ICON_CACHE
+
     q_icon = ICON_CACHE.get(icon_name)
     if not q_icon:
         logger.debug("getting icon from the cache!")
         # use the local icon cache
         import os
         from anima import defaults
+
         local_icon_cache_path = os.path.normpath(
-            os.path.expanduser(
-                os.path.join(defaults.local_cache_folder, "icons")
-            )
+            os.path.expanduser(os.path.join(defaults.local_cache_folder, "icons"))
         )
         local_icon_full_path = os.path.join(local_icon_cache_path, "%s.png" % icon_name)
         logger.debug("local_icon_full_path: %s" % local_icon_full_path)
@@ -31,7 +31,7 @@ def get_icon(icon_name):
             logger.debug("local icon cache not found: %s" % icon_name)
             logger.debug("retrieving icon from library!")
             here = os.path.abspath(os.path.dirname(__file__))
-            images_path = os.path.join(here, 'images')
+            images_path = os.path.join(here, "images")
             icon_full_path = os.path.join(images_path, "%s.png" % icon_name)
             logger.debug("icon_full_path: %s" % icon_full_path)
 
@@ -42,6 +42,7 @@ def get_icon(icon_name):
                 pass
 
             import shutil
+
             try:
                 shutil.copy(icon_full_path, local_icon_full_path)
             except (OSError, IOError):
@@ -81,10 +82,11 @@ def update_graphics_view_with_task_thumbnail(task, graphics_view):
     """
     from stalker import Task
 
-    if not isinstance(task, Task) or \
-       not isinstance(graphics_view, QtWidgets.QGraphicsView):
+    if not isinstance(task, Task) or not isinstance(
+        graphics_view, QtWidgets.QGraphicsView
+    ):
         # do nothing
-        logger.debug('task is not a stalker.models.task.Task instance')
+        logger.debug("task is not a stalker.models.task.Task instance")
         return
 
     # get the thumbnail full path
@@ -92,23 +94,19 @@ def update_graphics_view_with_task_thumbnail(task, graphics_view):
     if task.thumbnail:
         # use the cache system to get the thumbnail
         # try to get it as a normal file
-        full_path = os.path.expandvars(
-            task.thumbnail.full_path
-        )
+        full_path = os.path.expandvars(task.thumbnail.full_path)
         if not os.path.exists(full_path):
             full_path = None
     else:
-        logger.debug('there is no thumbnail')
+        logger.debug("there is no thumbnail")
         # try to get the thumbnail from parents
         for parent in reversed(task.parents):
             if parent.thumbnail:
                 # try to get it as a normal file
-                full_path = os.path.expandvars(
-                    parent.thumbnail.full_path
-                )
+                full_path = os.path.expandvars(parent.thumbnail.full_path)
                 if not os.path.exists(full_path):
                     full_path = None
-                logger.debug('found parent thumbnail at: %s' % full_path)
+                logger.debug("found parent thumbnail at: %s" % full_path)
                 break
 
     if full_path:
@@ -116,8 +114,7 @@ def update_graphics_view_with_task_thumbnail(task, graphics_view):
 
 
 def update_graphics_view_with_image_file(image_full_path, graphics_view):
-    """updates the QGraphicsView with the given image
-    """
+    """updates the QGraphicsView with the given image"""
 
     if not isinstance(graphics_view, QtWidgets.QGraphicsView):
         return
@@ -126,7 +123,7 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
 
     if image_full_path != "":
         image_full_path = os.path.normpath(image_full_path)
-        image_format = os.path.splitext(image_full_path)[-1].replace('.', '').upper()
+        image_format = os.path.splitext(image_full_path)[-1].replace(".", "").upper()
         logger.debug("creating pixmap from: %s" % image_full_path)
 
         # size = conf.thumbnail_size
@@ -135,14 +132,12 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
         size = graphics_view.size()
         width = size.width()
         height = size.height()
-        logger.debug('width: %s' % width)
-        logger.debug('height: %s' % height)
+        logger.debug("width: %s" % width)
+        logger.debug("height: %s" % height)
 
         if os.path.exists(image_full_path):
             pixmap = QtGui.QPixmap(image_full_path, format=image_format).scaled(
-                width, height,
-                QtCore.Qt.KeepAspectRatio,
-                QtCore.Qt.SmoothTransformation
+                width, height, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation
             )
             # pixmap = QtGui.QPixmap(image_full_path, format='JPG')
 
@@ -151,18 +146,18 @@ def update_graphics_view_with_image_file(image_full_path, graphics_view):
 
 
 def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
-    """shows a dialog for thumbnail upload
-    """
+    """shows a dialog for thumbnail upload"""
 
     if start_path is None:
         start_path = os.path.expanduser("~")
 
     # get a file from a FileDialog
     thumbnail_full_path = QtWidgets.QFileDialog.getOpenFileName(
-        parent, dialog_title,
+        parent,
+        dialog_title,
         start_path,
         # "Image Files (*.png *.jpg *.bmp *.tga *.tif *.tiff *.exr)"
-        "Image Files (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)"
+        "Image Files (*.png *.jpg *.jpeg *.bmp *.tif *.tiff)",
     )
 
     if isinstance(thumbnail_full_path, tuple):
@@ -172,8 +167,7 @@ def choose_thumbnail(parent, start_path=None, dialog_title="Choose Thumbnail"):
 
 
 def render_image_from_graphics_view(graphics_view, image_full_path):
-    """renders the graphics view scene to an image at the given full path
-    """
+    """renders the graphics view scene to an image at the given full path"""
     assert isinstance(graphics_view, QtWidgets.QGraphicsView)
     scene = graphics_view.scene()
     # there should be only one item
@@ -187,9 +181,7 @@ def render_image_from_graphics_view(graphics_view, image_full_path):
             # dir exists
             pass
 
-        pixmap.save(
-            image_full_path
-        )
+        pixmap.save(image_full_path)
 
 
 def initialize_post_publish_dialog():
@@ -200,18 +192,20 @@ def initialize_post_publish_dialog():
     try:
         _fromUtf8 = QtCore.QString.fromUtf8
     except AttributeError:
+
         def direct_drive(s):
             return s
+
         _fromUtf8 = direct_drive
 
     dialog = QtWidgets.QDialog()
     dialog.vertical_layout = QtWidgets.QVBoxLayout(dialog)
     dialog.label = QtWidgets.QLabel(dialog.vertical_layout.widget())
-    dialog.label.setText('POST PUBLISH IN PROGRESS')
-    dialog.label.setStyleSheet(_fromUtf8("color: rgb(20, 255, 20);\n""font: 16pt;"))
+    dialog.label.setText("POST PUBLISH IN PROGRESS")
+    dialog.label.setStyleSheet(_fromUtf8("color: rgb(20, 255, 20);\n" "font: 16pt;"))
     dialog.vertical_layout.addWidget(dialog.label)
     dialog.label1 = QtWidgets.QLabel(dialog.vertical_layout.widget())
-    dialog.label1.setText('PLEASE WAIT...')
+    dialog.label1.setText("PLEASE WAIT...")
     dialog.label1.setAlignment(QtCore.Qt.AlignCenter)
     dialog.vertical_layout.addWidget(dialog.label1)
     dialog.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
@@ -222,12 +216,13 @@ def initialize_post_publish_dialog():
 
 
 def load_font(font_filename):
-    """loads extra fonts from the fonts folder
-    """
+    """loads extra fonts from the fonts folder"""
     import time
+
     start_time = time.time()
     # get the font from cache if possible
     from anima.ui import FONT_CACHE
+
     font_family = FONT_CACHE.get(font_filename)
     if not font_family:
         logger.debug("font not found in runtime cache!")
@@ -235,12 +230,9 @@ def load_font(font_filename):
         # use the local font cache
         import os
         from anima import defaults
+
         local_font_cache_path = os.path.normpath(
-            os.path.expanduser(
-                os.path.join(
-                    defaults.local_cache_folder, "fonts"
-                )
-            )
+            os.path.expanduser(os.path.join(defaults.local_cache_folder, "fonts"))
         )
         local_font_full_path = os.path.join(local_font_cache_path, font_filename)
         logger.debug("local_font_full_path: %s" % local_font_full_path)
@@ -248,7 +240,7 @@ def load_font(font_filename):
             logger.debug("local font cache not found: %s" % font_filename)
             logger.debug("retrieving font from library!")
             here = os.path.dirname(os.path.realpath(__file__))
-            font_full_path = os.path.join(here, 'fonts', font_filename)
+            font_full_path = os.path.join(here, "fonts", font_filename)
             logger.debug("font_full_path: %s" % font_full_path)
 
             # copy to local cache folder
@@ -258,6 +250,7 @@ def load_font(font_filename):
                 pass
 
             import shutil
+
             try:
                 shutil.copy(font_full_path, local_font_full_path)
             except OSError:
@@ -274,7 +267,7 @@ def load_font(font_filename):
     return font_family
 
 
-def create_button(label, layout, callback, tooltip='', callback_kwargs=None):
+def create_button(label, layout, callback, tooltip="", callback_kwargs=None):
     """A wrapper for button creation
 
     :param label: The label of the button
@@ -285,7 +278,7 @@ def create_button(label, layout, callback, tooltip='', callback_kwargs=None):
     :param callback_kwargs: Callback arguments
     :return:
     """
-    if tooltip == '':
+    if tooltip == "":
         tooltip = callback.__doc__
 
     # button
@@ -298,6 +291,7 @@ def create_button(label, layout, callback, tooltip='', callback_kwargs=None):
     # Signal
     if callback_kwargs:
         import functools
+
         callback = functools.partial(callback, **callback_kwargs)
 
     button.clicked.connect(callback)
@@ -323,13 +317,14 @@ class ColorList(object):
     :param int index: The start index.
     :param float gamma: The gamma. Defaults to 1.0.
     """
+
     colors = [
         (1.000, 0.500, 0.666),
         (1.000, 0.833, 0.500),
         (0.666, 1.000, 0.500),
         (0.500, 1.000, 0.833),
         (0.500, 0.666, 1.000),
-        (0.833, 0.500, 1.000)
+        (0.833, 0.500, 1.000),
     ]
 
     def __init__(self, index=0, gamma=None):
@@ -337,25 +332,23 @@ class ColorList(object):
         if gamma is None:
             gamma = 1.0
             import os
-            if os.name == 'darwin':
+
+            if os.name == "darwin":
                 gamma = 0.455
         self.gamma = gamma
         self.max_colors = len(self.colors)
 
     def next(self):
-        """updates the index to the next one
-        """
+        """updates the index to the next one"""
         self.index = int((self.index + 1) % self.max_colors)
 
     def reset(self):
-        """resets the color index
-        """
+        """resets the color index"""
         self.index = 0
 
     @property
     def color(self):
-        """returns the current color values
-        """
+        """returns the current color values"""
         return list(map(lambda x: pow(x, self.gamma), self.colors[self.index]))
 
 
@@ -367,9 +360,10 @@ def set_widget_bg_color(widget, color):
     :return:
     """
     widget.setStyleSheet(
-        "background-color: rgba(%s, %s, %s, 1);" % (
+        "background-color: rgba(%s, %s, %s, 1);"
+        % (
             int(color.color[0] * 255),
             int(color.color[1] * 255),
-            int(color.color[2] * 255)
+            int(color.color[2] * 255),
         )
     )

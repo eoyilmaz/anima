@@ -4,15 +4,13 @@ from pymel.core.nodetypes import RenderLayer
 
 
 class aiRenderLayer(RenderLayer):
-    """Overridden RenderLayer class, helps managing Arnold attributes
-    """
+    """Overridden RenderLayer class, helps managing Arnold attributes"""
 
-    __layer_types__ = ['Diffuse', 'Glossy']
+    __layer_types__ = ["Diffuse", "Glossy"]
 
 
 class RenderLayerManager(object):
-    """Manages render layers
-    """
+    """Manages render layers"""
 
     def split_current_layer(self, layer_types=[]):
         """Splits the current layer in to types of layers specified with
@@ -24,11 +22,9 @@ class RenderLayerManager(object):
         :return:
         """
 
-    def from_selected(self, layer_type='Diffuse'):
+    def from_selected(self, layer_type="Diffuse"):
         """Creates render layers from selected objects.
 
-        :param layer_type: 
+        :param layer_type:
         :return:
         """
-
-

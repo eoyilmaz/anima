@@ -6,24 +6,23 @@ from anima.ui.utils import load_font
 
 
 class TaskIcon(QtGui.QIcon):
-    """A custom QIcon that creates icons from text
-    """
+    """A custom QIcon that creates icons from text"""
 
     task_entity_type_icons = {
-        'Task': u'\uf0ae',
-        'Asset': u'\uf12e',
-        'Shot': u'\uf030',
-        'Sequence': u'\uf1de',
-        'Project': u'\uf0e8'
+        "Task": "\uf0ae",
+        "Asset": "\uf12e",
+        "Shot": "\uf030",
+        "Sequence": "\uf1de",
+        "Project": "\uf0e8",
     }
 
     def __init__(self, *args, **kwargs):
-        self.entity_type = kwargs.pop('entity_type', None)
+        self.entity_type = kwargs.pop("entity_type", None)
 
         pixmap = QtGui.QPixmap(20, 20)
         super(TaskIcon, self).__init__(pixmap)
 
-        loaded_font_families = load_font('FontAwesome.otf')
+        loaded_font_families = load_font("FontAwesome.otf")
         # default_font = QtGui.QFont()
         self.icon_font = QtGui.QFont()
 
@@ -61,15 +60,14 @@ class TaskNameCompleter(QtWidgets.QCompleter):
 
     def update(self, completion_prefix):
         from stalker import Task
-        tasks = Task.query \
-            .filter(Task.name.ilike('%' + completion_prefix + '%')) \
-            .all()
-        logger.debug('completer tasks : %s' % tasks)
+
+        tasks = Task.query.filter(Task.name.ilike("%" + completion_prefix + "%")).all()
+        logger.debug("completer tasks : %s" % tasks)
         task_names = [task.name for task in tasks]
         model = QtGui.QStringListModel(task_names)
         self.setModel(model)
         # self.setCompletionPrefix(completion_prefix)
-        self.setCompletionPrefix('')
+        self.setCompletionPrefix("")
 
         # if completion_prefix.strip() != '':
         self.complete()
@@ -162,55 +160,44 @@ class TaskItem(QtGui.QStandardItem):
       has_children fields
     """
 
-    task_entity_types = ['Task', 'Asset', 'Shot', 'Sequence']
+    task_entity_types = ["Task", "Asset", "Shot", "Sequence"]
 
     def __init__(self, *args, **kwargs):
-        self.task = kwargs.pop('task', None)
+        self.task = kwargs.pop("task", None)
         self.loaded = False
         self.fetched_all = False
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug(
-            'TaskItem.__init__() is started for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.__init__() is started for item: %s" % self.text())
         self.parent = None
         self.setEditable(False)
-        logger.debug(
-            'TaskItem.__init__() is finished for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.__init__() is finished for item: %s" % self.text())
 
         icon = TaskIcon(self.task.entity_type)
         self.setData(icon, QtCore.Qt.DecorationRole)
         self.setData(self.task.name, QtCore.Qt.DisplayRole)
 
     def clone(self):
-        """returns a copy of this item
-        """
-        logger.debug('TaskItem.clone() is started for item: %s' % self.text())
+        """returns a copy of this item"""
+        logger.debug("TaskItem.clone() is started for item: %s" % self.text())
         new_item = TaskItem(task=self.task)
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
-        logger.debug('TaskItem.clone() is finished for item: %s' % self.text())
+        logger.debug("TaskItem.clone() is finished for item: %s" % self.text())
         return new_item
 
     def canFetchMore(self):
-        logger.debug(
-            'TaskItem.canFetchMore() is started for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.canFetchMore() is started for item: %s" % self.text())
         # return_value = False
         if self.task and self.task.id and not self.fetched_all:
             return_value = self.task.has_children
         else:
             return_value = False
-        logger.debug(
-            'TaskItem.canFetchMore() is finished for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.canFetchMore() is finished for item: %s" % self.text())
         return return_value
 
     def fetchMore(self):
-        logger.debug(
-            'TaskItem.fetchMore() is started for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
             from sqlalchemy.orm import aliased
@@ -220,34 +207,38 @@ class TaskItem(QtGui.QStandardItem):
             from stalker.db.session import DBSession
 
             inner_tasks = aliased(Task)
-            subquery = DBSession.query(Task.id) \
-                .filter(Task.id == inner_tasks.parent_id)
+            subquery = DBSession.query(Task.id).filter(Task.id == inner_tasks.parent_id)
 
-            query = DBSession.query(
-                Task.id,
-                Task.name,
-                Task.entity_type,
-                Task.status_id,
-                subquery.exists().label('has_children'),
-                array_agg(User.name).label('resources')
-            ) \
-                .outerjoin(Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id) \
-                .outerjoin(User, Task_Resources.c.resource_id == User.id) \
+            query = (
+                DBSession.query(
+                    Task.id,
+                    Task.name,
+                    Task.entity_type,
+                    Task.status_id,
+                    subquery.exists().label("has_children"),
+                    array_agg(User.name).label("resources"),
+                )
+                .outerjoin(
+                    Task_Resources, Task.__table__.c.id == Task_Resources.c.task_id
+                )
+                .outerjoin(User, Task_Resources.c.resource_id == User.id)
                 .group_by(
                     Task.id,
                     Task.name,
                     Task.entity_type,
                     Task.status_id,
-                    subquery.exists().label('has_children')
+                    subquery.exists().label("has_children"),
                 )
+            )
 
-            if self.task.entity_type != 'Project':
+            if self.task.entity_type != "Project":
                 # query child tasks
                 query = query.filter(Task.parent_id == self.task.id)
             else:
                 # query only root tasks
-                query = query.filter(Task.project_id == self.task.id)\
-                    .filter(Task.parent_id==None)
+                query = query.filter(Task.project_id == self.task.id).filter(
+                    Task.parent_id == None
+                )
 
             tasks = query.order_by(Task.name).all()
 
@@ -256,6 +247,7 @@ class TaskItem(QtGui.QStandardItem):
 
             # start = time.time()
             from anima import defaults
+
             task_items = []
             for task in tasks:
                 task_item = TaskItem(0, 4, task=task)
@@ -263,16 +255,12 @@ class TaskItem(QtGui.QStandardItem):
 
                 # color with task status
                 task_item.setData(
-                    QtGui.QColor(
-                        *defaults.status_colors_by_id[task.status_id]
-                    ),
-                    QtCore.Qt.BackgroundRole
+                    QtGui.QColor(*defaults.status_colors_by_id[task.status_id]),
+                    QtCore.Qt.BackgroundRole,
                 )
 
                 # use black text
-                task_item.setForeground(
-                    QtGui.QBrush(QtGui.QColor(0, 0, 0))
-                )
+                task_item.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
 
                 task_items.append(task_item)
 
@@ -281,39 +269,36 @@ class TaskItem(QtGui.QStandardItem):
                 for task_item in task_items:
                     # TODO: Create a custom QStandardItem for each data type in different columns
                     entity_type_item = QtGui.QStandardItem()
-                    entity_type_item.setData(task_item.task.entity_type, QtCore.Qt.DisplayRole)
+                    entity_type_item.setData(
+                        task_item.task.entity_type, QtCore.Qt.DisplayRole
+                    )
 
                     resources_item = QtGui.QStandardItem()
                     if task_item.task.resources != [None]:
-                        resources_item.setData(', '.join(map(str, task_item.task.resources)), QtCore.Qt.DisplayRole)
+                        resources_item.setData(
+                            ", ".join(map(str, task_item.task.resources)),
+                            QtCore.Qt.DisplayRole,
+                        )
 
                     self.appendRow([task_item, entity_type_item, resources_item])
 
             self.fetched_all = True
 
-        logger.debug(
-            'TaskItem.fetchMore() is finished for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.fetchMore() is finished for item: %s" % self.text())
 
     def hasChildren(self):
-        logger.debug(
-            'TaskItem.hasChildren() is started for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.hasChildren() is started for item: %s" % self.text())
         return_value = self.task.has_children
 
-        logger.debug(
-            'TaskItem.hasChildren() is finished for item: %s' % self.text()
-        )
+        logger.debug("TaskItem.hasChildren() is finished for item: %s" % self.text())
         return return_value
 
     def type(self, *args, **kwargs):
-        """
-        """
+        """ """
         return QtGui.QStandardItem.UserType + 1
 
     def reload(self):
-        """reloads the self data
-        """
+        """reloads the self data"""
         # delete all the children and fetch them again
         for i in range(self.rowCount()):
             self.removeRow(0)
@@ -322,36 +307,32 @@ class TaskItem(QtGui.QStandardItem):
 
 
 class TaskTreeModel(QtGui.QStandardItemModel):
-    """Implements the model view for the task hierarchy
-    """
+    """Implements the model view for the task hierarchy"""
 
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
-        logger.debug('TaskTreeModel.__init__() is started')
+        logger.debug("TaskTreeModel.__init__() is started")
         self.root = None
-        logger.debug('TaskTreeModel.__init__() is finished')
+        logger.debug("TaskTreeModel.__init__() is finished")
 
     def flags(self, model_index):
         """Returns model flags
 
         :param model_index: The item models index
-        :return: 
+        :return:
         """
         if not model_index.isValid():
             return QtCore.Qt.ItemIsEnabled
 
         # super(TaskTreeModel, self).flags(model_index)
         return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable  # \
-               # | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDropEnabled
+        # | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDropEnabled
 
     def populateTree(self, projects):
-        """populates tree with user projects
-        """
-        logger.debug('TaskTreeModel.populateTree() is started')
+        """populates tree with user projects"""
+        logger.debug("TaskTreeModel.populateTree() is started")
         self.setColumnCount(4)
-        self.setHorizontalHeaderLabels(
-            ['Name', 'Type', 'Resources', 'Dependencies']
-        )
+        self.setHorizontalHeaderLabels(["Name", "Type", "Resources", "Dependencies"])
 
         for project in projects:
             project_item = TaskItem(0, 4, task=project)
@@ -365,59 +346,46 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
             # color with task status
             from anima import defaults
+
             project_item.setData(
-                QtGui.QColor(
-                    *defaults.status_colors_by_id.get(project.status_id)
-                ),
-                QtCore.Qt.BackgroundRole
+                QtGui.QColor(*defaults.status_colors_by_id.get(project.status_id)),
+                QtCore.Qt.BackgroundRole,
             )
 
             # use black text
-            project_item.setForeground(
-                QtGui.QBrush(QtGui.QColor(0, 0, 0))
-            )
+            project_item.setForeground(QtGui.QBrush(QtGui.QColor(0, 0, 0)))
 
             self.appendRow(project_item)
 
-        logger.debug('TaskTreeModel.populateTree() is finished')
+        logger.debug("TaskTreeModel.populateTree() is finished")
 
     def canFetchMore(self, index):
-        logger.debug(
-            'TaskTreeModel.canFetchMore() is started for index: %s' % index
-        )
+        logger.debug("TaskTreeModel.canFetchMore() is started for index: %s" % index)
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
-        logger.debug(
-            'TaskTreeModel.canFetchMore() is finished for index: %s' % index
-        )
+        logger.debug("TaskTreeModel.canFetchMore() is finished for index: %s" % index)
         return return_value
 
     def fetchMore(self, index):
-        """fetches more elements
-        """
-        logger.debug(
-            'TaskTreeModel.canFetchMore() is started for index: %s' % index
-        )
+        """fetches more elements"""
+        logger.debug("TaskTreeModel.canFetchMore() is started for index: %s" % index)
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
-        logger.debug(
-            'TaskTreeModel.canFetchMore() is finished for index: %s' % index
-        )
+        logger.debug("TaskTreeModel.canFetchMore() is finished for index: %s" % index)
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
-        logger.debug(
-            'TaskTreeModel.hasChildren() is started for index: %s' % index
-        )
+        logger.debug("TaskTreeModel.hasChildren() is started for index: %s" % index)
         if not index.isValid():
             from stalker import Project
             from stalker.db.session import DBSession
+
             projects_count = DBSession.query(Project.id).count()
             return_value = projects_count > 0
         else:
@@ -425,14 +393,11 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             return_value = False
             if item:
                 return_value = item.hasChildren()
-        logger.debug(
-            'TaskTreeModel.hasChildren() is finished for index: %s' % index
-        )
+        logger.debug("TaskTreeModel.hasChildren() is finished for index: %s" % index)
         return return_value
 
     def reload(self, index):
-        """reloads the item at the given index
-        """
+        """reloads the item at the given index"""
         if not index.isValid():
             # just return
             return

@@ -4,8 +4,7 @@ from anima.ui.lib import QtWidgets
 
 
 class ResourceInfoWidget(QtWidgets.QWidget):
-    """A widget that displays task resource information
-    """
+    """A widget that displays task resource information"""
 
     def __init__(self, task=None, parent=None, **kwargs):
         self.task = task
@@ -23,28 +22,31 @@ class ResourceInfoWidget(QtWidgets.QWidget):
         self._setup_ui()
 
     def _setup_ui(self):
-        """create the UI widgets
-        """
+        """create the UI widgets"""
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         self.header_horizontal_layout = QtWidgets.QHBoxLayout()
 
         self.responsible_label = QtWidgets.QLabel(self)
-        self.responsible_label.setText('Resource')
-        self.responsible_label.setStyleSheet("""
+        self.responsible_label.setText("Resource")
+        self.responsible_label.setStyleSheet(
+            """
             background-color: gray;
             font-weight: bold;
             color: white;
             padding: 0.5em;
-        """)
+        """
+        )
 
         self.add_resource_button = QtWidgets.QPushButton(self)
-        self.add_resource_button.setText('+')
-        self.add_resource_button.setStyleSheet("""
+        self.add_resource_button.setText("+")
+        self.add_resource_button.setStyleSheet(
+            """
             background-color: gray;
             color: white;
             padding: 0.5em;
-        """)
+        """
+        )
 
         self.header_horizontal_layout.addWidget(self.responsible_label)
         self.header_horizontal_layout.addStretch(1)

@@ -9,6 +9,7 @@
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -63,26 +64,56 @@ class Ui_Dialog(object):
         self.verticalLayout.addLayout(self.verticalLayout_3)
         self.buttonBox = QtWidgets.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
         self.buttonBox.setObjectName("buttonBox")
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), Dialog.reject)
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL("accepted()"), Dialog.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL("rejected()"), Dialog.reject
+        )
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         Dialog.setTabOrder(self.use_selection_checkBox, self.tabWidget)
         Dialog.setTabOrder(self.tabWidget, self.buttonBox)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "Reference Editor", None, -1))
-        self.use_selection_checkBox.setText(QtWidgets.QApplication.translate("Dialog", "Use Selection", None, -1))
-        self.label.setText(QtWidgets.QApplication.translate("Dialog", "Ref Info", None, -1))
-        self.pushButton.setText(QtWidgets.QApplication.translate("Dialog", "Create Ticket", None, -1))
-        self.pushButton_2.setText(QtWidgets.QApplication.translate("Dialog", "Update To Latest Version", None, -1))
-        self.pushButton_3.setText(QtWidgets.QApplication.translate("Dialog", "Save Edits as New Version", None, -1))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.references_tab), QtWidgets.QApplication.translate("Dialog", "References", None, -1))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.textures_tab), QtWidgets.QApplication.translate("Dialog", "Textures", None, -1))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.animation_cache_tab), QtWidgets.QApplication.translate("Dialog", "Animation Caches", None, -1))
-
+        Dialog.setWindowTitle(
+            QtWidgets.QApplication.translate("Dialog", "Reference Editor", None, -1)
+        )
+        self.use_selection_checkBox.setText(
+            QtWidgets.QApplication.translate("Dialog", "Use Selection", None, -1)
+        )
+        self.label.setText(
+            QtWidgets.QApplication.translate("Dialog", "Ref Info", None, -1)
+        )
+        self.pushButton.setText(
+            QtWidgets.QApplication.translate("Dialog", "Create Ticket", None, -1)
+        )
+        self.pushButton_2.setText(
+            QtWidgets.QApplication.translate(
+                "Dialog", "Update To Latest Version", None, -1
+            )
+        )
+        self.pushButton_3.setText(
+            QtWidgets.QApplication.translate(
+                "Dialog", "Save Edits as New Version", None, -1
+            )
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.references_tab),
+            QtWidgets.QApplication.translate("Dialog", "References", None, -1),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.textures_tab),
+            QtWidgets.QApplication.translate("Dialog", "Textures", None, -1),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.animation_cache_tab),
+            QtWidgets.QApplication.translate("Dialog", "Animation Caches", None, -1),
+        )

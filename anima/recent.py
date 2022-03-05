@@ -26,22 +26,18 @@ class RecentFileManager(object):
     """
 
     def __new__(cls):
-        """restore from locally saved one
-        """
+        """restore from locally saved one"""
         return super(RecentFileManager, cls).__new__(cls)
 
     @classmethod
     def cache_file_full_path(cls):
-        """:return str: the cache file full path
-        """
+        """:return str: the cache file full path"""
         from anima import defaults
+
         return os.path.normpath(
             os.path.expandvars(
                 os.path.expanduser(
-                    os.path.join(
-                        defaults.local_cache_folder,
-                        defaults.recent_file_name
-                    )
+                    os.path.join(defaults.local_cache_folder, defaults.recent_file_name)
                 )
             )
         )
@@ -51,13 +47,9 @@ class RecentFileManager(object):
         self.restore()
 
     def save(self):
-        """save itself to local cache
-        """
+        """save itself to local cache"""
         dumped_data = json.dumps(
-            self.recent_files,
-            sort_keys=True,
-            indent=4,
-            separators=(',', ': ')
+            self.recent_files, sort_keys=True, indent=4, separators=(",", ": ")
         )
         self._write_data(dumped_data)
 
@@ -77,23 +69,22 @@ class RecentFileManager(object):
             # dir exists
             pass
         finally:
-            with open(file_full_path, 'w+') as data_file:
+            with open(file_full_path, "w+") as data_file:
                 data_file.writelines(data)
 
     def restore(self):
-        """restore from local cache folder
-        """
+        """restore from local cache folder"""
         try:
-            with open(RecentFileManager.cache_file_full_path(), 'r') as s:
+            with open(RecentFileManager.cache_file_full_path(), "r") as s:
                 self.recent_files = json.loads(s.read())
         except (IOError, ValueError):
             pass
 
         # limit maximum recent files
         from anima import defaults
+
         for dcc in self.recent_files:
-            self.recent_files[dcc] = \
-                self.recent_files[dcc][:defaults.max_recent_files]
+            self.recent_files[dcc] = self.recent_files[dcc][: defaults.max_recent_files]
 
     def add(self, dcc_name, file_path):
         """Saves the given file_path under the given DCC name
@@ -112,14 +103,15 @@ class RecentFileManager(object):
 
         # clamp max files stored
         from anima import defaults
-        self.recent_files[dcc_name] = \
-            self.recent_files[dcc_name][:defaults.max_recent_files]
+
+        self.recent_files[dcc_name] = self.recent_files[dcc_name][
+            : defaults.max_recent_files
+        ]
 
         self.save()
 
     def remove(self, dcc_name, file_path):
-        """Removes the given path from the recent files list
-        """
+        """Removes the given path from the recent files list"""
         self[dcc_name].remove(file_path)
 
     def __getitem__(self, item):

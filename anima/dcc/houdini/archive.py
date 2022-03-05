@@ -4,8 +4,7 @@ from anima.utils.archive import ArchiverBase
 
 
 class Archiver(ArchiverBase):
-    """Archives the current scene with all the necessary inputs
-    """
+    """Archives the current scene with all the necessary inputs"""
 
     default_project_structure = """assets
     Outputs
@@ -28,7 +27,9 @@ class Archiver(ArchiverBase):
         """
         raise NotImplementedError("Method is not implemented yet")
 
-    def _move_file_and_fix_references(self, path, project_path, scenes_folder='', refs_folder=''):
+    def _move_file_and_fix_references(
+        self, path, project_path, scenes_folder="", refs_folder=""
+    ):
         """Moves the given file to the given project path and moves any references of it too
 
         :param str path: The path of the scene file

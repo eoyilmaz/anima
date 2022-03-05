@@ -89,12 +89,14 @@ class UserDialog(QtWidgets.QDialog):
         self.user_password = self.password_line_edit.text()
 
         # Sends a warning message if the entered user information is missing
-        if len(self.user_name) < 2 or len(self.user_login) < 2 or len(self.user_email) < 2 or len(
-                self.user_password) < 2:
+        if (
+            len(self.user_name) < 2
+            or len(self.user_login) < 2
+            or len(self.user_email) < 2
+            or len(self.user_password) < 2
+        ):
             QtWidgets.QMessageBox.warning(
-                self,
-                "Warning",
-                "Please, fill out user information completely!"
+                self, "Warning", "Please, fill out user information completely!"
             )
         else:
             self.create_user()
@@ -108,7 +110,7 @@ class UserDialog(QtWidgets.QDialog):
             name="{0}".format(self.user_name),
             login="{0}".format(self.user_login),
             email="{0}".format(self.user_email),
-            password="{0}".format(self.user_password)
+            password="{0}".format(self.user_password),
         )
 
         # Checks if the user's name and e-mail address are registered in the database.
@@ -119,14 +121,14 @@ class UserDialog(QtWidgets.QDialog):
                 self,
                 "Warning",
                 "The email address you entered already belongs to an existing user , "
-                "Please re-enter your e-mail address!"
+                "Please re-enter your e-mail address!",
             )
         elif not User.query.filter_by(login=self.user_login).scalar() is None:
             QtWidgets.QMessageBox.warning(
                 self,
                 "Warning",
                 "The user '{0}' already exists, Please enter new "
-                "username!".format(self.user_login)
+                "username!".format(self.user_login),
             )
         else:
             try:
@@ -135,17 +137,13 @@ class UserDialog(QtWidgets.QDialog):
             # Gets the string representation of an exception
             except BaseException as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error",
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
 
             # now we can give the information message
             QtWidgets.QMessageBox.information(
                 self,
                 "Success",
-                "User '{0}' successfully created!".format(self.user_login)
+                "User '{0}' successfully created!".format(self.user_login),
             )
             # then we can close this dialog
             self.close()

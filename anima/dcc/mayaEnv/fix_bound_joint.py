@@ -33,8 +33,7 @@ import pymel.core as pm
 
 
 def UI():
-    """The UI of the script
-    """
+    """The UI of the script"""
 
     window_width = 153
     window_height = 80
@@ -47,29 +46,16 @@ def UI():
         window_name,
         tlb=True,
         title="fixBoundJoint " + __version__,
-        widthHeight=(window_width, window_height)
+        widthHeight=(window_width, window_height),
     )
 
     pm.columnLayout("FBJ_columnLayout1", adj=True)
 
-    pm.checkBox(
-        "FBJ_checkBox1",
-        l="Freeze transformations",
-        al="left",
-        v=1
-    )
+    pm.checkBox("FBJ_checkBox1", l="Freeze transformations", al="left", v=1)
 
-    pm.checkBox(
-        "FBJ_checkBox2",
-        l="Apply to children",
-        al="left"
-    )
+    pm.checkBox("FBJ_checkBox2", l="Apply to children", al="left")
 
-    pm.button(
-        "FBJ_button1",
-        l="Apply",
-        c=get_check_box_states_and_run
-    )
+    pm.button("FBJ_button1", l="Apply", c=get_check_box_states_and_run)
 
     pm.setParent()
 
@@ -78,8 +64,7 @@ def UI():
 
 
 def get_check_box_states_and_run(*args, **kwargs):
-    """Gets the data from UI and runs the script
-    """
+    """Gets the data from UI and runs the script"""
     freeze = pm.checkBox("FBJ_checkBox1", q=True, v=True)
     apply_to_children = pm.checkBox("FBJ_checkBox2", q=True, v=True)
     selection_list = pm.ls(sl=1, type="joint")
@@ -105,12 +90,7 @@ def do_fix(joints, freeze=True, apply_to_children=False):
 
     for joint in new_selection_list:
 
-        connections = joint.worldMatrix.outputs(
-            c=1,
-            p=1,
-            t="skinCluster",
-            et=True
-        )
+        connections = joint.worldMatrix.outputs(c=1, p=1, t="skinCluster", et=True)
 
         if freeze:
             freeze_joint(joint)

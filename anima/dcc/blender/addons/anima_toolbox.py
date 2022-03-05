@@ -7,9 +7,8 @@ bl_info = {
     "version": (1, 0, 0),
     "blender": (2, 80, 0),
     "description": "Anima Toolbox for Blender",
-    "doc_url": "{BLENDER_MANUAL_URL}/addons"
-               "/3d_view/anima_toolbox.html",
-    "category": "3D View"
+    "doc_url": "{BLENDER_MANUAL_URL}/addons" "/3d_view/anima_toolbox.html",
+    "category": "3D View",
 }
 
 
@@ -54,15 +53,17 @@ classes = (
 
 def register():
     from bpy.utils import register_class
+
     for cls in classes:
         register_class(cls)
 
 
 def unregister():
     from bpy.utils import unregister_class
+
     for cls in reversed(classes):
         unregister_class(cls)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     register()

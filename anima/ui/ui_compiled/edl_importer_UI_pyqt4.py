@@ -12,16 +12,22 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
+
     def _fromUtf8(s):
         return s
 
+
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
+
 except AttributeError:
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -33,8 +39,12 @@ class Ui_Dialog(object):
         self.formLayout.setFieldGrowthPolicy(QtGui.QFormLayout.AllNonFixedFieldsGrow)
         self.formLayout.setObjectName(_fromUtf8("formLayout"))
         self.media_files_path_lineEdit = QtGui.QLineEdit(Dialog)
-        self.media_files_path_lineEdit.setObjectName(_fromUtf8("media_files_path_lineEdit"))
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.media_files_path_lineEdit)
+        self.media_files_path_lineEdit.setObjectName(
+            _fromUtf8("media_files_path_lineEdit")
+        )
+        self.formLayout.setWidget(
+            0, QtGui.QFormLayout.FieldRole, self.media_files_path_lineEdit
+        )
         self.label = QtGui.QLabel(Dialog)
         self.label.setObjectName(_fromUtf8("label"))
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label)
@@ -44,7 +54,9 @@ class Ui_Dialog(object):
         self.verticalLayout.addLayout(self.formLayout)
         self.edl_preview_plainTextEdit = QtGui.QPlainTextEdit(Dialog)
         self.edl_preview_plainTextEdit.setReadOnly(True)
-        self.edl_preview_plainTextEdit.setObjectName(_fromUtf8("edl_preview_plainTextEdit"))
+        self.edl_preview_plainTextEdit.setObjectName(
+            _fromUtf8("edl_preview_plainTextEdit")
+        )
         self.verticalLayout.addWidget(self.edl_preview_plainTextEdit)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName(_fromUtf8("horizontalLayout_2"))
@@ -55,7 +67,9 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        Dialog.setTabOrder(self.media_files_path_lineEdit, self.edl_preview_plainTextEdit)
+        Dialog.setTabOrder(
+            self.media_files_path_lineEdit, self.edl_preview_plainTextEdit
+        )
         Dialog.setTabOrder(self.edl_preview_plainTextEdit, self.send_pushButton)
 
     def retranslateUi(self, Dialog):
@@ -63,4 +77,3 @@ class Ui_Dialog(object):
         self.label.setText(_translate("Dialog", "EDL Path", None))
         self.label_2.setText(_translate("Dialog", "AVID Media Files Path", None))
         self.send_pushButton.setText(_translate("Dialog", "Send To AVID", None))
-

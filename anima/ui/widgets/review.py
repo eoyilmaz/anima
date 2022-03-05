@@ -8,8 +8,7 @@ REQUEST_REVISION = "Request Revision"
 
 
 class ReviewWidget(QtWidgets.QWidget):
-    """A widget for reviewing Tasks.
-    """
+    """A widget for reviewing Tasks."""
 
     def __init__(self, task=None, review_type=None, reviewer=None, *args, **kwargs):
         super(ReviewWidget, self).__init__(*args, **kwargs)
@@ -31,15 +30,16 @@ class ReviewWidget(QtWidgets.QWidget):
         self.fill_ui()
 
     def _setup_ui(self):
-        """sets up the ui
-        """
+        """sets up the ui"""
         from functools import partial
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
         QLabel[labelField="true"] {
             font-weight: bold;
         }
-        """)
+        """
+        )
 
         # The main layout
         self.main_layout = QtWidgets.QVBoxLayout(self)
@@ -48,9 +48,7 @@ class ReviewWidget(QtWidgets.QWidget):
         # the form layout
         self.form_layout = QtWidgets.QFormLayout()
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
 
         # store roles
@@ -91,7 +89,9 @@ class ReviewWidget(QtWidgets.QWidget):
         self.form_layout.setWidget(i, label_role, review_type_label)
 
         self.review_type_widget = ReviewTypeWidget(self)
-        self.review_type_widget.currentIndexChanged.connect(partial(self.review_type_changed_callback))
+        self.review_type_widget.currentIndexChanged.connect(
+            partial(self.review_type_changed_callback)
+        )
 
         self.form_layout.setWidget(i, field_role, self.review_type_widget)
 
@@ -106,7 +106,10 @@ class ReviewWidget(QtWidgets.QWidget):
 
         from anima.ui.widgets.timing import ScheduleTimingWidget
         from anima import defaults
-        self.timing_widget = ScheduleTimingWidget(self, timing_resolution=defaults.timing_resolution)
+
+        self.timing_widget = ScheduleTimingWidget(
+            self, timing_resolution=defaults.timing_resolution
+        )
         self.timing_widget.setEnabled(False)
         # set the default to 1 hour
         self.timing_widget.set_schedule_info(timing=1, unit="h")
@@ -122,19 +125,24 @@ class ReviewWidget(QtWidgets.QWidget):
         self.form_layout.setWidget(i, field_role, self.description_widget)
 
     def fill_ui(self):
-        """fills the ui with the given data
-        """
+        """fills the ui with the given data"""
         self.review_type_widget.set_review_type(self.review_type)
 
         if self.reviewer:
             self.reviewer_name_widget.setText(self.reviewer.name)
 
         if self.task:
-            self.task_name_widget.setText("%s (%s) (%s)" % (
-                self.task.name,
-                ' | '.join([self.task.project.name] + [parent_task.name for parent_task in self.task.parents]),
-                self.task.id
-            ))
+            self.task_name_widget.setText(
+                "%s (%s) (%s)"
+                % (
+                    self.task.name,
+                    " | ".join(
+                        [self.task.project.name]
+                        + [parent_task.name for parent_task in self.task.parents]
+                    ),
+                    self.task.id,
+                )
+            )
 
         # from stalker import Version
         # version = Version.query.filter(Version.task == self.task).order_by(Version.date_created.desc()).first()
@@ -144,8 +152,7 @@ class ReviewWidget(QtWidgets.QWidget):
 
     @property
     def reviewer(self):
-        """getter for the reviewer property
-        """
+        """getter for the reviewer property"""
         return self._reviewer
 
     @reviewer.setter
@@ -159,11 +166,11 @@ class ReviewWidget(QtWidgets.QWidget):
             return
 
         from stalker import User
+
         if not isinstance(reviewer, User):
             raise TypeError(
-                "%s.reviewer should be a stalker.User instance, not %s" % (
-                    self.__class__.__name__, reviewer.__class__.__name__
-                )
+                "%s.reviewer should be a stalker.User instance, not %s"
+                % (self.__class__.__name__, reviewer.__class__.__name__)
             )
         self._reviewer = reviewer
 
@@ -171,8 +178,7 @@ class ReviewWidget(QtWidgets.QWidget):
 
     @property
     def task(self):
-        """getter for the task property
-        """
+        """getter for the task property"""
         return self._task
 
     @task.setter
@@ -186,11 +192,11 @@ class ReviewWidget(QtWidgets.QWidget):
             return
 
         from stalker import Task
+
         if not isinstance(task, Task):
             raise TypeError(
-                "%s.task should be a stalker.Task instance, not %s" % (
-                    self.__class__.__name__, task.__class__.__name__
-                )
+                "%s.task should be a stalker.Task instance, not %s"
+                % (self.__class__.__name__, task.__class__.__name__)
             )
         self._task = task
 
@@ -210,8 +216,7 @@ class ReviewWidget(QtWidgets.QWidget):
             self.timing_widget.setEnabled(True)
 
     def finalize_review(self):
-        """finalizes the review
-        """
+        """finalizes the review"""
         if self.task:
             if self.review_type == REQUEST_REVISION:
                 reviewer = self.reviewer
@@ -221,7 +226,7 @@ class ReviewWidget(QtWidgets.QWidget):
                     schedule_timing=timing,
                     schedule_unit=unit,
                     reviewer=reviewer,
-                    description=description
+                    description=description,
                 )
                 return review
             elif self.review_type == APPROVE:
@@ -230,8 +235,7 @@ class ReviewWidget(QtWidgets.QWidget):
 
 
 class ReviewTypeWidget(QtWidgets.QComboBox):
-    """A combo box that holds review types
-    """
+    """A combo box that holds review types"""
 
     def __init__(self, *args, **kwargs):
         super(ReviewTypeWidget, self).__init__(*args, **kwargs)
@@ -248,15 +252,15 @@ class ReviewTypeWidget(QtWidgets.QComboBox):
         :return:
         """
         if review_type not in [APPROVE, REQUEST_REVISION]:
-            raise RuntimeError("%s.review_type should be set to either %s or %s, not %s" % (
-                self.__class__.__name__, APPROVE, REQUEST_REVISION, review_type
-            ))
+            raise RuntimeError(
+                "%s.review_type should be set to either %s or %s, not %s"
+                % (self.__class__.__name__, APPROVE, REQUEST_REVISION, review_type)
+            )
 
         index = self.findText(review_type)
         if index != -1:
             self.setCurrentIndex(index)
 
     def get_review_type(self):
-        """returns the current review type
-        """
+        """returns the current review type"""
         return self.currentText()

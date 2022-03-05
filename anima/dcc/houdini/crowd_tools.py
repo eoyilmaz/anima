@@ -8,8 +8,7 @@ import hou
 
 
 def create_bake_setup():
-    """creates the necessary nodes to bake the crowd to RSProxies
-    """
+    """creates the necessary nodes to bake the crowd to RSProxies"""
     nodes = hou.selectedNodes()
     if not nodes:
         raise RuntimeError("Select a node please")
@@ -57,10 +56,13 @@ def create_bake_setup():
 
     # Python node
     python_node = parent_node.createNode("python")
-    python_node.parm("python").set("""# run only in batch mode
+    python_node.parm("python").set(
+        """# run only in batch mode
 if hou.applicationName() == 'hbatch':
     rs_node = hou.node("../%s")
-    rs_node.parm("execute").pressButton()""" % rs_proxy_output.name())
+    rs_node.parm("execute").pressButton()"""
+        % rs_proxy_output.name()
+    )
     python_node.setInput(0, attr_wrangle_node)
     nodes_created.append(python_node)
 
@@ -85,10 +87,9 @@ if hou.applicationName() == 'hbatch':
     nodes_created.append(metadata_node)
 
     from anima.dcc.houdini import auxiliary
+
     # Create space input0 for rs proxy output node
-    auxiliary.create_spare_input(
-        rs_proxy_output, "../%s" % metadata_node.name()
-    )
+    auxiliary.create_spare_input(rs_proxy_output, "../%s" % metadata_node.name())
 
     # delete node
     delete_node = parent_node.createNode("delete")
@@ -115,9 +116,8 @@ if hou.applicationName() == 'hbatch':
     # align the nodes
     network_editor = auxiliary.get_network_pane()
     import nodegraphalign  # this is a houdini module
-    nodegraphalign.alignConnected(
-        network_editor, block_begin_node, None, "down"
-    )
+
+    nodegraphalign.alignConnected(network_editor, block_begin_node, None, "down")
 
     # select newly created nodes
     nodes_created[0].setSelected(True, True)
@@ -126,14 +126,12 @@ if hou.applicationName() == 'hbatch':
 
 
 def do_bake():
-    """bakes the crowd to RSProxies
-    """
+    """bakes the crowd to RSProxies"""
     pass
 
 
 def create_render_setup():
-    """creates the render setup
-    """
+    """creates the render setup"""
     nodes = hou.selectedNodes()
     if not nodes:
         raise RuntimeError("Select a node please")
@@ -167,30 +165,36 @@ def create_render_setup():
 
     # attr wrangle - load proxies
     attr_wrangle_node = parent_node.createNode("attribwrangle")
-    attr_wrangle_node.parm("snippet").set("""s@instancefile = concat(
+    attr_wrangle_node.parm("snippet").set(
+        """s@instancefile = concat(
     "$HIP/Outputs/rs/", itoa(@Frame), "/Crowd_", itoa(@ptnum), ".", itoa(@Frame), ".rs"
-);""")
+);"""
+    )
     attr_wrangle_node.setInput(0, attr_delete_node)
     nodes_created.append(attr_wrangle_node)
 
     # attr wrangle - set materials
     import random
+
     attr_wrangle_node2 = parent_node.createNode("attribwrangle")
-    attr_wrangle_node2.parm("snippet").set("""int material_ids[] = {1,2,3,4,5,6,7,8,9,10};
+    attr_wrangle_node2.parm("snippet").set(
+        """int material_ids[] = {1,2,3,4,5,6,7,8,9,10};
 int material_id = material_ids[sample_discrete(len(material_ids), rand(@ptnum + %0.3f))];
 s@shop_materialpath = concat("/mat/Material", itoa(material_id));
-""" % random.random())
+"""
+        % random.random()
+    )
     attr_wrangle_node2.setInput(0, attr_wrangle_node)
     nodes_created.append(attr_wrangle_node2)
     # attr_wrangle_node3.setDisplayFlag(True)
     # attr_wrangle_node3.setRenderFlag(True)
     # align the nodes
     from anima.dcc.houdini import auxiliary
+
     network_editor = auxiliary.get_network_pane()
     import nodegraphalign
-    nodegraphalign.alignConnected(
-        network_editor, add_node, None, "down"
-    )
+
+    nodegraphalign.alignConnected(network_editor, add_node, None, "down")
 
     # select newly created nodes
     nodes_created[0].setSelected(True, True)

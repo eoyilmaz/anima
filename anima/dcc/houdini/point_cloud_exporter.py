@@ -14,8 +14,12 @@ def export_data(node, path):
     all_data = []
     for i in range(int(len(point_positions) / 3)):
         raw_data = "%s \t%s \t%s \t%s \t%s \t%s\n" % (
-            point_positions[i * 3], point_positions[i * 3 + 1], point_positions[i * 3 + 2],
-            point_colors[i * 3] * 256, point_colors[i * 3 + 1] * 256, point_colors[i * 3 + 2] * 256
+            point_positions[i * 3],
+            point_positions[i * 3 + 1],
+            point_positions[i * 3 + 2],
+            point_colors[i * 3] * 256,
+            point_colors[i * 3 + 1] * 256,
+            point_colors[i * 3 + 2] * 256,
         )
         all_data.append(raw_data)
 

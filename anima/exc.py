@@ -4,6 +4,6 @@
 
 
 class PublishError(RuntimeError):
-    """Raised when the published version is not matching the quality
-    """
+    """Raised when the published version is not matching the quality"""
+
     pass

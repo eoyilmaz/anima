@@ -29,8 +29,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
         self._setup_signals()
 
     def _setup_ui(self):
-        """set up the ui
-        """
+        """set up the ui"""
         self.main_layout = QtWidgets.QHBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -41,15 +40,21 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
 
         self.schedule_unit_widget = QtWidgets.QComboBox(self)
         from stalker import defaults
-        for datetime_unit_name, datetime_unit in zip(defaults.datetime_unit_names, defaults.datetime_units):
+
+        for datetime_unit_name, datetime_unit in zip(
+            defaults.datetime_unit_names, defaults.datetime_units
+        ):
             self.schedule_unit_widget.addItem(datetime_unit_name.title(), datetime_unit)
 
         self.main_layout.addWidget(self.schedule_unit_widget)
 
         self.schedule_model_widget = QtWidgets.QComboBox(self)
         from stalker.models.mixins import DateRangeMixin
+
         for task_schedule_model in defaults.task_schedule_models:
-            self.schedule_model_widget.addItem(task_schedule_model.title(), task_schedule_model)
+            self.schedule_model_widget.addItem(
+                task_schedule_model.title(), task_schedule_model
+            )
 
         self.main_layout.addWidget(self.schedule_model_widget)
 
@@ -58,26 +63,32 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
         self.main_layout.setStretch(2, 2)
 
     def _setup_signals(self):
-        """set up the signals
-        """
+        """set up the signals"""
         from functools import partial
-        self.schedule_timing_widget.valueChanged.connect(partial(self.update_timing_info))
-        self.schedule_unit_widget.currentIndexChanged.connect(partial(self.update_timing_info))
+
+        self.schedule_timing_widget.valueChanged.connect(
+            partial(self.update_timing_info)
+        )
+        self.schedule_unit_widget.currentIndexChanged.connect(
+            partial(self.update_timing_info)
+        )
 
     def update_timing_info(self, *args):
-        """updates the timing information
-        """
+        """updates the timing information"""
         self.set_schedule_info(*self.get_schedule_info())
 
     def get_schedule_info(self):
-        """getter for the schedule_info
-        """
+        """getter for the schedule_info"""
         schedule_timing = self.schedule_timing_widget.value()
-        schedule_unit = self.schedule_unit_widget.itemData(self.schedule_unit_widget.currentIndex())
-        schedule_model = self.schedule_model_widget.itemData(self.schedule_model_widget.currentIndex())
+        schedule_unit = self.schedule_unit_widget.itemData(
+            self.schedule_unit_widget.currentIndex()
+        )
+        schedule_model = self.schedule_model_widget.itemData(
+            self.schedule_model_widget.currentIndex()
+        )
         return schedule_timing, schedule_unit, schedule_model
 
-    def set_schedule_info(self, timing=1, unit='h', model='effort'):
+    def set_schedule_info(self, timing=1, unit="h", model="effort"):
         """setter for the schedule_info
 
         :param int timing:
@@ -91,6 +102,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
         self._updating_schedule_info = True
 
         from stalker.models.mixins import ScheduleMixin
+
         seconds = ScheduleMixin.to_seconds(timing, unit, model)
 
         # round the seconds to the timing resolution
@@ -98,6 +110,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
 
         # adjust the step of the schedule_timing to the current unit
         from anima import utils
+
         step = max(1, utils.to_unit(trs, unit, model))
         self.schedule_timing_widget.setSingleStep(step)
 
@@ -121,8 +134,7 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
 
     @property
     def timing_resolution(self):
-        """the getter for the timing_resolution property
-        """
+        """the getter for the timing_resolution property"""
         return self._timing_resolution
 
     @timing_resolution.setter
@@ -134,13 +146,16 @@ class ScheduleTimingWidget(QtWidgets.QWidget):
         :return:
         """
         import datetime
+
         if timing_resolution is None:
             from anima import defaults
+
             timing_resolution = defaults.timing_resolution
         elif not isinstance(timing_resolution, datetime.timedelta):
-            raise TypeError("%s.timing_resolution should be set to a datetime.timedelta instance, not %s" % (
-                self.__class__.__name__, timing_resolution.__class__.__name__
-            ))
+            raise TypeError(
+                "%s.timing_resolution should be set to a datetime.timedelta instance, not %s"
+                % (self.__class__.__name__, timing_resolution.__class__.__name__)
+            )
 
         self._timing_resolution = timing_resolution
 

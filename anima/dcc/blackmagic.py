@@ -15,6 +15,7 @@ def get_bmd():
     except ImportError:
         # Look for installer based environment variables:
         import os
+
         lib_path = os.getenv("RESOLVE_SCRIPT_LIB")
         if lib_path:
             try:

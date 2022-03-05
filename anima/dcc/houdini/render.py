@@ -14,8 +14,7 @@ class RenderSlicer(object):
 
     @classmethod
     def slice(cls, camera, slices_in_x, slices_in_y):
-        """slices all renderable cameras
-        """
+        """slices all renderable cameras"""
         # set render resolution
         # self.unslice_scene()
         # self.is_sliced = True
@@ -31,16 +30,20 @@ class RenderSlicer(object):
         v_res = camera.evalParm("resy")
 
         # this system only works when the
-        camera.setParms({
-            "resx": int(h_res / float(sx)),
-            "resy": int(v_res / float(sy)),
-            "aspect": 1
-        })
+        camera.setParms(
+            {
+                "resx": int(h_res / float(sx)),
+                "resy": int(v_res / float(sy)),
+                "aspect": 1,
+            }
+        )
 
-        camera.setParms({
-            'winsizex': 1.0/float(sx),
-            'winsizey': 1.0/float(sx),
-        })
+        camera.setParms(
+            {
+                "winsizex": 1.0 / float(sx),
+                "winsizey": 1.0 / float(sx),
+            }
+        )
 
         t = 0
         for i in range(sy):

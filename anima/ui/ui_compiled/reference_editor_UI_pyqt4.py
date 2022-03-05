@@ -12,16 +12,22 @@ from PyQt4 import QtCore, QtGui
 try:
     _fromUtf8 = QtCore.QString.fromUtf8
 except AttributeError:
+
     def _fromUtf8(s):
         return s
 
+
 try:
     _encoding = QtGui.QApplication.UnicodeUTF8
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig, _encoding)
+
 except AttributeError:
+
     def _translate(context, text, disambig):
         return QtGui.QApplication.translate(context, text, disambig)
+
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -77,14 +83,20 @@ class Ui_Dialog(object):
         self.verticalLayout.addLayout(self.verticalLayout_3)
         self.buttonBox = QtGui.QDialogButtonBox(Dialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtGui.QDialogButtonBox.Cancel|QtGui.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(
+            QtGui.QDialogButtonBox.Cancel | QtGui.QDialogButtonBox.Ok
+        )
         self.buttonBox.setObjectName(_fromUtf8("buttonBox"))
         self.verticalLayout.addWidget(self.buttonBox)
 
         self.retranslateUi(Dialog)
         self.tabWidget.setCurrentIndex(0)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept)
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject)
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL(_fromUtf8("accepted()")), Dialog.accept
+        )
+        QtCore.QObject.connect(
+            self.buttonBox, QtCore.SIGNAL(_fromUtf8("rejected()")), Dialog.reject
+        )
         QtCore.QMetaObject.connectSlotsByName(Dialog)
         Dialog.setTabOrder(self.use_selection_checkBox, self.tabWidget)
         Dialog.setTabOrder(self.tabWidget, self.buttonBox)
@@ -94,9 +106,21 @@ class Ui_Dialog(object):
         self.use_selection_checkBox.setText(_translate("Dialog", "Use Selection", None))
         self.label.setText(_translate("Dialog", "Ref Info", None))
         self.pushButton.setText(_translate("Dialog", "Create Ticket", None))
-        self.pushButton_2.setText(_translate("Dialog", "Update To Latest Version", None))
-        self.pushButton_3.setText(_translate("Dialog", "Save Edits as New Version", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.references_tab), _translate("Dialog", "References", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.textures_tab), _translate("Dialog", "Textures", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.animation_cache_tab), _translate("Dialog", "Animation Caches", None))
-
+        self.pushButton_2.setText(
+            _translate("Dialog", "Update To Latest Version", None)
+        )
+        self.pushButton_3.setText(
+            _translate("Dialog", "Save Edits as New Version", None)
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.references_tab),
+            _translate("Dialog", "References", None),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.textures_tab),
+            _translate("Dialog", "Textures", None),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.animation_cache_tab),
+            _translate("Dialog", "Animation Caches", None),
+        )

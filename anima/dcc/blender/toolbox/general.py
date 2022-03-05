@@ -6,10 +6,10 @@ from bpy.types import Panel, Operator
 class General(Panel):
     bl_idname = "ANIMA_TOOLBOX_PT_General"
     bl_label = "General"
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'View'
-    bl_parent_id = 'ANIMA_TOOLBOX_PT_Main'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "View"
+    bl_parent_id = "ANIMA_TOOLBOX_PT_Main"
 
     def draw(self, context):
         layout = self.layout
@@ -17,8 +17,18 @@ class General(Panel):
 
         box = layout.box()
         # box.label(text="Box Label")
-        operators = [OpenVersion, SaveAsVersion, VersionUpdater, Playblast, RangeFromShot, FitStencilToView,
-                     NudgeStencilToUp, NudgeStencilToDown, NudgeStencilToLeft, NudgeStencilToRight]
+        operators = [
+            OpenVersion,
+            SaveAsVersion,
+            VersionUpdater,
+            Playblast,
+            RangeFromShot,
+            FitStencilToView,
+            NudgeStencilToUp,
+            NudgeStencilToDown,
+            NudgeStencilToLeft,
+            NudgeStencilToRight,
+        ]
         for op in operators:
             row = box.row()
             row.operator(op.bl_idname, text=op.bl_label)
@@ -35,10 +45,11 @@ class OpenVersion(Operator):
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
+
         version_dialog(mode=1)
         # redraw
         # context.area.tag_redraw()
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class SaveAsVersion(Operator):
@@ -49,10 +60,11 @@ class SaveAsVersion(Operator):
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_dialog
+
         version_dialog(mode=0)
         # redraw
         # context.area.tag_redraw()
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class VersionUpdater(Operator):
@@ -62,10 +74,11 @@ class VersionUpdater(Operator):
 
     def execute(self, context):
         from anima.ui.scripts.blender import version_updater
+
         version_updater()
         # redraw
         # context.area.tag_redraw()
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class Playblast(Operator):
@@ -76,11 +89,12 @@ class Playblast(Operator):
 
     def execute(self, context):
         from anima.dcc import blender
+
         bl = blender.Blender()
         bl.viewport_render_animation(context)
         # redraw
         # context.area.tag_redraw()
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class RangeFromShot(Operator):
@@ -90,16 +104,17 @@ class RangeFromShot(Operator):
 
     def execute(self, context):
         from anima.dcc import blender
+
         bl = blender.Blender()
         version = bl.get_current_version()
         if not version:
-            return {'FINISHED'}
+            return {"FINISHED"}
 
         shot = bl.get_shot(version)
         if shot:
             bl.set_frame_range(shot.cut_in, shot.cut_out)
 
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class FitStencilToView(Operator):
@@ -116,18 +131,30 @@ class FitStencilToView(Operator):
         # get the current camera view size relative to the current view
         # set it to the current brush stencil
         import bpy
+
         # print("***************************************************")
 
-        brush = bpy.data.brushes['TexDraw']
+        brush = bpy.data.brushes["TexDraw"]
         stencil_dimension = brush.stencil_dimension
         stencil_pos = brush.stencil_pos
 
         region = context.region
         region_view_3d = context.region_data
-        print("region_view_3d.view_camera_offset   : %s" % region_view_3d.view_camera_offset)
-        print("region_view_3d.view_camera_offset[0]: %s" % region_view_3d.view_camera_offset[0])
-        print("region_view_3d.view_camera_offset[1]: %s" % region_view_3d.view_camera_offset[1])
-        print("region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom)
+        print(
+            "region_view_3d.view_camera_offset   : %s"
+            % region_view_3d.view_camera_offset
+        )
+        print(
+            "region_view_3d.view_camera_offset[0]: %s"
+            % region_view_3d.view_camera_offset[0]
+        )
+        print(
+            "region_view_3d.view_camera_offset[1]: %s"
+            % region_view_3d.view_camera_offset[1]
+        )
+        print(
+            "region_view_3d.view_camera_zoom     : %s" % region_view_3d.view_camera_zoom
+        )
         print("-------------------")
         print("Estimated goal values:")
         print("stencil_dimension.x                   : %s" % stencil_dimension.x)
@@ -164,7 +191,7 @@ class FitStencilToView(Operator):
         # print("stencil_dimension.x                   : %s" % stencil_dimension.x)
         # print("stencil_dimension.y                   : %s" % stencil_dimension.y)
 
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class NudgeStencilToLeft(Operator):
@@ -178,10 +205,11 @@ class NudgeStencilToLeft(Operator):
         :return:
         """
         import bpy
-        brush = bpy.data.brushes['TexDraw']
+
+        brush = bpy.data.brushes["TexDraw"]
         stencil_pos = brush.stencil_pos
         stencil_pos.x -= 1
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class NudgeStencilToRight(Operator):
@@ -195,10 +223,11 @@ class NudgeStencilToRight(Operator):
         :return:
         """
         import bpy
-        brush = bpy.data.brushes['TexDraw']
+
+        brush = bpy.data.brushes["TexDraw"]
         stencil_pos = brush.stencil_pos
         stencil_pos.x += 1
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class NudgeStencilToUp(Operator):
@@ -212,10 +241,11 @@ class NudgeStencilToUp(Operator):
         :return:
         """
         import bpy
-        brush = bpy.data.brushes['TexDraw']
+
+        brush = bpy.data.brushes["TexDraw"]
         stencil_pos = brush.stencil_pos
         stencil_pos.y += 1
-        return {'FINISHED'}
+        return {"FINISHED"}
 
 
 class NudgeStencilToDown(Operator):
@@ -229,7 +259,8 @@ class NudgeStencilToDown(Operator):
         :return:
         """
         import bpy
-        brush = bpy.data.brushes['TexDraw']
+
+        brush = bpy.data.brushes["TexDraw"]
         stencil_pos = brush.stencil_pos
         stencil_pos.y -= 1
-        return {'FINISHED'}
+        return {"FINISHED"}

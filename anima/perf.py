@@ -32,11 +32,15 @@ def measure_time(f_name):
                 end = time.time()
                 indentation -= tab_stop
 
-                print('%s%11s: %0.3f sec' % (" " * indentation, f_inner_name, (end - start)))
+                print(
+                    "%s%11s: %0.3f sec"
+                    % (" " * indentation, f_inner_name, (end - start))
+                )
 
             return return_data
 
         return wrapped_f
+
     return wrapper
 
 
@@ -60,8 +64,8 @@ class TimeReporter(object):
     def __init__(self):
         self._title = None
         self.report_text = ""
-        self.time_format = '%0.2f sec'
-        self.title = 'Process'
+        self.time_format = "%0.2f sec"
+        self.title = "Process"
 
         self.start_time = 0
         self.end_time = 0

@@ -28,7 +28,7 @@ import logging
 from anima.config import Config
 from stalker import SimpleEntity
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 
 __string_types__ = []
 if sys.version_info[0] >= 3:  # Python 3
@@ -38,9 +38,9 @@ else:  # Python 2
 
 
 def get_generic_text_attr(self, attr):
-    """patch Simple entity to add new functionality
-    """
+    """patch Simple entity to add new functionality"""
     import json
+
     attr_value = None
     if self.generic_text:
         data = json.loads(self.generic_text)
@@ -49,9 +49,9 @@ def get_generic_text_attr(self, attr):
 
 
 def set_generic_text_attr(self, attr, value):
-    """patch Simple entity to add new functionality
-    """
+    """patch Simple entity to add new functionality"""
     import json
+
     data = {}
     if self.generic_text:
         data = json.loads(self.generic_text)
@@ -70,13 +70,12 @@ logging_level = logging.ERROR
 logger.setLevel(logging_level)
 
 # create formatter
-logging_formatter = logging.Formatter('%(module)s: %(funcName)s: %(levelname)s: %(message)s')
+logging_formatter = logging.Formatter(
+    "%(module)s: %(funcName)s: %(levelname)s: %(message)s"
+)
 
 # create file handler
-log_file_path = os.path.join(
-    tempfile.gettempdir(),
-    'anima.log'
-)
+log_file_path = os.path.join(tempfile.gettempdir(), "anima.log")
 log_file_handler = logging.FileHandler(log_file_path)
 log_file_handler.setFormatter(logging_formatter)
 
@@ -88,8 +87,12 @@ logger.addHandler(log_file_handler)
 # fix file mod for log file
 os.chmod(
     log_file_path,
-    stat.S_IRWXU + stat.S_IRWXG + stat.S_IRWXO -
-    stat.S_IXUSR - stat.S_IXGRP - stat.S_IXOTH
+    stat.S_IRWXU
+    + stat.S_IRWXG
+    + stat.S_IRWXO
+    - stat.S_IXUSR
+    - stat.S_IXGRP
+    - stat.S_IXOTH,
 )
 
 TIMING_RESOLUTION = 10  # in minutes

@@ -9,6 +9,7 @@
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -51,7 +52,9 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(self.dockWidgetContents)
         self.pushButton.setObjectName("pushButton")
         self.verticalLayout.addWidget(self.pushButton)
-        spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        spacerItem = QtWidgets.QSpacerItem(
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
+        )
         self.verticalLayout.addItem(spacerItem)
         self.dockWidget.setWidget(self.dockWidgetContents)
         MainWindow.addDockWidget(QtCore.Qt.DockWidgetArea(1), self.dockWidget)
@@ -102,23 +105,64 @@ class Ui_MainWindow(object):
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QtWidgets.QApplication.translate("MainWindow", "Anima Manager", None, -1))
-        self.menuFile.setTitle(QtWidgets.QApplication.translate("MainWindow", "File", None, -1))
-        self.menuEdit.setTitle(QtWidgets.QApplication.translate("MainWindow", "Edit", None, -1))
-        self.menuHelp.setTitle(QtWidgets.QApplication.translate("MainWindow", "Help", None, -1))
-        self.menuView.setTitle(QtWidgets.QApplication.translate("MainWindow", "View", None, -1))
-        self.pushButton_2.setText(QtWidgets.QApplication.translate("MainWindow", "My Projects", None, -1))
-        self.pushButton_3.setText(QtWidgets.QApplication.translate("MainWindow", "My Tasks", None, -1))
-        self.pushButton.setText(QtWidgets.QApplication.translate("MainWindow", "My Vacations", None, -1))
-        self.actionConnect_To_Server.setText(QtWidgets.QApplication.translate("MainWindow", "Connect To Server...", None, -1))
-        self.actionAbout_AnimaMan.setText(QtWidgets.QApplication.translate("MainWindow", "About AnimaMan ...", None, -1))
-        self.actionLogin.setText(QtWidgets.QApplication.translate("MainWindow", "Login...", None, -1))
-        self.actionLogout.setText(QtWidgets.QApplication.translate("MainWindow", "Logout", None, -1))
-        self.actionExit.setText(QtWidgets.QApplication.translate("MainWindow", "Exit", None, -1))
-        self.actionUndo.setText(QtWidgets.QApplication.translate("MainWindow", "Undo", None, -1))
-        self.actionRedo.setText(QtWidgets.QApplication.translate("MainWindow", "Redo", None, -1))
-        self.actionCopy.setText(QtWidgets.QApplication.translate("MainWindow", "Copy", None, -1))
-        self.actionPaste.setText(QtWidgets.QApplication.translate("MainWindow", "Paste", None, -1))
-        self.actionFind.setText(QtWidgets.QApplication.translate("MainWindow", "Find...", None, -1))
-        self.actionHelp.setText(QtWidgets.QApplication.translate("MainWindow", "Help", None, -1))
-
+        MainWindow.setWindowTitle(
+            QtWidgets.QApplication.translate("MainWindow", "Anima Manager", None, -1)
+        )
+        self.menuFile.setTitle(
+            QtWidgets.QApplication.translate("MainWindow", "File", None, -1)
+        )
+        self.menuEdit.setTitle(
+            QtWidgets.QApplication.translate("MainWindow", "Edit", None, -1)
+        )
+        self.menuHelp.setTitle(
+            QtWidgets.QApplication.translate("MainWindow", "Help", None, -1)
+        )
+        self.menuView.setTitle(
+            QtWidgets.QApplication.translate("MainWindow", "View", None, -1)
+        )
+        self.pushButton_2.setText(
+            QtWidgets.QApplication.translate("MainWindow", "My Projects", None, -1)
+        )
+        self.pushButton_3.setText(
+            QtWidgets.QApplication.translate("MainWindow", "My Tasks", None, -1)
+        )
+        self.pushButton.setText(
+            QtWidgets.QApplication.translate("MainWindow", "My Vacations", None, -1)
+        )
+        self.actionConnect_To_Server.setText(
+            QtWidgets.QApplication.translate(
+                "MainWindow", "Connect To Server...", None, -1
+            )
+        )
+        self.actionAbout_AnimaMan.setText(
+            QtWidgets.QApplication.translate(
+                "MainWindow", "About AnimaMan ...", None, -1
+            )
+        )
+        self.actionLogin.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Login...", None, -1)
+        )
+        self.actionLogout.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Logout", None, -1)
+        )
+        self.actionExit.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Exit", None, -1)
+        )
+        self.actionUndo.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Undo", None, -1)
+        )
+        self.actionRedo.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Redo", None, -1)
+        )
+        self.actionCopy.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Copy", None, -1)
+        )
+        self.actionPaste.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Paste", None, -1)
+        )
+        self.actionFind.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Find...", None, -1)
+        )
+        self.actionHelp.setText(
+            QtWidgets.QApplication.translate("MainWindow", "Help", None, -1)
+        )

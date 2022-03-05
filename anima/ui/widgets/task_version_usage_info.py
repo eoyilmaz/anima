@@ -5,8 +5,7 @@ from anima.ui.lib import QtWidgets
 
 
 class TaskVersionUsageInfoWidget(QtWidgets.QWidget):
-    """A widget that displays task version usage information
-    """
+    """A widget that displays task version usage information"""
 
     def __init__(self, task=None, parent=None, **kwargs):
         self.task = task
@@ -24,20 +23,21 @@ class TaskVersionUsageInfoWidget(QtWidgets.QWidget):
         self._setup_ui()
 
     def _setup_ui(self):
-        """create the UI widgets
-        """
+        """create the UI widgets"""
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         self.header_horizontal_layout = QtWidgets.QHBoxLayout()
 
         self.versions_use_in_label = QtWidgets.QLabel(self)
-        self.versions_use_in_label.setText('Versions are used in')
-        self.versions_use_in_label.setStyleSheet("""
+        self.versions_use_in_label.setText("Versions are used in")
+        self.versions_use_in_label.setStyleSheet(
+            """
             background-color: gray;
             color: white;
             font-weight: bold;
             padding: 0.5em;
-        """)
+        """
+        )
 
         self.header_horizontal_layout.addWidget(self.versions_use_in_label)
         self.vertical_layout.addLayout(self.header_horizontal_layout)

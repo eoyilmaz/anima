@@ -6,16 +6,13 @@ PRE_PUBLISHER_TYPE = 0
 POST_PUBLISHER_TYPE = 1
 
 
-publishers = {
-    PRE_PUBLISHER_TYPE: {},
-    POST_PUBLISHER_TYPE: {}
-}
+publishers = {PRE_PUBLISHER_TYPE: {}, POST_PUBLISHER_TYPE: {}}
 
 # This is a storage for intermediate data like newly created versions etc.
 staging = {}
 
 
-def register_publisher(callable_, type_name='', publisher_type=PRE_PUBLISHER_TYPE):
+def register_publisher(callable_, type_name="", publisher_type=PRE_PUBLISHER_TYPE):
     """Registers a function as a publisher for defined task types.
 
     :param function callable_: The callable that is the publisher.
@@ -28,7 +25,7 @@ def register_publisher(callable_, type_name='', publisher_type=PRE_PUBLISHER_TYP
     """
 
     if not callable(callable_):
-        raise TypeError('%s is not callable' % callable_.__class__.__name__)
+        raise TypeError("%s is not callable" % callable_.__class__.__name__)
 
     def register_one(t_name, p_type):
         t_name = t_name.lower()
@@ -46,12 +43,13 @@ def register_publisher(callable_, type_name='', publisher_type=PRE_PUBLISHER_TYP
         register_one(type_name, publisher_type)
 
 
-def publisher(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
+def publisher(type_name="", publisher_type=PRE_PUBLISHER_TYPE):
     """A decorator to easily register a method or function as a publisher
 
     :param str, list type_name: The name of this publisher type.
     :param int publisher_type: 0 for pre 1 for post publishers
     """
+
     def wrapper(f):
         register_publisher(f, type_name, publisher_type)
         return f
@@ -59,13 +57,13 @@ def publisher(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
     if callable(type_name):
         # it must be the function it self
         f_callable = type_name
-        type_name = ''
+        type_name = ""
         return wrapper(f_callable)
 
     return wrapper
 
 
-def run_publishers(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
+def run_publishers(type_name="", publisher_type=PRE_PUBLISHER_TYPE):
     """Runs all the publishers registered under the given type name
 
     :param str type_name: A string holding the type name
@@ -73,17 +71,16 @@ def run_publishers(type_name='', publisher_type=PRE_PUBLISHER_TYPE):
       ``publish.PRE_PUBLISHER_TYPE`` or ``publish.POST_PUBLISHER_TYPE``
     :return:
     """
-    if type_name != '':
-        for f in publishers[publisher_type].get('', []):  # run generic
-            f()                                           # publishers first
+    if type_name != "":
+        for f in publishers[publisher_type].get("", []):  # run generic
+            f()  # publishers first
 
     for f in publishers[publisher_type].get(type_name.lower(), []):
         f()
 
 
 def clear_publishers():
-    """utility function to clear publishers
-    """
+    """utility function to clear publishers"""
     publishers[PRE_PUBLISHER_TYPE].clear()
     publishers[POST_PUBLISHER_TYPE].clear()
 
@@ -109,55 +106,50 @@ class ProgressControllerBase(object):
 
     @property
     def value(self):
-        """getter for the value attribute
-        """
+        """getter for the value attribute"""
         return self._value
 
     @value.setter
     def value(self, value):
         """setter for the value attribute
 
-        :param value: 
-        :return: 
+        :param value:
+        :return:
         """
         self._value = value
 
     @property
     def minimum(self):
-        """getter for the minimum attribute
-        """
+        """getter for the minimum attribute"""
         return self._minimum
 
     @minimum.setter
     def minimum(self, minimum):
         """setter for the minimum attribute
 
-        :param minimum: 
-        :return: 
+        :param minimum:
+        :return:
         """
         self._minimum = minimum
 
     @property
     def maximum(self):
-        """getter for the maximum attribute
-        """
+        """getter for the maximum attribute"""
         return self._maximum
 
     @maximum.setter
     def maximum(self, maximum):
         """setter for the maximum attribute
 
-        :param maximum: 
-        :return: 
+        :param maximum:
+        :return:
         """
         self._maximum = maximum
 
     def increment(self, step=1.0):
-        """increases value by 1 step
-        """
+        """increases value by 1 step"""
         self.value += step
 
     def complete(self):
-        """completes the progress
-        """
+        """completes the progress"""
         self.value = self.maximum

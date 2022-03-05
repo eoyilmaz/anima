@@ -20,14 +20,14 @@ def empty_reference_resolution(root=None, leave=None, update=None, create=None):
     :return: dict
     """
     return {
-        'root': [] if root is None else root,
-        'leave': [] if leave is None else leave,
-        'update': [] if update is None else update,
-        'create': [] if create is None else create
+        "root": [] if root is None else root,
+        "leave": [] if leave is None else leave,
+        "update": [] if update is None else update,
+        "create": [] if create is None else create,
     }
 
 
-def discover_env_vars(env_name=''):
+def discover_env_vars(env_name=""):
     """Looks for an ``env.json`` file in the path shown with the $ANIMAPATH
     environment variable then creates the environment variables.
 
@@ -122,6 +122,7 @@ def discover_env_vars(env_name=''):
     env.json will be appended to them.
     """
     from anima import defaults
+
     env_path = os.environ[defaults.anima_env_var]
 
     env_json_path = os.path.join(env_path, defaults.env_var_file_name)
@@ -134,8 +135,8 @@ def discover_env_vars(env_name=''):
     os_name = platform.system().lower()
 
     # replace darwin with osx
-    if os_name == 'darwin':
-        os_name = 'osx'
+    if os_name == "darwin":
+        os_name = "osx"
 
     # get the keys
     # first get *
@@ -149,5 +150,5 @@ def discover_env_vars(env_name=''):
 
                     os.environ[env_var] = os.pathsep.join(values)
 
-    append_data_from('*')
+    append_data_from("*")
     append_data_from(env_name)

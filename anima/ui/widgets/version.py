@@ -5,8 +5,7 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class VersionsTableWidget(QtWidgets.QTableWidget):
-    """A QTableWidget derivative specialized to hold version data
-    """
+    """A QTableWidget derivative specialized to hold version data"""
 
     def __init__(self, parent=None, *args, **kwargs):
         QtWidgets.QTableWidget.__init__(self, parent, *args, **kwargs)
@@ -28,62 +27,54 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.horizontalHeader().setStretchLastSection(True)
         self.verticalHeader().setStretchLastSection(False)
 
-        tool_tip_html = \
-            "<html><head/><body><p>Right click to:</p><ul style=\"" \
-            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; " \
-            "margin-right: 0px; -qt-list-indent: 1;\"><li><span style=\" " \
-            "font-weight:600;\">Copy Path</span></li><li><span style=\" " \
-            "font-weight:600;\">Browse Path</span></li><li><span style=\" " \
-            "font-weight:600;\">Change Description</span></li></ul>" \
-            "<p>Double click to:</p><ul style=\"margin-top: 0px; " \
-            "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; " \
-            "-qt-list-indent: 1;\"><li style=\" margin-top:12px; " \
-            "margin-bottom:12px; margin-left:0px; margin-right:0px; " \
-            "-qt-block-indent:0; text-indent:0px;\"><span style=\" " \
-            "font-weight:600;\">Open</span></li></ul></body></html>"
+        tool_tip_html = (
+            '<html><head/><body><p>Right click to:</p><ul style="'
+            "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
+            'margin-right: 0px; -qt-list-indent: 1;"><li><span style=" '
+            'font-weight:600;">Copy Path</span></li><li><span style=" '
+            'font-weight:600;">Browse Path</span></li><li><span style=" '
+            'font-weight:600;">Change Description</span></li></ul>'
+            '<p>Double click to:</p><ul style="margin-top: 0px; '
+            "margin-bottom: 0px; margin-left: 0px; margin-right: 0px; "
+            '-qt-list-indent: 1;"><li style=" margin-top:12px; '
+            "margin-bottom:12px; margin-left:0px; margin-right:0px; "
+            '-qt-block-indent:0; text-indent:0px;"><span style=" '
+            'font-weight:600;">Open</span></li></ul></body></html>'
+        )
 
         try:
             self.setToolTip(
                 QtWidgets.QApplication.translate(
-                    "Dialog",
-                    tool_tip_html,
-                    None,
-                    QtWidgets.QApplication.UnicodeUTF8
+                    "Dialog", tool_tip_html, None, QtWidgets.QApplication.UnicodeUTF8
                 )
             )
         except AttributeError:
             self.setToolTip(
-                QtWidgets.QApplication.translate(
-                    "Dialog",
-                    tool_tip_html,
-                    None
-                )
+                QtWidgets.QApplication.translate("Dialog", tool_tip_html, None)
             )
 
         self.versions = []
         self.labels = [
-            '#',
-            'App',
-            'Created By',
-            'Updated By',
-            'Size',
-            'Date',
-            'Description',
+            "#",
+            "App",
+            "Created By",
+            "Updated By",
+            "Size",
+            "Date",
+            "Description",
         ]
         self.setColumnCount(len(self.labels))
 
     def clear(self):
-        """overridden clear method
-        """
+        """overridden clear method"""
         QtWidgets.QTableWidget.clear(self)
         self.versions = []
-        
+
         # reset the labels
         self.setHorizontalHeaderLabels(self.labels)
 
     def select_version(self, version):
-        """selects the given version in the list
-        """
+        """selects the given version in the list"""
         # select the version in the previous version list
         index = -1
         for i, prev_version in enumerate(self.versions):
@@ -91,18 +82,17 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
                 index = i
                 break
 
-        logger.debug('current index: %s' % index)
+        logger.debug("current index: %s" % index)
 
         # select the row
         if index != -1:
             item = self.item(index, 0)
-            logger.debug('item : %s' % item)
+            logger.debug("item : %s" % item)
             self.setCurrentItem(item)
 
     @property
     def current_version(self):
-        """returns the current selected version from the table
-        """
+        """returns the current selected version from the table"""
         index = self.currentRow()
         try:
             version = self.versions[index]
@@ -111,12 +101,11 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             return None
 
     def update_content(self, versions):
-        """updates the content with the given versions data
-        """
+        """updates the content with the given versions data"""
         import os
         import datetime
 
-        logger.debug('VersionsTableWidget.update_content() is started')
+        logger.debug("VersionsTableWidget.update_content() is started")
 
         self.clear()
         self.versions = versions
@@ -138,11 +127,12 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
         # update the previous versions list
         from anima import defaults
+
         for i, version in enumerate(versions):
             is_published = version.is_published
             absolute_full_path = os.path.normpath(
                 os.path.expandvars(version.full_path)
-            ).replace('\\', '/')
+            ).replace("\\", "/")
             version_file_exists = os.path.exists(absolute_full_path)
 
             c = 0
@@ -168,6 +158,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             item = QtWidgets.QTableWidgetItem()
             if version.created_with:
                 from anima.ui import utils as ui_utils
+
                 app_icon = ui_utils.get_icon(version.created_with.lower())
                 if app_icon:
                     item.setIcon(app_icon)
@@ -184,7 +175,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
             # ------------------------------------
             # user.name
-            created_by = ''
+            created_by = ""
             if version.created_by_id:
                 created_by = defaults.user_names_lut[version.created_by_id]
             item = QtWidgets.QTableWidgetItem(created_by)
@@ -203,7 +194,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
 
             # ------------------------------------
             # user.name
-            updated_by = ''
+            updated_by = ""
             if version.updated_by_id:
                 updated_by = defaults.user_names_lut[version.updated_by_id]
             item = QtWidgets.QTableWidgetItem(updated_by)
@@ -227,13 +218,11 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # file_size_format = "%.2f MB"
             file_size = -1
             if version_file_exists:
-                file_size = float(
-                    os.path.getsize(absolute_full_path)) / 1048576
+                file_size = float(os.path.getsize(absolute_full_path)) / 1048576
 
             from anima import defaults
-            item = QtWidgets.QTableWidgetItem(
-                defaults.file_size_format % file_size
-            )
+
+            item = QtWidgets.QTableWidgetItem(defaults.file_size_format % file_size)
             # align to left and vertical center
             item.setTextAlignment(0x0001 | 0x0080)
 
@@ -293,12 +282,11 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
         self.resizeRowsToContents()
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
-        logger.debug('VersionsTableWidget.update_content() is finished')
+        logger.debug("VersionsTableWidget.update_content() is finished")
 
 
 class VersionDetailsWidget(QtWidgets.QWidget):
-    """Shows details about a Stalker Version
-    """
+    """Shows details about a Stalker Version"""
 
     def __init__(self, version=None, *args, **kwargs):
         super(VersionDetailsWidget, self).__init__(*args, **kwargs)
@@ -316,22 +304,21 @@ class VersionDetailsWidget(QtWidgets.QWidget):
         self.version = version
 
     def _setup_ui(self):
-        """set the ui
-        """
+        """set the ui"""
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.form_layout = QtWidgets.QFormLayout()
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
         self.main_layout.addLayout(self.form_layout)
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QLabel[labelField="true"] {
                 font-weight: bold;
             }
-        """)
+        """
+        )
 
         label_role = QtWidgets.QFormLayout.LabelRole
         field_role = QtWidgets.QFormLayout.FieldRole
@@ -389,8 +376,7 @@ class VersionDetailsWidget(QtWidgets.QWidget):
         self.main_layout.addWidget(self.warning_field)
 
     def fill_ui(self):
-        """fills the ui with version info
-        """
+        """fills the ui with version info"""
         if not self.version:
             return
 
@@ -398,16 +384,19 @@ class VersionDetailsWidget(QtWidgets.QWidget):
 
         self.task_name_widget.setText(self.version.task.name)
         self.version_file_name_widget.setText(os.path.basename(self.version.fullpath))
-        self.date_info_widget.setText(self.version.date_created.strftime('%d-%m-%Y %H:%M'))
+        self.date_info_widget.setText(
+            self.version.date_created.strftime("%d-%m-%Y %H:%M")
+        )
         self.created_by_widget.setText(
-            self.version.created_by.name if self.version.created_by else "-- creator missing --"
+            self.version.created_by.name
+            if self.version.created_by
+            else "-- creator missing --"
         )
         self.description_label_widget.setText(self.version.description)
 
     @property
     def version(self):
-        """getter of the version property
-        """
+        """getter of the version property"""
         return self._version
 
     @version.setter
@@ -421,10 +410,12 @@ class VersionDetailsWidget(QtWidgets.QWidget):
             return
 
         from stalker import Version
+
         if not isinstance(version, Version):
-            raise TypeError("%s.version should be set to a Stalker Version instance, not %s" % (
-                self.__class__.__name__, version.__class__.__name__
-            ))
+            raise TypeError(
+                "%s.version should be set to a Stalker Version instance, not %s"
+                % (self.__class__.__name__, version.__class__.__name__)
+            )
 
         self._version = version
 

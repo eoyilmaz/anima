@@ -2,45 +2,43 @@
 
 
 class RSProxyDataManager(object):
-    """Manages data
-    """
+    """Manages data"""
 
     def __init__(self):
         self.data = []
 
     def load(self, path):
         import json
+
         with open(path, "r") as f:
             data = json.load(f)
 
-        for i in range(len(data['instance_file'])):
+        for i in range(len(data["instance_file"])):
             data_obj = RSProxyDataObject()
             self.data.append(data_obj)
 
-            data_obj.pos = data['pos'][i]
-            data_obj.rot = data['rot'][i]
-            data_obj.sca = data['sca'][i]
-            data_obj.parent_name = data['parent_name'][i]
-            data_obj.instance_file = data['instance_file'][i]
-            data_obj.node_name = data['node_name'][i]
+            data_obj.pos = data["pos"][i]
+            data_obj.rot = data["rot"][i]
+            data_obj.sca = data["sca"][i]
+            data_obj.parent_name = data["parent_name"][i]
+            data_obj.instance_file = data["instance_file"][i]
+            data_obj.node_name = data["node_name"][i]
 
     def create(self):
-        """creates all nodes
-        """
+        """creates all nodes"""
         for d in self.data:
             d.create()
 
 
 class RSProxyDataObject(object):
-    """Holds raw data
-    """
+    """Holds raw data"""
 
     def __init__(self):
         self.pos = None
         self.rot = None
         self.sca = None
-        self.instance_file = ''
-        self.node_name = ''
+        self.instance_file = ""
+        self.node_name = ""
 
         self.transform_node = None
         self.shape_node = None
@@ -49,12 +47,11 @@ class RSProxyDataObject(object):
         self.parent_name = None
 
     def get_parent(self):
-        """gets the parent node or creates one
-        """
+        """gets the parent node or creates one"""
         import pymel.core as pm
 
         parent_node_name = self.parent_name
-        nodes_with_name = pm.ls('|%s' % parent_node_name)
+        nodes_with_name = pm.ls("|%s" % parent_node_name)
         parent_node = None
         if nodes_with_name:
             parent_node = nodes_with_name[0]
@@ -65,7 +62,7 @@ class RSProxyDataObject(object):
             current_node = None
             splits = self.parent_name.split("|")
             for i, node_name in enumerate(splits):
-                full_node_name = '|' + '|'.join(splits[:i + 1])
+                full_node_name = "|" + "|".join(splits[: i + 1])
                 list_nodes = pm.ls(full_node_name)
                 if list_nodes:
                     current_node = list_nodes[0]
@@ -81,16 +78,15 @@ class RSProxyDataObject(object):
         return parent_node
 
     def create(self):
-        """creates Maya objects
-        """
+        """creates Maya objects"""
         import pymel.core as pm
+
         self.parent_node = self.get_parent()
-        self.shape_node = pm.nt.Mesh(name='%sShape' % self.node_name)
+        self.shape_node = pm.nt.Mesh(name="%sShape" % self.node_name)
         self.transform_node = self.shape_node.getParent()
         self.transform_node.rename(self.node_name)
 
-        self.rs_proxy_node = \
-            pm.nt.RedshiftProxyMesh(name='%sRsProxy' % self.node_name)
+        self.rs_proxy_node = pm.nt.RedshiftProxyMesh(name="%sRsProxy" % self.node_name)
         self.rs_proxy_node.outMesh >> self.shape_node.inMesh
         self.rs_proxy_node.fileName.set(self.instance_file)
 
@@ -102,9 +98,8 @@ class RSProxyDataObject(object):
         self.parent_node.s.set([self.sca, self.sca, self.sca])
 
         # assign default shader
-        lambert1 = pm.ls('lambert1')[0]
-        lambert1_shading_group = \
-            lambert1.outputs(type='shadingEngine')[0]
+        lambert1 = pm.ls("lambert1")[0]
+        lambert1_shading_group = lambert1.outputs(type="shadingEngine")[0]
         pm.sets(lambert1_shading_group, fe=self.transform_node)
 
         pm.parent(self.transform_node, self.parent_node, r=1)

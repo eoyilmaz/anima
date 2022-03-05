@@ -17,49 +17,37 @@ def set_item_color(item, color):
 
 
 class VersionItem(QtGui.QStandardItem):
-    """Implements the Version as a QStandardItem
-    """
+    """Implements the Version as a QStandardItem"""
 
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug(
-            'VersionItem.__init__() is started for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.__init__() is started for item: %s" % self.text())
         self.loaded = False
         self.version = None
         self.parent = None
         self.pseudo_model = None
         self.fetched_all = False
         self.setEditable(False)
-        logger.debug(
-            'VersionItem.__init__() is finished for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.__init__() is finished for item: %s" % self.text())
 
     def clone(self):
-        """returns a copy of this item
-        """
-        logger.debug(
-            'VersionItem.clone() is started for item: %s' % self.text()
-        )
+        """returns a copy of this item"""
+        logger.debug("VersionItem.clone() is started for item: %s" % self.text())
         new_item = VersionItem()
         new_item.version = self.version
         new_item.parent = self.parent
         new_item.fetched_all = self.fetched_all
-        logger.debug(
-            'VersionItem.clone() is finished for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.clone() is finished for item: %s" % self.text())
         return new_item
 
     def canFetchMore(self):
-        logger.debug(
-            'VersionItem.canFetchMore() is started for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.canFetchMore() is started for item: %s" % self.text())
         if self.version and not self.fetched_all:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
         logger.debug(
-            'VersionItem.canFetchMore() is finished for item: %s' % self.text()
+            "VersionItem.canFetchMore() is finished for item: %s" % self.text()
         )
         return return_value
 
@@ -78,21 +66,21 @@ class VersionItem(QtGui.QStandardItem):
         version_item.setEditable(False)
         reference_resolution = pseudo_model.reference_resolution
 
-        if version in reference_resolution['update']:
-            action = 'update'
+        if version in reference_resolution["update"]:
+            action = "update"
             font_color = QtGui.QColor(192, 128, 0)
-            if version in reference_resolution['root']:
+            if version in reference_resolution["root"]:
                 version_item.setCheckable(True)
                 version_item.setCheckState(QtCore.Qt.Checked)
-        elif version in reference_resolution['create']:
-            action = 'create'
+        elif version in reference_resolution["create"]:
+            action = "create"
             font_color = QtGui.QColor(192, 0, 0)
-            if version in reference_resolution['root']:
+            if version in reference_resolution["root"]:
                 version_item.setCheckable(True)
                 version_item.setCheckState(QtCore.Qt.Checked)
         else:
             font_color = QtGui.QColor(0, 192, 0)
-            action = ''
+            action = ""
 
         version_item.action = action
 
@@ -110,10 +98,7 @@ class VersionItem(QtGui.QStandardItem):
         nice_name_item = QtGui.QStandardItem()
         nice_name_item.toolTip()
         nice_name_item.setText(
-            '%s_v%s' % (
-                version.nice_name,
-                ('%s' % version.version_number).zfill(3)
-            )
+            "%s_v%s" % (version.nice_name, ("%s" % version.version_number).zfill(3))
         )
         nice_name_item.setEditable(False)
         nice_name_item.version = version
@@ -130,7 +115,7 @@ class VersionItem(QtGui.QStandardItem):
 
         # Current
         current_version_item = QtGui.QStandardItem()
-        current_version_item.setText('%s' % version.version_number)
+        current_version_item.setText("%s" % version.version_number)
         current_version_item.setEditable(False)
         current_version_item.version = version
         current_version_item.action = action
@@ -144,13 +129,12 @@ class VersionItem(QtGui.QStandardItem):
         latest_published_version_item.action = action
         latest_published_version_item.setEditable(False)
 
-        latest_published_version_text = 'No Published Version'
+        latest_published_version_text = "No Published Version"
         if latest_published_version:
-            latest_published_version_text = '%s' % \
-                                            latest_published_version.version_number
-        latest_published_version_item.setText(
-            latest_published_version_text
-        )
+            latest_published_version_text = (
+                "%s" % latest_published_version.version_number
+            )
+        latest_published_version_item.setText(latest_published_version_text)
         set_item_color(latest_published_version_item, font_color)
 
         # Action
@@ -164,7 +148,7 @@ class VersionItem(QtGui.QStandardItem):
         # Updated By
         updated_by_item = QtGui.QStandardItem()
         updated_by_item.setEditable(False)
-        updated_by_text = ''
+        updated_by_text = ""
         if latest_published_version and latest_published_version.updated_by:
             updated_by_text = latest_published_version.updated_by.name
         updated_by_item.setText(updated_by_text)
@@ -188,14 +172,20 @@ class VersionItem(QtGui.QStandardItem):
         # path_item.setEditable(True)
         # set_item_color(path_item, font_color)
 
-        return [version_item, thumbnail_item, nice_name_item, take_item,
-                current_version_item, latest_published_version_item,
-                action_item, updated_by_item, description_item]
+        return [
+            version_item,
+            thumbnail_item,
+            nice_name_item,
+            take_item,
+            current_version_item,
+            latest_published_version_item,
+            action_item,
+            updated_by_item,
+            description_item,
+        ]
 
     def fetchMore(self):
-        logger.debug(
-            'VersionItem.fetchMore() is started for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
             # model = self.model() # This will cause a SEGFAULT
@@ -207,94 +197,85 @@ class VersionItem(QtGui.QStandardItem):
                 )
 
             self.fetched_all = True
-        logger.debug(
-            'VersionItem.fetchMore() is finished for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.fetchMore() is finished for item: %s" % self.text())
 
     def hasChildren(self):
-        logger.debug(
-            'VersionItem.hasChildren() is started for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.hasChildren() is started for item: %s" % self.text())
         if self.version:
             return_value = bool(self.version.inputs)
         else:
             return_value = False
-        logger.debug(
-            'VersionItem.hasChildren() is finished for item: %s' % self.text()
-        )
+        logger.debug("VersionItem.hasChildren() is finished for item: %s" % self.text())
         return return_value
 
     def type(self, *args, **kwargs):
-        """
-        """
+        """ """
         return QtGui.QStandardItem.UserType + 2
 
 
 class VersionTreeModel(QtGui.QStandardItemModel):
-    """Implements the model view for the version hierarchy
-    """
-    
+    """Implements the model view for the version hierarchy"""
+
     def __init__(self, flat_view=False, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
-        logger.debug('VersionTreeModel.__init__() is started')
+        logger.debug("VersionTreeModel.__init__() is started")
         self.root = None
         self.root_versions = []
         self.reference_resolution = None
         self.flat_view = flat_view
-        logger.debug('VersionTreeModel.__init__() is finished')
+        logger.debug("VersionTreeModel.__init__() is finished")
 
     def populateTree(self, versions):
-        """populates tree with root versions
-        """
-        logger.debug('VersionTreeModel.populateTree() is started')
+        """populates tree with root versions"""
+        logger.debug("VersionTreeModel.populateTree() is started")
         self.setColumnCount(7)
         self.setHorizontalHeaderLabels(
-            ['Do Update?', 'Thumbnail', 'Task', 'Take', 'Current', 'Latest',
-             'Action', 'Updated By', 'Notes']
+            [
+                "Do Update?",
+                "Thumbnail",
+                "Task",
+                "Take",
+                "Current",
+                "Latest",
+                "Action",
+                "Updated By",
+                "Notes",
+            ]
         )
 
         self.root_versions = versions
         for version in versions:
-            self.appendRow(
-                VersionItem.generate_version_row(None, self, version)
-            )
+            self.appendRow(VersionItem.generate_version_row(None, self, version))
 
-        logger.debug('VersionTreeModel.populateTree() is finished')
+        logger.debug("VersionTreeModel.populateTree() is finished")
 
     def canFetchMore(self, index):
-        logger.debug(
-            'VersionTreeModel.canFetchMore() is started for index: %s' % index
-        )
+        logger.debug("VersionTreeModel.canFetchMore() is started for index: %s" % index)
         if not index.isValid():
             return_value = False
         else:
             item = self.itemFromIndex(index)
             return_value = item.canFetchMore()
         logger.debug(
-            'VersionTreeModel.canFetchMore() is finished for index: %s' % index
+            "VersionTreeModel.canFetchMore() is finished for index: %s" % index
         )
         return return_value
 
     def fetchMore(self, index):
-        """fetches more elements
-        """
-        logger.debug(
-            'VersionTreeModel.canFetchMore() is started for index: %s' % index
-        )
+        """fetches more elements"""
+        logger.debug("VersionTreeModel.canFetchMore() is started for index: %s" % index)
         if index.isValid():
             item = self.itemFromIndex(index)
             item.fetchMore()
         logger.debug(
-            'VersionTreeModel.canFetchMore() is finished for index: %s' % index
+            "VersionTreeModel.canFetchMore() is finished for index: %s" % index
         )
 
     def hasChildren(self, index):
         """returns True or False depending on to the index and the item on the
         index
         """
-        logger.debug(
-            'VersionTreeModel.hasChildren() is started for index: %s' % index
-        )
+        logger.debug("VersionTreeModel.hasChildren() is started for index: %s" % index)
         if not index.isValid():
             return_value = len(self.root_versions) > 0
         else:
@@ -305,7 +286,5 @@ class VersionTreeModel(QtGui.QStandardItemModel):
                 return_value = False
                 if item:
                     return_value = item.hasChildren()
-        logger.debug(
-            'VersionTreeModel.hasChildren() is finished for index: %s' % index
-        )
+        logger.debug("VersionTreeModel.hasChildren() is finished for index: %s" % index)
         return return_value

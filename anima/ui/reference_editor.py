@@ -5,8 +5,7 @@ from anima.ui.base import ui_caller, QtWidgets
 
 
 def UI(environment=None, app_in=None, executor=None):
-    """
-    """
+    """ """
     return ui_caller(app_in, executor, MainDialog, environment=environment)
 
 
@@ -17,9 +16,8 @@ elif IS_PYSIDE2():
 elif IS_PYQT4():
     from anima.ui.ui_compiled import reference_editor_UI_pyqt4 as reference_editor_UI
 
-class MainDialog(QtWidgets.QDialog, reference_editor_UI.Ui_Dialog):
 
+class MainDialog(QtWidgets.QDialog, reference_editor_UI.Ui_Dialog):
     def __init__(self, environment=None, parent=None):
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
-

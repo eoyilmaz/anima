@@ -8,6 +8,7 @@ class RepresentationManager(object):
     and supplies easy switching or on load switching for different
     representations.
     """
+
     pass
 
 
@@ -29,8 +30,8 @@ class Representation(object):
     it is flexible enough.
     """
 
-    base_repr_name = 'Base'
-    repr_separator = '@'
+    base_repr_name = "Base"
+    repr_separator = "@"
 
     def __init__(self, version=None):
         self._version = None
@@ -44,14 +45,15 @@ class Representation(object):
         """
         if version is not None:
             from stalker import Version
+
             if not isinstance(version, Version):
                 raise TypeError(
-                    '%(class)s.version should be a '
-                    'stalker.models.version.Version instance, not '
-                    '%(version_class)s' %
-                    {
-                        'class': self.__class__.__name__,
-                        'version_class': version.__class__.__name__
+                    "%(class)s.version should be a "
+                    "stalker.models.version.Version instance, not "
+                    "%(version_class)s"
+                    % {
+                        "class": self.__class__.__name__,
+                        "version_class": version.__class__.__name__,
                     }
                 )
         return version
@@ -89,7 +91,7 @@ class Representation(object):
         """
         return self.find(repr_name) is not None
 
-    def is_repr(self, repr_name=''):
+    def is_repr(self, repr_name=""):
         """Returns a bool value depending if the version is the requested
         representation in its representation series.
 
@@ -99,8 +101,11 @@ class Representation(object):
         base_take_name = self.get_base_take_name(self.version)
 
         if repr_name != self.base_repr_name and repr_name != base_take_name:
-            resolved_repr_name = \
-                '%s%s%s' % (base_take_name, self.repr_separator, repr_name)
+            resolved_repr_name = "%s%s%s" % (
+                base_take_name,
+                self.repr_separator,
+                repr_name,
+            )
         else:
             resolved_repr_name = base_take_name
 
@@ -121,8 +126,9 @@ class Representation(object):
         :return: str
         """
         # find the base repr name from the current version
-        take_name = ''
+        take_name = ""
         from stalker import Version
+
         if isinstance(version, Version):
             take_name = version.take_name
         elif isinstance(version, str):
@@ -138,8 +144,7 @@ class Representation(object):
         return base_repr_take_name
 
     def list_all(self):
-        """lists other representations
-        """
+        """lists other representations"""
         base_take_name = self.get_base_take_name(self.version)
 
         # find any version that starts with the base_repr_name
@@ -147,11 +152,12 @@ class Representation(object):
         from stalker import Version
         from stalker.db.session import DBSession
         from sqlalchemy import distinct
+
         take_names = map(
             lambda x: x[0],
             DBSession.query(distinct(Version.take_name))
             .filter(Version.task == self.version.task)
-            .all()
+            .all(),
         )
         take_names.sort()
 
@@ -160,14 +166,13 @@ class Representation(object):
             if take_name.startswith(base_take_name):
                 if take_name != base_take_name:
                     repr_names.append(
-                        take_name[len(base_take_name) +
-                                  len(self.repr_separator):]
+                        take_name[len(base_take_name) + len(self.repr_separator) :]
                     )
                 else:
                     repr_names.append(self.base_repr_name)
         return repr_names
 
-    def find(self, repr_name=''):
+    def find(self, repr_name=""):
         """returns the Version instance with the given representation name.
 
         :param repr_name: The take name of the desires representation.
@@ -177,22 +182,21 @@ class Representation(object):
         if repr_name == self.base_repr_name:
             take_name = base_take_name
         else:
-            take_name = '%s%s%s' % (
-                base_take_name, self.repr_separator, repr_name
-            )
+            take_name = "%s%s%s" % (base_take_name, self.repr_separator, repr_name)
 
         from stalker import Version
-        return Version.query\
-            .filter_by(task=self.version.task)\
-            .filter_by(take_name=take_name)\
-            .filter_by(is_published=True)\
-            .order_by(Version.version_number.desc())\
+
+        return (
+            Version.query.filter_by(task=self.version.task)
+            .filter_by(take_name=take_name)
+            .filter_by(is_published=True)
+            .order_by(Version.version_number.desc())
             .first()
+        )
 
     @property
     def repr(self):
-        """returns the current representation name
-        """
+        """returns the current representation name"""
         if not self.version:
             return None
 

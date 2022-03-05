@@ -38,8 +38,7 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
         super(MainDialog, self).__init__(parent)
         self.setupUi(self)
 
-        window_title = 'Login Dialog | ' + \
-                       'Anima v' + anima.__version__
+        window_title = "Login Dialog | " + "Anima v" + anima.__version__
 
         # change the window title
         self.setWindowTitle(window_title)
@@ -56,29 +55,19 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
         logger.debug("finished initializing the interface")
 
     def _setup_signals(self):
-        """sets up the signals
-        """
+        """sets up the signals"""
         logger.debug("start setting up interface signals")
 
         # cancel button
-        QtCore.QObject.connect(
-            self.buttonBox,
-            QtCore.SIGNAL('rejected()'),
-            self.close
-        )
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
 
         # Ok button
-        QtCore.QObject.connect(
-            self.buttonBox,
-            QtCore.SIGNAL('accepted()'),
-            self.login
-        )
+        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), self.login)
 
         logger.debug("finished setting up interface signals")
 
     def login(self):
-        """does the nasty details for user to login
-        """
+        """does the nasty details for user to login"""
         from anima.utils import authenticate
 
         # get the user first
@@ -89,7 +78,5 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
             self.accept()
         else:
             QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                "login or password is incorrect"
+                self, "Error", "login or password is incorrect"
             )

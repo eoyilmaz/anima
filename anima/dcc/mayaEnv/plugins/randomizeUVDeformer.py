@@ -14,8 +14,7 @@ plugin_id = OpenMaya.MTypeId(0x00380)
 
 
 class RandomizeDeformer(OpenMayaMPx.MPxDeformerNode):
-    """a node to randomize uvs (for now)
-    """
+    """a node to randomize uvs (for now)"""
 
     aMaxOffset = OpenMaya.MObject()
 
@@ -39,19 +38,22 @@ class RandomizeDeformer(OpenMayaMPx.MPxDeformerNode):
 
         input_handle = data_block.outputArrayValue(input_attribute)
         input_handle.jumpToElement(geometry_index)
-        input_geometry_object =\
+        input_geometry_object = (
             input_handle.outputValue().child(input_geometry_attribute).asMesh()
+        )
 
         return input_geometry_object
 
-    def deform(self, data_block, geometry_iterator, local_to_world_matrix, geometry_index):
-        """do deformation
-        """
+    def deform(
+        self, data_block, geometry_iterator, local_to_world_matrix, geometry_index
+    ):
+        """do deformation"""
         envelope_attribute = OpenMayaMPx.cvar.MPxDeformerNode_envelope
         envelope_value = data_block.inputValue(envelope_attribute).asFloat()
 
-        input_geometry_object = \
-            self.get_deformer_input_geometry(data_block, geometry_index)
+        input_geometry_object = self.get_deformer_input_geometry(
+            data_block, geometry_index
+        )
 
         # Obtain the list of normals for each vertex in the mesh.
         mesh_fn = OpenMaya.MFnMesh(input_geometry_object)
@@ -65,8 +67,7 @@ class RandomizeDeformer(OpenMayaMPx.MPxDeformerNode):
         mesh_fn.getUvShellsIds(uv_shell_array, shells_ptr)
         mesh_fn.getUVs(u_array, v_array)
 
-        max_offset_attr_handle = \
-            data_block.inputValue(RandomizeDeformer.aMaxOffset)
+        max_offset_attr_handle = data_block.inputValue(RandomizeDeformer.aMaxOffset)
         max_offset = max_offset_attr_handle.asInt()
 
         # compute and write the new uvs
@@ -106,15 +107,13 @@ class RandomizeDeformer(OpenMayaMPx.MPxDeformerNode):
 
 
 def nodeCreator():
-    """creates the node
-    """
+    """creates the node"""
     return_data = OpenMayaMPx.asMPxPtr(RandomizeDeformer())
     return return_data
 
 
 def nodeInitializer():
-    """initializes the node
-    """
+    """initializes the node"""
     nAttr = OpenMaya.MFnNumericAttribute()
 
     # input position
@@ -129,16 +128,14 @@ def nodeInitializer():
 
     RandomizeDeformer.addAttribute(RandomizeDeformer.aMaxOffset)
     RandomizeDeformer.attributeAffects(
-        RandomizeDeformer.aMaxOffset,
-        OpenMayaMPx.cvar.MPxDeformerNode_outputGeom
+        RandomizeDeformer.aMaxOffset, OpenMayaMPx.cvar.MPxDeformerNode_outputGeom
     )
 
     return True
 
 
 def initializePlugin(obj):
-    """
-    """
+    """ """
     plugin = OpenMayaMPx.MFnPlugin(obj, "Erkan Ozgur Yilmaz", "0.1.0", "Any")
     try:
         plugin.registerNode(
@@ -146,15 +143,14 @@ def initializePlugin(obj):
             plugin_id,
             nodeCreator,
             nodeInitializer,
-            OpenMayaMPx.MPxNode.kDeformerNode
+            OpenMayaMPx.MPxNode.kDeformerNode,
         )
     except:
-        sys.stderr.write('Failed to register node: %s' % node_type_name)
+        sys.stderr.write("Failed to register node: %s" % node_type_name)
 
 
 def uninitializePlugin(mobject):
-    """uninitialize the script plug-in
-    """
+    """uninitialize the script plug-in"""
     plugin = OpenMayaMPx.MFnPlugin(mobject)
     try:
         plugin.deregisterNode(plugin_id)

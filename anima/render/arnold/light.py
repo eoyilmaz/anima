@@ -6,8 +6,8 @@ from pymel.core.runtime import ClusterCurve
 
 
 class BarnDoor(object):
-    """Previews barn door
-    """
+    """Previews barn door"""
+
     def __init__(self):
         self.top = None
         self.bottom = None
@@ -16,8 +16,8 @@ class BarnDoor(object):
 
 
 class BarnDoorFlip(object):
-    """One flip of barn door
-    """
+    """One flip of barn door"""
+
     def __init__(self):
         self.corner1 = 0
         self.corner2 = 0
@@ -25,8 +25,7 @@ class BarnDoorFlip(object):
 
 
 class BarnDoorPreviewLine(object):
-    """Previews the barn door
-    """
+    """Previews the barn door"""
 
     def __init__(self):
         self.curve = None
@@ -38,8 +37,7 @@ class BarnDoorPreviewLine(object):
         self.cluster_handle2 = None
 
     def build(self):
-        """builds it self
-        """
+        """builds it self"""
         self.curve = curve(d=1, p=[(1, 0, 0), (-1, 0, 0)], k=(0, 1))
         self.corner1_locator = spaceLocator()
         self.corner2_locator = spaceLocator()
@@ -63,11 +61,5 @@ class BarnDoorPreviewLine(object):
         self.cluster_handle2 = handles[1]
 
         # set clusters to absolute
-        self.cluster1.setAttr('relative', 0)
-        self.cluster2.setAttr('relative', 0)
-
-
-
-
-
-
+        self.cluster1.setAttr("relative", 0)
+        self.cluster2.setAttr("relative", 0)

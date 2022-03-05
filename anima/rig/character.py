@@ -9,11 +9,8 @@ class Character(object):
         self.limbs = []
         self.nodes = []
 
-
         self._network = None
         self._charSet = None
-
-
 
     def __del__(self):
         pass
@@ -21,15 +18,16 @@ class Character(object):
     @property
     def name(self):
         return self._name
+
     @name.setter
     def name(self, name_in):
         self._name = name_in
 
-
     def createHierarchy(self):
         pass
+
     def createCharset(self):
         pass
+
     def createFlow(self):
         pass
-

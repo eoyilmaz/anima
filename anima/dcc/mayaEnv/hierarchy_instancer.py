@@ -20,12 +20,11 @@ ChangeLog:
 
 import pymel.core as pm
 
-__version__ = '10.6.12'
+__version__ = "10.6.12"
 
 
 class HierarchyInstancer(object):
-    """the hierarchy object
-    """
+    """the hierarchy object"""
 
     def __init__(self):
         self._instantiable_types = []
@@ -43,9 +42,8 @@ class HierarchyInstancer(object):
         self._instantiable_types.append(node_type)
 
     def walk_hierarchy(self, node):
-        """for the given dag node, walks through the hierarchy
-        """
-        assert(isinstance(node, pm.nodetypes.Transform))
+        """for the given dag node, walks through the hierarchy"""
+        assert isinstance(node, pm.nodetypes.Transform)
 
         nodes = []
 
@@ -60,8 +58,7 @@ class HierarchyInstancer(object):
         return nodes
 
     def instance(self, source_transform_node):
-        """instances the given nodes hierarchy
-        """
+        """instances the given nodes hierarchy"""
 
         # duplicate the given node
         # then replace the instantiable nodes with instances

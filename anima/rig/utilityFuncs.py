@@ -4,44 +4,36 @@
 import pymel.core as pm
 from pymel.all import mel
 
-class UtilityFuncs():
 
+class UtilityFuncs:
 
-    #selects the hiearachy
+    # selects the hiearachy
     @staticmethod
     def selHierarchy(root):
         pm.select(root, hi=1)
-        return pm.ls(sl = 1)
-
-
+        return pm.ls(sl=1)
 
     @staticmethod
     def renameHierarchy(hierarchy, name):
-        #rename the hiearachy
+        # rename the hiearachy
         for s in hierarchy:
             pm.rename(s, (name + "#"))
         return hierarchy
 
-
-
     @staticmethod
     def duplicateObject(object):
-        #duplicate the object
+        # duplicate the object
         dup = pm.duplicate(object)
         return dup[0]
 
-
     @staticmethod
-    def typeCheck(instanceName, className) :
+    def typeCheck(instanceName, className):
         if not isinstance(instanceName, (className)):
-            raise TypeError("%s should be an instance of %s",
-                (instanceName, className))
-
-
+            raise TypeError("%s should be an instance of %s", (instanceName, className))
 
     @staticmethod
     def evaluate(command):
-        #evaluates the given string and return a list
+        # evaluates the given string and return a list
         return eval(command)
 
     @staticmethod
@@ -60,21 +52,26 @@ class UtilityFuncs():
 
     @staticmethod
     def rename(object, name_in):
-        return (pm.rename(object, name_in))
+        return pm.rename(object, name_in)
+
     @staticmethod
     def position(object):
-        return pm.xform(object, q = 1, ws = 1, t = 1)
+        return pm.xform(object, q=1, ws=1, t=1)
 
-#controllers Shape Dictionary
+    # controllers Shape Dictionary
 
-    ctrlShapes = {"circle" :  ("pm.delete((pm.circle( nr=(0, 1, 0), c=(0, 0, 0), sw=360, r=1)), ch = 1)"),
-
-                  "arrowCtrl" :     ("""pm.curve(per=True, d = 1, p = [ ( -1, -0.00207849, 0 ), ( 1, -0.00207849, 0 ),
+    ctrlShapes = {
+        "circle": (
+            "pm.delete((pm.circle( nr=(0, 1, 0), c=(0, 0, 0), sw=360, r=1)), ch = 1)"
+        ),
+        "arrowCtrl": (
+            """pm.curve(per=True, d = 1, p = [ ( -1, -0.00207849, 0 ), ( 1, -0.00207849, 0 ),
                                     ( 1, 2.997922, 0 ),( 2, 2.997922, 0 ), ( 0, 4.997922, 0 ), ( -2, 2.997922, 0 ),
                                     ( -1, 2.997922, 0 ), ( -1, -0.00207849, 0 )  ],
-                                    k = ([0 ,  1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7]))"""),
-
-                  "fourSidedArrowCtrl" : ("""pm.curve(per=True, d = 1, p = [(-0.31907, 1.758567, 0),
+                                    k = ([0 ,  1 ,  2 ,  3 ,  4 ,  5 ,  6 ,  7]))"""
+        ),
+        "fourSidedArrowCtrl": (
+            """pm.curve(per=True, d = 1, p = [(-0.31907, 1.758567, 0),
                                       (-0.31907, 0.272474, 0), (-1.758567, 0.272474, 0) ,
                                       (-1.758567, 1.172378, 0), (-2.930946, 0, 0 ), ( -1.758567, -1.172378, 0 ),
                                       ( -1.758567, -0.272474, 0 ),( -0.31907, -0.272474, 0 ), ( -0.31907, -1.758567, 0 ),
@@ -85,9 +82,10 @@ class UtilityFuncs():
                                       ( 1.172378, 1.758567, 0 ), ( 0, 2.930946, 0 ),( -1.172378, 1.758567, 0 ),
                                       ( -0.31907, 1.758567, 0) ],
                                        k = ([0 , 1 , 2 , 3 , 4 , 5 , 6 , 7 , 8 , 9 , 10 , 11 , 12 , 13 , 14 , 15 , 16 ,
-                                        17 , 18 , 19 , 20 , 21 , 22 , 23 , 24]))"""),
-
-                  "ikCtrl"  : ("""pm.curve(per=True, d = 1, p = [ ( 0.552734, 0, -0.138183), ( 0.552734, 0, -0.184245),
+                                        17 , 18 , 19 , 20 , 21 , 22 , 23 , 24]))"""
+        ),
+        "ikCtrl": (
+            """pm.curve(per=True, d = 1, p = [ ( 0.552734, 0, -0.138183), ( 0.552734, 0, -0.184245),
                                         ( 0.552734, 0, -0.230306),
                                         ( 0.552734, 0, -0.276367), ( 0.644856, 0, -0.184245), ( 0.736978, 0, -0.0921223),
                                         ( 0.829101, 0, 0), ( 0.736978, 0, 0.0921223), ( 0.644856, 0, 0.184245),
@@ -148,27 +146,19 @@ class UtilityFuncs():
                                         104,   105,   106,   107,   108,   109,   110,   111,   112,   113,   114,
                                         115,   116,   117,   118,   119,   120,   121,   122,   123,   124,   125,
                                         126,   127,   128,   129,   130,   131,   132,   133,   134,   135,   136,
-                                        137,   138,   139,   140,   141,   142,   143,   144] ))"""),
-                  "bodyCtrl"  :     ("""pm.curve(per=True, d = 1, p = [( -1, 0, 1), ( -1, 0, -1), ( 1, 0, -1), ( 1, 0, 1),
-                                    ( -1, 0, 1) ] , k =  [0,  1,  2,  3,  4 ] )"""),
-
-                  "elbowCtrl" :   ("""pm.curve(d = 3, p = [ ( 0, -0.0728115, -0.263333), ( 0, 0.0676745, -0.30954),
+                                        137,   138,   139,   140,   141,   142,   143,   144] ))"""
+        ),
+        "bodyCtrl": (
+            """pm.curve(per=True, d = 1, p = [( -1, 0, 1), ( -1, 0, -1), ( 1, 0, -1), ( 1, 0, 1),
+                                    ( -1, 0, 1) ] , k =  [0,  1,  2,  3,  4 ] )"""
+        ),
+        "elbowCtrl": (
+            """pm.curve(d = 3, p = [ ( 0, -0.0728115, -0.263333), ( 0, 0.0676745, -0.30954),
                                     ( 0, 0.166422, -0.162811),( 0, 0.316242, 0.066353), ( 0, 0.263828, 0.160055),
                                     ( 0, 0.0048945, 0.30954), ( 0, -0.117923, 0.298165), ( 0, -0.316242, 0.027507),
                                     ( 0, -0.265623, -0.052244), ( 0, -0.0394945, -0.211749), ( 0, 0.190873, 0.097192),
                                     ( 0, -0.139762, 0.142256), ( 0, -0.0829025, 0.013979), ( 0, -0.0666985, -0.054076),
                                     ( 0, -0.0205975, 0.039797) ],
-                                    k = [0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  12,  12] )""")
-
-                  }
-
-
-
-
-
-
-
-
-
-
-
+                                    k = [0,  0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10,  11,  12,  12,  12] )"""
+        ),
+    }

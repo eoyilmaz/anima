@@ -59,4 +59,3 @@ def relax():
 
     # reselect selection
     pm.select(selection)
-

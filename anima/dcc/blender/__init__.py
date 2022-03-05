@@ -10,23 +10,22 @@ RENDER_FILE_PATH_STORAGE = ""
 
 
 class Blender(DCCBase):
-    """The Blender DCC wrapper
-    """
+    """The Blender DCC wrapper"""
 
     name = "Blender%s.%s" % (bpy.app.version[0:2])
-    representations = ['Base']
+    representations = ["Base"]
 
     has_publishers = True
 
-    extensions = ['.blend']
+    extensions = [".blend"]
 
     project_structure = [
-        'Outputs',
-        'Outputs/alembic',
-        'Outputs/fbx',
-        'Outputs/geo',
-        'Outputs/rs',
-        'Inputs',
+        "Outputs",
+        "Outputs/alembic",
+        "Outputs/fbx",
+        "Outputs/geo",
+        "Outputs/rs",
+        "Inputs",
     ]
 
     def __init__(self, version=None):
@@ -66,6 +65,7 @@ class Blender(DCCBase):
         # create the folder if it doesn't exist
         try:
             import os
+
             os.makedirs(version.absolute_path)
         except OSError:
             # already exists
@@ -75,6 +75,7 @@ class Blender(DCCBase):
         bpy.ops.wm.save_as_mainfile(filepath=version.absolute_full_path)
 
         from stalker.db.session import DBSession
+
         DBSession.add(version)
 
         # append it to the recent file list
@@ -90,14 +91,15 @@ class Blender(DCCBase):
         # run post publishers here
         if version.is_published:
             # before doing anything run all publishers
-            type_name = ''
+            type_name = ""
             if version.task.type:
                 type_name = version.task.type.name
 
             # before running use the staging area to store the current version
             from anima.publish import staging, run_publishers, POST_PUBLISHER_TYPE
             from anima.exc import PublishError
-            staging['version'] = version
+
+            staging["version"] = version
             try:
                 run_publishers(type_name, publisher_type=POST_PUBLISHER_TYPE)
             except PublishError as e:
@@ -107,8 +109,14 @@ class Blender(DCCBase):
 
         return True
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
 
         # leave it simple for now
         bpy.ops.wm.open_mainfile(filepath=version.absolute_full_path)
@@ -121,27 +129,30 @@ class Blender(DCCBase):
             return self.check_referenced_versions()
         else:
             from anima.dcc import empty_reference_resolution
+
             return empty_reference_resolution
 
     def import_(self, version, use_namespace=False):
-        """the imports the given version
-        """
+        """the imports the given version"""
         if not version:
             return
 
         files = {
-            'Collection': [],
-            'Image': [],
-            'Mesh': [],
-            'Material': [],
-            'Object': [],
-            'Scene': [],
-            'Texture': [],
+            "Collection": [],
+            "Image": [],
+            "Mesh": [],
+            "Material": [],
+            "Object": [],
+            "Scene": [],
+            "Texture": [],
         }
-        with bpy.data.libraries.load(version.absolute_full_path) as (data_from, data_to):
+        with bpy.data.libraries.load(version.absolute_full_path) as (
+            data_from,
+            data_to,
+        ):
             # Collection
             for name in data_from.collections:
-                files['Collection'].append({'name': name})
+                files["Collection"].append({"name": name})
 
             # # Image
             # for name in data_from.images:
@@ -171,7 +182,7 @@ class Blender(DCCBase):
             if files[key]:
                 bpy.ops.wm.append(
                     directory="%s/%s/" % (version.absolute_full_path, key),
-                    files=files[key]
+                    files=files[key],
                 )
 
     def reference(self, version, use_namespace=True):
@@ -185,18 +196,21 @@ class Blender(DCCBase):
             return
 
         files = {
-            'Collection': [],
-            'Image': [],
-            'Mesh': [],
-            'Material': [],
-            'Object': [],
-            'Scene': [],
-            'Texture': [],
+            "Collection": [],
+            "Image": [],
+            "Mesh": [],
+            "Material": [],
+            "Object": [],
+            "Scene": [],
+            "Texture": [],
         }
-        with bpy.data.libraries.load(version.absolute_full_path) as (data_from, data_to):
+        with bpy.data.libraries.load(version.absolute_full_path) as (
+            data_from,
+            data_to,
+        ):
             # Collection
             for name in data_from.collections:
-                files['Collection'].append({'name': name})
+                files["Collection"].append({"name": name})
 
             # # Image
             # for name in data_from.images:
@@ -226,7 +240,7 @@ class Blender(DCCBase):
             if files[key]:
                 bpy.ops.wm.link(
                     directory="%s/%s/" % (version.absolute_full_path, key),
-                    files=files[key]
+                    files=files[key],
                 )
 
     def get_referenced_versions(self, parent_ref=None):
@@ -236,13 +250,16 @@ class Blender(DCCBase):
         :return:
         """
         import os
+
         versions = []
         for lib_name in bpy.data.libraries.keys():
             lib = bpy.data.libraries[lib_name]
             file_path = lib.filepath
-            if file_path.startswith('//'):  # This is a relative path
+            if file_path.startswith("//"):  # This is a relative path
                 curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
-                file_full_path = os.path.normpath("%s%s" % (curr_blend_file_dir, file_path))
+                file_full_path = os.path.normpath(
+                    "%s%s" % (curr_blend_file_dir, file_path)
+                )
             else:
                 file_full_path = os.path.normpath(file_path)
             version = self.get_version_from_full_path(file_full_path)
@@ -258,23 +275,26 @@ class Blender(DCCBase):
         :return:
         """
         import os
+
         for lib_name in bpy.data.libraries.keys():
             lib = bpy.data.libraries[lib_name]
             file_path = lib.filepath
-            if file_path.startswith('//'):  # This is a relative path
+            if file_path.startswith("//"):  # This is a relative path
                 curr_blend_file_dir = os.path.dirname(bpy.data.filepath)
-                file_full_path = os.path.normpath("%s%s" % (curr_blend_file_dir, file_path))
+                file_full_path = os.path.normpath(
+                    "%s%s" % (curr_blend_file_dir, file_path)
+                )
             else:
                 file_full_path = os.path.normpath(file_path)
             version = self.get_version_from_full_path(file_full_path)
-            if version in reference_resolution['update']:
+            if version in reference_resolution["update"]:
                 if not version.is_latest_published_version():
                     latest_published_version = version.latest_published_version
 
                     # make it relative again
-                    new_file_path = '//%s' % os.path.relpath(
+                    new_file_path = "//%s" % os.path.relpath(
                         latest_published_version.absolute_full_path,
-                        os.path.dirname(bpy.data.filepath)
+                        os.path.dirname(bpy.data.filepath),
                     )
                     lib.filepath = new_file_path
                     lib.reload()
@@ -282,8 +302,7 @@ class Blender(DCCBase):
         return []  # need to return an empty list
 
     def deep_version_inputs_update(self):
-        """updates the inputs of the references of the current scene
-        """
+        """updates the inputs of the references of the current scene"""
         # just use the first level references for now
         self.update_version_inputs()
 
@@ -295,7 +314,9 @@ class Blender(DCCBase):
         """
         bpy.context.scene.render.fps = fps
 
-    def set_frame_range(self, start_frame=1001, end_frame=1100, adjust_frame_range=False):
+    def set_frame_range(
+        self, start_frame=1001, end_frame=1100, adjust_frame_range=False
+    ):
         """Sets the frame range
         :param int start_frame: The start frame.
         :param int  end_frame: The end frame.
@@ -327,12 +348,13 @@ class Blender(DCCBase):
         :return:
         """
         version_sig_name = self.get_significant_name(
-            version,
-            include_project_code=False
+            version, include_project_code=False
         )
         view_layer = bpy.context.view_layer.name
 
-        output_filename_template = f'//Outputs/renders/{view_layer}/{version_sig_name}_{view_layer}.####'
+        output_filename_template = (
+            f"//Outputs/renders/{view_layer}/{version_sig_name}_{view_layer}.####"
+        )
 
         render_file_full_path = output_filename_template
 
@@ -340,10 +362,10 @@ class Blender(DCCBase):
 
         bpy.context.scene.render.filepath = render_file_full_path
 
-        bpy.context.scene.render.image_settings.file_format = 'OPEN_EXR'
-        bpy.context.scene.render.image_settings.color_depth = '16'
-        bpy.context.scene.render.image_settings.exr_codec = 'ZIP'
-        bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+        bpy.context.scene.render.image_settings.file_format = "OPEN_EXR"
+        bpy.context.scene.render.image_settings.color_depth = "16"
+        bpy.context.scene.render.image_settings.exr_codec = "ZIP"
+        bpy.context.scene.render.image_settings.color_mode = "RGBA"
         bpy.context.scene.render.film_transparent = True
         bpy.context.scene.render.use_persistent_data = True
 
@@ -351,24 +373,22 @@ class Blender(DCCBase):
         bpy.context.scene.render.use_placeholder = True
 
     def register_handlers(self):
-        """registers handlers
-        """
+        """registers handlers"""
         print("registering render handlers for render file output")
         handlers = [
             [bpy.app.handlers.render_pre, render_variables_init],
             [bpy.app.handlers.render_post, render_variables_restore],
-            [bpy.app.handlers.render_cancel, render_variables_restore]
+            [bpy.app.handlers.render_cancel, render_variables_restore],
         ]
         for handler, callback_func in handlers:
             if callback_func not in handler:
                 handler.append(callback_func)
 
     def get_current_version(self):
-        """returns the current open version
-        """
+        """returns the current open version"""
         version = None
         full_path = bpy.data.filepath
-        if full_path != '':
+        if full_path != "":
             version = self.get_version_from_full_path(full_path)
         return version
 
@@ -378,15 +398,16 @@ class Blender(DCCBase):
         :param context: The current context that this script is running at
         """
         import os
+
         version = self.get_current_version()
 
         # store the current render settings
         render_settings = {
-            'filepath': bpy.context.scene.render.filepath,
-            'file_format': bpy.context.scene.render.image_settings.file_format,
-            'color_depth': bpy.context.scene.render.image_settings.color_depth,
-            'exr_codec': bpy.context.scene.render.image_settings.exr_codec,
-            'color_mode': bpy.context.scene.render.image_settings.color_mode,
+            "filepath": bpy.context.scene.render.filepath,
+            "file_format": bpy.context.scene.render.image_settings.file_format,
+            "color_depth": bpy.context.scene.render.image_settings.color_depth,
+            "exr_codec": bpy.context.scene.render.image_settings.exr_codec,
+            "color_mode": bpy.context.scene.render.image_settings.color_mode,
         }
 
         # disable viewport overlay
@@ -396,25 +417,31 @@ class Blender(DCCBase):
         context.space_data.overlay.show_overlays = False
 
         # set output settings
-        bpy.context.scene.render.image_settings.file_format = 'FFMPEG'
-        bpy.context.scene.render.image_settings.color_mode = 'RGB'
-        bpy.context.scene.render.ffmpeg.format = 'MPEG4'
-        bpy.context.scene.render.ffmpeg.constant_rate_factor = 'HIGH'
-        bpy.context.scene.render.ffmpeg.ffmpeg_preset = 'GOOD'
+        bpy.context.scene.render.image_settings.file_format = "FFMPEG"
+        bpy.context.scene.render.image_settings.color_mode = "RGB"
+        bpy.context.scene.render.ffmpeg.format = "MPEG4"
+        bpy.context.scene.render.ffmpeg.constant_rate_factor = "HIGH"
+        bpy.context.scene.render.ffmpeg.ffmpeg_preset = "GOOD"
         bpy.context.scene.render.ffmpeg.gopsize = 12
         bpy.context.scene.render.filepath = "//"
 
         # set output filename
         if version:
-            version_sig_name = self.get_significant_name(version, include_project_code=False)
+            version_sig_name = self.get_significant_name(
+                version, include_project_code=False
+            )
         else:
             if bpy.data.filepath:
-                version_sig_name = os.path.splitext(os.path.basename(bpy.data.filepath))[0]
+                version_sig_name = os.path.splitext(
+                    os.path.basename(bpy.data.filepath)
+                )[0]
             else:
-                version_sig_name = 'playblast'
+                version_sig_name = "playblast"
 
-        output_filename_template = '//Outputs/playblast/%(version_sig_name)s.#'
-        rendered_output_filename = output_filename_template % {'version_sig_name': version_sig_name}
+        output_filename_template = "//Outputs/playblast/%(version_sig_name)s.#"
+        rendered_output_filename = output_filename_template % {
+            "version_sig_name": version_sig_name
+        }
 
         bpy.context.scene.render.filepath = rendered_output_filename
 
@@ -426,23 +453,31 @@ class Blender(DCCBase):
             context.space_data.overlay.show_overlays = current_overlay_state
 
             # restore the render settings
-            bpy.context.scene.render.filepath = render_settings['filepath']
-            bpy.context.scene.render.image_settings.file_format = render_settings['file_format']
-            bpy.context.scene.render.image_settings.color_depth = render_settings['color_depth']
-            bpy.context.scene.render.image_settings.exr_codec = render_settings['exr_codec']
-            bpy.context.scene.render.image_settings.color_mode = render_settings['color_mode']
+            bpy.context.scene.render.filepath = render_settings["filepath"]
+            bpy.context.scene.render.image_settings.file_format = render_settings[
+                "file_format"
+            ]
+            bpy.context.scene.render.image_settings.color_depth = render_settings[
+                "color_depth"
+            ]
+            bpy.context.scene.render.image_settings.exr_codec = render_settings[
+                "exr_codec"
+            ]
+            bpy.context.scene.render.image_settings.color_mode = render_settings[
+                "color_mode"
+            ]
 
             # and open the file path
             from anima.utils import open_browser_in_location
+
             movie_file_rel_path = rendered_output_filename.replace(
-                '#', '%s-%s' % (
-                    bpy.context.scene.frame_start,
-                    bpy.context.scene.frame_end
-                )
-            )[2:]  # removes the '//' at the beginning of the file path
+                "#",
+                "%s-%s" % (bpy.context.scene.frame_start, bpy.context.scene.frame_end),
+            )[
+                2:
+            ]  # removes the '//' at the beginning of the file path
             playblast_full_path = os.path.join(
-                os.path.dirname(bpy.data.filepath),
-                movie_file_rel_path
+                os.path.dirname(bpy.data.filepath), movie_file_rel_path
             )
             open_browser_in_location(playblast_full_path)
 
@@ -468,14 +503,15 @@ def render_variables_init(scene):
 
     # now replace the
     scene.render.filepath = RENDER_FILE_PATH_STORAGE.format(
-        file=bpy.data.filepath.rpartition('.')[0],
+        file=bpy.data.filepath.rpartition(".")[0],
         scene=scene.name,
         camera=scene.camera.name,
-        view_layer=bpy.context.view_layer.name
+        view_layer=bpy.context.view_layer.name,
     )
 
     # create the render path
     import os
+
     render_dir_name = os.path.dirname(bpy.path.abspath(scene.render.filepath))
     print("creating render dir: %s" % render_dir_name)
     logger.debug("creating render dir: %s" % render_dir_name)

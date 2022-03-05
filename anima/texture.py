@@ -12,6 +12,7 @@ class ReferenceManager(object):
     have a version part, so that it can find new versions by traversing the
     texture folder.
     """
+
     pass
 
 
@@ -29,6 +30,7 @@ class Reference(object):
     Any edits to a reference (especially if it is a FileReference) can be baked
     as a new version to the original one.
     """
+
     pass
 
 
@@ -38,5 +40,5 @@ class TicketGenerator(object):
     This class isolates all the technical detail about creating and sending a
     Ticket about a Reference to Stalker Pyramid server.
     """
-    pass
 
+    pass

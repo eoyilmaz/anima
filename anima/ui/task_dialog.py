@@ -23,13 +23,13 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
-    """The Task Dialog
-    """
-    __company_name__ = 'Erkan Ozgur Yilmaz'
-    __app_name__ = 'Project Dialog'
+    """The Task Dialog"""
 
-    CREATE_MODE = 'Create'
-    UPDATE_MODE = 'Update'
+    __company_name__ = "Erkan Ozgur Yilmaz"
+    __app_name__ = "Project Dialog"
+
+    CREATE_MODE = "Create"
+    UPDATE_MODE = "Update"
 
     def __init__(self, parent=None, parent_task=None, tasks=None):
         logger.debug("initializing the interface")
@@ -37,10 +37,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # store the logged in user
         self.logged_in_user = None
-        self.settings = QtCore.QSettings(
-            self.__company_name__,
-            self.__app_name__
-        )
+        self.settings = QtCore.QSettings(self.__company_name__, self.__app_name__)
 
         self.parent_task = parent_task
 
@@ -71,15 +68,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.fill_ui_with_task(self.tasks)
 
     def _setup(self):
-        """setup the ui elements
-        """
+        """setup the ui elements"""
         self.setWindowTitle("Task Dialog")
         self.resize(550, 790)
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
 
         # Dialog Label
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setText('%s Task' % self.mode)
+        self.dialog_label.setText("%s Task" % self.mode)
         self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);font: 18pt;")
         self.vertical_layout.addWidget(self.dialog_label)
 
@@ -95,9 +91,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QFormLayout.AllNonFixedFieldsGrow
         )
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
 
         form_field_index = 0
@@ -106,15 +100,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Project Field
         self.project_label = QtWidgets.QLabel("Project", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.project_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.project_label
         )
         self.projects_combo_box = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.projects_combo_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.projects_combo_box
         )
         form_field_index += 1
 
@@ -124,9 +114,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # label
         self.entity_type_label = QtWidgets.QLabel("Entity Type", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.entity_type_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.entity_type_label
         )
 
         # field
@@ -140,7 +128,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.entity_type_combo_box
+            self.entity_type_combo_box,
         )
         form_field_index += 1
 
@@ -149,33 +137,29 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.parent_label = QtWidgets.QLabel("Parent", self)
         self.parent_label.setObjectName("parent_label")
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.parent_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.parent_label
         )
         self.parent_task_fields_vertical_layout = QtWidgets.QVBoxLayout()
         self.parent_task_fields_vertical_layout.setObjectName(
-            "parent_task_fields_vertical_layout")
+            "parent_task_fields_vertical_layout"
+        )
         self.parent_task_fields_horizontal_layout = QtWidgets.QHBoxLayout()
         self.parent_task_fields_horizontal_layout.setObjectName(
-            "parent_task_fields_horizontal_layout")
+            "parent_task_fields_horizontal_layout"
+        )
 
         # Validator
-        self.parent_task_validator_label = \
-            QtWidgets.QLabel("Validator Message", self)
-        self.parent_task_validator_label.setStyleSheet(
-            "color: rgb(255, 0, 0);"
-        )
+        self.parent_task_validator_label = QtWidgets.QLabel("Validator Message", self)
+        self.parent_task_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         # Line Edit
         from anima.ui.widgets import ValidatedLineEdit
+
         self.parent_task_line_edit = ValidatedLineEdit(
             message_field=self.parent_task_validator_label
         )
         self.parent_task_line_edit.setEnabled(False)
-        self.parent_task_fields_horizontal_layout.addWidget(
-            self.parent_task_line_edit
-        )
+        self.parent_task_fields_horizontal_layout.addWidget(self.parent_task_line_edit)
 
         self.pick_parent_task_push_button = QtWidgets.QPushButton(self)
         self.pick_parent_task_push_button.setToolTip("Pick parent task")
@@ -193,7 +177,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.parent_task_fields_vertical_layout
+            self.parent_task_fields_vertical_layout,
         )
         form_field_index += 1
 
@@ -201,24 +185,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Name Fields
         self.name_label = QtWidgets.QLabel("Name", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.name_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.name_label
         )
         self.name_field_vertical_layout = QtWidgets.QVBoxLayout()
         self.name_validator_label = QtWidgets.QLabel("Validator Message", self)
         self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
-        self.name_line_edit = ValidatedLineEdit(
-            message_field=self.name_validator_label
-        )
+        self.name_line_edit = ValidatedLineEdit(message_field=self.name_validator_label)
         self.name_field_vertical_layout.addWidget(self.name_line_edit)
         self.name_field_vertical_layout.addWidget(self.name_validator_label)
 
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.name_field_vertical_layout
+            self.name_field_vertical_layout,
         )
         form_field_index += 1
 
@@ -226,9 +206,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Code Fields
         self.code_label = QtWidgets.QLabel("Code", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.code_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.code_label
         )
         self.code_field_vertical_layout = QtWidgets.QVBoxLayout()
 
@@ -237,16 +215,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.code_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
         # Validated Line Edit
-        self.code_line_edit = ValidatedLineEdit(
-            message_field=self.code_validator_label
-        )
+        self.code_line_edit = ValidatedLineEdit(message_field=self.code_validator_label)
         self.code_field_vertical_layout.addWidget(self.code_line_edit)
         self.code_field_vertical_layout.addWidget(self.code_validator_label)
 
         self.form_layout.setLayout(
             form_field_index,
             QtWidgets.QFormLayout.FieldRole,
-            self.code_field_vertical_layout
+            self.code_field_vertical_layout,
         )
         form_field_index += 1
 
@@ -254,17 +230,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Task Type Fields
         self.task_type_label = QtWidgets.QLabel("Task Type", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.task_type_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.task_type_label
         )
 
         self.task_type_combo_box = QtWidgets.QComboBox(self)
         self.task_type_combo_box.setEditable(True)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.task_type_combo_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.task_type_combo_box
         )
         form_field_index += 1
 
@@ -272,17 +244,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Asset Type Fields
         self.asset_type_label = QtWidgets.QLabel("Asset Type", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.asset_type_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.asset_type_label
         )
 
         self.asset_type_combo_box = QtWidgets.QComboBox(self)
         self.asset_type_combo_box.setEditable(True)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.asset_type_combo_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.asset_type_combo_box
         )
         form_field_index += 1
 
@@ -290,15 +258,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Sequence Fields
         self.sequence_label = QtWidgets.QLabel("Sequence", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.sequence_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.sequence_label
         )
         self.sequence_combo_box = QtWidgets.QComboBox(self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.sequence_combo_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.sequence_combo_box
         )
         form_field_index += 1
 
@@ -306,16 +270,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # FPS Fields
         self.fps_label = QtWidgets.QLabel("FPS", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.fps_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.fps_label
         )
         self.fps_spin_box = QtWidgets.QSpinBox(self)
         self.fps_spin_box.setMinimum(1)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.fps_spin_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.fps_spin_box
         )
         form_field_index += 1
 
@@ -323,9 +283,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # CutIn & CutOut Fields
         self.cut_in_cut_out_label = QtWidgets.QLabel("Cut In & Out", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.cut_in_cut_out_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.cut_in_cut_out_label
         )
         self.horizontal_layout_4 = QtWidgets.QHBoxLayout()
         self.cut_in_spin_box = QtWidgets.QSpinBox(self)
@@ -336,19 +294,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.horizontal_layout_4.addWidget(self.cut_out_spin_box)
         self.form_layout.setLayout(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.horizontal_layout_4
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.horizontal_layout_4
         )
         form_field_index += 1
 
         # ----------------------------------------------
         # Image Format Fields
         from anima.ui.widgets.image_format import ImageFormatWidget
+
         self.image_format = ImageFormatWidget(
             parent=self,
             parent_form_layout=self.form_layout,
-            parent_form_layout_index=form_field_index
+            parent_form_layout_index=form_field_index,
         )
         form_field_index += 1
 
@@ -356,9 +313,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # DependsTo Fields
         self.depends_to_label = QtWidgets.QLabel("Depends To", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.depends_to_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.depends_to_label
         )
         self.horizontal_layout_3 = QtWidgets.QHBoxLayout()
         self.depends_to_list_widget = QtWidgets.QListWidget(self)
@@ -369,29 +324,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout_3 = QtWidgets.QVBoxLayout()
         self.add_depending_task_push_button = QtWidgets.QPushButton("+", self)
         self.add_depending_task_push_button.setToolTip("Add depending task...")
-        self.add_depending_task_push_button.setMaximumSize(
-            QtCore.QSize(25, 16777215))
+        self.add_depending_task_push_button.setMaximumSize(QtCore.QSize(25, 16777215))
         self.vertical_layout_3.addWidget(self.add_depending_task_push_button)
-        self.remove_depending_task_push_button =\
-            QtWidgets.QPushButton("-", self)
-        self.remove_depending_task_push_button.setToolTip(
-            "Remove depending task..."
-        )
+        self.remove_depending_task_push_button = QtWidgets.QPushButton("-", self)
+        self.remove_depending_task_push_button.setToolTip("Remove depending task...")
         self.remove_depending_task_push_button.setMaximumSize(
-            QtCore.QSize(25, 16777215))
-        self.vertical_layout_3.addWidget(
-            self.remove_depending_task_push_button)
+            QtCore.QSize(25, 16777215)
+        )
+        self.vertical_layout_3.addWidget(self.remove_depending_task_push_button)
         spacer_item = QtWidgets.QSpacerItem(
-            20, 40,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Expanding
+            20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding
         )
         self.vertical_layout_3.addItem(spacer_item)
         self.horizontal_layout_3.addLayout(self.vertical_layout_3)
         self.form_layout.setLayout(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.horizontal_layout_3
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.horizontal_layout_3
         )
         form_field_index += 1
 
@@ -399,9 +346,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Resources Fields
         self.resources_label = QtWidgets.QLabel("Resources", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.resources_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.resources_label
         )
         self.vertical_layout_2 = QtWidgets.QVBoxLayout()
         self.resources_combo_box = QtWidgets.QComboBox(self)
@@ -412,9 +357,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.resources_list_widget.setToolTip("Double click to remove")
         self.vertical_layout_2.addWidget(self.resources_list_widget)
         self.form_layout.setLayout(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.vertical_layout_2
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.vertical_layout_2
         )
         form_field_index += 1
 
@@ -422,9 +365,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Responsible Fields
         self.responsible_label = QtWidgets.QLabel("Responsible", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.responsible_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.responsible_label
         )
         self.vertical_layout_4 = QtWidgets.QVBoxLayout()
         self.responsible_combo_box = QtWidgets.QComboBox(self)
@@ -433,9 +374,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.responsible_list_widget = QtWidgets.QListWidget(self)
         self.vertical_layout_4.addWidget(self.responsible_list_widget)
         self.form_layout.setLayout(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.vertical_layout_4
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.vertical_layout_4
         )
         form_field_index += 1
 
@@ -445,7 +384,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setWidget(
             form_field_index,
             QtWidgets.QFormLayout.LabelRole,
-            self.schedule_timing_label
+            self.schedule_timing_label,
         )
         self.horizontal_layout_2 = QtWidgets.QHBoxLayout()
         self.schedule_timing_spin_box = QtWidgets.QSpinBox(self)
@@ -457,9 +396,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.schedule_model_combo_box = QtWidgets.QComboBox(self)
         self.horizontal_layout_2.addWidget(self.schedule_model_combo_box)
         self.form_layout.setLayout(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.horizontal_layout_2
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.horizontal_layout_2
         )
         form_field_index += 1
 
@@ -467,17 +404,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Update Bid Fields
         self.update_bid_label = QtWidgets.QLabel("Update Bid", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.update_bid_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.update_bid_label
         )
         self.update_bid_check_box = QtWidgets.QCheckBox(self)
         self.update_bid_check_box.setText("")
         # self.update_bid_check_box.setChecked(True)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.update_bid_check_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.update_bid_check_box
         )
         form_field_index += 1
 
@@ -485,17 +418,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Priority Fields
         self.priority_label = QtWidgets.QLabel("Priority", self)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.LabelRole,
-            self.priority_label
+            form_field_index, QtWidgets.QFormLayout.LabelRole, self.priority_label
         )
         self.priority_spin_box = QtWidgets.QSpinBox(self)
         self.priority_spin_box.setMaximum(1000)
         self.priority_spin_box.setProperty("value", 500)
         self.form_layout.setWidget(
-            form_field_index,
-            QtWidgets.QFormLayout.FieldRole,
-            self.priority_spin_box
+            form_field_index, QtWidgets.QFormLayout.FieldRole, self.priority_spin_box
         )
 
         self.vertical_layout.addLayout(self.form_layout)
@@ -524,9 +453,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setTabOrder(self.fps_spin_box, self.cut_in_spin_box)
         self.setTabOrder(self.cut_in_spin_box, self.cut_out_spin_box)
         self.setTabOrder(self.cut_out_spin_box, self.depends_to_list_widget)
-        self.setTabOrder(self.depends_to_list_widget, self.add_depending_task_push_button)
-        self.setTabOrder(self.add_depending_task_push_button, self.remove_depending_task_push_button)
-        self.setTabOrder(self.remove_depending_task_push_button, self.resources_combo_box)
+        self.setTabOrder(
+            self.depends_to_list_widget, self.add_depending_task_push_button
+        )
+        self.setTabOrder(
+            self.add_depending_task_push_button, self.remove_depending_task_push_button
+        )
+        self.setTabOrder(
+            self.remove_depending_task_push_button, self.resources_combo_box
+        )
         self.setTabOrder(self.resources_combo_box, self.resources_list_widget)
         self.setTabOrder(self.resources_list_widget, self.responsible_combo_box)
         self.setTabOrder(self.responsible_combo_box, self.responsible_list_widget)
@@ -537,9 +472,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setTabOrder(self.update_bid_check_box, self.priority_spin_box)
 
     def show(self):
-        """overridden show method
-        """
-        logger.debug('MainDialog.show is started')
+        """overridden show method"""
+        logger.debug("MainDialog.show is started")
         self.logged_in_user = self.get_logged_in_user()
         if not self.logged_in_user:
             self.reject()
@@ -547,123 +481,117 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         else:
             return_val = super(MainDialog, self).show()
 
-        logger.debug('MainDialog.show is finished')
+        logger.debug("MainDialog.show is finished")
         return return_val
 
     def _setup_signals(self):
-        """set the signals
-        """
+        """set the signals"""
         # Entity type changed
         QtCore.QObject.connect(
             self.entity_type_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.entity_type_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.entity_type_combo_box_changed,
         )
 
         # project_combo_box changed
         QtCore.QObject.connect(
             self.projects_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.projects_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.projects_combo_box_changed,
         )
 
         # name_line_edit is changed
         QtCore.QObject.connect(
             self.name_line_edit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.name_line_edit_changed
+            QtCore.SIGNAL("textChanged(QString)"),
+            self.name_line_edit_changed,
         )
 
         # code_line_edit is changed
         QtCore.QObject.connect(
             self.code_line_edit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.code_line_edit_changed
+            QtCore.SIGNAL("textChanged(QString)"),
+            self.code_line_edit_changed,
         )
 
         # pick_task_push_button
         QtCore.QObject.connect(
             self.pick_parent_task_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.pick_parent_task_push_button_clicked
+            self.pick_parent_task_push_button_clicked,
         )
 
         # add_depending_task_push_button
         QtCore.QObject.connect(
             self.add_depending_task_push_button,
-            QtCore.SIGNAL('clicked()'),
-            self.add_depending_task_push_button_clicked
+            QtCore.SIGNAL("clicked()"),
+            self.add_depending_task_push_button_clicked,
         )
 
         # remove_depending_task_push_button
         QtCore.QObject.connect(
             self.remove_depending_task_push_button,
-            QtCore.SIGNAL('clicked()'),
-            self.remove_depending_task_push_button_clicked
+            QtCore.SIGNAL("clicked()"),
+            self.remove_depending_task_push_button_clicked,
         )
 
         # depends_to_list_widget doubleClicked
         QtCore.QObject.connect(
             self.depends_to_list_widget,
             QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.depends_to_list_widget_item_double_clicked
+            self.depends_to_list_widget_item_double_clicked,
         )
 
         # resources_combo_box changed
         QtCore.QObject.connect(
             self.resources_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.resources_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.resources_combo_box_changed,
         )
 
         # resources_list_widget doubleClicked
         QtCore.QObject.connect(
             self.resources_list_widget,
             QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.resources_list_widget_item_double_clicked
+            self.resources_list_widget_item_double_clicked,
         )
 
         # responsible_combo_box changed
         QtCore.QObject.connect(
             self.responsible_combo_box,
-            QtCore.SIGNAL('currentIndexChanged(QString)'),
-            self.responsible_combo_box_changed
+            QtCore.SIGNAL("currentIndexChanged(QString)"),
+            self.responsible_combo_box_changed,
         )
 
         # responsible_list_widget doubleClicked
         QtCore.QObject.connect(
             self.responsible_list_widget,
             QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.responsible_list_widget_item_double_clicked
+            self.responsible_list_widget_item_double_clicked,
         )
 
         # button box
         QtCore.QObject.connect(
-            self.button_box,
-            QtCore.SIGNAL("accepted()"),
-            self.accept
+            self.button_box, QtCore.SIGNAL("accepted()"), self.accept
         )
         QtCore.QObject.connect(
-            self.button_box,
-            QtCore.SIGNAL("rejected()"),
-            self.reject
+            self.button_box, QtCore.SIGNAL("rejected()"), self.reject
         )
 
     def _set_defaults(self):
-        """sets the defaults fro the ui
-        """
+        """sets the defaults fro the ui"""
         # hide validators
         self.parent_task_validator_label.setVisible(False)
 
         # invalidate the name field by default
-        self.name_line_edit.set_invalid('Please enter a name!')
+        self.name_line_edit.set_invalid("Please enter a name!")
 
         # hide code area
         self.code_label.setVisible(False)
         self.code_line_edit.setVisible(False)
 
         # invalidate the code by default
-        self.code_line_edit.set_invalid('Please enter a code!')
+        self.code_line_edit.set_invalid("Please enter a code!")
 
         # hide asset type area
         self.asset_type_label.setVisible(False)
@@ -686,9 +614,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # fill projects list
         self.projects_combo_box.clear()
         from stalker import Project, Task
-        self.projects_combo_box.addItems(
-            sorted([p.name for p in Project.query.all()])
-        )
+
+        self.projects_combo_box.addItems(sorted([p.name for p in Project.query.all()]))
 
         # fill image_format combo_box
         self.image_format.fill_combo_box()
@@ -721,38 +648,45 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # task types
         from stalker import Type
         from stalker.db.session import DBSession
-        all_task_type_names = DBSession.query(Type.name)\
-            .filter(Type.target_entity_type == 'Task')\
-            .order_by(Type.name.asc())\
+
+        all_task_type_names = (
+            DBSession.query(Type.name)
+            .filter(Type.target_entity_type == "Task")
+            .order_by(Type.name.asc())
             .all()
+        )
         self.task_type_combo_box.clear()
         self.task_type_combo_box.addItems(
-            [''] + list(map(lambda x: x[0], all_task_type_names))
+            [""] + list(map(lambda x: x[0], all_task_type_names))
         )
 
         # asset types
         from stalker import Type
-        all_asset_type_names = DBSession.query(Type.name)\
-            .filter(Type.target_entity_type == 'Asset')\
-            .order_by(Type.name.asc())\
+
+        all_asset_type_names = (
+            DBSession.query(Type.name)
+            .filter(Type.target_entity_type == "Asset")
+            .order_by(Type.name.asc())
             .all()
+        )
         self.asset_type_combo_box.clear()
         self.asset_type_combo_box.addItems(
-            [''] + list(map(lambda x: x[0], all_asset_type_names))
+            [""] + list(map(lambda x: x[0], all_asset_type_names))
         )
 
         # sequences
         from stalker import Sequence
-        all_sequence_names = DBSession\
-            .query(Sequence.name)\
-            .filter(Sequence.project == project)\
-            .all()
+
+        all_sequence_names = (
+            DBSession.query(Sequence.name).filter(Sequence.project == project).all()
+        )
         self.sequence_combo_box.clear()
         self.sequence_combo_box.addItems(
-            [''] + list(map(lambda x: x[0], all_sequence_names))
+            [""] + list(map(lambda x: x[0], all_sequence_names))
         )
 
         from anima import defaults
+
         self.cut_in_spin_box.setValue(defaults.cut_in)
         self.cut_out_spin_box.setValue(defaults.cut_out)
 
@@ -771,19 +705,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.read_settings()
 
     def write_settings(self):
-        """stores the settings to persistent storage
-        """
+        """stores the settings to persistent storage"""
         self.settings.beginGroup("MainDialog")
-        self.settings.setValue("update_bid_last_state", self.update_bid_check_box.isChecked())
+        self.settings.setValue(
+            "update_bid_last_state", self.update_bid_check_box.isChecked()
+        )
         self.settings.endGroup()
 
     def read_settings(self):
-        """restores the settings from persistent storage
-        """
+        """restores the settings from persistent storage"""
         self.settings.beginGroup("MainDialog")
         # restore the last state
         update_bid_last_state = self.settings.value("update_bid_last_state")
-        update_bid_last_state = True if update_bid_last_state in [True, 'True', 'true'] else False
+        update_bid_last_state = (
+            True if update_bid_last_state in [True, "True", "true"] else False
+        )
         self.update_bid_check_box.setChecked(update_bid_last_state)
         self.settings.endGroup()
 
@@ -798,13 +734,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("attr: %s" % attr)
         merged_items = []
         from anima import __string_types__
+
         for item in items:
             value = getattr(item, attr)
-            if not isinstance(value, __string_types__) and hasattr(value, '__getitem__'):
+            if not isinstance(value, __string_types__) and hasattr(
+                value, "__getitem__"
+            ):
                 merged_items += value
             else:
                 merged_items.append(value)
-        logger.debug('merged_items: %s' % merged_items)
+        logger.debug("merged_items: %s" % merged_items)
         return list(set(merged_items))
 
     @classmethod
@@ -817,7 +756,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         values = cls.get_merged_items(items, attr)
         if len(values) == 1:
-            logger.debug('unique_items: %s' % values)
+            logger.debug("unique_items: %s" % values)
             return values[0]
         else:
             return None
@@ -852,14 +791,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # sequences
             from stalker import Sequence
             from stalker.db.session import DBSession
-            all_sequence_names = DBSession \
-                .query(Sequence.name) \
-                .filter(Sequence.project == project) \
-                .order_by(Sequence.name.asc()) \
+
+            all_sequence_names = (
+                DBSession.query(Sequence.name)
+                .filter(Sequence.project == project)
+                .order_by(Sequence.name.asc())
                 .all()
+            )
             self.sequence_combo_box.clear()
             self.sequence_combo_box.addItems(
-                [''] + list(map(lambda x: x[0], all_sequence_names))
+                [""] + list(map(lambda x: x[0], all_sequence_names))
             )
 
             if all(map(lambda x: isinstance(x, Shot), self.tasks)):
@@ -867,10 +808,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 sequences = self.get_unique_items(self.tasks, "sequences")
                 if sequences:
                     seq = sequences
-                    index = self.sequence_combo_box.findText(
-                        seq.name,
-                        match_exactly
-                    )
+                    index = self.sequence_combo_box.findText(seq.name, match_exactly)
                     if index:
                         self.sequence_combo_box.setCurrentIndex(index)
 
@@ -923,7 +861,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.entity_type_combo_box.setEnabled(False)
 
         # task or asset type
-        type_obj = self.get_merged_items(self.tasks, 'type')
+        type_obj = self.get_merged_items(self.tasks, "type")
         combo_box = None
         if entity_type:
             if entity_type == "Task":
@@ -936,6 +874,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # single type selected
             type_obj = type_obj[0]
             from stalker import Type
+
             if type_obj is not None and isinstance(type_obj, Type):
                 type_name = type_obj.name
         else:
@@ -985,13 +924,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # schedule info
         if self.tasks:
 
-            schedule_timings = self.get_merged_items(self.tasks, 'schedule_timing')
+            schedule_timings = self.get_merged_items(self.tasks, "schedule_timing")
             if len(schedule_timings) == 1:
                 self.schedule_timing_spin_box.setValue(schedule_timings[0])
             else:
                 self.schedule_timing_spin_box.setValue(-1)
 
-            schedule_units = self.get_merged_items(self.tasks, 'schedule_unit')
+            schedule_units = self.get_merged_items(self.tasks, "schedule_unit")
             schedule_unit = None
             if len(schedule_units) == 1:
                 schedule_unit = schedule_units[0]
@@ -1000,11 +939,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 schedule_unit = MULTI_VALUE_ENUM
 
             if schedule_unit:
-                index = self.schedule_unit_combo_box.findText(schedule_unit, QtCore.Qt.MatchExactly)
+                index = self.schedule_unit_combo_box.findText(
+                    schedule_unit, QtCore.Qt.MatchExactly
+                )
                 if index:
                     self.schedule_unit_combo_box.setCurrentIndex(index)
 
-            schedule_models = self.get_merged_items(self.tasks, 'schedule_model')
+            schedule_models = self.get_merged_items(self.tasks, "schedule_model")
             if len(schedule_models) == 1:
                 schedule_model = schedule_models[0]
             else:
@@ -1012,14 +953,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 schedule_model = MULTI_VALUE_ENUM
 
             if schedule_model:
-                index = self.schedule_model_combo_box.findText(schedule_model, QtCore.Qt.MatchExactly)
+                index = self.schedule_model_combo_box.findText(
+                    schedule_model, QtCore.Qt.MatchExactly
+                )
                 if index:
                     self.schedule_model_combo_box.setCurrentIndex(index)
 
     @property
     def tasks(self):
-        """property for the self._tasks attribute
-        """
+        """property for the self._tasks attribute"""
         return self._tasks
 
     @tasks.setter
@@ -1039,7 +981,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param str entity_type:
         :return:
         """
-        if entity_type == 'Task':
+        if entity_type == "Task":
             # code fields
             self.code_label.setVisible(False)
             self.code_line_edit.setVisible(False)
@@ -1083,6 +1025,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # if this is a parent task
                 # do not show resource and timing related fields
                 from stalker import Task
+
                 assert isinstance(self.tasks[0], Task)
 
                 if self.tasks[0].is_container:
@@ -1104,7 +1047,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 self.update_bid_label.setVisible(False)
                 self.update_bid_check_box.setVisible(False)
 
-        elif entity_type == 'Asset':
+        elif entity_type == "Asset":
             # code fields
             self.code_label.setVisible(True)
             self.code_line_edit.setVisible(True)
@@ -1146,7 +1089,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.update_bid_label.setVisible(False)
             self.update_bid_check_box.setVisible(False)
 
-        elif entity_type == 'Shot':
+        elif entity_type == "Shot":
             # code fields
             self.code_label.setVisible(True)
             self.code_line_edit.setVisible(True)
@@ -1188,7 +1131,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.update_bid_label.setVisible(False)
             self.update_bid_check_box.setVisible(False)
 
-        elif entity_type == 'Sequence':
+        elif entity_type == "Sequence":
             # code fields
             self.code_label.setVisible(True)
             self.code_line_edit.setVisible(True)
@@ -1237,6 +1180,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         project_name = self.projects_combo_box.currentText()
         from stalker import Project
+
         return Project.query.filter(Project.name == project_name).first()
 
     def set_project(self, project):
@@ -1247,17 +1191,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         if project and project != self.get_project():
             index = self.projects_combo_box.findText(
-                project.name,
-                QtCore.Qt.MatchExactly
+                project.name, QtCore.Qt.MatchExactly
             )
             if index:
                 self.projects_combo_box.setCurrentIndex(index)
 
             if self.mode == self.CREATE_MODE:
                 # also update the image format field
-                self.image_format.set_current_image_format(
-                    project.image_format
-                )
+                self.image_format.set_current_image_format(project.image_format)
 
     def get_parent_task(self):
         """returns the currently selected parent task
@@ -1265,7 +1206,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         parent_task_text = self.parent_task_line_edit.text()
-        if parent_task_text != '':
+        if parent_task_text != "":
             return self.get_task_from_ui_text(parent_task_text)
         else:
             return
@@ -1277,14 +1218,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return str: Task hierarchy name
         """
         if task.parents:
-            path = '%s | %s' % (
+            path = "%s | %s" % (
                 task.project.code,
-                ' | '.join(map(lambda x: x.name, task.parents))
+                " | ".join(map(lambda x: x.name, task.parents)),
             )
         else:
             path = task.project.code
 
-        return '%s (%s) (%s)' % (task.name, path, task.id)
+        return "%s (%s) (%s)" % (task.name, path, task.id)
 
     def set_parent_task(self, task):
         """sets the parent_task_line_edit
@@ -1294,6 +1235,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         if task:
             from stalker import Task, Project
+
             # this is a weird initialization, but the task is may be
             # a project, then init with it
             project = task
@@ -1304,26 +1246,21 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             if isinstance(task, Task):
                 self.parent_task = task
-                self.parent_task_line_edit.setText(
-                    self.get_task_hierarchy_name(task)
-                )
+                self.parent_task_line_edit.setText(self.get_task_hierarchy_name(task))
             else:
                 self.parent_task = None
                 self.parent_task_line_edit.setText("")
 
     def pick_parent_task_push_button_clicked(self):
-        """runs when pick_parent_task_push_button is clicked
-        """
+        """runs when pick_parent_task_push_button is clicked"""
         from anima.ui import task_picker_dialog
 
         task_picker_main_dialog = task_picker_dialog.MainDialog(
-            parent=self,
-            project=self.get_project()
+            parent=self, project=self.get_project()
         )
         # scroll to the current task
         parent_task = self.get_parent_task()
-        task_picker_main_dialog.tasks_tree_view\
-            .find_and_select_entity_item(parent_task)
+        task_picker_main_dialog.tasks_tree_view.find_and_select_entity_item(parent_task)
         task_picker_main_dialog.exec_()
 
         try:
@@ -1343,6 +1280,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 return
 
             from stalker import Entity, Task, Project
+
             parent_task = Entity.query.get(parent_task_id)
 
             if parent_task is not None:
@@ -1353,11 +1291,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     if self.tasks[0] and self.mode == self.UPDATE_MODE:
                         # check if the picked parent task is suitable for the updated
                         # task
-                        if self.tasks[0] in parent_task.parents \
-                           or self.tasks[0] == parent_task:
+                        if (
+                            self.tasks[0] in parent_task.parents
+                            or self.tasks[0] == parent_task
+                        ):
                             # warn the user by invalidating the field
                             self.parent_task_line_edit.set_invalid(
-                                'New parent is not valid!'
+                                "New parent is not valid!"
                             )
                         else:
                             self.parent_task_line_edit.set_valid()
@@ -1366,29 +1306,27 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         task_picker_main_dialog.deleteLater()
 
     def projects_combo_box_changed(self, project_name):
-        """runs when the project_combo_box is changed
-        """
+        """runs when the project_combo_box is changed"""
         # reset the parent task
-        self.parent_task_line_edit.setText('')
+        self.parent_task_line_edit.setText("")
 
         # reset resources
         # add resources
         from anima import defaults
         from stalker import Project, User, ProjectUser
         from stalker.db.session import DBSession
-        all_project_user_ids = DBSession.query(User.id)\
-            .join(ProjectUser)\
-            .join(Project)\
-            .filter(Project.name == project_name)\
-            .all()
 
-        all_user_names = \
-            sorted(
-                map(
-                    lambda x: defaults.user_names_lut[x[0]],
-                    all_project_user_ids
-                )
-            )
+        all_project_user_ids = (
+            DBSession.query(User.id)
+            .join(ProjectUser)
+            .join(Project)
+            .filter(Project.name == project_name)
+            .all()
+        )
+
+        all_user_names = sorted(
+            map(lambda x: defaults.user_names_lut[x[0]], all_project_user_ids)
+        )
 
         # clear depends_to_list_widget
         self.depends_to_list_widget.clear()
@@ -1399,70 +1337,67 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # get resources from the project
         self.updating_resources_combo_box = True
         self.resources_combo_box.clear()
-        self.resources_combo_box.addItems([''] + all_user_names)
+        self.resources_combo_box.addItems([""] + all_user_names)
         self.updating_resources_combo_box = False
 
         # get resources from the project
         self.updating_responsible_combo_box = True
         self.responsible_combo_box.clear()
-        self.responsible_combo_box.addItems([''] + all_user_names)
+        self.responsible_combo_box.addItems([""] + all_user_names)
         self.updating_responsible_combo_box = False
 
     def name_line_edit_changed(self, text):
-        """runs when the name_line_edit text has changed
-        """
+        """runs when the name_line_edit text has changed"""
         # if any([True for c in text if ord(c) >= 128]):
         #     self.name_line_edit.set_invalid('Turkce karakter kullanma!!!!')
         # else:
         #     self.name_line_edit.set_valid()
 
-        if re.findall(r'[^a-zA-Z0-9_ ]+', text):
-            self.name_line_edit.set_invalid('Invalid character')
+        if re.findall(r"[^a-zA-Z0-9_ ]+", text):
+            self.name_line_edit.set_invalid("Invalid character")
         else:
             self.name_line_edit.set_valid()
 
-        if text == '':
-            self.name_line_edit.set_invalid('Please enter a name!')
+        if text == "":
+            self.name_line_edit.set_invalid("Please enter a name!")
 
         # just update the code field
-        formatted_text = text.strip().replace(' ', '_').replace('-', '_')
+        formatted_text = text.strip().replace(" ", "_").replace("-", "_")
 
         # remove multiple under scores
-        formatted_text = re.sub('[_]+', '_', formatted_text)
+        formatted_text = re.sub("[_]+", "_", formatted_text)
 
         self.code_line_edit.setText(formatted_text)
 
     def code_line_edit_changed(self, text):
-        """runs when the code_line_edit text has changed
-        """
+        """runs when the code_line_edit text has changed"""
         if self.updating_code_line_edit:
             return
 
         self.updating_code_line_edit = True
 
-        if re.findall(r'[^a-zA-Z0-9_ ]+', text):
-            self.code_line_edit.set_invalid('Invalid character')
+        if re.findall(r"[^a-zA-Z0-9_ ]+", text):
+            self.code_line_edit.set_invalid("Invalid character")
         else:
-            if text == '':
-                self.code_line_edit.set_invalid('Please enter a code!')
+            if text == "":
+                self.code_line_edit.set_invalid("Please enter a code!")
             else:
                 if len(text) > 24:
-                    self.code_line_edit.set_invalid('Code is too long (>24)')
+                    self.code_line_edit.set_invalid("Code is too long (>24)")
                 else:
                     self.code_line_edit.set_valid()
 
         # just update the code field
-        formatted_text = text.strip().replace(' ', '_').replace('-', '_')
+        formatted_text = text.strip().replace(" ", "_").replace("-", "_")
 
         # remove multiple under scores
-        formatted_text = re.sub('[_]+', '_', formatted_text)
+        formatted_text = re.sub("[_]+", "_", formatted_text)
 
         self.code_line_edit.setText(formatted_text)
         self.updating_code_line_edit = False
 
     def add_depending_task_push_button_clicked(self):
-        """runs when add depending task push button clicked
-        """
+        """runs when add depending task push button clicked"""
         try:
             # PySide and PySide2
             accepted = QtWidgets.QDialog.DialogCode.Accepted
@@ -1471,10 +1406,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             accepted = QtWidgets.QDialog.Accepted
 
         from anima.ui import task_picker_dialog
+
         task_picker_main_dialog = task_picker_dialog.MainDialog(
-            parent=self,
-            project=self.get_project(),
-            allow_multi_selection=True
+            parent=self, project=self.get_project(), allow_multi_selection=True
         )
 
         if self.last_selected_dependent_task:
@@ -1494,9 +1428,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             for task in tasks:
                 if task.project != self.get_project():
                     QtWidgets.QMessageBox.critical(
-                        self,
-                        'Error',
-                        'Please select a task from the same project!'
+                        self, "Error", "Please select a task from the same project!"
                     )
                 else:
                     self.add_dependent_task(task)
@@ -1523,8 +1455,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # don't add if the task already exists
         tasks_exists = self.depends_to_list_widget.findItems(
-            task_path,
-            QtCore.Qt.MatchExactly
+            task_path, QtCore.Qt.MatchExactly
         )
 
         if not tasks_exists:
@@ -1540,15 +1471,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     self.last_selected_dependent_task = self.tasks[0].parent
 
     def remove_depending_task_push_button_clicked(self):
-        """runs whn remove_depending_task_push_button is clicked
-        """
+        """runs whn remove_depending_task_push_button is clicked"""
         # just remove the current selected item
         for item in self.depends_to_list_widget.selectedItems():
             if item.text() != MULTI_VALUE_ENUM:
                 self.depends_to_list_widget.takeItem(
-                    self.depends_to_list_widget.row(
-                        item
-                    )
+                    self.depends_to_list_widget.row(item)
                 )
 
     @classmethod
@@ -1569,7 +1497,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param str item_text: Currently selected item text
         :return:
         """
-        if item_text == '':
+        if item_text == "":
             return
 
         if self.updating_resources_combo_box:
@@ -1605,7 +1533,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :param str item_text: Currently selected item text
         :return:
         """
-        if item_text == '':
+        if item_text == "":
             return
 
         if self.updating_responsible_combo_box:
@@ -1614,7 +1542,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.updating_responsible_combo_box = True
 
         if item_text != MULTI_VALUE_ENUM:
-            index = self.responsible_combo_box.findText(item_text, QtCore.Qt.MatchExactly)
+            index = self.responsible_combo_box.findText(
+                item_text, QtCore.Qt.MatchExactly
+            )
 
             # Remove MULTI_VALUE_ENUM
             self.remove_multi_value_enum_from_list_widget(self.responsible_list_widget)
@@ -1645,9 +1575,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if item.text() != MULTI_VALUE_ENUM:
             # remove the item and add it to the resources_combo_box
             self.updating_resources_combo_box = True
-            self.resources_list_widget.takeItem(
-                self.resources_list_widget.row(item)
-            )
+            self.resources_list_widget.takeItem(self.resources_list_widget.row(item))
 
             # return it to the resources_combo_box
             self.resources_combo_box.addItem(item_text)
@@ -1661,9 +1589,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # remove the item and add it to the resources_combo_box
         if item.text() != MULTI_VALUE_ENUM:
-            self.depends_to_list_widget.takeItem(
-                self.depends_to_list_widget.row(item)
-            )
+            self.depends_to_list_widget.takeItem(self.depends_to_list_widget.row(item))
 
     def responsible_list_widget_item_double_clicked(self, item):
         """runs when an item is double clicked in responsible_list_widget
@@ -1700,13 +1626,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     @classmethod
     def get_task_from_ui_text(cls, text):
-        """returns a Task instance from the given UI text
-        """
+        """returns a Task instance from the given UI text"""
         if text == MULTI_VALUE_ENUM:
             return MULTI_VALUE_ENUM
 
         from stalker import Task
-        task_id = int(text.split('(')[-1].replace(')', ''))
+
+        task_id = int(text.split("(")[-1].replace(")", ""))
         return Task.query.get(task_id)
 
     @classmethod
@@ -1717,6 +1643,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         from stalker import User
+
         users = []
         for i in range(list_widget.count()):
             user_item = list_widget.item(i)
@@ -1731,54 +1658,53 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return users
 
     def get_task_type(self):
-        """returns the task type
-        """
+        """returns the task type"""
         from stalker import Type
         from stalker.db.session import DBSession
+
         task_type_name = self.task_type_combo_box.currentText()
         task_type = None
         if task_type_name and task_type_name != MULTI_VALUE_ENUM:
-            task_type = Type.query\
-                .filter(Type.target_entity_type == 'Task')\
-                .filter(Type.name == task_type_name)\
+            task_type = (
+                Type.query.filter(Type.target_entity_type == "Task")
+                .filter(Type.name == task_type_name)
                 .first()
+            )
             if not task_type:
                 # create a new Task Type
                 task_type = Type(
-                    name=task_type_name,
-                    code=task_type_name,
-                    target_entity_type='Task'
+                    name=task_type_name, code=task_type_name, target_entity_type="Task"
                 )
                 DBSession.add(task_type)
 
         return task_type
 
     def get_asset_type(self):
-        """returns the asset type
-        """
+        """returns the asset type"""
         from stalker import Type
         from stalker.db.session import DBSession
+
         asset_type_name = self.asset_type_combo_box.currentText()
         asset_type = None
         if asset_type_name and asset_type_name != MULTI_VALUE_ENUM:
-            asset_type = Type.query\
-                .filter(Type.target_entity_type == 'Asset')\
-                .filter(Type.name == asset_type_name)\
+            asset_type = (
+                Type.query.filter(Type.target_entity_type == "Asset")
+                .filter(Type.name == asset_type_name)
                 .first()
+            )
             if not asset_type:
                 # create a new Asset Type
                 asset_type = Type(
                     name=asset_type_name,
                     code=asset_type_name,
-                    target_entity_type='Asset'
+                    target_entity_type="Asset",
                 )
                 DBSession.add(asset_type)
 
         return asset_type
 
     def accept(self):
-        """create/update the task
-        """
+        """create/update the task"""
         # store the settings first
         self.write_settings()
 
@@ -1787,29 +1713,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         project = self.get_project()
 
         if not self.multi_selection_mode and not self.parent_task_line_edit.is_valid:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Some fields are not valid!'
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", "Some fields are not valid!")
             return
         parent_task = self.get_parent_task()
 
         if not self.multi_selection_mode and not self.name_line_edit.is_valid:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Some fields are not valid!'
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", "Some fields are not valid!")
             return
         name = self.name_line_edit.text()
 
         if not self.multi_selection_mode and not self.code_line_edit.is_valid:
-            QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Some fields are not valid!'
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", "Some fields are not valid!")
             return
         code = self.code_line_edit.text()
 
@@ -1821,11 +1735,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # Sequence
         from stalker import Sequence
+
         sequence_name = self.sequence_combo_box.currentText()
-        sequence = Sequence.query\
-            .filter(Sequence.project == project)\
-            .filter(Sequence.name == sequence_name)\
+        sequence = (
+            Sequence.query.filter(Sequence.project == project)
+            .filter(Sequence.name == sequence_name)
             .first()
+        )
 
         fps = self.fps_spin_box.value()
         cut_in = self.cut_in_spin_box.value()
@@ -1846,53 +1762,57 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         import datetime
         from anima.utils import local_to_utc
+
         utc_now = local_to_utc(datetime.datetime.now())
         import stalker
         from distutils.version import LooseVersion
-        if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
+
+        if LooseVersion(stalker.__version__) >= LooseVersion("0.2.18"):
             # inject timezone info
             import pytz
+
             utc_now = utc_now.replace(tzinfo=pytz.utc)
 
         from stalker import Task, Asset, Shot
         from stalker.db.session import DBSession
+
         if self.mode == self.CREATE_MODE:
             # Create
             kwargs = {
-                'name': name,
-                'code': code,
-                'project': project,
-                'parent': parent_task,
-                'depends': depends,
-                'resources': resources,
-                'responsible': responsible,
-                'schedule_timing': schedule_timing,
-                'schedule_unit': schedule_unit,
-                'schedule_model': schedule_model,
-                'priority': priority,
-                'created_by': created_by,
-                'date_created': utc_now
+                "name": name,
+                "code": code,
+                "project": project,
+                "parent": parent_task,
+                "depends": depends,
+                "resources": resources,
+                "responsible": responsible,
+                "schedule_timing": schedule_timing,
+                "schedule_unit": schedule_unit,
+                "schedule_model": schedule_model,
+                "priority": priority,
+                "created_by": created_by,
+                "date_created": utc_now,
             }
-            if entity_type == 'Asset':
+            if entity_type == "Asset":
                 entity_class = Asset
-                kwargs['type'] = asset_type
-            elif entity_type == 'Shot':
+                kwargs["type"] = asset_type
+            elif entity_type == "Shot":
                 entity_class = Shot
-                kwargs['sequences'] = [sequence]
-                kwargs['fps'] = fps
-                kwargs['cut_in'] = cut_in
-                kwargs['cut_out'] = cut_out
+                kwargs["sequences"] = [sequence]
+                kwargs["fps"] = fps
+                kwargs["cut_in"] = cut_in
+                kwargs["cut_out"] = cut_out
 
                 # only set the image format if it is different than the one used
                 # for the Project
                 if project.image_format != image_format:
-                    kwargs['image_format'] = image_format
+                    kwargs["image_format"] = image_format
 
-            elif entity_type == 'Sequence':
+            elif entity_type == "Sequence":
                 entity_class = Sequence
             else:
                 entity_class = Task
-                kwargs['type'] = task_type
+                kwargs["type"] = task_type
 
             try:
                 task = entity_class(**kwargs)
@@ -1900,11 +1820,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 DBSession.commit()
             except Exception as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
             else:
                 self.tasks = [task]
         else:
@@ -1935,57 +1851,52 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         self.tasks[0].image_format = None
 
                 from stalker.exceptions import CircularDependencyError
+
                 try:
                     self.tasks[0].parent = parent_task
                 except CircularDependencyError as e:
                     DBSession.rollback()
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        'Error',
-                        str(e)
-                    )
+                    QtWidgets.QMessageBox.critical(self, "Error", str(e))
                     # revert the parent field
                     if self.tasks[0].parent:
                         self.parent_task_line_edit.setText(
                             self.get_task_hierarchy_name(self.tasks[0].parent)
                         )
                     else:
-                        self.parent_task_line_edit.setText('')
+                        self.parent_task_line_edit.setText("")
                     self.parent_task_line_edit.set_valid()
                     return
 
             try:
                 from stalker.exceptions import StatusError
+
                 if MULTI_VALUE_ENUM not in depends:
                     for task in self.tasks:
                         try:
-                            if sorted(task.depends, key=lambda x: x.id) != sorted(depends, key=lambda x: x.id):
+                            if sorted(task.depends, key=lambda x: x.id) != sorted(
+                                depends, key=lambda x: x.id
+                            ):
                                 task.depends = depends
                         except StatusError as e:
                             DBSession.rollback()
-                            QtWidgets.QMessageBox.critical(
-                                self,
-                                'Error',
-                                str(e)
-                            )
+                            QtWidgets.QMessageBox.critical(self, "Error", str(e))
                             return
             except CircularDependencyError as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
 
             import datetime
             from anima.utils import local_to_utc
+
             utc_now = local_to_utc(datetime.datetime.now())
             import stalker
             from distutils.version import LooseVersion
-            if LooseVersion(stalker.__version__) >= LooseVersion('0.2.18'):
+
+            if LooseVersion(stalker.__version__) >= LooseVersion("0.2.18"):
                 # inject timezone info
                 import pytz
+
                 utc_now = utc_now.replace(tzinfo=pytz.utc)
 
             for task in self.tasks:
@@ -1995,10 +1906,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 if MULTI_VALUE_ENUM not in responsible:
                     task.responsible = responsible
 
-                if task_type and task.entity_type == 'Task' and task_type != MULTI_VALUE_ENUM:
+                if (
+                    task_type
+                    and task.entity_type == "Task"
+                    and task_type != MULTI_VALUE_ENUM
+                ):
                     task.type = task_type
 
-                if asset_type and task.entity_type == 'Asset' and asset_type != MULTI_VALUE_ENUM:
+                if (
+                    asset_type
+                    and task.entity_type == "Asset"
+                    and asset_type != MULTI_VALUE_ENUM
+                ):
                     task.type = asset_type
 
                 if schedule_timing not in [-1, 0]:
@@ -2026,17 +1945,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     DBSession.commit()
                 except Exception as e:
                     DBSession.rollback()
-                    QtWidgets.QMessageBox.critical(
-                        self,
-                        'Error',
-                        str(e)
-                    )
+                    QtWidgets.QMessageBox.critical(self, "Error", str(e))
 
         super(MainDialog, self).accept()
 
     def reject(self):
-        """overridden reject method
-        """
+        """overridden reject method"""
         # store the settings
         self.write_settings()
         super(MainDialog, self).reject()

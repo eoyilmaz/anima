@@ -26,12 +26,12 @@ particles = particle_system.particles
 reverse = False
 
 if reverse:
-    index_function = lambda x, y: x * (segment_count + 1) + segment_count -  y
+    index_function = lambda x, y: x * (segment_count + 1) + segment_count - y
 else:
     index_function = lambda x, y: x * (segment_count + 1) + y
 
 
-for i,h in enumerate(particles):
+for i, h in enumerate(particles):
     index = i * (segment_count + 1)
     h.location.x = curve_coordinates[index].x
     h.location.y = curve_coordinates[index].y
@@ -46,10 +46,10 @@ for i,h in enumerate(particles):
         pv.co.z = curve_coordinates[index].z
 
 
-#bpy.context.object.modifiers["ParticleSystem 1"].show_viewport = False
-#bpy.ops.particle.particle_edit_toggle()
-#bpy.context.scene.tool_settings.particle_edit.tool = 'ADD'
-#bpy.context.scene.tool_settings.particle_edit.use_default_interpolate = True
-#bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(4.271749973297119, -11.9777193069458, 56.15434646606445), "mouse":(), "pressure":0, "size":0, "pen_flip":False, "time":0, "is_start":False}])
+# bpy.context.object.modifiers["ParticleSystem 1"].show_viewport = False
+# bpy.ops.particle.particle_edit_toggle()
+# bpy.context.scene.tool_settings.particle_edit.tool = 'ADD'
+# bpy.context.scene.tool_settings.particle_edit.use_default_interpolate = True
+# bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(4.271749973297119, -11.9777193069458, 56.15434646606445), "mouse":(), "pressure":0, "size":0, "pen_flip":False, "time":0, "is_start":False}])
 
-#bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(354, 384), "pressure":0, "size":0, "pen_flip":False, "time":0, "is_start":False}])
+# bpy.ops.particle.brush_edit(stroke=[{"name":"", "location":(0, 0, 0), "mouse":(354, 384), "pressure":0, "size":0, "pen_flip":False, "time":0, "is_start":False}])

@@ -9,12 +9,13 @@ class TestEnvironment(DCCBase):
     """A test DCC which just raises errors to check if the correct
     method has been called
     """
+
     name = "TestEnv"
-    representations = ['Base', 'BBox', 'GPU', 'ASS']
+    representations = ["Base", "BBox", "GPU", "ASS"]
 
     test_data = {}
 
-    def __init__(self, name='TestEnv'):
+    def __init__(self, name="TestEnv"):
         DCCBase.__init__(self, name=name)
         # initialize test_data counter
         for f in dir(self):
@@ -31,8 +32,14 @@ class TestEnvironment(DCCBase):
         pass
 
     @count_calls
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
         self._version = version
         return self.check_referenced_versions()
 
@@ -46,8 +53,7 @@ class TestEnvironment(DCCBase):
 
     @count_calls
     def get_last_version(self):
-        """mock version of the original this returns None all the time
-        """
+        """mock version of the original this returns None all the time"""
         return None
 
     @count_calls
@@ -93,27 +99,30 @@ class TestEnvironment(DCCBase):
                     to_be_updated_list.append(ref_v)
 
             if to_be_updated_list:
-                action = 'create'
+                action = "create"
                 # check if there is a new published version of this version
                 # that is using all the updated versions of the references
                 latest_published_version = v.latest_published_version
-                if latest_published_version and \
-                   not v.is_latest_published_version():
+                if latest_published_version and not v.is_latest_published_version():
                     # so there is a new published version
                     # check if its children needs any update
                     # and the updated child versions are already
                     # referenced to the this published version
-                    if all([ref_v.latest_published_version
+                    if all(
+                        [
+                            ref_v.latest_published_version
                             in latest_published_version.inputs
-                            for ref_v in to_be_updated_list]):
+                            for ref_v in to_be_updated_list
+                        ]
+                    ):
                         # so all new versions are referenced to this published
                         # version, just update to this latest published version
-                        action = 'update'
+                        action = "update"
                     else:
                         # not all references are in the inputs
                         # so we need to create a new version as usual
                         # and update the references to the latest versions
-                        action = 'create'
+                        action = "create"
             else:
                 # nothing needs to be updated,
                 # so check if this version has a new version,
@@ -121,18 +130,20 @@ class TestEnvironment(DCCBase):
                 # version
                 if v.is_latest_published_version():
                     # do nothing
-                    action = 'leave'
+                    action = "leave"
                 else:
                     # update to latest published version
-                    action = 'update'
+                    action = "update"
 
                 # before setting the action check all the inputs in
                 # resolution_dictionary, if any of them are update, or create
                 # then set this one to 'create'
-                if any(rev_v in resolution_dictionary['update'] or
-                       rev_v in resolution_dictionary['create']
-                       for rev_v in v.inputs):
-                    action = 'create'
+                if any(
+                    rev_v in resolution_dictionary["update"]
+                    or rev_v in resolution_dictionary["create"]
+                    for rev_v in v.inputs
+                ):
+                    action = "create"
 
             # so append this v to the related action list
             resolution_dictionary[action].append(v)
@@ -173,7 +184,7 @@ class TestEnvironment(DCCBase):
 
         # loop through 'create' versions and update their references
         # and create a new version for each of them
-        for version in reference_resolution['create']:
+        for version in reference_resolution["create"]:
             local_reference_resolution = self.open(version, force=True)
 
             # save as a new version
@@ -181,8 +192,7 @@ class TestEnvironment(DCCBase):
                 task=version.task,
                 take_name=version.take_name,
                 parent=version,
-                description='Automatically created with '
-                            'Deep Reference Update'
+                description="Automatically created with " "Deep Reference Update",
             )
             new_version.is_published = True
 
@@ -203,9 +213,7 @@ class TestEnvironment(DCCBase):
             #
             # append all the 'create' items to 'update' items,
             # so we can update them with update_first_level_versions()
-            reference_resolution['update'].extend(
-                reference_resolution['create']
-            )
+            reference_resolution["update"].extend(reference_resolution["create"])
             self.update_first_level_versions(reference_resolution)
 
         return new_versions

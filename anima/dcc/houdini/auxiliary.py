@@ -7,18 +7,16 @@ import hou
 
 
 def get_network_pane():
-    """returns the network pane
-    """
+    """returns the network pane"""
     return hou.ui.paneTabOfType(hou.paneTabType.NetworkEditor)
 
 
 def get_scene_viewer():
-    """returns the scene viewer
-    """
+    """returns the scene viewer"""
     return hou.ui.paneTabOfType(hou.paneTabType.SceneViewer)
 
 
-def create_spare_input(node, value=''):
+def create_spare_input(node, value=""):
     """creates spare inputs for the given node and sets the value
 
     :param hou.Node node: The node to insert the spare input to.
@@ -28,15 +26,19 @@ def create_spare_input(node, value=''):
     parm_template_group = node.parmTemplateGroup()
     parm_template_group.append(
         hou.StringParmTemplate(
-            'spare_input0', 'Spare Input 0', 1,
-            string_type=hou.stringParmType.NodeReference
+            "spare_input0",
+            "Spare Input 0",
+            1,
+            string_type=hou.stringParmType.NodeReference,
         )
     )
     node.setParmTemplateGroup(parm_template_group)
-    node.parm('spare_input0').set(value)
+    node.parm("spare_input0").set(value)
 
 
-def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_film_aperture=24):
+def very_nice_camera_rig(
+    focal_length=35, horizontal_film_aperture=36, vertical_film_aperture=24
+):
     """creates a very nice camera rig where the Heading, Pitch and Roll controls are on different transform nodes
     allowing more control on the camera movement
 
@@ -47,8 +49,7 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
 
     obj_context = hou.node("/obj")
 
-    camera = obj_context.createNode("cam")\
-
+    camera = obj_context.createNode("cam")
     # set camera attributes
     camera.parm("focal").set(focal_length)
     # set the film back in millimeters (yeah)
@@ -72,36 +73,70 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
 
     # Focal Length
     ptg = main_ctrl.parmTemplateGroup()
-    ptg.append(hou.FloatParmTemplate('focal', 'Focal Length', 1, default_value=[focal_length], min=1.0, min_is_strict=True))
-    ptg.append(hou.FloatParmTemplate('aperture', 'Aperture', 1, default_value=[horizontal_film_aperture], min=1.0, min_is_strict=True))
-    ptg.append(hou.ToggleParmTemplate('useDepthOfField', 'Use Depth Of Field', default_value=False))
-    ptg.append(hou.FloatParmTemplate('fstop', 'f-stop', 1, default_value=[2.8], min=0.01, min_is_strict=True))
-    ptg.append(hou.FloatParmTemplate('focusOffset', 'Focus Offset', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('offsetX', 'Offset X (PanH)', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('offsetY', 'Offset Y (PanV)', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('offsetZ', 'Offset Z (Depth)', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('roll1', 'Roll', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('pitch', 'Pitch', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('heading', 'Heading', 1, default_value=[0]))
-    ptg.append(hou.FloatParmTemplate('camerar', 'Camera Rotation', 3))
+    ptg.append(
+        hou.FloatParmTemplate(
+            "focal",
+            "Focal Length",
+            1,
+            default_value=[focal_length],
+            min=1.0,
+            min_is_strict=True,
+        )
+    )
+    ptg.append(
+        hou.FloatParmTemplate(
+            "aperture",
+            "Aperture",
+            1,
+            default_value=[horizontal_film_aperture],
+            min=1.0,
+            min_is_strict=True,
+        )
+    )
+    ptg.append(
+        hou.ToggleParmTemplate(
+            "useDepthOfField", "Use Depth Of Field", default_value=False
+        )
+    )
+    ptg.append(
+        hou.FloatParmTemplate(
+            "fstop", "f-stop", 1, default_value=[2.8], min=0.01, min_is_strict=True
+        )
+    )
+    ptg.append(
+        hou.FloatParmTemplate("focusOffset", "Focus Offset", 1, default_value=[0])
+    )
+    ptg.append(
+        hou.FloatParmTemplate("offsetX", "Offset X (PanH)", 1, default_value=[0])
+    )
+    ptg.append(
+        hou.FloatParmTemplate("offsetY", "Offset Y (PanV)", 1, default_value=[0])
+    )
+    ptg.append(
+        hou.FloatParmTemplate("offsetZ", "Offset Z (Depth)", 1, default_value=[0])
+    )
+    ptg.append(hou.FloatParmTemplate("roll1", "Roll", 1, default_value=[0]))
+    ptg.append(hou.FloatParmTemplate("pitch", "Pitch", 1, default_value=[0]))
+    ptg.append(hou.FloatParmTemplate("heading", "Heading", 1, default_value=[0]))
+    ptg.append(hou.FloatParmTemplate("camerar", "Camera Rotation", 3))
 
     main_ctrl.setParmTemplateGroup(ptg)
     translate_parm = ptg.find("t")
     ptg
 
-
-
     main_ctrl.parm("focal").set(focal_length)
     main_ctrl.parm("aperture").set(horizontal_film_aperture)
     main_ctrl_name = main_ctrl.name()
-    camera.parm("focal").setExpression("ch(\"../%s/focal\")" % main_ctrl_name)
-    camera.parm("aperture").setExpression("ch(\"../%s/aperture\")" % main_ctrl_name)
+    camera.parm("focal").setExpression('ch("../%s/focal")' % main_ctrl_name)
+    camera.parm("aperture").setExpression('ch("../%s/aperture")' % main_ctrl_name)
 
     # Depth Of Field
-    camera.parm("RS_campro_dofEnable").setExpression("ch(\"../%s/useDepthOfField\")" % main_ctrl_name)
+    camera.parm("RS_campro_dofEnable").setExpression(
+        'ch("../%s/useDepthOfField")' % main_ctrl_name
+    )
 
     # F-Stop
-    camera.parm("fstop").setExpression("ch(\"../%s/fstop\")" % main_ctrl_name)
+    camera.parm("fstop").setExpression('ch("../%s/fstop")' % main_ctrl_name)
 
     # Camera Local Position and Offsets
     # Focus Offset
@@ -111,7 +146,9 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
 
     # Back to focal plane
     camera.parm("focus").setExpression(
-        'ch("../{main_ctrl}/offsetZ") + ch("../{main_ctrl}/focusOffset")'.format(main_ctrl=main_ctrl_name)
+        'ch("../{main_ctrl}/offsetZ") + ch("../{main_ctrl}/focusOffset")'.format(
+            main_ctrl=main_ctrl_name
+        )
     )
 
     # -----------------------------------------------------------

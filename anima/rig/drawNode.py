@@ -5,8 +5,8 @@ from shapes import Shape
 
 
 class DrawNode(object):
-    """
-    """
+    """ """
+
     # TODO: add documentation here!
 
     def __init__(self, drawer, name):
@@ -35,7 +35,7 @@ class DrawNode(object):
         self._axialCor = None
         self._ofsGrp = []
         ##########################################
-        #DEL LATER
+        # DEL LATER
         self._constrainedPoint = None
         self._targetPoint = None
 
@@ -54,9 +54,8 @@ class DrawNode(object):
         self._inputParent = None
         self._outputParent = None
 
-
     def _draw(self, drawer, args):
-    # Draw the Node
+        # Draw the Node
         return drawer(args)
 
     def _set_drawnNode(self, drawer, args):
@@ -96,12 +95,12 @@ class DrawNode(object):
 
     @property
     def transform(self):
-        self._transform = (pm.xform(self._drawnNode, q=1, t=1))
+        self._transform = pm.xform(self._drawnNode, q=1, t=1)
         return self._transform
 
     @transform.setter
     def transform(self, moveVal):
-        self._transform = (pm.xform(self._drawnNode, t=moveVal))
+        self._transform = pm.xform(self._drawnNode, t=moveVal)
 
     @property
     def axialCor(self):
@@ -115,10 +114,9 @@ class DrawNode(object):
     def constrainedPoint(self):
         return self._constrainedPoint
 
-
-    #delete Later
+    # delete Later
     def create_parentConst(self, source, dest, maintainOff=0):
-        return (pm.parentConstraint(source, dest, mo=maintainOff))
+        return pm.parentConstraint(source, dest, mo=maintainOff)
 
     def delete_parent(self, node_in):
         pm.delete(node_in)
@@ -130,32 +128,35 @@ class DrawNode(object):
             temp_grp = pm.group(self.drawnNode, n=(self._axialCor + "_#"))
             self.ofsGrp.append(temp_grp)
         else:
-            name = (self.drawnNode + "_axialCor")
-            self._axialCor = self._draw(Shape.transform,
-                                        (name))
+            name = self.drawnNode + "_axialCor"
+            self._axialCor = self._draw(Shape.transform, (name))
 
             pm.delete(pm.parentConstraint(self.drawnNode, self.axialCor, mo=0))
             pm.parent(self._drawnNode, self._axialCor)
-            #pm.delete(self.create_parentConst(self.drawnNode, self.axialCor))
-            #pm.parent(self._drawnNode, self.axialCor)
+            # pm.delete(self.create_parentConst(self.drawnNode, self.axialCor))
+            # pm.parent(self._drawnNode, self.axialCor)
 
     # Create Point Constrain
     def inputPoint(self, target=None, maintainOff=None):
         if target is None and maintainOff is None:
             return self._inputPoint
         else:
-            self._inputPoint = pm.pointConstraint(target, self.drawnNode,
-                                                  mo=maintainOff)
+            self._inputPoint = pm.pointConstraint(
+                target, self.drawnNode, mo=maintainOff
+            )
 
     def outputPoint(self, constrained=None, maintainOff=None):
         if constrained is None and maintainOff is None:
             return self._outputPoint
         else:
-            self._outputPoint = pm.pointConstraint(self.drawnNode, constrained,
-                                                   mo=maintainOff)
+            self._outputPoint = pm.pointConstraint(
+                self.drawnNode, constrained, mo=maintainOff
+            )
+
     def temp_inputPoint(self, target, maintainOff=1):
         tempConst = self.inputPoint(target, maintainOff)
         pm.delete(tempConst)
+
     def temp_outputPoint(self, constrained, maintainOff=1):
         tempConst = self.inputPoint(constrained, maintainOff)
         pm.delete(tempConst)
@@ -165,27 +166,30 @@ class DrawNode(object):
         if target is None and maintainOff is None:
             return self._inputOrient
         else:
-            self._inputOrient = pm.orientConstraint(target, self.drawnNode,
-                                                    mo=maintainOff)
+            self._inputOrient = pm.orientConstraint(
+                target, self.drawnNode, mo=maintainOff
+            )
 
     def outputOrient(self, constrained=None, maintainOff=None):
         if constrained is None and maintainOff is None:
             return self._outputOrient
         else:
-            self._outputOrient = pm.orientConstraint(constrained,
-                                                     self.drawnNode,
-                                                     mo=maintainOff)
+            self._outputOrient = pm.orientConstraint(
+                constrained, self.drawnNode, mo=maintainOff
+            )
+
     def temp_inputOrient(self, target, maintainOff=1):
         tempConst = self.inputPoint(target, maintainOff)
         pm.delete(tempConst)
+
     def temp_outputOrient(self, constrained, maintainOff=1):
         tempConst = self.inputPoint(constrained, maintainOff)
         pm.delete(tempConst)
 
     # Create Parent Constrain
-    def constrain(self, node_in, constType='point',
-                  targetType='constObj',
-                  maintainOff=0):
+    def constrain(
+        self, node_in, constType="point", targetType="constObj", maintainOff=0
+    ):
 
         """
         :param constType: It can bePoint Orient or Parent
@@ -198,31 +202,28 @@ class DrawNode(object):
                 object’s position
         """
         tempConst = None
-        target, constrained, setObjType = self._validate_targetType(node_in,
-                                                                    targetType)
+        target, constrained, setObjType = self._validate_targetType(node_in, targetType)
 
-        if constType is 'point':
+        if constType is "point":
             tempConst = pm.pointConstraint(target, constrained, mo=maintainOff)
-            if setObjType is 'setConstrainedPoint':
+            if setObjType is "setConstrainedPoint":
                 self._constrainedPoint = tempConst
             else:
                 self._targetPoint = tempConst
-        elif constType is 'orient':
+        elif constType is "orient":
             tempConst = pm.orienConstraint(target, constrained, mo=maintainOff)
-            if setObjType is 'setConstrainedPoint':
+            if setObjType is "setConstrainedPoint":
                 self._constrainedOrient = tempConst
             else:
                 self._targetOrient = tempConst
-        elif constType is 'parent':
-            tempConst = pm.parentConstraint(target, constrained,
-                                            mo=maintainOff)
-            if setObjType is 'setConstrainedPoint':
+        elif constType is "parent":
+            tempConst = pm.parentConstraint(target, constrained, mo=maintainOff)
+            if setObjType is "setConstrainedPoint":
                 self._constrainedParent = tempConst
             else:
                 self._targetParent = tempConst
 
         return tempConst
-
 
     def _validate_targetType(self, node_in, targetType):
         """
@@ -231,18 +232,17 @@ class DrawNode(object):
         :param targetType:
         :return: :raise:
         """
-        if (targetType is not 'constObj') and (targetType is not 'targetObj'):
-            raise TypeError(
-                '%s parameter should be constObj or targetObj' % targetType)
+        if (targetType is not "constObj") and (targetType is not "targetObj"):
+            raise TypeError("%s parameter should be constObj or targetObj" % targetType)
 
-        elif targetType is 'constObj':
-            return node_in, self.drawnNode, 'setConstrainedPoint'
+        elif targetType is "constObj":
+            return node_in, self.drawnNode, "setConstrainedPoint"
         else:
-            return self.drawnNode, node_in, 'setTargetPoint'
+            return self.drawnNode, node_in, "setTargetPoint"
 
-    def temp_constrain(self, node_in, constType='point',
-                       targetType='constObj',
-                       maintainOff=0):
+    def temp_constrain(
+        self, node_in, constType="point", targetType="constObj", maintainOff=0
+    ):
 
         """
         :param constType: It can bePoint Orient or Parent
@@ -255,6 +255,3 @@ class DrawNode(object):
                 object’s position
         """
         pm.delete(self.constrain(node_in, constType, targetType, maintainOff))
-
-
-

@@ -35,21 +35,23 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # create the custom task tree view
 
         from anima.ui.views.task import TaskTreeView
-        self.tasks_tree_view = TaskTreeView(project=project, allow_multi_selection=allow_multi_selection)
 
-        self.tasks_tree_view.replace_with_other(
-            self.verticalLayout,
-            0
+        self.tasks_tree_view = TaskTreeView(
+            project=project, allow_multi_selection=allow_multi_selection
         )
+
+        self.tasks_tree_view.replace_with_other(self.verticalLayout, 0)
 
         self.tasks_tree_view.fill()
 
         # setup the double click signal
-        self.tasks_tree_view.doubleClicked.disconnect(self.tasks_tree_view.double_clicked_on_entity)
+        self.tasks_tree_view.doubleClicked.disconnect(
+            self.tasks_tree_view.double_clicked_on_entity
+        )
         QtCore.QObject.connect(
             self.tasks_tree_view,
-            QtCore.SIGNAL('doubleClicked(QModelIndex)'),
-            self.tasks_tree_view_double_clicked
+            QtCore.SIGNAL("doubleClicked(QModelIndex)"),
+            self.tasks_tree_view_double_clicked,
         )
 
     def _setup_ui(self):
@@ -57,7 +59,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.verticalLayout = QtWidgets.QVBoxLayout(self)
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
         self.verticalLayout.addWidget(self.buttonBox)
 
         QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), self.accept)
@@ -76,6 +80,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if task_ids:
             task_id = task_ids[0]
         from stalker import Task
+
         task = Task.query.get(task_id)
         # if the task is a leaf task then return it
         if task and task.is_leaf:

@@ -39,7 +39,7 @@ def camera_film_offset_tool():
 
     pm.transformLimits(handle, sx=(0.01, 2.0), esx=(True, True))
 
-    handle.addAttr('enable', at='bool', dv=True, k=True)
+    handle.addAttr("enable", at="bool", dv=True, k=True)
     handle.enable >> camera_shape.panZoomEnabled
 
 
@@ -81,17 +81,19 @@ def create_frustum_curve(camera):
 
     # validate the camera
     if not isinstance(camera, pm.nt.Camera):
-        raise RuntimeError('Please select a camera')
-    
+        raise RuntimeError("Please select a camera")
+
     # create the outer box
     frame_curve = pm.curve(
         d=1,
-        p=[(-0.5, 0.5, 0),
-           (0.5, 0.5, 0),
-           (0.5, -0.5, 0),
-           (-0.5, -0.5, 0),
-           (-0.5, 0.5, 0)],
-        k=[0, 1, 2, 3, 4]
+        p=[
+            (-0.5, 0.5, 0),
+            (0.5, 0.5, 0),
+            (0.5, -0.5, 0),
+            (-0.5, -0.5, 0),
+            (-0.5, 0.5, 0),
+        ],
+        k=[0, 1, 2, 3, 4],
     )
 
     pm.parent(frame_curve, camera_tranform, r=True)
@@ -101,17 +103,15 @@ def create_frustum_curve(camera):
     exp = """float $flen = {camera}.focalLength;
 float $hfa = {camera}.horizontalFilmAperture * 25.4;
 {curve}.sx = {curve}.sy = -{curve}.translateZ * $hfa/ $flen;""".format(
-        camera=camera.name(),
-        curve=frame_curve.name()
+        camera=camera.name(), curve=frame_curve.name()
     )
-    pm.expression(s=exp, o='', ae=1, uc="all")
+    pm.expression(s=exp, o="", ae=1, uc="all")
 
     return frame_curve
 
 
 def get_selected_camera():
-    """Returns the selected camera
-    """
+    """Returns the selected camera"""
     for obj in pm.ls(sl=1, type=pm.nt.Transform):
         # if it is a transform node query for shapes
         if isinstance(obj, pm.nt.Transform):
@@ -123,13 +123,11 @@ def get_selected_camera():
 
 
 def camera_focus_plane_tool(camera):
-    """sets up a focus plane for the selected camera
-    """
+    """sets up a focus plane for the selected camera"""
     camera_shape = camera.getShape()
 
     frame = pm.nurbsPlane(
-        n='focusPlane#',
-        p=(0, 0, 0), ax=(0, 0, 1), w=1, lr=1, d=1, u=1, v=1, ch=0
+        n="focusPlane#", p=(0, 0, 0), ax=(0, 0, 1), w=1, lr=1, d=1, u=1, v=1, ch=0
     )[0]
     frame_shape = frame.getShape()
     pm.parent(frame, camera, r=True)
@@ -142,15 +140,15 @@ def camera_focus_plane_tool(camera):
     %(frame)s.sx = -%(frame)s.translateZ * $hfa / $flen;
     %(frame)s.sy = %(frame)s.sx / defaultResolution.deviceAspectRatio;
     """ % {
-        'camera': camera_shape.name(),
-        'frame': frame.name()
+        "camera": camera_shape.name(),
+        "frame": frame.name(),
     }
     exp_focus_distance = """%(camera)s.focusDistance = -%(frame)s.tz;
     %(camera)s.aiFocusDistance = %(camera)s.focusDistance;
     %(camera)s.aiApertureSize = %(camera)s.focalLength / %(camera)s.fStop * 0.1;
     """ % {
-        'camera': camera_shape.name(),
-        'frame': frame.name()
+        "camera": camera_shape.name(),
+        "frame": frame.name(),
     }
     try:
         pm.expression(s=exp_scale, ae=1, uc="all")
@@ -162,39 +160,39 @@ def camera_focus_plane_tool(camera):
         pass
 
     # set material
-    surface_shader = pm.shadingNode('surfaceShader', asShader=1)
+    surface_shader = pm.shadingNode("surfaceShader", asShader=1)
     pm.select(frame)
     pm.hyperShade(a=surface_shader.name())
 
-    surface_shader.setAttr('outColor', (0.4, 0, 0))
-    surface_shader.setAttr('outTransparency', (0.5, 0.5, 0.5))
+    surface_shader.setAttr("outColor", (0.4, 0, 0))
+    surface_shader.setAttr("outTransparency", (0.5, 0.5, 0.5))
 
     # prevent it from being rendered
-    frame_shape.setAttr('castsShadows', 0)
-    frame_shape.setAttr('receiveShadows', 0)
-    frame_shape.setAttr('motionBlur', 0)
-    frame_shape.setAttr('primaryVisibility', 0)
-    frame_shape.setAttr('smoothShading', 0)
-    frame_shape.setAttr('visibleInReflections', 0)
-    frame_shape.setAttr('visibleInRefractions', 0)
+    frame_shape.setAttr("castsShadows", 0)
+    frame_shape.setAttr("receiveShadows", 0)
+    frame_shape.setAttr("motionBlur", 0)
+    frame_shape.setAttr("primaryVisibility", 0)
+    frame_shape.setAttr("smoothShading", 0)
+    frame_shape.setAttr("visibleInReflections", 0)
+    frame_shape.setAttr("visibleInRefractions", 0)
 
     # Arnold attributes
     try:
-        frame_shape.setAttr('aiSelfShadows', 0)
-        frame_shape.setAttr('aiVisibleInDiffuse', 0)
-        frame_shape.setAttr('aiVisibleInGlossy', 0)
+        frame_shape.setAttr("aiSelfShadows", 0)
+        frame_shape.setAttr("aiVisibleInDiffuse", 0)
+        frame_shape.setAttr("aiVisibleInGlossy", 0)
     except pm.MayaAttributeError:
         pass
 
     # hide unnecessary attributes
-    frame.setAttr('tx', lock=True, keyable=False)
-    frame.setAttr('ty', lock=True, keyable=False)
-    frame.setAttr('rx', lock=True, keyable=False)
-    frame.setAttr('ry', lock=True, keyable=False)
-    frame.setAttr('rz', lock=True, keyable=False)
-    frame.setAttr('sx', lock=True, keyable=False)
-    frame.setAttr('sy', lock=True, keyable=False)
-    frame.setAttr('sz', lock=True, keyable=False)
+    frame.setAttr("tx", lock=True, keyable=False)
+    frame.setAttr("ty", lock=True, keyable=False)
+    frame.setAttr("rx", lock=True, keyable=False)
+    frame.setAttr("ry", lock=True, keyable=False)
+    frame.setAttr("rz", lock=True, keyable=False)
+    frame.setAttr("sx", lock=True, keyable=False)
+    frame.setAttr("sy", lock=True, keyable=False)
+    frame.setAttr("sz", lock=True, keyable=False)
 
     return frame
 
@@ -214,8 +212,10 @@ def cam_to_chan(start_frame, end_frame):
 
     camera = selection[0]
 
-    template = "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t" \
-               "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
+    template = (
+        "%(frame)s\t%(posx)s\t%(posy)s\t%(posz)s\t"
+        "%(rotx)s\t%(roty)s\t%(rotz)s\t%(vfv)s"
+    )
 
     lines = []
 
@@ -227,20 +227,21 @@ def cam_to_chan(start_frame, end_frame):
         vfv = pm.camera(camera, q=True, vfv=True)
 
         lines.append(
-            template % {
-                'frame': i,
-                'posx': pos[0],
-                'posy': pos[1],
-                'posz': pos[2],
-                'rotx': rot[0],
-                'roty': rot[1],
-                'rotz': rot[2],
-                'vfv': vfv
+            template
+            % {
+                "frame": i,
+                "posx": pos[0],
+                "posy": pos[1],
+                "posz": pos[2],
+                "rotx": rot[0],
+                "roty": rot[1],
+                "rotz": rot[2],
+                "vfv": vfv,
             }
         )
 
-    with open(chan_file, 'w') as f:
-        f.writelines('\n'.join(lines))
+    with open(chan_file, "w") as f:
+        f.writelines("\n".join(lines))
 
 
 def import_3dequalizer_points(width, height):
@@ -258,6 +259,7 @@ def import_3dequalizer_points(width, height):
     # parse the file
     from anima import utils
     from anima.dcc.equalizer import TDE4PointManager
+
     man = TDE4PointManager()
     man.read(path)
 
@@ -272,7 +274,7 @@ def import_3dequalizer_points(width, height):
     for point in man.points:
         # create a locator
         loc = create_camera_space_locator(frustum_curve, use_limits=False)
-        loc.rename('p%s' % point.name)
+        loc.rename("p%s" % point.name)
 
         # animate the locator
         for frame in point.data.keys():
@@ -332,7 +334,9 @@ def find_cut_info(cam):
     return cut_info
 
 
-def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_film_aperture=24):
+def very_nice_camera_rig(
+    focal_length=35, horizontal_film_aperture=36, vertical_film_aperture=24
+):
     """creates a very nice camera rig where the Heading, Pitch and Roll controls are on different transform nodes
     allowing more control on the camera movement
 
@@ -350,12 +354,13 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
 
     # add cacheable attribute
     from anima.dcc.mayaEnv import rigging
+
     rigging.Rigging.add_cacheable_attribute(camera_transform, "shot_camera")
 
-    main_ctrl = pm.spaceLocator(name='main_ctrl#')
-    heading_ctrl = pm.nt.Transform(name='heading_ctrl#')
-    pitch_ctrl = pm.nt.Transform(name='pitch_ctrl#')
-    roll_ctrl = pm.nt.Transform(name='roll_ctrl#')
+    main_ctrl = pm.spaceLocator(name="main_ctrl#")
+    heading_ctrl = pm.nt.Transform(name="heading_ctrl#")
+    pitch_ctrl = pm.nt.Transform(name="pitch_ctrl#")
+    roll_ctrl = pm.nt.Transform(name="roll_ctrl#")
 
     # create DAG hierarchy
     pm.parent(camera_transform, roll_ctrl)
@@ -366,55 +371,55 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
     # Attributes
     # -----------------------------------------------------------
     # Focal Length And Focal Plane Controls
-    main_ctrl.addAttr('divider1', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.addAttr("divider1", at="enum", niceName="----", enumName="----", k=False)
     main_ctrl.divider1.showInChannelBox(True)
 
-    main_ctrl.addAttr('focalLength', at='float', k=True, min=1)
+    main_ctrl.addAttr("focalLength", at="float", k=True, min=1)
     main_ctrl.focalLength.set(focal_length)
     main_ctrl.focalLength >> camera_shape.focalLength
 
-    main_ctrl.addAttr('useDepthOfField', at='enum', enumName='false:true', k=False)
+    main_ctrl.addAttr("useDepthOfField", at="enum", enumName="false:true", k=False)
     main_ctrl.useDepthOfField.showInChannelBox(True)
     main_ctrl.useDepthOfField >> camera_shape.depthOfField
 
-    main_ctrl.addAttr('fStop', at='float', k=True, min=0.1, dv=2.8)
+    main_ctrl.addAttr("fStop", at="float", k=True, min=0.1, dv=2.8)
     main_ctrl.fStop >> camera_shape.fStop
 
-    main_ctrl.addAttr('focusOffset', at='float', k=True, dv=0)
+    main_ctrl.addAttr("focusOffset", at="float", k=True, dv=0)
 
     # -----------------------------------------------------------
     # Camera Local Position and Offsets
-    main_ctrl.addAttr('divider2', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.addAttr("divider2", at="enum", niceName="----", enumName="----", k=False)
     main_ctrl.divider2.showInChannelBox(True)
-    main_ctrl.addAttr('offsetX', niceName='Offset X (PanH)', at='float', k=True)
-    main_ctrl.addAttr('offsetY', niceName='Offset Y (PanV)', at='float', k=True)
-    main_ctrl.addAttr('offsetZ', niceName='Offset Z (Depth)', at='float', k=True, min=0)
+    main_ctrl.addAttr("offsetX", niceName="Offset X (PanH)", at="float", k=True)
+    main_ctrl.addAttr("offsetY", niceName="Offset Y (PanV)", at="float", k=True)
+    main_ctrl.addAttr("offsetZ", niceName="Offset Z (Depth)", at="float", k=True, min=0)
 
     main_ctrl.offsetX >> camera_transform.tx
     main_ctrl.offsetY >> camera_transform.ty
     main_ctrl.offsetZ >> camera_transform.tz
 
     # Back to focal plane
-    add_double_linear = pm.shadingNode('addDoubleLinear', asUtility=True)
+    add_double_linear = pm.shadingNode("addDoubleLinear", asUtility=True)
     main_ctrl.offsetZ >> add_double_linear.input1
     main_ctrl.focusOffset >> add_double_linear.input2
     add_double_linear.output >> camera_shape.focusDistance
 
     # -----------------------------------------------------------
     # Camera Orientation
-    main_ctrl.addAttr('divider3', at='enum', niceName='----', enumName='----', k=False)
+    main_ctrl.addAttr("divider3", at="enum", niceName="----", enumName="----", k=False)
     main_ctrl.divider3.showInChannelBox(True)
-    main_ctrl.addAttr('roll', k=True, at='float')
-    main_ctrl.addAttr('pitch', k=True, at='float')
-    main_ctrl.addAttr('heading', k=True, at='float')
+    main_ctrl.addAttr("roll", k=True, at="float")
+    main_ctrl.addAttr("pitch", k=True, at="float")
+    main_ctrl.addAttr("heading", k=True, at="float")
 
     main_ctrl.roll >> roll_ctrl.rz
     main_ctrl.pitch >> pitch_ctrl.rx
     main_ctrl.heading >> heading_ctrl.ry
 
-    main_ctrl.addAttr('cameraRx', k=True, at='float')
-    main_ctrl.addAttr('cameraRy', k=True, at='float')
-    main_ctrl.addAttr('cameraRz', k=True, at='float')
+    main_ctrl.addAttr("cameraRx", k=True, at="float")
+    main_ctrl.addAttr("cameraRy", k=True, at="float")
+    main_ctrl.addAttr("cameraRz", k=True, at="float")
 
     main_ctrl.cameraRx >> camera_transform.rx
     main_ctrl.cameraRy >> camera_transform.ry
@@ -445,8 +450,7 @@ def very_nice_camera_rig(focal_length=35, horizontal_film_aperture=36, vertical_
 
 
 def lock_tracked_camera_channels():
-    """Locks tracked camera translate channels
-    """
+    """Locks tracked camera translate channels"""
     for node in pm.selected():
         node.t.lock()
         node.r.lock()

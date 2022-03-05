@@ -20,8 +20,7 @@ default_handle_count = 0
 
 
 class MayaExtension(object):
-    """Extension to PyMel classes
-    """
+    """Extension to PyMel classes"""
 
     @extends(Attribute)
     @property
@@ -49,9 +48,9 @@ class MayaExtension(object):
 
     @extends(CheckBox)
     def value(self, value=None):
-        """returns or set the check box value
-        """
+        """returns or set the check box value"""
         from pymel.core import checkBox
+
         if value is not None:
             # set the value
             checkBox(self, e=1, v=value)
@@ -61,9 +60,9 @@ class MayaExtension(object):
 
     @extends(TextField)
     def text(self, value=None):
-        """returns or sets the text field value
-        """
+        """returns or sets the text field value"""
         from pymel.core import textField
+
         if value is not None:
             # set the value
             textField(self, e=1, tx=value)
@@ -85,7 +84,7 @@ class FileReferenceExtension(object):
         """dummy method to let the IDEs find FileReference.path and not
         complain about it.
         """
-        return ''
+        return ""
 
     def replaceWith(self, path):
         """dummy method to let the IDEs find FileReference.replaceWith and not
@@ -103,6 +102,7 @@ class FileReferenceExtension(object):
         """
         rep_v = self.find_repr(repr_name)
         from stalker import Repository
+
         if rep_v is not None and rep_v != self.version:
             self.replaceWith(
                 Repository.to_os_independent_path(rep_v.absolute_full_path)
@@ -116,6 +116,7 @@ class FileReferenceExtension(object):
         :return: :class:`.Version`
         """
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -135,6 +136,7 @@ class FileReferenceExtension(object):
         :return: list of str
         """
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -146,8 +148,7 @@ class FileReferenceExtension(object):
 
     @extends(FileReference)
     def to_base(self):
-        """Loads the original version
-        """
+        """Loads the original version"""
         self.to_repr(Representation.base_repr_name)
 
     @extends(FileReference)
@@ -156,6 +157,7 @@ class FileReferenceExtension(object):
         representation for this reference
         """
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -173,6 +175,7 @@ class FileReferenceExtension(object):
         :return:
         """
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -190,6 +193,7 @@ class FileReferenceExtension(object):
         :return:
         """
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -202,9 +206,9 @@ class FileReferenceExtension(object):
     @extends(FileReference)
     @property
     def repr(self):
-        """the representation name of the related version
-        """
+        """the representation name of the related version"""
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -216,9 +220,9 @@ class FileReferenceExtension(object):
 
     @extends(FileReference)
     def get_base(self):
-        """returns the base version instance
-        """
+        """returns the base version instance"""
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         v = m.get_version_from_full_path(self.path)
 
@@ -231,17 +235,16 @@ class FileReferenceExtension(object):
     @extends(FileReference)
     @property
     def version(self):
-        """returns the Stalker Version instance related to this reference
-        """
+        """returns the Stalker Version instance related to this reference"""
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         return m.get_version_from_full_path(self.path)
 
     @extends(FileReference)
     @property
     def topmost_parent(self):
-        """returns the highest parent reference, the root reference.
-        """
+        """returns the highest parent reference, the root reference."""
         # get the topmost parent ref
         ref = self
         parent_ref = ref.parent()
@@ -256,26 +259,24 @@ class FileReferenceExtension(object):
 
 
 class SequenceManagerExtension(object):
-    """Extension to the pm.nodetypes.SequenceManager class
-    """
+    """Extension to the pm.nodetypes.SequenceManager class"""
 
     @extends(pm.nodetypes.SequenceManager)
     def get_shot_name_template(self):
         """returns teh shot_name_template_ attribute value, creates the
         attribute if missing
         """
-        if not self.hasAttr('shot_name_template'):
-            default_template = '<Sequence>_<Shot>_<Task>_<Take>_<Version>'
+        if not self.hasAttr("shot_name_template"):
+            default_template = "<Sequence>_<Shot>_<Task>_<Take>_<Version>"
             self.set_shot_name_template(default_template)
 
         return self.shot_name_template.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_shot_name_template(self, template):
-        """sets the shot_name_template attribute value
-        """
-        if not self.hasAttr('shot_name_template'):
-            self.addAttr('shot_name_template', dt='string')
+        """sets the shot_name_template attribute value"""
+        if not self.hasAttr("shot_name_template"):
+            self.addAttr("shot_name_template", dt="string")
 
         self.shot_name_template.set(template)
 
@@ -284,16 +285,15 @@ class SequenceManagerExtension(object):
         """returns the version attribute value, creates the attribute if
         missing
         """
-        if not self.hasAttr('version'):
-            self.set_version('')
+        if not self.hasAttr("version"):
+            self.set_version("")
         return self.version.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_version(self, template):
-        """sets the version attribute value
-        """
-        if not self.hasAttr('version'):
-            self.addAttr('version', dt='string')
+        """sets the version attribute value"""
+        if not self.hasAttr("version"):
+            self.addAttr("version", dt="string")
 
         self.version.set(template)
 
@@ -302,16 +302,15 @@ class SequenceManagerExtension(object):
         """returns the task_name attribute value, creates the attribute if
         missing
         """
-        if not self.hasAttr('task_name'):
-            self.set_task_name('')
+        if not self.hasAttr("task_name"):
+            self.set_task_name("")
         return self.task_name.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_task_name(self, task_name):
-        """sets the task_name attribute value
-        """
-        if not self.hasAttr('task_name'):
-            self.addAttr('task_name', dt='string')
+        """sets the task_name attribute value"""
+        if not self.hasAttr("task_name"):
+            self.addAttr("task_name", dt="string")
 
         self.task_name.set(task_name)
 
@@ -320,16 +319,15 @@ class SequenceManagerExtension(object):
         """returns the take_name attribute value, creates the attribute if
         missing
         """
-        if not self.hasAttr('take_name'):
-            self.set_take_name('')
+        if not self.hasAttr("take_name"):
+            self.set_take_name("")
         return self.take_name.get()
 
     @extends(pm.nodetypes.SequenceManager)
     def set_take_name(self, take_name):
-        """sets the take_name attribute value
-        """
-        if not self.hasAttr('take_name'):
-            self.addAttr('take_name', dt='string')
+        """sets the take_name attribute value"""
+        if not self.hasAttr("take_name"):
+            self.addAttr("take_name", dt="string")
 
         self.take_name.set(take_name)
 
@@ -339,9 +337,9 @@ class SequenceManagerExtension(object):
 
         :return: pm.nodetypes.Sequence
         """
-        sequencer = pm.createNode('sequencer')
+        sequencer = pm.createNode("sequencer")
         if not name:
-            name = ''
+            name = ""
 
         sequencer.set_sequence_name(name)
 
@@ -374,9 +372,9 @@ class SequenceManagerExtension(object):
             shots = seq1.shots.get()
 
             # collect clips
-            all_clips = [clip
-                         for track in seq.media.video.tracks
-                         for clip in track.clips]
+            all_clips = [
+                clip for track in seq.media.video.tracks for clip in track.clips
+            ]
 
             deleted_shots = []
             used_shots = []
@@ -387,7 +385,7 @@ class SequenceManagerExtension(object):
 
             # find the corresponding shots in seq
             for clip in all_clips:
-                #is_deleted = True
+                # is_deleted = True
                 for shot in shots:
                     if clip.id.lower() == shot.full_shot_name.lower():
 
@@ -453,7 +451,7 @@ class SequenceManagerExtension(object):
                 for clip in track.clips:
                     # clip.id is something like SEQ001_HSNI_010_0010_v046
                     # filter the shot name
-                    shot_name = clip.id.split('_')[-2]
+                    shot_name = clip.id.split("_")[-2]
                     shot = seq1.create_shot(shot_name)
 
                     shot.startFrame.set(clip.in_)
@@ -462,9 +460,9 @@ class SequenceManagerExtension(object):
                     shot.handle.set(0)
                     if clip.file:
                         f = clip.file
-                        pathurl = f.pathurl.replace('file://localhost/', '')
-                        if ':' not in pathurl:  # not windows, keep '/'
-                            pathurl = '/%s' % pathurl
+                        pathurl = f.pathurl.replace("file://localhost/", "")
+                        if ":" not in pathurl:  # not windows, keep '/'
+                            pathurl = "/%s" % pathurl
                         shot.output.set(pathurl)
 
                     shot.track.set(i + 1)
@@ -479,8 +477,8 @@ class SequenceManagerExtension(object):
         """
         if not isinstance(path, str):
             raise TypeError(
-                'path argument in %s.from_xml should be a string, not %s' %
-                (self.__class__.__name__, path.__class__.__name__)
+                "path argument in %s.from_xml should be a string, not %s"
+                % (self.__class__.__name__, path.__class__.__name__)
             )
 
         from xml.etree import ElementTree
@@ -488,7 +486,7 @@ class SequenceManagerExtension(object):
         try:
             tree = ElementTree.parse(path)
         except IOError:
-            raise IOError('Please supply a valid path to an XML file!')
+            raise IOError("Please supply a valid path to an XML file!")
 
         root = tree.getroot()
         seq = Sequence()
@@ -508,15 +506,17 @@ class SequenceManagerExtension(object):
         """
         if not isinstance(path, str):
             raise TypeError(
-                'path argument in %s.from_edl should be a string, not %s' %
-                (self.__class__.__name__, path.__class__.__name__)
+                "path argument in %s.from_edl should be a string, not %s"
+                % (self.__class__.__name__, path.__class__.__name__)
             )
 
         from anima.dcc.mayaEnv import Maya
+
         m = Maya()
         fps = m.get_fps()
 
         import edl
+
         p = edl.Parser(str(fps))
         with open(path) as f:
             l = p.parse(f)
@@ -534,11 +534,10 @@ class SequenceManagerExtension(object):
         """
         seq = self.generate_sequence_structure()
 
-        rendered_template = ''
+        rendered_template = ""
         if seq:
             rendered_template = seq.to_xml(
-                indentation=indentation,
-                pre_indent=indentation + pre_indent
+                indentation=indentation, pre_indent=indentation + pre_indent
             )
         return rendered_template
 
@@ -560,16 +559,18 @@ class SequenceManagerExtension(object):
             return None
 
         sequencer = sequencers[0]
-        time = pm.PyNode('time1')
+        time = pm.PyNode("time1")
 
         seq = Sequence()
         seq.name = str(sequencer.get_sequence_name())
 
         seq.rate = Rate(timebase=str(fps), ntsc=False)
-        seq.timecode = str(timecode.Timecode(
-            framerate=seq.rate.timebase,
-            frames=int(time.timecodeProductionStart.get() + 1)
-        ))
+        seq.timecode = str(
+            timecode.Timecode(
+                framerate=seq.rate.timebase,
+                frames=int(time.timecodeProductionStart.get() + 1),
+            )
+        )
         seq.duration = sequencer.duration
 
         media = Media()
@@ -587,16 +588,14 @@ class SequenceManagerExtension(object):
             # clips always start from 0 and includes the shot handle
             clip.in_ = shot.handle.get()  # handle at start
             clip.out = shot.handle.get() + shot.duration  # handle at end
-            clip.type = 'Video'  # always video for now
+            clip.type = "Video"  # always video for now
 
             f = File()
-            f.name = os.path.splitext(
-                os.path.basename(str(shot.output.get()))
-            )[0]
+            f.name = os.path.splitext(os.path.basename(str(shot.output.get())))[0]
 
             f.duration = shot.duration + 2 * shot.handle.get()
 
-            f.pathurl = str('file://localhost/%s' % shot.output.get())
+            f.pathurl = str("file://localhost/%s" % shot.output.get())
 
             clip.file = f
 
@@ -617,8 +616,7 @@ class SequenceManagerExtension(object):
 
     @extends(pm.nodetypes.SequenceManager)
     def to_edl(self):
-        """Generates an EDL file out of the edit
-        """
+        """Generates an EDL file out of the edit"""
         seq = self.generate_sequence_structure()
         l = seq.to_edl()
         return l
@@ -639,15 +637,15 @@ class SequencerExtension(object):
         """returns the SequenceManager instance that this sequence is connected
         to
         """
-        return pm.ls(self.connections(), type='sequenceManager')[0]
+        return pm.ls(self.connections(), type="sequenceManager")[0]
 
     @extends(pm.nodetypes.Sequencer)
     def get_sequence_name(self):
         """Gets the sequence_name attribute value, creates the attribute if it
         is missing
         """
-        if not self.hasAttr('sequence_name'):
-            self.set_sequence_name('')
+        if not self.hasAttr("sequence_name"):
+            self.set_sequence_name("")
         return self.sequence_name.get()
 
     @extends(pm.nodetypes.Sequencer)
@@ -657,16 +655,15 @@ class SequencerExtension(object):
         :param name: A str holding the desired name of the sequence.
         :return: None
         """
-        if not self.hasAttr('sequence_name'):
-            self.addAttr('sequence_name', dt='string')
+        if not self.hasAttr("sequence_name"):
+            self.addAttr("sequence_name", dt="string")
         self.sequence_name.set(name)
 
     @extends(pm.nodetypes.Sequencer)
     @property
     def all_shots(self):
-        """return all the shots connected to this sequencer
-        """
-        return pm.ls(self.shots.get(), typ='shot')
+        """return all the shots connected to this sequencer"""
+        return pm.ls(self.shots.get(), typ="shot")
 
     # @extends(pm.nodetypes.Sequencer)
     # @all_shots.setter
@@ -689,7 +686,7 @@ class SequencerExtension(object):
         :return: None
         """
         # add the given shot to the list
-        if not shot.hasAttr('handle'):
+        if not shot.hasAttr("handle"):
             shot.set_handle(handle=default_handle_count)
 
         # connect to the sequencer
@@ -714,15 +711,13 @@ class SequencerExtension(object):
 
     @extends(pm.nodetypes.Sequencer)
     def mute_shots(self):
-        """mutes all shots connected to this sequencer
-        """
+        """mutes all shots connected to this sequencer"""
         for shot in self.all_shots:
             shot.mute()
 
     @extends(pm.nodetypes.Sequencer)
     def unmute_shots(self):
-        """unmutes all shots connected to this sequencer
-        """
+        """unmutes all shots connected to this sequencer"""
         for shot in self.all_shots:
             shot.unmute()
 
@@ -737,8 +732,13 @@ class SequencerExtension(object):
         """
         raise NotImplementedError()
 
-    def set_shot_names(self, sequence_name, padding=4, increment=10,
-                       template='%(sequence_name)s_%(shot_name)_%(version_number)03d'):
+    def set_shot_names(
+        self,
+        sequence_name,
+        padding=4,
+        increment=10,
+        template="%(sequence_name)s_%(shot_name)_%(version_number)03d",
+    ):
         """Sets all shot names according to the given template.
 
         :param sequence_name: The sequence name
@@ -750,7 +750,7 @@ class SequencerExtension(object):
         raise NotImplementedError()
 
     @extends(pm.nodetypes.Sequencer)
-    def create_shot(self, name='', handle=default_handle_count):
+    def create_shot(self, name="", handle=default_handle_count):
         """Creates a new shot.
 
         :param str name: A string value for the newly created shot name, if
@@ -759,10 +759,10 @@ class SequencerExtension(object):
           is 10.
         :returns: The created :class:`~pm.nt.Shot` instance
         """
-        shot = pm.createNode('shot')
+        shot = pm.createNode("shot")
         shot.shotName.set(name)
         shot.set_handle(handle=handle)
-        shot.set_output('')
+        shot.set_output("")
 
         # connect to the sequencer
         shot.message >> self.shots.next_available
@@ -770,14 +770,11 @@ class SequencerExtension(object):
 
     @extends(pm.nodetypes.Sequencer)
     def create_shot_playblasts(self, output_path, show_ornaments=True):
-        """creates the selected shot playblasts
-        """
+        """creates the selected shot playblasts"""
         movie_files = []
         for shot in self.all_shots:
             movie_files.append(
-                shot.playblast(
-                    options={'showOrnaments': show_ornaments}
-                )
+                shot.playblast(options={"showOrnaments": show_ornaments})
             )
         return movie_files
 
@@ -797,30 +794,28 @@ class SequencerExtension(object):
         :return: list of file path
         """
 
-        sm = pm.PyNode('sequenceManager1')
+        sm = pm.PyNode("sequenceManager1")
         seq = sm.generate_sequence_structure()
         xmls = seq.to_metafuze_xml()
 
         # write the given content to tmp
         for i, xml in enumerate(xmls):
-            temp_file_path = tempfile.mktemp(suffix='.xml')
+            temp_file_path = tempfile.mktemp(suffix=".xml")
             yield i
-            with open(temp_file_path, 'w') as f:
+            with open(temp_file_path, "w") as f:
                 f.write(xml)
 
             subprocess.call(
-                ['metafuze',
-                 '-debug',
-                 temp_file_path],
-                #stderr=subprocess.PIPE,
-                shell=True
+                ["metafuze", "-debug", temp_file_path],
+                # stderr=subprocess.PIPE,
+                shell=True,
             )
 
             # remove the temp file
             # os.remove(temp_file_path)
             # print('xml path: %s' % temp_file_path)
 
-        #if return_code:
+        # if return_code:
         #    # there is an error
         #    raise RuntimeError("Something went wrong in MXF conversion")
 
@@ -836,14 +831,12 @@ class SequencerExtension(object):
     @extends(pm.nodetypes.Sequencer)
     @property
     def duration(self):
-        """returns the duration of this sequence
-        """
+        """returns the duration of this sequence"""
         return self.maxFrame.get() - self.minFrame.get() + 1
 
 
 class ShotExtension(object):
-    """extensions to pm.nodetypes.Shot class
-    """
+    """extensions to pm.nodetypes.Shot class"""
 
     @extends(pm.nodetypes.Shot)
     def get_camera(self):
@@ -867,8 +860,8 @@ class ShotExtension(object):
         """Gets the output attribute value of this shot, creates the attribute
         if it is missing
         """
-        if not self.hasAttr('output'):
-            self.set_output('')
+        if not self.hasAttr("output"):
+            self.set_output("")
         return self.output.get()
 
     @extends(pm.nodetypes.Shot)
@@ -880,8 +873,8 @@ class ShotExtension(object):
           output.
         :return:
         """
-        if not self.hasAttr('output'):
-            self.addAttr('output', dt='string')
+        if not self.hasAttr("output"):
+            self.addAttr("output", dt="string")
         self.output.set(output)
 
     @extends(pm.nodetypes.Shot)
@@ -903,8 +896,7 @@ class ShotExtension(object):
     @extends(pm.nodetypes.Shot)
     @property
     def sequence(self):
-        """returns the current sequencer
-        """
+        """returns the current sequencer"""
         sequencers = self.message.outputs(type=pm.nt.Sequencer)
         if sequencers:
             return sequencers[0]
@@ -926,33 +918,20 @@ class ShotExtension(object):
             handle = self.handle.get()
 
         track = self.track.get()
-        self.startFrame.set(
-            self.startFrame.get() - handle
-        )
-        self.endFrame.set(
-            self.endFrame.get() + handle
-        )
-        self.sequenceStartFrame.set(
-            self.sequenceStartFrame.get() - handle
-        )
+        self.startFrame.set(self.startFrame.get() - handle)
+        self.endFrame.set(self.endFrame.get() + handle)
+        self.sequenceStartFrame.set(self.sequenceStartFrame.get() - handle)
         try:
             yield None
         finally:
-            self.startFrame.set(
-                self.startFrame.get() + handle
-            )
-            self.endFrame.set(
-                self.endFrame.get() - handle
-            )
-            self.sequenceStartFrame.set(
-                self.sequenceStartFrame.get() + handle
-            )
+            self.startFrame.set(self.startFrame.get() + handle)
+            self.endFrame.set(self.endFrame.get() - handle)
+            self.sequenceStartFrame.set(self.sequenceStartFrame.get() + handle)
             self.track.set(track)
 
     @extends(pm.nodetypes.Shot)
     def playblast(self, options=None):
-        """creates the selected shot playblasts
-        """
+        """creates the selected shot playblasts"""
         # template vars
         sequence = self.sequence
 
@@ -970,10 +949,10 @@ class ShotExtension(object):
         height = self.hResolution.get()
 
         extra_frame = 0
-        if platform.system() == 'Windows':
+        if platform.system() == "Windows":
             # windows version of Maya 2014 drops 1 frame from end whereas
             # Linux doesn't do that
-            if pm.versions.shortName() == '2014':
+            if pm.versions.shortName() == "2014":
                 extra_frame = 1
 
         # store track
@@ -981,9 +960,8 @@ class ShotExtension(object):
 
         try:
             movie_full_path = os.path.join(
-                tempfile.gettempdir(),
-                '%s.mov' % self.full_shot_name
-            ).replace('\\', '/')
+                tempfile.gettempdir(), "%s.mov" % self.full_shot_name
+            ).replace("\\", "/")
         except AttributeError:
             # this is an error I keep getting, somehow the extension is not
             # able to call full_shot_name
@@ -997,27 +975,27 @@ class ShotExtension(object):
             template = sm.get_shot_name_template()
 
             # replace template variables
-            template = template \
-                .replace('<Sequence>', '%(sequence)s') \
-                .replace('<Shot>', '%(shot)s') \
-                .replace('<Task>', '%(task)s') \
-                .replace('<Take>', '%(take)s') \
-                .replace('<Version>', '%(version)s') \
-                .replace('<Camera>', '%(camera)s')
+            template = (
+                template.replace("<Sequence>", "%(sequence)s")
+                .replace("<Shot>", "%(shot)s")
+                .replace("<Task>", "%(task)s")
+                .replace("<Take>", "%(take)s")
+                .replace("<Version>", "%(version)s")
+                .replace("<Camera>", "%(camera)s")
+            )
 
             rendered_template = template % {
-                'shot': self.shotName.get(),
-                'sequence': seq.sequence_name.get(),
-                'task': task,
-                'take': take,
-                'version': version,
-                'camera': camera.name() if camera else None
+                "shot": self.shotName.get(),
+                "sequence": seq.sequence_name.get(),
+                "task": task,
+                "take": take,
+                "version": version,
+                "camera": camera.name() if camera else None,
             }
 
             movie_full_path = os.path.join(
-                tempfile.gettempdir(),
-                '%s.mov' % rendered_template
-            ).replace('\\', '/')
+                tempfile.gettempdir(), "%s.mov" % rendered_template
+            ).replace("\\", "/")
 
         # set the output of this shot
         self.set_output(movie_full_path)
@@ -1027,26 +1005,26 @@ class ShotExtension(object):
         self.unmute()
 
         default_options = {
-            'fmt': 'image',
-            'sequenceTime': 1,
-            'forceOverwrite': 1,
-            'clearCache': 1,
-            'showOrnaments': 1,
-            'offScreen': 1,
-            'viewer': 0,
-            'compression': 'png',
-            'quality': 85,
-            'startTime': start_frame,
-            'endTime': end_frame + extra_frame,
-            'filename': movie_full_path,
-            'wh': [width, height],
-            'useTraxSounds': True,
+            "fmt": "image",
+            "sequenceTime": 1,
+            "forceOverwrite": 1,
+            "clearCache": 1,
+            "showOrnaments": 1,
+            "offScreen": 1,
+            "viewer": 0,
+            "compression": "png",
+            "quality": 85,
+            "startTime": start_frame,
+            "endTime": end_frame + extra_frame,
+            "filename": movie_full_path,
+            "wh": [width, height],
+            "useTraxSounds": True,
         }
 
         if options:
             # offset end time by one frame if t his is windows
-            if 'endTime' in options:
-                options['endTime'] += extra_frame
+            if "endTime" in options:
+                options["endTime"] += extra_frame
             default_options.update(options)
 
         # include handles
@@ -1055,6 +1033,7 @@ class ShotExtension(object):
 
             # if a sound node is specified remove useTraxSounds flag
             import pprint
+
             pprint.pprint(default_options)
 
             # result = pm.playblast(**default_options)
@@ -1065,12 +1044,19 @@ class ShotExtension(object):
 
             result = [
                 {
-                    'video': pm.playblast(**default_options),
-                    'audio': {
-                        'node': audio_node,
-                        'offset': default_options.get('startTime', 0) - audio_node.offset.get() if audio_node else 0,
-                        'duration': (default_options.get('endTime', 0) - default_options.get('startTime', 0) + 1)
-                    }
+                    "video": pm.playblast(**default_options),
+                    "audio": {
+                        "node": audio_node,
+                        "offset": default_options.get("startTime", 0)
+                        - audio_node.offset.get()
+                        if audio_node
+                        else 0,
+                        "duration": (
+                            default_options.get("endTime", 0)
+                            - default_options.get("startTime", 0)
+                            + 1
+                        ),
+                    },
                 }
             ]
             sequence.unmute_shots()
@@ -1079,7 +1065,10 @@ class ShotExtension(object):
         self.track.set(track)
 
         from anima.dcc.mayaEnv.auxiliary import Playblaster
-        return Playblaster.convert_image_sequence_to_video(result, delete_source_sequence=True)
+
+        return Playblaster.convert_image_sequence_to_video(
+            result, delete_source_sequence=True
+        )
 
     @extends(pm.nodetypes.Shot)
     def convert_to_mxf(self, metafuze_xml):
@@ -1099,36 +1088,32 @@ class ShotExtension(object):
         if not isinstance(handle, int):
             raise TypeError(
                 '"handle" argument in %(class)s.set_handle() should be '
-                'a non negative integer, not %(handle_class)s' %
-                {
-                    'class': self.__class__.__name__,
-                    'handle_class': handle.__class__.__name__
+                "a non negative integer, not %(handle_class)s"
+                % {
+                    "class": self.__class__.__name__,
+                    "handle_class": handle.__class__.__name__,
                 }
             )
 
         if handle < 0:
             raise ValueError(
                 '"handle" argument in %(class)s.set_handle() should be '
-                'a non negative integer, not %(handle)s' %
-                {
-                    'class': self.__class__.__name__,
-                    'handle': handle
-                }
+                "a non negative integer, not %(handle)s"
+                % {"class": self.__class__.__name__, "handle": handle}
             )
 
         # create "handle" attribute in each shot and set the value
         try:
-            self.addAttr('handle', at='short', k=False, min=0)
+            self.addAttr("handle", at="short", k=False, min=0)
         except RuntimeError:
             # attribute is already there
             pass
-        self.setAttr('handle', handle)
+        self.setAttr("handle", handle)
 
     @extends(pm.nodetypes.Shot)
     @property
     def duration(self):
-        """returns the shot duration
-        """
+        """returns the shot duration"""
         return self.sequenceEndFrame.get() - self.sequenceStartFrame.get() + 1
 
     def add_frames_to_start(self, shot, frame_count=0):
@@ -1174,8 +1159,7 @@ class ShotExtension(object):
     @extends(pm.nodetypes.Shot)
     @property
     def full_shot_name(self):
-        """returns the full shot name
-        """
+        """returns the full shot name"""
         seq = self.sequence
         sm = seq.manager
         camera = self.currentCamera.get()
@@ -1185,21 +1169,22 @@ class ShotExtension(object):
         template = sm.get_shot_name_template()
 
         # replace template variables
-        template = template\
-            .replace('<Sequence>', '%(sequence)s')\
-            .replace('<Shot>', '%(shot)s')\
-            .replace('<Task>', '%(task)s')\
-            .replace('<Take>', '%(take)s')\
-            .replace('<Version>', '%(version)s')\
-            .replace('<Camera>', '%(camera)s')
+        template = (
+            template.replace("<Sequence>", "%(sequence)s")
+            .replace("<Shot>", "%(shot)s")
+            .replace("<Task>", "%(task)s")
+            .replace("<Take>", "%(take)s")
+            .replace("<Version>", "%(version)s")
+            .replace("<Camera>", "%(camera)s")
+        )
 
         rendered_template = template % {
-            'shot': self.shotName.get(),
-            'sequence': seq.sequence_name.get(),
-            'task': task,
-            'take': take,
-            'version': version,
-            'camera': camera.name() if camera else None
+            "shot": self.shotName.get(),
+            "sequence": seq.sequence_name.get(),
+            "task": task,
+            "take": take,
+            "version": version,
+            "camera": camera.name() if camera else None,
         }
 
         return rendered_template

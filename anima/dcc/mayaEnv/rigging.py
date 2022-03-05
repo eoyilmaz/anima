@@ -8,23 +8,20 @@ from anima.ui.lib import QtCore, QtWidgets
 
 
 class Rigging(object):
-    """Rigging tools
-    """
+    """Rigging tools"""
 
     @classmethod
     def add_cacheable_attribute(cls, node, cacheable_attr_value=None):
-        """adds the cacheable attribute to the selected node
-        """
-        if not node.hasAttr('cacheable'):
-            node.addAttr('cacheable', dt='string')
+        """adds the cacheable attribute to the selected node"""
+        if not node.hasAttr("cacheable"):
+            node.addAttr("cacheable", dt="string")
             if not cacheable_attr_value:
                 cacheable_attr_value = node.name().lower()
-            node.setAttr('cacheable', cacheable_attr_value)
+            node.setAttr("cacheable", cacheable_attr_value)
 
     @classmethod
     def setup_stretchy_spline_ik_curve(cls):
-        """
-        """
+        """ """
         selection = pm.ls(sl=1)
         curve = selection[0]
         curve_info = pm.createNode("curveInfo")
@@ -66,8 +63,7 @@ class Rigging(object):
 
     @classmethod
     def create_zv_parent_compatible_groups(cls):
-        """Creates ZV Parent compatible groups.
-        """
+        """Creates ZV Parent compatible groups."""
         selection = pm.ls(sl=1)
         for item in selection:
             acg1 = auxiliary.axial_correction_group(item, name_postfix="_SN")
@@ -112,7 +108,7 @@ class Rigging(object):
         joint_shapes = pm.listRelatives(joints, s=True, pa=True)
         for i in range(0, len(joint_shapes)):
             name = "%sShape%s" % (joints, (i + 1))
-            temp = ''.join(name.split('|', 1))
+            temp = "".join(name.split("|", 1))
             pm.rename(joint_shapes[i], temp)
         pm.delete(objects)
         pm.select(joints)
@@ -148,41 +144,40 @@ class Rigging(object):
     @classmethod
     def fix_bound_joint(cls):
         from anima.dcc.mayaEnv import fix_bound_joint
+
         fix_bound_joint.UI()
 
     @classmethod
     def create_follicle(cls, component):
-        """creates a follicle at given component
-        """
-        follicle_shape = pm.createNode('follicle')
+        """creates a follicle at given component"""
+        follicle_shape = pm.createNode("follicle")
 
         geometry = component.node()
         uv = None
 
         if isinstance(geometry, pm.nt.Mesh):
-            geometry.attr('outMesh') >> follicle_shape.attr('inputMesh')
+            geometry.attr("outMesh") >> follicle_shape.attr("inputMesh")
             # get uv
             uv = component.getUV()
         elif isinstance(geometry, pm.nt.NurbsSurface):
-            geometry.attr('local') >> follicle_shape.attr('inputSurface')
+            geometry.attr("local") >> follicle_shape.attr("inputSurface")
             # get uv
             # TODO: Fix this
             uv = [0, 0]
 
-        geometry.attr('worldMatrix[0]') >> follicle_shape.attr(
-            'inputWorldMatrix')
+        geometry.attr("worldMatrix[0]") >> follicle_shape.attr("inputWorldMatrix")
 
-        follicle_shape.setAttr('pu', uv[0])
-        follicle_shape.setAttr('pv', uv[1])
+        follicle_shape.setAttr("pu", uv[0])
+        follicle_shape.setAttr("pv", uv[1])
 
         # set simulation to static
-        follicle_shape.setAttr('simulationMethod', 0)
+        follicle_shape.setAttr("simulationMethod", 0)
 
         # connect to its transform node
         follicle = follicle_shape.getParent()
 
-        follicle_shape.attr('outTranslate') >> follicle.attr('t')
-        follicle_shape.attr('outRotate') >> follicle.attr('r')
+        follicle_shape.attr("outTranslate") >> follicle.attr("t")
+        follicle_shape.attr("outRotate") >> follicle.attr("r")
 
         return follicle
 
@@ -193,8 +188,7 @@ class Rigging(object):
 
     @classmethod
     def reset_tweaks(cls):
-        """Resets the tweaks on the selected deformed objects
-        """
+        """Resets the tweaks on the selected deformed objects"""
         for obj in pm.ls(sl=1):
             for tweak_node in pm.ls(obj.listHistory(), type=pm.nt.Tweak):
 
@@ -214,20 +208,25 @@ class Rigging(object):
 
     @classmethod
     def create_joints_on_curve_ui(cls):
-        """Creates joints on selected curve
-        """
+        """Creates joints on selected curve"""
         from anima.dcc import mayaEnv
+
         main_window = mayaEnv.get_maya_main_window()
         jocd = JointOnCurveDialog(parent=main_window)
         jocd.show()
 
     @classmethod
-    def create_joints_on_curve(cls, number_of_joints=2, orientation="xyz",
-                               second_axis="+x", align_to_world=False,
-                               reverse_dir=False, joint_name_string="joint",
-                               suffix_string=""):
-        """Creates joints on selected curve
-        """
+    def create_joints_on_curve(
+        cls,
+        number_of_joints=2,
+        orientation="xyz",
+        second_axis="+x",
+        align_to_world=False,
+        reverse_dir=False,
+        joint_name_string="joint",
+        suffix_string="",
+    ):
+        """Creates joints on selected curve"""
 
         sel_list = pm.ls(sl=1)
         if len(sel_list) < 1:
@@ -253,28 +252,28 @@ class Rigging(object):
 
         vector_lut = {
             "xyz": {
-                'aim_vector': pm.dt.Vector(1, 0, 0),
-                'world_up_vector': pm.dt.Vector(0, 1, 0)
+                "aim_vector": pm.dt.Vector(1, 0, 0),
+                "world_up_vector": pm.dt.Vector(0, 1, 0),
             },
             "xzy": {
-                'aim_vector': pm.dt.Vector(1, 0, 0),
-                'world_up_vector': pm.dt.Vector(0, 0, 1)
+                "aim_vector": pm.dt.Vector(1, 0, 0),
+                "world_up_vector": pm.dt.Vector(0, 0, 1),
             },
             "yzx": {
-                'aim_vector': pm.dt.Vector(0, 1, 0),
-                'world_up_vector': pm.dt.Vector(0, 0, 1)
+                "aim_vector": pm.dt.Vector(0, 1, 0),
+                "world_up_vector": pm.dt.Vector(0, 0, 1),
             },
             "yxz": {
-                'aim_vector': pm.dt.Vector(0, 1, 0),
-                'world_up_vector': pm.dt.Vector(1, 0, 0)
+                "aim_vector": pm.dt.Vector(0, 1, 0),
+                "world_up_vector": pm.dt.Vector(1, 0, 0),
             },
             "zxy": {
-                'aim_vector': pm.dt.Vector(0, 0, 1),
-                'world_up_vector': pm.dt.Vector(1, 0, 0)
+                "aim_vector": pm.dt.Vector(0, 0, 1),
+                "world_up_vector": pm.dt.Vector(1, 0, 0),
             },
             "zyx": {
-                'aim_vector': pm.dt.Vector(0, 0, 1),
-                'world_up_vector': pm.dt.Vector(0, 1, 0)
+                "aim_vector": pm.dt.Vector(0, 0, 1),
+                "world_up_vector": pm.dt.Vector(0, 1, 0),
             },
         }
 
@@ -282,12 +281,12 @@ class Rigging(object):
         world_up_vector = vector_lut[orientation]["world_up_vector"]
 
         up_vector_lut = {
-            '+x': pm.dt.Vector(1, 0, 0),
-            '-x': pm.dt.Vector(-1, 0, 0),
-            '+y': pm.dt.Vector(0, 1, 0),
-            '-y': pm.dt.Vector(0, -1, 0),
-            '+z': pm.dt.Vector(0, 0, 1),
-            '-z': pm.dt.Vector(0, 0, -1)
+            "+x": pm.dt.Vector(1, 0, 0),
+            "-x": pm.dt.Vector(-1, 0, 0),
+            "+y": pm.dt.Vector(0, 1, 0),
+            "-y": pm.dt.Vector(0, -1, 0),
+            "+z": pm.dt.Vector(0, 0, 1),
+            "-z": pm.dt.Vector(0, 0, -1),
         }
         up_vector = up_vector_lut[second_axis]
 
@@ -302,7 +301,7 @@ class Rigging(object):
 
         joints = []
         for i in range(number_of_joints):
-            u_value = (1.0 * float(i) / (float(number_of_joints) - 1.0))
+            u_value = 1.0 * float(i) / (float(number_of_joints) - 1.0)
 
             if reverse_dir:
                 u_value = 1.0 - u_value
@@ -312,7 +311,7 @@ class Rigging(object):
             world_pos = pm.dt.Vector(
                 motion_path1.xCoordinate.get(),
                 motion_path1.yCoordinate.get(),
-                motion_path1.zCoordinate.get()
+                motion_path1.zCoordinate.get(),
             )
 
             pm.select(None)
@@ -343,17 +342,14 @@ class Rigging(object):
 
         # fix the last joint
         pm.makeIdentity(
-            joints[-1],
-            apply=1, t=False, r=False, s=False, n=False, jointOrient=True
+            joints[-1], apply=1, t=False, r=False, s=False, n=False, jointOrient=True
         )
 
         pm.delete(motion_path1)
         pm.select(joints[0])
 
         # fix first joints orientation
-        pm.makeIdentity(
-            apply=True, t=False, r=True, s=False, n=False
-        )
+        pm.makeIdentity(apply=True, t=False, r=True, s=False, n=False)
 
     @classmethod
     def mirror_transformation(cls):
@@ -362,6 +358,7 @@ class Rigging(object):
         """
         # TODO: This needs more generalization
         import math
+
         sel_list = pm.selected()
 
         source_node = sel_list[0]
@@ -379,8 +376,7 @@ class Rigging(object):
         reflected_local_z_axis = local_z_axis.deepcopy()
         reflected_local_z_axis.x *= -1
 
-        reflected_local_x_axis = reflected_local_y_axis.cross(
-            reflected_local_z_axis)
+        reflected_local_x_axis = reflected_local_y_axis.cross(reflected_local_z_axis)
         reflected_local_x_axis.normalize()
 
         wm = pm.dt.TransformationMatrix()
@@ -397,8 +393,7 @@ class Rigging(object):
 
     @classmethod
     def ik_fk_limb_rigger(cls):
-        """Creates IK/FK Limb Setup from selected start and end joint
-        """
+        """Creates IK/FK Limb Setup from selected start and end joint"""
         selection = pm.selected()
 
         start_joint = selection[0]
@@ -455,8 +450,7 @@ class Rigging(object):
 
     @classmethod
     def squash_stretch_bend_rigger(cls):
-        """Creates Squash/Stretch/Bend rig for the selected geometry
-        """
+        """Creates Squash/Stretch/Bend rig for the selected geometry"""
         geo = pm.selected()[0]
         ssbr = SquashStretchBendRigger(geo)
         ssbr.setup()
@@ -464,8 +458,7 @@ class Rigging(object):
 
 
 class JointOnCurveDialog(QtWidgets.QDialog):
-    """Dialog for create_joint_on_curve utility
-    """
+    """Dialog for create_joint_on_curve utility"""
 
     def __init__(self, parent=None):
         super(JointOnCurveDialog, self).__init__(parent)
@@ -476,8 +469,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         self._setup_ui()
 
     def _setup_ui(self):
-        """the ui
-        """
+        """the ui"""
         self.resize(243, 209)
 
         # from anima.ui.lib import QtWidgets
@@ -497,9 +489,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
             QtWidgets.QFormLayout.AllNonFixedFieldsGrow
         )
         self.form_layout.setLabelAlignment(
-            QtCore.Qt.AlignRight |
-            QtCore.Qt.AlignTrailing |
-            QtCore.Qt.AlignVCenter
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
         )
 
         label_role = QtWidgets.QFormLayout.LabelRole
@@ -515,7 +505,9 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         self.number_of_joints_label.setText("Number Of Joints")
 
         self.form_layout.setWidget(
-            form_field_index, label_role, self.number_of_joints_label,
+            form_field_index,
+            label_role,
+            self.number_of_joints_label,
         )
 
         # Field
@@ -533,9 +525,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         # Label
         self.orientation_label = QtWidgets.QLabel(self)
         self.orientation_label.setText("Orientation")
-        self.form_layout.setWidget(
-            form_field_index, label_role, self.orientation_label
-        )
+        self.form_layout.setWidget(form_field_index, label_role, self.orientation_label)
 
         # Field
         self.orientation_combo_box = QtWidgets.QComboBox(self)
@@ -564,13 +554,11 @@ class JointOnCurveDialog(QtWidgets.QDialog):
             "Second Axis World Orientation"
         )
         self.form_layout.setWidget(
-            form_field_index, label_role,
-            self.second_axis_world_orientation_label
+            form_field_index, label_role, self.second_axis_world_orientation_label
         )
 
         # Field
-        self.second_axis_world_orientation_combo_box = \
-            QtWidgets.QComboBox(self)
+        self.second_axis_world_orientation_combo_box = QtWidgets.QComboBox(self)
         self.second_axis_world_orientation_combo_box.addItems(
             [
                 "+x",
@@ -582,8 +570,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
             ]
         )
         self.form_layout.setWidget(
-            form_field_index, field_role,
-            self.second_axis_world_orientation_combo_box
+            form_field_index, field_role, self.second_axis_world_orientation_combo_box
         )
 
         # --------------------------------
@@ -626,9 +613,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         # Label
         self.joint_names_label = QtWidgets.QLabel(self)
         self.joint_names_label.setText("Joint Names")
-        self.form_layout.setWidget(
-            form_field_index, label_role, self.joint_names_label
-        )
+        self.form_layout.setWidget(form_field_index, label_role, self.joint_names_label)
 
         # Field
         self.joint_names_layout = QtWidgets.QHBoxLayout(self)
@@ -648,7 +633,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         QtCore.QObject.connect(
             self.joint_names_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.joint_names_line_edit.setEnabled
+            self.joint_names_line_edit.setEnabled,
         )
 
         # ------------------------
@@ -669,12 +654,8 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         self.suffix_joint_names_line_edit.setText("_suffix")
         self.suffix_joint_names_line_edit.setEnabled(False)
 
-        self.suffix_joint_names_layout.addWidget(
-            self.suffix_joint_names_check_box
-        )
-        self.suffix_joint_names_layout.addWidget(
-            self.suffix_joint_names_line_edit
-        )
+        self.suffix_joint_names_layout.addWidget(self.suffix_joint_names_check_box)
+        self.suffix_joint_names_layout.addWidget(self.suffix_joint_names_line_edit)
 
         self.form_layout.setLayout(
             form_field_index, field_role, self.suffix_joint_names_layout
@@ -684,7 +665,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
         QtCore.QObject.connect(
             self.suffix_joint_names_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.suffix_joint_names_line_edit.setEnabled
+            self.suffix_joint_names_line_edit.setEnabled,
         )
 
         # ----------------
@@ -698,14 +679,11 @@ class JointOnCurveDialog(QtWidgets.QDialog):
 
         # setup signals
         QtCore.QObject.connect(
-            self.create_joints_button,
-            QtCore.SIGNAL("clicked()"),
-            self.create_joints
+            self.create_joints_button, QtCore.SIGNAL("clicked()"), self.create_joints
         )
 
     def create_joints(self):
-        """
-        """
+        """ """
         joint_name_string = ""
         suffix_string = ""
 
@@ -728,7 +706,7 @@ class JointOnCurveDialog(QtWidgets.QDialog):
             align_to_world=align_to_world,
             reverse_dir=reverse_dir,
             joint_name_string=joint_name_string,
-            suffix_string=suffix_string
+            suffix_string=suffix_string,
         )
 
 
@@ -746,7 +724,7 @@ class PinController(object):
 
     def __init__(self, pin_size=0.1):
         self.size = pin_size
-        self.shader_type = 'lambert'
+        self.shader_type = "lambert"
         self.color = [0, 1, 0]
         self.pin_transform = None
         self.pin_shape = None
@@ -761,14 +739,15 @@ class PinController(object):
         self.axial_correction_group = None
 
     def setup(self):
-        """creates the setup
-        """
+        """creates the setup"""
         from anima.dcc.mayaEnv import auxiliary
 
         vtx_coord = pm.xform(self.pin_to_vertex, q=1, ws=1, t=1)
 
         self.pin_to_shape = self.pin_to_vertex.node()
-        self.pin_uv = self.pin_to_shape.getUVAtPoint(vtx_coord, space='world', uvSet='map1')
+        self.pin_uv = self.pin_to_shape.getUVAtPoint(
+            vtx_coord, space="world", uvSet="map1"
+        )
 
         # create a sphere with the size of pin_size
         self.pin_transform, make_nurbs_node = pm.sphere(radius=self.size)
@@ -777,12 +756,12 @@ class PinController(object):
         self.pin_shape = self.pin_transform.getShape()
 
         # create two axial correction groups
-        self.compensation_group = \
-            auxiliary.axial_correction_group(self.pin_transform)
+        self.compensation_group = auxiliary.axial_correction_group(self.pin_transform)
         self.compensation_group.rename("%s_CompensationGrp" % self.pin_transform.name())
 
-        self.axial_correction_group = \
-            auxiliary.axial_correction_group(self.compensation_group)
+        self.axial_correction_group = auxiliary.axial_correction_group(
+            self.compensation_group
+        )
 
         # create compensation setup
         decompose_matrix = pm.nt.DecomposeMatrix()
@@ -795,14 +774,18 @@ class PinController(object):
         # set the transform limit of the pin to [-1, 1] range
         pm.transformLimits(
             self.pin_transform,
-            tx=[-1, 1], etx=[1, 1],
-            ty=[-1, 1], ety=[1, 1],
-            tz=[-1, 1], etz=[1, 1],
+            tx=[-1, 1],
+            etx=[1, 1],
+            ty=[-1, 1],
+            ety=[1, 1],
+            tz=[-1, 1],
+            etz=[1, 1],
         )
 
         # create a follicle on the shape at the given uv
-        self.follicle_transform, self.follicle_shape = \
-            auxiliary.create_follicle(self.pin_to_shape, self.pin_uv)
+        self.follicle_transform, self.follicle_shape = auxiliary.create_follicle(
+            self.pin_to_shape, self.pin_uv
+        )
         self.follicle_transform.rename("%s_Follicle" % self.pin_transform.name())
 
         # move the axial correction group
@@ -816,13 +799,12 @@ class PinController(object):
 
         # assign shader
         shader = self.get_pin_shader()
-        shading_engine = shader.outputs(type='shadingEngine')[0]
+        shading_engine = shader.outputs(type="shadingEngine")[0]
         pm.sets("initialShadingGroup", rm=self.pin_shape)
         pm.sets(shading_engine, fe=self.pin_shape)
 
     def get_pin_shader(self):
-        """this creates or returns the existing pin shader
-        """
+        """this creates or returns the existing pin shader"""
         shaders = pm.ls("%s*" % self.pin_shader_prefix)
         if shaders:
             # try to find the shader with the same color
@@ -845,8 +827,8 @@ class PinController(object):
 
 
 class SkinTools(object):
-    """A helper utility for easy joint influence edit.
-    """
+    """A helper utility for easy joint influence edit."""
+
     weight_threshold = 0.00001
 
     def __init__(self, mesh=None, skin_cluster=None):
@@ -878,14 +860,12 @@ class SkinTools(object):
         self.skin_cluster = skin_cluster
 
     def get_skin_cluster(self):
-        """returns the skin cluster affecting the mesh
-        """
+        """returns the skin cluster affecting the mesh"""
         if self.skin_cluster:
             return self.skin_cluster
         else:
             if self.mesh:
-                skin_clusters = \
-                    pm.ls(self.mesh.listHistory(), type=pm.nt.SkinCluster)
+                skin_clusters = pm.ls(self.mesh.listHistory(), type=pm.nt.SkinCluster)
                 if skin_clusters:
                     return skin_clusters[0]
 
@@ -919,9 +899,7 @@ class SkinTools(object):
             all_weights = weight_attr.get()
 
             array_indices = enumerate(
-                filter(
-                    lambda x: x < num_joints,
-                    weight_attr.getArrayIndices())
+                filter(lambda x: x < num_joints, weight_attr.getArrayIndices())
             )
 
             for i, joint_index in array_indices:
@@ -994,7 +972,7 @@ class SkinTools(object):
             pm.polyListComponentConversion(
                 input_list, fv=1, fe=1, ff=1, fuv=1, fvf=1, tv=1
             ),
-            fl=1
+            fl=1,
         )
 
 
@@ -1024,29 +1002,25 @@ class SkinToolsUI(object):
         self.joints = []
 
     def ui(self):
-        """the ui
-        """
+        """the ui"""
         import functools
+
         width = 300
         height = 380
 
         if pm.window("skinTools_window", q=1, ex=1):
             pm.deleteUI("skinTools_window", window=1)
 
-        self.window = pm.window(
-            "skinTools_window", w=width, h=height, t="skinTools"
-        )
+        self.window = pm.window("skinTools_window", w=width, h=height, t="skinTools")
 
         self.form_layout1 = pm.formLayout("skinTools_formLayout1", nd=100)
         with self.form_layout1:
 
-            self.column_layout1 = \
-                pm.columnLayout("skinTools_columnLayout1", adj=1, cal="center")
+            self.column_layout1 = pm.columnLayout(
+                "skinTools_columnLayout1", adj=1, cal="center"
+            )
             with self.column_layout1:
-                pm.button(
-                    l="Set Mesh",
-                    c=self.set_mesh_button_proc
-                )
+                pm.button(l="Set Mesh", c=self.set_mesh_button_proc)
 
                 with pm.rowLayout("skinTools_mesh_name_row_layout", nc=2):
                     pm.text(l="mesh name: ")
@@ -1056,13 +1030,11 @@ class SkinToolsUI(object):
                     pm.text(l="skinCluster: ")
                     self.skin_cluster_text = pm.text(l="")
 
-                pm.button(
-                    l="update",
-                    c=lambda x: self.update_list()
-                )
+                pm.button(l="update", c=lambda x: self.update_list())
 
-            self.influence_list_text_scroll_list = \
-                pm.textScrollList(numberOfRows=20, sc=self.select)
+            self.influence_list_text_scroll_list = pm.textScrollList(
+                numberOfRows=20, sc=self.select
+            )
             pm.popupMenu(parent=self.influence_list_text_scroll_list)
             pm.menuItem(l="switch hold", c=self.switch_hold)
 
@@ -1070,35 +1042,23 @@ class SkinToolsUI(object):
             with self.column_layout3:
                 pm.button(
                     l="find influenced Vertices",
-                    c=self.find_influenced_vertices_button_proc
+                    c=self.find_influenced_vertices_button_proc,
                 )
 
                 def set_joint_weight_callback(weight, *args):
                     selection = pm.ls(sl=1)
-                    joints = \
-                        filter(lambda x: isinstance(x, pm.nt.Joint), selection)
-                    vertices = \
-                        filter(
-                            lambda x: isinstance(x, pm.MeshVertex),
-                            selection
-                        )
+                    joints = filter(lambda x: isinstance(x, pm.nt.Joint), selection)
+                    vertices = filter(lambda x: isinstance(x, pm.MeshVertex), selection)
                     for joint in joints:
-                        self.skin_tools.set_joint_weight(
-                            joint,
-                            vertices,
-                            weight
-                        )
+                        self.skin_tools.set_joint_weight(joint, vertices, weight)
 
-                self.remove_selected_button = \
-                    pm.button(
-                        l="remove selected",
-                        c=functools.partial(set_joint_weight_callback, 0)
-                    )
-                self.add_selected_button = \
-                    pm.button(
-                        l="add selected",
-                        c=functools.partial(set_joint_weight_callback, 1)
-                    )
+                self.remove_selected_button = pm.button(
+                    l="remove selected",
+                    c=functools.partial(set_joint_weight_callback, 0),
+                )
+                self.add_selected_button = pm.button(
+                    l="add selected", c=functools.partial(set_joint_weight_callback, 1)
+                )
 
         pm.formLayout(
             "skinTools_formLayout1",
@@ -1107,24 +1067,25 @@ class SkinToolsUI(object):
                 [self.column_layout1, "left", 0],
                 [self.column_layout1, "right", 0],
                 [self.column_layout1, "top", 0],
-
                 [self.influence_list_text_scroll_list, "left", 0],
                 [self.influence_list_text_scroll_list, "right", 0],
-
                 [self.column_layout3, "left", 0],
                 [self.column_layout3, "right", 0],
-
                 [self.column_layout3, "bottom", 0],
             ],
             an=[
                 [self.column_layout1, "bottom"],
                 [self.column_layout3, "top"],
             ],
-
             ac=[
                 [self.influence_list_text_scroll_list, "top", 0, self.column_layout1],
-                [self.influence_list_text_scroll_list, "bottom", 0, self.column_layout3],
-            ]
+                [
+                    self.influence_list_text_scroll_list,
+                    "bottom",
+                    0,
+                    self.column_layout3,
+                ],
+            ],
         )
 
         pm.showWindow(self.window)
@@ -1132,8 +1093,7 @@ class SkinToolsUI(object):
 
     @measure_time("set_mesh_button_proc")
     def set_mesh_button_proc(self, *args):
-        """the skinCluster_text should be filled with the skinCluster name
-        """
+        """the skinCluster_text should be filled with the skinCluster name"""
         # get the mesh from scene selection
         selection = pm.ls(sl=1)
         if selection:
@@ -1149,52 +1109,34 @@ class SkinToolsUI(object):
                 shape = node
 
             self.skin_tools.set_mesh(shape)
-            pm.text(
-                self.mesh_name_text,
-                e=1,
-                l=self.skin_tools.mesh.name()
-            )
-            pm.text(
-                self.skin_cluster_text,
-                e=1,
-                l=self.skin_tools.skin_cluster.name()
-            )
+            pm.text(self.mesh_name_text, e=1, l=self.skin_tools.mesh.name())
+            pm.text(self.skin_cluster_text, e=1, l=self.skin_tools.skin_cluster.name())
 
             self.update_list()
 
     @measure_time("find_influenced_vertices_button_proc")
     def find_influenced_vertices_button_proc(self, *args):
-        """
-        """
+        """ """
         # get the joint name from list
         joint = pm.ls(sl=1)
-        influenced_vertices = \
-            self.skin_tools.find_influenced_vertices(joint)
+        influenced_vertices = self.skin_tools.find_influenced_vertices(joint)
         pm.select(influenced_vertices)
 
     @measure_time("fill_skin_cluster_text_field")
     def fill_skin_cluster_text_field(self):
-        """
-        """
+        """ """
         if self.skin_tools.skin_cluster:
-            pm.text(
-                self.skin_cluster_text,
-                e=1,
-                l=self.skin_tools.skin_cluster.name()
-            )
+            pm.text(self.skin_cluster_text, e=1, l=self.skin_tools.skin_cluster.name())
 
     @measure_time("fill_mesh_name_text_field")
     def fill_mesh_name_text_field(self):
-        """
-        """
+        """ """
         if self.skin_tools.mesh:
             pm.text(self.mesh_name_text, e=True, l=self.skin_tools.mesh.name())
 
     @measure_time("get_selected_item_in_list")
     def get_selected_item_in_list(self):
-        items = pm.textScrollList(
-            self.influence_list_text_scroll_list, q=1, si=1
-        )
+        items = pm.textScrollList(self.influence_list_text_scroll_list, q=1, si=1)
 
         if items:
             if items[0].endswith(" (h)"):
@@ -1204,24 +1146,18 @@ class SkinToolsUI(object):
 
     @measure_time("get_selected_item_index_in_list")
     def get_selected_item_index_in_list(self):
-        index_list = \
-            pm.textScrollList(
-                self.influence_list_text_scroll_list, q=True, sii=True
-            )
+        index_list = pm.textScrollList(
+            self.influence_list_text_scroll_list, q=True, sii=True
+        )
         return index_list[0]
 
     @measure_time("get_number_of_items")
     def get_number_of_items(self):
-        return pm.textScrollList(
-            self.influence_list_text_scroll_list, q=True, ni=True
-        )
+        return pm.textScrollList(self.influence_list_text_scroll_list, q=True, ni=True)
 
     @measure_time("get_selected_index")
     def get_selected_index(self):
-        temp_arr = \
-            pm.textScrollList(
-                self.influence_list_text_scroll_list, q=1, sii=1
-            )
+        temp_arr = pm.textScrollList(self.influence_list_text_scroll_list, q=1, sii=1)
         return temp_arr[0]
 
     @measure_time("switch_hold")
@@ -1236,23 +1172,18 @@ class SkinToolsUI(object):
             item.liw.set(1)
             self.replace_item_in_list(item_index, "%s (h)" % item.name())
 
-        pm.textScrollList(
-            self.influence_list_text_scroll_list, e=1, sii=item_index
-        )
+        pm.textScrollList(self.influence_list_text_scroll_list, e=1, sii=item_index)
 
     @measure_time("replace_item_in_list")
     def replace_item_in_list(self, index, item_name):
-        pm.textScrollList(
-            self.influence_list_text_scroll_list, e=True, rii=index
-        )
+        pm.textScrollList(self.influence_list_text_scroll_list, e=True, rii=index)
         pm.textScrollList(
             self.influence_list_text_scroll_list, e=True, ap=[index, item_name]
         )
 
     @measure_time("update_list")
     def update_list(self):
-        """updates the scroll list with influences
-        """
+        """updates the scroll list with influences"""
         # clear the list
         pm.textScrollList(self.influence_list_text_scroll_list, e=1, ra=1)
 
@@ -1262,8 +1193,7 @@ class SkinToolsUI(object):
 
         # get the vertex list without joints
         sel_list = pm.ls(sl=1)
-        transform_nodes = \
-            filter(lambda x: isinstance(x, pm.nt.Transform), sel_list)
+        transform_nodes = filter(lambda x: isinstance(x, pm.nt.Transform), sel_list)
         if transform_nodes:
             # use only one transform node
             # this UI operates only on one mesh
@@ -1279,8 +1209,7 @@ class SkinToolsUI(object):
             self.joints = self.skin_tools.skin_cluster.getInfluence()
         else:
             # check if any vertices are selected
-            vertices = \
-                filter(lambda x: isinstance(x, pm.MeshVertex), sel_list)
+            vertices = filter(lambda x: isinstance(x, pm.MeshVertex), sel_list)
             component_list = self.skin_tools.convert_to_vertex_list(vertices)
 
             if not component_list:
@@ -1288,8 +1217,9 @@ class SkinToolsUI(object):
                 print("no components")
                 return
 
-            self.joints = \
-                self.skin_tools.get_joints_effecting_components(component_list)
+            self.joints = self.skin_tools.get_joints_effecting_components(
+                component_list
+            )
 
         # and add the new joint names to the list
         # add the hold status to the name of the joint
@@ -1300,14 +1230,12 @@ class SkinToolsUI(object):
                 display_string = "%s (h)" % display_string
 
             pm.textScrollList(
-                self.influence_list_text_scroll_list,
-                e=1, append=display_string
+                self.influence_list_text_scroll_list, e=1, append=display_string
             )
 
     @measure_time("select")
     def select(self):
-        """selects the joint that is selected in the list in the scene
-        """
+        """selects the joint that is selected in the list in the scene"""
         pm.select(pm.ls(sl=1, type="joint"), d=1)
         selected_item = self.get_selected_item_in_list()
         pm.select(selected_item, add=1)
@@ -1318,8 +1246,7 @@ class SkinToolsUI(object):
 
 
 class JointHierarchy(object):
-    """Represents a joint hierarchy
-    """
+    """Represents a joint hierarchy"""
 
     def __init__(self, start_joint, end_joint):
         """
@@ -1348,8 +1275,8 @@ class JointHierarchy(object):
 
         if not found_end_joint:
             raise RuntimeError(
-                "Cannot reach end joint (%s) from start joint (%s)" %
-                (self.end_joint, self.start_joint)
+                "Cannot reach end joint (%s) from start joint (%s)"
+                % (self.end_joint, self.start_joint)
             )
 
     def duplicate(self, class_=None, prefix="", suffix="", subdivision=0):
@@ -1367,7 +1294,9 @@ class JointHierarchy(object):
             class_ = self.__class__
 
         new_start_joint = pm.duplicate(self.start_joint)[0]
-        all_hierarchy = list(reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint)))
+        all_hierarchy = list(
+            reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint))
+        )
         new_end_joint = all_hierarchy[len(self.joints) - 2]
 
         # delete anything below
@@ -1375,7 +1304,9 @@ class JointHierarchy(object):
 
         # insert subdivision amount of joints between joints
         if subdivision > 0:
-            all_new_joints = [new_start_joint] + list(reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint)))
+            all_new_joints = [new_start_joint] + list(
+                reversed(new_start_joint.listRelatives(ad=1, type=pm.nt.Joint))
+            )
             new_parent = all_new_joints[0]
             for j_i, j in enumerate(all_new_joints[:-1]):
                 if new_parent != j:
@@ -1405,17 +1336,24 @@ class JointHierarchy(object):
                     if current_index >= len(new_hierarchy.joints):
                         continue
                     nj = new_hierarchy.joints[current_index]
-                    nj.rename("{prefix}{joint}{suffix}_{subdiv}".format(prefix=prefix, suffix=suffix, joint=j.name(), subdiv=s + 1))
+                    nj.rename(
+                        "{prefix}{joint}{suffix}_{subdiv}".format(
+                            prefix=prefix, suffix=suffix, joint=j.name(), subdiv=s + 1
+                        )
+                    )
             else:
                 nj = new_hierarchy.joints[i]
-                nj.rename("{prefix}{joint}{suffix}".format(prefix=prefix, suffix=suffix, joint=j.name()))
+                nj.rename(
+                    "{prefix}{joint}{suffix}".format(
+                        prefix=prefix, suffix=suffix, joint=j.name()
+                    )
+                )
 
         return new_hierarchy
 
 
 class IKJointHierarchyBase(JointHierarchy):
-    """A base class for IK joint hierarchies
-    """
+    """A base class for IK joint hierarchies"""
 
     def __init__(self, start_joint, end_joint, do_stretchy=True):
         JointHierarchy.__init__(self, start_joint, end_joint)
@@ -1431,7 +1369,7 @@ class IKJointHierarchyBase(JointHierarchy):
 
         self.main_group = None
 
-    def create_ik_setup(self, solver='', controller_radius=0.5):
+    def create_ik_setup(self, solver="", controller_radius=0.5):
         """Do create ik setup here
 
         :param solver:
@@ -1441,14 +1379,12 @@ class IKJointHierarchyBase(JointHierarchy):
         raise NotImplementedError("create_ik_setup is not implemented")
 
     def create_stretch_setup(self):
-        """Do create stretch setup here
-        """
+        """Do create stretch setup here"""
         raise NotImplementedError("create_ik_setup is not implemented")
 
 
 class IKLimbJointHierarchy(IKJointHierarchyBase):
-    """IK variant of the JointHierarchy
-    """
+    """IK variant of the JointHierarchy"""
 
     def __init__(self, start_joint, end_joint, do_stretchy=True):
         super(IKLimbJointHierarchy, self).__init__(
@@ -1457,15 +1393,14 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
         self.start_locator = None
         self.end_locator = None
 
-    def create_ik_setup(self, solver='ikRPsolver', controller_radius=0.5):
-        """Creates IK setup
-        """
-        self.ik_handle, self.ik_end_effector = \
-            pm.ikHandle(sj=self.start_joint, ee=self.end_joint, solver=solver)
+    def create_ik_setup(self, solver="ikRPsolver", controller_radius=0.5):
+        """Creates IK setup"""
+        self.ik_handle, self.ik_end_effector = pm.ikHandle(
+            sj=self.start_joint, ee=self.end_joint, solver=solver
+        )
 
         self.ik_end_controller, shape = pm.circle(
-            normal=(0, 1, 0),
-            radius=controller_radius
+            normal=(0, 1, 0), radius=controller_radius
         )
         pm.parent(self.ik_end_controller, self.ik_end_effector)
 
@@ -1480,6 +1415,7 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
 
         pm.parent(self.ik_end_controller, w=1)
         from anima.dcc.mayaEnv import auxiliary
+
         auxiliary.axial_correction_group(self.ik_end_controller)
 
         # constraint the orientation of the last joint to the controller
@@ -1489,7 +1425,7 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
         pm.pointConstraint(self.ik_end_controller, self.ik_handle)
 
         # create pole controller
-        self.ik_pole_controller = pm.spaceLocator(name='ikPoleController#')
+        self.ik_pole_controller = pm.spaceLocator(name="ikPoleController#")
         # place it to the extension of the pole vector
         pm.parent(self.ik_pole_controller, self.joints[1], r=1)
         pm.parent(self.ik_pole_controller, w=1)
@@ -1504,7 +1440,7 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
         auxiliary.axial_correction_group(self.ik_pole_controller)
 
         # group everything under the main_group
-        self.main_group = pm.nt.Transform(name='IKLimbJointHierarchy_Grp#')
+        self.main_group = pm.nt.Transform(name="IKLimbJointHierarchy_Grp#")
         pm.parent(self.ik_handle, self.main_group)
         pm.parent(self.ik_end_controller.getParent(), self.main_group)
         # parent pole controller under the end controller
@@ -1514,10 +1450,9 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
             self.create_stretch_setup()
 
     def create_stretch_setup(self):
-        """create IK Stretch setup
-        """
-        self.start_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
-        self.end_locator = pm.spaceLocator(name='ikStretchMeasureLoc#')
+        """create IK Stretch setup"""
+        self.start_locator = pm.spaceLocator(name="ikStretchMeasureLoc#")
+        self.end_locator = pm.spaceLocator(name="ikStretchMeasureLoc#")
 
         pm.parent(self.start_locator, self.start_joint, r=1)
         pm.parent(self.start_locator, self.start_joint.getParent())
@@ -1548,14 +1483,13 @@ class IKLimbJointHierarchy(IKJointHierarchyBase):
 
 
 class FKLimbJointHierarchy(JointHierarchy):
-    """FK variant of the JointHierarchy
-    """
+    """FK variant of the JointHierarchy"""
+
     pass
 
 
 class BendyLimbJointHierarchy(JointHierarchy):
-    """Bendy variant of JointHierarchy
-    """
+    """Bendy variant of JointHierarchy"""
 
     def __init__(self, start_joint, end_joint):
         super(BendyLimbJointHierarchy, self).__init__(start_joint, end_joint)
@@ -1566,10 +1500,11 @@ class BendyLimbJointHierarchy(JointHierarchy):
         self.main_controller = None
 
     def create_bendy_setup(self, control_hierarchy=None):
-        """creates the necessary nodes and connections for the bendy setup
-        """
+        """creates the necessary nodes and connections for the bendy setup"""
         if not control_hierarchy:
-            raise RuntimeError("Please supply a JointHierarchy instance as the control hierarchy!")
+            raise RuntimeError(
+                "Please supply a JointHierarchy instance as the control hierarchy!"
+            )
 
         subdivision = int((len(self.joints) - 3) / 2)
 
@@ -1581,7 +1516,10 @@ class BendyLimbJointHierarchy(JointHierarchy):
         for i in range(len(control_hierarchy.joints) - 1):
             curve = pm.curve(
                 d=3,
-                ep=map(lambda x: pm.xform(x, q=1, ws=1, t=1), control_hierarchy.joints[i:i+2]),
+                ep=map(
+                    lambda x: pm.xform(x, q=1, ws=1, t=1),
+                    control_hierarchy.joints[i : i + 2],
+                ),
             )
             self.bendy_curves.append(curve)
         pm.parent(self.bendy_curves, bendy_curves_group)
@@ -1591,49 +1529,64 @@ class BendyLimbJointHierarchy(JointHierarchy):
 
             # create a cluster for first two and last two cvs of the curve
             for j in range(2):
-                cluster, cluster_handle = pm.cluster('%s.cv[%s:%s]' % (curve.name(), j * 2, j * 2 + 1))
+                cluster, cluster_handle = pm.cluster(
+                    "%s.cv[%s:%s]" % (curve.name(), j * 2, j * 2 + 1)
+                )
 
                 # move the cluster to the start or end of the curve
                 if j == 0:
                     cv_index = j * 2
                 else:
                     cv_index = j * 2 + 1
-                tra = pm.xform('%s.cv[%s]' % (curve.name(), cv_index), q=1, ws=1, t=1)
+                tra = pm.xform("%s.cv[%s]" % (curve.name(), cv_index), q=1, ws=1, t=1)
                 cluster_handle.t.set(tra)
                 cluster_handle.getShape().origin.set(tra)
 
                 data = dict()
-                data['cluster'] = cluster
-                data['cluster_handle'] = cluster_handle
-                data['curve'] = curve
-                data['curve_index'] = i
-                data['cluster_index'] = j
+                data["cluster"] = cluster
+                data["cluster_handle"] = cluster_handle
+                data["curve"] = curve
+                data["curve_index"] = i
+                data["cluster_index"] = j
                 self.cluster_data.append(data)
 
         # parentConstraint the clusters to the control joints
-        clusters_group = pm.nt.Transform(name='bendy_clusters#')
+        clusters_group = pm.nt.Transform(name="bendy_clusters#")
         pm.parent(clusters_group, main_bendy_group)
         for cluster_data in self.cluster_data:
-            cluster_handle = cluster_data['cluster_handle']
-            cluster_acg1 = auxiliary.axial_correction_group(cluster_handle, name_postfix='_Ctrl')
-            cluster_data['acg1'] = cluster_acg1
+            cluster_handle = cluster_data["cluster_handle"]
+            cluster_acg1 = auxiliary.axial_correction_group(
+                cluster_handle, name_postfix="_Ctrl"
+            )
+            cluster_data["acg1"] = cluster_acg1
             cluster_acg2 = auxiliary.axial_correction_group(cluster_acg1)
-            cluster_data['acg2'] = cluster_acg2
+            cluster_data["acg2"] = cluster_acg2
             pm.parent(cluster_acg2, clusters_group)
 
-            joint_index = cluster_data['curve_index'] + cluster_data['cluster_index']
-            oc = pm.orientConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+            joint_index = cluster_data["curve_index"] + cluster_data["cluster_index"]
+            oc = pm.orientConstraint(
+                control_hierarchy.joints[joint_index], cluster_acg2, mo=1
+            )
             oc.interpType.set(2)  # shortest
-            pc = pm.pointConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+            pc = pm.pointConstraint(
+                control_hierarchy.joints[joint_index], cluster_acg2, mo=1
+            )
 
-            joint_index = cluster_data['curve_index'] + cluster_data['cluster_index'] - 1
-            if joint_index >= 0 and not (cluster_data['curve_index'] == (len(control_hierarchy.joints) - 1) and cluster_data['cluster_index'] == 1):
-                oc = pm.orientConstraint(control_hierarchy.joints[joint_index], cluster_acg2, mo=1)
+            joint_index = (
+                cluster_data["curve_index"] + cluster_data["cluster_index"] - 1
+            )
+            if joint_index >= 0 and not (
+                cluster_data["curve_index"] == (len(control_hierarchy.joints) - 1)
+                and cluster_data["cluster_index"] == 1
+            ):
+                oc = pm.orientConstraint(
+                    control_hierarchy.joints[joint_index], cluster_acg2, mo=1
+                )
                 oc.interpType.set(2)  # shortest
 
         # Motion Path stuff
         # group locators
-        locators_group = pm.nt.Transform(name='bendy_locators#')
+        locators_group = pm.nt.Transform(name="bendy_locators#")
         pm.parent(locators_group, main_bendy_group)
         for i, j in enumerate(self.joints[:-1]):
             # directly attach them to the curves
@@ -1691,27 +1644,43 @@ class BendyLimbJointHierarchy(JointHierarchy):
         self.main_controller = pm.nt.Transform(name="bendy_ctrl#")
         self.main_controller.v.setKeyable(False)
         pm.parent(self.main_controller, main_bendy_group)
-        pm.addAttr(self.main_controller, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
-        pm.addAttr(self.main_controller, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
-        pm.addAttr(self.main_controller, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
+        pm.addAttr(
+            self.main_controller,
+            sn="start_curviness",
+            at="float",
+            min=0,
+            dv=1.0,
+            k=True,
+        )
+        pm.addAttr(
+            self.main_controller,
+            sn="center_curviness",
+            at="float",
+            min=0,
+            dv=1.0,
+            k=True,
+        )
+        pm.addAttr(
+            self.main_controller, sn="end_curviness", at="float", min=0, dv=1.0, k=True
+        )
         pm.addAttr(self.main_controller, sn="start_twist", at="float", dv=0.0, k=True)
         pm.addAttr(self.main_controller, sn="end_twist", at="float", dv=0.0, k=True)
 
-        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sx
-        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sy
-        self.main_controller.start_curviness >> self.cluster_data[0]['acg1'].sz
+        self.main_controller.start_curviness >> self.cluster_data[0]["acg1"].sx
+        self.main_controller.start_curviness >> self.cluster_data[0]["acg1"].sy
+        self.main_controller.start_curviness >> self.cluster_data[0]["acg1"].sz
 
-        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sx
-        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sy
-        self.main_controller.center_curviness >> self.cluster_data[1]['acg1'].sz
+        self.main_controller.center_curviness >> self.cluster_data[1]["acg1"].sx
+        self.main_controller.center_curviness >> self.cluster_data[1]["acg1"].sy
+        self.main_controller.center_curviness >> self.cluster_data[1]["acg1"].sz
 
-        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sx
-        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sy
-        self.main_controller.center_curviness >> self.cluster_data[2]['acg1'].sz
+        self.main_controller.center_curviness >> self.cluster_data[2]["acg1"].sx
+        self.main_controller.center_curviness >> self.cluster_data[2]["acg1"].sy
+        self.main_controller.center_curviness >> self.cluster_data[2]["acg1"].sz
 
-        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sx
-        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sy
-        self.main_controller.end_curviness >> self.cluster_data[3]['acg1'].sz
+        self.main_controller.end_curviness >> self.cluster_data[3]["acg1"].sx
+        self.main_controller.end_curviness >> self.cluster_data[3]["acg1"].sy
+        self.main_controller.end_curviness >> self.cluster_data[3]["acg1"].sz
 
         # connect front twist controls
         pm.select(None)
@@ -1721,24 +1690,23 @@ class BendyLimbJointHierarchy(JointHierarchy):
             self.main_controller.start_twist >> blend_colors.color1R
             self.main_controller.end_twist >> blend_colors.color2R
             blend_colors.outputR >> motion_path.frontTwist
-            blend_colors.blender.set( 1.0 - float(i) / float(len(self.motion_paths) + 1))
+            blend_colors.blender.set(1.0 - float(i) / float(len(self.motion_paths) + 1))
 
 
 class ReverseFootJointHierarchy(JointHierarchy):
-    """Reverse foot joint hierarchy
-    """
+    """Reverse foot joint hierarchy"""
+
     pass
 
 
 class IKSpineJointHierarchy(IKJointHierarchyBase):
-    """Creates IK spine joint hierarchy
-    """
+    """Creates IK spine joint hierarchy"""
 
     def __init__(self, start_joint, end_joint, do_stretchy=True):
         IKJointHierarchyBase.__init__(start_joint, end_joint, do_stretchy)
         self.spine_curve = None
 
-    def create_ik_setup(self, solver='', controller_radius=0.5):
+    def create_ik_setup(self, solver="", controller_radius=0.5):
         """Create spine ik setup
 
         :param solver:
@@ -1752,9 +1720,9 @@ class IKSpineJointHierarchy(IKJointHierarchyBase):
 
         # attach each joint to a motion path
         for i, joint in enumerate(self.joints):
-            u_value = (1.0 * float(i) / (float(len(self.joints)) - 1.0))
+            u_value = 1.0 * float(i) / (float(len(self.joints)) - 1.0)
 
-            locator = pm.spaceLocator(name='ikSplineJointPlacementLoc#')
+            locator = pm.spaceLocator(name="ikSplineJointPlacementLoc#")
 
             motion_path = pm.nt.MotionPath
             motion_path.uValue.set(u_value)
@@ -1784,14 +1752,12 @@ class IKSpineJointHierarchy(IKJointHierarchyBase):
             motion_path.fractionMode.set(1)
 
     def create_stretch_setup(self):
-        """Creates the stretchy setup
-        """
+        """Creates the stretchy setup"""
         pass
 
 
 class RiggerBase(object):
-    """Base class for rigger classes
-    """
+    """Base class for rigger classes"""
 
     def __init__(self, joint_hierarchy):
         self.base_hierarchy = joint_hierarchy
@@ -1804,18 +1770,19 @@ class RiggerBase(object):
         self.fk_hierarchy = None
 
     def create_ik_hierarchy(self):
-        """Creates the ik hierarchy
-        """
-        self.ik_hierarchy = self.base_hierarchy.duplicate(class_=JointHierarchy, suffix="_ik")
+        """Creates the ik hierarchy"""
+        self.ik_hierarchy = self.base_hierarchy.duplicate(
+            class_=JointHierarchy, suffix="_ik"
+        )
 
     def create_fk_hierarchy(self):
-        """Creates the fk hierarchy
-        """
-        self.fk_hierarchy = self.base_hierarchy.duplicate(class_=JointHierarchy, suffix="_fk")
+        """Creates the fk hierarchy"""
+        self.fk_hierarchy = self.base_hierarchy.duplicate(
+            class_=JointHierarchy, suffix="_fk"
+        )
 
     def create_switch_setup(self):
-        """Creates the required IK/FK blend setup
-        """
+        """Creates the required IK/FK blend setup"""
         if self.ik_hierarchy is None:
             raise RuntimeError("No IK hierarchy!")
 
@@ -1825,10 +1792,18 @@ class RiggerBase(object):
         self.ik_fk_switch_handle, shape = pm.circle(normal=(1, 0, 0), radius=0.5)
         pm.parent(self.ik_fk_switch_handle, self.base_hierarchy.joints[0], r=1)
         pm.parent(self.ik_fk_switch_handle, self.base_hierarchy.joints[0].getParent())
-        pm.addAttr(self.ik_fk_switch_handle, sn="ikFkSwitch", dv=0, at="float", min=0, max=1, k=True)
+        pm.addAttr(
+            self.ik_fk_switch_handle,
+            sn="ikFkSwitch",
+            dv=0,
+            at="float",
+            min=0,
+            max=1,
+            k=True,
+        )
 
         # parent the locator used for stretch measurement to the ik_fk_switch_handle
-        #pm.pointConstraint(self.ik_fk_switch_handle, self.ik_hierarchy.start_locator, mo=True)
+        # pm.pointConstraint(self.ik_fk_switch_handle, self.ik_hierarchy.start_locator, mo=True)
 
         # reverser
         reverser = pm.nt.Reverse()
@@ -1860,24 +1835,24 @@ class RiggerBase(object):
 class IKFKLimbRigger(RiggerBase):
     """Creates a simple IK/FK Limb rig
 
-    The class creates a fully switchable IK/FK limb setup between the start and
-    end joints.
+        The class creates a fully switchable IK/FK limb setup between the start and
+        end joints.
 
-    Test Code:
+        Test Code:
 
-from anima.dcc.mayaEnv import rigging
+    from anima.dcc.mayaEnv import rigging
 
-selection = pm.selected()
+    selection = pm.selected()
 
-start_joint = selection[0]
-end_joint = selection[1]
-joint_hierarchy = JointHierarchy(start_joint, end_joint)
+    start_joint = selection[0]
+    end_joint = selection[1]
+    joint_hierarchy = JointHierarchy(start_joint, end_joint)
 
-rigger = rigging.IKFKLimbRigger(joint_hierarchy)
+    rigger = rigging.IKFKLimbRigger(joint_hierarchy)
 
-rigger.create_ik_hierarchy()
-rigger.create_fk_hierarchy()
-rigger.create_switch_setup()
+    rigger.create_ik_hierarchy()
+    rigger.create_fk_hierarchy()
+    rigger.create_switch_setup()
     """
 
     def __init__(self, joint_hierarchy):
@@ -1885,9 +1860,10 @@ rigger.create_switch_setup()
         self.bendy_hierarchy = None
 
     def create_ik_hierarchy(self):
-        """Creates the ik hierarchy
-        """
-        self.ik_hierarchy = self.base_hierarchy.duplicate(class_=IKLimbJointHierarchy, suffix="_ik")
+        """Creates the ik hierarchy"""
+        self.ik_hierarchy = self.base_hierarchy.duplicate(
+            class_=IKLimbJointHierarchy, suffix="_ik"
+        )
         # set joint radius
         base_radius = self.base_hierarchy.joints[0].radius.get()
         for j in self.ik_hierarchy.joints:
@@ -1896,9 +1872,10 @@ rigger.create_switch_setup()
         self.ik_hierarchy.create_ik_setup()
 
     def create_fk_hierarchy(self):
-        """Creates the fk hierarchy
-        """
-        self.fk_hierarchy = self.base_hierarchy.duplicate(class_=FKLimbJointHierarchy, suffix="_fk")
+        """Creates the fk hierarchy"""
+        self.fk_hierarchy = self.base_hierarchy.duplicate(
+            class_=FKLimbJointHierarchy, suffix="_fk"
+        )
         # set joint radius
         base_radius = self.base_hierarchy.joints[0].radius.get()
         for j in self.fk_hierarchy.joints:
@@ -1906,8 +1883,7 @@ rigger.create_switch_setup()
         assert isinstance(self.fk_hierarchy, FKLimbJointHierarchy)
 
     def create_bendy_hierarchy(self, subdivision=2):
-        """Creates bendy hierarchy
-        """
+        """Creates bendy hierarchy"""
         self.bendy_hierarchy = self.base_hierarchy.duplicate(
             class_=BendyLimbJointHierarchy, suffix="_bendy", subdivision=subdivision
         )
@@ -1919,27 +1895,66 @@ rigger.create_switch_setup()
 
         # add bendy hierarchy controls to this one
         if self.bendy_hierarchy:
-            pm.addAttr(self.ik_fk_switch_handle, sn="start_curviness", at="float", min=0, dv=1.0, k=True)
-            pm.addAttr(self.ik_fk_switch_handle, sn="center_curviness", at="float", min=0, dv=1.0, k=True)
-            pm.addAttr(self.ik_fk_switch_handle, sn="end_curviness", at="float", min=0, dv=1.0, k=True)
-            pm.addAttr(self.ik_fk_switch_handle, sn="start_twist", at="float", dv=0.0, k=True)
-            pm.addAttr(self.ik_fk_switch_handle, sn="end_twist", at="float", dv=0.0, k=True)
-            self.ik_fk_switch_handle.start_curviness >> self.bendy_hierarchy.main_controller.start_curviness
-            self.ik_fk_switch_handle.center_curviness >> self.bendy_hierarchy.main_controller.center_curviness
-            self.ik_fk_switch_handle.end_curviness >> self.bendy_hierarchy.main_controller.end_curviness
-            self.ik_fk_switch_handle.start_twist >> self.bendy_hierarchy.main_controller.start_twist
-            self.ik_fk_switch_handle.end_twist >> self.bendy_hierarchy.main_controller.end_twist
+            pm.addAttr(
+                self.ik_fk_switch_handle,
+                sn="start_curviness",
+                at="float",
+                min=0,
+                dv=1.0,
+                k=True,
+            )
+            pm.addAttr(
+                self.ik_fk_switch_handle,
+                sn="center_curviness",
+                at="float",
+                min=0,
+                dv=1.0,
+                k=True,
+            )
+            pm.addAttr(
+                self.ik_fk_switch_handle,
+                sn="end_curviness",
+                at="float",
+                min=0,
+                dv=1.0,
+                k=True,
+            )
+            pm.addAttr(
+                self.ik_fk_switch_handle, sn="start_twist", at="float", dv=0.0, k=True
+            )
+            pm.addAttr(
+                self.ik_fk_switch_handle, sn="end_twist", at="float", dv=0.0, k=True
+            )
+            (
+                self.ik_fk_switch_handle.start_curviness
+                >> self.bendy_hierarchy.main_controller.start_curviness
+            )
+            (
+                self.ik_fk_switch_handle.center_curviness
+                >> self.bendy_hierarchy.main_controller.center_curviness
+            )
+            (
+                self.ik_fk_switch_handle.end_curviness
+                >> self.bendy_hierarchy.main_controller.end_curviness
+            )
+            (
+                self.ik_fk_switch_handle.start_twist
+                >> self.bendy_hierarchy.main_controller.start_twist
+            )
+            (
+                self.ik_fk_switch_handle.end_twist
+                >> self.bendy_hierarchy.main_controller.end_twist
+            )
 
 
 class SpineRigger(RiggerBase):
-    """creates a stretchy spine setup
-    """
+    """creates a stretchy spine setup"""
+
     pass
 
 
 class ReverseFootRigger(RiggerBase):
-    """Creates reverse foot rig
-    """
+    """Creates reverse foot rig"""
 
     def __init__(self, joint_hierarchy, ik_fk_rigger=None):
         """
@@ -1958,12 +1973,13 @@ class ReverseFootRigger(RiggerBase):
         self.ik_fk_limb_rigger = ik_fk_rigger
 
     def create_reverse_foot_hierarchy(self, heel_extension=0):
-        """Creates the reverse foot joint hierarchy
-        """
+        """Creates the reverse foot joint hierarchy"""
         # so we have the base_joints that we need to control with the reverse
         # joint hierarchy
         # create the reverse foot hierarchy by duplicating the base_hierarchy
-        self.reverse_foot_joint_hierarchy = self.base_hierarchy.duplicate(class_=ReverseFootJointHierarchy)
+        self.reverse_foot_joint_hierarchy = self.base_hierarchy.duplicate(
+            class_=ReverseFootJointHierarchy
+        )
 
         # create the heel joint
         heel_joint = pm.duplicate(self.reverse_foot_joint_hierarchy.joints[-1], rc=1)[0]
@@ -1986,7 +2002,9 @@ class ReverseFootRigger(RiggerBase):
             pm.parent(j, self.reverse_foot_joint_hierarchy.joints[norm_index + 1])
 
         # reverse the storage
-        self.reverse_foot_joint_hierarchy.joints = list(reversed(self.reverse_foot_joint_hierarchy.joints))
+        self.reverse_foot_joint_hierarchy.joints = list(
+            reversed(self.reverse_foot_joint_hierarchy.joints)
+        )
 
         # parent them under the heel joint
         pm.parent(self.reverse_foot_joint_hierarchy.joints[0], heel_joint)
@@ -2002,13 +2020,13 @@ class ReverseFootRigger(RiggerBase):
             self.create_reverse_foot_hierarchy(heel_extension)
 
         self.main_controller, shape = pm.circle(
-            normal=(0, 1, 0),
-            radius=controller_radius
+            normal=(0, 1, 0), radius=controller_radius
         )
         # set it in the same position with the heel joint
         pm.xform(
-            self.main_controller, ws=1,
-            t=pm.xform(self.reverse_foot_joint_hierarchy.joints[0], q=1, ws=1, t=1)
+            self.main_controller,
+            ws=1,
+            t=pm.xform(self.reverse_foot_joint_hierarchy.joints[0], q=1, ws=1, t=1),
         )
         # parent the heel joint under the controller
         pm.parent(self.reverse_foot_joint_hierarchy.joints[0], self.main_controller)
@@ -2019,11 +2037,17 @@ class ReverseFootRigger(RiggerBase):
         foot_ik_tip_joint = self.reverse_foot_joint_hierarchy.joints[-3]
 
         # create the Single Chain IK Handles
-        self.ball_ik_handle, self.ball_ik_end_effector = \
-            pm.ikHandle(sj=self.base_hierarchy.joints[0], ee=self.base_hierarchy.joints[1], solver="ikSCsolver")
+        self.ball_ik_handle, self.ball_ik_end_effector = pm.ikHandle(
+            sj=self.base_hierarchy.joints[0],
+            ee=self.base_hierarchy.joints[1],
+            solver="ikSCsolver",
+        )
 
-        self.tip_ik_handle, self.tip_ik_end_effector = \
-            pm.ikHandle(sj=self.base_hierarchy.joints[1], ee=self.base_hierarchy.joints[2], solver="ikSCsolver")
+        self.tip_ik_handle, self.tip_ik_end_effector = pm.ikHandle(
+            sj=self.base_hierarchy.joints[1],
+            ee=self.base_hierarchy.joints[2],
+            solver="ikSCsolver",
+        )
 
         # parent the ball IK handle to ball joint
         pm.parent(self.ball_ik_handle, foot_ik_ball_joint)
@@ -2035,16 +2059,10 @@ class ReverseFootRigger(RiggerBase):
         if self.ik_fk_limb_rigger:
             self.connect_to_ik_fk_limb_rigger()
 
-        attrs = [
-            'tipHeading',
-            'tipRoll',
-            'tipBank',
-            'ballRoll',
-            'ballBank'
-        ]
+        attrs = ["tipHeading", "tipRoll", "tipBank", "ballRoll", "ballBank"]
 
         for attr in attrs:
-            pm.addAttr(self.main_controller, ln=attr, at='float', k=1)
+            pm.addAttr(self.main_controller, ln=attr, at="float", k=1)
 
         self.main_controller.tipHeading >> foot_ik_tip_joint.ry
         self.main_controller.tipRoll >> foot_ik_tip_joint.rx
@@ -2058,13 +2076,19 @@ class ReverseFootRigger(RiggerBase):
     def connect_to_ik_fk_limb_rigger(self):
         pm.parent(
             self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller,
-            self.reverse_foot_joint_hierarchy.joints[-2]
+            self.reverse_foot_joint_hierarchy.joints[-2],
         )
         # also connect attributes
         pm.addAttr(self.main_controller, sn="minScale", at="float", dv=1.0, k=True)
         pm.addAttr(self.main_controller, sn="maxScale", at="float", dv=2.0, k=True)
-        self.main_controller.minScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.minScale
-        self.main_controller.maxScale >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.maxScale
+        (
+            self.main_controller.minScale
+            >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.minScale
+        )
+        (
+            self.main_controller.maxScale
+            >> self.ik_fk_limb_rigger.ik_hierarchy.ik_end_controller.maxScale
+        )
 
 
 class SquashStretchBendRigger(object):
@@ -2094,14 +2118,12 @@ class SquashStretchBendRigger(object):
         self.main_control = None
 
     def check_main_control(self):
-        """checks the existence of the main control
-        """
+        """checks the existence of the main control"""
         if self.main_control is None:
             raise RuntimeError("Please create the main controller first")
 
     def setup(self):
-        """creates all the necessary nodes
-        """
+        """creates all the necessary nodes"""
         self.create_main_controller()
 
         if self.use_squash:
@@ -2115,8 +2137,7 @@ class SquashStretchBendRigger(object):
         self.finalize_setup()
 
     def create_main_controller(self):
-        """creates the main controller
-        """
+        """creates the main controller"""
         bbox = self.geo.getBoundingBox()
         y_min = bbox.min().y
         y_max = bbox.max().y
@@ -2131,8 +2152,7 @@ class SquashStretchBendRigger(object):
         self.main_control.worldMatrix[0] >> self.decompose_matrix.inputMatrix
 
     def create_squash_deformer(self):
-        """creates the squash deformer
-        """
+        """creates the squash deformer"""
         self.check_main_control()
 
         bbox = self.geo.getBoundingBox()
@@ -2140,7 +2160,7 @@ class SquashStretchBendRigger(object):
         h = bbox.height()
 
         # create squash deformer
-        self.squash_deformer, self.squash_handle = pm.nonLinear(self.geo, type='squash')
+        self.squash_deformer, self.squash_handle = pm.nonLinear(self.geo, type="squash")
         self.squash_deformer.lowBound.set(0)
         self.squash_handle.ty.set(y_min)
         self.squash_handle.s.set(h, h, h)
@@ -2151,20 +2171,29 @@ class SquashStretchBendRigger(object):
         self.decompose_matrix.outputTranslate >> self.distance_between1.point2
 
         # Squash
-        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        pm.setDrivenKeyframe(
+            self.squash_deformer.factor,
+            cd=self.distance_between1.distance,
+            itt="clamped",
+            ott="clamped",
+        )
         self.main_control.ty.set(-h * 0.5)
         self.squash_deformer.factor.set(-1)
-        pm.setDrivenKeyframe(self.squash_deformer.factor, cd=self.distance_between1.distance, itt="clamped", ott="clamped")
+        pm.setDrivenKeyframe(
+            self.squash_deformer.factor,
+            cd=self.distance_between1.distance,
+            itt="clamped",
+            ott="clamped",
+        )
         self.main_control.ty.set(0)
 
         # adjust infinity of the keyframes to be linear
         anim_curve = self.squash_deformer.factor.inputs(type=pm.nt.AnimCurve)[0]
-        anim_curve.setPreInfinityType(infinityType='linear')
-        anim_curve.setPostInfinityType(infinityType='linear')
+        anim_curve.setPreInfinityType(infinityType="linear")
+        anim_curve.setPostInfinityType(infinityType="linear")
 
     def create_bend_deformer(self):
-        """creates the bend deformer
-        """
+        """creates the bend deformer"""
         self.check_main_control()
 
         bbox = self.geo.getBoundingBox()
@@ -2180,7 +2209,7 @@ class SquashStretchBendRigger(object):
         self.aim_locator2 = pm.spaceLocator(name="ssb_aim_locator#")
 
         # create bend deformer
-        self.bend_deformer, self.bend_handle = pm.nonLinear(self.geo, type='bend')
+        self.bend_deformer, self.bend_handle = pm.nonLinear(self.geo, type="bend")
         self.bend_deformer.lowBound.set(0)
         self.bend_deformer.highBound.set(1)
         self.bend_handle.ty.set(y_min)
@@ -2188,26 +2217,44 @@ class SquashStretchBendRigger(object):
         pm.parent(self.aim_locator2, self.bend_handle, r=1)
 
         # create aim constraint for the bend.curvature control
-        pm.aimConstraint(self.main_control, self.aim_locator2, skip=["x", "y"], aimVector=[1, 0, 0], upVector=[0, 1, 0])
+        pm.aimConstraint(
+            self.main_control,
+            self.aim_locator2,
+            skip=["x", "y"],
+            aimVector=[1, 0, 0],
+            upVector=[0, 1, 0],
+        )
 
         # create constraints
         # main to aim locator
         pm.pointConstraint(self.main_control, self.aim_locator1, skip="y")
 
         # create aim constraint
-        pm.aimConstraint(self.aim_locator1, self.bend_handle, upVector=[0, 1, 0], aimVector=[1, 0, 0])
+        pm.aimConstraint(
+            self.aim_locator1, self.bend_handle, upVector=[0, 1, 0], aimVector=[1, 0, 0]
+        )
 
         # create set driven keys
         # bend
-        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        pm.setDrivenKeyframe(
+            self.bend_deformer.curvature,
+            cd=self.aim_locator2.rz,
+            itt="clamped",
+            ott="clamped",
+        )
         self.main_control.tx.set(h)
         self.bend_deformer.curvature.set(90)
-        pm.setDrivenKeyframe(self.bend_deformer.curvature, cd=self.aim_locator2.rz, itt="clamped", ott="clamped")
+        pm.setDrivenKeyframe(
+            self.bend_deformer.curvature,
+            cd=self.aim_locator2.rz,
+            itt="clamped",
+            ott="clamped",
+        )
         self.main_control.tx.set(0)
         # adjust infinity of the keyframes to be linear
         anim_curve = self.bend_deformer.curvature.inputs(type=pm.nt.AnimCurve)[0]
-        anim_curve.setPreInfinityType(infinityType='linear')
-        anim_curve.setPostInfinityType(infinityType='linear')
+        anim_curve.setPreInfinityType(infinityType="linear")
+        anim_curve.setPostInfinityType(infinityType="linear")
 
     def create_delta_mush_deformer(self):
         self.check_main_control()
@@ -2218,19 +2265,18 @@ class SquashStretchBendRigger(object):
             smoothingIterations=10,
             smoothingStep=0.5,
             pinBorderVertices=1,
-            envelope=1
+            envelope=1,
         )
         self.delta_mush.inwardConstraint.set(0.25)
         self.delta_mush.outwardConstraint.set(0.25)
         self.delta_mush.distanceWeight.set(0.25)
 
     def finalize_setup(self):
-        """does final clean up
-        """
+        """does final clean up"""
         self.check_main_control()
 
         # group the node together
-        parent_group = pm.nt.Transform(name='SquashStretchBendRiggerGroup#')
+        parent_group = pm.nt.Transform(name="SquashStretchBendRiggerGroup#")
         pm.parent(self.main_control.getParent(), parent_group)
         pm.parent(self.aim_locator1, parent_group)
         if self.use_squash:

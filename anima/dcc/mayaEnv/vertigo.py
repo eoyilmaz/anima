@@ -10,8 +10,7 @@ vertigo_global_attr_name = "vertigo_global_loc"
 
 
 def setup_look_at(camera):
-    """sets up the look at locator for the given camera
-    """
+    """sets up the look at locator for the given camera"""
 
     # just create a locator under the camera
     # and move it to -10
@@ -41,8 +40,7 @@ def setup_look_at(camera):
 
 
 def setup_vertigo(camera):
-    """sets up the vertigo for the given camera
-    """
+    """sets up the vertigo for the given camera"""
 
     # camera should have the vertigo locator
 
@@ -77,15 +75,20 @@ def setup_vertigo(camera):
     pm.pointConstraint(world_loc, vertigo_loc)
 
     # create the expression
-    expr_str = camera.name() + ".focalLength = (" + vertigo_loc.name() + \
-        ".tz / " + str(z1) + ") * " + str(f1) + ";"
+    expr_str = (
+        "{camera_name}.focalLength = ({vertigo_loc_name}.tz / {z1}) * {f1};".format(
+            camera_name=camera.name(),
+            vertigo_loc_name=vertigo_loc.name(),
+            z1=str(z1),
+            f1=str(f1),
+        )
+    )
 
     expr = pm.expression(s=expr_str)
 
 
 def delete(camera):
-    """deletes the vertigo setup from the given camera
-    """
+    """deletes the vertigo setup from the given camera"""
 
     global vertigo_attr_name
     global vertigo_global_attr_name

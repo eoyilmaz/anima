@@ -3,11 +3,11 @@ from anima import logger
 
 
 def update_outputs():
-    """updates outputs in the current script
-    """
+    """updates outputs in the current script"""
     from anima.utils import do_db_setup
+
     do_db_setup()
-    
+
     from anima.dcc import nukeEnv
 
     nEnv = nukeEnv.Nuke()
@@ -17,8 +17,7 @@ def update_outputs():
 
 
 def output_to_h264(write_node=None):
-    """an after render function which converts the input to h264
-    """
+    """an after render function which converts the input to h264"""
     import os
     import nuke
 
@@ -30,13 +29,13 @@ def output_to_h264(write_node=None):
 
     # add the _h264 extension to the filename
     file_name = os.path.basename(file_full_path)
-    path = file_full_path[:-len(file_name)]
+    path = file_full_path[: -len(file_name)]
     file_name_wo_ext, ext = os.path.splitext(file_name)
 
     # split any '.' (ex: a.%04d -> [a, %04d])
-    file_name_wo_ext = file_name_wo_ext.split('.')[0]
+    file_name_wo_ext = file_name_wo_ext.split(".")[0]
     # add _h264
-    output_file_name = file_name_wo_ext + '_h264.mov'
+    output_file_name = file_name_wo_ext + "_h264.mov"
     output_full_path = os.path.join(path, output_file_name)
 
     # TODO: if it is a sequence of images rename them by creating temp soft
@@ -44,23 +43,14 @@ def output_to_h264(write_node=None):
 
     # run ffmpeg in a separate thread
     import threading
-    t = threading.Timer(
-        1.0,
-        convert_to_h264,
-        args=[file_full_path, output_full_path]
-    )
+
+    t = threading.Timer(1.0, convert_to_h264, args=[file_full_path, output_full_path])
     t.start()
 
 
 def convert_to_h264(input_path, output_path):
-    """converts the given input to h264
-    """
-    ffmpeg(**{
-        'i': input_path,
-        'vcodec': 'libx264',
-        'b:v': '4096k',
-        'o': output_path
-    })
+    """converts the given input to h264"""
+    ffmpeg(**{"i": input_path, "vcodec": "libx264", "b:v": "4096k", "o": output_path})
 
 
 def convert_to_animated_gif(input_path, output_path):
@@ -70,40 +60,35 @@ def convert_to_animated_gif(input_path, output_path):
     :param output_path: The output path
     :return:
     """
-    ffmpeg(**{
-        'i': input_path,
-        'vcodec': 'libx264',
-        'b:v': '4096k',
-        'o': output_path
-    })
+    ffmpeg(**{"i": input_path, "vcodec": "libx264", "b:v": "4096k", "o": output_path})
 
 
 def ffmpeg(**kwargs):
-    """a simple python wrapper for ffmpeg command
-    """
+    """a simple python wrapper for ffmpeg command"""
 
     # there is only one special keyword called 'o'
 
     # this will raise KeyError if there is no 'o' key which is good to prevent
     # the rest to execute
-    output = kwargs['o']
-    kwargs.pop('o')
+    output = kwargs["o"]
+    kwargs.pop("o")
 
     # generate args
-    args = ['ffmpeg']
+    args = ["ffmpeg"]
     for key in kwargs:
         # append the flag
-        args.append('-' + key)
+        args.append("-" + key)
         # append the value
         args.append(kwargs[key])
         # overwrite output
-    args.append('-y')
+    args.append("-y")
     # append the output
     args.append(output)
 
-    logger.debug('calling real ffmpeg with args: %s' % args)
+    logger.debug("calling real ffmpeg with args: %s" % args)
 
     import subprocess
+
     process = subprocess.Popen(args, stderr=subprocess.PIPE)
 
     # loop until process finishes and capture stderr output
@@ -111,10 +96,10 @@ def ffmpeg(**kwargs):
     while True:
         stderr = process.stderr.readline()
 
-        if stderr == '' and process.poll() is not None:
+        if stderr == "" and process.poll() is not None:
             break
 
-        if stderr != '':
+        if stderr != "":
             stderr_buffer.append(stderr)
 
     if process.returncode:
@@ -122,43 +107,43 @@ def ffmpeg(**kwargs):
         raise RuntimeError(stderr_buffer)
 
     logger.debug(stderr_buffer)
-    logger.debug('process completed!')
+    logger.debug("process completed!")
 
 
 def open_in_file_browser(path):
-    """opens the file browser with the given path
-    """
+    """opens the file browser with the given path"""
     import platform
 
     system = platform.system()
 
     import subprocess
-    if system == 'Windows':
-        subprocess.Popen(['explorer', '/select,', path.replace('/', '\\')])
-    elif system == 'Darwin':
-        subprocess.Popen([
-            'open', '-a', '/System/Library/CoreServices/Finder.app', path
-        ])
-    elif system == 'Linux':
-        subprocess.Popen(['nautilus', path])
+
+    if system == "Windows":
+        subprocess.Popen(["explorer", "/select,", path.replace("/", "\\")])
+    elif system == "Darwin":
+        subprocess.Popen(
+            ["open", "-a", "/System/Library/CoreServices/Finder.app", path]
+        )
+    elif system == "Linux":
+        subprocess.Popen(["nautilus", path])
 
 
 def open_node_in_file_browser(node):
-    """opens the node path in filebrowser
-    """
+    """opens the node path in filebrowser"""
     import os
     import nuke
+
     file_full_path = nuke.filename(node)
     # get the path
     file_name = os.path.basename(file_full_path)
-    path = file_full_path[:-len(file_name)]
+    path = file_full_path[: -len(file_name)]
     open_in_file_browser(path)
 
 
 def open_selected_nodes_in_file_browser():
-    """opens selected node in filebrowser
-    """
+    """opens selected node in filebrowser"""
     import nuke
+
     nodes = nuke.selectedNodes()
     for node in nodes:
         open_node_in_file_browser(node)
@@ -170,6 +155,7 @@ def create_auto_crop_writer():
     """
     import os
     import nuke
+
     # get selected nodes and deselect them
     nodes = nuke.selectedNodes()
     [node.setSelected(False) for node in nodes]
@@ -177,16 +163,14 @@ def create_auto_crop_writer():
     write_nodes = []
 
     for node in nodes:
-        write_node = nuke.createNode('Write')
-        file_path = node['file'].value()
+        write_node = nuke.createNode("Write")
+        file_path = node["file"].value()
         filename_with_number_seq, ext = os.path.splitext(file_path)
         filename, number_seq = os.path.splitext(filename_with_number_seq)
 
-        write_node['file'].setValue(
-            filename + '_auto_cropped' + number_seq + ext
-        )
-        write_node['channels'].setValue('all')
-        write_node['autocrop'].setValue(True)
+        write_node["file"].setValue(filename + "_auto_cropped" + number_seq + ext)
+        write_node["channels"].setValue("all")
+        write_node["autocrop"].setValue(True)
         write_node.setXpos(node.xpos() + 100)
         write_node.setYpos(node.ypos())
 
@@ -199,7 +183,7 @@ def create_auto_crop_writer():
 
     # connect the write nodes to afanasy if afanasy exists
     try:
-        afanasy = nuke.createNode('afanasy')
+        afanasy = nuke.createNode("afanasy")
         for i, node in enumerate(write_nodes):
             afanasy.setInput(i, node)
     except RuntimeError:

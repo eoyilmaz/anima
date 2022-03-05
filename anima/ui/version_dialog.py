@@ -21,12 +21,7 @@ if sys.version_info.major > 2:
 else:
     exceptionMessageGenerator = lambda e: e.message
 
-ref_depth_res = [
-    "As Saved",
-    "All",
-    "Top Level Only",
-    "None"
-]
+ref_depth_res = ["As Saved", "All", "Top Level Only", "None"]
 
 VersionNT = namedtuple(
     # A named tuple for fast Version look-up
@@ -39,8 +34,8 @@ VersionNT = namedtuple(
         "created_by_id",
         "updated_by_id",
         "full_path",
-        "description"
-    ]
+        "description",
+    ],
 )
 
 # Mode is now defining the UI mode as which functionality it gives
@@ -167,8 +162,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("finished initializing the interface")
 
     def _setup_ui(self):
-        """sets the UI up
-        """
+        """sets the UI up"""
         self.update_window_title()
 
         self.resize(1500, 850)
@@ -203,14 +197,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.main_widget = QtWidgets.QWidget(self)
         size_policy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Preferred,
-            QtWidgets.QSizePolicy.Preferred
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
         )
         size_policy.setHorizontalStretch(1)
         size_policy.setVerticalStretch(1)
-        size_policy.setHeightForWidth(
-            self.main_widget.sizePolicy().hasHeightForWidth()
-        )
+        size_policy.setHeightForWidth(self.main_widget.sizePolicy().hasHeightForWidth())
         self.main_widget.setSizePolicy(size_policy)
 
         self.vertical_layout_1 = QtWidgets.QVBoxLayout(self.main_widget)
@@ -227,9 +218,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Login Information
         self.horizontal_layout_11.setContentsMargins(0, 0, 0, 0)
         spacer_item = QtWidgets.QSpacerItem(
-            40, 20,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.horizontal_layout_11.addItem(spacer_item)
 
@@ -324,22 +313,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # Tasks Tree View
         self.tasks_tree_view = TaskTreeView(self)
         self.tasks_tree_view.setToolTip(
-            "<html><head/><body><p>Right Click:</p><ul style=\""
+            '<html><head/><body><p>Right Click:</p><ul style="'
             "margin-top: 0px; margin-bottom: 0px; margin-left: 0px; "
             "margin-right: 0px; -qt-list-indent: 1; "
-            "\"><li style=\" margin-top:12px; margin-bottom:0px; "
+            '"><li style=" margin-top:12px; margin-bottom:0px; '
             "margin-left:0px; margin-right:0px; -qt-block-indent:0; "
-            "text-indent:0px;\">"
-            "To go to the <span style=\" font-weight:600;\">"
-            "Dependent Tasks</span></li><li style=\" margin-top:0px; "
+            'text-indent:0px;">'
+            'To go to the <span style=" font-weight:600;">'
+            'Dependent Tasks</span></li><li style=" margin-top:0px; '
             "margin-bottom:12px; margin-left:0px; margin-right:0px; "
-            "-qt-block-indent:0; text-indent:0px;\">"
-            "To go to the <span style=\" font-weight:600;\">"
+            '-qt-block-indent:0; text-indent:0px;">'
+            'To go to the <span style=" font-weight:600;">'
             "Dependee Tasks</span></li></ul><p><br/></p></body></html>"
         )
-        self.tasks_tree_view.setEditTriggers(
-            QtWidgets.QAbstractItemView.NoEditTriggers
-        )
+        self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         # self.tasks_tree_view.setAlternatingRowColors(True)
         # self.tasks_tree_view.setUniformRowHeights(True)
         # self.tasks_tree_view.header().setCascadingSectionResizes(True)
@@ -348,7 +335,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ------------------------------------------
         # New Version Fields
         self.new_version_controls_widget = QtWidgets.QWidget(self)
-        self.new_version_main_layout = QtWidgets.QVBoxLayout(self.new_version_controls_widget)
+        self.new_version_main_layout = QtWidgets.QVBoxLayout(
+            self.new_version_controls_widget
+        )
 
         # ==================
         # Description Field
@@ -358,17 +347,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.new_version_main_layout.addWidget(self.description_label)
         self.description_text_edit = QtWidgets.QTextEdit(self)
         self.description_text_edit.setHtml(
-            "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \""
-            "http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-            "<html><head><meta name=\"qrichtext\" content=\"1\" />"
-            "<style type=\"text/css\">\n"
+            '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0//EN" "'
+            'http://www.w3.org/TR/REC-html40/strict.dtd">\n'
+            '<html><head><meta name="qrichtext" content="1" />'
+            '<style type="text/css">\n'
             "p, li { white-space: pre-wrap; }\n"
-            "</style></head><body style=\" font-family:\'MS Shell Dlg 2\'; "
-            "font-size:8.25pt; font-weight:400; font-style:normal;\">\n"
-            "<p style=\"-qt-paragraph-type:empty; margin-top:0px; "
+            "</style></head><body style=\" font-family:'MS Shell Dlg 2'; "
+            'font-size:8.25pt; font-weight:400; font-style:normal;">\n'
+            '<p style="-qt-paragraph-type:empty; margin-top:0px; '
             "margin-bottom:0px; margin-left:0px; margin-right:0px; "
-            "-qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\'; "
-            "font-size:9pt;\"><br /></p></body></html>",
+            "-qt-block-indent:0; text-indent:0px; font-family:'Sans Serif'; "
+            'font-size:9pt;"><br /></p></body></html>',
         )
 
         self.description_text_edit.setEnabled(True)
@@ -423,43 +412,44 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.thumbnail_graphics_view = QtWidgets.QGraphicsView(self)
         size_policy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Fixed,
-            QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
         )
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
-        size_policy.setHeightForWidth(self.thumbnail_graphics_view.sizePolicy().hasHeightForWidth())
+        size_policy.setHeightForWidth(
+            self.thumbnail_graphics_view.sizePolicy().hasHeightForWidth()
+        )
         self.thumbnail_graphics_view.setSizePolicy(size_policy)
         self.thumbnail_graphics_view.setMinimumSize(QtCore.QSize(320, 180))
         self.thumbnail_graphics_view.setMaximumSize(QtCore.QSize(320, 180))
         self.thumbnail_graphics_view.setAutoFillBackground(False)
-        self.thumbnail_graphics_view.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.thumbnail_graphics_view.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.thumbnail_graphics_view.setVerticalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff
+        )
+        self.thumbnail_graphics_view.setHorizontalScrollBarPolicy(
+            QtCore.Qt.ScrollBarAlwaysOff
+        )
         brush = QtGui.QBrush(QtGui.QColor(0, 0, 0))
         brush.setStyle(QtCore.Qt.SolidPattern)
         self.thumbnail_graphics_view.setBackgroundBrush(brush)
         self.thumbnail_graphics_view.setInteractive(False)
         self.thumbnail_graphics_view.setRenderHints(
-            QtGui.QPainter.Antialiasing |
-            QtGui.QPainter.HighQualityAntialiasing |
-            QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
+            QtGui.QPainter.Antialiasing
+            | QtGui.QPainter.HighQualityAntialiasing
+            | QtGui.QPainter.SmoothPixmapTransform
+            | QtGui.QPainter.TextAntialiasing
         )
         self.thumbnail_layout.addWidget(self.thumbnail_graphics_view)
 
         spacer_item1 = QtWidgets.QSpacerItem(
-            0, 0,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Minimum
+            0, 0, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
         )
         self.thumbnail_layout.addItem(spacer_item1)
 
         self.horizontal_layout_13 = QtWidgets.QHBoxLayout()
         # self.horizontal_layout_13.setContentsMargins(-1, -1, -1, 10)
         spacer_item1 = QtWidgets.QSpacerItem(
-            5, 20,
-            QtWidgets.QSizePolicy.Minimum,
-            QtWidgets.QSizePolicy.Minimum
+            5, 20, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum
         )
         self.horizontal_layout_13.addItem(spacer_item1)
         self.upload_thumbnail_push_button = QtWidgets.QPushButton(self)
@@ -484,7 +474,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.repr_as_separate_takes_check_box.setText("Show Repr.")
         self.repr_as_separate_takes_check_box.setToolTip(
             "<html><head/><body><p>Check this to show "
-            "<span style=\" font-weight:600;\">Representations</span> as "
+            '<span style=" font-weight:600;">Representations</span> as '
             "separate takes if available</p></body></html>"
         )
         self.vertical_layout_8.addWidget(self.repr_as_separate_takes_check_box)
@@ -550,9 +540,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.show_published_only_check_box.setText("Show Published Only")
 
         spacer_item2 = QtWidgets.QSpacerItem(
-            40, 20,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.horizontal_layout_10.addItem(spacer_item2)
         self.versions_main_layout.addLayout(self.horizontal_layout_10)
@@ -606,12 +594,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.previous_versions_table_widget.horizontalHeaderItem(1).setText("User")
         self.previous_versions_table_widget.horizontalHeaderItem(2).setText("File Size")
         self.previous_versions_table_widget.horizontalHeaderItem(3).setText("Date")
-        self.previous_versions_table_widget.horizontalHeaderItem(4).setText("Description")
+        self.previous_versions_table_widget.horizontalHeaderItem(4).setText(
+            "Description"
+        )
 
-        self.previous_versions_table_widget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.previous_versions_table_widget.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+        )
         # self.previous_versions_table_widget.setAlternatingRowColors(True)
-        self.previous_versions_table_widget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.previous_versions_table_widget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.previous_versions_table_widget.setSelectionMode(
+            QtWidgets.QAbstractItemView.SingleSelection
+        )
+        self.previous_versions_table_widget.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectRows
+        )
         self.previous_versions_table_widget.setShowGrid(False)
         self.previous_versions_table_widget.setColumnCount(7)
         self.previous_versions_table_widget.setRowCount(0)
@@ -620,33 +616,48 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             item = QtWidgets.QTableWidgetItem()
             self.previous_versions_table_widget.setHorizontalHeaderItem(i, item)
 
-        self.previous_versions_table_widget.horizontalHeader().setStretchLastSection(True)
-        self.previous_versions_table_widget.verticalHeader().setStretchLastSection(False)
+        self.previous_versions_table_widget.horizontalHeader().setStretchLastSection(
+            True
+        )
+        self.previous_versions_table_widget.verticalHeader().setStretchLastSection(
+            False
+        )
 
         self.versions_main_layout.addWidget(self.previous_versions_table_widget)
 
         self.previous_version_secondary_controls_widget = QtWidgets.QWidget(self)
-        self.previous_version_secondary_controls_layout = QtWidgets.QHBoxLayout(self.previous_version_secondary_controls_widget)
-
+        self.previous_version_secondary_controls_layout = QtWidgets.QHBoxLayout(
+            self.previous_version_secondary_controls_widget
+        )
 
         self.representations_label = QtWidgets.QLabel(self)
         self.representations_label.setText("Repr.")
-        self.previous_version_secondary_controls_layout.addWidget(self.representations_label)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.representations_label
+        )
 
         self.representations_comboBox = QtWidgets.QComboBox(self)
-        self.representations_comboBox.setToolTip("Choose Representation (if supported by the DCC)")
+        self.representations_comboBox.setToolTip(
+            "Choose Representation (if supported by the DCC)"
+        )
 
-        self.previous_version_secondary_controls_layout.addWidget(self.representations_comboBox)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.representations_comboBox
+        )
         self.reference_depth_label = QtWidgets.QLabel(self)
         self.reference_depth_label.setText("Refs")
-        self.previous_version_secondary_controls_layout.addWidget(self.reference_depth_label)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.reference_depth_label
+        )
         self.ref_depth_combo_box = QtWidgets.QComboBox(self)
-        self.ref_depth_combo_box.setToolTip("Choose reference depth (if supported by DCC)")
-        self.previous_version_secondary_controls_layout.addWidget(self.ref_depth_combo_box)
+        self.ref_depth_combo_box.setToolTip(
+            "Choose reference depth (if supported by DCC)"
+        )
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.ref_depth_combo_box
+        )
         spacer_item3 = QtWidgets.QSpacerItem(
-            40, 20,
-            QtWidgets.QSizePolicy.Expanding,
-            QtWidgets.QSizePolicy.Minimum
+            40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
         )
         self.previous_version_secondary_controls_layout.addItem(spacer_item3)
         self.use_namespace_check_box = QtWidgets.QCheckBox(self)
@@ -664,22 +675,30 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             """
         )
         self.use_namespace_check_box.setChecked(True)
-        self.previous_version_secondary_controls_layout.addWidget(self.use_namespace_check_box)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.use_namespace_check_box
+        )
 
         # Choose Push Button
         self.choose_version_push_button = QtWidgets.QPushButton(self)
         self.choose_version_push_button.setText("Choose")
-        self.previous_version_secondary_controls_layout.addWidget(self.choose_version_push_button)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.choose_version_push_button
+        )
 
         # Check Updates Check Box
         self.check_updates_check_box = QtWidgets.QCheckBox(self)
         self.check_updates_check_box.setToolTip("Disable update check (faster)")
         self.check_updates_check_box.setText("Check Updates")
         self.check_updates_check_box.setChecked(True)
-        self.previous_version_secondary_controls_layout.addWidget(self.check_updates_check_box)
+        self.previous_version_secondary_controls_layout.addWidget(
+            self.check_updates_check_box
+        )
 
         self.previous_version_controls_widget = QtWidgets.QWidget(self)
-        self.open_buttons_layout = QtWidgets.QHBoxLayout(self.previous_version_controls_widget)
+        self.open_buttons_layout = QtWidgets.QHBoxLayout(
+            self.previous_version_controls_widget
+        )
 
         # Open Push Button
         self.open_push_button = QtWidgets.QPushButton(self)
@@ -709,7 +728,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.close1_push_button.setText("Close")
         self.open_buttons_layout.addWidget(self.close1_push_button)
 
-        self.versions_main_layout.addWidget(self.previous_version_secondary_controls_widget)
+        self.versions_main_layout.addWidget(
+            self.previous_version_secondary_controls_widget
+        )
         self.versions_main_layout.addWidget(self.previous_version_controls_widget)
         self.versions_main_layout.addWidget(self.new_version_controls_widget)
 
@@ -736,7 +757,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.setTabOrder(self.save_as_push_button, self.previous_versions_table_widget)
         self.setTabOrder(self.previous_versions_table_widget, self.open_push_button)
         self.setTabOrder(self.open_push_button, self.open_as_new_version_push_button)
-        self.setTabOrder(self.open_as_new_version_push_button, self.reference_push_button)
+        self.setTabOrder(
+            self.open_as_new_version_push_button, self.reference_push_button
+        )
         self.setTabOrder(self.reference_push_button, self.import_push_button)
 
     # def close(self):
@@ -744,9 +767,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     QtWidgets.QDialog.close(self)
 
     def update_window_title(self):
-        """updates the window title depending on the DCC and mode
-        """
+        """updates the window title depending on the DCC and mode"""
         import anima
+
         window_title = "Anima Pipeline v%s " % anima.__version__
 
         if self.dcc:
@@ -791,16 +814,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.switch_mode_button.setVisible(False)
 
     def switch_mode(self):
-        """switches mode between Open and Save As
-        """
+        """switches mode between Open and Save As"""
         if self.mode == SAVE_AS_MODE:
             self.set_mode(OPEN_MODE)
         elif self.mode == OPEN_MODE:
             self.set_mode(SAVE_AS_MODE)
 
     def show(self):
-        """overridden show method
-        """
+        """overridden show method"""
         logger.debug("MainDialog.show is started")
         logged_in_user = self.get_logged_in_user()
         if not logged_in_user:
@@ -814,35 +835,26 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return return_val
 
     def _setup_signals(self):
-        """sets up the signals
-        """
+        """sets up the signals"""
         logger.debug("start setting up interface signals")
 
         # close button
         QtCore.QObject.connect(
-            self.close1_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.close
+            self.close1_push_button, QtCore.SIGNAL("clicked()"), self.close
         )
 
         QtCore.QObject.connect(
-            self.close2_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.close
+            self.close2_push_button, QtCore.SIGNAL("clicked()"), self.close
         )
 
         # switch mode button
         QtCore.QObject.connect(
-            self.switch_mode_button,
-            QtCore.SIGNAL("clicked()"),
-            self.switch_mode
+            self.switch_mode_button, QtCore.SIGNAL("clicked()"), self.switch_mode
         )
 
         # logout button
         QtCore.QObject.connect(
-            self.logout_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.logout
+            self.logout_push_button, QtCore.SIGNAL("clicked()"), self.logout
         )
 
         # # my_tasks_only_checkBox
@@ -870,7 +882,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.repr_as_separate_takes_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.tasks_tree_view_changed
+            self.tasks_tree_view_changed,
         )
 
         # takes_combo_box
@@ -880,91 +892,91 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"
                 # "currentIndexChanged(QString)"
             ),
-            self.takes_list_widget_changed
+            self.takes_list_widget_changed,
         )
 
         # recent files comboBox
         QtCore.QObject.connect(
             self.recent_files_combo_box,
             QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.recent_files_combo_box_index_changed
+            self.recent_files_combo_box_index_changed,
         )
 
         # find_from_path_lineEdit
         QtCore.QObject.connect(
             self.find_from_path_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.find_from_path_push_button_clicked
+            self.find_from_path_push_button_clicked,
         )
 
         # add_take_toolButton
         QtCore.QObject.connect(
             self.add_take_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.add_take_push_button_clicked
+            self.add_take_push_button_clicked,
         )
 
         # export_as
         QtCore.QObject.connect(
             self.export_as_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.export_as_push_button_clicked
+            self.export_as_push_button_clicked,
         )
 
         # save_as
         QtCore.QObject.connect(
             self.save_as_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.save_as_push_button_clicked
+            self.save_as_push_button_clicked,
         )
 
         # publish
         QtCore.QObject.connect(
             self.publish_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.publish_push_button_clicked
+            self.publish_push_button_clicked,
         )
 
         # open
         QtCore.QObject.connect(
             self.open_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.open_push_button_clicked
+            self.open_push_button_clicked,
         )
 
         # open as
         QtCore.QObject.connect(
             self.open_as_new_version_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.open_as_new_version_push_button_clicked
+            self.open_as_new_version_push_button_clicked,
         )
 
         # chose
         QtCore.QObject.connect(
             self.choose_version_push_button,
             QtCore.SIGNAL("cliched()"),
-            self.choose_version_push_button_clicked
+            self.choose_version_push_button_clicked,
         )
 
         # reference
         QtCore.QObject.connect(
             self.reference_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.reference_push_button_clicked
+            self.reference_push_button_clicked,
         )
 
         # import
         QtCore.QObject.connect(
             self.import_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.import_push_button_clicked
+            self.import_push_button_clicked,
         )
 
         # show_only_published_checkBox
         QtCore.QObject.connect(
             self.show_published_only_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.update_previous_versions_table_widget
+            self.update_previous_versions_table_widget,
         )
 
         # # version_count_spin_box
@@ -978,52 +990,49 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.upload_thumbnail_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.upload_thumbnail_push_button_clicked
+            self.upload_thumbnail_push_button_clicked,
         )
 
         # upload_thumbnail_push_button
         QtCore.QObject.connect(
             self.clear_thumbnail_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.clear_thumbnail_push_button_clicked
+            self.clear_thumbnail_push_button_clicked,
         )
 
         # close button
         QtCore.QObject.connect(
             self.clear_recent_files_push_button,
             QtCore.SIGNAL("clicked()"),
-            self.clear_recent_file_push_button_clicked
+            self.clear_recent_file_push_button_clicked,
         )
 
         QtCore.QObject.connect(
             self.show_completed_check_box,
             QtCore.SIGNAL("stateChanged(int)"),
-            self.fill_tasks_tree_view
+            self.fill_tasks_tree_view,
         )
 
         logger.debug("finished setting up interface signals")
 
     def fill_logged_in_user(self):
-        """fills the logged in user label
-        """
+        """fills the logged in user label"""
         logged_in_user = self.get_logged_in_user()
         if logged_in_user:
             self.logged_in_user_label.setText(logged_in_user.name)
 
     def logout(self):
-        """log the current user out
-        """
+        """log the current user out"""
         from stalker import LocalSession
+
         lsession = LocalSession()
         lsession.delete()
         self.close()
 
     def _show_previous_versions_tableWidget_context_menu(self, position):
-        """the custom context menu for the previous_versions_table_widget
-        """
+        """the custom context menu for the previous_versions_table_widget"""
         # convert the position to global screen position
-        global_position = \
-            self.previous_versions_table_widget.mapToGlobal(position)
+        global_position = self.previous_versions_table_widget.mapToGlobal(position)
 
         item = self.previous_versions_table_widget.itemAt(position)
         # if not item:
@@ -1035,6 +1044,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             index = item.row()
             version = self.previous_versions_table_widget.versions[index]
             from stalker import Version
+
             version = Version.query.get(version.id)
 
         # create the menu
@@ -1047,8 +1057,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         browse_outputs_action = menu.addAction("Browse Outputs...")
         upload_output_action = menu.addAction("Upload Output...")
         copy_path_action = menu.addAction("Copy Path")
-        rerender_path_variables_action = \
-            menu.addAction("Re-Render Path Variables")
+        rerender_path_variables_action = menu.addAction("Re-Render Path Variables")
         menu.addSeparator()
         change_description_action = menu.addAction("Change Description...")
         menu.addSeparator()
@@ -1072,7 +1081,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 publish_action.setText("Un-Publish")
 
             from anima import defaults
-            if logged_in_user not in version.task.responsible and not defaults.is_power_user(logged_in_user):
+
+            if (
+                logged_in_user not in version.task.responsible
+                and not defaults.is_power_user(logged_in_user)
+            ):
                 publish_action.setEnabled(False)
                 delete_action.setEnabled(False)
         else:
@@ -1089,6 +1102,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     version.is_published = True
                     version.updated_by = logged_in_user
                     from stalker.db.session import DBSession
+
                     DBSession.add(version)
                     DBSession.commit()
                     # refresh the tableWidget
@@ -1098,10 +1112,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # allow the user un-publish this version if it is not used
                     # by any other versions
                     from stalker import Version
-                    versions_using_this_versions = \
-                        Version.query\
-                               .filter(Version.inputs.contains(version))\
-                               .all()
+
+                    versions_using_this_versions = Version.query.filter(
+                        Version.inputs.contains(version)
+                    ).all()
 
                     if len(versions_using_this_versions):
                         related_tasks = []
@@ -1114,29 +1128,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             "Error",
                             "This version is referenced by the following "
                             "tasks:<br><br>%s<br><br>"
-                            "So, you can not un-publish it!" %
-                            "<br>".join(
-                                list(
-                                    map(
-                                        lambda x: x.name,
-                                        related_tasks
-                                    )
-                                )
-                            )
+                            "So, you can not un-publish it!"
+                            % "<br>".join(list(map(lambda x: x.name, related_tasks))),
                         )
                     else:
                         version.is_published = False
                         version.updated_by = logged_in_user
                         from stalker.db.session import DBSession
+
                         DBSession.add(version)
                         DBSession.commit()
                         # refresh the tableWidget
                         self.update_previous_versions_table_widget()
                 elif choice == "Delete":
-                    versions_using_this_versions = \
-                        Version.query\
-                               .filter(Version.inputs.contains(version))\
-                               .all()
+                    versions_using_this_versions = Version.query.filter(
+                        Version.inputs.contains(version)
+                    ).all()
                     # if there are other versions using this version
                     # don't allow it to be deleted
                     if len(versions_using_this_versions):
@@ -1150,15 +1157,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             "Error",
                             "This version is referenced by the following "
                             "tasks:<br><br>%s<br><br>"
-                            "So, you can not delete it!" %
-                            "<br>".join(
-                                list(
-                                    map(
-                                        lambda x: x.name,
-                                        related_tasks
-                                    )
-                                )
-                            )
+                            "So, you can not delete it!"
+                            % "<br>".join(list(map(lambda x: x.name, related_tasks))),
                         )
                     else:
                         # Ask user if he/she is sure
@@ -1169,10 +1169,11 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             "<br>"
                             "<br>Files will not be deleted!",
                             QtWidgets.QMessageBox.Yes,
-                            QtWidgets.QMessageBox.No
+                            QtWidgets.QMessageBox.No,
                         )
                         if answer == QtWidgets.QMessageBox.Yes:
                             from stalker.db.session import DBSession
+
                             # remove any parent data
 
                             try:
@@ -1180,11 +1181,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                                 DBSession.commit()
                             except Exception as e:
                                 DBSession.rollback()
-                                QtWidgets.QMessageBox.critical(
-                                    self,
-                                    "Error",
-                                    str(e)
-                                )
+                                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                             finally:
                                 # refresh the tableWidget
                                 self.update_previous_versions_table_widget()
@@ -1192,36 +1189,24 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                             return
 
             from anima import utils
+
             if choice == "Browse Path...":
-                path = os.path.expandvars(
-                    os.path.expandvars(
-                        version.full_path
-                    )
-                )
+                path = os.path.expandvars(os.path.expandvars(version.full_path))
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
-                        self,
-                        "Error",
-                        "Path doesn't exists:\n%s" % path
+                        self, "Error", "Path doesn't exists:\n%s" % path
                     )
             elif choice == "Browse Outputs...":
                 path = os.path.join(
-                    os.path.dirname(
-                        os.path.expandvars(
-                            version.full_path
-                        )
-                    ),
-                    "Outputs"
+                    os.path.dirname(os.path.expandvars(version.full_path)), "Outputs"
                 )
                 try:
                     utils.open_browser_in_location(path)
                 except IOError:
                     QtWidgets.QMessageBox.critical(
-                        self,
-                        "Error",
-                        "Path doesn't exists:\n%s" % path
+                        self, "Error", "Path doesn't exists:\n%s" % path
                     )
             elif choice == "Upload Output...":
                 # upload output to the given version
@@ -1231,6 +1216,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 file_path = result[0]
                 if file_path:
                     from anima.utils import MediaManager
+
                     with open(file_path) as f:
                         MediaManager.upload_version_output(
                             version, f, os.path.basename(file_path)
@@ -1245,7 +1231,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         "Enter the new description",
                         "Please enter the new description:",
                         QtWidgets.QLineEdit.Normal,
-                        version.description
+                        version.description,
                     )
 
                     if ok:
@@ -1253,6 +1239,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         version.description = new_description
 
                         from stalker.db.session import DBSession
+
                         DBSession.add(version)
                         DBSession.commit()
 
@@ -1262,11 +1249,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 # just set the clipboard to the version.absolute_full_path
                 clipboard = QtWidgets.QApplication.clipboard()
                 clipboard.setText(
-                    os.path.normpath(
-                        os.path.expandvars(
-                            version.full_path
-                        )
-                    )
+                    os.path.normpath(os.path.expandvars(version.full_path))
                 )
             elif selected_item == create_version_action:
                 # create a new version with the currently selected data
@@ -1279,6 +1262,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 version.created_with = self.dcc.name
 
                 from stalker.db.session import DBSession
+
                 try:
                     DBSession.commit()
                 except BaseException:
@@ -1300,11 +1284,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # )
                     # if answer == QtWidgets.QMessageBox.Yes:
                     from stalker import Version
+
                     assert isinstance(version, Version)
                     ext = version.extension
                     version.update_paths()
                     version.extension = ext
                     from stalker.db.session import DBSession
+
                     try:
                         DBSession.commit()
                     except BaseException:
@@ -1314,17 +1300,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     @classmethod
     def get_item_indices_containing_text(cls, text, tree_view):
-        """returns the indexes of the item indices containing the given text
-        """
+        """returns the indexes of the item indices containing the given text"""
         model = tree_view.model()
         logger.debug("searching for text : %s" % text)
-        return model.match(
-            model.index(0, 0),
-            0,
-            text,
-            -1,
-            QtCore.Qt.MatchRecursive
-        )
+        return model.match(model.index(0, 0), 0, text, -1, QtCore.Qt.MatchRecursive)
 
     def find_entity_item_in_tree_view(self, entity, tree_view):
         """finds the item related to the stalker entity in the given
@@ -1344,32 +1323,30 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return None
 
     def clear_recent_files(self):
-        """clears the recent files
-        """
+        """clears the recent files"""
         if self.dcc:
             from anima.recent import RecentFileManager
+
             rfm = RecentFileManager()
             rfm[self.dcc.name] = []
             rfm.save()
 
     def clear_recent_file_push_button_clicked(self):
-        """clear the recent files
-        """
+        """clear the recent files"""
         # ask the user if he/she is sure about that
         answer = QtWidgets.QMessageBox.question(
             self,
             "Clear recent files list?",
             "Clear recent files list?",
             QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
         if answer == QtWidgets.QMessageBox.Yes:
             self.clear_recent_files()
             self.update_recent_files_combo_box()
 
     def update_recent_files_combo_box(self):
-        """
-        """
+        """ """
         self.recent_files_combo_box.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToContentsOnFirstShow
         )
@@ -1381,6 +1358,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # update recent files list
         if self.dcc:
             from anima.recent import RecentFileManager
+
             rfm = RecentFileManager()
             try:
                 recent_files = rfm[self.dcc.name]
@@ -1399,9 +1377,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         )
 
                         self.recent_files_combo_box.setItemData(
-                            i,
-                            full_path,
-                            QtCore.Qt.ToolTipRole
+                            i, full_path, QtCore.Qt.ToolTipRole
                         )
 
                     # try:
@@ -1413,7 +1389,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                     self.recent_files_combo_box.setSizePolicy(
                         QtWidgets.QSizePolicy.MinimumExpanding,
-                        QtWidgets.QSizePolicy.Minimum
+                        QtWidgets.QSizePolicy.Minimum,
                     )
             except KeyError:
                 pass
@@ -1428,8 +1404,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     #     # self.fill_tasks_tree_view()
 
     def fill_tasks_tree_view(self, show_completed_projects=False):
-        """wrapper for the tasks_tree_view.fill() method
-        """
+        """wrapper for the tasks_tree_view.fill() method"""
         self.tasks_tree_view.show_completed_projects = show_completed_projects
         self.tasks_tree_view.fill()
 
@@ -1437,14 +1412,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("setting up signals for tasks_tree_view_changed")
         QtCore.QObject.connect(
             self.tasks_tree_view.selectionModel(),
-            QtCore.SIGNAL("selectionChanged(const QItemSelection &, "
-                          "const QItemSelection &)"),
-            self.tasks_tree_view_changed
+            QtCore.SIGNAL(
+                "selectionChanged(const QItemSelection &, " "const QItemSelection &)"
+            ),
+            self.tasks_tree_view_changed,
         )
 
     def tasks_tree_view_changed(self):
-        """runs when the tasks_tree_view item is changed
-        """
+        """runs when the tasks_tree_view item is changed"""
         logger.debug("tasks_tree_view_changed running")
         if self.tasks_tree_view.is_updating:
             logger.debug("tasks_tree_view is updating, so returning early")
@@ -1472,39 +1447,48 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             from stalker import SimpleEntity
             from stalker.db.session import DBSession
-            entity_type = DBSession\
-                .query(SimpleEntity.entity_type)\
-                .filter(SimpleEntity.id == task_id)\
+
+            entity_type = (
+                DBSession.query(SimpleEntity.entity_type)
+                .filter(SimpleEntity.id == task_id)
                 .first()
+            )
 
             if entity_type == "Project":
                 return
 
             from stalker import Task
             from stalker.db.session import DBSession
-            children_count = DBSession.query(Task.id)\
-                .filter(Task.parent_id == task_id)\
-                .count()
+
+            children_count = (
+                DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
+            )
 
             if children_count == 0:
                 from sqlalchemy import text
+
                 sql = """SELECT
                     DISTINCT "Versions".take_name
                 FROM "Versions"
                 WHERE "Versions".task_id = :task_id
                 """
-                result = DBSession\
-                    .connection()\
-                    .execute(text(sql), task_id=task_id)\
+                result = (
+                    DBSession.connection()
+                    .execute(text(sql), task_id=task_id)
                     .fetchall()
+                )
 
                 takes = list(map(lambda x: x[0], result))
 
                 if not self.repr_as_separate_takes_check_box.isChecked():
                     # filter representations
                     from anima.representation import Representation
-                    takes = [take for take in takes
-                             if Representation.repr_separator not in take]
+
+                    takes = [
+                        take
+                        for take in takes
+                        if Representation.repr_separator not in take
+                    ]
                 takes = sorted(takes, key=lambda x: x.lower())
 
             logger.debug("len(takes) from db: %s" % len(takes))
@@ -1514,8 +1498,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.takes_label.setText("Takes (%s)" % len(takes))
 
     def _set_defaults(self):
-        """sets up the defaults for the interface
-        """
+        """sets up the defaults for the interface"""
         logger.debug("started setting up interface defaults")
         # set icon for search_task_toolButton
         # icon = QtGui.QApplication.style().standardIcon(QtWidgets.QStyle.SP_BrowserReload)
@@ -1531,9 +1514,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.clear_thumbnail()
 
         # fill the tasks and show completed projects if check box is checked
-        self.fill_tasks_tree_view(
-            self.show_completed_check_box.isChecked()
-        )
+        self.fill_tasks_tree_view(self.show_completed_check_box.isChecked())
 
         # reconnect signals
         # takes_combo_box
@@ -1546,9 +1527,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # takes_combo_box
         QtCore.QObject.connect(
             self.takes_list_widget,
-            QtCore.SIGNAL(
-                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-            self.takes_list_widget_changed
+            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
+            self.takes_list_widget_changed,
         )
         # *********************************************************************
 
@@ -1560,7 +1540,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.previous_versions_table_widget,
             QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self._show_previous_versions_tableWidget_context_menu
+            self._show_previous_versions_tableWidget_context_menu,
         )
 
         # Open the version
@@ -1568,7 +1548,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         QtCore.QObject.connect(
             self.previous_versions_table_widget,
             QtCore.SIGNAL("cellDoubleClicked(int,int)"),
-            self.open_push_button_clicked
+            self.open_push_button_clicked,
         )
 
         # *********************************************************************
@@ -1585,10 +1565,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # fill programs list
         from anima.dcc.external import ExternalDCCFactory
+
         env_factory = ExternalDCCFactory()
-        env_names = env_factory.get_env_names(
-            name_format=self.environment_name_format
-        )
+        env_names = env_factory.get_env_names(name_format=self.environment_name_format)
         self.dcc_combo_box.addItems(env_names)
 
         is_external_env = False
@@ -1660,6 +1639,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not self.dcc:
             # set the environment_comboBox
             from anima.dcc.external import ExternalDCCFactory
+
             dcc_factory = ExternalDCCFactory()
             try:
                 dcc = dcc_factory.get_env(version.created_with)
@@ -1667,17 +1647,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 pass
             else:
                 # find it in the comboBox
-                index = \
-                    self.dcc_combo_box.findText(
-                        dcc.name,
-                        QtCore.Qt.MatchContains
-                    )
+                index = self.dcc_combo_box.findText(dcc.name, QtCore.Qt.MatchContains)
                 if index:
                     self.dcc_combo_box.setCurrentIndex(index)
 
     def takes_list_widget_changed(self, index):
-        """runs when the takes_listWidget has changed
-        """
+        """runs when the takes_listWidget has changed"""
         logger.debug("takes_list_widget_changed started")
         # count = self.takes_list_widget.count()
         # if index == count - 1:
@@ -1691,12 +1666,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("takes_combo_box_changed finished")
 
     def update_previous_versions_table_widget(self):
-        """updates the previous_versions_table_widget
-        """
+        """updates the previous_versions_table_widget"""
         logger.debug("update_previous_versions_table_widget is started")
         self.previous_versions_table_widget.clear()
 
         from stalker import Task
+
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
@@ -1707,10 +1682,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # do not display any version for a container task
         from stalker.db.session import DBSession
-        children_count = DBSession\
-            .query(Task.id)\
-            .filter(Task.parent_id == task_id)\
-            .count()
+
+        children_count = (
+            DBSession.query(Task.id).filter(Task.parent_id == task_id).count()
+        )
         if children_count > 0:
             # clear the versions list
             self.previous_versions_table_widget.clear()
@@ -1726,16 +1701,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # query the Versions of this type and take
         from stalker import Version
-        query = DBSession.query(
-            # use only the necessary fields
-            Version.id, Version.version_number,
-            Version.is_published, Version.created_with,
-            Version.created_by_id, Version.updated_by_id,
-            Version.full_path,  # convert to absolute full path
-            Version.description,
-        )\
-            .filter(Version.task_id == task_id) \
+
+        query = (
+            DBSession.query(
+                # use only the necessary fields
+                Version.id,
+                Version.version_number,
+                Version.is_published,
+                Version.created_with,
+                Version.created_by_id,
+                Version.updated_by_id,
+                Version.full_path,  # convert to absolute full path
+                Version.description,
+            )
+            .filter(Version.task_id == task_id)
             .filter(Version.take_name == take_name)
+        )
 
         # get the published only
         if self.show_published_only_check_box.isChecked():
@@ -1744,8 +1725,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # show how many
         # count = self.version_count_spin_box.value()
 
-        data_from_db = \
-            query.order_by(Version.version_number.desc()).all()
+        data_from_db = query.order_by(Version.version_number.desc()).all()
         versions = list(map(lambda x: VersionNT(*x), data_from_db))
         versions.reverse()
 
@@ -1753,8 +1733,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("update_previous_versions_table_widget is finished")
 
     def add_take_push_button_clicked(self):
-        """runs when the add_take_toolButton clicked
-        """
+        """runs when the add_take_toolButton clicked"""
         # open up a QInputDialog and ask for a take name
         # anything is acceptable
         # because the validation will occur in the Version instance
@@ -1768,7 +1747,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             "Add Take Name",
             "New Take Name",
             QtWidgets.QLineEdit.Normal,
-            current_take_name
+            current_take_name,
         )
 
         if ok:
@@ -1785,6 +1764,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         # create a new version
         from stalker import Task
+
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
         if task_ids:
@@ -1794,15 +1774,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return None
 
         from stalker.db.session import DBSession
+
         with DBSession.no_autoflush:
             task = Task.query.get(task_id)
 
         # check if the task is a leaf task
         if not task.is_leaf:
             QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                "Please select a <strong>leaf</strong> task!"
+                self, "Error", "Please select a <strong>leaf</strong> task!"
             )
             return None
 
@@ -1816,12 +1795,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker.db.session import DBSession
         from stalker import Version
+
         try:
             version = Version(
-                task=task,
-                created_by=user,
-                take_name=take_name,
-                description=description
+                task=task, created_by=user, take_name=take_name, description=description
             )
             version.is_published = publish
             DBSession.add(version)
@@ -1843,8 +1820,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         return version
 
     def export_as_push_button_clicked(self):
-        """runs when the export_as_pushButton clicked
-        """
+        """runs when the export_as_pushButton clicked"""
         logger.debug("exporting the data as a new version")
 
         # get the new version
@@ -1861,12 +1837,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             except RuntimeError as e:
                 error_message = "%s" % e
                 print(error_message)
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error",
-                    error_message
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", error_message)
                 from stalker.db.session import DBSession
+
                 DBSession.rollback()
                 return
             finally:
@@ -1877,22 +1850,20 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     QtWidgets.QMessageBox.information(
                         self,
                         "Export",
-                        "%s\n\n has been exported correctly!" %
-                        new_version.filename
+                        "%s\n\n has been exported correctly!" % new_version.filename,
                     )
 
     def save_as_push_button_clicked(self):
-        """runs when the save_as_push_button clicked
-        """
+        """runs when the save_as_push_button clicked"""
         logger.debug("saving the data as a new version")
         new_version = self.get_new_version()
         self.save_as_wrapper(new_version)
 
     def publisher_rejected(self, version=None):
-        """runs when the publisher is rejected
-        """
+        """runs when the publisher is rejected"""
         from stalker import Version
         from stalker.db.session import DBSession
+
         if version and isinstance(version, Version):
             if version:
                 DBSession.delete(version)
@@ -1900,40 +1871,39 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             DBSession.rollback()
 
     def publish_push_button_clicked(self):
-        """runs when the publish_push_button clicked
-        """
+        """runs when the publish_push_button clicked"""
         logger.debug("saving the data as a new published version")
         answer = QtWidgets.QMessageBox.question(
             self,
             "Publish?",
             "Publish?",
             QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
         if answer == QtWidgets.QMessageBox.Yes:
             new_version = self.get_new_version(publish=True)
             if self.dcc and self.dcc.has_publishers:
                 import functools
+
                 callback = functools.partial(
-                    self.save_as_wrapper,
-                    version=new_version,
-                    run_pre_publishers=False
+                    self.save_as_wrapper, version=new_version, run_pre_publishers=False
                 )
                 # create the publish window
                 from anima.ui import publish_checker
+
                 self.close()
                 dialog = publish_checker.UI(
                     environment=self.dcc,
                     publish_callback=callback,
                     version=new_version,
-                    parent=self.parent()
+                    parent=self.parent(),
                 )
 
                 # connect the rejected signal to delete the new version
                 QtCore.QObject.connect(
                     dialog,
                     QtCore.SIGNAL("rejected()"),
-                    functools.partial(self.publisher_rejected, version=new_version)
+                    functools.partial(self.publisher_rejected, version=new_version),
                 )
 
                 dialog.show()
@@ -1962,17 +1932,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # call the environments save_as method
         from stalker.db.session import DBSession
+
         is_external_env = False
         environment = self.dcc
         if not environment:
             # get the environment
             dcc_name = self.dcc_combo_box.currentText()
             from anima.dcc.external import ExternalDCCFactory
+
             env_factory = ExternalDCCFactory()
-            environment = env_factory.get_env(
-                dcc_name,
-                self.environment_name_format
-            )
+            environment = env_factory.get_env(dcc_name, self.environment_name_format)
             is_external_env = True
             if not environment:
                 logger.debug("no DCC found with name: %s" % dcc_name)
@@ -1994,12 +1963,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     "current version: <b>%s</b><br>"
                     "new version    : <b>%s</b><br>"
                     "<br>"
-                    "Are you sure?" % (
-                        current_version.nice_name,
-                        new_version.nice_name
-                    ),
+                    "Are you sure?"
+                    % (current_version.nice_name, new_version.nice_name),
                     QtWidgets.QMessageBox.Yes,
-                    QtWidgets.QMessageBox.No
+                    QtWidgets.QMessageBox.No,
                 )
 
                 if answer == QtWidgets.QMessageBox.No:
@@ -2017,13 +1984,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     "Error",
                     "Can not publish the FIRST version!!!"
                     "<br><br>"
-                    "Save it normally first."
+                    "Save it normally first.",
                 )
 
                 DBSession.rollback()
                 return
 
         from anima.exc import PublishError
+
         try:
             environment.save_as(new_version, **kwargs)
         except (RuntimeError, PublishError) as e:
@@ -2036,11 +2004,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     error_message = unicode(e)
 
             print(error_message)
-            QtWidgets.QMessageBox.critical(
-                self,
-                "Error",
-                error_message
-            )
+            QtWidgets.QMessageBox.critical(self, "Error", error_message)
 
             DBSession.rollback()
             return
@@ -2050,8 +2014,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             clipboard = QtWidgets.QApplication.clipboard()
 
             logger.debug(
-                "new_version.absolute_full_path: %s" %
-                new_version.absolute_full_path)
+                "new_version.absolute_full_path: %s" % new_version.absolute_full_path
+            )
 
             v_path = os.path.normpath(new_version.absolute_full_path)
             clipboard.setText(v_path)
@@ -2063,12 +2027,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 "Path Generated",
                 "A new Version is created at:\n\n%s\n\n"
                 "And the path is copied to your clipboard!!!" % v_path,
-                QtWidgets.QMessageBox.Ok
+                QtWidgets.QMessageBox.Ok,
             )
 
         # check if the new version is pointing to a valid file
         # save the new version to the database
         from stalker import Version
+
         new_version = Version.query.get(new_version.id)
         if not os.path.exists(new_version.absolute_full_path):
             # raise an error
@@ -2077,7 +2042,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 "Error",
                 "Something went wrong with %s\n"
                 "and the file is not created!\n\n"
-                "Please save again!" % environment.name
+                "Please save again!" % environment.name,
             )
             DBSession.rollback()
         DBSession.commit()
@@ -2090,8 +2055,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.close()
 
     def choose_version_push_button_clicked(self):
-        """runs when the choose_pushButton clicked
-        """
+        """runs when the choose_pushButton clicked"""
         version = self.previous_versions_table_widget.current_version
         if not version:
             return
@@ -2101,6 +2065,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         from stalker import Version
+
         self.chosen_version = Version.query.get(version_id)
 
         if self.chosen_version:
@@ -2108,8 +2073,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.close()
 
     def open_push_button_clicked(self):
-        """runs when the open_pushButton clicked
-        """
+        """runs when the open_pushButton clicked"""
         if self.mode == SAVE_AS_MODE:
             return
 
@@ -2118,6 +2082,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         skip_update_check = not self.check_updates_check_box.isChecked()
 
         from stalker import Version
+
         old_version = Version.query.get(old_version.id)
 
         if not self.check_version_file_exists(old_version):
@@ -2126,7 +2091,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # close the dialog
         # TODO: Please, please, please fix the following code!
         is_blender = False
-        if self.dcc and self.dcc.name.lower().startswith('blender'):
+        if self.dcc and self.dcc.name.lower().startswith("blender"):
             is_blender = True
 
         if not is_blender:
@@ -2139,13 +2104,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # environment can throw RuntimeError for unsaved changes
             try:
-                reference_resolution = \
-                    self.dcc.open(
-                        old_version,
-                        representation=repr_name,
-                        reference_depth=ref_depth,
-                        skip_update_check=skip_update_check
-                    )
+                reference_resolution = self.dcc.open(
+                    old_version,
+                    representation=repr_name,
+                    reference_depth=ref_depth,
+                    skip_update_check=skip_update_check,
+                )
             except RuntimeError as e:
                 # pop a dialog and ask if the user really wants to open the
                 # file
@@ -2156,18 +2120,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     "There are <b>unsaved changes</b> in the current "
                     "scene<br><br>Do you really want to open the file?",
                     QtWidgets.QMessageBox.Yes,
-                    QtWidgets.QMessageBox.No
+                    QtWidgets.QMessageBox.No,
                 )
 
                 if answer == QtWidgets.QMessageBox.Yes:
-                    reference_resolution =\
-                        self.dcc.open(
-                            old_version,
-                            True,
-                            representation=repr_name,
-                            reference_depth=ref_depth,
-                            skip_update_check=skip_update_check
-                        )
+                    reference_resolution = self.dcc.open(
+                        old_version,
+                        True,
+                        representation=repr_name,
+                        reference_depth=ref_depth,
+                        skip_update_check=skip_update_check,
+                    )
                 else:
                     # no, just return
                     return
@@ -2176,12 +2139,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
                 from anima.ui import version_updater
-                version_updater_main_dialog = \
-                    version_updater.MainDialog(
-                        environment=self.dcc,
-                        parent=self,
-                        reference_resolution=reference_resolution
-                    )
+
+                version_updater_main_dialog = version_updater.MainDialog(
+                    environment=self.dcc,
+                    parent=self,
+                    reference_resolution=reference_resolution,
+                )
 
                 version_updater_main_dialog.exec_()
 
@@ -2192,8 +2155,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.close()
 
     def open_as_new_version_push_button_clicked(self):
-        """Opens the selected version and immediately saves it as a new version
-        """
+        """Opens the selected version and immediately saves it as a new version"""
         new_version = self.get_new_version()
         self.open_push_button_clicked()
         logger.debug("opening the data as a new version")
@@ -2211,15 +2173,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtWidgets.QMessageBox.critical(
                 self,
                 "File Doesn't Exist!",
-                "File doesn't exist!:<br><br>%s" %
-                version.absolute_full_path
+                "File doesn't exist!:<br><br>%s" % version.absolute_full_path,
             )
             return False
         return True
 
     def reference_push_button_clicked(self):
-        """runs when the reference_pushButton clicked
-        """
+        """runs when the reference_pushButton clicked"""
         # get the new version
         previous_version = self.previous_versions_table_widget.current_version
 
@@ -2231,11 +2191,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 "Referencing <b>un-published versions</b> are only "
                 "allowed for Power Users!\n"
                 "Please reference a published version of the same Asset/Shot",
-                QtWidgets.QMessageBox.Ok
+                QtWidgets.QMessageBox.Ok,
             )
             return
 
         from stalker import Version
+
         previous_version = Version.query.get(previous_version.id)
 
         if not self.check_version_file_exists(previous_version):
@@ -2249,46 +2210,45 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
             # check if it has any representations
             # .filter(Version.parent == previous_version)\
-            all_repr_count = Version.query\
-                .filter(Version.task == previous_version.task)\
-                .filter(Version.take_name.ilike(previous_version.take_name + "@%"))\
+            all_repr_count = (
+                Version.query.filter(Version.task == previous_version.task)
+                .filter(Version.take_name.ilike(previous_version.take_name + "@%"))
                 .count()
+            )
 
             if all_repr_count > 0:
                 # ask which one to reference
                 repr_message_box = QtWidgets.QMessageBox()
                 repr_message_box.setText("Which Repr.?")
                 from anima.representation import Representation
-                base_button = \
-                    repr_message_box.addButton(
-                        Representation.base_repr_name,
-                        QtWidgets.QMessageBox.ActionRole
-                    )
+
+                base_button = repr_message_box.addButton(
+                    Representation.base_repr_name, QtWidgets.QMessageBox.ActionRole
+                )
                 setattr(base_button, "repr_version", previous_version)
 
                 for repr_name in self.dcc.representations:
                     repr_str = "%{take}{repr_separator}{repr_name}%".format(
                         take=previous_version.take_name,
                         repr_name=repr_name,
-                        repr_separator=Representation.repr_separator
+                        repr_separator=Representation.repr_separator,
                     )
-                    repr_version = Version.query\
-                        .filter(Version.task == previous_version.task)\
-                        .filter(Version.take_name.ilike(repr_str))\
-                        .order_by(Version.version_number.desc())\
+                    repr_version = (
+                        Version.query.filter(Version.task == previous_version.task)
+                        .filter(Version.take_name.ilike(repr_str))
+                        .order_by(Version.version_number.desc())
                         .first()
+                    )
 
                     if repr_version:
                         repr_button = repr_message_box.addButton(
-                            repr_name,
-                            QtWidgets.QMessageBox.ActionRole
+                            repr_name, QtWidgets.QMessageBox.ActionRole
                         )
                         setattr(repr_button, "repr_version", repr_version)
 
                 # add a cancel button
                 cancel_button = repr_message_box.addButton(
-                    "Cancel",
-                    QtWidgets.QMessageBox.RejectRole
+                    "Cancel", QtWidgets.QMessageBox.RejectRole
                 )
 
                 repr_message_box.exec_()
@@ -2307,25 +2267,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     QtWidgets.QMessageBox.information(
                         self,
                         "Reference",
-                        "%s\n\n has been referenced correctly!" %
-                        previous_version.filename,
-                        QtWidgets.QMessageBox.Ok
+                        "%s\n\n has been referenced correctly!"
+                        % previous_version.filename,
+                        QtWidgets.QMessageBox.Ok,
                     )
             except RuntimeError as e:
                 QtWidgets.QMessageBox.critical(
-                    self,
-                    "Error",
-                    exceptionMessageGenerator(e)
+                    self, "Error", exceptionMessageGenerator(e)
                 )
 
     def import_push_button_clicked(self):
-        """runs when the import_pushButton clicked
-        """
+        """runs when the import_pushButton clicked"""
         # get the previous version
-        previous_version_id = \
-            self.previous_versions_table_widget.current_version.id
+        previous_version_id = self.previous_versions_table_widget.current_version.id
 
         from stalker import Version
+
         previous_version = Version.query.get(previous_version_id)
 
         if not self.check_version_file_exists(previous_version):
@@ -2345,20 +2302,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 QtWidgets.QMessageBox.information(
                     self,
                     "Import",
-                    "%s\n\n has been imported correctly!" %
-                    previous_version.filename,
-                    QtWidgets.QMessageBox.Ok
+                    "%s\n\n has been imported correctly!" % previous_version.filename,
+                    QtWidgets.QMessageBox.Ok,
                 )
 
     def clear_thumbnail(self):
-        """clears the thumbnail_graphicsView
-        """
+        """clears the thumbnail_graphicsView"""
         from anima.ui import utils as ui_utils
+
         ui_utils.clear_thumbnail(self.thumbnail_graphics_view)
 
     def update_thumbnail(self):
-        """updates the thumbnail for the selected task
-        """
+        """updates the thumbnail for the selected task"""
         # get the current task
         self.clear_thumbnail_push_button.setEnabled(False)
         task_id = None
@@ -2369,6 +2324,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if task_id:
             from anima.ui import utils as ui_utils
             from stalker import Task
+
             task = Task.query.get(task_id)
             if task and task.thumbnail:
                 self.clear_thumbnail_push_button.setEnabled(True)
@@ -2377,8 +2333,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             )
 
     def upload_thumbnail_push_button_clicked(self):
-        """runs when the upload_thumbnail_pushButton is clicked
-        """
+        """runs when the upload_thumbnail_pushButton is clicked"""
         # get the current task
         task_id = None
         task_ids = self.tasks_tree_view.get_selected_task_ids()
@@ -2389,16 +2344,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             return
 
         from stalker import Task
+
         task = Task.query.get(task_id)
 
         if not task:
             return
 
         from anima.ui import utils as ui_utils
+
         thumbnail_full_path = ui_utils.choose_thumbnail(
             self,
             start_path=task.absolute_path,
-            dialog_title="Choose Thumbnail for: %s" % task.name
+            dialog_title="Choose Thumbnail for: %s" % task.name,
         )
 
         # if the thumbnail_full_path is empty do not do anything
@@ -2411,8 +2368,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.update_thumbnail()
 
     def clear_thumbnail_push_button_clicked(self):
-        """clears the thumbnail of the current task if it has one
-        """
+        """clears the thumbnail of the current task if it has one"""
         # check the thumbnail view first
         scene = self.thumbnail_graphics_view.scene()
         if not scene.items():
@@ -2430,10 +2386,12 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker import SimpleEntity
         from stalker.db.session import DBSession
-        result = DBSession \
-            .query(SimpleEntity.thumbnail_id) \
-            .filter(SimpleEntity.id == task_id) \
+
+        result = (
+            DBSession.query(SimpleEntity.thumbnail_id)
+            .filter(SimpleEntity.id == task_id)
             .first()
+        )
         thumb_id = result[0]
 
         if not thumb_id:
@@ -2444,12 +2402,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             "Delete Thumbnail?",
             "Delete Thumbnail?",
             QtWidgets.QMessageBox.Yes,
-            QtWidgets.QMessageBox.No
+            QtWidgets.QMessageBox.No,
         )
 
         if answer == QtWidgets.QMessageBox.Yes:
             # remove the thumbnail and its thumbnail and its thumbnail
             from stalker import Task, Link
+
             t = Link.query.filter(Link.id == thumb_id).first()
             task = Task.query.get(task_id)
             task.thumbnail = None
@@ -2472,14 +2431,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         :return:
         """
         from anima.dcc.base import DCCBase
+
         dcc = DCCBase()
         if path:
             version = dcc.get_version_from_full_path(path)
             self.restore_ui(version)
 
     def find_from_path_push_button_clicked(self):
-        """runs when find_from_path_pushButton is clicked
-        """
+        """runs when find_from_path_pushButton is clicked"""
         self.find_from_path(self.find_from_path_line_edit.text())
 
     # def search_task_comboBox_textChanged(self, text):
@@ -2516,7 +2475,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def recent_files_combo_box_index_changed(self, path):
         """runs when the recent files combo box index has changed
 
-        :param path: 
+        :param path:
         :return:
         """
         current_index = self.recent_files_combo_box.currentIndex()

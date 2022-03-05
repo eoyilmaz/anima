@@ -62,7 +62,7 @@ class DCCBase(object):
     """
 
     name = "DCCBase"
-    representations = ['Base']
+    representations = ["Base"]
     has_publishers = False
     allow_publish_on_export = False
     extensions = []
@@ -74,26 +74,22 @@ class DCCBase(object):
         self._version = version
 
     def __str__(self):
-        """the string representation of the DCC
-        """
+        """the string representation of the DCC"""
         return self._name
 
     @property
     def version(self):
-        """returns the current Version instance which is open in the DCC
-        """
+        """returns the current Version instance which is open in the DCC"""
         return self.get_current_version()
 
     @property
     def name(self):
-        """returns the DCC name
-        """
+        """returns the DCC name"""
         return self._name
 
     @name.setter
     def name(self, name):
-        """sets the DCC name
-        """
+        """sets the DCC name"""
         self._name = name
 
     def save_as(self, version, run_pre_publishers=True):
@@ -114,20 +110,23 @@ class DCCBase(object):
         """
         raise NotImplementedError("export_as is not implemented")
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
-        """the open action
-        """
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
+        """the open action"""
         raise NotImplementedError("open is not implemented")
 
     def import_(self, version):
-        """the import action
-        """
+        """the import action"""
         raise NotImplementedError("import_ is not implemented")
 
     def reference(self, version, use_namespace=True):
-        """the reference action
-        """
+        """the reference action"""
         raise NotImplementedError("reference is not implemented")
 
     def trim_repo_path(self, path):
@@ -144,13 +143,13 @@ class DCCBase(object):
 
         # then try to trim the path
         if path.startswith(repo.path):
-            return path[len(repo.path):]
+            return path[len(repo.path) :]
         elif path.startswith(repo.windows_path):
-            return path[len(repo.windows_path):]
+            return path[len(repo.windows_path) :]
         elif path.startswith(repo.linux_path):
-            return path[len(repo.linux_path):]
+            return path[len(repo.linux_path) :]
         elif path.startswith(repo.osx_path):
-            return path[len(repo.osx_path):]
+            return path[len(repo.osx_path) :]
         return path
 
     @classmethod
@@ -162,6 +161,7 @@ class DCCBase(object):
         """
         # first find the repository
         from stalker import Repository
+
         return Repository.find_repo(path)
 
     def get_versions_from_path(self, path):
@@ -188,18 +188,20 @@ class DCCBase(object):
             return []
 
         # convert '\\' to '/'
-        path = os.path.normpath(path).replace('\\', '/')
+        path = os.path.normpath(path).replace("\\", "/")
         from stalker import Repository
+
         os_independent_path = Repository.to_os_independent_path(path)
-        logger.debug('os_independent_path: %s' % os_independent_path)
+        logger.debug("os_independent_path: %s" % os_independent_path)
 
         from stalker import Version
         from stalker.db.session import DBSession
 
         # try to get all versions with that info
         with DBSession.no_autoflush:
-            versions = Version.query.\
-                filter(Version.full_path.startswith(os_independent_path)).all()
+            versions = Version.query.filter(
+                Version.full_path.startswith(os_independent_path)
+            ).all()
 
         return versions
 
@@ -217,22 +219,20 @@ class DCCBase(object):
 
         :return: :class:`~stalker.models.version.Version`
         """
-        logger.debug('full_path: %s' % full_path)
+        logger.debug("full_path: %s" % full_path)
         # convert '\\' to '/'
-        full_path = os.path.normpath(
-            os.path.expandvars(full_path)
-        ).replace('\\', '/')
+        full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
 
         # trim repo path
         from stalker import Repository, Version
+
         os_independent_path = Repository.to_os_independent_path(full_path)
 
         # try to get a version with that info
-        logger.debug('getting a version with path: %s' % full_path)
+        logger.debug("getting a version with path: %s" % full_path)
 
-        version = Version.query\
-            .filter(Version.full_path == os_independent_path).first()
-        logger.debug('version: %s' % version)
+        version = Version.query.filter(Version.full_path == os_independent_path).first()
+        logger.debug("version: %s" % version)
         return version
 
     def get_current_version(self):
@@ -243,8 +243,7 @@ class DCCBase(object):
         raise NotImplementedError("get_current_version is not implemented")
 
     def append_to_recent_files(self, path):
-        """appends the given path to the recent files list
-        """
+        """appends the given path to the recent files list"""
         # add the file to the recent file list
         rfm = RecentFileManager()
         rfm.add(self.name, path)
@@ -268,7 +267,7 @@ class DCCBase(object):
         try:
             recent_files = rfm[self.name]
         except KeyError:
-            logger.debug('no recent files')
+            logger.debug("no recent files")
             recent_files = None
 
         if recent_files is not None:
@@ -303,8 +302,7 @@ class DCCBase(object):
         return version
 
     def get_project(self):
-        """returns the current project from DCC
-        """
+        """returns the current project from DCC"""
         raise NotImplementedError("get_project is not implemented")
 
     def set_project(self, version):
@@ -321,26 +319,25 @@ class DCCBase(object):
           version argument and a Version instance will be get from the given
           parent_ref.path.
         """
-        logger.debug('parent_ref: %s' % parent_ref)
+        logger.debug("parent_ref: %s" % parent_ref)
 
-        logger.debug('get a version')
+        logger.debug("get a version")
         if not parent_ref:
-            logger.debug('got no parent_ref')
+            logger.debug("got no parent_ref")
             version = self.get_current_version()
         else:
-            logger.debug('have a parent_ref')
+            logger.debug("have a parent_ref")
             version = self.get_version_from_full_path(parent_ref.path)
 
         if version:
-            logger.debug('got a version: %s' % version.absolute_full_path)
+            logger.debug("got a version: %s" % version.absolute_full_path)
             # use the original version if it is a Repr version
             from anima.representation import Representation
-            if Representation.repr_separator in version.take_name \
-               and version.parent:
+
+            if Representation.repr_separator in version.take_name and version.parent:
                 version = version.parent
                 logger.debug(
-                    'this is a representation switching to its parent: %s' %
-                    version
+                    "this is a representation switching to its parent: %s" % version
                 )
 
             # update the reference list
@@ -349,12 +346,12 @@ class DCCBase(object):
 
             # commit data to the database
             from stalker.db.session import DBSession
+
             DBSession.add(version)
             DBSession.commit()
 
     def deep_version_inputs_update(self):
-        """Updates the inputs of the references of the current scene
-        """
+        """Updates the inputs of the references of the current scene"""
         raise NotImplementedError("deep_version_inputs_update is not implemented")
 
     def check_referenced_versions(self, pdm=None):
@@ -384,14 +381,12 @@ class DCCBase(object):
         """
         if not pdm:
             from anima.ui.progress_dialog import ProgressDialogManager
+
             pdm = ProgressDialogManager()
 
-        caller = \
-            pdm.register(
-                3,
-                '%s.check_referenced_versions() prepare data' %
-                self.__class__.__name__
-            )
+        caller = pdm.register(
+            3, "%s.check_referenced_versions() prepare data" % self.__class__.__name__
+        )
 
         # deeply get which file is referencing which other files
         self.deep_version_inputs_update()
@@ -399,8 +394,10 @@ class DCCBase(object):
             caller.step()
 
         from anima.dcc import empty_reference_resolution
-        reference_resolution = \
-            empty_reference_resolution(root=self.get_referenced_versions())
+
+        reference_resolution = empty_reference_resolution(
+            root=self.get_referenced_versions()
+        )
 
         if caller:
             caller.step()
@@ -426,7 +423,7 @@ class DCCBase(object):
         # register a new caller
         caller = pdm.register(
             len(dfs_version_references),
-            '%s.check_referenced_versions()' % self.__class__.__name__
+            "%s.check_referenced_versions()" % self.__class__.__name__,
         )
 
         # iterate back in the list
@@ -438,27 +435,30 @@ class DCCBase(object):
                     to_be_updated_list.append(ref_v)
 
             if to_be_updated_list:
-                action = 'create'
+                action = "create"
                 # check if there is a new published version of this version
                 # that is using all the updated versions of the references
                 latest_published_version = v.latest_published_version
-                if latest_published_version and \
-                        not v.is_latest_published_version():
+                if latest_published_version and not v.is_latest_published_version():
                     # so there is a new published version
                     # check if its children needs any update
                     # and the updated child versions are already
                     # referenced to the this published version
-                    if all([ref_v.latest_published_version
+                    if all(
+                        [
+                            ref_v.latest_published_version
                             in latest_published_version.inputs
-                            for ref_v in to_be_updated_list]):
+                            for ref_v in to_be_updated_list
+                        ]
+                    ):
                         # so all new versions are referenced to this published
                         # version, just update to this latest published version
-                        action = 'update'
+                        action = "update"
                     else:
                         # not all references are in the inputs
                         # so we need to create a new version as usual
                         # and update the references to the latest versions
-                        action = 'create'
+                        action = "create"
             else:
                 # nothing needs to be updated,
                 # so check if this version has a new version,
@@ -466,18 +466,20 @@ class DCCBase(object):
                 # version
                 if v.is_latest_published_version():
                     # do nothing
-                    action = 'leave'
+                    action = "leave"
                 else:
                     # update to latest published version
-                    action = 'update'
+                    action = "update"
 
                 # before setting the action check all the inputs in
                 # resolution_dictionary, if any of them are update, or create
                 # then set this one to 'create'
-                if any(rev_v in reference_resolution['update'] or
-                       rev_v in reference_resolution['create']
-                       for rev_v in v.inputs):
-                    action = 'create'
+                if any(
+                    rev_v in reference_resolution["update"]
+                    or rev_v in reference_resolution["create"]
+                    for rev_v in v.inputs
+                ):
+                    action = "create"
 
             # so append this v to the related action list
             reference_resolution[action].append(v)
@@ -525,8 +527,7 @@ class DCCBase(object):
         raise NotImplementedError("set_frame_range is not implemented")
 
     def get_fps(self):
-        """Returns the frame rate of this current DCC
-        """
+        """Returns the frame rate of this current DCC"""
         raise NotImplementedError("get_fps is not implemented")
 
     def set_fps(self, fps=25):
@@ -550,11 +551,10 @@ class DCCBase(object):
         """
         if filename is None:
             return False
-        return filename.split('.')[-1].lower() in self.extensions
+        return filename.split(".")[-1].lower() in self.extensions
 
     def load_referenced_versions(self):
-        """loads all the references
-        """
+        """loads all the references"""
         raise NotImplementedError("load_referenced_versions is not implemented")
 
     def replace_version(self, source_version, target_version):
@@ -593,7 +593,9 @@ class DCCBase(object):
         pass
 
     @classmethod
-    def get_significant_name(cls, version, include_project_code=True, include_version_number=True):
+    def get_significant_name(
+        cls, version, include_project_code=True, include_version_number=True
+    ):
         """returns a significant name starting from the closest parent which is
         an Asset, Shot or Sequence and includes the ``Project.code``
 
@@ -604,12 +606,12 @@ class DCCBase(object):
         :rtype : str
         """
         if include_project_code:
-            sig_name = '%s_%s' % (version.task.project.code, version.nice_name)
+            sig_name = "%s_%s" % (version.task.project.code, version.nice_name)
         else:
             sig_name = version.nice_name
 
         if include_version_number:
-            sig_name = '%s_v%03d' % (sig_name, version.version_number)
+            sig_name = "%s_v%03d" % (sig_name, version.version_number)
 
         return sig_name
 
@@ -621,17 +623,17 @@ class DCCBase(object):
         """
         # use the user home directory .stalker_local_backup
         from anima import defaults
+
         return os.path.normpath(
-            os.path.expanduser(
-                '%s/projects_backup' % defaults.local_cache_folder
-            )
-        ).replace('\\', '/')
+            os.path.expanduser("%s/projects_backup" % defaults.local_cache_folder)
+        ).replace("\\", "/")
 
     def create_project_structure(self, version):
         """creates the project structure
         :param version: Stalker version
         """
         import os
+
         project_path = version.absolute_path
         for path in self.project_structure:
             # TODO: use exist_ok=True for Python 3.x
@@ -649,24 +651,21 @@ class DCCBase(object):
         :return:
         """
         output_path = os.path.join(
-            cls.local_backup_path(),
-            version.absolute_path.replace(':', '')
-        ).replace('\\', '/')
+            cls.local_backup_path(), version.absolute_path.replace(":", "")
+        ).replace("\\", "/")
 
         output_full_path = os.path.join(
-            cls.local_backup_path(),
-            version.absolute_full_path.replace(':', '')
-        ).replace('\\', '/')
+            cls.local_backup_path(), version.absolute_full_path.replace(":", "")
+        ).replace("\\", "/")
 
         # do nothing if the version and the copy is on the same drive
         # (ex: do not duplicate the file)
-        if len(os.path.commonprefix([output_full_path,
-                                     version.absolute_full_path])):
+        if len(os.path.commonprefix([output_full_path, version.absolute_full_path])):
             logger.debug(
-                'Local copy file: %s is on the same drive with the source '
-                'file: %s' % (output_full_path, version.absolute_full_path)
+                "Local copy file: %s is on the same drive with the source "
+                "file: %s" % (output_full_path, version.absolute_full_path)
             )
-            logger.debug('Not duplicating it!')
+            logger.debug("Not duplicating it!")
             return
 
         # create intermediate folders
@@ -679,19 +678,17 @@ class DCCBase(object):
         import shutil
 
         try:
-            shutil.copy(
-                version.absolute_full_path,
-                output_full_path
-            )
+            shutil.copy(version.absolute_full_path, output_full_path)
         except IOError:
             # no space left
             pass
 
-        logger.debug('created copy to: %s' % output_full_path)
+        logger.debug("created copy to: %s" % output_full_path)
 
     @classmethod
     def get_shot(cls, version):
         from stalker import Shot
+
         for task in version.task.parents:
             if isinstance(task, Shot):
                 return task
@@ -733,30 +730,30 @@ class Filter(object):
 
 
 class OpenFilter(Filter):
-    """A filter for Open operations
-    """
+    """A filter for Open operations"""
+
     pass
 
 
 class ReferenceFilter(Filter):
-    """A filter for Reference operations
-    """
+    """A filter for Reference operations"""
+
     pass
 
 
 class ImportFilter(Filter):
-    """A filter for Import operations
-    """
+    """A filter for Import operations"""
+
     pass
 
 
 class ExportFilter(Filter):
-    """A filter for Export operations
-    """
+    """A filter for Export operations"""
+
     pass
 
 
 class SaveAsFilter(Filter):
-    """A Filter for Save As operations
-    """
+    """A Filter for Save As operations"""
+
     pass

@@ -14,8 +14,7 @@ from anima.ui.lib import QtCore, QtWidgets
 
 
 def ui():
-    """returns the widget to Houdini
-    """
+    """returns the widget to Houdini"""
     root_widget = QtWidgets.QWidget()
     tlb = ToolboxLayout()
     root_widget.setLayout(tlb)
@@ -23,16 +22,14 @@ def ui():
 
 
 class ToolboxLayout(QtWidgets.QVBoxLayout):
-    """The toolbox
-    """
+    """The toolbox"""
 
     def __init__(self, *args, **kwargs):
         super(ToolboxLayout, self).__init__(*args, **kwargs)
         self._setup_ui()
 
     def _setup_ui(self):
-        """add tools
-        """
+        """add tools"""
         # create the main tab layout
         main_tab_widget = QtWidgets.QTabWidget(self.widget())
         self.addWidget(main_tab_widget)
@@ -47,7 +44,7 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         general_tab_vertical_layout = QtWidgets.QVBoxLayout()
         general_tab_widget.setLayout(general_tab_vertical_layout)
 
-        main_tab_widget.addTab(general_tab_widget, 'Generic')
+        main_tab_widget.addTab(general_tab_widget, "Generic")
 
         # Create tools for general tab
 
@@ -55,72 +52,63 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         # Version Dialog
 
         from anima.ui.utils import create_button
+
         create_button(
-            'Open Version',
+            "Open Version",
             general_tab_vertical_layout,
             GeneralTools.version_dialog,
-            callback_kwargs={"mode": 1}
+            callback_kwargs={"mode": 1},
         )
 
         create_button(
-            'Save As Version',
+            "Save As Version",
             general_tab_vertical_layout,
             GeneralTools.version_dialog,
-            callback_kwargs={"mode": 0}
+            callback_kwargs={"mode": 0},
         )
 
         # Browse $HIP
         create_button(
-            'Browse $HIP',
-            general_tab_vertical_layout,
-            GeneralTools.browse_hip
+            "Browse $HIP", general_tab_vertical_layout, GeneralTools.browse_hip
         )
 
         # Copy Path
         create_button(
-            'Copy Node Path',
-            general_tab_vertical_layout,
-            GeneralTools.copy_node_path
+            "Copy Node Path", general_tab_vertical_layout, GeneralTools.copy_node_path
         )
 
         # Range from shot
         create_button(
-            'Range From Shot',
-            general_tab_vertical_layout,
-            GeneralTools.range_from_shot
+            "Range From Shot", general_tab_vertical_layout, GeneralTools.range_from_shot
         )
 
         # Update render settings
         create_button(
-            'Update Render Settings',
+            "Update Render Settings",
             general_tab_vertical_layout,
-            GeneralTools.update_render_settings
+            GeneralTools.update_render_settings,
         )
 
         def export_rsproxy_data_as_json_callback():
-            """
-            """
+            """ """
             import hou
+
             try:
                 GeneralTools.export_rsproxy_data_as_json()
             except (BaseException, hou.OperationFailed) as e:
                 QtWidgets.QMessageBox.critical(
-                    main_tab_widget,
-                    "Export",
-                    "Error!<br><br>%s" % e
+                    main_tab_widget, "Export", "Error!<br><br>%s" % e
                 )
             else:
                 QtWidgets.QMessageBox.information(
-                    main_tab_widget,
-                    "Export",
-                    "Data has been exported correctly!"
+                    main_tab_widget, "Export", "Data has been exported correctly!"
                 )
 
         # Export RSProxy Data As JSON
         create_button(
-            'Export RSProxy Data As JSON',
+            "Export RSProxy Data As JSON",
             general_tab_vertical_layout,
-            export_rsproxy_data_as_json_callback
+            export_rsproxy_data_as_json_callback,
         )
 
         # Batch Rename
@@ -143,37 +131,34 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             search_str = search_field.text()
             replace_str = replace_field.text()
             GeneralTools.rename_selected_nodes(
-                search_str,
-                replace_str,
-                replace_in_child_nodes_check_box.isChecked()
+                search_str, replace_str, replace_in_child_nodes_check_box.isChecked()
             )
 
         create_button(
-            "Search && Replace",
-            batch_rename_layout,
-            search_and_replace_callback
+            "Search && Replace", batch_rename_layout, search_and_replace_callback
         )
 
         # Import Shaders From Maya
         create_button(
-            'Import Shaders From Maya',
+            "Import Shaders From Maya",
             general_tab_vertical_layout,
-            GeneralTools.import_shaders_from_maya
+            GeneralTools.import_shaders_from_maya,
         )
 
         # Create Focus Plane
         create_button(
-            'Creat Focus Plane',
+            "Creat Focus Plane",
             general_tab_vertical_layout,
-            GeneralTools.create_focus_plane
+            GeneralTools.create_focus_plane,
         )
 
         # Create Focus Plane
         from anima.dcc.houdini import auxiliary
+
         create_button(
-            'Create A Very Nice Camera Rig',
+            "Create A Very Nice Camera Rig",
             general_tab_vertical_layout,
-            auxiliary.very_nice_camera_rig
+            auxiliary.very_nice_camera_rig,
         )
 
         # -------------------------------------------------------------------
@@ -191,23 +176,24 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
         crowd_tab_vertical_layout = QtWidgets.QVBoxLayout()
         crowd_tab_widget.setLayout(crowd_tab_vertical_layout)
 
-        main_tab_widget.addTab(crowd_tab_widget, 'Crowd')
+        main_tab_widget.addTab(crowd_tab_widget, "Crowd")
 
         # crowd_tools_label = QtWidgets.QLabel("Crowd Tools")
         # crowd_tab_vertical_layout.addWidget(crowd_tools_label)
 
         from anima.dcc.houdini import crowd_tools
+
         # Bake Setup
         create_button(
-            'Create Bake Setup',
+            "Create Bake Setup",
             crowd_tab_vertical_layout,
-            crowd_tools.create_bake_setup
+            crowd_tools.create_bake_setup,
         )
         # Bake Setup
         create_button(
-            'Create Render Setup',
+            "Create Render Setup",
             crowd_tab_vertical_layout,
-            crowd_tools.create_render_setup
+            crowd_tools.create_render_setup,
         )
 
         # -------------------------------------------------------------------
@@ -216,46 +202,46 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
 
 
 class GeneralTools(object):
-    """General Tools
-    """
+    """General Tools"""
 
     @classmethod
     def version_dialog(cls, mode=2):
-        """version dialog
-        """
+        """version dialog"""
         from anima.ui.scripts import houdini
+
         houdini.version_dialog(mode=mode)
 
     @classmethod
     def browse_hip(cls):
-        """browse HIP folder
-        """
+        """browse HIP folder"""
         from anima.utils import open_browser_in_location
         import os
-        hip = os.environ.get('HIP')
+
+        hip = os.environ.get("HIP")
         if hip:
             open_browser_in_location(hip)
 
     @classmethod
     def copy_node_path(cls):
-        """copies path to clipboard
-        """
+        """copies path to clipboard"""
         import hou
+
         node = hou.selectedNodes()[0]
         hou.ui.copyTextToClipboard(node.path())
 
     @classmethod
     def range_from_shot(cls):
-        """sets the playback range from the related shot item
-        """
+        """sets the playback range from the related shot item"""
         from anima.dcc import houdini
+
         h = houdini.Houdini()
         v = h.get_current_version()
         if not v:
-            print('no v, returning!')
+            print("no v, returning!")
             return
 
         from stalker import Shot
+
         if not v.task.parent or not isinstance(v.task.parent, Shot):
             return
 
@@ -268,19 +254,20 @@ class GeneralTools(object):
         etc.)
         """
         from anima.dcc import houdini
+
         h = houdini.Houdini()
         v = h.get_current_version()
         if not v:
-            print('no v, returning!')
+            print("no v, returning!")
             return
 
         h.set_render_filename(version=v)
 
     @classmethod
-    def export_rsproxy_data_as_json(cls, geo=None, path=''):
-        """exports RSProxy Data on points as json
-        """
+    def export_rsproxy_data_as_json(cls, geo=None, path=""):
+        """exports RSProxy Data on points as json"""
         import hou
+
         if geo is None:
             node = hou.selectedNodes()[0]
             geo = node.geometry()
@@ -296,12 +283,10 @@ class GeneralTools(object):
 
         import os
         import tempfile
-        if path == '':
+
+        if path == "":
             path = os.path.normpath(
-                os.path.join(
-                    tempfile.gettempdir(),
-                    'rsproxy_info.json'
-                )
+                os.path.join(tempfile.gettempdir(), "rsproxy_info.json")
             )
 
         pos_data = []
@@ -316,15 +301,18 @@ class GeneralTools(object):
             "sca": sca,
             "instance_file": instance_file,
             "node_name": node_name,
-            "parent_name": parent_name
+            "parent_name": parent_name,
         }
 
         import json
+
         with open(path, "w") as f:
             f.write(json.dumps(json_data))
 
     @classmethod
-    def rename_selected_nodes(cls, search_str, replace_str, replace_in_child_nodes=False):
+    def rename_selected_nodes(
+        cls, search_str, replace_str, replace_in_child_nodes=False
+    ):
         """Batch renames selected nodes
 
         :param str search_str: Search for this
@@ -332,6 +320,7 @@ class GeneralTools(object):
         :return:
         """
         import hou
+
         selection = hou.selectedNodes()
         for node in selection:
             name = node.name()
@@ -349,12 +338,11 @@ class GeneralTools(object):
         """
         import os
         import tempfile
-        shader_data_temp_file_path = os.path.join(
-            tempfile.gettempdir(),
-            'shader_data'
-        )
+
+        shader_data_temp_file_path = os.path.join(tempfile.gettempdir(), "shader_data")
 
         import hou
+
         selected_nodes = hou.selectedNodes()
         if not selected_nodes:
             raise RuntimeError("Please select a node!")
@@ -363,24 +351,21 @@ class GeneralTools(object):
 
         # read the json data
         import json
+
         with open(shader_data_temp_file_path, "r") as f:
             shader_assignment_data = json.load(f)
 
         current_context = base_node.parent()
         # create Material SOP node
-        material_sop_node = current_context.createNode(
-            "material"
-        )
+        material_sop_node = current_context.createNode("material")
 
         # create material slots
-        material_sop_node\
-            .parm("num_materials")\
-            .set(len(shader_assignment_data))
+        material_sop_node.parm("num_materials").set(len(shader_assignment_data))
 
         # connect the material to the selected node
         material_sop_node.setInput(0, base_node)
 
-        material_context = hou.node('/mat')
+        material_context = hou.node("/mat")
         for i, shader_name in enumerate(shader_assignment_data):
             # create a new material for each shader name
             # Use RSMaterial for now
@@ -399,23 +384,18 @@ class GeneralTools(object):
             # set group field
             material_sop_node.parm("group%s" % (i + 1)).set(
                 " ".join(
-                    map(
-                        lambda x: "@path=%s" % x,
-                        shader_assignment_data[shader_name]
-                    )
+                    map(lambda x: "@path=%s" % x, shader_assignment_data[shader_name])
                 )
             )
 
             # set material field
-            material_sop_node.parm("shop_materialpath%s" % (i + 1)).set(
-                shader.path()
-            )
+            material_sop_node.parm("shop_materialpath%s" % (i + 1)).set(shader.path())
 
     @classmethod
     def create_focus_plane(cls):
-        """Creates a focus plane tool for the selected camera
-        """
+        """Creates a focus plane tool for the selected camera"""
         import hou
+
         selected = hou.selectedNodes()
         if not selected:
             return
@@ -431,9 +411,13 @@ class GeneralTools(object):
         grid_node.parm("orient").set(0)
 
         # set color and alpha
-        attr_wrangle = focus_plane_node.createNode("attribwrangle", "set_color_and_alpha")
+        attr_wrangle = focus_plane_node.createNode(
+            "attribwrangle", "set_color_and_alpha"
+        )
         attr_wrangle.setInput(0, grid_node)
-        attr_wrangle.parm("snippet").set("v@Cd = {1, 0, 0};\nv@Alpha = {0.5, 0.5, 0.5};")
+        attr_wrangle.parm("snippet").set(
+            "v@Cd = {1, 0, 0};\nv@Alpha = {0.5, 0.5, 0.5};"
+        )
 
         # Create Display node
         display_null = focus_plane_node.createNode("null", "DISPLAY")
@@ -451,22 +435,20 @@ class GeneralTools(object):
 
         # align the nodes
         from anima.dcc.houdini import auxiliary
+
         network_editor = auxiliary.get_network_pane()
         import nodegraphalign  # this is a houdini module
-        nodegraphalign.alignConnected(
-            network_editor, grid_node, None, "down"
-        )
-        nodegraphalign.alignConnected(
-            network_editor, camera, None, "down"
-        )
+
+        nodegraphalign.alignConnected(network_editor, grid_node, None, "down")
+        nodegraphalign.alignConnected(network_editor, camera, None, "down")
 
     @classmethod
     def archive_current_scene(cls):
-        """archives the current scene
-        """
+        """archives the current scene"""
         from anima.dcc import houdini
         from anima.dcc.houdini.archive import Archiver
         from anima.utils.archive import archive_current_scene
+
         h_env = houdini.Houdini()
         version = h_env.get_current_version()
         archiver = Archiver()

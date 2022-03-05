@@ -4,13 +4,11 @@ import bpy
 
 
 class Render:
-    """utils for shading and render context
-    """
+    """utils for shading and render context"""
 
     @classmethod
     def get_selected_shading_nodes(cls):
-        """returns the selected shading nodes in the shading node tree
-        """
+        """returns the selected shading nodes in the shading node tree"""
         selected_nodes = []
         for mat in bpy.data.materials:
             if mat.node_tree:
@@ -33,31 +31,27 @@ class Render:
 
     @classmethod
     def set_selected_image_texture_nodes_to_srgb(cls):
-        """sets the selected image texture node to sRGB
-        """
+        """sets the selected image texture node to sRGB"""
         nodes = cls.get_selected_shading_nodes()
         for node in nodes:
             cls.set_to_srgb(node)
 
     @classmethod
     def set_selected_image_texture_nodes_to_raw(cls):
-        """sets the selected image texture node to RAW
-        """
+        """sets the selected image texture node to RAW"""
         nodes = cls.get_selected_shading_nodes()
         for node in nodes:
             cls.set_to_raw(node)
 
     @classmethod
     def set_to_srgb(cls, node):
-        """sets the given image texture node to sRGB
-        """
-        cls.set_image_texture_node_color_space(node, 'Utility - sRGB - Texture')
+        """sets the given image texture node to sRGB"""
+        cls.set_image_texture_node_color_space(node, "Utility - sRGB - Texture")
 
     @classmethod
     def set_to_raw(cls, node):
-        """sets the given image texture node to sRGB
-        """
-        cls.set_image_texture_node_color_space(node, 'raw')
+        """sets the given image texture node to sRGB"""
+        cls.set_image_texture_node_color_space(node, "raw")
 
     @classmethod
     def set_image_texture_node_color_space(cls, node, space):

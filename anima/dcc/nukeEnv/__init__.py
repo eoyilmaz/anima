@@ -6,15 +6,13 @@ from anima.dcc.base import DCCBase
 
 
 class Nuke(DCCBase):
-    """the nuke DCC class
-    """
+    """the nuke DCC class"""
 
     name = "nuke%s" % nuke.NUKE_VERSION_MAJOR
-    extensions = ['.nk']
+    extensions = [".nk"]
 
-    def __init__(self, name='', version=None):
-        """nuke specific init
-        """
+    def __init__(self, name="", version=None):
+        """nuke specific init"""
         super(Nuke, self).__init__(name=name, version=version)
         # and add you own modifications to __init__
         # get the root node
@@ -24,8 +22,7 @@ class Nuke(DCCBase):
 
     @classmethod
     def get_root_node(cls):
-        """returns the root node of the current nuke session
-        """
+        """returns the root node of the current nuke session"""
         return nuke.toNode("root")
 
     def save_as(self, version, run_pre_publishers=True):
@@ -70,6 +67,7 @@ class Nuke(DCCBase):
         is_shot_related_task = False
         shot = None
         from stalker import Shot
+
         for task in version.task.parents:
             if isinstance(task, Shot):
                 is_shot_related_task = True
@@ -84,10 +82,7 @@ class Nuke(DCCBase):
         if is_shot_related_task:
             # just set if the frame range is not 1-1
             if shot.cut_in != 1 and shot.cut_out != 1:
-                self.set_frame_range(
-                    shot.cut_in,
-                    shot.cut_out
-                )
+                self.set_frame_range(shot.cut_in, shot.cut_out)
             imf = shot.image_format
         else:
             imf = project.image_format
@@ -102,23 +97,28 @@ class Nuke(DCCBase):
 
             # update database with new version info
             from stalker.db.session import DBSession
+
             DBSession.commit()
 
         return True
 
     def export_as(self, version):
-        """the export action for nuke DCC
-        """
+        """the export action for nuke DCC"""
         # set the extension to '.nk'
         version.update_paths()
         version.extension = self.extensions[0]
         nuke.nodeCopy(version.absolute_full_path)
         return True
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
-        """the open action for nuke DCC
-        """
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
+        """the open action for nuke DCC"""
         nuke.scriptOpen(version.absolute_full_path)
 
         # set the project_directory
@@ -138,11 +138,11 @@ class Nuke(DCCBase):
         # return True to specify everything was ok and an empty list
         # for the versions those needs to be updated
         from anima.dcc import empty_reference_resolution
+
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
-        """the import action for nuke DCC
-        """
+        """the import action for nuke DCC"""
         nuke.nodePaste(version.absolute_full_path)
         return True
 
@@ -153,7 +153,7 @@ class Nuke(DCCBase):
 
         :return: :class:`~oyProjectManager.models.version.Version`
         """
-        full_path = self._root.knob('name').value()
+        full_path = self._root.knob("name").value()
         return self.get_version_from_full_path(full_path)
 
     def get_version_from_recent_files(self):
@@ -193,8 +193,7 @@ class Nuke(DCCBase):
         return version
 
     def get_last_version(self):
-        """gets the file name from nuke
-        """
+        """gets the file name from nuke"""
         version = self.get_current_version()
 
         # read the recent file list
@@ -208,29 +207,24 @@ class Nuke(DCCBase):
         return version
 
     def get_frame_range(self):
-        """returns the current frame range
-        """
+        """returns the current frame range"""
         # self._root = self.get_root_node()
-        start_frame = int(self._root.knob('first_frame').value())
-        end_frame = int(self._root.knob('last_frame').value())
+        start_frame = int(self._root.knob("first_frame").value())
+        end_frame = int(self._root.knob("last_frame").value())
         return start_frame, end_frame
 
-    def set_frame_range(self, start_frame=1, end_frame=100,
-                        adjust_frame_range=False):
-        """sets the start and end frame range
-        """
-        self._root.knob('first_frame').setValue(start_frame)
-        self._root.knob('last_frame').setValue(end_frame)
+    def set_frame_range(self, start_frame=1, end_frame=100, adjust_frame_range=False):
+        """sets the start and end frame range"""
+        self._root.knob("first_frame").setValue(start_frame)
+        self._root.knob("last_frame").setValue(end_frame)
 
     def set_fps(self, fps=25):
-        """sets the current fps
-        """
-        self._root.knob('fps').setValue(fps)
+        """sets the current fps"""
+        self._root.knob("fps").setValue(fps)
 
     def get_fps(self):
-        """returns the current fps
-        """
-        return int(self._root.knob('fps').getValue())
+        """returns the current fps"""
+        return int(self._root.knob("fps").getValue())
 
     def set_resolution(self, image_format):
         """Sets the resolution of the current scene
@@ -256,8 +250,7 @@ class Nuke(DCCBase):
         root["format"].setValue("%s" % image_format.name)
 
     def get_main_write_nodes(self):
-        """Returns the main write node in the scene or None.
-        """
+        """Returns the main write node in the scene or None."""
         # list all the write nodes in the current file
         all_main_write_nodes = []
         for write_node in nuke.allNodes("Write"):
@@ -267,8 +260,7 @@ class Nuke(DCCBase):
         return all_main_write_nodes
 
     def create_main_write_node(self, version):
-        """creates the default write node if there is no one created before.
-        """
+        """creates the default write node if there is no one created before."""
         # list all the write nodes in the current file
         main_write_nodes = self.get_main_write_nodes()
 
@@ -281,32 +273,30 @@ class Nuke(DCCBase):
 
         for main_write_node in main_write_nodes:
             # get the output format
-            output_format_enum = main_write_node.knob('file_type').value().strip()
-            if output_format_enum == '' or output_format_enum == 'exr':
+            output_format_enum = main_write_node.knob("file_type").value().strip()
+            if output_format_enum == "" or output_format_enum == "exr":
                 # set it to exr by default
-                output_format_enum = 'exr'
-                main_write_node.knob('file_type').setValue(output_format_enum)
+                output_format_enum = "exr"
+                main_write_node.knob("file_type").setValue(output_format_enum)
 
                 # set default attributes
-                main_write_node["colorspace"].setValue(1)   # ACES 2065-1
-                main_write_node["datatype"].setValue(0)     # 16 bit half
+                main_write_node["colorspace"].setValue(1)  # ACES 2065-1
+                main_write_node["datatype"].setValue(0)  # 16 bit half
                 main_write_node["compression"].setValue(1)  # Zip (1 scanline)
-            elif output_format_enum == 'ffmpeg':
-                output_format_enum = 'mov'
+            elif output_format_enum == "ffmpeg":
+                output_format_enum = "mov"
                 main_write_node["colorspace"].setValue(104)  # Output - Rec.709
-            elif output_format_enum == 'targa':
-                output_format_enum = 'tga'
+            elif output_format_enum == "targa":
+                output_format_enum = "tga"
                 main_write_node["colorspace"].setValue(104)  # Output - Rec.709
 
             # set the output path
-            output_file_name = '%s_v%03d' % (
-                version.nice_name, version.version_number
-            )
+            output_file_name = "%s_v%03d" % (version.nice_name, version.version_number)
 
-            if output_format_enum == 'mov':
-                output_file_name = '%s.%s' % (output_file_name, output_format_enum)
+            if output_format_enum == "mov":
+                output_file_name = "%s.%s" % (output_file_name, output_format_enum)
             else:
-                output_file_name = '%s.####.%s' % (output_file_name, output_format_enum)
+                output_file_name = "%s.####.%s" % (output_file_name, output_format_enum)
 
             # check if it is a stereo comp
             # if it is enable separate view rendering
@@ -314,20 +304,16 @@ class Nuke(DCCBase):
             # set the output path
             output_file_full_path = os.path.join(
                 version.absolute_path,
-                'Outputs',
+                "Outputs",
                 version.take_name,
-                'v%03d' % version.version_number,
+                "v%03d" % version.version_number,
                 output_format_enum,
-                output_file_name
+                output_file_name,
             ).replace("\\", "/")
 
             # create the path
             try:
-                os.makedirs(
-                    os.path.dirname(
-                        output_file_full_path
-                    )
-                )
+                os.makedirs(os.path.dirname(output_file_full_path))
             except OSError:
                 # path already exists
                 pass
@@ -336,8 +322,7 @@ class Nuke(DCCBase):
             main_write_node.knob("file").setValue(output_file_full_path)
 
     def replace_external_paths(self, mode=0):
-        """make paths relative to the project dir
-        """
+        """make paths relative to the project dir"""
         # convert the given path to tcl environment script
         from anima import utils
 
@@ -354,17 +339,17 @@ class Nuke(DCCBase):
         write_geo_nodes = [node for node in all_nodes if node.Class() == "WriteGeo"]
 
         def node_rep(nodes):
-            """helper function to replace path values
-            """
-            [n["file"].setValue(
-                rep_path(
-                    os.path.expandvars(
-                        os.path.expanduser(
-                            n["file"].getValue()
-                        )
-                    ).replace('\\', '/')
+            """helper function to replace path values"""
+            [
+                n["file"].setValue(
+                    rep_path(
+                        os.path.expandvars(
+                            os.path.expanduser(n["file"].getValue())
+                        ).replace("\\", "/")
+                    )
                 )
-            ) for n in nodes]
+                for n in nodes
+            ]
 
         node_rep(read_nodes)
         node_rep(write_nodes)
@@ -415,32 +400,31 @@ class Nuke(DCCBase):
 
         # create a jinja2 template
         import jinja2
-        template = jinja2.Template("""Project: {{shot.project.name}}
+
+        template = jinja2.Template(
+            """Project: {{shot.project.name}}
 Shot: {{shot.name}}
 Frame Range: {{shot.cut_in}}-{{shot.cut_out}}
 Handles: +{{shot.handle_at_start}}, -{{shot.handle_at_end}}
 Artist: {% for resource in shot.resources %}{{resource.name}}{%- if loop.index != 1%}, {% endif -%}{% endfor %}
 Version: v{{'%03d'|format(version.version_number)}}
 Status: {{version.task.status.name}}
-        """)
+        """
+        )
 
-        template_vars = {
-            "shot": shot,
-            "version": version
-        }
+        template_vars = {"shot": shot, "version": version}
 
         return template.render(**template_vars)
 
     def update_color_management(self):
-        """updates color management
-        """
+        """updates color management"""
         root = self.get_root_node()
         root["colorManagement"].setValue(1)  # OCIO
         # root["OCIO_config"].setValue(6)      # Custom
         # root["OCIOConfigPath"].setValue("[getenv ANIMA_DEV_PATH]/OpenColorIO-Configs/aces_1.1/config.ocio")
         root["workingSpaceLUT"].setValue(0)  # ACES 2065-1
-        root["monitorLut"].setValue(0)       # sRGB
-        root["int8Lut"].setValue(148)        # Utility - sRGB - Texture
-        root["int16Lut"].setValue(148)       # Utility - sRGB - Texture
-        root["logLut"].setValue(5)           # Input - ADX - ADX10
-        root["floatLut"].setValue(0)         # ACES 2065-1
+        root["monitorLut"].setValue(0)  # sRGB
+        root["int8Lut"].setValue(148)  # Utility - sRGB - Texture
+        root["int16Lut"].setValue(148)  # Utility - sRGB - Texture
+        root["logLut"].setValue(5)  # Input - ADX - ADX10
+        root["floatLut"].setValue(0)  # ACES 2065-1

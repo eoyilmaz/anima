@@ -6,6 +6,7 @@ def extends(cls):
 
     :param cls: The class object that will be extended.
     """
+
     def wrapper(f):
         if isinstance(f, property):
             name = f.fget.__name__
@@ -21,4 +22,5 @@ def extends(cls):
             return f(*args, **kwargs)
 
         return wrapped_f
+
     return wrapper

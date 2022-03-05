@@ -6,212 +6,168 @@ from anima.render.mat_converter import ConversionManagerBase, NodeCreatorBase
 
 
 CONVERSION_SPEC_SHEET = {
-    'VRayMtl': {
-        'node_type': MaxPlus.Mtl,
-        'secondary_type': 'Redshift Material',
-
+    "VRayMtl": {
+        "node_type": MaxPlus.Mtl,
+        "secondary_type": "Redshift Material",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'diffuse': 'diffuse_color',
-            'diffuse_roughness': 'diffuse_roughness',
-            'selfIllumination': 'emission_color',
+        "attributes": {
+            "diffuse": "diffuse_color",
+            "diffuse_roughness": "diffuse_roughness",
+            "selfIllumination": "emission_color",
             # 'selfIllumination_gi': '',
-            'selfIllumination_multiplier': 'emission_weight',
-            'reflection': {
-                'refl_color': lambda x: x,
-                'refl_weight': lambda x, y: get_refl_weight(x, y),
+            "selfIllumination_multiplier": "emission_weight",
+            "reflection": {
+                "refl_color": lambda x: x,
+                "refl_weight": lambda x, y: get_refl_weight(x, y),
             },
-            'reflection_glossiness': 'refl_roughness',
+            "reflection_glossiness": "refl_roughness",
             # 'hilight_glossiness': '',
             # 'reflection_subdivs': {
             #     'refl_samples': lambda x: 16,
             # },
-
             # 'reflection_fresnel': '',
-
-            'reflection_maxDepth': 'refl_depth',
+            "reflection_maxDepth": "refl_depth",
             # 'reflection_exitColor': '',
-
             # 'reflection_useInterpolation': '',
-            'reflection_ior': 'refl_ior',
+            "reflection_ior": "refl_ior",
             # 'reflection_lockGlossiness': '',
             # 'reflection_lockIOR': '',
-
             # 'reflection_dimDistance': '',
             # 'reflection_dimDistance_on': '',
             # 'reflection_dimDistance_falloff': '',
-
             # 'reflection_affectAlpha': '',
-
-            'refraction': {
-                'refr_color': lambda x: x,
-                'refr_weight': lambda x, y: get_refr_weight(x, y),
+            "refraction": {
+                "refr_color": lambda x: x,
+                "refr_weight": lambda x, y: get_refr_weight(x, y),
             },
-            'refraction_glossiness': {
-                'refr_roughness': lambda x: x,
-                'refr_isGlossiness': True,
+            "refraction_glossiness": {
+                "refr_roughness": lambda x: x,
+                "refr_isGlossiness": True,
             },
             # 'refraction_subdivs': '',
-            'refraction_ior': 'refr_ior',
-
+            "refraction_ior": "refr_ior",
             # 'refraction_fogColor': '',
             # 'refraction_fogMult': '',
             # 'refraction_fogBias': '',
             # 'refraction_affectShadows': '',
             # 'refraction_affectAlpha': '',
-
-            'refraction_maxDepth': 'refr_depth',
+            "refraction_maxDepth": "refr_depth",
             # 'refraction_exitColor': '',
             # 'refraction_useExitColor': '',
             # 'refraction_useInterpolation': '',
-
             # 'refraction_dispersion': 'refr_abbe',
-            'refraction_dispersion_on': {
-                'refr_abbe': lambda x, y:
-                y.ParameterBlock.refraction_dispersion.Value
-                if ((x - 1.0) / 149.0) else 0  # VRay uses a value between 1-150
-                                               # fit it in to 0-100 range
+            "refraction_dispersion_on": {
+                "refr_abbe": lambda x, y: y.ParameterBlock.refraction_dispersion.Value
+                if ((x - 1.0) / 149.0)
+                else 0  # VRay uses a value between 1-150
+                # fit it in to 0-100 range
             },
-
             # 'translucency_on': '',
             # 'translucency_thickness': '',
             # 'translucency_scatterCoeff': '',
             # 'translucency_fbCoeff': '',
-
-            'translucency_scatterCoeff': {
-                'transl_weight': lambda x, y: \
-                    (1 if y.ParameterBlock.translucency_on.Value else 0) * x
+            "translucency_scatterCoeff": {
+                "transl_weight": lambda x, y: (
+                    1 if y.ParameterBlock.translucency_on.Value else 0
+                )
+                * x
             },
-            'translucency_color': 'transl_color',
-
-            'brdf_type': {
-                'refl_brdf': lambda x: {0: 0, 1: 0, 2: 2, 4: 1}[x],
+            "translucency_color": "transl_color",
+            "brdf_type": {
+                "refl_brdf": lambda x: {0: 0, 1: 0, 2: 2, 4: 1}[x],
             },
-
-            'anisotropy': 'refl_aniso',
-            'anisotropy_rotation': 'refl_aniso_rotation',
-
+            "anisotropy": "refl_aniso",
+            "anisotropy_rotation": "refl_aniso_rotation",
             # 'anisotropy_derivation': '',
             # 'anisotropy_axis': '',
             # 'anisotropy_channel': '',
-
             # 'soften': '',  # Couldn't find it in the UI
-
             # 'brdf_fixDarkEdges': '',
             # 'gtr_gamma': '',
             # 'gtr_oldGamma': '',
-
-            'brdf_useRoughness': {
-                'refl_isGlossiness': lambda x: not x,
+            "brdf_useRoughness": {
+                "refl_isGlossiness": lambda x: not x,
             },
-
             # 'option_traceDiffuse': '',
             # 'option_traceReflection': '',
             # 'option_traceRefraction': '',
             # 'option_doubleSided': '',
             # 'option_reflectOnBack': '',
             # 'option_useIrradMap': '',
-
             # 'refraction_fogUnitsScale_on': '',
             # 'option_traceDiffuseAndGlossy': '',
-            'option_cutOff': {
-                'refl_cutoff': lambda x: x,
-                'refr_cutoff': lambda x: x,
+            "option_cutOff": {
+                "refl_cutoff": lambda x: x,
+                "refr_cutoff": lambda x: x,
             },
-
-            'preservationMode': {
-                'energyCompMode': lambda x: 1 - x
-            },
-
+            "preservationMode": {"energyCompMode": lambda x: 1 - x},
             # 'option_environment_priority': '',
             # 'effect_id': '',  # There should have been a material_id but
-                                # like the one in Maya, but I couldn't find it
+            # like the one in Maya, but I couldn't find it
             # 'override_effect_id': '',
             # 'option_clampTextures': '',
             # 'option_opacityMode': '',  # May be related with the
-                                         # affects_alpha option
-
+            # affects_alpha option
             # 'option_glossyFresnel':,
-
-            'texmap_diffuse': 'diffuse_color_map',
-            'texmap_diffuse_on': 'diffuse_color_mapenable',
-            'texmap_diffuse_multiplier': 'diffuse_color_mapamount',
-
-            'texmap_reflection': 'refl_color_map',
-            'texmap_reflection_on': 'refl_color_mapenable',
-            'texmap_reflection_multiplier': 'refl_color_mapamount',
-
-            'texmap_refraction': 'refr_color_map',
-            'texmap_refraction_on': 'refr_color_mapenable',
-            'texmap_refraction_multiplier': 'refr_color_mapamount',
-
-            'texmap_bump': {
-                'bump_input_map': lambda x: create_bump_node(x),
+            "texmap_diffuse": "diffuse_color_map",
+            "texmap_diffuse_on": "diffuse_color_mapenable",
+            "texmap_diffuse_multiplier": "diffuse_color_mapamount",
+            "texmap_reflection": "refl_color_map",
+            "texmap_reflection_on": "refl_color_mapenable",
+            "texmap_reflection_multiplier": "refl_color_mapamount",
+            "texmap_refraction": "refr_color_map",
+            "texmap_refraction_on": "refr_color_mapenable",
+            "texmap_refraction_multiplier": "refr_color_mapamount",
+            "texmap_bump": {
+                "bump_input_map": lambda x: create_bump_node(x),
             },
-            'texmap_bump_on': 'bump_input_mapenable',
-            'texmap_bump_multiplier': 'bump_input_mapamount',
-
-            'texmap_reflectionGlossiness': 'refl_roughness_map',
-            'texmap_reflectionGlossiness_on': 'refl_roughness_mapenable',
-            'texmap_reflectionGlossiness_multiplier': 'refl_roughness_mapamount',
-
-            'texmap_refractionGlossiness': 'refr_roughness_map',
-            'texmap_refractionGlossiness_on': 'refr_roughness_mapenable',
-            'texmap_refractionGlossiness_multiplier': 'refr_roughness_mapamount',
-
-            'texmap_refractionIOR': 'refr_ior_map',
-            'texmap_refractionIOR_on': 'refr_ior_mapenable',
-            'texmap_refractionIOR_multiplier': 'refr_ior_mapamount',
-
-            'texmap_displacement': {
-                'displacement_input_map':
-                    lambda x: create_displacement_node(x),
+            "texmap_bump_on": "bump_input_mapenable",
+            "texmap_bump_multiplier": "bump_input_mapamount",
+            "texmap_reflectionGlossiness": "refl_roughness_map",
+            "texmap_reflectionGlossiness_on": "refl_roughness_mapenable",
+            "texmap_reflectionGlossiness_multiplier": "refl_roughness_mapamount",
+            "texmap_refractionGlossiness": "refr_roughness_map",
+            "texmap_refractionGlossiness_on": "refr_roughness_mapenable",
+            "texmap_refractionGlossiness_multiplier": "refr_roughness_mapamount",
+            "texmap_refractionIOR": "refr_ior_map",
+            "texmap_refractionIOR_on": "refr_ior_mapenable",
+            "texmap_refractionIOR_multiplier": "refr_ior_mapamount",
+            "texmap_displacement": {
+                "displacement_input_map": lambda x: create_displacement_node(x),
             },
-            'texmap_displacement_on': 'displacement_input_mapenable',
-            'texmap_displacement_multiplier': 'displacement_input_mapamount',
-
-            'texmap_translucent': 'transl_color_map',
-            'texmap_translucent_on': 'transl_color_mapenable',
-            'texmap_translucent_multiplier': 'transl_color_mapamount',
-
+            "texmap_displacement_on": "displacement_input_mapenable",
+            "texmap_displacement_multiplier": "displacement_input_mapamount",
+            "texmap_translucent": "transl_color_map",
+            "texmap_translucent_on": "transl_color_mapenable",
+            "texmap_translucent_multiplier": "transl_color_mapamount",
             # 'texmap_environment': '',
             # 'texmap_environment_on': '',
             #
             # 'texmap_hilightGlossiness': '',
             # 'texmap_hilightGlossiness_on': '',
             # 'texmap_hilightGlossiness_multiplier': '',
-
-            'texmap_reflectionIOR': 'refl_ior_map',
-            'texmap_reflectionIOR_on': 'refl_ior_mapenable',
-            'texmap_reflectionIOR_multiplier': 'refl_ior_mapamount',
-
-            'texmap_opacity': 'opacity_color_map',
-            'texmap_opacity_on': 'opacity_color_mapenable',
-            'texmap_opacity_multiplier': 'opacity_color_mapamount',
-
-            'texmap_roughness': 'diffuse_roughness_map',
-            'texmap_roughness_on': 'diffuse_roughness_mapenable',
-            'texmap_roughness_multiplier': 'diffuse_roughness_mapamount',
-
-            'texmap_anisotropy': 'refl_aniso_map',
-            'texmap_anisotropy_on': 'refl_aniso_mapenable',
-            'texmap_anisotropy_multiplier': 'refl_aniso_mapamount',
-
-            'texmap_anisotropy_rotation': 'refl_aniso_rotation_map',
-            'texmap_anisotropy_rotation_on': 'refl_aniso_rotation_mapenable',
-            'texmap_anisotropy_rotation_multiplier':
-                'refl_aniso_rotation_mapamount',
-
+            "texmap_reflectionIOR": "refl_ior_map",
+            "texmap_reflectionIOR_on": "refl_ior_mapenable",
+            "texmap_reflectionIOR_multiplier": "refl_ior_mapamount",
+            "texmap_opacity": "opacity_color_map",
+            "texmap_opacity_on": "opacity_color_mapenable",
+            "texmap_opacity_multiplier": "opacity_color_mapamount",
+            "texmap_roughness": "diffuse_roughness_map",
+            "texmap_roughness_on": "diffuse_roughness_mapenable",
+            "texmap_roughness_multiplier": "diffuse_roughness_mapamount",
+            "texmap_anisotropy": "refl_aniso_map",
+            "texmap_anisotropy_on": "refl_aniso_mapenable",
+            "texmap_anisotropy_multiplier": "refl_aniso_mapamount",
+            "texmap_anisotropy_rotation": "refl_aniso_rotation_map",
+            "texmap_anisotropy_rotation_on": "refl_aniso_rotation_mapenable",
+            "texmap_anisotropy_rotation_multiplier": "refl_aniso_rotation_mapamount",
             # 'texmap_refraction_fog': '',
             # 'texmap_refraction_fog_on': '',
             # 'texmap_refraction_fog_multiplier': '',
-
-            'texmap_self_illumination': 'emission_color_map',
-            'texmap_self_illumination_on': 'emission_color_mapenable',
-            'texmap_self_illumination_multiplier': 'emission_color_mapamount',
-
+            "texmap_self_illumination": "emission_color_map",
+            "texmap_self_illumination_on": "emission_color_mapenable",
+            "texmap_self_illumination_multiplier": "emission_color_mapamount",
             # 'reflect_minRate': '',
             # 'reflect_maxRate': '',
             # 'reflect_interpSamples': '',
@@ -222,184 +178,165 @@ CONVERSION_SPEC_SHEET = {
             # 'refract_interpSamples': '',
             # 'refract_colorThreshold': '',
             # 'refract_normalThreshold': '',
-        }
-
+        },
     },
-    'VRayBlendMtl': {
-        'node_type': MaxPlus.Mtl,
-        'secondary_type': 'Redshift Material Blender',
-
+    "VRayBlendMtl": {
+        "node_type": MaxPlus.Mtl,
+        "secondary_type": "Redshift Material Blender",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'baseMtl': 'baseColor_map',
-            'coatMtl_enable': {
-                'layerColor1_mapenable': lambda x: x[0],
-                'layerColor2_mapenable': lambda x: x[1],
-                'layerColor3_mapenable': lambda x: x[2],
-                'layerColor4_mapenable': lambda x: x[3],
-                'layerColor5_mapenable': lambda x: x[4],
-                'layerColor6_mapenable': lambda x: x[5],
+        "attributes": {
+            "baseMtl": "baseColor_map",
+            "coatMtl_enable": {
+                "layerColor1_mapenable": lambda x: x[0],
+                "layerColor2_mapenable": lambda x: x[1],
+                "layerColor3_mapenable": lambda x: x[2],
+                "layerColor4_mapenable": lambda x: x[3],
+                "layerColor5_mapenable": lambda x: x[4],
+                "layerColor6_mapenable": lambda x: x[5],
             },
-            'coatMtl': {
-                'layerColor1_map': lambda x: x[0],
-                'layerColor2_map': lambda x: x[1],
-                'layerColor3_map': lambda x: x[2],
-                'layerColor4_map': lambda x: x[3],
-                'layerColor5_map': lambda x: x[4],
-                'layerColor6_map': lambda x: x[5],
+            "coatMtl": {
+                "layerColor1_map": lambda x: x[0],
+                "layerColor2_map": lambda x: x[1],
+                "layerColor3_map": lambda x: x[2],
+                "layerColor4_map": lambda x: x[3],
+                "layerColor5_map": lambda x: x[4],
+                "layerColor6_map": lambda x: x[5],
             },
-            'blend': {
-                'blendColor1': lambda x: x[0],
-                'blendColor2': lambda x: x[1],
-                'blendColor3': lambda x: x[2],
-                'blendColor4': lambda x: x[3],
-                'blendColor5': lambda x: x[4],
-                'blendColor6': lambda x: x[5],
+            "blend": {
+                "blendColor1": lambda x: x[0],
+                "blendColor2": lambda x: x[1],
+                "blendColor3": lambda x: x[2],
+                "blendColor4": lambda x: x[3],
+                "blendColor5": lambda x: x[4],
+                "blendColor6": lambda x: x[5],
             },
-            'texmap_blend': {
-                'blendColor1_map': lambda x: x[0],
-                'blendColor2_map': lambda x: x[1],
-                'blendColor3_map': lambda x: x[2],
-                'blendColor4_map': lambda x: x[3],
-                'blendColor5_map': lambda x: x[4],
-                'blendColor6_map': lambda x: x[5],
+            "texmap_blend": {
+                "blendColor1_map": lambda x: x[0],
+                "blendColor2_map": lambda x: x[1],
+                "blendColor3_map": lambda x: x[2],
+                "blendColor4_map": lambda x: x[3],
+                "blendColor5_map": lambda x: x[4],
+                "blendColor6_map": lambda x: x[5],
             },
             # 'texmap_blend_multiplier': '',
-            'additiveMode': [
-                'additiveMode1',
-                'additiveMode2',
-                'additiveMode3',
-                'additiveMode4',
-                'additiveMode5',
-                'additiveMode6',
-            ]
-        }
+            "additiveMode": [
+                "additiveMode1",
+                "additiveMode2",
+                "additiveMode3",
+                "additiveMode4",
+                "additiveMode5",
+                "additiveMode6",
+            ],
+        },
     },
-
-    'VRayColor': {
+    "VRayColor": {
         # Convert it to 3ds Max's Color Correction node
-        'node_type': MaxPlus.Texmap,
-        'secondary_type': 'Color Correction',
-
+        "node_type": MaxPlus.Texmap,
+        "secondary_type": "Color Correction",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'red': {
-                'lightnessMode': 1,
-                'exposureMode': 0,
-                'enableR': True,
-                'gainR': lambda x: x * 100,
+        "attributes": {
+            "red": {
+                "lightnessMode": 1,
+                "exposureMode": 0,
+                "enableR": True,
+                "gainR": lambda x: x * 100,
             },
-            'green': {
-                'lightnessMode': 1,
-                'exposureMode': 0,
-                'enableG': True,
-                'gainG': lambda x: x * 100,
+            "green": {
+                "lightnessMode": 1,
+                "exposureMode": 0,
+                "enableG": True,
+                "gainG": lambda x: x * 100,
             },
-            'blue': {
-                'lightnessMode': 1,
-                'exposureMode': 0,
-                'enableB': True,
-                'gainB': lambda x: x * 100,
+            "blue": {
+                "lightnessMode": 1,
+                "exposureMode": 0,
+                "enableB": True,
+                "gainB": lambda x: x * 100,
             },
-            'rgb_multiplier': {
-                'gammaRGB': lambda x: x * 100,
+            "rgb_multiplier": {
+                "gammaRGB": lambda x: x * 100,
             },
             # 'alpha', # can do nothing
-            'color': 'color',
-            'color_gamma': 'gammaRGB'
-
-        }
+            "color": "color",
+            "color_gamma": "gammaRGB",
+        },
     },
-
-    'VRayDirt': {
-        'node_type': MaxPlus.Texmap,
-        'secondary_type': 'Redshift Ambient Occlusion',
-
+    "VRayDirt": {
+        "node_type": MaxPlus.Texmap,
+        "secondary_type": "Redshift Ambient Occlusion",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'radius': 'maxDistance',
-            'occluded_color': 'dark',
-            'unoccluded_color': 'bright',
-            'distribution': 'spread',
-            'falloff': 'fallOff',
-            'subdivs': 'numSamples',
-            'bias': 'bias',
-            'affect_alpha': 'occlusionInAlpha',
+        "attributes": {
+            "radius": "maxDistance",
+            "occluded_color": "dark",
+            "unoccluded_color": "bright",
+            "distribution": "spread",
+            "falloff": "fallOff",
+            "subdivs": "numSamples",
+            "bias": "bias",
+            "affect_alpha": "occlusionInAlpha",
             # ignore_for_gi
-            'consider_same_object_only': 'sameObjectOnly',
+            "consider_same_object_only": "sameObjectOnly",
             # double_sided
-            'invert_normal': 'invert',
+            "invert_normal": "invert",
             # work_with_transparency
             # environment_occlusion
-            'mode': {
-                'reflective': lambda x: min(1, x),
+            "mode": {
+                "reflective": lambda x: min(1, x),
             },
             # reflection_glossiness
             # affect_reflection_elements
-            'texmap_radius': 'maxDistance_map',
-            'texmap_radius_on': 'maxDistance_mapenable',
+            "texmap_radius": "maxDistance_map",
+            "texmap_radius_on": "maxDistance_mapenable",
             # texmap_radius_multiplier
-            'texmap_occluded_color': 'dark_map',
-            'texmap_occluded_color_on': 'dark_mapenable',
+            "texmap_occluded_color": "dark_map",
+            "texmap_occluded_color_on": "dark_mapenable",
             # texmap_occluded_color_multiplier
-            'texmap_unoccluded_color': 'bright_map',
-            'texmap_unoccluded_color_on': 'bright_mapenable',
+            "texmap_unoccluded_color": "bright_map",
+            "texmap_unoccluded_color_on": "bright_mapenable",
             # texmap_unoccluded_color_multiplier
             # texmap_reflection_glossiness
             # texmap_reflection_glossiness_on
             # texmap_reflection_glossiness_multiplier
             # subdivs_as_samples
-        }
+        },
     },
-
-    'VRayLightMtl': {
-        'node_type': MaxPlus.Mtl,
-        'secondary_type': 'Redshift Incandescent',
-
+    "VRayLightMtl": {
+        "node_type": MaxPlus.Mtl,
+        "secondary_type": "Redshift Incandescent",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'color': 'color',
-            'multiplier': 'intensity',
-            'texmap': 'color_map',
-            'texmap_on': 'color_mapenable',
-            'twoSided': 'doublesided',
-            'compensate_exposure': 'applyExposureCompensation',
+        "attributes": {
+            "color": "color",
+            "multiplier": "intensity",
+            "texmap": "color_map",
+            "texmap_on": "color_mapenable",
+            "twoSided": "doublesided",
+            "compensate_exposure": "applyExposureCompensation",
             # 'opacity_multiplyColor'
-            'opacity_texmap': 'alpha_map',
-            'opacity_texmap_on': 'alpha_mapenable',
-
+            "opacity_texmap": "alpha_map",
+            "opacity_texmap_on": "alpha_mapenable",
             # directLight_on
             # directLight_subdivs
             # directLight_cutoffThreshold
-
             # displacement_multiplier
             # displacement_texmap
             # displacement_texmap_on
-
             # texmap_resolution
             # texmap_adaptiveness
-        }
+        },
     },
-
-    'VRayFastSSS2': {
-        'node_type': MaxPlus.Mtl,
-        'secondary_type': 'Redshift Sub-Surface Scatter',
-
+    "VRayFastSSS2": {
+        "node_type": MaxPlus.Mtl,
+        "secondary_type": "Redshift Sub-Surface Scatter",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
+        "attributes": {
             # 'preset': '',
-            'scale': 'scale',
-            'IOR': 'ior',
+            "scale": "scale",
+            "IOR": "ior",
             # 'multiple_scattering': '',
             # 'prepass_rate': '',
             # 'prepass_id': '',
@@ -412,25 +349,25 @@ CONVERSION_SPEC_SHEET = {
             # 'samples_color': '',
             # 'overall_color': '',
             # 'diffuse_color': '',
-            'diffuse_amount': 'diffuse_amount',
+            "diffuse_amount": "diffuse_amount",
             # 'color_mode': '',
-            'sub_surface_color': 'sub_surface_color',
-            'scatter_color': 'scatter_color',
-            'scatter_radius': 'scatter_radius',
-            'phase_function': 'phase',
-            'specular_color': 'refl_color',
-            'specular_amount': 'reflectivity',
-            'specular_glossiness': 'refl_gloss',
-            'specular_subdivs': 'refl_gloss_samples',
-            'trace_reflections': {
-                'refl_hl_only': lambda x: not x,
+            "sub_surface_color": "sub_surface_color",
+            "scatter_color": "scatter_color",
+            "scatter_radius": "scatter_radius",
+            "phase_function": "phase",
+            "specular_color": "refl_color",
+            "specular_amount": "reflectivity",
+            "specular_glossiness": "refl_gloss",
+            "specular_subdivs": "refl_gloss_samples",
+            "trace_reflections": {
+                "refl_hl_only": lambda x: not x,
             },
-            'reflection_depth': 'refl_depth',
-            'single_scatter': {
-                'singleScatter_on': lambda x: True if x > 0 else False,
+            "reflection_depth": "refl_depth",
+            "single_scatter": {
+                "singleScatter_on": lambda x: True if x > 0 else False,
             },
-            'single_scatter_subdivs': 'ss_samples',
-            'refraction_depth': 'refr_depth',
+            "single_scatter_subdivs": "ss_samples",
+            "refraction_depth": "refr_depth",
             # 'front_lighting': '',
             # 'back_lighting': '',
             # 'scatter_gi': '',
@@ -438,14 +375,14 @@ CONVERSION_SPEC_SHEET = {
             # 'interpolation_accuracy': '',
             # 'legacy_mode': '',
             # 'prepass_blur': '',
-            'cutoff_threshold': ['refl_cutoff', 'refr_cutoff'],
+            "cutoff_threshold": ["refl_cutoff", "refr_cutoff"],
             # 'prepass_mode': '',
             # 'prepass_fileName': '',
-            'texmap_bump': {
-                'bump_input_map': lambda x: create_bump_node(x),
+            "texmap_bump": {
+                "bump_input_map": lambda x: create_bump_node(x),
             },
-            'texmap_bump_on': 'bump_input_mapenable',
-            'texmap_bump_multiplier': 'bump_input_mapamount',
+            "texmap_bump_on": "bump_input_mapenable",
+            "texmap_bump_multiplier": "bump_input_mapamount",
             # 'texmap_opacity': '',
             # 'texmap_opacity_on': '',
             # 'texmap_opacity_multiplier': '',
@@ -455,70 +392,64 @@ CONVERSION_SPEC_SHEET = {
             # 'texmap_diffuse_color': '',
             # 'texmap_diffuse_color_on': '',
             # 'texmap_diffuse_color_multiplier': '',
-            'texmap_diffuse_amount': 'diffuse_amount_map',
-            'texmap_diffuse_amount_on': 'diffuse_amount_mapenable',
-            'texmap_diffuse_amount_multiplier': 'diffuse_amount_mapamount',
-            'texmap_specular_color': 'refl_color_map',
-            'texmap_specular_color_on': 'refl_color_mapenable',
-            'texmap_specular_color_multiplier': 'refl_color_mapamount',
-            'texmap_specular_amount': 'reflectivity_map',
-            'texmap_specular_amount_on': 'reflectivity_mapenable',
-            'texmap_specular_amount_multiplier': 'reflectivity_mapamount',
-            'texmap_specular_glossiness': 'refl_gloss_map',
-            'texmap_specular_glossiness_on': 'refl_gloss_mapenable',
-            'texmap_specular_glossiness_multiplier': 'refl_gloss_mapamount',
-            'texmap_sss_color': 'sub_surface_color_map',
-            'texmap_sss_color_on': 'sub_surface_color_mapenable',
-            'texmap_sss_color_multiplier': 'sub_surface_color_mapamount',
-            'texmap_scatter_color': 'scatter_color_map',
-            'texmap_scatter_color_on': 'scatter_color_mapenable',
-            'texmap_scatter_color_multiplier': 'scatter_color_mapamount',
-            'texmap_scatter_radius': 'scatter_radius_map',
-            'texmap_scatter_radius_on': 'scatter_radius_mapenable',
-            'texmap_scatter_radius_multiplier': 'scatter_radius_mapamount',
-            'texmap_displacement': {
-                'displacement_input_map': lambda x: create_displacement_node(x)
+            "texmap_diffuse_amount": "diffuse_amount_map",
+            "texmap_diffuse_amount_on": "diffuse_amount_mapenable",
+            "texmap_diffuse_amount_multiplier": "diffuse_amount_mapamount",
+            "texmap_specular_color": "refl_color_map",
+            "texmap_specular_color_on": "refl_color_mapenable",
+            "texmap_specular_color_multiplier": "refl_color_mapamount",
+            "texmap_specular_amount": "reflectivity_map",
+            "texmap_specular_amount_on": "reflectivity_mapenable",
+            "texmap_specular_amount_multiplier": "reflectivity_mapamount",
+            "texmap_specular_glossiness": "refl_gloss_map",
+            "texmap_specular_glossiness_on": "refl_gloss_mapenable",
+            "texmap_specular_glossiness_multiplier": "refl_gloss_mapamount",
+            "texmap_sss_color": "sub_surface_color_map",
+            "texmap_sss_color_on": "sub_surface_color_mapenable",
+            "texmap_sss_color_multiplier": "sub_surface_color_mapamount",
+            "texmap_scatter_color": "scatter_color_map",
+            "texmap_scatter_color_on": "scatter_color_mapenable",
+            "texmap_scatter_color_multiplier": "scatter_color_mapamount",
+            "texmap_scatter_radius": "scatter_radius_map",
+            "texmap_scatter_radius_on": "scatter_radius_mapenable",
+            "texmap_scatter_radius_multiplier": "scatter_radius_mapamount",
+            "texmap_displacement": {
+                "displacement_input_map": lambda x: create_displacement_node(x)
             },
-            'texmap_displacement_on': 'displacement_input_mapenable',
-            'texmap_displacement_multiplier': 'displacement_input_mapamount',
-        }
+            "texmap_displacement_on": "displacement_input_mapenable",
+            "texmap_displacement_multiplier": "displacement_input_mapamount",
+        },
     },
-
-    'Normal Bump': {
-        'node_type': MaxPlus.Texmap,
-        'secondary_type': 'Redshift Normal Map',
-
+    "Normal Bump": {
+        "node_type": MaxPlus.Texmap,
+        "secondary_type": "Redshift Normal Map",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'mult_spin': 'scale',
+        "attributes": {
+            "mult_spin": "scale",
             # 'bump_spin': '',
-            'normal_map': {
-                'tex0': lambda x: set_bitmap_value(x),
+            "normal_map": {
+                "tex0": lambda x: set_bitmap_value(x),
             },
             # 'bump_map': '',
             # 'map1on': '',
             # 'map2on': '',
-            'method': {
-                'tspace_id': lambda x: x + 1,
+            "method": {
+                "tspace_id": lambda x: x + 1,
             },
             # 'flipred': '',
-            'flipgreen': 'flipY',
+            "flipgreen": "flipY",
             # 'swap_rg': '',
-        }
+        },
     },
-
-    'VRayNormalMap': {
-        'node_type': MaxPlus.Texmap,
-        'secondary_type': 'Redshift Normal Map',
-
+    "VRayNormalMap": {
+        "node_type": MaxPlus.Texmap,
+        "secondary_type": "Redshift Normal Map",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'normal_map': {
-                'tex0': lambda x: set_bitmap_value(x),
+        "attributes": {
+            "normal_map": {
+                "tex0": lambda x: set_bitmap_value(x),
                 # 'unbiasedNormalMap': ,
                 # 'eccmax': ,
                 # 'alt_x': ,
@@ -533,39 +464,35 @@ CONVERSION_SPEC_SHEET = {
                 # 'max_uv_y': ,
             },
             # 'normal_map_on': '',
-            'normal_map_multiplier': 'scale',
+            "normal_map_multiplier": "scale",
             # 'bump_map': '',
             # 'bump_map_on': '',
             # 'bump_map_multiplier': '',
-            'map_channel': 'tspace_id',
+            "map_channel": "tspace_id",
             # 'flip_red': '',
-            'flip_green': 'flipY',
+            "flip_green": "flipY",
             # 'swap_red_and_green': '',
             # 'map_rotation': '',
-        }
+        },
     },
-
-    'VRayOverrideMtl': {
-        'node_type': MaxPlus.Mtl,
-        'secondary_type': 'Redshift Ray Switch',
-
+    "VRayOverrideMtl": {
+        "node_type": MaxPlus.Mtl,
+        "secondary_type": "Redshift Ray Switch",
         # 'call_after': # write the code here to assign this material to
         # all of the objects that is using the VRayMtl
-
-        'attributes': {
-            'baseMtl': 'cameraColor_map',
-            'baseMtl_on': 'cameraColor_mapenable',
-            'giMtl': 'giColor_map',
-            'giMtl_on': 'giColor_mapenable',
-            'reflectMtl': 'reflectionColor_map',
-            'reflectMtl_on': 'reflectionColor_mapenable',
-            'refractMtl': 'refractionColor_map',
-            'refractMtl_on': 'refractionColor_mapenable',
+        "attributes": {
+            "baseMtl": "cameraColor_map",
+            "baseMtl_on": "cameraColor_mapenable",
+            "giMtl": "giColor_map",
+            "giMtl_on": "giColor_mapenable",
+            "reflectMtl": "reflectionColor_map",
+            "reflectMtl_on": "reflectionColor_mapenable",
+            "refractMtl": "refractionColor_map",
+            "refractMtl_on": "refractionColor_mapenable",
             # 'shadowMtl':
             # 'shadowMtl_on'
         },
     },
-
 }
 
 
@@ -618,9 +545,9 @@ def set_bitmap_value(value, y=None, z=None):
     :return:
     """
     value_class_name = value.GetClassName()
-    if value_class_name == 'VRayNormalMap':
+    if value_class_name == "VRayNormalMap":
         value = value.ParameterBlock.normal_map.Value
-    elif value_class_name == 'Redshift Normal Map':
+    elif value_class_name == "Redshift Normal Map":
         return value.ParameterBlock.tex0.Value
 
     return value.ParameterBlock.bitmap.Value
@@ -635,8 +562,7 @@ def create_bump_node(source_value):
     try:
         source_value.GetName()
         rs_bump_map = NodeCreator.create_node_by_type(
-            MaxPlus.Texmap,
-            'Redshift Bump Map'
+            MaxPlus.Texmap, "Redshift Bump Map"
         )
         rs_bump_map.ParameterBlock.input_map.Value = source_value
         return rs_bump_map
@@ -653,8 +579,7 @@ def create_displacement_node(source_value):
     try:
         source_value.GetName()
         rs_displacement_map = NodeCreator.create_node_by_type(
-            MaxPlus.Texmap,
-            'Redshift Displacement Map'
+            MaxPlus.Texmap, "Redshift Displacement Map"
         )
         rs_displacement_map.ParameterBlock.texMap_map.Value = source_value
         return rs_displacement_map
@@ -675,8 +600,7 @@ def use_front_material(source_node):
     for parent, param, i in ConversionManager.outputs(source_node):
         # param.Value = front_material
         ConversionManager.connect_attr(
-            front_material, parent,
-            '%s[%i]' % (param.GetName(), i)
+            front_material, parent, "%s[%i]" % (param.GetName(), i)
         )
 
     # also assign the front material to all of the dependencies.
@@ -687,7 +611,7 @@ def use_front_material(source_node):
             break
 
 
-def print_out_node_info(source_value, source_node, target_node, template=''):
+def print_out_node_info(source_value, source_node, target_node, template=""):
     """prints out node info
 
     :param source_value:
@@ -698,22 +622,18 @@ def print_out_node_info(source_value, source_node, target_node, template=''):
     """
     print(
         template.format(
-            source_value=source_value,
-            source_node=source_node,
-            target_node=target_node
+            source_value=source_value, source_node=source_node, target_node=target_node
         )
     )
 
 
 class NodeCreator(NodeCreatorBase):
-    """Creates nodes according to the given specs
-    """
+    """Creates nodes according to the given specs"""
 
     def create(self):
-        """creates the node
-        """
-        node_class = self.specs.get('node_type')
-        secondary_class = self.specs.get('secondary_type')
+        """creates the node"""
+        node_class = self.specs.get("node_type")
+        secondary_class = self.specs.get("secondary_type")
 
         new_node = self.create_node_by_type(node_class, secondary_class)
 
@@ -736,9 +656,7 @@ class NodeCreator(NodeCreatorBase):
         super_class_id = class_.SuperClassId
 
         # create an animatable
-        animatable = MaxPlus.Factory.CreateAnimatable(
-            super_class_id, class_id, False
-        )
+        animatable = MaxPlus.Factory.CreateAnimatable(super_class_id, class_id, False)
 
         # and cast it to the node_type
         new_node = node_class._CastFrom(animatable)
@@ -747,8 +665,7 @@ class NodeCreator(NodeCreatorBase):
 
 
 class ConversionManager(ConversionManagerBase):
-    """Manages the conversion from VRay to RedShift
-    """
+    """Manages the conversion from VRay to RedShift"""
 
     def __init__(self):
         super(ConversionManager, self).__init__()
@@ -756,13 +673,12 @@ class ConversionManager(ConversionManagerBase):
         self.node_creator_factory = NodeCreator
 
     def auto_convert(self):
-        """finds and converts all the nodes in the current scene
-        """
+        """finds and converts all the nodes in the current scene"""
         # pre condition the scene
         #
         # First run the conversion script only for VRay2SidedMtl
         # because it is causing a problem
-        for node in self.get_node_by_class('VRay2SidedMtl'):
+        for node in self.get_node_by_class("VRay2SidedMtl"):
             use_front_material(node)
 
         # then call the super
@@ -799,13 +715,12 @@ class ConversionManager(ConversionManagerBase):
                 value = param.GetValue()
                 # TODO: This one doesn't consider that the parameter is a multi
                 # parameter.
-                if isinstance(value, MaxPlus.Animatable) \
-                   and str(value) != 'None':
+                if isinstance(value, MaxPlus.Animatable) and str(value) != "None":
                     inputs.append(value)
         else:
             param = node.ParameterBlock.GetParamByName(attr)
             value = param.GetValue()
-            if isinstance(value, MaxPlus.Animatable) and str(value) != 'None':
+            if isinstance(value, MaxPlus.Animatable) and str(value) != "None":
                 inputs.append(value)
 
         return inputs
@@ -823,21 +738,15 @@ class ConversionManager(ConversionManagerBase):
         # param.Value = source_attr
 
         # do it with pymxs
-        MaxPlus.MaterialManager.PutMtlToMtlEditor(
-            source_node, 0
-        )
-        source_node_pymxs = \
-            pymxs.runtime.getMEditMaterial(1)
+        MaxPlus.MaterialManager.PutMtlToMtlEditor(source_node, 0)
+        source_node_pymxs = pymxs.runtime.getMEditMaterial(1)
 
         # get the parent node
-        MaxPlus.MaterialManager.PutMtlToMtlEditor(
-            target_node, 1
-        )
-        target_node_pymxs = \
-            pymxs.runtime.getMEditMaterial(2)
+        MaxPlus.MaterialManager.PutMtlToMtlEditor(target_node, 1)
+        target_node_pymxs = pymxs.runtime.getMEditMaterial(2)
 
         # Then execute the connection script
-        exec('target_node_pymxs.%s = source_node_pymxs' % target_parameter)
+        exec("target_node_pymxs.%s = source_node_pymxs" % target_parameter)
         # This should've worked!
 
     @classmethod
@@ -910,8 +819,7 @@ class ConversionManager(ConversionManagerBase):
                 nodes_to_return[mat.GetFullName()] = mat
 
             # try to get it from the material hierarchy
-            for parent_mat, param, sub_mat, index in \
-                    self.walk_material_hierarchy(mat):
+            for parent_mat, param, sub_mat, index in self.walk_material_hierarchy(mat):
                 try:
                     class_name = sub_mat.GetClassName()
                 except RuntimeError:
@@ -940,8 +848,7 @@ class ConversionManager(ConversionManagerBase):
                 return nodes_to_return
 
             # try to get it from the material hierarchy
-            for parent_mat, param, sub_mat, index in \
-                    self.walk_material_hierarchy(mat):
+            for parent_mat, param, sub_mat, index in self.walk_material_hierarchy(mat):
                 try:
                     sub_mat_name = sub_mat.GetName()
                 except RuntimeError:
@@ -969,8 +876,7 @@ class ConversionManager(ConversionManagerBase):
                 return nodes_to_return
 
             # try to get it from the material hierarchy
-            for parent_mat, param, sub_mat, index in \
-                    self.walk_material_hierarchy(mat):
+            for parent_mat, param, sub_mat, index in self.walk_material_hierarchy(mat):
                 try:
                     sub_mat_class_name = sub_mat.GetClassName()
                 except RuntimeError:
@@ -997,12 +903,11 @@ class ConversionManager(ConversionManagerBase):
         :param value:
         :return:
         """
-        if str(value) != 'None':
+        if str(value) != "None":
             node.ParameterBlock.GetParamByName(attr).SetValue(value)
 
     def walk_hierarchy(self, node):
-        """this is a generator that yields all dag nodes in the current scene
-        """
+        """this is a generator that yields all dag nodes in the current scene"""
         for c in node.Children:
             yield c
             for gc in self.walk_hierarchy(c):
@@ -1019,7 +924,7 @@ class ConversionManager(ConversionManagerBase):
             # decide what to do by looking at the parameter type of the p param
             param_type_name = MaxPlus.FPTypeGetName(p.GetParamType())
             value = p.Value
-            if param_type_name in ['MtlTab', 'TexmapTab']:
+            if param_type_name in ["MtlTab", "TexmapTab"]:
                 # it contains multiple materials
                 for i, v in enumerate(value):
                     yield (node, p, v, i)
@@ -1083,7 +988,7 @@ class ConversionManager(ConversionManagerBase):
         for old_node, new_node in new_nodes:
             # get the INodes using directly the old_node as material
             # Recursively assign the new material to the objects
-            print('cleaning up: %s' % old_node.GetName())
+            print("cleaning up: %s" % old_node.GetName())
             iteration = 0
             while True:
                 iteration += 1
@@ -1091,8 +996,7 @@ class ConversionManager(ConversionManagerBase):
                 try:
                     inode_name = inode.GetName()
                     inode_mat = inode.GetMaterial()
-                    print('updating material of (%i): %s' %
-                          (iteration, inode_name))
+                    print("updating material of (%i): %s" % (iteration, inode_name))
                 except RuntimeError:
                     break
                 if inode_mat.GetName() == old_node.GetName():
@@ -1114,16 +1018,19 @@ class ConversionManager(ConversionManagerBase):
                             try:
                                 # unless this is is a Multi/Sub-Object node
                                 # do it directly
-                                if parent.GetClassName() == 'Multi/Sub-Object':
+                                if parent.GetClassName() == "Multi/Sub-Object":
                                     # convert it to a MaxPlus.Mtl object
-                                    print('using Mtl instead of MtlBase for '
-                                          'Multi/Sub-Object')
+                                    print(
+                                        "using Mtl instead of MtlBase for "
+                                        "Multi/Sub-Object"
+                                    )
                                     # parent = MaxPlus.Mtl._CastFrom(parent)
                                     # # then use the SetSubMtl() method
                                     # parent.SetSubMtl(i, new_node)
                                     self.connect_attr(
-                                        new_node, parent,
-                                        '%s[%i]' % (param.GetName(), i)
+                                        new_node,
+                                        parent,
+                                        "%s[%i]" % (param.GetName(), i),
                                     )
                                 else:
                                     # do it with pymxs
@@ -1131,21 +1038,21 @@ class ConversionManager(ConversionManagerBase):
                                     # Python material/texture to pymxs
                                     # so the best way I found was to use the
                                     # material editor
+                                    print("using pymxs for complex connection!")
                                     print(
-                                        'using pymxs for complex connection!'
-                                    )
-                                    print(
-                                        '%s --> %s.%s[%s]' % (
+                                        "%s --> %s.%s[%s]"
+                                        % (
                                             new_node.GetFullName(),
                                             parent.GetName(),
                                             param.GetName(),
-                                            i
+                                            i,
                                         )
                                     )
 
                                     self.connect_attr(
-                                        new_node, parent,
-                                        '%s[%i]' % (param.GetName(), i)
+                                        new_node,
+                                        parent,
+                                        "%s[%i]" % (param.GetName(), i),
                                     )
 
                                     # # put the material to slot 1. which is slot
@@ -1171,16 +1078,21 @@ class ConversionManager(ConversionManagerBase):
                                     # # This should've worked!
 
                             except TypeError:
-                                print('Could not connect: %s --> %s.%s[%s]' %
-                                      (new_node.GetFullName(),
-                                       parent.GetName(), param.GetName(), i))
+                                print(
+                                    "Could not connect: %s --> %s.%s[%s]"
+                                    % (
+                                        new_node.GetFullName(),
+                                        parent.GetName(),
+                                        param.GetName(),
+                                        i,
+                                    )
+                                )
                     # # do this only once
                     # break
 
     @classmethod
     def get_all_material_types_in_current_scene(cls):
-        """returns all the material types in the current scene
-        """
+        """returns all the material types in the current scene"""
         mat_types = {}
         mat_lib = MaxPlus.MaterialLibrary.GetSceneMaterialLibrary()
         mat_count = mat_lib.GetNumMaterials()
@@ -1188,26 +1100,19 @@ class ConversionManager(ConversionManagerBase):
             mat = mat_lib.GetMaterial(i)
             mat_class_name = mat.GetClassName()
             if mat_class_name not in mat_types:
-                mat_types[mat_class_name] = {
-                    'count': 0,
-                    'nodes': []
-                }
-            mat_types[mat_class_name]['count'] += 1
-            mat_types[mat_class_name]['nodes'].append(mat)
+                mat_types[mat_class_name] = {"count": 0, "nodes": []}
+            mat_types[mat_class_name]["count"] += 1
+            mat_types[mat_class_name]["nodes"].append(mat)
 
-            for parent, parameter, sub_mat, index in \
-                    cls.walk_material_hierarchy(mat):
+            for parent, parameter, sub_mat, index in cls.walk_material_hierarchy(mat):
                 try:
                     sub_mat_class_name = sub_mat.GetClassName()
                 except RuntimeError:
                     continue
                 if sub_mat_class_name not in mat_types:
-                    mat_types[sub_mat_class_name] = {
-                        'count': 0,
-                        'nodes': []
-                    }
-                mat_types[sub_mat_class_name]['count'] += 1
-                mat_types[sub_mat_class_name]['nodes'].append(sub_mat)
+                    mat_types[sub_mat_class_name] = {"count": 0, "nodes": []}
+                mat_types[sub_mat_class_name]["count"] += 1
+                mat_types[sub_mat_class_name]["nodes"].append(sub_mat)
 
         return mat_types
 
@@ -1218,19 +1123,26 @@ class ConversionManager(ConversionManagerBase):
         """
         import os
         import tempfile
-        json_file_path = os.path.join(
-            tempfile.gettempdir(),
-            'basic_material.json'
-        )
+
+        json_file_path = os.path.join(tempfile.gettempdir(), "basic_material.json")
 
         data = {}
 
-        exportable_types = ['Texmap', 'Int', 'PercentFraction', 'Float',
-                            'FRgb', 'Rgb', 'Point3', 'BOOL', 'World']
+        exportable_types = [
+            "Texmap",
+            "Int",
+            "PercentFraction",
+            "Float",
+            "FRgb",
+            "Rgb",
+            "Point3",
+            "BOOL",
+            "World",
+        ]
         param_types = []
         for p in node.ParameterBlock.Parameters:
             param_type_name = MaxPlus.FPTypeGetName(p.GetParamType())
-            #print(p.GetName(), )
+            # print(p.GetName(), )
             # data[p.GetName()] = p.Value;
             param_types.append(param_type_name)
 

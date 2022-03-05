@@ -19,18 +19,20 @@ from anima import logger
 
 
 def version_dialog(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_dialog UI for Blender
-    """
+    """Helper function for version_dialog UI for Blender"""
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     # use PySide2
     from anima import ui
+
     ui.SET_PYSIDE2()
 
     from anima.ui import version_dialog
     from anima.dcc import blender as blender_dcc
+
     b = blender_dcc.Blender()
 
     logger.setLevel(logging_level)
@@ -40,18 +42,20 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
 
 def version_updater(logging_level=logging.WARNING):
-    """Helper function for version_dialog UI for Blender
-    """
+    """Helper function for version_dialog UI for Blender"""
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     # use PySide2
     from anima import ui
+
     ui.SET_PYSIDE2()
 
     from anima.ui import version_updater
     from anima.dcc import blender
+
     b = blender.Blender()
 
     logger.setLevel(logging_level)

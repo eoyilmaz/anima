@@ -5,8 +5,7 @@ from anima.ui.lib import QtWidgets
 
 
 class ProjectComboBox(QtWidgets.QComboBox):
-    """A QComboBox variant for Stalker Project instances
-    """
+    """A QComboBox variant for Stalker Project instances"""
 
     def __init__(self, *args, **kwargs):
         super(ProjectComboBox, self).__init__(*args, **kwargs)
@@ -14,16 +13,17 @@ class ProjectComboBox(QtWidgets.QComboBox):
         self.fill_ui()
 
     def fill_ui(self):
-        """fills the ui with project instances
-        """
+        """fills the ui with project instances"""
         from stalker import Project
+
         self.clear()
 
         # add the default item
         self.addItem("Select Project...", None)
         if self.show_active_projects:
             from stalker import Status
-            cmpl = Status.query.filter(Status.code == 'CMPL').first()
+
+            cmpl = Status.query.filter(Status.code == "CMPL").first()
             projects = Project.query.filter(Project.status != cmpl).all()
         else:
             projects = Project.query.order_by(Project.name).all()
@@ -33,8 +33,7 @@ class ProjectComboBox(QtWidgets.QComboBox):
 
     @property
     def show_active_projects(self):
-        """getter for the self._show_active_projects property
-        """
+        """getter for the self._show_active_projects property"""
         return self._show_active_projects
 
     @show_active_projects.setter
@@ -48,6 +47,5 @@ class ProjectComboBox(QtWidgets.QComboBox):
         self.fill_ui()
 
     def get_current_project(self):
-        """returns the current project instance
-        """
+        """returns the current project instance"""
         return self.itemData(self.currentIndex())

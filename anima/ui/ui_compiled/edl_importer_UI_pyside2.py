@@ -9,6 +9,7 @@
 
 from PySide2 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -16,11 +17,15 @@ class Ui_Dialog(object):
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.formLayout = QtWidgets.QFormLayout()
-        self.formLayout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
+        self.formLayout.setFieldGrowthPolicy(
+            QtWidgets.QFormLayout.AllNonFixedFieldsGrow
+        )
         self.formLayout.setObjectName("formLayout")
         self.media_files_path_lineEdit = QtWidgets.QLineEdit(Dialog)
         self.media_files_path_lineEdit.setObjectName("media_files_path_lineEdit")
-        self.formLayout.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.media_files_path_lineEdit)
+        self.formLayout.setWidget(
+            0, QtWidgets.QFormLayout.FieldRole, self.media_files_path_lineEdit
+        )
         self.label = QtWidgets.QLabel(Dialog)
         self.label.setObjectName("label")
         self.formLayout.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label)
@@ -41,12 +46,23 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
-        Dialog.setTabOrder(self.media_files_path_lineEdit, self.edl_preview_plainTextEdit)
+        Dialog.setTabOrder(
+            self.media_files_path_lineEdit, self.edl_preview_plainTextEdit
+        )
         Dialog.setTabOrder(self.edl_preview_plainTextEdit, self.send_pushButton)
 
     def retranslateUi(self, Dialog):
-        Dialog.setWindowTitle(QtWidgets.QApplication.translate("Dialog", "EDL Importer", None, -1))
-        self.label.setText(QtWidgets.QApplication.translate("Dialog", "EDL Path", None, -1))
-        self.label_2.setText(QtWidgets.QApplication.translate("Dialog", "AVID Media Files Path", None, -1))
-        self.send_pushButton.setText(QtWidgets.QApplication.translate("Dialog", "Send To AVID", None, -1))
-
+        Dialog.setWindowTitle(
+            QtWidgets.QApplication.translate("Dialog", "EDL Importer", None, -1)
+        )
+        self.label.setText(
+            QtWidgets.QApplication.translate("Dialog", "EDL Path", None, -1)
+        )
+        self.label_2.setText(
+            QtWidgets.QApplication.translate(
+                "Dialog", "AVID Media Files Path", None, -1
+            )
+        )
+        self.send_pushButton.setText(
+            QtWidgets.QApplication.translate("Dialog", "Send To AVID", None, -1)
+        )

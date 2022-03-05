@@ -5,8 +5,7 @@ from anima.ui.lib import QtCore, QtWidgets
 
 
 class TaskDashboardWidget(QtWidgets.QWidget):
-    """A widget that displays task related information
-    """
+    """A widget that displays task related information"""
 
     def __init__(self, task=None, parent=None, **kwargs):
         self._task = None
@@ -37,8 +36,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task = task
 
     def _setup_ui(self):
-        """create the UI widgets
-        """
+        """create the UI widgets"""
         # we need a main layout
         # may be a vertical one
         # or a form layout
@@ -50,9 +48,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.vertical_layout.addLayout(horizontal_layout3)
 
         self.widget_label = QtWidgets.QLabel(self)
-        self.widget_label.setStyleSheet(
-            "color: rgb(71, 143, 202);\nfont: 18pt;"
-        )
+        self.widget_label.setStyleSheet("color: rgb(71, 143, 202);\nfont: 18pt;")
         horizontal_layout3.addWidget(self.widget_label)
         horizontal_layout3.addStretch(1)
 
@@ -73,12 +69,13 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         QtCore.QObject.connect(
             self.fix_task_status_button,
             QtCore.SIGNAL("clicked()"),
-            self.fix_task_status
+            self.fix_task_status,
         )
 
         # Add Status Label
         vertical_layout3 = QtWidgets.QVBoxLayout()
         from anima.ui.widgets.task_status_label import TaskStatusLabel
+
         self.task_status_label = TaskStatusLabel(task=self.task)
         self.task_status_label.setMaximumHeight(12)
         vertical_layout3.addWidget(self.task_status_label)
@@ -90,12 +87,14 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_progress.setValue(50)
         self.task_progress.setAlignment(QtCore.Qt.AlignCenter)
         self.task_progress.setMaximumHeight(12)
-        self.task_progress.setStyleSheet("""
+        self.task_progress.setStyleSheet(
+            """
             QProgressBar::chunk {
                 background-color: #3add36;
                 width: 1px;
             }
-        """)
+        """
+        )
         vertical_layout3.addWidget(self.task_progress)
 
         # set items closer to each other
@@ -125,6 +124,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Task Thumbnail
         from anima.ui.widgets.entity_thumbnail import EntityThumbnailWidget
+
         self.task_thumbnail_widget = EntityThumbnailWidget(task=self.task, parent=self)
 
         horizontal_layout2.addWidget(self.task_thumbnail_widget)
@@ -132,6 +132,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Task Detail Info
         from anima.ui.widgets.task_detail import TaskDetailWidget
+
         self.task_detail_widget = TaskDetailWidget(task=self.task, parent=self)
 
         horizontal_layout2.addWidget(self.task_detail_widget)
@@ -139,6 +140,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Task Timing Info
         from anima.ui.widgets.task_timing import TaskTimingInfoWidget
+
         self.task_timing_widget = TaskTimingInfoWidget(task=self.task, parent=self)
 
         horizontal_layout2.addWidget(self.task_timing_widget)
@@ -149,12 +151,14 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # --------------------------
         # Description field
         self.description_label = QtWidgets.QLabel(self)
-        self.description_label.setStyleSheet("""
+        self.description_label.setStyleSheet(
+            """
         background-color: gray;
         color: white;
         font-weight: bold;
         padding: 0.5em;
-        """)
+        """
+        )
         self.description_label.setText("Description")
         self.description_field = QtWidgets.QTextEdit(self)
         self.description_field.setAcceptRichText(True)
@@ -170,6 +174,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # ---------------------------
         # Responsible Info
         from anima.ui.widgets.responsible_info import ResponsibleInfoWidget
+
         self.responsible_info_widget = ResponsibleInfoWidget(
             task=self.task, parent=self
         )
@@ -178,15 +183,14 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # ---------------------------
         # Resource Info
         from anima.ui.widgets.resource_info import ResourceInfoWidget
-        self.resource_info_widget = ResourceInfoWidget(
-            task=self.task, parent=self
-        )
+
+        self.resource_info_widget = ResourceInfoWidget(task=self.task, parent=self)
         vertical_layout2.addWidget(self.resource_info_widget)
 
         # ---------------------------
         # Task Versions Usage Info
-        from anima.ui.widgets.task_version_usage_info import \
-            TaskVersionUsageInfoWidget
+        from anima.ui.widgets.task_version_usage_info import TaskVersionUsageInfoWidget
+
         self.task_versions_usage_info_widget = TaskVersionUsageInfoWidget(
             task=self.task, parent=self
         )
@@ -200,21 +204,21 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         # ---------------------------
         # Task Notes
         from anima.ui.widgets.entity_notes import EntityNotesWidgets
+
         self.task_notes_widget = EntityNotesWidgets(entity=self.task, parent=self)
         self.vertical_layout.addWidget(self.task_notes_widget)
 
     @property
     def task(self):
-        """getter for the _task attribute
-        """
+        """getter for the _task attribute"""
         return self._task
 
     @task.setter
     def task(self, task):
-        """setter for the task attribute
-        """
+        """setter for the task attribute"""
 
         from stalker import Task
+
         if isinstance(task, Task):
             self._task = task
         else:
@@ -236,11 +240,11 @@ class TaskDashboardWidget(QtWidgets.QWidget):
             self.task_progress.setValue(self._task.percent_complete)
         else:
             self.description_field_is_updating = True
-            self.description_field.setText('')
+            self.description_field.setText("")
             self.description_field_is_updating = False
             self.task_progress.setValue(0)
 
-        self.widget_label.setText(self._task.name if self._task else 'Task Name')
+        self.widget_label.setText(self._task.name if self._task else "Task Name")
         self.task_thumbnail_widget.task = self._task
         self.task_detail_widget.task = self._task
         self.task_timing_widget.task = self._task
@@ -248,21 +252,22 @@ class TaskDashboardWidget(QtWidgets.QWidget):
         self.task_notes_widget.task = self._task
 
     def fix_task_status(self):
-        """fix current task status
-        """
+        """fix current task status"""
         from stalker import Task
+
         assert isinstance(self.task, Task)
         from anima import utils
+
         utils.fix_task_statuses(self.task)
         utils.fix_task_computed_time(self.task)
 
         from stalker.db.session import DBSession
+
         DBSession.add(self.task)
         DBSession.commit()
 
     def update_description(self):
-        """runs when description field has changed
-        """
+        """runs when description field has changed"""
         if self.description_field_is_updating:
             return
 
@@ -270,6 +275,7 @@ class TaskDashboardWidget(QtWidgets.QWidget):
 
         self.task.description = self.description_field.toPlainText()
         from stalker.db.session import DBSession
+
         DBSession.add(self.task)
         DBSession.commit()
 

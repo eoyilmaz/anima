@@ -24,8 +24,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.task = task
 
     def _setup_ui(self):
-        """create the UI widgets
-        """
+        """create the UI widgets"""
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.vertical_layout)
 
@@ -34,8 +33,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
 
         # set size policy
         size_policy = QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Fixed,
-            QtWidgets.QSizePolicy.Fixed
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed
         )
         size_policy.setHorizontalStretch(0)
         size_policy.setVerticalStretch(0)
@@ -62,10 +60,10 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.thumbnail_graphics_view.setBackgroundBrush(brush)
         self.thumbnail_graphics_view.setInteractive(False)
         self.thumbnail_graphics_view.setRenderHints(
-            QtGui.QPainter.Antialiasing |
-            QtGui.QPainter.HighQualityAntialiasing |
-            QtGui.QPainter.SmoothPixmapTransform |
-            QtGui.QPainter.TextAntialiasing
+            QtGui.QPainter.Antialiasing
+            | QtGui.QPainter.HighQualityAntialiasing
+            | QtGui.QPainter.SmoothPixmapTransform
+            | QtGui.QPainter.TextAntialiasing
         )
         self.vertical_layout.addWidget(self.thumbnail_graphics_view)
 
@@ -88,13 +86,12 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         QtCore.QObject.connect(
             self.upload_thumbnail_button,
             QtCore.SIGNAL("clicked()"),
-            self.upload_thumbnail_button_clicked
+            self.upload_thumbnail_button_clicked,
         )
 
     @property
     def task(self):
-        """getter for the task property
-        """
+        """getter for the task property"""
         return self._task
 
     @task.setter
@@ -105,6 +102,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         :return:
         """
         from stalker import Task
+
         if isinstance(task, Task):
             self._task = task
 
@@ -112,15 +110,15 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         self.clear_thumbnail()
         if task:
             from anima.ui import utils
+
             utils.update_graphics_view_with_task_thumbnail(
-                self.task,
-                self.thumbnail_graphics_view
+                self.task, self.thumbnail_graphics_view
             )
 
     def clear_thumbnail(self):
-        """clears the content of the thumbnail
-        """
+        """clears the content of the thumbnail"""
         from anima.ui import utils
+
         utils.clear_thumbnail(self.thumbnail_graphics_view)
 
     # def thumbnail_graphics_view_clicked(self):
@@ -130,11 +128,11 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
     #     # self.upload_thumbnail_button.setVisible(True)
 
     def upload_thumbnail_button_clicked(self):
-        """replaces the thumbnail
-        """
+        """replaces the thumbnail"""
         # print('thumbnail button clicked')
         # self.upload_thumbnail_button.setVisible(False)
         from anima.ui import utils
+
         thumbnail_full_path = utils.choose_thumbnail(self)
         anima.utils.upload_thumbnail(self.task, thumbnail_full_path)
         self.fill_ui()

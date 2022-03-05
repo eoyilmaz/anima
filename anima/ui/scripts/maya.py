@@ -5,11 +5,12 @@ from anima import logger
 
 
 def set_qt_lib():
-    """sets the Qt lib according to the maya version
-    """
+    """sets the Qt lib according to the maya version"""
     import pymel
+
     try:
         from anima import ui
+
         if pymel.versions.current() > 201650:
             ui.SET_PYSIDE2()
         else:
@@ -19,10 +20,10 @@ def set_qt_lib():
 
 
 def version_dialog(logging_level=logging.WARNING, mode=2):
-    """Helper function for version_dialog UI for Maya
-    """
+    """Helper function for version_dialog UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     # use PySide for Maya 2014
@@ -31,9 +32,11 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
     from anima.ui import version_dialog
     from anima.dcc import mayaEnv
+
     m = mayaEnv.Maya()
 
     import pymel
+
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     logger.setLevel(logging_level)
@@ -43,10 +46,10 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
 
 
 def version_updater(logging_level=logging.WARNING):
-    """helper function for version_updater UI for Maya
-    """
+    """helper function for version_updater UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     # set Qt lib
@@ -54,9 +57,11 @@ def version_updater(logging_level=logging.WARNING):
 
     from anima.ui import version_updater
     from anima.dcc import mayaEnv
+
     m = mayaEnv.Maya()
 
     import pymel
+
     m.name = "Maya%s" % str(pymel.versions.current())[0:4]
 
     logger.setLevel(logging_level)
@@ -73,21 +78,22 @@ def version_updater(logging_level=logging.WARNING):
 
 
 def version_mover():
-    """
-    """
+    """ """
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     from anima.ui import version_mover as vm
+
     vm.UI()
 
 
 def project_manager(logging_level=logging.WARNING):
-    """Helper function for project_manager UI for Maya
-    """
+    """Helper function for project_manager UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
+
     do_db_setup()
 
     # use PySide for Maya 2014

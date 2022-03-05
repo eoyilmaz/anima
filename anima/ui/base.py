@@ -9,12 +9,10 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
 class AnimaDialogBase(object):
-    """A simple class to hold basic common functions for dialogs
-    """
+    """A simple class to hold basic common functions for dialogs"""
 
     def center_window(self):
-        """centers the window to the main application window
-        """
+        """centers the window to the main application window"""
 
         # if there is no main application then fall back to centering to the
         # screen that the mouse pointer is in
@@ -37,8 +35,7 @@ class AnimaDialogBase(object):
         self.move(left, top)
 
     def center_window_to_screen(self):
-        """centers the window to the screen that the mouse pointer is in
-        """
+        """centers the window to the screen that the mouse pointer is in"""
         desktop = QtWidgets.QApplication.desktop()
         cursor_pos = QtGui.QCursor.pos()
         desktop_number = desktop.screenNumber(cursor_pos)
@@ -48,12 +45,11 @@ class AnimaDialogBase(object):
 
         self.move(
             (desktop_rect.width() - size.width()) * 0.5 + desktop_rect.left(),
-            (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top()
+            (desktop_rect.height() - size.height()) * 0.5 + desktop_rect.top(),
         )
 
     def get_logged_in_user(self):
-        """returns the logged in user
-        """
+        """returns the logged in user"""
         # Fix issues about this method being a part of a QLayout instead of a QDialog
         parent = None
         if isinstance(self, QtWidgets.QDialog):
@@ -61,11 +57,13 @@ class AnimaDialogBase(object):
 
         local_session = LocalSession()
         from stalker.db.session import DBSession
+
         with DBSession.no_autoflush:
             logged_in_user = local_session.logged_in_user
 
         if not logged_in_user:
             from anima.ui import login_dialog
+
             dialog = login_dialog.MainDialog(parent=parent)
             # dialog.deleteLater()
             dialog.exec_()
@@ -93,8 +91,8 @@ class AnimaDialogBase(object):
 
 
 class MultiLineInputDialog(QtWidgets.QDialog):
-    """A simple dialog with a QPlainTextEdit
-    """
+    """A simple dialog with a QPlainTextEdit"""
+
     pass
 
 
@@ -111,7 +109,7 @@ def ui_caller(app_in, executor, ui_class, **kwargs):
             try:
                 app = QtWidgets.QApplication(sys.argv)
             except (TypeError, AttributeError):  # sys.argv gives argv.error or
-                                                 # Qt gives TypeError
+                # Qt gives TypeError
                 app = QtWidgets.QApplication([])
         else:
             app = app_in
@@ -123,10 +121,7 @@ def ui_caller(app_in, executor, ui_class, **kwargs):
         app.exec_()
         if self_quit:
             app.connect(
-                app,
-                QtCore.SIGNAL("lastWindowClosed()"),
-                app,
-                QtCore.SLOT("quit()")
+                app, QtCore.SIGNAL("lastWindowClosed()"), app, QtCore.SLOT("quit()")
             )
     else:
         executor.exec_(app, ui_instance)

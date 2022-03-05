@@ -4,8 +4,8 @@ from anima import logger
 
 
 class ArchiverBase(object):
-    """The base class for Archivers
-    """
+    """The base class for Archivers"""
+
     default_project_structure = ""
 
     def __init__(self, exclude_mask=None, recursive_search=False):
@@ -15,7 +15,7 @@ class ArchiverBase(object):
         self.recursive_search = recursive_search
 
     @classmethod
-    def create_default_project(cls, path, name='DefaultProject'):
+    def create_default_project(cls, path, name="DefaultProject"):
         """Creates default project structure.
 
         :param str path: The path that the default project structure will be created.
@@ -24,10 +24,11 @@ class ArchiverBase(object):
         :return:
         """
         import os
+
         project_path = os.path.join(path, name)
 
         # lets create the structure
-        for dir_name in cls.default_project_structure.split('\n'):
+        for dir_name in cls.default_project_structure.split("\n"):
             dir_path = os.path.join(project_path, dir_name.strip())
             try:
                 os.makedirs(dir_path)
@@ -36,7 +37,7 @@ class ArchiverBase(object):
 
         return project_path
 
-    def flatten(self, path, project_name='DefaultProject', tempdir=None):
+    def flatten(self, path, project_name="DefaultProject", tempdir=None):
         """Flattens the given scene in to a new default project.
 
         It will also flatten all the referenced files, textures, image planes,
@@ -54,19 +55,24 @@ class ArchiverBase(object):
         if not tempdir:
             tempdir = tempfile.gettempdir()
         from stalker import Repository
+
         all_repos = Repository.query.all()
 
-        default_project_path = self.create_default_project(path=tempdir, name=project_name)
+        default_project_path = self.create_default_project(
+            path=tempdir, name=project_name
+        )
 
-        logger.debug('creating new default project at: %s' % default_project_path)
+        logger.debug("creating new default project at: %s" % default_project_path)
 
-        ref_paths = self._move_file_and_fix_references(path, default_project_path, scenes_folder='scenes')
+        ref_paths = self._move_file_and_fix_references(
+            path, default_project_path, scenes_folder="scenes"
+        )
 
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
 
             if self.exclude_mask and os.path.splitext(ref_path)[1] in self.exclude_mask:
-                logger.debug('skipping: %s' % ref_path)
+                logger.debug("skipping: %s" % ref_path)
                 continue
 
             # fix different OS paths
@@ -74,8 +80,9 @@ class ArchiverBase(object):
                 if repo.is_in_repo(ref_path):
                     ref_path = repo.to_native_path(ref_path)
 
-            new_ref_paths = \
-                self._move_file_and_fix_references(ref_path, default_project_path, scenes_folder='scenes/refs')
+            new_ref_paths = self._move_file_and_fix_references(
+                ref_path, default_project_path, scenes_folder="scenes/refs"
+            )
 
             # extend ref_paths with new ones
             for new_ref_path in new_ref_paths:
@@ -84,7 +91,9 @@ class ArchiverBase(object):
 
         return default_project_path
 
-    def _move_file_and_fix_references(self, path, project_path, scenes_folder='', refs_folder=''):
+    def _move_file_and_fix_references(
+        self, path, project_path, scenes_folder="", refs_folder=""
+    ):
         """Moves the given file to the given project path and moves any
         references of it too
 
@@ -95,14 +104,18 @@ class ArchiverBase(object):
         :return list: returns a list of paths
         """
         # This needs to be implemented by the environment
-        raise NotImplementedError("This method needs to be implemented by the derived class")
+        raise NotImplementedError(
+            "This method needs to be implemented by the derived class"
+        )
 
     def _extract_references(self):
         """returns the list of references in the given scene
 
         :return:
         """
-        raise NotImplementedError("This method needs to be implemented by the derived class")
+        raise NotImplementedError(
+            "This method needs to be implemented by the derived class"
+        )
 
     @classmethod
     def archive(cls, path, tempdir=None):
@@ -120,20 +133,20 @@ class ArchiverBase(object):
             tempdir = tempfile.gettempdir()
 
         dir_name = os.path.basename(path)
-        zip_path = os.path.join(tempdir, '%s.zip' % dir_name)
+        zip_path = os.path.join(tempdir, "%s.zip" % dir_name)
 
-        parent_path = os.path.dirname(path) + '/'
+        parent_path = os.path.dirname(path) + "/"
 
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, allowZip64=True) as z:
+        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True) as z:
             for current_dir_path, dir_names, file_names in os.walk(path):
                 for dir_name in dir_names:
                     dir_path = os.path.join(current_dir_path, dir_name)
-                    arch_path = dir_path[len(parent_path):]
+                    arch_path = dir_path[len(parent_path) :]
                     z.write(dir_path, arch_path)
 
                 for file_name in file_names:
                     file_path = os.path.join(current_dir_path, file_name)
-                    arch_path = file_path[len(parent_path):]
+                    arch_path = file_path[len(parent_path) :]
                     z.write(file_path, arch_path)
 
         return zip_path
@@ -160,7 +173,7 @@ def archive_current_scene(version, archiver):
         "<br>"
         "Is that OK?",
         QtWidgets.QMessageBox.Yes,
-        QtWidgets.QMessageBox.No
+        QtWidgets.QMessageBox.No,
     )
     if answer == QtWidgets.QMessageBox.No:
         return
@@ -171,7 +184,7 @@ def archive_current_scene(version, archiver):
         "Temporary dir to use?",
         "Please choose a temporary directory:",
         QtWidgets.QLineEdit.Normal,
-        tempfile.gettempdir()
+        tempfile.gettempdir(),
     )
 
     if version:
@@ -179,40 +192,37 @@ def archive_current_scene(version, archiver):
         task = version.task
         if False:
             from stalker import Version, Task
-            assert (isinstance(version, Version))
-            assert (isinstance(task, Task))
+
+            assert isinstance(version, Version)
+            assert isinstance(task, Task)
         # project_name = version.nice_name
-        project_name = os.path.splitext(
-            os.path.basename(
-                version.absolute_full_path
-            )
-        )[0]
-        project_path = archiver.flatten(path, project_name=project_name, tempdir=tempdir)
+        project_name = os.path.splitext(os.path.basename(version.absolute_full_path))[0]
+        project_path = archiver.flatten(
+            path, project_name=project_name, tempdir=tempdir
+        )
 
         # append link file
-        stalker_link_file_path = os.path.join(project_path, 'scenes/stalker_links.txt')
-        version_upload_link = '%s/tasks/%s/versions/list' % (
+        stalker_link_file_path = os.path.join(project_path, "scenes/stalker_links.txt")
+        version_upload_link = "%s/tasks/%s/versions/list" % (
             anima.defaults.stalker_server_external_address,
-            task.id
+            task.id,
         )
-        request_review_link = '%s/tasks/%s/view' % (
+        request_review_link = "%s/tasks/%s/view" % (
             anima.defaults.stalker_server_external_address,
-            task.id
+            task.id,
         )
-        with open(stalker_link_file_path, 'w+') as f:
+        with open(stalker_link_file_path, "w+") as f:
             f.write(
                 "Version Upload Link: %s\n"
                 "Request Review Link: %s\n" % (version_upload_link, request_review_link)
             )
         zip_path = archiver.archive(project_path, tempdir=tempdir)
-        new_zip_path = os.path.join(
-            version.absolute_path,
-            os.path.basename(zip_path)
-        )
+        new_zip_path = os.path.join(version.absolute_path, os.path.basename(zip_path))
 
         # move the zip right beside the original version file
         shutil.move(zip_path, new_zip_path)
 
         # open the zip file in browser
         from anima.utils import open_browser_in_location
+
         open_browser_in_location(new_zip_path)

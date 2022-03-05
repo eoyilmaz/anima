@@ -21,20 +21,19 @@ def UI(app_in=None, executor=None, **kwargs):
 
 
 class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
-    """The Repository Dialog
-    """
+    """The Repository Dialog"""
 
     def __init__(self, parent=None, repository=None):
         super(MainDialog, self).__init__(parent=parent)
         self._setup_ui()
 
         self.repository = repository
-        self.mode = 'Create'
+        self.mode = "Create"
 
         if self.repository:
-            self.mode = 'Update'
+            self.mode = "Update"
 
-        self.dialog_label.setText('%s Repository' % self.mode)
+        self.dialog_label.setText("%s Repository" % self.mode)
 
         self._setup_signals()
 
@@ -49,10 +48,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setObjectName("verticalLayout")
         self.dialog_label = QtWidgets.QLabel(self)
-        self.dialog_label.setStyleSheet(
-            "color: rgb(71, 143, 202);\n"
-            "font: 18pt;"
-        )
+        self.dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
         self.dialog_label.setObjectName("dialog_label")
         self.dialog_label.setText("Create Repository")
 
@@ -87,19 +83,16 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setLayout(
             row_number,
             QtWidgets.QFormLayout.FieldRole,
-            self.name_fields_vertical_layout
+            self.name_fields_vertical_layout,
         )
         self.name_validator_label.setText("Validator Message")
 
         # create name_line_edit
         from anima.ui.widgets import ValidatedLineEdit
-        self.name_line_edit = ValidatedLineEdit(
-            message_field=self.name_validator_label
-        )
-        self.name_line_edit.setPlaceholderText('Enter Name')
-        self.name_fields_vertical_layout.insertWidget(
-            0, self.name_line_edit
-        )
+
+        self.name_line_edit = ValidatedLineEdit(message_field=self.name_validator_label)
+        self.name_line_edit.setPlaceholderText("Enter Name")
+        self.name_fields_vertical_layout.insertWidget(0, self.name_line_edit)
 
         row_number += 1
         # -------------
@@ -109,9 +102,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.code_label.setText("Code")
         self.code_label.setObjectName("code_label")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.LabelRole,
-            self.code_label
+            row_number, QtWidgets.QFormLayout.LabelRole, self.code_label
         )
 
         # Field
@@ -124,18 +115,15 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.form_layout.setLayout(
             row_number,
             QtWidgets.QFormLayout.FieldRole,
-            self.code_fields_vertical_layout
+            self.code_fields_vertical_layout,
         )
 
         # create code_line_edit
         from anima.ui.widgets import ValidatedLineEdit
-        self.code_line_edit = ValidatedLineEdit(
-            message_field=self.code_validator_label
-        )
-        self.code_line_edit.setPlaceholderText('Enter Code')
-        self.code_fields_vertical_layout.insertWidget(
-            0, self.code_line_edit
-        )
+
+        self.code_line_edit = ValidatedLineEdit(message_field=self.code_validator_label)
+        self.code_line_edit.setPlaceholderText("Enter Code")
+        self.code_fields_vertical_layout.insertWidget(0, self.code_line_edit)
 
         row_number += 1
         # -------------
@@ -144,9 +132,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.windows_path_label = QtWidgets.QLabel(self)
         self.windows_path_label.setObjectName("windows_path_label")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.LabelRole,
-            self.windows_path_label
+            row_number, QtWidgets.QFormLayout.LabelRole, self.windows_path_label
         )
         self.windows_path_label.setText("Windows Path")
 
@@ -154,9 +140,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.windows_path_line_edit = QtWidgets.QLineEdit(self)
         self.windows_path_line_edit.setObjectName("windows_path_lineEdit")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.FieldRole,
-            self.windows_path_line_edit
+            row_number, QtWidgets.QFormLayout.FieldRole, self.windows_path_line_edit
         )
 
         row_number += 1
@@ -167,18 +151,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.linux_label.setObjectName("linux_label")
         self.linux_label.setText("Linux Path")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.LabelRole,
-            self.linux_label
+            row_number, QtWidgets.QFormLayout.LabelRole, self.linux_label
         )
 
         # Field
         self.linux_path_line_edit = QtWidgets.QLineEdit(self)
         self.linux_path_line_edit.setObjectName("linux_path_lineEdit")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.FieldRole,
-            self.linux_path_line_edit
+            row_number, QtWidgets.QFormLayout.FieldRole, self.linux_path_line_edit
         )
 
         row_number += 1
@@ -189,18 +169,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.osx_path_label.setObjectName("osx_path_label")
         self.osx_path_label.setText("OSX Path")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.LabelRole,
-            self.osx_path_label
+            row_number, QtWidgets.QFormLayout.LabelRole, self.osx_path_label
         )
 
         # Field
         self.osx_path_line_edit = QtWidgets.QLineEdit(self)
         self.osx_path_line_edit.setObjectName("osx_path_lineEdit")
         self.form_layout.setWidget(
-            row_number,
-            QtWidgets.QFormLayout.FieldRole,
-            self.osx_path_line_edit
+            row_number, QtWidgets.QFormLayout.FieldRole, self.osx_path_line_edit
         )
         self.vertical_layout.addLayout(self.form_layout)
 
@@ -215,40 +191,33 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.vertical_layout.setStretch(2, 1)
 
         QtCore.QObject.connect(
-            self.button_box,
-            QtCore.SIGNAL("accepted()"),
-            self.accept
+            self.button_box, QtCore.SIGNAL("accepted()"), self.accept
         )
         QtCore.QObject.connect(
-            self.button_box,
-            QtCore.SIGNAL("rejected()"),
-            self.reject
+            self.button_box, QtCore.SIGNAL("rejected()"), self.reject
         )
         QtCore.QMetaObject.connectSlotsByName(self)
 
     def _setup_signals(self):
-        """create the signals
-        """
+        """create the signals"""
         # name_line_edit is changed
         QtCore.QObject.connect(
             self.name_line_edit,
-            QtCore.SIGNAL('textChanged(QString)'),
-            self.name_line_edit_changed
+            QtCore.SIGNAL("textChanged(QString)"),
+            self.name_line_edit_changed,
         )
 
     def _set_defaults(self):
-        """sets the default values
-        """
+        """sets the default values"""
         pass
 
     def name_line_edit_changed(self, text):
-        """runs when the name_line_edit text has changed
-        """
-        if re.findall(r'[^a-zA-Z0-9\-_ ]+', text):
-            self.name_line_edit.set_invalid('Invalid character')
+        """runs when the name_line_edit text has changed"""
+        if re.findall(r"[^a-zA-Z0-9\-_ ]+", text):
+            self.name_line_edit.set_invalid("Invalid character")
         else:
-            if text == '':
-                self.name_line_edit.set_invalid('Enter a name')
+            if text == "":
+                self.name_line_edit.set_invalid("Enter a name")
             else:
                 self.name_line_edit.set_valid()
 
@@ -260,6 +229,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         """
         if False:
             from stalker import Repository
+
             assert isinstance(repository, Repository)
 
         self.repository = repository
@@ -274,13 +244,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         self.osx_path_line_edit.setText(self.repository.osx_path)
 
     def accept(self):
-        """overridden accept method
-        """
+        """overridden accept method"""
         if not self.name_line_edit.is_valid:
             QtWidgets.QMessageBox.critical(
-                self,
-                'Error',
-                'Please fix <b>name</b> field!'
+                self, "Error", "Please fix <b>name</b> field!"
             )
             return
         name = self.name_line_edit.text()
@@ -292,8 +259,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         from stalker import Repository
         from stalker.db.session import DBSession
+
         logged_in_user = self.get_logged_in_user()
-        if self.mode == 'Create':
+        if self.mode == "Create":
             # Create a new Repository
             try:
                 repo = Repository(
@@ -301,21 +269,17 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     code=code,
                     windows_path=windows_path,
                     linux_path=linux_path,
-                    osx_path=osx_path
+                    osx_path=osx_path,
                 )
                 self.repository = repo
                 DBSession.add(repo)
                 DBSession.commit()
             except Exception as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
 
-        elif self.mode == 'Update':
+        elif self.mode == "Update":
             # Update the repository
             try:
                 self.repository.name = name
@@ -328,11 +292,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 DBSession.commit()
             except Exception as e:
                 DBSession.rollback()
-                QtWidgets.QMessageBox.critical(
-                    self,
-                    'Error',
-                    str(e)
-                )
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
                 return
 
         super(MainDialog, self).accept()

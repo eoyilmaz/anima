@@ -6,20 +6,21 @@ from anima.dcc.base import DCCBase
 
 
 class Houdini(DCCBase):
-    """the houdini DCC class
-    """
-    name = 'Houdini'
+    """the houdini DCC class"""
+
+    name = "Houdini"
     extensions = {
-        0: '.hiplc',
-        hou.licenseCategoryType.Commercial: '.hip',
-        hou.licenseCategoryType.Apprentice: '.hipnc',
-        hou.licenseCategoryType.Indie: '.hiplc'
+        0: ".hiplc",
+        hou.licenseCategoryType.Commercial: ".hip",
+        hou.licenseCategoryType.Apprentice: ".hipnc",
+        hou.licenseCategoryType.Indie: ".hiplc",
     }
 
     def __init__(self, name="", version=None):
         super(Houdini, self).__init__(name, version)
 
         from stalker import Repository
+
         # re initialize repo vars
         for repo in Repository.query.all():
             env_var_name = repo.env_var
@@ -29,17 +30,19 @@ class Houdini(DCCBase):
             # export old env var
             self.set_environment_variable("REPO%s" % repo.id, value)
 
-        self.name = '%s%s.%s' % (
-            self.name, hou.applicationVersion()[0], hou.applicationVersion()[1]
+        self.name = "%s%s.%s" % (
+            self.name,
+            hou.applicationVersion()[0],
+            hou.applicationVersion()[1],
         )
 
     def save_as(self, version, run_pre_publishers=True):
-        """the save action for houdini DCC
-        """
+        """the save action for houdini DCC"""
         if not version:
             return
 
         from stalker import Version
+
         assert isinstance(version, Version)
 
         # get the current version,
@@ -57,11 +60,7 @@ class Houdini(DCCBase):
 
         # create the folder if it doesn't exists
         try:
-            os.makedirs(
-                os.path.dirname(
-                    version.absolute_full_path
-                )
-            )
+            os.makedirs(os.path.dirname(version.absolute_full_path))
         except OSError:
             # dirs exist
             pass
@@ -85,6 +84,7 @@ class Houdini(DCCBase):
 
         # set the fps
         from stalker import Shot
+
         shot = version.task.parent
         if version and isinstance(shot, Shot):
             # set to shot.fps if this is a shot related scene
@@ -108,9 +108,7 @@ class Houdini(DCCBase):
         self.set_environment_variables(version)
 
         # append it to the recent file list
-        self.append_to_recent_files(
-            version.absolute_full_path
-        )
+        self.append_to_recent_files(version.absolute_full_path)
 
         # update the parent info
         if current_version:
@@ -118,6 +116,7 @@ class Houdini(DCCBase):
 
             # update database with new version info
             from stalker.db.session import DBSession
+
             DBSession.commit()
 
         # create a local copy
@@ -125,10 +124,15 @@ class Houdini(DCCBase):
 
         return True
 
-    def open(self, version, force=False, representation=None,
-             reference_depth=0, skip_update_check=False):
-        """the open action for houdini DCC
-        """
+    def open(
+        self,
+        version,
+        force=False,
+        representation=None,
+        reference_depth=0,
+        skip_update_check=False,
+    ):
+        """the open action for houdini DCC"""
         if not version:
             return
 
@@ -136,42 +140,37 @@ class Houdini(DCCBase):
             raise RuntimeError
 
         hou.hipFile.load(
-            file_name=str(version.absolute_full_path),
-            suppress_save_prompt=True
+            file_name=str(version.absolute_full_path), suppress_save_prompt=True
         )
 
         # set the environment variables
         self.set_environment_variables(version)
 
         # append it to the recent file list
-        self.append_to_recent_files(
-            version.absolute_full_path
-        )
+        self.append_to_recent_files(version.absolute_full_path)
 
         # update flipbook settings
         self.update_flipbook_settings()
 
         from anima.dcc import empty_reference_resolution
+
         return empty_reference_resolution()
 
     def import_(self, version, use_namespace=True):
-        """the import action for houdini DCC
-        """
+        """the import action for houdini DCC"""
         hou.hipFile.merge(str(version.absolute_full_path))
         return True
 
     def get_current_version(self):
-        """Returns the currently opened Version instance
-        """
+        """Returns the currently opened Version instance"""
         version = None
         full_path = hou.hipFile.name()
-        if full_path != 'untitled.hip':
+        if full_path != "untitled.hip":
             version = self.get_version_from_full_path(full_path)
         return version
 
     def get_last_version(self):
-        """gets the file name from houdini DCC
-        """
+        """gets the file name from houdini DCC"""
         version = self.get_current_version()
 
         if version is None:
@@ -192,32 +191,30 @@ class Houdini(DCCBase):
 
         # set the $JOB variable to the parent of version.full_path
         from anima import logger
-        logger.debug('version: %s' % version)
-        logger.debug('version.path: %s' % version.absolute_path)
-        logger.debug('version.filename: %s' % version.filename)
-        logger.debug('version.full_path: %s' % version.absolute_full_path)
+
+        logger.debug("version: %s" % version)
+        logger.debug("version.path: %s" % version.absolute_path)
+        logger.debug("version.filename: %s" % version.filename)
+        logger.debug("version.full_path: %s" % version.absolute_full_path)
         logger.debug(
-            'version.full_path (calculated): %s' %
-            os.path.join(
-                version.absolute_full_path,
-                version.filename
-            ).replace("\\", "/")
+            "version.full_path (calculated): %s"
+            % os.path.join(version.absolute_full_path, version.filename).replace(
+                "\\", "/"
+            )
         )
         job = str(version.absolute_path)
         hip = job
-        hip_name = os.path.splitext(
-            os.path.basename(
-                str(version.absolute_full_path)
-            )
-        )[0]
+        hip_name = os.path.splitext(os.path.basename(str(version.absolute_full_path)))[
+            0
+        ]
 
-        logger.debug('job     : %s' % job)
-        logger.debug('hip     : %s' % hip)
-        logger.debug('hipName : %s' % hip_name)
+        logger.debug("job     : %s" % job)
+        logger.debug("hip     : %s" % hip)
+        logger.debug("hipName : %s" % hip_name)
 
-        self.set_environment_variable('JOB', job)
-        self.set_environment_variable('HIP', hip)
-        self.set_environment_variable('HIPNAME', hip_name)
+        self.set_environment_variable("JOB", job)
+        self.set_environment_variable("HIP", hip)
+        self.set_environment_variable("HIPNAME", hip_name)
 
     @classmethod
     def set_environment_variable(cls, var, value):
@@ -238,19 +235,20 @@ class Houdini(DCCBase):
 
     @classmethod
     def update_flipbook_settings(cls):
-        """updates the flipbook settings
-        """
+        """updates the flipbook settings"""
         from anima.dcc.houdini import auxiliary
+
         scene_viewer = auxiliary.get_scene_viewer()
         if not scene_viewer:
             return
 
         fs = scene_viewer.flipbookSettings()
-        flipbook_path = '$HIP/Outputs/playblasts'
-        fs.output('%s/$HIPNAME.$F4.jpg' % flipbook_path)
+        flipbook_path = "$HIP/Outputs/playblasts"
+        fs.output("%s/$HIPNAME.$F4.jpg" % flipbook_path)
 
         # create the output folder
         import os
+
         try:
             os.makedirs(os.path.expandvars(flipbook_path))
         except OSError:
@@ -258,27 +256,24 @@ class Houdini(DCCBase):
             pass
 
     def get_recent_file_list(self):
-        """returns the recent HIP files list from the houdini
-        """
+        """returns the recent HIP files list from the houdini"""
         # use a FileHistory object
         file_history = FileHistory()
 
         # get the hip files list
-        return file_history.get_recent_files('HIP')
+        return file_history.get_recent_files("HIP")
 
     def get_frame_range(self):
-        """returns the frame range of the
-        """
+        """returns the frame range of the"""
         # use the hscript commands to get the frame range
-        time_info = hou.hscript('tset')[0].split('\n')
+        time_info = hou.hscript("tset")[0].split("\n")
 
-        pattern = r'[-0-9\.]+'
+        pattern = r"[-0-9\.]+"
 
         import re
+
         start_frame = int(
-            hou.timeToFrame(
-                float(re.search(pattern, time_info[2]).group(0))
-            )
+            hou.timeToFrame(float(re.search(pattern, time_info[2]).group(0)))
         )
         duration = int(re.search(pattern, time_info[0]).group(0))
         end_frame = start_frame + duration - 1
@@ -286,8 +281,7 @@ class Houdini(DCCBase):
         return start_frame, end_frame
 
     def set_frame_range(self, start_frame=1, end_frame=100, adjust_frame_range=False):
-        """sets the frame range
-        """
+        """sets the frame range"""
         # --------------------------------------------
         # set the timeline
         current_frame = hou.frame()
@@ -298,8 +292,7 @@ class Houdini(DCCBase):
 
         # for now use hscript, the python version is not implemented yet
         hou.hscript(
-            'tset `(' + str(start_frame) + '-1)/$FPS` `' + str(
-                end_frame) + '/$FPS`'
+            "tset `(" + str(start_frame) + "-1)/$FPS` `" + str(end_frame) + "/$FPS`"
         )
 
         # --------------------------------------------
@@ -317,32 +310,30 @@ class Houdini(DCCBase):
 
     @classmethod
     def get_output_nodes(cls):
-        """returns the rop nodes in the scene
-        """
-        rop_context = hou.node('/out')
+        """returns the rop nodes in the scene"""
+        rop_context = hou.node("/out")
 
         # get the children
         out_nodes = rop_context.children()
 
         exclude_node_types = [
             hou.nodeType(hou.nodeTypeCategories()["Driver"], "wedge"),
-            hou.nodeType(hou.nodeTypeCategories()["Driver"], "fetch")
+            hou.nodeType(hou.nodeTypeCategories()["Driver"], "fetch"),
         ]
 
         # remove nodes in type in exclude_node_types list
-        new_out_nodes = [node for node in out_nodes
-                         if node.type() not in exclude_node_types]
+        new_out_nodes = [
+            node for node in out_nodes if node.type() not in exclude_node_types
+        ]
 
         return new_out_nodes
 
     def get_fps(self):
-        """returns the current fps
-        """
+        """returns the current fps"""
         return int(hou.fps())
 
     def get_shot_node(self):
-        """returns or creates qLib shot node
-        """
+        """returns or creates qLib shot node"""
         ql_shot_node_type = "qLib::shot_ql::1"
         obj_context = hou.node("/obj")
         for child in obj_context.children():
@@ -375,6 +366,7 @@ class Houdini(DCCBase):
         shot_node.parm("projs").set(project.code)
 
         from stalker import Shot
+
         image_format = project.image_format
         if task.parent and isinstance(task.parent, Shot):
             shot = task.parent
@@ -397,8 +389,7 @@ class Houdini(DCCBase):
             pass
 
     def set_render_filename(self, version):
-        """sets the render file name
-        """
+        """sets the render file name"""
         # go to the Main take before doing anything
         # store the current take
         current_take = hou.takes.currentTake()
@@ -408,7 +399,8 @@ class Houdini(DCCBase):
         # So use the scene base name again
         # output_filename = '$HIP/Outputs/renders/$OS/`$HIPNAME`_$OS.$F4.exr'
         import os
-        output_filename = '$HIP/Outputs/renders/$OS/%s_$OS.$F4.exr' % (
+
+        output_filename = "$HIP/Outputs/renders/$OS/%s_$OS.$F4.exr" % (
             os.path.splitext(version.filename)[0]
         )
 
@@ -416,12 +408,10 @@ class Houdini(DCCBase):
         output_nodes = self.get_output_nodes()
         for output_node in output_nodes:
             # get only the ifd nodes for now
-            if output_node.type().name() == 'ifd':
+            if output_node.type().name() == "ifd":
                 # set the file name
                 try:
-                    output_node.setParms(
-                        {'vm_picture': str(output_filename)}
-                    )
+                    output_node.setParms({"vm_picture": str(output_filename)})
                 except hou.PermissionError:
                     # node is locked
                     pass
@@ -430,14 +420,12 @@ class Houdini(DCCBase):
                 output_node.setParms({"vm_image_exr_compression": "zips"})
 
                 # also create the folders
-                output_file_full_path = output_node.evalParm('vm_picture')
+                output_file_full_path = output_node.evalParm("vm_picture")
                 output_file_path = os.path.dirname(output_file_full_path)
 
                 flat_output_file_path = output_file_path
                 while "$" in flat_output_file_path:
-                    flat_output_file_path = os.path.expandvars(
-                        flat_output_file_path
-                    )
+                    flat_output_file_path = os.path.expandvars(flat_output_file_path)
 
                 # do not create the folders
                 # try:
@@ -445,14 +433,11 @@ class Houdini(DCCBase):
                 # except OSError:
                 #     # dirs exists
                 #     pass
-            elif output_node.type().name() == 'Redshift_ROP':
+            elif output_node.type().name() == "Redshift_ROP":
                 # set the file name
                 try:
                     output_node.setParms(
-                        {
-                            'RS_outputFileNamePrefix':
-                                str(output_filename)
-                        }
+                        {"RS_outputFileNamePrefix": str(output_filename)}
                     )
                 except hou.PermissionError:
                     # node is locked
@@ -477,13 +462,19 @@ class Houdini(DCCBase):
                 if shot_node:
                     # set the render camera
                     try:
-                        output_node.parm("RS_renderCamera").setExpression('chsop("%s/shotcam")' % shot_node.path())
+                        output_node.parm("RS_renderCamera").setExpression(
+                            'chsop("%s/shotcam")' % shot_node.path()
+                        )
                     except hou.PermissionError:  # parameter is locked
                         pass
 
                     try:
-                        output_node.parm("RS_overrideRes1").setExpression('ch("%s/cam_resx")' % shot_node.path())
-                        output_node.parm("RS_overrideRes2").setExpression('ch("%s/cam_resy")' % shot_node.path())
+                        output_node.parm("RS_overrideRes1").setExpression(
+                            'ch("%s/cam_resx")' % shot_node.path()
+                        )
+                        output_node.parm("RS_overrideRes2").setExpression(
+                            'ch("%s/cam_resy")' % shot_node.path()
+                        )
                     except hou.PermissionError:  # parameter is locked
                         pass
 
@@ -491,6 +482,7 @@ class Houdini(DCCBase):
                     # so use the shot nodes resolution if this is a shot related node
                     # set the fps
                     from stalker import Shot
+
                     shot = version.task.parent
                     project = version.task.project
                     imf = project.image_format
@@ -507,19 +499,17 @@ class Houdini(DCCBase):
                 # the AOV name
 
                 # get AOVs
-                aov_count = output_node.evalParm('RS_aov')
+                aov_count = output_node.evalParm("RS_aov")
                 if aov_count:
                     for i in range(aov_count):
                         aov_index = i + 1
-                        aov_custom_prefix_parm = \
-                            'RS_aovCustomPrefix_%s' % aov_index
-                        aov_custom_suffix_parm = \
-                            'RS_aovSuffix_%s' % aov_index
+                        aov_custom_prefix_parm = "RS_aovCustomPrefix_%s" % aov_index
+                        aov_custom_suffix_parm = "RS_aovSuffix_%s" % aov_index
                         try:
                             output_node.parm(aov_custom_prefix_parm).set(
                                 '`strreplace(chs("RS_outputFileNamePrefix"), '
-                                '".$F4.exr", "_" + chs("%s") + ".$F4.exr")`' %
-                                aov_custom_suffix_parm
+                                '".$F4.exr", "_" + chs("%s") + ".$F4.exr")`'
+                                % aov_custom_suffix_parm
                             )
                         except hou.PermissionError:
                             # node is locked
@@ -529,15 +519,12 @@ class Houdini(DCCBase):
                 # output_node.setParms({"vm_image_exr_compression": "zips"})
 
                 # also create the folders
-                output_file_full_path = \
-                    output_node.evalParm('RS_outputFileNamePrefix')
+                output_file_full_path = output_node.evalParm("RS_outputFileNamePrefix")
                 output_file_path = os.path.dirname(output_file_full_path)
 
                 flat_output_file_path = output_file_path
                 while "$" in flat_output_file_path:
-                    flat_output_file_path = os.path.expandvars(
-                        flat_output_file_path
-                    )
+                    flat_output_file_path = os.path.expandvars(flat_output_file_path)
 
                 # enable skip rendered images
                 output_node.parm("RS_outputSkipRendered").set(1)
@@ -554,8 +541,7 @@ class Houdini(DCCBase):
         hou.takes.setCurrentTake(current_take)
 
     def set_fps(self, fps=25):
-        """sets the time unit of the DCC
-        """
+        """sets the time unit of the DCC"""
         if fps <= 0:
             return
 
@@ -566,8 +552,7 @@ class Houdini(DCCBase):
         self.set_frame_range(start_frame, end_frame)
 
     def replace_paths(self):
-        """replaces all the paths in all the path related nodes
-        """
+        """replaces all the paths in all the path related nodes"""
         # get all the nodes and their childs and
         # try to get string and file path parameters
         # and replace them if they contain absolute paths
@@ -586,25 +571,24 @@ class Houdini(DCCBase):
 
 class FileHistory(object):
     """A Houdini recent file history parser
-    
+
     Holds the data in a dictionary, where the keys are the file types and the
     values are string list of recent file paths of that type
     """
 
     def __init__(self):
-        self._history_file_name = 'file.history'
-        self._history_file_path = ''
+        self._history_file_name = "file.history"
+        self._history_file_path = ""
 
         # if os.name == 'nt':
-            # under windows the HIH is useless
-            # interpret the HIH from POSE environment variable
-        self._history_file_path = os.path.dirname(os.getenv('POSE'))
+        # under windows the HIH is useless
+        # interpret the HIH from POSE environment variable
+        self._history_file_path = os.path.dirname(os.getenv("POSE"))
         # else:
         #     self._history_file_path = os.getenv('HIH')
 
         self._history_file_full_path = os.path.join(
-            self._history_file_path,
-            self._history_file_name
+            self._history_file_path, self._history_file_name
         )
 
         self._buffer = []
@@ -615,8 +599,7 @@ class FileHistory(object):
         self._parse()
 
     def _read(self):
-        """reads the history file to a buffer
-        """
+        """reads the history file to a buffer"""
         try:
             history_file = open(self._history_file_full_path)
         except IOError:
@@ -631,17 +614,16 @@ class FileHistory(object):
         history_file.close()
 
     def _parse(self):
-        """parses the data in self._buffer
-        """
+        """parses the data in self._buffer"""
         self._history = dict()
         buffer_list = self._buffer
-        key_name = ''
+        key_name = ""
         path_list = []
         len_buffer = len(buffer_list)
 
         for i in range(len_buffer):
             # try to find a '{'
-            if buffer_list[i] == '{':
+            if buffer_list[i] == "{":
                 # create a key with the previous line
                 key_name = buffer_list[i - 1]
                 path_list = []
@@ -651,7 +633,7 @@ class FileHistory(object):
 
                     # add all the lines to the path_list until you find a '}'
                     current_element = buffer_list[j]
-                    if current_element != '}':
+                    if current_element != "}":
                         path_list.append(current_element)
                     else:
                         # set i to j+1 and let it continue
@@ -660,10 +642,9 @@ class FileHistory(object):
                     # append the key and data to the dictionary
                 self._history[key_name] = path_list
 
-    def get_recent_files(self, type_name=''):
-        """returns the file list of the given file type
-        """
-        if type_name == '' or type_name is None:
+    def get_recent_files(self, type_name=""):
+        """returns the file list of the given file type"""
+        if type_name == "" or type_name is None:
             return []
         else:
             return self._history.get(type_name, [])
