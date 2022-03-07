@@ -609,6 +609,7 @@ workspace -fr "translatorData" "Outputs/data";
                     f=force,
                     loadReferenceDepth="none",
                     prompt=prompt,
+                    ignoreVersion=True,
                 )
                 # list all references and switch their paths
                 for ref in pm.listReferences():
@@ -620,7 +621,12 @@ workspace -fr "translatorData" "Outputs/data";
                 if reference_depth_res[reference_depth] is None:
                     logger.info("not using loadReferenceDepth parameter")
                     # load in saved state
-                    pm.openFile(version.absolute_full_path, f=force, prompt=prompt)
+                    pm.openFile(
+                        version.absolute_full_path,
+                        f=force,
+                        prompt=prompt,
+                        ignoreVersion=True,
+                    )
                 else:
                     logger.info(
                         "using loadReferenceDepth:%s"
@@ -631,6 +637,7 @@ workspace -fr "translatorData" "Outputs/data";
                         f=force,
                         prompt=prompt,
                         loadReferenceDepth=reference_depth_res[reference_depth],
+                        ignoreVersion=True,
                     )
         except RuntimeError as e:
             # restore the previous workspace
