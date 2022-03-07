@@ -2421,6 +2421,7 @@ def export_alembic_of_nodes(
     :param bool unload_refs: Unloads the references in the scene to speed playback performance.
     :return:
     """
+    print("INFO: Start export_alembic_of_nodes!")
     # stop if there are no cacheable nodes given
     if not cacheable_nodes:
         return
@@ -2523,6 +2524,7 @@ def export_alembic_of_nodes(
     import shutil
 
     for cacheable_node_name in sorted(cacheable_node_references):
+        print("INFO: exporting: {}".format(cacheable_node_name))
 
         if unload_refs:
             # load the reference first
@@ -2636,7 +2638,7 @@ def export_alembic_of_nodes(
             temp_cache_file_path,
         )
 
-        print("Executing command: %s" % command_to_exec)
+        print("INFO: Executing command: {}".format(command_to_exec))
         pm.mel.eval(command_to_exec)
         # move in to place
         shutil.move(temp_cache_file_path, output_full_path)
@@ -2660,6 +2662,7 @@ def export_alembic_of_nodes(
                 related_ref.unload()
 
         caller.step()
+        print("INFO: Export successful: {}".format(cacheable_node_name))
 
     if unload_refs:
         # load all references back
@@ -2669,6 +2672,7 @@ def export_alembic_of_nodes(
 
     # restore playback option
     pm.playbackOptions(v=default_playback_option)
+    print("INFO: End export_alembic_of_nodes!")
 
 
 def export_alembic_of_selected_cacheable_nodes(
