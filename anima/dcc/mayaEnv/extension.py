@@ -997,8 +997,6 @@ class ShotExtension(object):
                 tempfile.gettempdir(), "%s.mov" % rendered_template
             ).replace("\\", "/")
 
-        print("movie_full_path: {}".format(movie_full_path))
-
         # set the output of this shot
         self.set_output(movie_full_path)
 
