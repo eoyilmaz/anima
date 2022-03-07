@@ -266,13 +266,15 @@ sourceimages/3dPaintTextures"""
         return ref_paths
 
     @classmethod
-    def bind_to_original(cls, path):
+    def bind_to_original(cls, path, project=None):
         """Binds all the references to the original Versions in the repository.
 
         Given a maya scene file, this method will find the originals of the
         references in the database and will replace them with the originals.
 
         :param str path: The path of the maya file.
+        :param Project project: If given the path will be searched among the given
+          project Versions.
 
         :return:
         """
@@ -287,11 +289,18 @@ sourceimages/3dPaintTextures"""
             ref_file_name = os.path.basename(ref_path)
 
             # try to find a corresponding Stalker Version instance with it
-            from stalker import Version
+            from stalker import Version, Task
 
-            version = Version.query.filter(
-                Version.full_path.endswith(ref_file_name)
-            ).first()
+            if project is not None:
+                # use the given project
+                version = Version.query.join(Task).filter(
+                    Version.full_path.endswith(ref_file_name)
+                ).filter(Task.project == project).first()
+            else:
+                # search on all projects
+                version = Version.query.filter(
+                    Version.full_path.endswith(ref_file_name)
+                ).first()
 
             if version:
                 # replace it
