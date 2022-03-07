@@ -2038,7 +2038,7 @@ class Playblaster(object):
             new_result.append(video_file_path)
 
         # delete all the temp files
-        if delete_source_sequence:
+        if delete_source_sequence and '#' in original_image_sequence_path:
             try:
                 video_file_pattern = original_image_sequence_path.replace("#", "*")
                 import glob
@@ -2168,7 +2168,9 @@ class Playblaster(object):
 
             caller.step()
 
-        return self.convert_image_sequence_to_video(temp_video_file_full_paths)
+        return self.convert_image_sequence_to_video(
+            temp_video_file_full_paths, delete_source_sequence=True
+        )
 
     @classmethod
     def upload_outputs(cls, version, video_file_full_paths):

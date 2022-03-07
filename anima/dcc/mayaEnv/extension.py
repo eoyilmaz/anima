@@ -960,7 +960,7 @@ class ShotExtension(object):
 
         try:
             movie_full_path = os.path.join(
-                tempfile.gettempdir(), "%s.mov" % self.full_shot_name
+                tempfile.gettempdir(), "%s.png" % self.full_shot_name
             ).replace("\\", "/")
         except AttributeError:
             # this is an error I keep getting, somehow the extension is not
@@ -994,7 +994,7 @@ class ShotExtension(object):
             }
 
             movie_full_path = os.path.join(
-                tempfile.gettempdir(), "%s.mov" % rendered_template
+                tempfile.gettempdir(), "%s.png" % rendered_template
             ).replace("\\", "/")
 
         # set the output of this shot
