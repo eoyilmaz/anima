@@ -9,7 +9,7 @@ def submit_job(job_name, block_name, command, host_mask=""):
     :param job_name:
     :param block_name:
     :param command:
-    :param str host_mask: A hostmask
+    :param str host_mask: The host mask.
     :return:
     """
 
@@ -35,7 +35,7 @@ def submit_alembic_job(path, project_code="", host_mask=""):
 
     :param str path: Path to a maya file
     :param project_code: Project.code
-    :param str host_mask: Host mask.
+    :param str host_mask: The host mask.
     """
     job_name = "%s:%s - Alembic Export" % (project_code, os.path.basename(path))
     block_name = job_name
@@ -54,7 +54,7 @@ def submit_playblast_job(path, project_code="", host_mask=""):
 
     :param str path: Path to a maya file
     :param project_code: Project.code
-    :param str host_mask: Host mask.
+    :param str host_mask: The host mask.
     """
     job_name = "%s:%s - Playblast" % (project_code, os.path.basename(path))
     block_name = job_name
