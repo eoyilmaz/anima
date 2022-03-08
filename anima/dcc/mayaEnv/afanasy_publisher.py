@@ -22,7 +22,7 @@ def submit_job(job_name, block_name, command, host_mask=""):
     job = af.Job(job_name)
     job.blocks = [block]
     if host_mask != "":
-        host_mask.replace('"', "")
+        host_mask = host_mask.replace('"', "")
         job.setHostsMask(host_mask)
     status, data = job.send()
 
