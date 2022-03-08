@@ -3,12 +3,13 @@
 import os
 
 
-def submit_job(job_name, block_name, command):
+def submit_job(job_name, block_name, command, host_mask=""):
     """Submits an Afanasy job
 
     :param job_name:
     :param block_name:
     :param command:
+    :param str host_mask: A hostmask
     :return:
     """
 
@@ -20,17 +21,21 @@ def submit_job(job_name, block_name, command):
 
     job = af.Job(job_name)
     job.blocks = [block]
+    if host_mask != "":
+        host_mask.replace('"', "")
+        job.setHostsMask(host_mask)
     status, data = job.send()
 
     if not status:
         RuntimeError("Something went wrong!")
 
 
-def submit_alembic_job(path, project_code=""):
+def submit_alembic_job(path, project_code="", host_mask=""):
     """creates a afanasy job that exports the alembics on a given scene
 
     :param str path: Path to a maya file
     :param project_code: Project.code
+    :param str host_mask: Host mask.
     """
     job_name = "%s:%s - Alembic Export" % (project_code, os.path.basename(path))
     block_name = job_name
@@ -41,14 +46,15 @@ def submit_alembic_job(path, project_code=""):
         "from anima.dcc.mayaEnv import afanasy_publisher;"
         "afanasy_publisher.export_alembics('{path}');\"".format(path=path),
     ]
-    submit_job(job_name, block_name, command)
+    submit_job(job_name, block_name, command, host_mask=host_mask)
 
 
-def submit_playblast_job(path, project_code=""):
+def submit_playblast_job(path, project_code="", host_mask=""):
     """creates a afanasy job that exports the alembics on a given scene
 
     :param str path: Path to a maya file
     :param project_code: Project.code
+    :param str host_mask: Host mask.
     """
     job_name = "%s:%s - Playblast" % (project_code, os.path.basename(path))
     block_name = job_name
@@ -59,7 +65,7 @@ def submit_playblast_job(path, project_code=""):
         "from anima.dcc.mayaEnv import afanasy_publisher;"
         "afanasy_publisher.export_playblast('{path}');\"".format(path=path),
     ]
-    submit_job(job_name, block_name, command)
+    submit_job(job_name, block_name, command, host_mask=host_mask)
 
 
 def export_alembics(path):
