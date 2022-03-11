@@ -293,14 +293,21 @@ sourceimages/3dPaintTextures"""
 
             if project is not None:
                 # use the given project
-                version = Version.query.join(Task).filter(
+                versions = Version.query.join(Task).filter(
                     Version.full_path.endswith(ref_file_name)
-                ).filter(Task.project == project).first()
+                ).filter(Task.project == project).all()
             else:
                 # search on all projects
-                version = Version.query.filter(
+                versions = Version.query.filter(
                     Version.full_path.endswith(ref_file_name)
-                ).first()
+                ).all()
+
+            version = None
+            for v in versions:
+                # check the whole filename
+                if v.filename == ref_file_name:
+                    version = v
+                    break
 
             if version:
                 # replace it
