@@ -31,11 +31,7 @@ def version_dialog(mode=2):
     from anima.ui import version_dialog
     from anima.dcc import houdini
 
-    reload(houdini)
-    reload(version_dialog)
-
     h = houdini.Houdini()
-
     logger.setLevel(logging.WARNING)
 
     if hou.applicationVersion()[0] <= 13:

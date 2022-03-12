@@ -88,7 +88,7 @@ class ProgressDialogManager(object):
             self.dialog.close()
 
         # re initialize self
-        self.__init__(dialog=self.dialog)
+        self.__init__(parent=self.parent, dialog=self.dialog)
 
     def register(self, max_iteration, title=""):
         """registers a new caller
