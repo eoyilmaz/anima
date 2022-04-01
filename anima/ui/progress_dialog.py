@@ -4,7 +4,7 @@ from anima.base import Singleton
 
 
 class ProgressCaller(object):
-    """A simple object to hold caller data for ProgressDialogManager"""
+    """A simple object to hold caller data for ProgressDialogManager."""
 
     def __init__(self, max_steps=0, title=""):
         self.max_steps = max_steps
@@ -13,20 +13,24 @@ class ProgressCaller(object):
         self.manager = None
 
     def step(self, step_size=1, message=""):
-        """A shortcut for the ProgressDialogManager.step() method"""
+        """Shortcut for the ``ProgressDialogManager`` ``step`` method.
+
+        Args:
+            step_size (int): The step size.
+            message (str): Message that appears on the progress dialog.
+        """
         self.manager.step(self, step=step_size, message=message)
 
     def end_progress(self):
-        """A shortcut fro the ProgressDialogManager.end_progress() method"""
+        """Shortcut for the ``ProgressDialogManager`` ``end_progress`` method."""
         self.manager.end_progress(self)
 
 
 class ProgressDialogManager(object):
-    """A wrapper for the QtGui.QProgressDialog where it can be called from
-    multiple other branches of the code.
+    """Wrapper for the QProgressDialog that can be called from multiple other code paths.
 
-    This is a wrapper for the QProgressDialog window. It is able to track more
-    then one process. The current usage is as follows::
+    This is a wrapper for the QProgressDialog window. It is able to track more than one
+    process. The current usage is as follows::
 
       pm = ProgressDialogManager()
 
@@ -36,9 +40,9 @@ class ProgressDialogManager(object):
       for i in range(100):
           caller.step()
 
-    So calling ``register`` will register a new caller for the progress window.
-    The ProgressDialogManager will store the caller and will kill the
-    QProgressDialog when all of the callers are completed.
+    So calling ``register`` will register a new caller for the progress window. The
+    ProgressDialogManager will store the caller and will kill the QProgressDialog when
+    all the callers are completed.
     """
 
     __metaclass__ = Singleton
@@ -59,41 +63,50 @@ class ProgressDialogManager(object):
         self.current_step = 0
 
     def create_dialog(self):
-        """creates the progressWindow"""
+        """Create the progress dialog."""
         if self.use_ui:
             if self.dialog is None:
                 from anima.ui.lib import QtWidgets
-
                 self.dialog = QtWidgets.QProgressDialog(self.parent)
-                # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
-                # self.dialog.setMinimumDuration(2000)
-                self.dialog.setRange(0, self.max_steps)
-                self.dialog.setLabelText(self.title)
-                # self.dialog.setAutoClose(True)
-                # self.dialog.setAutoReset(True)
-                self.center_window()
-                self.dialog.show()
+
+            # QtGui.QProgressDialog(None, QtCore.Qt.WindowStaysOnTopHint)
+            self.dialog.setRange(0, self.max_steps)
+            self.dialog.setLabelText(self.title)
+            self.dialog.setCancelButton(None)
+            self.center_window()
+            self.dialog.show()
 
         # also set the Manager to in progress
         self.in_progress = True
 
     def was_cancelled(self):
+        """Check if cancelled.
+
+        Returns:
+            bool: True if cancelled or False otherwise.
+        """
         if self.dialog:
             return self.dialog.wasCanceled()
         return False
 
     def close(self):
-        """kills the progressWindow"""
+        """Kill the progress dialog."""
         if self.dialog is not None:
             self.dialog.close()
+            self.dialog.deleteLater()
 
         # re initialize self
         self.__init__(parent=self.parent, dialog=self.dialog)
 
     def register(self, max_iteration, title=""):
-        """registers a new caller
+        """Register a new caller.
 
-        :return: ProgressCaller instance
+        Args:
+            max_iteration (int): Maximum number of expected steps.
+            title (str): Dialog title.
+
+        Returns:
+            rbl_pipe_ui.blueprint.utils.ProgressCaller: A ProgressCaller instance.
         """
         caller = ProgressCaller(max_steps=max_iteration, title=title)
         caller.manager = self
@@ -104,18 +117,17 @@ class ProgressDialogManager(object):
                 self.create_dialog()
             else:
                 # update the maximum
-                if self.dialog:
+                if not self.dialog:
                     self.create_dialog()
                 self.dialog.setRange(0, self.max_steps)
                 self.dialog.setValue(self.current_step)
-            # self. center_window()
 
         # also store this
         self.callers.append(caller)
         return caller
 
     def center_window(self):
-        """recenters the dialog window to the screen"""
+        """Center the dialog window to the screen."""
         if self.dialog is not None:
             from anima.ui.lib import QtGui, QtWidgets
 
@@ -137,37 +149,40 @@ class ProgressDialogManager(object):
                 )
 
     def step(self, caller, step=1, message=""):
-        """Increments the progress by the given mount
+        """Increment the progress by the given amount.
 
-        :param caller: A :class:`.ProgressCaller` instance, generally returned
-          by the :meth:`.register` method.
-        :param step: The step size to increment, the default value is 1.
-        :param str message: The progress message as string.
+        Args:
+            caller (ProgressCaller): A :class:`.ProgressCaller` instance, generally
+                returned by the :meth:`.register` method.
+            step (int): The step size to increment, the default value is 1.
+            message (str): The progress message as string.
         """
         caller.current_step += step
         self.current_step += step
         if self.dialog:
             self.dialog.setValue(self.current_step)
-            self.dialog.setLabelText("%s : %s" % (caller.title, message))
-            # self.center_window()
+            self.dialog.setLabelText("{} : {}".format(caller.title, message))
 
         if caller.current_step >= caller.max_steps:
             # kill the caller
             self.end_progress(caller)
 
-        from anima.ui.lib import QtWidgets
+        if self.use_ui:
+            from anima.ui.lib import QtWidgets
 
-        try:
-            qApp = QtWidgets.qApp
-        except AttributeError:
-            qApp = QtWidgets.QApplication
-        qApp.processEvents()
+            try:
+                qApp = QtWidgets.qApp
+            except AttributeError:
+                qApp = QtWidgets.QApplication
+
+            if qApp:
+                qApp.processEvents()
 
     def end_progress(self, caller):
-        """Ends the progress for the given caller
+        """End the progress for the given caller.
 
-        :param caller: A :class:`.ProgressCaller` instance
-        :return: None
+        Args:
+            caller: A :class:`.ProgressCaller` instance.
         """
         # remove the caller from the callers list
         if caller in self.callers:
@@ -178,5 +193,5 @@ class ProgressDialogManager(object):
             if steps_left > 0:
                 self.max_steps -= steps_left
 
-        if len(self.callers) == 0:
+        if not self.callers:
             self.close()
