@@ -14,7 +14,7 @@ from anima.dcc.base import DCCBase
 from anima.dcc.mayaEnv import extension  # register extensions
 from anima.exc import PublishError
 from anima.representation import Representation
-from anima.ui.progress_dialog import ProgressDialogManager
+from anima.utils.progress import ProgressManager, ProgressDialogBase
 
 # empty publishers first
 from anima.dcc.mayaEnv import publish as publish_scripts  # register publishers
@@ -59,40 +59,55 @@ def get_maya_main_window():
             return sip.wrapinstance(ptr_conv_func(ptr), QtCore.QObject)
 
 
-class MayaMainProgressBarWrapper(object):
-    """wraps main progress bar dialog to be ProgressDialogManager compliant"""
+class MayaMainProgressBarWrapper(ProgressDialogBase):
+    """Wrap main progress bar dialog to be ProgressManager compliant."""
 
     def __init__(self):
+        super(MayaMainProgressBarWrapper, self).__init__()
         self.progress_bar = pm.windows.getMainProgressBar()
         self.progress_bar.beginProgress()
 
-    def end_progress(self):
-        """wrapper for end_progress"""
-        self.progress_bar.endProgress()
+    def set_current_step(self, step):
+        """Set the current step.
+
+        Args:
+            step (int): The current step value.
+        """
+        super(MayaMainProgressBarWrapper, self).set_current_step(step)
+        self.progress_bar.setProgress(step)
+        self.progress_bar.step()
+
+    def set_range(self, min_range=0, max_range=100):
+        """Set the minimum and maximum ranges.
+
+        Args:
+            min_range (int): The minimum step value, default is 0.
+            max_range (int): The maximum step value, default is 100.
+        """
+        super(MayaMainProgressBarWrapper, self).set_range(min_range, max_range)
+        self.progress_bar.setMinValue(min_range)
+        self.progress_bar.setMaxValue(max_range)
+
+    def set_title(self, title):
+        """Set the title.
+
+        Args:
+            title (str): The title.
+        """
+        super(MayaMainProgressBarWrapper, self).set_title(title)
+        self.progress_bar.setStatus(title)
 
     def was_cancelled(self):
-        """wrapper for was_canceled method"""
+        """Check if cancelled.
+
+        Returns:
+            bool: True if cancelled, False otherwise.
+        """
         return self.progress_bar.getIsCancelled()
 
     def close(self):
+        """Close the dialog."""
         self.progress_bar.endProgress()
-
-    def setRange(self, range_min, range_max):
-        self.progress_bar.setMinValue(0)
-        self.progress_bar.setMaxValue(range_max)
-
-    def setLabelText(self, label):
-        self.progress_bar.setStatus(label)
-
-    def show(self):
-        return
-
-    def geometry(self):
-        return
-
-    def setValue(self, value):
-        self.progress_bar.setProgress(value)
-        self.progress_bar.step()
 
 
 class Maya(DCCBase):
@@ -241,11 +256,30 @@ workspace -fr "translatorData" "Outputs/data";
         # super(Maya, self).__init__(self.name, version)
         DCCBase.__init__(self, self.name, version)
 
-        self.use_progress_window = False
+        self._use_progress_window = None
         if not pm.general.about(batch=1):
             self.use_progress_window = True
+        else:
+            self.use_progress_window = False
 
         self.set_arnold_texture_search_path()
+
+    @property
+    def use_progress_window(self):
+        """Return use progress window state."""
+        return self._use_progress_window
+
+    @use_progress_window.setter
+    def use_progress_window(self, use_progress_window):
+        """Set use_progress_window attribute."""
+        self._use_progress_window = use_progress_window
+        pdm = ProgressManager()
+        if not self._use_progress_window:
+            # disable progress window
+            pdm.dialog_class = ProgressDialogBase
+        else:
+            pdm.dialog_class = MayaMainProgressBarWrapper
+        pdm.end_progress()  # reset pdm.dialog
 
     @classmethod
     def set_arnold_texture_search_path(cls):
@@ -1234,9 +1268,7 @@ workspace -fr "translatorData" "Outputs/data";
         caller = None
         if len(references):
             logger.debug("register a new caller")
-            wrp = MayaMainProgressBarWrapper()
-            pdm = ProgressDialogManager(dialog=wrp)
-            pdm.use_ui = self.use_progress_window
+            pdm = ProgressManager()
             caller = pdm.register(
                 ref_count,
                 "Maya.get_referenced_versions(%s) %i "
@@ -1639,9 +1671,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         :return: dictionary
         """
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-        pdm.use_ui = self.use_progress_window
+        pdm = ProgressManager()
         return super(Maya, self).check_referenced_versions(pdm=pdm)
 
     def update_versions(self, reference_resolution):
@@ -1701,9 +1731,7 @@ workspace -fr "translatorData" "Outputs/data";
         prev_vers = None
 
         # use a progress window for that
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-        pdm.use_ui = self.use_progress_window
+        pdm = ProgressManager()
         caller = pdm.register(len(references_list), "Maya.update_versions()")
 
         # while len(references_list):
@@ -1923,9 +1951,7 @@ workspace -fr "translatorData" "Outputs/data";
             # 7- fix edits with new namespace
             # 8- apply them
 
-            wrp = MayaMainProgressBarWrapper()
-            pdm = ProgressDialogManager(dialog=wrp)
-            pdm.use_ui = self.use_progress_window
+            pdm = ProgressManager()
             caller = pdm.register(
                 len(to_update_paths), "Maya.fix_reference_namespaces()"
             )

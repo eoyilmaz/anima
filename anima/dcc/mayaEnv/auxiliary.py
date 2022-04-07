@@ -5,6 +5,7 @@ import pymel.core as pm
 import re
 
 import anima.utils
+from anima.utils.progress import ProgressManager
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
@@ -2104,12 +2105,8 @@ class Playblaster(object):
         if len(shots) <= 0:
             raise RuntimeError("There are no Shots in your Camera Sequencer.")
 
-        from anima.ui.progress_dialog import ProgressDialogManager
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-        pdm.close()
+        pdm = ProgressManager()
+        pdm.end_progress()
 
         caller = pdm.register(len(shots), "Generating Playblasts...")
 
@@ -2180,12 +2177,8 @@ class Playblaster(object):
         :param list video_file_full_paths: List of file paths
         :return:
         """
-        from anima.ui.progress_dialog import ProgressDialogManager
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-        pdm.close()
+        pdm = ProgressManager()
+        pdm.end_progress()
 
         outputs = []
         # register a new caller
@@ -2349,12 +2342,8 @@ def get_cacheable_nodes():
 
     :return:
     """
-    from anima.ui.progress_dialog import ProgressDialogManager
-    from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-    wrp = MayaMainProgressBarWrapper()
-    pdm = ProgressDialogManager(dialog=wrp)
-    pdm.close()
+    pdm = ProgressManager()
+    pdm.end_progress()
 
     # list all cacheable nodes
     cacheable_nodes = []
@@ -2432,11 +2421,7 @@ def export_alembic_of_nodes(
     if not pm.pluginInfo("AbcExport", q=1, l=1):
         pm.loadPlugin("AbcExport")
 
-    from anima.ui.progress_dialog import ProgressDialogManager
-    from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-    wrp = MayaMainProgressBarWrapper()
-    pdm = ProgressDialogManager(dialog=wrp)
+    pdm = ProgressManager()
 
     cacheable_nodes.sort(key=lambda x: x.getAttr("cacheable"))
 
@@ -3158,10 +3143,7 @@ def match_hierarchy(source, target, node_types=None, use_long_names=False):
       value is (pm.nt.Mesh, pm.nt.NurbsSurface).
     :param use_long_names: Precisely match the placement in the hierarchy.
     """
-    # from anima.ui import progress_dialog
-    # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
+    # pdm = ProgressManager()
 
     if node_types is None:
         node_types = (pm.nt.Mesh, pm.nt.NurbsSurface)

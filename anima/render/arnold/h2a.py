@@ -7,14 +7,13 @@ import time
 
 
 from anima.render.arnold import base85
-reload(base85)
 
 try:
     import hou
 except ImportError:
     hou = None
 
-from cStringIO import StringIO
+from io import StringIO
 
 
 class Buffer(object):
@@ -48,7 +47,7 @@ class Buffer(object):
         self_i += 1
         if self_i == self.str_buffer_size:
             self.flush()
-        self.str_buffer_append(`data`)
+        self.str_buffer_append(str(data))
 
     def getvalue(self):
         """returns the string data
@@ -223,7 +222,7 @@ polymesh
     combined_number_of_points_per_primitive = []
 
     for prim in geo.iterPrims():
-        number_of_points_per_primitive.append(`prim.numVertices()`)
+        number_of_points_per_primitive.append(str(prim.numVertices()))
         i += 1
         if i > 500:
             i = 0
@@ -232,7 +231,7 @@ polymesh
         for vertex in prim.vertices():
             point = vertex.point()
             point_id = point.number()
-            vertex_ids.append(`point_id`)
+            vertex_ids.append(str(point_id))
             # vertex_normals.extend(point.floatListAttribValue('N'))
             # vertex_uv = vertex.floatListAttribValue('uv')
             # vertex_uvs.append(vertex_uv[0])
@@ -256,7 +255,7 @@ polymesh
     # if vertex_normals:
     #     combined_vertex_normals.append(' '.join(map(str, vertex_normals)))
 
-    ## encode uvs
+    # # encode uvs
     # encoded_vertex_uvs = '%s' % base85.arnold_b85_encode(
     #     struct.pack(
     #         '<%sd' % len(vertex_uvs),
@@ -274,7 +273,7 @@ polymesh
     try:
         point_colors = geo.pointFloatAttribValuesAsString('color')
     except hou.OperationFailed:
-       # no color attribute skip it
+        # no color attribute skip it
         skip_colors = True
         point_colors = ''
 
@@ -290,25 +289,25 @@ polymesh
     # Number Of Points Per Primitive
     #
     encode_start = time.time()
-    #encoded_number_of_points_per_primitive = 'B%s' % base85.arnold_b85_encode(
-    #    struct.pack(
-    #        '>%sB' % len(number_of_points_per_primitive),
-    #        *number_of_points_per_primitive
-    #    )
-    #)
+    # encoded_number_of_points_per_primitive = 'B%s' % base85.arnold_b85_encode(
+    #     struct.pack(
+    #         '>%sB' % len(number_of_points_per_primitive),
+    #         *number_of_points_per_primitive
+    #     )
+    # )
     encoded_number_of_points_per_primitive = '\n'.join(combined_number_of_points_per_primitive)
     encode_end = time.time()
     print('Encoding Number of Points  : %3.3f' % (encode_end - encode_start))
 
     split_start = time.time()
-    #splitted_number_of_points_per_primitive = \
-    #    re.sub(
-    #        "(.{500})", "\\1\n",
-    #        #' '.join(number_of_points_per_primitive),
-    #        encoded_number_of_points_per_primitive,
-    #        0
-    #    )
-    #splitted_number_of_points_per_primitive = ' '.join(encoded_number_of_points_per_primitive)
+    # splitted_number_of_points_per_primitive = \
+    #     re.sub(
+    #         "(.{500})", "\\1\n",
+    #         #' '.join(number_of_points_per_primitive),
+    #         encoded_number_of_points_per_primitive,
+    #         0
+    #     )
+    # splitted_number_of_points_per_primitive = ' '.join(encoded_number_of_points_per_primitive)
     splitted_number_of_points_per_primitive = encoded_number_of_points_per_primitive
     split_end = time.time()
     print('Splitting Number of Points : %3.3f' % (split_end - split_start))
@@ -633,9 +632,9 @@ curves
 
     real_number_of_points_in_one_curve = real_point_count / number_of_curves
     number_of_points_in_one_curve = real_number_of_points_in_one_curve + 2
-    number_of_points_per_curve = [`number_of_points_in_one_curve`] * number_of_curves
+    number_of_points_per_curve = [str(number_of_points_in_one_curve)] * number_of_curves
 
-    curve_ids = ' '.join(`id_` for id_ in xrange(number_of_curves))
+    curve_ids = ' '.join(str(id_) for id_ in range(number_of_curves))
 
     radius = None
 

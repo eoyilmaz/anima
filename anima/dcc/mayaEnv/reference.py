@@ -2,6 +2,7 @@
 
 from anima.utils import do_db_setup
 from pymel import core as pm
+from anima.utils.progress import ProgressManager
 
 
 class Reference(object):
@@ -607,11 +608,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates desired representations of this scene"""
-        from anima.ui.progress_dialog import ProgressDialogManager
-        from anima.dcc.mayaEnv import Maya, repr_tools, auxiliary
-
-        reload(auxiliary)
-        reload(repr_tools)
+        from anima.dcc.mayaEnv import Maya, repr_tools
 
         response = pm.confirmDialog(
             title="Do Create Representations?",
@@ -625,10 +622,7 @@ class Reference(object):
             return
 
         # register a new caller
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
+        pdm = ProgressManager()
 
         m_env = Maya()
         source_version = m_env.get_current_version()
@@ -694,11 +688,7 @@ class Reference(object):
         cls, generate_gpu=True, generate_ass=True, generate_rs=True, skip_existing=False
     ):
         """generates all representations of all references of this scene"""
-        from anima.ui.progress_dialog import ProgressDialogManager
-        from anima.dcc.mayaEnv import Maya, repr_tools, auxiliary
-
-        reload(auxiliary)
-        reload(repr_tools)
+        from anima.dcc.mayaEnv import Maya, repr_tools
 
         paths_visited = []
         versions_to_visit = []
@@ -706,18 +696,9 @@ class Reference(object):
 
         # generate a sorted version list
         # and visit each reference only once
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-
-        use_progress_window = False
-        if not pm.general.about(batch=1):
-            use_progress_window = True
+        pdm = ProgressManager()
 
         all_refs = pm.listReferences(recursive=True)
-
-        pdm.use_ui = use_progress_window
         caller = pdm.register(len(all_refs), "List References")
 
         for ref in reversed(all_refs):

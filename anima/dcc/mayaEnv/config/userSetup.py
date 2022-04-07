@@ -91,6 +91,10 @@ else:
     logprint("successfully QtLib to PySide inside userSetup.py")
 
 if not pm.general.about(batch=1):
+    # set progress manager display type
+    from anima.utils.progress import ProgressManager
+    pdm = ProgressManager()
+
     # load shelves
     # DO NOT DELETE THE FOLLOWING LINE
     from anima.dcc.mayaEnv import auxiliary

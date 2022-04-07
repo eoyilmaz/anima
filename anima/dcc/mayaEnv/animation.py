@@ -325,13 +325,16 @@ class Animation(object):
 
         locator = pm.spaceLocator()
 
+        import functools
+        functools_reduce = functools.reduce
+
         for i in range(start, end + 1):
             pm.currentTime(i)
             point_positions = pm.xform(vertices, q=1, ws=1, t=1)
             point_count = len(point_positions) / 3
-            px = reduce(lambda x, y: x + y, point_positions[0::3]) / point_count
-            py = reduce(lambda x, y: x + y, point_positions[1::3]) / point_count
-            pz = reduce(lambda x, y: x + y, point_positions[2::3]) / point_count
+            px = functools_reduce(lambda x, y: x + y, point_positions[0::3]) / point_count
+            py = functools_reduce(lambda x, y: x + y, point_positions[1::3]) / point_count
+            pz = functools_reduce(lambda x, y: x + y, point_positions[2::3]) / point_count
 
             locator.t.set(px, py, pz)
             pm.setKeyframe(locator.tx)

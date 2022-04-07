@@ -389,14 +389,14 @@ class Modeling(object):
 
         mesh_count = len(all_meshes)
 
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-        from anima.ui.progress_dialog import ProgressDialogManager
+        from anima.utils.progress import ProgressManager
 
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
+        pdm = ProgressManager()
 
-        if not pm.general.about(batch=1) and mesh_count:
-            pdm.use_ui = True
+        if pm.general.about(batch=1) or not mesh_count:
+            from anima.utils.progress import ProgressDialogBase
+            pdm.dialog_class = ProgressDialogBase
+            pdm.create_dialog()
 
         caller = pdm.register(mesh_count, "check_uvs()")
 

@@ -5,7 +5,7 @@ import re
 import tempfile
 
 from anima.dcc.mayaEnv import auxiliary
-from anima.ui.progress_dialog import ProgressDialogManager
+from anima.utils.progress import ProgressManager
 from maya import cmds as cmds, mel as mel
 from pymel import core as pm
 
@@ -743,11 +743,7 @@ class Render(object):
             override_attr_name = None
 
         # register a caller
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
-        pdm.use_ui = True if len(objects) > 3 else False
+        pdm = ProgressManager()
         caller = pdm.register(len(objects), "Setting Shape Attribute")
 
         layers = pm.ls(type="renderLayer")
@@ -1119,12 +1115,6 @@ class Render(object):
         else:
             lut = auxiliary.match_hierarchy(source, target)
 
-        # from anima.ui import progress_dialog
-        # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-        # wrp = MayaMainProgressBarWrapper()
-        # pdm = progress_dialog.ProgressDialogManager(dialog=wrp)
-
-        # caller = pdm.register(2, title='Transferring materials')
         for source_node, target_node in lut["match"]:
             auxiliary.transfer_shaders(source_node, target_node)
             # also transfer render attributes
@@ -2310,24 +2300,7 @@ class Render(object):
         import shutil
         import glob
 
-        # from maya import OpenMayaUI
-        #
-        # try:
-        #     from shiboken import wrapInstance
-        # except ImportError:
-        #     from shiboken2 import wrapInstance
-        #
-        # from anima.ui import progress_dialog
-        #
-        # maya_main_window = wrapInstance(
-        #     long(OpenMayaUI.MQtUtil.mainWindow()),
-        #     progress_dialog.QtWidgets.QWidget
-        # )
-        #
-        from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-
-        wrp = MayaMainProgressBarWrapper()
-        pdm = ProgressDialogManager(dialog=wrp)
+        pdm = ProgressManager()
 
         selected_nodes = pm.ls(sl=1)
         caller = pdm.register(len(selected_nodes), title="Moving Cache Files")

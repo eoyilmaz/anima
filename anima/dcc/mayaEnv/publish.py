@@ -1114,16 +1114,6 @@ def check_out_of_space_uvs(progress_controller=None):
     progress_controller.maximum = mesh_count
     nodes_with_out_of_space_uvs = []
 
-    # from anima.ui.progress_dialog import ProgressDialogManager
-    # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = ProgressDialogManager(dialog=wrp)
-
-    # if not pm.general.about(batch=1) and mesh_count:
-    #     pdm.use_ui = True
-
-    # caller = pdm.register(mesh_count, 'check_out_of_space_uvs()')
-
     try:
         for node in all_meshes:
             u, v = node.getUVs()
@@ -1281,16 +1271,6 @@ def check_uvs(progress_controller=None):
     all_meshes = pm.ls(type="mesh")
     mesh_count = len(all_meshes)
     progress_controller.maximum = mesh_count
-
-    # from anima.ui.progress_dialog import ProgressDialogManager
-    # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = ProgressDialogManager(dialog=wrp)
-    #
-    # if not pm.general.about(batch=1) and mesh_count:
-    #     pdm.use_ui = True
-
-    # caller = pdm.register(mesh_count, 'check_uvs()')
 
     meshes_with_zero_uv_area = []
     for node in all_meshes:
@@ -1715,21 +1695,8 @@ def check_component_edits_on_references(progress_controller=None):
 
     references_with_component_edits = []
 
-    # from anima.ui.progress_dialog import ProgressDialogManager
-    # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = ProgressDialogManager(dialog=wrp)
-
     all_refs = pm.listReferences(recursive=True)
     ref_count = len(all_refs)
-
-    # if not pm.general.about(batch=1) and ref_count:
-    #     pdm.use_ui = True
-
-    # caller = pdm.register(
-    #     ref_count,
-    #     'Checking component edits on %i reference nodes' % ref_count
-    # )
 
     progress_controller.maximum = ref_count
     for ref in all_refs:
@@ -2915,10 +2882,6 @@ def export_edl_and_xml(progress_controller=None):
     progress_controller.increment()
 
     # convert to MXF
-    # from anima.ui.progress_dialog import ProgressDialogManager
-    # from anima.dcc.mayaEnv import MayaMainProgressBarWrapper
-    # wrp = MayaMainProgressBarWrapper()
-    # pdm = ProgressDialogManager(dialog=wrp)
 
     # shots = seq1.shots.get()
     shots = pm.ls(type="shot")

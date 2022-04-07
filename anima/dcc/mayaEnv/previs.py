@@ -1023,10 +1023,10 @@ class ShotExporter(object):
 
         from anima.dcc import mayaEnv
         from stalker import Version
-        from anima.ui.progress_dialog import ProgressDialogManager
+        from anima.utils.progress import ProgressManager
 
-        pdm = ProgressDialogManager()
-        pdm.close()
+        pdm = ProgressManager()
+        pdm.end_progress()
 
         m_env = mayaEnv.Maya()
 
