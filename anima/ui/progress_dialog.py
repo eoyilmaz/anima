@@ -49,6 +49,7 @@ class ProgressDialog(ProgressDialogBase, QtWidgets.QProgressDialog):
             title (str): The title.
         """
         self.setLabelText(title)
+        self.setWindowTitle(title)
 
     def was_cancelled(self):
         """Check if cancelled.

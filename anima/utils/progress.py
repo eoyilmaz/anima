@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+
 
 from anima.base import Singleton
 
@@ -71,7 +73,10 @@ class TerminalProgressPrinter(ProgressDialogBase):
         """
         denominator = float(self.max_range - self.min_range)
         nominator = float(self.current_step - self.min_range)
-        rational_step = nominator / denominator
+        if denominator != 0:
+            rational_step = nominator / denominator
+        else:
+            rational_step = 0
         progress_chars = (
             self.progress_char * int(rational_step * float(self.max_characters))
         ).ljust(self.max_characters)
@@ -245,6 +250,8 @@ class ProgressManager(object):
                 self.max_steps -= steps_left
 
         if not self.callers:
-            if self.dialog:
-                self.dialog.close()
+            self.max_steps = 0
+            self.current_step = 0
+            if self._dialog:
+                self._dialog.close()
                 self._dialog = None

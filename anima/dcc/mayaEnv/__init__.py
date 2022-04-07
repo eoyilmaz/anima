@@ -84,6 +84,8 @@ class MayaMainProgressBarWrapper(ProgressDialogBase):
             min_range (int): The minimum step value, default is 0.
             max_range (int): The maximum step value, default is 100.
         """
+        if min_range == max_range:
+            max_range = min_range + 1
         super(MayaMainProgressBarWrapper, self).set_range(min_range, max_range)
         self.progress_bar.setMinValue(min_range)
         self.progress_bar.setMaxValue(max_range)
