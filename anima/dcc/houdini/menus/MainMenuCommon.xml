@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mainMenu>
+  <menuBar>
+    <subMenu id="anima_menu">
+      <label>Anima</label>
+      <insertBefore>help_menu</insertBefore>
+
+      <scriptItem>
+        <label>Version Open</label>
+        <scriptCode><![CDATA[# -*- coding: utf-8 -*-
+import os
+import sys
+import functools
+import hdefereval
+from anima.ui import SET_PYSIDE2
+
+SET_PYSIDE2()
+
+from anima.ui.scripts import houdini
+
+func = functools.partial(houdini.version_dialog, mode=1)
+hdefereval.executeDeferred(func)
+]]>
+        </scriptCode>
+      </scriptItem>
+
+      <scriptItem>
+        <label>Version Save</label>
+        <scriptCode><![CDATA[# -*- coding: utf-8 -*-
+import os
+import sys
+import functools
+import hdefereval
+from anima.ui import SET_PYSIDE2
+
+SET_PYSIDE2()
+
+from anima.ui.scripts import houdini
+
+func = functools.partial(houdini.version_dialog, mode=0)
+hdefereval.executeDeferred(func)
+]]>
+        </scriptCode>
+      </scriptItem>
+
+    </subMenu>
+  </menuBar>
+</mainMenu>
+
