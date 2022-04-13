@@ -6,7 +6,7 @@
       <insertBefore>help_menu</insertBefore>
 
       <scriptItem>
-        <label>Version Open</label>
+        <label>Open</label>
         <scriptCode><![CDATA[# -*- coding: utf-8 -*-
 import os
 import sys
@@ -25,7 +25,7 @@ hdefereval.executeDeferred(func)
       </scriptItem>
 
       <scriptItem>
-        <label>Version Save</label>
+        <label>Save As</label>
         <scriptCode><![CDATA[# -*- coding: utf-8 -*-
 import os
 import sys
