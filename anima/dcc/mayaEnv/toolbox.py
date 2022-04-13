@@ -1990,7 +1990,7 @@ def UI():
 
             pm.button(
                 "export_alembic_of_selected_cacheable_nodes_button",
-                l="Selected Cacheable Nodes",
+                l="Export Selected Cacheable Nodes",
                 c=repeated_callback(
                     export_alembic_callback_with_options,
                     auxiliary.export_alembic_of_selected_cacheable_nodes,
