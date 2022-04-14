@@ -347,31 +347,16 @@ class GenericTools(object):
         flow = comp.CurrentFrame.FlowView
         x, y = flow.GetPosTable(node).values()
 
-        node_input_list = node.GetInputList()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = fusion_env.fusion.GetPrefs("Global.UserInterface.AutoClipBrowse")
+        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", False)
 
-        path = ""
-        key = "Clip"
-        for input_entry_key in node_input_list.keys():
-            input_entry = node_input_list[input_entry_key]
-            input_id = input_entry.GetAttrs()["INPS_ID"]
-            if input_id == key:
-                path = input_entry[0]
-                break
-
-        comp.Lock()
-        loader_node = comp.AddTool("Loader")
-        comp.Unlock()
-
-        node_input_list = loader_node.GetInputList()
-        for input_entry_key in node_input_list.keys():
-            input_entry = node_input_list[input_entry_key]
-            input_id = input_entry.GetAttrs()["INPS_ID"]
-            if input_id == key:
-                input_entry[0] = path
-                break
+        loader_node = comp.Loader()
+        loader_node.Clip[0] = node.Clip[0]
+        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", auto_browse)
 
         # set position near to the saver node
-        flow.SetPos(loader_node, x, y + 1.0)
+        flow.SetPos(loader_node, x + 1.0, y)
         flow.Select(node, False)
         flow.Select(loader_node, True)
         comp.SetActiveTool(loader_node)
