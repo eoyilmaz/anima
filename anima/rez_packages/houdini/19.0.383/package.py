@@ -24,8 +24,8 @@ with scope("config") as c:
 
 
 def commands():
-    env.PYTHONPATH.append("{root}/python")
-    env.PATH.append("{root}/bin")
+    # env.PYTHONPATH.append("{root}/python")
+    # env.PATH.append("{root}/bin")
     env.PATH.append(
         "/opt/hfs{}.{}.{}/bin".format(
             env.REZ_HOUDINI_MAJOR_VERSION,

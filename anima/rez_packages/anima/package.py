@@ -27,6 +27,9 @@ build_command = "python {root}/build.py {install}"
 
 
 def commands():
+    # env.PYTHONPATH.append("{root}/python")
+    # env.PATH.append("{root}/bin")
+
     import os
 
     anima_lib_path = os.path.expanduser("~/Documents/development/anima")
@@ -35,7 +38,6 @@ def commands():
     env.ANIMA_LIB_PATH = anima_lib_path
     env.ANIMA_DEV_PATH = anima_dev_path
 
-    env.PYTHONPATH.append("{root}/python")
     env.PYTHONPATH.append("{}/anima".format(anima_lib_path))
     env.PYTHONPATH.append(
         "{}/extra_libraries/py{}.{}".format(
@@ -133,4 +135,3 @@ def commands():
         )
 
     env.ANIMA_PATH = os.path.expanduser("~/Documents/development/anima/anima")
-    env.PATH.append("{root}/bin")

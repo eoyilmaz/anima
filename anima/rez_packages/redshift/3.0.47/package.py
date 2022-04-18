@@ -28,8 +28,8 @@ with scope("config") as c:
 
 
 def commands():
-    env.PYTHONPATH.append("{root}/python")
-    env.PATH.append("{root}/bin")
+    # env.PYTHONPATH.append("{root}/python")
+    # env.PATH.append("{root}/bin")
 
     if "linux" in this.root:
         env.REDSHIFT_LOCATION = "/usr/redshift_v{}.{}.{}".format(

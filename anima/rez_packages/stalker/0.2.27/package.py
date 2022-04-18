@@ -25,8 +25,10 @@ variants = [
     ["python-3.10"],
 ]
 
+build_command = "python {root}/../build.py {install}"
+
 
 def commands():
-    env.PYTHONPATH.append("{root}/python")
-    env.PATH.append("{root}/bin")
+    # env.PYTHONPATH.append("{root}/python")
+    # env.PATH.append("{root}/bin")
     env.STALKER_PATH = "/mnt/NAS/Users/eoyilmaz/Stalker_Projects"

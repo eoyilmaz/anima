@@ -21,9 +21,10 @@ with scope("config") as c:
 
 
 def commands():
-    env.PYTHONPATH.append("{root}/python")
-    env.PATH.append("{root}/bin")
+    # env.PYTHONPATH.append("{root}/python")
+    # env.PATH.append("{root}/bin")
     env.PATH.append("/usr/autodesk/maya{}/bin".format(env.REZ_MAYA_MAJOR_VERSION))
     env.MAYA_DISABLE_CIP = 1
+    env.MAYA_DISABLE_CER = 1
 
 

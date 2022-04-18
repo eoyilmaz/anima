@@ -18,6 +18,4 @@ build_command = "python {root}/../build.py {install}"
 def commands():
     env.QLIB = "${HOME}/Documents/development/qLib"
     env.QOTL = "${QLIB}/otls"
-    env.HOUDINI_PATH.append("${QLIB}")
-    if "&" not in env.HOUDINI_PATH.value():
-        env.HOUDINI_PATH.append("&")
+    env.HOUDINI_PATH.prepend("${QLIB}")

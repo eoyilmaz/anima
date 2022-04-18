@@ -21,5 +21,5 @@ build_command = "python {root}/../build.py {install}"
 
 
 def commands():
-    env.PYTHONPATH.append("{root}/python")
+    # env.PYTHONPATH.append("{root}/python")
     env.PATH.prepend("{root}/bin")
