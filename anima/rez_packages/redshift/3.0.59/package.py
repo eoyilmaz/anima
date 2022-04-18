@@ -38,13 +38,9 @@ def commands():
             env.REZ_REDSHIFT_MINOR_VERSION,
             env.REZ_REDSHIFT_PATCH_VERSION,
         )
+        env.REDSHIFT_COREDATAPATH = env.REDSHIFT_LOCATION
 
     if "maya" in this.root:
-        env.REDSHIFT_COREDATAPATH = "/usr/redshift_v{}.{}.{}".format(
-            env.REZ_REDSHIFT_MAJOR_VERSION,
-            env.REZ_REDSHIFT_MINOR_VERSION,
-            env.REZ_REDSHIFT_PATCH_VERSION,
-        )
         env.REDSHIFT_PLUG_IN_PATH = "$REDSHIFT_COREDATAPATH/redshift4maya/{}".format(
             env.REZ_MAYA_MAJOR_VERSION
         )
@@ -70,7 +66,7 @@ def commands():
 
     if "houdini" in this.root:
         env.HOUDINI_DSO_ERROR = 2
-        env.PATH.append("{}/bin".format(env.REDSHIFT_LOCATION))
+        env.PATH.prepend("{}/bin".format(env.REDSHIFT_LOCATION))
         env.HOUDINI_PATH.append(
             "{}/redshift4houdini/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
