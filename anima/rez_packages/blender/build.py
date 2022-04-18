@@ -19,7 +19,7 @@ def build(source_path, build_path, install_path, targets):
     # create custom start_blender command to the install path
     start_blender_command_path = pathlib.Path(install_path) / "bin" / "blender"
     start_blender_command_content = """#!/usr/bin/sh
-$HOME/.local/bin/blender-{}.{}.{}/blender --python-use-system-env "$@"
+/opt/blender-{}.{}.{}/blender --python-use-system-env "$@"
 """.format(
         major_version, minor_version, patch_version
     )
