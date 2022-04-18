@@ -16,6 +16,7 @@ description = "CGRU/Afanasy Package"
 variants = [
     ["platform-linux", "maya"],
     ["platform-linux", "houdini"],
+    ["platform-linux", "blender"],
 ]
 
 build_command = "python {root}/../build.py {install}"
@@ -90,8 +91,6 @@ def commands():
         )
         env.MAYA_VERSION = env.REZ_MAYA_MAJOR_VERSION
         env.MAYA_EXEC = "${MAYA_LOCATION}/bin/maya${MAYA_VERSION}"
-        print(f"MAYA: {env.MAYA_EXEC}")
-        print(f"MAYA_VERSION: {env.MAYA_VERSION}")
 
         # The name of Maya main window menu
         env.MAYA_CGRU_MENUS_NAME = "CGRU"
@@ -114,11 +113,12 @@ def commands():
 
     # Houdini
     if "houdini" in this.root:
-        env.APP_DIR = "/opt/hfs{}.{}.{}".format(
+        env.HOUDINI_LOCATION = "/opt/hfs{}.{}.{}".format(
             env.REZ_HOUDINI_MAJOR_VERSION,
             env.REZ_HOUDINI_MINOR_VERSION,
             env.REZ_HOUDINI_PATCH_VERSION,
         )
+        env.APP_DIR = env.HOUDINI_LOCATION
         # Setup CGRU houdini scripts location:
         env.HOUDINI_CGRU_PATH = "$CGRU_LOCATION/plugins/houdini"
 
@@ -137,3 +137,17 @@ def commands():
             env.HOUDINI_OTLSCAN_PATH.prepend("${HOUDINI_CGRU_OTLSCAN_PATH}")
 
         env.APP_EXE = "houdini"
+
+    # Blender
+    if "blender" in this.root:
+        env.BLENDER_LOCATION = "/opt/blender-{}.{}.{}".format(
+            env.REZ_BLENDER_MAJOR_VERSION,
+            env.REZ_BLENDER_MINOR_VERSION,
+            env.REZ_BLENDER_PATCH_VERSION,
+        )
+
+        env.BLENDER_CGRU_PATH = "${CGRU_LOCATION}/plugins/blender"
+        env.BLENDER_USER_SCRIPTS.prepend("${BLENDER_CGRU_PATH}")
+
+        env.APP_DIR = "${BLENDER_LOCATION}"
+        env.APP_EXE = "${BLENDER_LOCATION}/blender"
