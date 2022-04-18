@@ -13,7 +13,8 @@ uuid = "edf2e1216f1744e286dbfc5becd985e5"
 description = "Blender Package"
 
 requires = [
-    "aces"
+    "aces",
+    "python-3.9",
 ]
 
 build_command = "python {root}/../build.py {install}"
