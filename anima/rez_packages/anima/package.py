@@ -17,9 +17,10 @@ requires = [
 ]
 
 variants = [
-    ["platform-linux", "maya"],
-    ["platform-linux", "houdini"],
+    ["platform-linux", "blender"],
     ["platform-linux", "fusion"],
+    ["platform-linux", "houdini"],
+    ["platform-linux", "maya"],
 ]
 
 build_command = "python {root}/build.py {install}"
@@ -36,6 +37,13 @@ def commands():
 
     env.PYTHONPATH.append("{root}/python")
     env.PYTHONPATH.append("{}/anima".format(anima_lib_path))
+    env.PYTHONPATH.append(
+        "{}/extra_libraries/py{}.{}".format(
+            anima_lib_path,
+            env.REZ_PYTHON_MAJOR_VERSION,
+            env.REZ_PYTHON_MINOR_VERSION,
+        )
+    )
 
     # Maya
     if "maya" in this.root:
@@ -46,13 +54,6 @@ def commands():
         env.PYTHONPATH.append(
             "{}/anima/anima/dcc/mayaEnv/config/{}".format(
                 anima_lib_path, env.REZ_MAYA_MAJOR_VERSION
-            )
-        )
-        env.PYTHONPATH.append(
-            "{}/extra_libraries/py{}.{}".format(
-                anima_lib_path,
-                env.REZ_PYTHON_MAJOR_VERSION,
-                env.REZ_PYTHON_MINOR_VERSION,
             )
         )
         env.PYTHONPATH.append("{}/maya/scripts".format(anima_dev_path))
@@ -98,16 +99,6 @@ def commands():
             anima_dev_path, houdini_short_version
         )
 
-        # PYTHONPATH
-        env.PYTHONPATH.append(
-            "{}/extra_libraries/py{}.{}".format(
-                anima_lib_path,
-                env.REZ_PYTHON_MAJOR_VERSION,
-                env.REZ_PYTHON_MINOR_VERSION,
-            )
-        )
-        env.PYTHONPATH.append("{}/anima".format(anima_lib_path))
-
         env.HOUDINI_OTLSCAN_PATH.append(anima_otl_path)
         if "&" not in env.HOUDINI_OTLSCAN_PATH.value():
             env.HOUDINI_OTLSCAN_PATH.append("&")
@@ -127,6 +118,19 @@ def commands():
         )
         if "&" not in env.HOUDINI_MENU_PATH.value():
             env.HOUDINI_MENU_PATH.append("&")
+
+    # Blender
+    if "blender" in this.root:
+        # Blender cannot use multiple paths in BLENDER_USER_SCRIPTS
+        # so, instead of append/prepend directly set to a value
+        env.BLENDER_USER_SCRIPTS = "{}/blender".format(anima_dev_path)
+        # Add extra libraries like PySide2
+        env.PYTHONPATH.append("{}/extra_libraries/py{}.{}/__extras__".format(
+                anima_lib_path,
+                env.REZ_PYTHON_MAJOR_VERSION,
+                env.REZ_PYTHON_MINOR_VERSION,
+            )
+        )
 
     env.ANIMA_PATH = os.path.expanduser("~/Documents/development/anima/anima")
     env.PATH.append("{root}/bin")
