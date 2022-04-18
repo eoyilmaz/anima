@@ -32,11 +32,12 @@ def commands():
 
     import os
 
-    anima_lib_path = os.path.expanduser("~/Documents/development/anima")
-    anima_dev_path = os.path.expanduser("~/Documents/DEV")
+    anima_lib_path = os.path.expanduser("$HOME/Documents/development/anima")
+    anima_dev_path = os.path.expanduser("$HOME/Documents/DEV")
 
     env.ANIMA_LIB_PATH = anima_lib_path
     env.ANIMA_DEV_PATH = anima_dev_path
+    env.ANIMA_PATH = os.path.expanduser("{}/anima".format(anima_lib_path))
 
     env.PYTHONPATH.append("{}/anima".format(anima_lib_path))
     env.PYTHONPATH.append(
@@ -133,5 +134,3 @@ def commands():
                 env.REZ_PYTHON_MINOR_VERSION,
             )
         )
-
-    env.ANIMA_PATH = os.path.expanduser("~/Documents/development/anima/anima")
