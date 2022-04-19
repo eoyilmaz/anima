@@ -17,10 +17,10 @@ requires = [
 ]
 
 variants = [
-    ["platform-linux", "blender"],
-    ["platform-linux", "fusion"],
-    ["platform-linux", "houdini"],
-    ["platform-linux", "maya"],
+    ["blender"],
+    ["fusion"],
+    ["houdini"],
+    ["maya"],
 ]
 
 build_command = "python {root}/build.py {install}"
