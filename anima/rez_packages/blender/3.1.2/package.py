@@ -15,6 +15,7 @@ description = "Blender Package"
 requires = [
     "aces",
     "python-3.10",
+    "pyside2",
 ]
 
 build_command = "python {root}/../build.py {install}"

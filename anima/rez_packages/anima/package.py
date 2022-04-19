@@ -128,9 +128,4 @@ def commands():
         # so, instead of append/prepend directly set to a value
         env.BLENDER_USER_SCRIPTS = "{}/blender".format(anima_dev_path)
         # Add extra libraries like PySide2
-        env.PYTHONPATH.append("{}/extra_libraries/py{}.{}/__extras__".format(
-                anima_lib_path,
-                env.REZ_PYTHON_MAJOR_VERSION,
-                env.REZ_PYTHON_MINOR_VERSION,
-            )
-        )
+
