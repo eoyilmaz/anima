@@ -1,0 +1,3 @@
+#!/usr/bin/sh
+
+python$REZ_PYTHON_MAJOR_VERSION.$REZ_PYTHON_MINOR_VERSION
