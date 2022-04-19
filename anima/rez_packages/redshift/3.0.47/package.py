@@ -11,12 +11,12 @@ uuid = "949dbed5cb0247e4b94445f6ef3a0539"
 description = "Redshift package"
 
 variants = [
-    ["platform-linux", "maya-2020"],
-    ["platform-linux", "houdini-17.5.460"],
-    ["platform-linux", "houdini-18.0.597"],
-    ["platform-linux", "houdini-18.5.532"],
-    ["platform-linux", "houdini-18.5.563"],
-    ["platform-linux", "houdini-18.5.596"],
+    ["maya-2020"],
+    ["houdini-17.5.460"],
+    ["houdini-18.0.597"],
+    ["houdini-18.5.532"],
+    ["houdini-18.5.563"],
+    ["houdini-18.5.596"],
 ]
 
 build_command = "python {root}/../build.py {install}"
@@ -31,7 +31,7 @@ def commands():
     # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
 
-    if "linux" in this.root:
+    if system.platform == "linux":
         env.REDSHIFT_LOCATION = "/usr/redshift-{}.{}.{}".format(
             env.REZ_REDSHIFT_MAJOR_VERSION,
             env.REZ_REDSHIFT_MINOR_VERSION,
