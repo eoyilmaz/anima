@@ -32,7 +32,7 @@ def commands():
     # env.PATH.append("{root}/bin")
 
     if "linux" in this.root:
-        env.REDSHIFT_LOCATION = "/usr/redshift_v{}.{}.{}".format(
+        env.REDSHIFT_LOCATION = "/usr/redshift-{}.{}.{}".format(
             env.REZ_REDSHIFT_MAJOR_VERSION,
             env.REZ_REDSHIFT_MINOR_VERSION,
             env.REZ_REDSHIFT_PATCH_VERSION,
