@@ -29,7 +29,11 @@ def commands():
     unsetenv("PYTHONHOME")
 
     # Set CGRU root:
-    env.CGRU_LOCATION.set("/opt/cgru")
+    env.CGRU_LOCATION.set("/opt/cgru-{}.{}.{}".format(
+        env.REZ_CGRU_MAJOR_VERSION,
+        env.REZ_CGRU_MINOR_VERSION,
+        env.REZ_CGRU_PATCH_VERSION,
+    ))
 
     # Add CGRU bin to path:
     env.PATH.prepend("${CGRU_LOCATION}/bin")
