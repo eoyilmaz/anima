@@ -14,9 +14,9 @@ description = "CGRU/Afanasy Package"
 
 
 variants = [
-    ["platform-linux", "maya"],
-    ["platform-linux", "houdini"],
-    ["platform-linux", "blender"],
+    ["maya"],
+    ["houdini"],
+    ["blender"],
 ]
 
 build_command = "python {root}/../build.py {install}"
