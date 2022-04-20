@@ -2,7 +2,7 @@
 
 name = "anima"
 
-version = "1.0.0"
+version = "0.7.0"
 
 author = [
     "Erkan Ozgur Yilmaz",
