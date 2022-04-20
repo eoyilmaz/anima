@@ -25,9 +25,7 @@ def common_prefix(*sequences):
         return [], []
     # loop in parallel on the sequences
     common = []
-    import itertools
-
-    for elements in itertools.izip(*sequences):
+    for elements in zip(*sequences):
         # unless all elements are equal, bail out of the loop
         if not all_equal(elements):
             break
