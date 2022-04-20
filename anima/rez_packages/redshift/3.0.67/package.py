@@ -12,6 +12,7 @@ description = "Redshift package"
 
 variants = [
     ["maya-2020"],
+    ["maya-2022"],
     ["houdini-18.5.759"],
     ["houdini-19.0.561"],
 ]
