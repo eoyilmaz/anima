@@ -74,3 +74,11 @@ def commands():
         )
         env.REDSHIFT_RV_OPEN_ONLY = 1
         env.REDSHIFT_RV_ALWAYSONTOP = 0
+        env.PXR_PLUGINPATH_NAME.append(
+            "{}/redshift4solaris/{}.{}.{}".format(
+                env.REDSHIFT_LOCATION,
+                env.REZ_HOUDINI_MAJOR_VERSION,
+                env.REZ_HOUDINI_MINOR_VERSION,
+                env.REZ_HOUDINI_PATCH_VERSION,
+            )
+        )
