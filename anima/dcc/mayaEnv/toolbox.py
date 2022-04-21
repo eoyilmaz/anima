@@ -1999,7 +1999,6 @@ def UI():
                 cache_format = pm.radioCollection(
                     "export_cache_of_nodes_cache_format_radio_collection", q=1, sl=1
                 )
-                print("cache_format: {}".format(cache_format))
                 func(
                     isolate=isolate,
                     unload_refs=unload_refs,
