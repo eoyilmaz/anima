@@ -2783,33 +2783,9 @@ def cache_animations(progress_controller=None):
 
     # export Alembic/USD caches.
     # TODO: How to decide which cache format is going to be used.
-    output_file_paths = auxiliary.export_cache_of_all_cacheable_nodes(handles=1)
+    auxiliary.export_cache_of_all_cacheable_nodes(handles=1)
     progress_controller.increment()
 
-    # add the outputs as an output for the current version
-    from anima.dcc import mayaEnv
-    from stalker import Link, Repository, Type
-    from stalker.db.session import DBSession
-
-    m = mayaEnv.Maya()
-    current_version = m.get_current_version()
-
-    # get Alembic type
-    with DBSession.no_autoflush:
-        alembic_type = Type.query.filter(Type.name == 'Alembic').first()
-
-    if not alembic_type:
-        alembic_type = Type(name="Alembic", code="Alembic", target_entity_type="Link")
-
-    for output_file_path in output_file_paths:
-        new_link = Link(
-            full_path=Repository.to_os_independent_path(output_file_path),
-            original_filename=os.path.basename(output_file_path),
-            type=alembic_type
-        )
-        DBSession.add(new_link)
-        current_version.outputs.append(new_link)
-    DBSession.commit()
     progress_controller.complete()
 
 

@@ -10,8 +10,8 @@ from anima.utils.progress import ProgressManager
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
 
-ALEMBIC = "alembic"
-USD = "usd"
+ALEMBIC = "Alembic"
+USD = "USD"
 
 CACHE_FORMAT_DATA = {
     ALEMBIC: {"output_dir": "alembic", "file_extension": ".abc"},
@@ -2640,10 +2640,10 @@ def export_cache_of_nodes(
                 "exportBlendShapes=0;exportColorSets=1;defaultMeshScheme=catmullClark;"
                 "defaultUSDFormat=usdc;animation=1;eulerFilter=0;staticSingleSample=0;"
                 "startTime={start_frame};endTime={end_frame};frameStride={step};"
-                "frameSample=0.0;parentScope=;"
+                "frameSample=0.0;parentScope={parentScope};"
                 "exportDisplayColor=0;shadingMode=useRegistry;"
                 "convertMaterialsTo=UsdPreviewSurface;exportInstances=1;"
-                'exportVisibility=1;mergeTransformAndShape=1;stripNamespaces=0" '
+                'exportVisibility=1;mergeTransformAndShape=1;stripNamespaces=1" '
                 '-typ "USD Export" -pr -es "{file_path}";'
             )
 
@@ -2666,6 +2666,7 @@ def export_cache_of_nodes(
             print("cacheable_node.fullPath(): {}".format(cacheable_node.fullPath()))
             pm.select(cacheable_node)
             command_to_exec = command.format(
+                parentScope=cacheable_node.namespace()[:-1],
                 start_frame=int(start_frame - handles),
                 end_frame=int(end_frame + handles),
                 step=step,
@@ -2709,7 +2710,58 @@ def export_cache_of_nodes(
     pm.playbackOptions(v=default_playback_option)
     print("INFO: End export_cache_of_nodes!")
 
+    # add the outputs as an output for the current version
+    add_outputs_to_current_version(output_full_paths, cache_format)
+
     return output_full_paths
+
+
+def add_outputs_to_current_version(output_full_paths, output_type_name):
+    """Add the given file as a Link to the current version.
+
+    :param list output_full_paths: A list of file paths.
+    :param str output_type_name: The output type, e.g Alembic, USD, Image, Video, Audio
+        etc.
+    :return: List of Link instances that are newly created
+    """
+    from anima.dcc import mayaEnv
+
+    m = mayaEnv.Maya()
+    current_version = m.get_current_version()
+
+    if current_version is None:
+        return
+
+    import os
+    from stalker import Link, Repository, Type, LocalSession
+    from stalker.db.session import DBSession
+
+    # get Alembic type
+    with DBSession.no_autoflush:
+        output_type = Type.query.filter(Type.name == output_type_name).first()
+
+    if not output_type:
+        output_type = Type(
+            name=output_type_name,
+            code=output_type_name,
+            target_entity_type="Link"
+        )
+
+    local_session = LocalSession()
+    with DBSession.no_autoflush:
+        logged_in_user = local_session.logged_in_user
+
+    # Create a Link with the output file and link it to the current version
+    for output_file_path in output_full_paths:
+        new_link = Link(
+            full_path=Repository.to_os_independent_path(output_file_path),
+            original_filename=os.path.basename(output_file_path),
+            type=output_type,
+            created_by=logged_in_user,
+        )
+        DBSession.add(new_link)
+        current_version.outputs.append(new_link)
+    DBSession.commit()
 
 
 def export_cache_of_selected_cacheable_nodes(
