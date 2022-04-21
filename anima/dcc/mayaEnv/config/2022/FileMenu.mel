@@ -43,7 +43,7 @@ global proc fix_external_paths()
 
 global proc switch_to_default_render_layer()
 {
-    python("from anima.dcc.mayaEnv import auxiliary; reload(auxiliary); auxiliary.switch_to_default_render_layer();");
+    python("from anima.dcc.mayaEnv import auxiliary; auxiliary.switch_to_default_render_layer();");
 }
 
 global proc FileMenu_SaveItem()
