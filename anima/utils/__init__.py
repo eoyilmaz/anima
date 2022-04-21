@@ -888,6 +888,8 @@ class MediaManager(object):
         stderr_buffer = []
         while True:
             stderr = process.stderr.readline()
+            if not isinstance(stderr, str):
+                stderr = stderr.decode("utf-8", "replace")
 
             if stderr == "" and process.poll() is not None:
                 break
@@ -939,6 +941,8 @@ class MediaManager(object):
         stdout_buffer = []
         while True:
             stdout = process.stdout.readline()
+            if not isinstance(stdout, str):
+                stdout = stdout.decode("utf-8", "replace")
 
             if stdout == "" and process.poll() is not None:
                 break

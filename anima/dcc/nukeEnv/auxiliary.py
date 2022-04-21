@@ -95,6 +95,8 @@ def ffmpeg(**kwargs):
     stderr_buffer = []
     while True:
         stderr = process.stderr.readline()
+        if not isinstance(stderr, str):
+            stderr = stderr.decode("utf-8", "replace")
 
         if stderr == "" and process.poll() is not None:
             break
