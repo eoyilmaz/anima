@@ -10,6 +10,14 @@ from anima.utils.progress import ProgressManager
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
 
+ALEMBIC = "alembic"
+USD = "usd"
+
+CACHE_FORMAT_DATA = {
+    ALEMBIC: {"output_dir": "alembic", "file_extension": ".abc"},
+    USD: {"output_dir": "usd", "file_extension": ".usd"},
+}
+
 
 def kill_all_torn_off_panels():
     """deletes all torn off panels"""
@@ -2039,7 +2047,7 @@ class Playblaster(object):
             new_result.append(video_file_path)
 
         # delete all the temp files
-        if delete_source_sequence and '#' in original_image_sequence_path:
+        if delete_source_sequence and "#" in original_image_sequence_path:
             try:
                 video_file_pattern = original_image_sequence_path.replace("#", "*")
                 import glob
@@ -2398,28 +2406,39 @@ def get_reference_copy_number(node):
         return ref_number
 
 
-def export_alembic_of_nodes(
-    cacheable_nodes, handles=0, step=1, isolate=True, unload_refs=True
+def export_cache_of_nodes(
+    cacheable_nodes,
+    handles=0,
+    step=1,
+    isolate=True,
+    unload_refs=True,
+    cache_format=ALEMBIC,
 ):
-    """exports alembic caches of the given nodes
+    """Export Alembic/USD caches of the given nodes.
 
     :param list cacheable_nodes: The top transform nodes
-    :param int handles: An integer that shows the desired handles from start
-      and end.
-    :param int step:
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
-      of constraints not to work on some scenes. Default value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
+    :param int handles: An integer that shows the desired handles from start and end.
+    :param int step: Frame step.
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This
+      can sometimes create a problem of constraints not to work on some scenes. Default
+      value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback
+      performance.
+    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
     :return:
     """
-    print("INFO: Start export_alembic_of_nodes!")
+    print("INFO: Start export_cache_of_nodes!")
     # stop if there are no cacheable nodes given
     if not cacheable_nodes:
         return
 
     # load Abc plugin first
-    if not pm.pluginInfo("AbcExport", q=1, l=1):
-        pm.loadPlugin("AbcExport")
+    if cache_format == ALEMBIC:
+        if not pm.pluginInfo("AbcExport", q=1, l=1):
+            pm.loadPlugin("AbcExport")
+    elif cache_format == USD:
+        if not pm.pluginInfo("mayaUsdPlugin", q=1, l=1):
+            pm.loadPlugin("mayaUsdPlugin")
 
     pdm = ProgressManager()
 
@@ -2436,8 +2455,7 @@ def export_alembic_of_nodes(
     current_file_path = os.path.dirname(current_file_full_path)
     current_file_name = os.path.basename(current_file_full_path)
 
-    # export alembic caches
-    previous_cacheable_attr_value = ""
+    # export caches
     pm.select(None)
 
     wrong_node_names = ["_rig_", "_proxy_"]
@@ -2496,8 +2514,6 @@ def export_alembic_of_nodes(
                 "related_refs": [],
             }
 
-    # print("cacheable_node_references: %s" % cacheable_node_references)
-
     # unload all references
     ref_load_states = {}
     if unload_refs:
@@ -2510,6 +2526,7 @@ def export_alembic_of_nodes(
     import tempfile
     import shutil
 
+    output_full_paths = []
     for cacheable_node_name in sorted(cacheable_node_references):
         print("INFO: exporting: {}".format(cacheable_node_name))
 
@@ -2571,7 +2588,12 @@ def export_alembic_of_nodes(
 
         output_path = os.path.join(
             current_file_path,
-            "Outputs/alembic/%s%i/" % (cacheable_attr_value, copy_number),
+            "Outputs/%s/%s%i/"
+            % (
+                CACHE_FORMAT_DATA[cache_format]["output_dir"],
+                cacheable_attr_value,
+                copy_number,
+            ),
         )
 
         output_filename = "%s_%i_%i_%s%i%s" % (
@@ -2580,7 +2602,7 @@ def export_alembic_of_nodes(
             end_frame,
             cacheable_attr_value,
             copy_number,
-            ".abc",
+            CACHE_FORMAT_DATA[cache_format]["file_extension"],
         )
 
         output_full_path = os.path.join(output_path, output_filename).replace("\\", "/")
@@ -2589,46 +2611,72 @@ def export_alembic_of_nodes(
         except OSError:
             pass
 
-        if int(pm.about(v=1)) >= 2017:
-            command = (
-                'AbcExport -j "-frameRange %s %s -step %s -ro '
-                "-stripNamespaces -uvWrite -wholeFrameGeo "
-                "-worldSpace -autoSubd -writeUVSets -dataFormat "
-                " ogawa -writeVisibility -eulerFilter "
-            )
+        if cache_format == ALEMBIC:
+            if int(pm.about(v=1)) >= 2017:
+                command = (
+                    'AbcExport -j "-frameRange {start_frame} {end_frame} -step {step} '
+                    "-ro -stripNamespaces -uvWrite -wholeFrameGeo "
+                    "-worldSpace -autoSubd -writeUVSets -dataFormat "
+                    " ogawa -writeVisibility -eulerFilter "
+                )
+            else:
+                command = (
+                    'AbcExport -j "-frameRange {start_frame} {end_frame} -step {step}'
+                    " -ro -stripNamespaces -uvWrite -wholeFrameGeo "
+                    "-worldSpace -writeUVSets -writeVisibility "
+                )
+
+            # add cacheable_attrs if any
+            if cacheable_attrs:
+                command = "{} {}".format(
+                    command,
+                    " ".join(map(lambda x: "-attr {}".format(x), cacheable_attrs)),
+                )
+
+            command += ' -root {node} -file {file_path}";'
         else:
             command = (
-                'AbcExport -j "-frameRange %s %s -step %s -ro '
-                "-stripNamespaces -uvWrite -wholeFrameGeo "
-                "-worldSpace -writeUVSets -writeVisibility "
+                'file -force -options ";exportUVs=1;exportSkels=none;exportSkin=none;'
+                "exportBlendShapes=0;exportColorSets=1;defaultMeshScheme=catmullClark;"
+                "defaultUSDFormat=usdc;animation=1;eulerFilter=0;staticSingleSample=0;"
+                "startTime={start_frame};endTime={end_frame};frameStride={step};"
+                "frameSample=0.0;parentScope=;"
+                "exportDisplayColor=0;shadingMode=useRegistry;"
+                "convertMaterialsTo=UsdPreviewSurface;exportInstances=1;"
+                'exportVisibility=1;mergeTransformAndShape=1;stripNamespaces=0" '
+                '-typ "USD Export" -pr -es "{file_path}";'
             )
-
-        # add cacheable_attrs if any
-        if cacheable_attrs:
-            command = "%s %s" % (
-                command,
-                " ".join(map(lambda x: "-attr %s" % x, cacheable_attrs)),
-            )
-
-        command += ' -root %s -file %s";'
 
         # use a temp file to export the cache
         # and then move it in to place
-        #
-        temp_cache_file_path = tempfile.mktemp(suffix=".abc").replace("\\", "/")
+        temp_cache_file_path = tempfile.mktemp(
+            suffix=CACHE_FORMAT_DATA[cache_format]["file_extension"]
+        ).replace("\\", "/")
 
-        command_to_exec = command % (
-            int(start_frame - handles),
-            int(end_frame + handles),
-            step,
-            cacheable_node.fullPath(),
-            temp_cache_file_path,
-        )
+        command_to_exec = ""
+        if cache_format == ALEMBIC:
+            command_to_exec = command.format(
+                start_frame=int(start_frame - handles),
+                end_frame=int(end_frame + handles),
+                step=step,
+                node=cacheable_node.fullPath(),
+                file_path=temp_cache_file_path,
+            )
+        elif cache_format == USD:
+            print("cacheable_node.fullPath(): {}".format(cacheable_node.fullPath()))
+            pm.select(cacheable_node)
+            command_to_exec = command.format(
+                start_frame=int(start_frame - handles),
+                end_frame=int(end_frame + handles),
+                step=step,
+                file_path=temp_cache_file_path,
+            )
 
         print("INFO: Executing command: {}".format(command_to_exec))
         pm.mel.eval(command_to_exec)
         # move in to place
         shutil.move(temp_cache_file_path, output_full_path)
+        output_full_paths.append(output_full_path)
 
         # reveal any previously hidden nodes
         for node in hidden_nodes:
@@ -2659,70 +2707,64 @@ def export_alembic_of_nodes(
 
     # restore playback option
     pm.playbackOptions(v=default_playback_option)
-    print("INFO: End export_alembic_of_nodes!")
+    print("INFO: End export_cache_of_nodes!")
+
+    return output_full_paths
 
 
-def export_alembic_of_selected_cacheable_nodes(
-    handles=0, step=1, isolate=True, unload_refs=True
+def export_cache_of_selected_cacheable_nodes(
+    handles=0, step=1, isolate=True, unload_refs=True, cache_format=ALEMBIC
 ):
-    """Exports alembic caches of the selected cacheable nodes
+    """Exports Alembic/USD caches of the selected cacheable nodes.
 
-    :param int handles: An integer that shows the desired handles from start
-      and end.
+    :param int handles: An integer that shows the desired handles from start and end.
     :param int step:
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
-      of constraints not to work on some scenes. Default value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This
+      can sometimes create a problem of constraints not to work on some scenes. Default
+      value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback
+      performance.
+    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
     :return:
     """
     # get selected cacheable nodes in the current scene
     cacheable_nodes = [
         n for n in pm.selected() if n.hasAttr("cacheable") and n.getAttr("cacheable")
     ]
-    export_alembic_of_nodes(
-        cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs
+    return export_cache_of_nodes(
+        cacheable_nodes,
+        handles,
+        step,
+        isolate=isolate,
+        unload_refs=unload_refs,
+        cache_format=cache_format,
     )
 
 
-def export_alembic_of_all_cacheable_nodes(
-    handles=0, step=1, isolate=True, unload_refs=True
+def export_cache_of_all_cacheable_nodes(
+    handles=0, step=1, isolate=True, unload_refs=True, cache_format=ALEMBIC
 ):
-    """Exports alembic caches of the all cacheable nodes
+    """Export Alembic/USD caches by looking at the current scene and try to find
+    transform nodes which has an attribute called "cacheable".
 
-    :param int handles: An integer that shows the desired handles from start
-      and end.
-    :param int step:
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
-      of constraints not to work on some scenes. Default value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
-    :return:
-    """
-    # get selected cacheable nodes in the current scene
-    cacheable_nodes = get_cacheable_nodes()
-    export_alembic_of_nodes(
-        cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs
-    )
-
-
-def export_alembic_from_cache_node(handles=0, step=1, isolate=True, unload_refs=True):
-    """exports alembic caches by looking at the current scene and try to find
-    transform nodes which has an attribute called "cacheable"
-
-    :param int handles: An integer that shows the desired handles from start
-      and end.
-    :param int step: Frame step
-    :param bool isolate: Isolate the exported object, so it is faster to playback. This can sometimes create a problem
-      of constraints not to work on some scenes. Default value is True.
-    :param bool unload_refs: Unloads the references in the scene to speed playback performance.
+    :param int handles: An integer that shows the desired handles from start and end.
+    :param int step: Frame step.
+    :param bool isolate: Isolate the exported object, so it is faster to playback. This
+      can sometimes create a problem of constraints not to work on some scenes. Default
+      value is True.
+    :param bool unload_refs: Unloads the references in the scene to speed playback
+      performance.
+    :param str cache_format: Cache format, "alembic" or "usd". The default is "alembic".
     """
     # get cacheable nodes in the current scene
     cacheable_nodes = get_cacheable_nodes()
-    print("cacheable_nodes")
-    print("===============")
-    for node in cacheable_nodes:
-        print(node.name())
-    export_alembic_of_nodes(
-        cacheable_nodes, handles, step, isolate=isolate, unload_refs=unload_refs
+    return export_cache_of_nodes(
+        cacheable_nodes,
+        handles,
+        step,
+        isolate=isolate,
+        unload_refs=unload_refs,
+        cache_format=cache_format,
     )
 
 

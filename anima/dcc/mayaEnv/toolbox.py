@@ -1932,31 +1932,41 @@ def UI():
             rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             with rowLayout:
                 pm.button(
-                    "abc_from_selected_button",
+                    "cache_from_selected_button",
                     l="From Selected",
                     c=repeated_callback(Animation.create_alembic_command),
-                    ann="Creates Alembic Cache from selected nodes",
+                    ann="Creates Alembic/USD Cache from selected nodes",
                     bgc=color.color,
                 )
                 from_top_node_checkBox = pm.checkBox(
                     "from_top_node_checkBox", l="Top Node", value=True, bgc=color.color
                 )
 
-            # pm.button(
-            #     'abc_from_source_to_target_button',
-            #     l='Source -> Target',
-            #     c=repeated_callback(Animation.copy_alembic_data),
-            #     ann='Copy Alembic Data from Source to Target by the matching '
-            #         'node names',
-            #     bgc=color.color
-            # )
-
             # rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             pm.text(l="===== EXPORT =====")
+
+            from anima.dcc.mayaEnv.auxiliary import CACHE_FORMAT_DATA
+            cache_format_names = list(CACHE_FORMAT_DATA.keys())
+
+            with pm.rowLayout(nc=len(cache_format_names) + 1, adj=1):
+                pm.radioCollection(
+                    "export_cache_of_nodes_cache_format_radio_collection",
+                )
+                pm.text(l="Cache Format:")
+
+                for i, cache_format_name in enumerate(cache_format_names):
+                    pm.radioButton(
+                        cache_format_name,
+                        w=80,
+                        al="left",
+                        ann=cache_format_name,
+                        sl=i == 0  # I hate those kind of tricks
+                    )
+
             with pm.rowLayout(nc=3, adj=3):
                 pm.checkBoxGrp(
-                    "export_alembic_of_nodes_checkbox_grp",
-                    l="Alembic Options",
+                    "export_cache_of_nodes_checkbox_grp",
+                    l="Alembic/USD Options",
                     numberOfCheckBoxes=2,
                     labelArray2=["Isolate", "Unload Refs"],
                     cl3=["left", "left", "left"],
@@ -1965,7 +1975,7 @@ def UI():
                 )
 
             pm.intFieldGrp(
-                "export_alembic_of_nodes_handles_int_slider_grp",
+                "export_cache_of_nodes_handles_int_slider_grp",
                 l="Handles",
                 el="frames",
                 nf=1,
@@ -1974,48 +1984,57 @@ def UI():
                 v1=1,
             )
 
-            def export_alembic_callback_with_options(func):
+            def export_cache_callback_with_options(func):
                 """calls the function with the parameters from the ui
 
                 :param func:
                 :return:
                 """
                 isolate, unload_refs = pm.checkBoxGrp(
-                    "export_alembic_of_nodes_checkbox_grp", q=1, valueArray2=1
+                    "export_cache_of_nodes_checkbox_grp", q=1, valueArray2=1
                 )
                 handles = pm.intFieldGrp(
-                    "export_alembic_of_nodes_handles_int_slider_grp", q=1, v1=1
+                    "export_cache_of_nodes_handles_int_slider_grp", q=1, v1=1
                 )
-                func(isolate=isolate, unload_refs=unload_refs, handles=handles)
+                cache_format = pm.radioCollection(
+                    "export_cache_of_nodes_cache_format_radio_collection", q=1, sl=1
+                ).lower()
+                print("cache_format: {}".format(cache_format))
+                func(
+                    isolate=isolate,
+                    unload_refs=unload_refs,
+                    handles=handles,
+                    cache_format=cache_format,
+                )
 
             pm.button(
-                "export_alembic_of_selected_cacheable_nodes_button",
+                "export_cache_of_selected_cacheable_nodes_button",
                 l="Export Selected Cacheable Nodes",
                 c=repeated_callback(
-                    export_alembic_callback_with_options,
-                    auxiliary.export_alembic_of_selected_cacheable_nodes,
+                    export_cache_callback_with_options,
+                    auxiliary.export_cache_of_selected_cacheable_nodes,
                 ),
-                ann=auxiliary.export_alembic_of_selected_cacheable_nodes.__doc__.split(
+                ann=auxiliary.export_cache_of_selected_cacheable_nodes.__doc__.split(
                     "\n"
                 )[0],
                 bgc=color.color,
             )
             pm.button(
-                "export_alembic_of_all_cacheable_nodes_button",
+                "export_cache_of_all_cacheable_nodes_button",
                 l="ALL Cacheable Nodes",
                 c=repeated_callback(
-                    export_alembic_callback_with_options,
-                    auxiliary.export_alembic_of_all_cacheable_nodes,
+                    export_cache_callback_with_options,
+                    auxiliary.export_cache_of_all_cacheable_nodes,
                 ),
-                ann=auxiliary.export_alembic_of_all_cacheable_nodes.__doc__.split("\n")[
+                ann=auxiliary.export_cache_of_all_cacheable_nodes.__doc__.split("\n")[
                     0
                 ],
                 bgc=color.color,
             )
 
             pm.button(
-                "export_alembic_on_farm_button",
-                l="Export Alembic On Farm",
+                "export_cache_on_farm_button",
+                l="Export Alembic On Farm",  # TODO: Add USD
                 c=repeated_callback(Animation.export_alembics_on_farm),
                 ann=Animation.export_alembics_on_farm.__doc__.split("\n")[0],
                 bgc=color.color,

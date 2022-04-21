@@ -90,7 +90,7 @@ def export_alembics(path):
 
     from anima.dcc.mayaEnv import auxiliary
 
-    auxiliary.export_alembic_from_cache_node(
+    auxiliary.export_cache_of_all_cacheable_nodes(
         handles=1, isolate=False, unload_refs=False
     )
     print("Alembic Export Done!")
