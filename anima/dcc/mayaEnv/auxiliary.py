@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import pymel.core as pm
-
+import os
 import re
+
+import pymel.core as pm
 
 import anima.utils
 from anima.utils.progress import ProgressManager
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
+VERSION_NUMBER_RE = r"([\w\d/_]+v)([0-9]+)([\w\d._]+)"
 
 ALEMBIC = "Alembic"
 USD = "USD"
@@ -2823,18 +2825,104 @@ def export_cache_of_all_cacheable_nodes(
 def extract_version_from_path(path):
     """extracts version number ("_v%03d") as an integer from the given path
 
-    :param path: The path to extract the version number from
+    :param str path: The path to extract the version number from
     """
     import re
-
-    version_matcher = re.compile("([\w\d/]+_v)([0-9]+)([\w\d._]+)")
+    version_matcher = re.compile(VERSION_NUMBER_RE)
     m = re.match(version_matcher, path)
     if m:
         return int(m.group(2))
 
 
-def update_alembic_references():
-    """Updates referenced alembic files in the current scene"""
+def auto_reference_caches(cache_type=ALEMBIC):
+    """Reference caches from Animation scene of the same shot.
+
+    :param str cache_type: Desired cache type, one of ``auxiliary.ALEMBIC`` or
+        ``auxiliary.USD``, default value is ALEMBIC and USD is meaningless for now.
+    """
+    # update all references first
+    update_cache_references(cache_type=cache_type)
+
+    import glob
+    from anima.dcc import mayaEnv
+    from stalker import Shot, Task, Type, Version
+
+    m = mayaEnv.Maya()
+    v = m.get_current_version()
+    if not isinstance(v, Version):
+        raise RuntimeError("Active scene is not related to a Version.")
+
+    # get the task
+    task = v.task
+    if not task.parent:
+        raise RuntimeError("This is a root task, please open a Shot based version!")
+
+    shot = task.parent
+    if not isinstance(shot, Shot):
+        raise RuntimeError("This is not a shot task!")
+
+    # find the animation task
+    anim_type = Type.query.filter(Type.name == "Animation").first()
+    anim_task = Task.query.filter(Task.parent == shot).filter(Task.type == anim_type).first()
+
+    if not anim_task:
+        raise RuntimeError("Cannot find anim task under shot with id: {}".format(shot.id))
+
+    # get the cache folder
+    cache_path = os.path.join(
+        anim_task.absolute_path, "Outputs", CACHE_FORMAT_DATA[cache_type]["output_dir"]
+    )
+
+    # there should be one folder for each asset
+    for dir_name in os.listdir(cache_path):
+        dir_abs_path = os.path.join(cache_path, dir_name)
+        if not os.path.isdir(dir_abs_path):
+            # this is not a directory skip it
+            continue
+
+        os.chdir(dir_abs_path)
+
+        # the directory name is also the instance name
+        asset_instance_name = dir_name
+        glob_pattern = "*{}*".format(asset_instance_name)
+
+        all_cache_files = sorted(glob.glob(glob_pattern), key=extract_version_from_path)
+        if not all_cache_files:
+            continue
+        latest_cache_file_name = all_cache_files[-1]
+        # do an exception for ``rendercam`` and do not use the _fixed one
+        if "rendercam" in asset_instance_name and latest_cache_file_name.endswith("_fixed{}".format(CACHE_FORMAT_DATA[cache_type]["file_extension"])):
+            # use the non fixed one
+            latest_cache_file_name = all_cache_files[-2]
+
+        latest_cache_file_path = os.path.join(dir_abs_path, latest_cache_file_name).replace("\\", "/")
+
+        # check if it is already referenced in the current scene
+        already_referenced = False
+        for ref in pm.listReferences():
+            if ref.path == latest_cache_file_path:
+                already_referenced = True
+                break
+
+        if already_referenced:
+            # skip this cache
+            continue
+
+        # reference the cache file
+        pm.createReference(
+            latest_cache_file_path,
+            gl=True,
+            namespace=asset_instance_name,
+            options="v=0"
+        )
+
+
+def update_cache_references(cache_type=ALEMBIC):
+    """Update referenced alembic files in the current scene.
+
+    :param str cache_type: Desired cache type, one of ``auxiliary.ALEMBIC`` or
+        ``auxiliary.USD``, default value is ALEMBIC and USD is meaningless for now.
+    """
     # TODO: This tool needs improvement
     # There is a need for a UI similar to the ``VersionUpdater``
     # It is even possible to directly use that UI
@@ -2846,14 +2934,12 @@ def update_alembic_references():
     # But, this is exactly what VersionUpdater does.
 
     import glob
-    import re
-
-    version_matcher = re.compile("([\w\d/_]+)(v[0-9]+)([\w\d._]+)")
+    version_matcher = re.compile(VERSION_NUMBER_RE)
 
     updated_path_info = []
     for ref in pm.listReferences():
         path = ref.path
-        if not path.endswith(".abc"):
+        if not path.endswith(CACHE_FORMAT_DATA[cache_type]["file_extension"]):
             continue
 
         m = re.match(version_matcher, path)

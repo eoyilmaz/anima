@@ -567,10 +567,19 @@ def UI():
 
             color.next()
             pm.button(
-                "update_alembic_references_button",
-                l="Update Alembic References",
-                c=repeated_callback(auxiliary.update_alembic_references),
-                ann=auxiliary.update_alembic_references.__doc__,
+                "auto_reference_caches_button",
+                l="Auto Reference Caches",
+                c=repeated_callback(auxiliary.auto_reference_caches),
+                ann=auxiliary.auto_reference_caches.__doc__,
+                bgc=color.color,
+            )
+
+            color.next()
+            pm.button(
+                "update_cache_references_button",
+                l="Update Cache References",
+                c=repeated_callback(auxiliary.update_cache_references),
+                ann=auxiliary.update_cache_references.__doc__,
                 bgc=color.color,
             )
 
