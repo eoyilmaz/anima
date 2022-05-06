@@ -1176,7 +1176,7 @@ def check_uv_border_crossing(progress_controller=None):
         # The following method is 20-25% faster than using getUvShellsIds()
         #
         num_uvs = node.numUVs()
-        uv_ids = range(num_uvs)
+        uv_ids = list(range(num_uvs))
 
         uv_shells_and_uv_ids = []
         uv_shells_and_uv_coords = []
