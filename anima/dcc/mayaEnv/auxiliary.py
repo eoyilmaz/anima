@@ -2440,7 +2440,11 @@ def export_cache_of_nodes(
             pm.loadPlugin("AbcExport")
     elif cache_format == USD:
         if not pm.pluginInfo("mayaUsdPlugin", q=1, l=1):
-            pm.loadPlugin("mayaUsdPlugin")
+            try:
+                pm.loadPlugin("mayaUsdPlugin")
+            except RuntimeError:
+                # mayaUsdPlugin not found, skip this
+                return
 
     pdm = ProgressManager()
 
