@@ -1562,8 +1562,10 @@ class Playblaster(object):
         """returns the active view camera"""
         active_panel = self.get_active_panel()
         current_cam = None
-        if active_panel not in [False, "False"]:
+        try:
             current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+        except pm.MayaNodeError as e:
+            pass
 
         # really return the camera node and not the transform node
         if isinstance(current_cam, pm.nt.Transform):
