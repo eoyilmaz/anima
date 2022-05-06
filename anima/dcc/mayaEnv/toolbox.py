@@ -1954,7 +1954,7 @@ def UI():
             # rowLayout = pm.rowLayout(nc=2, adj=1, bgc=color.color)
             pm.text(l="===== EXPORT =====")
 
-            from anima.dcc.mayaEnv.auxiliary import CACHE_FORMAT_DATA
+            from anima.dcc.mayaEnv.auxiliary import CACHE_FORMAT_DATA, ALEMBIC
             cache_format_names = list(CACHE_FORMAT_DATA.keys())
 
             with pm.rowLayout(nc=len(cache_format_names) + 1, adj=1):
@@ -1969,7 +1969,7 @@ def UI():
                         w=80,
                         al="left",
                         ann=cache_format_name,
-                        sl=i == 0  # I hate those kind of tricks
+                        sl=cache_format_name == ALEMBIC
                     )
 
             with pm.rowLayout(nc=3, adj=3):
