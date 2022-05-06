@@ -1467,6 +1467,7 @@ class Playblaster(object):
         # try to get the shot from sequencer
         current_shot = pm.sequenceManager(q=1, currentShot=1)
 
+        current_cam_name = "NoCameraFound"
         if current_shot:
             shot_name = pm.getAttr("%s.shotName" % current_shot)
             current_cam_name = pm.shot(current_shot, q=1, cc=1)
@@ -1485,12 +1486,17 @@ class Playblaster(object):
             shot_name = os.path.split(pm.sceneName())[1].split("_")[0]
             # use the active panel camera
             current_cam = self.get_active_panel_camera()
-            current_cam_name = current_cam.name()
+
+            if current_cam is not None:
+                current_cam_name = current_cam.name()
 
         if isinstance(current_cam, pm.nt.Transform):
             current_cam = current_cam.getShape()
 
-        focal_length = current_cam.getAttr("focalLength")
+        focal_length = 0
+
+        if current_cam is not None:
+            focal_length = current_cam.getAttr("focalLength")
 
         sequencers = pm.ls(type="sequencer")
         if sequencers:
@@ -1555,7 +1561,9 @@ class Playblaster(object):
     def get_active_panel_camera(self):
         """returns the active view camera"""
         active_panel = self.get_active_panel()
-        current_cam = pm.modelEditor(active_panel, q=1, cam=1)
+        current_cam = None
+        if active_panel not in [False, "False"]:
+            current_cam = pm.modelEditor(active_panel, q=1, cam=1)
 
         # really return the camera node and not the transform node
         if isinstance(current_cam, pm.nt.Transform):
@@ -1862,11 +1870,14 @@ class Playblaster(object):
             if self.version:
                 # use version.base_name plus the camera name
                 current_camera = self.get_active_panel_camera()
+                current_camera_name = "Camera"
+                if current_camera is not None:
+                    # use the transform
+                    current_camera_name = \
+                        current_camera.getParent().name().split(":")[-1]
                 filename = "%s_%s" % (
                     os.path.splitext(self.version.filename)[0],
-                    current_camera.getParent()
-                    .name()
-                    .split(":")[-1],  # use the transform
+                    current_camera_name,
                 )  # node name
             else:
                 # use the current scene name
