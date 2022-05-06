@@ -63,10 +63,15 @@ def __plugin_loader(plugin_name):
     if not pm.pluginInfo(plugin_name, q=1, loaded=1):
         start_time = time.time()
         logprint("loading %s!" % plugin_name)
-        pm.loadPlugin(plugin_name)
-        end_time = time.time()
-        duration = end_time - start_time
-        logprint("%s loaded! in %0.3f sec" % (plugin_name, duration))
+        try:
+            pm.loadPlugin(plugin_name)
+        except RuntimeError:
+            logprint("{} not found!".format(plugin_name))
+            pass
+        else:
+            end_time = time.time()
+            duration = end_time - start_time
+            logprint("%s loaded! in %0.3f sec" % (plugin_name, duration))
 
 
 def __plugin_unloader(plugin_name):
