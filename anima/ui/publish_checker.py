@@ -333,10 +333,9 @@ class PublisherElement(object):
                 end = time.time()
             except Exception as e:
                 end = time.time()
-                exc_type, exc_value, exc_traceback = sys.exc_info()
                 self.state = False
                 self.publisher_state_label.setToolTip(
-                    "\n".join(traceback.format_exc(exc_traceback).splitlines()[-25:])
+                    "\n".join(traceback.format_exc().splitlines()[-25:])
                 )
             else:
                 self.state = True
