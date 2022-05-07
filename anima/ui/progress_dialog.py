@@ -14,7 +14,7 @@ class ProgressDialog(ProgressDialogBase, QtWidgets.QProgressDialog):
 
     def setup_ui(self):
         """Set the ui up."""
-        self.setWindowFlag(QtGui.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(QtGui.Qt.WindowStaysOnTopHint)
         self.setCancelButton(None)
         self.setMinimumDuration(0)
 
