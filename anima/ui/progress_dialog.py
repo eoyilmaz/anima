@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from anima.ui.lib import QtGui, QtWidgets
+from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.utils.progress import ProgressDialogBase
 
 
@@ -14,7 +14,7 @@ class ProgressDialog(ProgressDialogBase, QtWidgets.QProgressDialog):
 
     def setup_ui(self):
         """Set the ui up."""
-        self.setWindowFlags(QtGui.Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
         self.setCancelButton(None)
         self.setMinimumDuration(0)
 
