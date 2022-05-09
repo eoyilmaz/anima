@@ -275,8 +275,11 @@ class Render(object):
 
         # support both object and material selections
         nodes = pm.selected()
+        accepted_materials = [
+            "aiStandardSurface", "RedshiftMaterial", "RedshiftStandardMaterial"
+        ]
         for node in nodes:
-            if node.type() == "aiStandardSurface" or node.type() == "RedshiftMaterial":
+            if node.type() in accepted_materials:
                 materials.append(node)
             elif node.type() == "transform":
                 try:
@@ -408,7 +411,7 @@ class Render(object):
                     roughness_file.colorSpace.set("Raw")
                     roughness_file.alphaIsLuminance.set(1)
                     roughness_file.outAlpha >> material.specularRoughness
-            elif material.type() == "RedshiftMaterial":
+            elif material.type() in ["RedshiftMaterial", "RedshiftStandardMaterial"]:
                 # create place2dTexture node
                 place2d = pm.shadingNode("place2dTexture", asUtility=1)
 
@@ -419,7 +422,13 @@ class Render(object):
                     "%s/%s_Diffuse*" % (texture_path, material_name)
                 )
                 if diffuse_color_file_path:
+                    use_udim = False
+                    if len(diffuse_color_file_path) > 1:
+                        use_udim = True
                     diffuse_color_file_path = diffuse_color_file_path[0]
+                    if use_udim:
+                        diffuse_color_file_path = \
+                            diffuse_color_file_path.replace("1001", "<udim>")
 
                     diffuse_color_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, diffuse_color_file)
@@ -434,14 +443,24 @@ class Render(object):
                     "%s/%s_BaseColor*" % (texture_path, material_name)
                 )
                 if base_color_file_path:
+                    use_udim = False
+                    if len(base_color_file_path) > 1:
+                        use_udim = True
                     base_color_file_path = base_color_file_path[0]
+                    if use_udim:
+                        base_color_file_path = \
+                            base_color_file_path.replace("1001", "<udim>")
 
                     base_color_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, base_color_file)
                     base_color_file.setAttr("ignoreColorSpaceFileRules", 1)
                     base_color_file.fileTextureName.set(base_color_file_path)
                     base_color_file.colorSpace.set("sRGB")
-                    base_color_file.outColor >> material.diffuse_color
+                    try:
+                        base_color_file.outColor >> material.diffuse_color
+                    except AttributeError:
+                        # RedshiftStandardMaterial
+                        base_color_file.outColor >> material.base_color
 
                 # *********************************************
                 # Height
@@ -455,7 +474,13 @@ class Render(object):
                         "%s/%s_%s*" % (texture_path, material_name, height_channel_name)
                     )
                     if height_file_path:
+                        use_udim = False
+                        if len(height_file_path) > 1:
+                            use_udim = True
                         height_file_path = height_file_path[0]
+                        if use_udim:
+                            height_file_path = \
+                                height_file_path.replace("1001", "<udim>")
 
                         # create a displacement node
                         shading_node = material.attr("outColor").outputs(
@@ -482,14 +507,24 @@ class Render(object):
                 # *********************************************
                 # Metalness
                 # set material BRDF to GGX and set fresnel type to metalness
-                material.refl_brdf.set(1)
-                material.refl_fresnel_mode.set(2)
+                try:
+                    material.refl_brdf.set(1)
+                    material.refl_fresnel_mode.set(2)
+                except AttributeError:
+                    # RedshiftStandardMaterial
+                    pass
 
                 metalness_file_path = glob.glob(
                     "%s/%s_Metal*" % (texture_path, material_name)
                 )
                 if metalness_file_path:
+                    use_udim = False
+                    if len(metalness_file_path) > 1:
+                        use_udim = True
                     metalness_file_path = metalness_file_path[0]
+                    if use_udim:
+                        metalness_file_path = \
+                            metalness_file_path.replace("1001", "<udim>")
 
                     metalness_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, metalness_file)
@@ -497,7 +532,11 @@ class Render(object):
                     metalness_file.colorSpace.set("Raw")
                     metalness_file.setAttr("ignoreColorSpaceFileRules", 1)
                     metalness_file.alphaIsLuminance.set(1)
-                    metalness_file.outAlpha >> material.refl_metalness
+                    try:
+                        metalness_file.outAlpha >> material.refl_metalness
+                    except AttributeError:
+                        # RedshiftStandardMaterial
+                        metalness_file.outAlpha >> material.metalness
 
                 # *********************************************
                 # Reflectivity
@@ -505,7 +544,13 @@ class Render(object):
                     "%s/%s_Reflectivity*" % (texture_path, material_name)
                 )
                 if reflectivity_file_path:
+                    use_udim = False
+                    if len(reflectivity_file_path) > 1:
+                        use_udim = True
                     reflectivity_file_path = reflectivity_file_path[0]
+                    if use_udim:
+                        reflectivity_file_path = \
+                            reflectivity_file_path.replace("1001", "<udim>")
 
                     reflectivity_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, reflectivity_file)
@@ -513,7 +558,11 @@ class Render(object):
                     reflectivity_file.colorSpace.set("sRGB")
                     reflectivity_file.setAttr("ignoreColorSpaceFileRules", 1)
                     reflectivity_file.alphaIsLuminance.set(1)
-                    reflectivity_file.outColor >> material.refl_reflectivity
+                    try:
+                        reflectivity_file.outColor >> material.refl_reflectivity
+                    except AttributeError:
+                        # RedshiftStandardMaterial
+                        reflectivity_file.outColor >> material.refl_weight
 
                 # *********************************************
                 # Normal
@@ -521,7 +570,12 @@ class Render(object):
                     "%s/%s_Normal*" % (texture_path, material_name)
                 )
                 if normal_file_path:
+                    use_udim = False
+                    if len(normal_file_path) > 1:
+                        use_udim = True
                     normal_file_path = normal_file_path[0]
+                    if use_udim:
+                        normal_file_path = normal_file_path.replace("1001", "<udim>")
 
                     # Redshift BumpMap doesn't work properly with Substance normals
                     rs_normal_map = pm.shadingNode("RedshiftBumpMap", asUtility=1)
@@ -546,7 +600,13 @@ class Render(object):
                     "%s/%s_Roughness*" % (texture_path, material_name)
                 )
                 if roughness_file_path:
+                    use_udim = False
+                    if len(roughness_file_path) > 1:
+                        use_udim = True
                     roughness_file_path = roughness_file_path[0]
+                    if use_udim:
+                        roughness_file_path = \
+                            roughness_file_path.replace("1001", "<udim>")
                     roughness_file = pm.shadingNode("file", asTexture=1)
                     connect_place2d_to_file(place2d, roughness_file)
                     roughness_file.fileTextureName.set(roughness_file_path)
