@@ -2029,7 +2029,7 @@ def UI():
             )
             pm.button(
                 "export_cache_of_all_cacheable_nodes_button",
-                l="ALL Cacheable Nodes",
+                l="Export All Cacheable Nodes",
                 c=repeated_callback(
                     export_cache_callback_with_options,
                     auxiliary.export_cache_of_all_cacheable_nodes,
