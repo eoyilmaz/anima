@@ -1934,7 +1934,6 @@ class Render(object):
         area_light_list = pm.selected()
         from anima.dcc.mayaEnv import auxiliary
 
-        reload(auxiliary)
         for light in area_light_list:
             dwl = auxiliary.DummyWindowLight()
             dwl.light = light
@@ -2756,3 +2755,274 @@ class RenderSlicer(object):
         self.camera.renderPanZoom.set(1)
 
         d_res.pixelAspect.set(1)
+
+
+class LightingSceneBuilder(object):
+    """Build lighting scenes.
+
+    This is a class that helps building lighting scenes by looking at the animation
+    scenes, gathering data and then using that data to reference assets and cache files
+    to the lighting scene.
+    """
+
+    LOOK_DEVS_GROUP_NAME = "LOOK_DEVS"
+    ANIMS_GROUP_NAME = "ANIMS"
+
+    def __init__(self):
+        self.custom_rig_to_look_dev_lut = {}
+
+    def update_rig_to_look_dev_lut(self, path):
+        """Update the ``custom_rig_to_look_dev_lut.
+
+        :param str path: The path to the custom json file.
+        """
+        import json
+        with open(path, "r") as f:
+            self.custom_rig_to_look_dev_lut = json.load(f)
+
+    def get_cacheable_to_look_dev_version_lut(self, animation_version):
+        """Build the lighting scene
+
+        :param Version animation_version: The animation Version to open.
+
+        :return:
+        """
+        from stalker import Type, Task, Version
+        look_dev_type = Type.query.filter(Type.name == "Look Development").first()
+        if not look_dev_type:
+            raise RuntimeError(
+                "No Look Development task type found, please create one!"
+            )
+
+        # open the animation version
+        from anima.dcc import mayaEnv
+        # get the current version
+        m = mayaEnv.Maya()
+        # store the current version to open later on
+        lighting_version = m.get_current_version()
+        m.open(
+            animation_version,
+            force=True,
+            skip_update_check=True,
+            prompt=False,
+            reference_depth=1
+        )
+        # this version may uploaded with Stalker Pyramid, so update referenced versions
+        # to get a proper version.inputs list
+        m.update_version_inputs()
+
+        # now load all references
+        for ref in pm.listReferences():
+            ref.load()
+
+        # get all cacheable nodes
+        cacheable_to_look_dev_version_lut = {}
+        cacheable_nodes = auxiliary.get_cacheable_nodes()
+        references_with_no_look_dev_task = []
+        references_with_no_look_dev_version = []
+        for cacheable_node in cacheable_nodes:
+            cacheable_attr_value = cacheable_node.cacheable.get()
+            ref = cacheable_node.referenceFile()
+            ref_version = ref.version
+            copy_number = auxiliary.get_reference_copy_number(cacheable_node)
+            cacheable_attr_value_with_copy_number = "{}{}".format(
+                cacheable_attr_value, copy_number
+            )
+            rig_task = ref_version.task
+            rig_task_id = rig_task.id
+            rig_take_name = ref_version.take_name
+
+            if rig_task_id in self.custom_rig_to_look_dev_lut:
+                # there is a custom mapping for this rig use it
+                look_dev_task_id = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_task_id']
+                look_dev_take_name = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_take_name']
+                look_dev_task = Task.query.get(look_dev_task_id)
+            else:
+                # try to get the sibling look dev task
+                look_dev_take_name = ref_version.take_name
+                look_dev_task = Task.query\
+                    .filter(Task.parent == rig_task.parent)\
+                    .filter(Task.type == look_dev_type)\
+                    .first()
+
+            # no look_dev_task, we can't do anything about this asset, report it
+            if not look_dev_task:
+                references_with_no_look_dev_task.append(ref_version)
+                # skip to the next cacheable node
+                continue
+
+            # get the latest published look dev version for this cacheable node
+            latest_published_look_dev_version = Version.query\
+                .filter(Version.task == look_dev_task)\
+                .filter(Version.take_name == look_dev_take_name)\
+                .filter(Version.is_published == True)\
+                .order_by(Version.version_number.desc())\
+                .first()
+
+            if not latest_published_look_dev_version:
+                references_with_no_look_dev_version.append(ref_version)
+
+            cacheable_to_look_dev_version_lut[cacheable_attr_value_with_copy_number] = {
+                'look_dev_version': latest_published_look_dev_version
+            }
+
+        # re-open the lighting version
+        m.open(lighting_version, force=True, skip_update_check=True, prompt=False)
+
+        return cacheable_to_look_dev_version_lut
+
+    def create_item_group(self, group_name, hidden=False):
+        """Crete item group.
+
+        :param str group_name: The group name.
+        :param bool hidden: If the group should be invisible.
+        """
+        query = pm.ls(group_name)
+        if not query:
+            group = pm.nt.Transform(name=group_name)
+            group.v.set(not hidden)  # It should be hidden
+        else:
+            group = query[0]
+        return group
+
+    def build(
+            self,
+            transfer_shaders=True,
+            transfer_uvs=False,
+            cache_type=auxiliary.ALEMBIC
+        ):
+        """Build the lighting scene
+
+        :return:
+        """
+        from anima.dcc import mayaEnv
+        # get the current version
+        m = mayaEnv.Maya()
+        v = m.get_current_version()
+        if not v:
+            raise RuntimeError(
+                "No version found! Please save an empty scene as a version under the "
+                "Lighting task"
+            )
+
+        # check if this is really a lighting task
+        from stalker import Type
+        lighting_task = v.task
+        lighting_type = Type.query.filter(Type.name == "Lighting").first()
+        if not lighting_type:
+            raise RuntimeError("No Lighting task type found, please create one!")
+
+        if not lighting_task.type or not lighting_task.type == lighting_type:
+            raise RuntimeError(
+                "This is not a lighting task, please run this in a scene related to a "
+                "Lighting task."
+            )
+
+        from stalker import Shot
+        shot = lighting_task.parent
+        if not shot:
+            raise RuntimeError(
+                "No parent task found! It is not possible to find sibling tasks!"
+            )
+
+        # get the animation task
+        animation_type = Type.query.filter(Type.name == "Animation").first()
+        if not animation_type:
+            raise RuntimeError("No Animation task type found, please create one!")
+
+        from stalker import Task
+        animation_task = Task.query.filter(Task.parent == shot)\
+            .filter(Task.type == animation_type).first()
+
+        if not animation_task:
+            raise RuntimeError("No Animation task found!")
+
+        # get latest animation version
+        from stalker import Version
+        animation_version = Version.query\
+            .filter(Version.task == animation_task)\
+            .filter(Version.take_name == "Main")\
+            .order_by(Version.version_number.desc())\
+            .first()
+
+        if not animation_version:
+            raise RuntimeError("No Animation Version under Main take is found!")
+
+        # get the cacheable_to_look_dev_lut
+        cacheable_to_look_dev_version_lut = \
+            self.get_cacheable_to_look_dev_version_lut(animation_version)
+
+        import pprint
+        print("cacheable_to_look_dev_version_lut:")
+        pprint.pprint(cacheable_to_look_dev_version_lut)
+
+        # reference all caches
+        # (we are assuming that these are all generated before)
+        auxiliary.auto_reference_caches()
+
+        # create the LOOK_DEVS group if it doesn't exist
+        look_devs_group = self.create_item_group(self.LOOK_DEVS_GROUP_NAME, hidden=True)
+        anims_group = self.create_item_group(self.ANIMS_GROUP_NAME)
+
+        # get all referenced cache files
+        # to prevent referencing the same look dev more than once,
+        # store the referenced look dev version in a dictionary
+        look_dev_version_to_ref_node_lut = {}
+        for cache_ref_node in pm.listReferences():
+            if not cache_ref_node.path.endswith(
+                auxiliary.CACHE_FORMAT_DATA[cache_type]["file_extension"]
+            ):
+                continue
+
+            # ref namespace is equal to the cacheable_attr_value
+            cacheable_attr_value = cache_ref_node.namespace
+
+            # if this is the shotCam, renderCam or the camera, just skip it
+            if any([cam in cacheable_attr_value for cam in ("shotCam", "renderCam")]):
+                continue
+
+            # now use the cacheable_to_look_dev_version_lut to reference the look_dev
+            # file
+            look_dev_version = \
+                cacheable_to_look_dev_version_lut[cacheable_attr_value]['look_dev_version']
+            if look_dev_version in look_dev_version_to_ref_node_lut:
+                # use the same ref_node
+                look_dev_ref_node = look_dev_version_to_ref_node_lut[look_dev_version]
+            else:
+                # reference the look dev file
+                look_dev_ref_node = m.reference(look_dev_version)
+            # now we should have a reference node for the cache and a reference node for
+            # the look dev
+
+            look_dev_root_node = list(look_dev_ref_node.subReferences().values())[0].nodes()[0]
+            cache_root_node = cache_ref_node.nodes()[0]
+            if transfer_shaders:
+                # transfer shaders from the look dev to the cache nodes
+                pm.select(None)
+                # look dev scenes references the model scene and the geometry is in the
+                # model scene
+                pm.select([look_dev_root_node, cache_root_node])
+                Render.transfer_shaders()
+
+            if transfer_uvs:
+                from anima.dcc.mayaEnv import modeling
+                pm.select(None)
+                pm.select([look_dev_root_node, cache_root_node])
+                modeling.Model.transfer_uvs()
+
+            # deselect everything to prevent unpredicted errors
+            pm.select(None)
+
+            # parent the look_dev_root_node under the LOOK_DEVS group
+            pm.parent(look_dev_root_node, look_devs_group)
+
+            # parent the alembic under the ANIMS group
+            pm.parent(cache_root_node, anims_group)
+
+        # animation version inputs should have been updated
+        # reference any Layouts
+        layout_type = Type.query.filter(Type.name == "Layout").first()
+        for input_version in animation_version.inputs:
+            if input_version.task.type and input_version.task.type == layout_type:
+                # reference this version here too
+                m.reference(input_version)
