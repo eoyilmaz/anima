@@ -2884,6 +2884,10 @@ class LightingSceneBuilder(object):
         print("===================================")
         print("\n".join([v.absolute_full_path for v in references_with_no_look_dev_version]))
 
+        import pprint
+        print("Cacheable To LookDev Version Lut")
+        pprint.pprint(cacheable_to_look_dev_version_lut)
+
         return cacheable_to_look_dev_version_lut
 
     def create_item_group(self, group_name, hidden=False):
