@@ -2823,6 +2823,10 @@ class LightingSceneBuilder(object):
         for cacheable_node in cacheable_nodes:
             cacheable_attr_value = cacheable_node.cacheable.get()
             ref = cacheable_node.referenceFile()
+            if not ref:
+                # this is not a referenced cacheable node,
+                # it is probably the camera, skip it
+                continue
             ref_version = ref.version
             copy_number = auxiliary.get_reference_copy_number(cacheable_node)
             cacheable_attr_value_with_copy_number = "{}{}".format(
@@ -2954,10 +2958,6 @@ class LightingSceneBuilder(object):
         # get the cacheable_to_look_dev_lut
         cacheable_to_look_dev_version_lut = \
             self.get_cacheable_to_look_dev_version_lut(animation_version)
-
-        import pprint
-        print("cacheable_to_look_dev_version_lut:")
-        pprint.pprint(cacheable_to_look_dev_version_lut)
 
         # reference all caches
         # (we are assuming that these are all generated before)
