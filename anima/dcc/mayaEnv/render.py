@@ -2832,11 +2832,14 @@ class LightingSceneBuilder(object):
             rig_task_id = rig_task.id
             rig_take_name = ref_version.take_name
 
+            look_dev_take_name = None
+            look_dev_task = None
             if rig_task_id in self.custom_rig_to_look_dev_lut:
                 # there is a custom mapping for this rig use it
-                look_dev_task_id = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_task_id']
-                look_dev_take_name = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_take_name']
-                look_dev_task = Task.query.get(look_dev_task_id)
+                if rig_take_name in self.custom_rig_to_look_dev_lut[rig_task_id]:
+                    look_dev_task_id = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_task_id']
+                    look_dev_take_name = self.custom_rig_to_look_dev_lut[rig_task_id][rig_take_name]['look_dev_take_name']
+                    look_dev_task = Task.query.get(look_dev_task_id)
             else:
                 # try to get the sibling look dev task
                 look_dev_take_name = ref_version.take_name
