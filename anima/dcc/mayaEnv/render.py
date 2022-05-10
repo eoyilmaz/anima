@@ -2876,6 +2876,14 @@ class LightingSceneBuilder(object):
         # re-open the lighting version
         m.open(lighting_version, force=True, skip_update_check=True, prompt=False)
 
+        print("References With No Look Dev Task")
+        print("================================")
+        print("\n".join([v.absolute_full_path for v in references_with_no_look_dev_task]))
+
+        print("References With No Look Dev Version")
+        print("===================================")
+        print("\n".join([v.absolute_full_path for v in references_with_no_look_dev_version]))
+
         return cacheable_to_look_dev_version_lut
 
     def create_item_group(self, group_name, hidden=False):
