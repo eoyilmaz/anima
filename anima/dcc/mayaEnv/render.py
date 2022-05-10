@@ -2767,6 +2767,8 @@ class LightingSceneBuilder(object):
 
     LOOK_DEVS_GROUP_NAME = "LOOK_DEVS"
     ANIMS_GROUP_NAME = "ANIMS"
+    LAYOUTS_GROUP_NAME = "LAYOUTS"
+    CAMERA_GROUP_NAME = "CAMERA"
 
     def __init__(self):
         self.custom_rig_to_look_dev_lut = {}
@@ -2980,6 +2982,7 @@ class LightingSceneBuilder(object):
         # create the LOOK_DEVS group if it doesn't exist
         look_devs_group = self.create_item_group(self.LOOK_DEVS_GROUP_NAME, hidden=True)
         anims_group = self.create_item_group(self.ANIMS_GROUP_NAME)
+        camera_group = self.create_item_group(self.CAMERA_GROUP_NAME)
 
         # get all referenced cache files
         # to prevent referencing the same look dev more than once,
@@ -2996,6 +2999,9 @@ class LightingSceneBuilder(object):
 
             # if this is the shotCam, renderCam or the camera, just skip it
             if any([cam.lower() in cacheable_attr_value.lower() for cam in ("shotCam", "renderCam")]):
+                # parent it under CAMERA group
+                pm.parent(cache_ref_node.nodes()[0], camera_group)
+                # and skip the rest
                 continue
 
             # now use the cacheable_to_look_dev_version_lut to reference the look_dev
@@ -3038,6 +3044,7 @@ class LightingSceneBuilder(object):
 
         # animation version inputs should have been updated
         # reference any Layouts
+        layouts_group = self.create_item_group(self.LAYOUTS_GROUP_NAME)
         layout_type = Type.query.filter(Type.name == "Layout").first()
         for input_version in animation_version.inputs:
             if input_version.task.type and input_version.task.type == layout_type:
@@ -3052,4 +3059,6 @@ class LightingSceneBuilder(object):
                         .order_by(Version.version_number.desc())\
                         .first()
                 if input_version:
-                    m.reference(input_version)
+                    ref_node = m.reference(input_version)
+                    # parent it to the LAYOUTS group
+                    pm.parent(ref_node.nodes()[0], layouts_group)
