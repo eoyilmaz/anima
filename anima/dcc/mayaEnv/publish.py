@@ -1835,7 +1835,7 @@ def check_root_node_name(progress_controller=None):
 
     asset_name = None
     if isinstance(t.parent, Asset):
-        asset_name = t.parent_name
+        asset_name = t.parent.name
         if take_name != "Main":
             # also include the take_name
             asset_name = "{}_{}".format(asset_name, take_name)
@@ -1936,9 +1936,9 @@ def cacheable_attr_to_lowercase(progress_controller=None):
 
 @publisher("rig")
 def check_cacheable_attr(progress_controller=None):
-    """Cacheable attribute is valid
+    """Check if cacheable attribute is valid.
 
-    checks if there is a valid cacheable attr
+    Checks if there is only one transform node with a valid cacheable attr.
     """
     from stalker import Asset
     from anima.dcc import mayaEnv
@@ -1949,24 +1949,34 @@ def check_cacheable_attr(progress_controller=None):
     has_valid_cacheable = False
 
     # assumes there is only one root node (def check_if_only_one_root_node)
-    root_node = auxiliary.get_root_nodes()[0]
-    progress_controller.maximum = 2
+    cacheable_nodes = auxiliary.get_cacheable_nodes()
+    if not cacheable_nodes:
+        raise PublishError(
+            "No transform nodes with a <b>cacheable</b> attribute found!"
+        )
+
+    # there could be only one cacheable node per rig
+    if len(cacheable_nodes) > 1:
+        pm.select(cacheable_nodes)
+        raise PublishError(
+            "More than one cacheable node found in the scene. Only one is allowed!"
+        )
 
     m_env = mayaEnv.Maya()
     v = m_env.get_current_version()
     t = v.task
-
     asset_code = None
     if isinstance(t.parent, Asset):
         asset_code = t.parent.code
 
+    cacheable_node = cacheable_nodes[0]
+    progress_controller.maximum = 2
     if (
-        root_node.hasAttr("cacheable")
-        and root_node.getAttr("cacheable") != ""
-        and root_node.getAttr("cacheable") is not None
+        cacheable_node.hasAttr("cacheable")
+        and cacheable_node.getAttr("cacheable") != ""
+        and cacheable_node.getAttr("cacheable") is not None
         and asset_code is not None
-        and root_node.getAttr("cacheable").startswith(asset_code.lower()) is True
-        and root_node.getAttr("cacheable") == root_node.lower()
+        and cacheable_node.getAttr("cacheable").startswith(asset_code.lower()) is True
     ):
         has_valid_cacheable = True
         progress_controller.increment()
@@ -1980,12 +1990,36 @@ def check_cacheable_attr(progress_controller=None):
 
 
 def check_cacheable_attr___fix():
-    """tries to fix check_cacheable_attr"""
+    """Try to fix cacheable attr problems."""
     from stalker import Asset
     from anima.dcc import mayaEnv
 
-    # assumes there is only one root node (def check_if_only_one_root_node)
-    node = auxiliary.get_root_nodes()[0]
+    cacheable_nodes = auxiliary.get_cacheable_nodes()
+    cacheable_node = None
+
+    if len(cacheable_nodes) == 0:
+        # no cacheable node create cacheable attribute on the root node
+        from anima.dcc.mayaEnv import rigging
+        # assumes there is only one root node
+        root_node = auxiliary.get_root_nodes()[0]
+        rigging.Rigging.add_cacheable_attribute(root_node)
+        cacheable_node = root_node
+    elif len(cacheable_nodes) > 1:
+        # there is more than one cacheable node,
+        # keep the highest in the hierarchy
+        # delete the other
+        lowest_rank = 1e4
+        lowest_rank_node = None
+        for cacheable_node in cacheable_nodes:
+            cacheable_node_rank = len(cacheable_node.getAllParents())
+            if cacheable_node_rank < lowest_rank:
+                lowest_rank_node = cacheable_node
+                lowest_rank = cacheable_node_rank
+        # now remove the cacheable attr on the lowest hierarchy items
+        for cacheable_node in cacheable_nodes:
+            if cacheable_node != lowest_rank_node:
+                cacheable_node.deleteAttr("cacheable")
+        cacheable_node = lowest_rank_node
 
     m_env = mayaEnv.Maya()
     v = m_env.get_current_version()
@@ -1995,21 +2029,17 @@ def check_cacheable_attr___fix():
         asset_code = t.parent.code
 
     if asset_code:
-        if node.name().startswith(asset_code):
-            node_name = node.name()
+        if cacheable_node.name().lower().startswith(asset_code.lower()):
+            cacheable_attr_value = cacheable_node.name()
         else:
-            node_name = asset_code
+            cacheable_attr_value = asset_code
     else:
-        if node.isReferenced() is True:
-            node_name = str(node.stripNamespace())
+        if cacheable_node.isReferenced() is True:
+            cacheable_attr_value = str(cacheable_node.stripNamespace())
         else:
-            node_name = node.name()
+            cacheable_attr_value = cacheable_node.name()
 
-    if not node.hasAttr("cacheable"):
-        node.addAttr("cacheable", dt="string")
-        node.setAttr("cacheable", node_name.lower())
-    else:
-        node.setAttr("cacheable", node_name.lower())
+    cacheable_node.setAttr("cacheable", cacheable_attr_value.lower())
 
 
 @publisher("animation")
