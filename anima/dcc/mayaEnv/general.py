@@ -19,7 +19,6 @@ class General(object):
         """Opens the Publish Checker window without publishing the current
         scene
         """
-        import functools
         from anima.dcc import mayaEnv
 
         m = mayaEnv.Maya()
@@ -79,10 +78,9 @@ class General(object):
         ref_namespaces = [ref.namespace for ref in pm.listReferences()]
         missing_namespaces = []
 
+        pdm = ProgressManager()
+        pdm.end_progress()
         if len(all_namespaces) > 0:
-            pdm = ProgressManager()
-            pdm.end_progress()
-
             caller = pdm.register(len(all_namespaces), "Locating Unused Namespaces...")
             for nsa in all_namespaces:
                 i = 0
@@ -411,8 +409,8 @@ class General(object):
         unused_nodes = []
         for node in pm.ls(type=pm.nt.Mesh):
             if (
-                len(filter(filter_funct, node.inputs())) == 0
-                and len(filter(filter_funct, node.outputs())) == 0
+                len(list(filter(filter_funct, node.inputs()))) == 0
+                and len(list(filter(filter_funct, node.outputs()))) == 0
                 and node.attr("intermediateObject").get()
             ):
                 unused_nodes.append(node)
@@ -451,7 +449,7 @@ class General(object):
         """renames the selected nodes with unique names"""
         import re
 
-        [node.rename(re.sub("[\d]+", "#", node.name())) for node in pm.selected()]
+        [node.rename(re.sub(r"[\d]+", "#", node.name())) for node in pm.selected()]
 
     @classmethod
     def rsproxy_data_importer(cls, path=""):
@@ -517,7 +515,6 @@ class UnknownPluginCleaner(object):
         "pfMaya-0.5",
         "pfNode.py",
         "pfOptions.py",
-        "poseReader",
         "PVstFlexSliderNode.py",
         "qualoth-4.1-Maya2014-x64",
         "qualoth-2014-x64",
@@ -559,7 +556,10 @@ class UnknownPluginCleaner(object):
     pc = general.UnknownPluginCleaner()
 
     td = Project.query.filter(Project.code=='TD').first()
-    for v in Version.query.join(Task, Version.task_id==Task.id).filter(Version.created_with=='Maya2018').filter(Task.project==td).all():
+    all_versions = Version.query.join(Task, Version.task_id==Task.id)\
+        .filter(Version.created_with=='Maya2018')\
+        .filter(Task.project==td).all()
+    for v in all_versions:
         path = v.absolute_full_path
         pc.path = path
         result = pc.clean()
