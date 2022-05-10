@@ -3014,6 +3014,7 @@ class LightingSceneBuilder(object):
             else:
                 # reference the look dev file
                 look_dev_ref_node = m.reference(look_dev_version)
+                look_dev_version_to_ref_node_lut[look_dev_version] = look_dev_ref_node
             # now we should have a reference node for the cache and a reference node for
             # the look dev
 
