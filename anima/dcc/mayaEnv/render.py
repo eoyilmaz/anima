@@ -3042,4 +3042,14 @@ class LightingSceneBuilder(object):
         for input_version in animation_version.inputs:
             if input_version.task.type and input_version.task.type == layout_type:
                 # reference this version here too
-                m.reference(input_version)
+                # if this is a repr, use the base repr
+                if "@" in input_version.take_name:
+                    # get the base version
+                    input_version = Version.query\
+                        .filter(Version.task==input_version.task)\
+                        .filter(Version.take_name==input_version.take_name.split("@")[0])\
+                        .filter(Version.is_published==True)\
+                        .order_by(Version.version_number.desc())\
+                        .first()
+                if input_version:
+                    m.reference(input_version)
