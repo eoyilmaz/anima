@@ -3049,15 +3049,16 @@ class LightingSceneBuilder(object):
         for input_version in animation_version.inputs:
             if input_version.task.type and input_version.task.type == layout_type:
                 # reference this version here too
-                # if this is a repr, use the base repr
-                if "@" in input_version.take_name:
-                    # get the base version
-                    input_version = Version.query\
-                        .filter(Version.task==input_version.task)\
-                        .filter(Version.take_name==input_version.take_name.split("@")[0])\
-                        .filter(Version.is_published==True)\
-                        .order_by(Version.version_number.desc())\
-                        .first()
+                # use the RSProxy repr
+                rs_proxy_take_name = "{}@RS".format(
+                    input_version.take_name.split("@")[0]
+                )
+                input_version = Version.query\
+                    .filter(Version.task==input_version.task)\
+                    .filter(Version.take_name==rs_proxy_take_name)\
+                    .filter(Version.is_published==True)\
+                    .order_by(Version.version_number.desc())\
+                    .first()
                 if input_version:
                     ref_node = m.reference(input_version)
                     # parent it to the LAYOUTS group
