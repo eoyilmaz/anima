@@ -2995,7 +2995,7 @@ class LightingSceneBuilder(object):
             cacheable_attr_value = cache_ref_node.namespace
 
             # if this is the shotCam, renderCam or the camera, just skip it
-            if any([cam in cacheable_attr_value for cam in ("shotCam", "renderCam")]):
+            if any([cam.lower() in cacheable_attr_value.lower() for cam in ("shotCam", "renderCam")]):
                 continue
 
             # now use the cacheable_to_look_dev_version_lut to reference the look_dev
