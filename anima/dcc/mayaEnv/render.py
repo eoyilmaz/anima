@@ -3041,13 +3041,13 @@ class LightingSceneBuilder(object):
                 pm.select([look_dev_root_node, cache_root_node])
                 modeling.Model.transfer_uvs()
 
-            # hide non renderable objects if any
-            if "no_render" in cacheable_to_look_dev_version_lut:
-                for no_render_name in cacheable_to_look_dev_version_lut["no_render"]:
-                    for cached_node in cache_ref_node.nodes():
-                        if cached_node.stripNamespace() == no_render_name:
-                            cached_node.v.set(0)
-                            continue
+            # hide non renderable objects
+            cache_ref_node_nodes = cache_ref_node.nodes()
+            for no_render_name in cacheable_to_look_dev_version_lut["no_render"]:
+                for cached_node in cache_ref_node_nodes:
+                    if cached_node.stripNamespace() == no_render_name:
+                        cached_node.v.set(0)
+                        continue
 
             # deselect everything to prevent unpredicted errors
             pm.select(None)
