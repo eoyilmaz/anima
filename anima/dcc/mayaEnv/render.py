@@ -3024,8 +3024,8 @@ class LightingSceneBuilder(object):
             # now we should have a reference node for the cache and a reference node for
             # the look dev
 
-            look_dev_root_node = auxiliary.get_root_nodes(look_dev_ref_node)
-            cache_root_node = auxiliary.get_root_nodes(cache_ref_node)
+            look_dev_root_node = auxiliary.get_root_nodes(look_dev_ref_node)[0]
+            cache_root_node = auxiliary.get_root_nodes(cache_ref_node)[0]
             if transfer_shaders:
                 # transfer shaders from the look dev to the cache nodes
                 pm.select(None)
