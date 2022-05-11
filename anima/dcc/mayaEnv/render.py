@@ -3005,10 +3005,9 @@ class LightingSceneBuilder(object):
             cacheable_attr_value = cache_ref_node.namespace
 
             # if this is the shotCam, renderCam or the camera, just skip it
-            cache_ref_all_nodes = cache_ref_node.nodes()
             if any([cam.lower() in cacheable_attr_value.lower() for cam in ("shotCam", "renderCam")]):
                 # parent it under CAMERA group
-                pm.parent(cache_ref_all_nodes[0], camera_group)
+                pm.parent(cache_ref_node.nodes()[0], camera_group)
                 # and skip the rest
                 continue
 
@@ -3027,7 +3026,7 @@ class LightingSceneBuilder(object):
             # the look dev
 
             look_dev_root_node = list(look_dev_ref_node.subReferences().values())[0].nodes()[0]
-            cache_root_node = cache_ref_all_nodes[0]
+            cache_root_node = cache_ref_node.nodes()[0]
             if transfer_shaders:
                 # transfer shaders from the look dev to the cache nodes
                 pm.select(None)
@@ -3045,7 +3044,7 @@ class LightingSceneBuilder(object):
             # hide non renderable objects if any
             if "no_render" in cacheable_to_look_dev_version_lut:
                 for no_render_name in cacheable_to_look_dev_version_lut["no_render"]:
-                    for cached_node in cache_ref_all_nodes:
+                    for cached_node in cache_ref_node.nodes():
                         if cached_node.stripNamespace() == no_render_name:
                             cached_node.v.set(0)
 
