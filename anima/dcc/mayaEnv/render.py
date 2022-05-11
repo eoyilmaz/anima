@@ -2823,6 +2823,7 @@ class LightingSceneBuilder(object):
         references_with_no_look_dev_task = []
         references_with_no_look_dev_version = []
         for cacheable_node in cacheable_nodes:
+            non_renderable_objects = []
             cacheable_attr_value = cacheable_node.cacheable.get()
             ref = cacheable_node.referenceFile()
             if not ref:
@@ -2844,9 +2845,14 @@ class LightingSceneBuilder(object):
             if rig_task_id_as_str in self.custom_rig_to_look_dev_lut:
                 # there is a custom mapping for this rig use it
                 if rig_take_name in self.custom_rig_to_look_dev_lut[rig_task_id_as_str]:
-                    look_dev_task_id = self.custom_rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]['look_dev_task_id']
-                    look_dev_take_name = self.custom_rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]['look_dev_take_name']
+                    lut_data = \
+                        self.custom_rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]
+                    look_dev_task_id = lut_data['look_dev_task_id']
+                    look_dev_take_name = lut_data['look_dev_take_name']
                     look_dev_task = Task.query.get(look_dev_task_id)
+                    if "no_render" in lut_data:
+                        # there are object not to be rendered
+                        non_renderable_objects = lut_data["no_render"]
             else:
                 # try to get the sibling look dev task
                 look_dev_take_name = ref_version.take_name
@@ -2873,7 +2879,8 @@ class LightingSceneBuilder(object):
                 references_with_no_look_dev_version.append(ref_version)
 
             cacheable_to_look_dev_version_lut[cacheable_attr_value_with_copy_number] = {
-                'look_dev_version': latest_published_look_dev_version
+                "look_dev_version": latest_published_look_dev_version,
+                "no_render": non_renderable_objects
             }
 
         # re-open the lighting version
@@ -2998,9 +3005,10 @@ class LightingSceneBuilder(object):
             cacheable_attr_value = cache_ref_node.namespace
 
             # if this is the shotCam, renderCam or the camera, just skip it
+            cache_ref_all_nodes = cache_ref_node.nodes()
             if any([cam.lower() in cacheable_attr_value.lower() for cam in ("shotCam", "renderCam")]):
                 # parent it under CAMERA group
-                pm.parent(cache_ref_node.nodes()[0], camera_group)
+                pm.parent(cache_ref_all_nodes[0], camera_group)
                 # and skip the rest
                 continue
 
@@ -3019,7 +3027,7 @@ class LightingSceneBuilder(object):
             # the look dev
 
             look_dev_root_node = list(look_dev_ref_node.subReferences().values())[0].nodes()[0]
-            cache_root_node = cache_ref_node.nodes()[0]
+            cache_root_node = cache_ref_all_nodes[0]
             if transfer_shaders:
                 # transfer shaders from the look dev to the cache nodes
                 pm.select(None)
@@ -3033,6 +3041,13 @@ class LightingSceneBuilder(object):
                 pm.select(None)
                 pm.select([look_dev_root_node, cache_root_node])
                 modeling.Model.transfer_uvs()
+
+            # hide non renderable objects if any
+            if "no_render" in cacheable_to_look_dev_version_lut:
+                for no_render_name in cacheable_to_look_dev_version_lut["no_render"]:
+                    for cached_node in cache_ref_all_nodes:
+                        if cached_node.stripNamespace() == no_render_name:
+                            cached_node.v.set(0)
 
             # deselect everything to prevent unpredicted errors
             pm.select(None)
