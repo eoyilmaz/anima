@@ -758,10 +758,24 @@ def replace_with_bbox(nodes):
     return bboxes
 
 
-def get_root_nodes():
-    """returns the root DAG nodes"""
+def get_root_nodes(reference_node=None):
+    """returns the root DAG nodes.
+
+    :param reference_node: If given, the root node of that reference and all the
+        subReference nodes will be returned.
+
+    :return: list
+    """
     root_transform_nodes = []
-    for node in pm.ls(dag=1, transforms=1):
+
+    if not reference_node:
+        nodes_to_consider = pm.ls(dag=1, transforms=1)
+    else:
+        nodes_to_consider = pm.ls(
+            reference_node.nodes(recursive=1), type=pm.nt.Transform
+        )
+
+    for node in nodes_to_consider:
         if node.getParent() is None:
             shape = node.getShape()
             if shape:
@@ -1875,8 +1889,9 @@ class Playblaster(object):
                 current_camera_name = "Camera"
                 if current_camera is not None:
                     # use the transform
-                    current_camera_name = \
+                    current_camera_name = (
                         current_camera.getParent().name().split(":")[-1]
+                    )
                 filename = "%s_%s" % (
                     os.path.splitext(self.version.filename)[0],
                     current_camera_name,
@@ -2761,9 +2776,7 @@ def add_outputs_to_current_version(output_full_paths, output_type_name):
 
     if not output_type:
         output_type = Type(
-            name=output_type_name,
-            code=output_type_name,
-            target_entity_type="Link"
+            name=output_type_name, code=output_type_name, target_entity_type="Link"
         )
 
     local_session = LocalSession()
@@ -2845,6 +2858,7 @@ def extract_version_from_path(path):
     :param str path: The path to extract the version number from
     """
     import re
+
     version_matcher = re.compile(VERSION_NUMBER_RE)
     m = re.match(version_matcher, path)
     if m:
@@ -2880,10 +2894,14 @@ def auto_reference_caches(cache_type=ALEMBIC):
 
     # find the animation task
     anim_type = Type.query.filter(Type.name == "Animation").first()
-    anim_task = Task.query.filter(Task.parent == shot).filter(Task.type == anim_type).first()
+    anim_task = (
+        Task.query.filter(Task.parent == shot).filter(Task.type == anim_type).first()
+    )
 
     if not anim_task:
-        raise RuntimeError("Cannot find anim task under shot with id: {}".format(shot.id))
+        raise RuntimeError(
+            "Cannot find anim task under shot with id: {}".format(shot.id)
+        )
 
     # get the cache folder
     cache_path = os.path.join(
@@ -2908,11 +2926,15 @@ def auto_reference_caches(cache_type=ALEMBIC):
             continue
         latest_cache_file_name = all_cache_files[-1]
         # do an exception for ``rendercam`` and do not use the _fixed one
-        if "rendercam" in asset_instance_name and latest_cache_file_name.endswith("_fixed{}".format(CACHE_FORMAT_DATA[cache_type]["file_extension"])):
+        if "rendercam" in asset_instance_name and latest_cache_file_name.endswith(
+            "_fixed{}".format(CACHE_FORMAT_DATA[cache_type]["file_extension"])
+        ):
             # use the non fixed one
             latest_cache_file_name = all_cache_files[-2]
 
-        latest_cache_file_path = os.path.join(dir_abs_path, latest_cache_file_name).replace("\\", "/")
+        latest_cache_file_path = os.path.join(
+            dir_abs_path, latest_cache_file_name
+        ).replace("\\", "/")
 
         # check if it is already referenced in the current scene
         already_referenced = False
@@ -2930,7 +2952,7 @@ def auto_reference_caches(cache_type=ALEMBIC):
             latest_cache_file_path,
             gl=True,
             namespace=asset_instance_name,
-            options="v=0"
+            options="v=0",
         )
 
 
@@ -2951,6 +2973,7 @@ def update_cache_references(cache_type=ALEMBIC):
     # But, this is exactly what VersionUpdater does.
 
     import glob
+
     version_matcher = re.compile(VERSION_NUMBER_RE)
 
     updated_path_info = []
