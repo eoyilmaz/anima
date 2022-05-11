@@ -776,7 +776,13 @@ def get_root_nodes(reference_node=None):
         )
 
     for node in nodes_to_consider:
-        if node.getParent() is None:
+        if not reference_node:
+            parent_is_none = node.getParent() is None
+        else:
+            # consider in confinements of the reference node
+            parent_is_none = node.getParent() not in nodes_to_consider
+
+        if parent_is_none:
             shape = node.getShape()
             if shape:
                 if shape.type() not in ["camera", "displayPoints"]:
