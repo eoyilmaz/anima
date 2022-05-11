@@ -3043,7 +3043,7 @@ class LightingSceneBuilder(object):
 
             # hide non renderable objects
             cache_ref_node_nodes = cache_ref_node.nodes()
-            for no_render_name in cacheable_to_look_dev_version_lut["no_render"]:
+            for no_render_name in cacheable_to_look_dev_version_lut[cacheable_attr_value]["no_render"]:
                 for cached_node in cache_ref_node_nodes:
                     if cached_node.stripNamespace() == no_render_name:
                         cached_node.v.set(0)
