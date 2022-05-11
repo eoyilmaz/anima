@@ -3047,6 +3047,7 @@ class LightingSceneBuilder(object):
                     for cached_node in cache_ref_node.nodes():
                         if cached_node.stripNamespace() == no_render_name:
                             cached_node.v.set(0)
+                            continue
 
             # deselect everything to prevent unpredicted errors
             pm.select(None)
