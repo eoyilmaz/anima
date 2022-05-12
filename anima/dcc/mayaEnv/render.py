@@ -3033,7 +3033,11 @@ class LightingSceneBuilder(object):
                 # model scene
                 pm.select([look_dev_root_node, cache_root_node])
                 Render.transfer_shaders()
-            # hide the look_dev_root_node
+
+            # hide all the transform nodes under the look_dev_root_node
+            for node in pm.listRelatives(look_dev_root_node, ad=1, type=pm.nt.Transform):
+                node.v.set(0)
+            # and the look dev node itself
             look_dev_root_node.v.set(0)
 
             if transfer_uvs:
