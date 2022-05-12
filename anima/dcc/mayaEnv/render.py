@@ -2986,7 +2986,7 @@ class LightingSceneBuilder(object):
         auxiliary.auto_reference_caches()
 
         # create the LOOK_DEVS group if it doesn't exist
-        look_devs_group = self.create_item_group(self.LOOK_DEVS_GROUP_NAME, hidden=True)
+        look_devs_group = self.create_item_group(self.LOOK_DEVS_GROUP_NAME)
         anims_group = self.create_item_group(self.ANIMS_GROUP_NAME)
         camera_group = self.create_item_group(self.CAMERA_GROUP_NAME)
 
@@ -3033,6 +3033,8 @@ class LightingSceneBuilder(object):
                 # model scene
                 pm.select([look_dev_root_node, cache_root_node])
                 Render.transfer_shaders()
+            # hide the look_dev_root_node
+            look_dev_root_node.v.set(0)
 
             if transfer_uvs:
                 from anima.dcc.mayaEnv import modeling
