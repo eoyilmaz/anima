@@ -2381,8 +2381,11 @@ class Playblaster(object):
         return hires_path
 
 
-def get_cacheable_nodes():
-    """returns the cacheable nodes from the current scene
+def get_cacheable_nodes(reference_node=None):
+    """Return the cacheable nodes from the current scene or in the given reference node.
+
+    :param reference_node: A Maya FileReference node. When supplied only the recursive
+        content of this reference will be searched for a cacheable node.
 
     :return:
     """
@@ -2391,20 +2394,25 @@ def get_cacheable_nodes():
 
     # list all cacheable nodes
     cacheable_nodes = []
-    tr_list = pm.ls(tr=1, type="transform")
-    caller = pdm.register(len(tr_list), "Searching for Cacheable Nodes")
-    for tr in tr_list:
-        if tr.hasAttr("cacheable") and tr.getAttr("cacheable"):
+
+    if not reference_node:
+        transform_nodes = pm.ls(type=pm.nt.Transform)
+    else:
+        transform_nodes = pm.ls(reference_node.nodes(recursive=True), type=pm.nt.Transform)
+
+    caller = pdm.register(len(transform_nodes), "Searching for Cacheable Nodes")
+    for node in transform_nodes:
+        if node.hasAttr("cacheable") and node.getAttr("cacheable"):
             # check if any of its parents has a cacheable attribute
             has_cacheable_parent = False
-            for parent in tr.getAllParents():
+            for parent in node.getAllParents():
                 if parent.hasAttr("cacheable"):
                     has_cacheable_parent = True
                     break
 
             if not has_cacheable_parent:
                 # only include direct references
-                ref = tr.referenceFile()
+                ref = node.referenceFile()
                 if ref is not None and ref.parent() is None:
                     # skip cacheable nodes coming from layout
                     if (
@@ -2414,7 +2422,7 @@ def get_cacheable_nodes():
                     ):
                         caller.step()
                         continue
-                cacheable_nodes.append(tr)
+                cacheable_nodes.append(node)
 
         caller.step()
 
@@ -2422,8 +2430,15 @@ def get_cacheable_nodes():
 
 
 def get_reference_copy_number(node):
-    """returns the reference number of the given reference file"""
-    ref_node = node.referenceFile()
+    """Return the reference number of the given reference file.
+
+    :param node: This can be a regular Maya node or a ReferenceFile.
+    """
+    if not isinstance(node, pm.system.FileReference):
+        ref_node = node.referenceFile()
+    else:
+        ref_node = node
+
     if not ref_node:
         # not a referenced file
         return 1
