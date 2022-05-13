@@ -2770,8 +2770,12 @@ class LightingSceneBuilder(object):
     LAYOUTS_GROUP_NAME = "LAYOUTS"
     CAMERA_GROUP_NAME = "CAMERA"
 
+    RIG_TO_CACHEABLE_LUT_FILE_NAME = "rig_to_cacheable_lut.json"
+
     def __init__(self):
         self.custom_rig_to_look_dev_lut = {}
+        self.rig_to_cacheable_lut_file_path = None
+        self.rig_to_cacheable_lut = {}
 
     def update_rig_to_look_dev_lut(self, path):
         """Update the ``custom_rig_to_look_dev_lut.
@@ -2782,11 +2786,66 @@ class LightingSceneBuilder(object):
         with open(path, "r") as f:
             self.custom_rig_to_look_dev_lut = json.load(f)
 
+    def generate_rig_to_cacheable_lut_file_path(self, project):
+        """Generate rig_to_cacheable_lut_file_path.
+
+        :param project: A Stalker project.
+        :return str: The path of the JSON file path.
+        """
+        if self.rig_to_cacheable_lut_file_path:
+            return self.rig_to_cacheable_lut_file_path
+
+        from stalker import Project
+        if not isinstance(project, Project):
+            raise TypeError("Please supply a stalker Project instance, not {}".format(
+                project.__class__.__name__
+            ))
+
+        self.rig_to_cacheable_lut_file_path = os.path.join(
+            project.repository.path,
+            project.code,
+            "References",
+            self.RIG_TO_CACHEABLE_LUT_FILE_NAME
+        )
+        return self.rig_to_cacheable_lut_file_path
+
+    def read_rig_to_cacheable_lut(self, project):
+        """Read the JSON file at the given path.
+
+        Reads the rig -> cacheable attr value from the file for speeding the whole
+            process.
+
+        The path is for a JSON file that contains the mapping from rig_to_cacheable and
+        the reverse mapping. In theory, this should make things way faster by skipping
+        the loading of the reference files.
+
+        :param Project project: The Stalker Project instance.
+        """
+        import json
+        path = self.generate_rig_to_cacheable_lut_file_path(project)
+        if os.path.isfile(path):
+            with open(path, "r") as f:
+                self.rig_to_cacheable_lut = json.load(f)
+
+    def write_rig_to_cacheable_lut(self, project):
+        """Update the JSON file with new info
+
+        :param Project project: A Stalker Project instance.
+        """
+        import json
+        path = self.generate_rig_to_cacheable_lut_file_path(project)
+        try:
+            os.makedirs(os.path.dirname(path))
+        except OSError:
+            # already exists, skip
+            pass
+        with open(path, "w") as f:
+            json.dump(self.rig_to_cacheable_lut, f, indent=4, sort_keys=True)
+
     def get_cacheable_to_look_dev_version_lut(self, animation_version):
-        """Build the lighting scene
+        """Build look dev version lut.
 
         :param Version animation_version: The animation Version to open.
-
         :return:
         """
         from stalker import Type, Task, Version
@@ -2807,39 +2866,56 @@ class LightingSceneBuilder(object):
             force=True,
             skip_update_check=True,
             prompt=False,
-            reference_depth=1
+            reference_depth=3
         )
         # this version may uploaded with Stalker Pyramid, so update referenced versions
         # to get a proper version.inputs list
         m.update_version_inputs()
 
-        # now load all references
-        for ref in pm.listReferences():
-            ref.load()
-
-        # get all cacheable nodes
         cacheable_to_look_dev_version_lut = {}
-        cacheable_nodes = auxiliary.get_cacheable_nodes()
         references_with_no_look_dev_task = []
         references_with_no_look_dev_version = []
-        for cacheable_node in cacheable_nodes:
-            non_renderable_objects = []
-            cacheable_attr_value = cacheable_node.cacheable.get()
-            ref = cacheable_node.referenceFile()
-            if not ref:
-                # this is not a referenced cacheable node,
-                # it is probably the camera, skip it
-                continue
+
+        # load the self.rig_to_cacheable_lut
+        self.read_rig_to_cacheable_lut(animation_version.task.project)
+
+        # now load all references
+        for ref in pm.listReferences():
+            # get all cacheable nodes
             ref_version = ref.version
-            copy_number = auxiliary.get_reference_copy_number(cacheable_node)
-            cacheable_attr_value_with_copy_number = "{}{}".format(
-                cacheable_attr_value, copy_number
-            )
             rig_task = ref_version.task
             rig_task_id = rig_task.id
             rig_task_id_as_str = str(rig_task_id)
             rig_take_name = ref_version.take_name
+            copy_number = auxiliary.get_reference_copy_number(ref)
 
+            cacheable_attr_value = None
+            # try to use the cache file
+            if rig_task_id_as_str in self.rig_to_cacheable_lut:
+                if rig_take_name in self.rig_to_cacheable_lut[rig_task_id_as_str]:
+                    cacheable_attr_value = \
+                        self.rig_to_cacheable_lut[rig_task_id_as_str][rig_take_name]
+            else:
+                # load the reference
+                ref.load()
+                cacheable_nodes = auxiliary.get_cacheable_nodes(ref)
+                if not cacheable_nodes:
+                    continue
+                cacheable_node = cacheable_nodes[0]
+                cacheable_attr_value = cacheable_node.cacheable.get()
+
+                # store the value for the next time
+                if rig_task_id_as_str not in self.rig_to_cacheable_lut:
+                    self.rig_to_cacheable_lut[rig_task_id_as_str] = {}
+
+                self.rig_to_cacheable_lut[rig_task_id_as_str][rig_take_name] = \
+                    cacheable_attr_value
+
+            cacheable_attr_value_with_copy_number = "{}{}".format(
+                cacheable_attr_value, copy_number
+            )
+
+            non_renderable_objects = []
             look_dev_take_name = None
             look_dev_task = None
             if rig_task_id_as_str in self.custom_rig_to_look_dev_lut:
@@ -2882,6 +2958,9 @@ class LightingSceneBuilder(object):
                 "look_dev_version": latest_published_look_dev_version,
                 "no_render": non_renderable_objects
             }
+
+        # save the self.rig_to_cacheable_lut
+        self.write_rig_to_cacheable_lut(animation_version.task.project)
 
         # re-open the lighting version
         m.open(lighting_version, force=True, skip_update_check=True, prompt=False)
