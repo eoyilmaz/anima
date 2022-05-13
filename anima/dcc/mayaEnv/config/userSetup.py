@@ -129,6 +129,29 @@ if not pm.general.about(batch=1):
     else:
         logprint("no **%s** env var for shelves" % custom_shelves_env_var_name)
 
+    def create_menus():
+        # add menus
+        # delete previous menu
+        main_menu_name = "AnimaMenu"
+        main_menu_label = "Anima"
+        maya_main_window = pm.mel.globals["$gMainWindow"]
+        if pm.menu(main_menu_name, exists=1, p=maya_main_window):
+            pm.menu(main_menu_name, e=True, deleteAllItems=True)
+            pm.deleteUI(main_menu_name)
+
+        pm.menu(main_menu_name, label=main_menu_label, tearOff=True, p=maya_main_window)
+        pm.menuItem(label="Open Version",
+                    c="from anima.ui.scripts import maya; maya.version_dialog(1);")
+        pm.menuItem(label="Save As Version",
+                    c="from anima.ui.scripts import maya; maya.version_dialog(0);")
+        pm.menuItem(label="Publish",
+                    c="from anima.ui.scripts import maya; maya.version_dialog(0);")
+        pm.menuItem(divider=True)
+        pm.menuItem(label="Toolbox",
+                    c="from anima.dcc.mayaEnv import toolbox; toolbox.UI();")
+
+    mayautils.executeDeferred(create_menus)
+
     if "ANIMA_TEST_SETUP" not in os.environ:
 
         def load_arnold():
