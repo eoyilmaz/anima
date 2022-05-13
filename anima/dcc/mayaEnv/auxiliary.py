@@ -2936,11 +2936,9 @@ def auto_reference_caches(cache_type=ALEMBIC):
             # this is not a directory skip it
             continue
 
-        os.chdir(dir_abs_path)
-
         # the directory name is also the instance name
         asset_instance_name = dir_name
-        glob_pattern = "*{}*".format(asset_instance_name)
+        glob_pattern = "{}/*{}*".format(dir_abs_path, asset_instance_name)
 
         all_cache_files = sorted(glob.glob(glob_pattern), key=extract_version_from_path)
         if not all_cache_files:
@@ -2953,9 +2951,7 @@ def auto_reference_caches(cache_type=ALEMBIC):
             # use the non fixed one
             latest_cache_file_name = all_cache_files[-2]
 
-        latest_cache_file_path = os.path.join(
-            dir_abs_path, latest_cache_file_name
-        ).replace("\\", "/")
+        latest_cache_file_path = latest_cache_file_name.replace("\\", "/")
 
         # check if it is already referenced in the current scene
         already_referenced = False
