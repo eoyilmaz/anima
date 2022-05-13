@@ -141,11 +141,11 @@ if not pm.general.about(batch=1):
 
         pm.menu(main_menu_name, label=main_menu_label, tearOff=True, p=maya_main_window)
         pm.menuItem(label="Open Version",
-                    c="from anima.ui.scripts import maya; maya.version_dialog(1);")
+                    c="from anima.ui.scripts import maya; maya.version_dialog(mode=1);")
         pm.menuItem(label="Save As Version",
-                    c="from anima.ui.scripts import maya; maya.version_dialog(0);")
+                    c="from anima.ui.scripts import maya; maya.version_dialog(mode=0);")
         pm.menuItem(label="Publish",
-                    c="from anima.ui.scripts import maya; maya.version_dialog(0);")
+                    c="from anima.ui.scripts import maya; maya.version_dialog(mode=0);")
         pm.menuItem(divider=True)
         pm.menuItem(label="Toolbox",
                     c="from anima.dcc.mayaEnv import toolbox; toolbox.UI();")
