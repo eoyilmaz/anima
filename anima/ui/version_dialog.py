@@ -299,7 +299,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # ========================================
         self.horizontal_layout_3 = QtWidgets.QHBoxLayout()
         self.find_from_path_line_edit = QtWidgets.QLineEdit(self)
-        self.find_from_path_line_edit.setPlaceholderText("Find From Path")
+        self.find_from_path_line_edit.setPlaceholderText("Find From Path or Task ID")
+        self.find_from_path_line_edit.setToolTip(
+            "Find Versions or Tasks from Version paths or Task IDs"
+        )
 
         self.horizontal_layout_3.addWidget(self.find_from_path_line_edit)
         self.find_from_path_push_button = QtWidgets.QPushButton(self)
@@ -839,178 +842,109 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("start setting up interface signals")
 
         # close button
-        QtCore.QObject.connect(
-            self.close1_push_button, QtCore.SIGNAL("clicked()"), self.close
-        )
+        self.close1_push_button.clicked.connect(self.close)
 
-        QtCore.QObject.connect(
-            self.close2_push_button, QtCore.SIGNAL("clicked()"), self.close
-        )
+        self.close2_push_button.clicked.connect(self.close)
 
         # switch mode button
-        QtCore.QObject.connect(
-            self.switch_mode_button, QtCore.SIGNAL("clicked()"), self.switch_mode
-        )
+        self.switch_mode_button.clicked.connect(self.switch_mode)
 
         # logout button
-        QtCore.QObject.connect(
-            self.logout_push_button, QtCore.SIGNAL("clicked()"), self.logout
-        )
+        self.logout_push_button.clicked.connect(self.logout)
 
         # # my_tasks_only_checkBox
-        # QtCore.QObject.connect(
-        #     self.my_tasks_only_checkBox,
-        #     QtCore.SIGNAL("stateChanged(int)"),
+        # self.my_tasks_only_checkBox.stateChanged.connect(
         #     self.my_tasks_only_check_box_changed
         # )
 
         # search for tasks
-        # QtCore.QObject.connect(
-        #     self.search_task_comboBox,
-        #     QtCore.SIGNAL("editTextChanged(QString)"),
+        # self.search_task_comboBox.editTextChanged.connect(
         #     self.search_task_comboBox_textChanged
         # )
 
         # # takes_combo_box
-        # QtCore.QObject.connect(
-        #     self.takes_combo_box,
-        #     QtCore.SIGNAL("currentTextChanged(QString)"),
+        # self.takes_combo_box.currentTextChanged.connect(
         #     self.takes_combo_box_changed
         # )
 
         # repr_as_separate_takes_checkBox
-        QtCore.QObject.connect(
-            self.repr_as_separate_takes_check_box,
-            QtCore.SIGNAL("stateChanged(int)"),
-            self.tasks_tree_view_changed,
+        self.repr_as_separate_takes_check_box.stateChanged.connect(
+            self.tasks_tree_view_changed
         )
 
         # takes_combo_box
-        QtCore.QObject.connect(
-            self.takes_list_widget,
-            QtCore.SIGNAL(
-                "currentItemChanged(QListWidgetItem *, QListWidgetItem *)"
-                # "currentIndexChanged(QString)"
-            ),
-            self.takes_list_widget_changed,
+        self.takes_list_widget.currentItemChanged.connect(
+            self.takes_list_widget_changed
         )
 
         # recent files comboBox
-        QtCore.QObject.connect(
-            self.recent_files_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.recent_files_combo_box_index_changed,
+        self.recent_files_combo_box.currentIndexChanged.connect(
+            self.recent_files_combo_box_index_changed
         )
 
         # find_from_path_lineEdit
-        QtCore.QObject.connect(
-            self.find_from_path_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.find_from_path_push_button_clicked,
+        self.find_from_path_push_button.clicked.connect(
+            self.find_from_path_push_button_clicked
         )
 
         # add_take_toolButton
-        QtCore.QObject.connect(
-            self.add_take_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.add_take_push_button_clicked,
-        )
+        self.add_take_push_button.clicked.connect(self.add_take_push_button_clicked)
 
         # export_as
-        QtCore.QObject.connect(
-            self.export_as_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.export_as_push_button_clicked,
-        )
+        self.export_as_push_button.clicked.connect(self.export_as_push_button_clicked)
 
         # save_as
-        QtCore.QObject.connect(
-            self.save_as_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.save_as_push_button_clicked,
-        )
+        self.save_as_push_button.clicked.connect(self.save_as_push_button_clicked)
 
         # publish
-        QtCore.QObject.connect(
-            self.publish_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.publish_push_button_clicked,
-        )
+        self.publish_push_button.clicked.connect(self.publish_push_button_clicked)
 
         # open
-        QtCore.QObject.connect(
-            self.open_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.open_push_button_clicked,
-        )
+        self.open_push_button.clicked.connect(self.open_push_button_clicked)
 
         # open as
-        QtCore.QObject.connect(
-            self.open_as_new_version_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.open_as_new_version_push_button_clicked,
+        self.open_as_new_version_push_button.clicked.connect(
+            self.open_as_new_version_push_button_clicked
         )
 
         # chose
-        QtCore.QObject.connect(
-            self.choose_version_push_button,
-            QtCore.SIGNAL("cliched()"),
-            self.choose_version_push_button_clicked,
+        self.choose_version_push_button.clicked.connect(
+            self.choose_version_push_button_clicked
         )
 
         # reference
-        QtCore.QObject.connect(
-            self.reference_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.reference_push_button_clicked,
-        )
+        self.reference_push_button.clicked.connect(self.reference_push_button_clicked)
 
         # import
-        QtCore.QObject.connect(
-            self.import_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.import_push_button_clicked,
-        )
+        self.import_push_button.clicked.connect(self.import_push_button_clicked)
 
         # show_only_published_checkBox
-        QtCore.QObject.connect(
-            self.show_published_only_check_box,
-            QtCore.SIGNAL("stateChanged(int)"),
-            self.update_previous_versions_table_widget,
+        self.show_published_only_check_box.stateChanged.connect(
+            self.update_previous_versions_table_widget
         )
 
         # # version_count_spin_box
-        # QtCore.QObject.connect(
-        #     self.version_count_spin_box,
-        #     QtCore.SIGNAL("valueChanged(int)"),
+        # self.version_count_spin_box.valueChanged.connect(
         #     self.update_previous_versions_table_widget
         # )
 
         # upload_thumbnail_push_button
-        QtCore.QObject.connect(
-            self.upload_thumbnail_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.upload_thumbnail_push_button_clicked,
+        self.upload_thumbnail_push_button.clicked.connect(
+            self.upload_thumbnail_push_button_clicked
         )
 
         # upload_thumbnail_push_button
-        QtCore.QObject.connect(
-            self.clear_thumbnail_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.clear_thumbnail_push_button_clicked,
+        self.clear_thumbnail_push_button.clicked.connect(
+            self.clear_thumbnail_push_button_clicked
         )
 
         # close button
-        QtCore.QObject.connect(
-            self.clear_recent_files_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.clear_recent_file_push_button_clicked,
+        self.clear_recent_files_push_button.clicked.connect(
+            self.clear_recent_file_push_button_clicked
         )
 
-        QtCore.QObject.connect(
-            self.show_completed_check_box,
-            QtCore.SIGNAL("stateChanged(int)"),
-            self.fill_tasks_tree_view,
+        self.show_completed_check_box.stateChanged.connect(
+            self.fill_tasks_tree_view
         )
 
         logger.debug("finished setting up interface signals")
@@ -1518,17 +1452,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         # reconnect signals
         # takes_combo_box
-        # QtCore.QObject.connect(
-        #     self.takes_list_widget,
-        #     QtCore.SIGNAL("currentTextChanged(QString)"),
+        # self.takes_list_widget.currentTextChanged.connect(
         #     self.takes_list_widget_changed
         # )
 
         # takes_combo_box
-        QtCore.QObject.connect(
-            self.takes_list_widget,
-            QtCore.SIGNAL("currentItemChanged(QListWidgetItem *, QListWidgetItem *)"),
-            self.takes_list_widget_changed,
+        self.takes_list_widget.currentItemChanged.connect(
+            self.takes_list_widget_changed
         )
         # *********************************************************************
 
@@ -1537,17 +1467,13 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             QtCore.Qt.CustomContextMenu
         )
 
-        QtCore.QObject.connect(
-            self.previous_versions_table_widget,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self._show_previous_versions_tableWidget_context_menu,
+        self.previous_versions_table_widget.customContextMenuRequested.connect(
+            self._show_previous_versions_tableWidget_context_menu
         )
 
         # Open the version
         # add double clicking to previous_versions_table_widget
-        QtCore.QObject.connect(
-            self.previous_versions_table_widget,
-            QtCore.SIGNAL("cellDoubleClicked(int,int)"),
+        self.previous_versions_table_widget.cellDoubleClicked.connect(
             self.open_push_button_clicked,
         )
 
@@ -1610,23 +1536,36 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         logger.debug("finished setting up interface defaults")
 
-    def restore_ui(self, version):
+    def restore_ui(self, entity):
         """Restores the UI with the given Version instance
 
-        :param version: :class:`~oyProjectManager.models.version.Version`
+        :param [Version, Task] entity: Stalker Version or Task instance
           instance
         """
-        logger.debug("restoring ui with the given version: %s", version)
+        logger.debug("restoring ui with the given entity: %s", entity)
 
-        # quit if version is None
-        if version is None or not version.task.project.active:
+        # quit if entity is None
+        if entity is None:
             return
 
-        # set the task
-        task = version.task
+        from stalker import Task, Version
+        version = None
+        task = None
+        if isinstance(entity, Version):
+            version = entity
+            task = version.task
+        elif isinstance(entity, Task):
+            task = entity
+
+        if not task.project.active:
+            return
 
         found_task_item = self.tasks_tree_view.find_and_select_entity_item(task)
         if not found_task_item:
+            return
+
+        # the following lines needs a version
+        if not version:
             return
 
         # take_name
@@ -1900,10 +1839,8 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                 )
 
                 # connect the rejected signal to delete the new version
-                QtCore.QObject.connect(
-                    dialog,
-                    QtCore.SIGNAL("rejected()"),
-                    functools.partial(self.publisher_rejected, version=new_version),
+                dialog.rejected.connect(
+                    functools.partial(self.publisher_rejected, version=new_version)
                 )
 
                 dialog.show()
@@ -2434,8 +2371,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         dcc = DCCBase()
         if path:
-            version = dcc.get_version_from_full_path(path)
-            self.restore_ui(version)
+            if path.isdigit():
+                # path is task id
+                from stalker import Task
+                task = Task.query.get(path)
+                self.restore_ui(task)
+            else:
+                version = dcc.get_version_from_full_path(path)
+                self.restore_ui(version)
 
     def find_from_path_push_button_clicked(self):
         """runs when find_from_path_pushButton is clicked"""
