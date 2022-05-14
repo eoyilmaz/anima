@@ -2374,7 +2374,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             if path.isdigit():
                 # path is task id
                 from stalker import Task
-                task = Task.query.get(path)
+                task = Task.query.filter(Task.id == path).first()
                 self.restore_ui(task)
             else:
                 version = dcc.get_version_from_full_path(path)
