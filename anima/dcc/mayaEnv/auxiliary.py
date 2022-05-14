@@ -3729,3 +3729,104 @@ def fix_joint_hierarchy_scale(source_joint):
         )
         pm.xform(joint, ws=1, t=j_data["t"])
         # pm.xform(joint, ws=1, t=j_data['r'])
+
+
+def orphan_rig_finder(project):
+    """Find rig tasks that doesn't have a corresponding LookDev tasks.
+
+    :param project: A Stalker Project instance to look in to.
+    """
+    from stalker import Task, Type, Version
+    from stalker.db.session import DBSession
+
+    # get all the rig tasks
+    rig_type = Type.query.filter(Type.name == "Rig").first()
+    look_dev_type = Type.query.filter(Type.name == "Look Development").first()
+
+    all_rig_tasks = Task.query.filter(Task.project == project).filter(Task.type == rig_type).all()
+    total_rig_task_count = len(all_rig_tasks)
+    print("found rig count: {}".format(total_rig_task_count))
+    skipped = []
+    checked = []
+    cacheable_attrs_that_appear_more_than_once = {}
+    orphan_rigs = {}  # (rig_take_id, rig_version_take)
+
+    for i, rig_task in enumerate(all_rig_tasks):
+        print("{}/{}".format(i + 1, total_rig_task_count))
+        print("Checking: {} ({})".format(rig_task.parent.name, rig_task.parent.id))
+
+        checked.append(rig_task.parent.name)
+        # get the latest published rig version
+        # we need to consider all the takes differently
+
+        unique_takes = DBSession.query(Version.take_name)\
+            .filter(Version.task_id == rig_task.id)\
+            .filter(~Version.take_name.contains("@"))\
+            .distinct()\
+            .all()
+        unique_takes = [t[0] for t in unique_takes]
+
+        # check LookDev first
+        # if no LookDev with the same take_name
+        # we found an orphan rig
+        look_dev_task = Task.query.\
+            filter(Task.parent_id==rig_task.parent.id).\
+            filter(Task.type == look_dev_type).\
+            first()
+
+        rig_task_id_as_str = str(rig_task.id)
+        for take_name in unique_takes:
+            # -----------------------------
+            # get the latest published rig version
+            latest_published_rig_version = Version.query.\
+                filter(Version.task_id == rig_task.id).\
+                filter(Version.take_name == take_name).\
+                filter(Version.is_published == True).\
+                order_by(Version.version_number.desc()).\
+                first()
+
+            if latest_published_rig_version is None:
+                # no rig published
+                # directly skip it
+                continue
+
+            # -----------------------------
+            # get the look dev task
+            if look_dev_task is None:
+                # no look dev task
+                if rig_task_id_as_str not in orphan_rigs:
+                    orphan_rigs[rig_task_id_as_str] = {}
+
+                orphan_rigs[rig_task_id_as_str][take_name] = {
+                    None: "no look dev task",
+                    "look_dev_task_id": None,
+                    "look_dev_take_name": "Main",
+                    "no_render": []
+                }
+
+                continue
+
+            # -----------------------------
+            # get latest published look dev version with the same take name
+            latest_published_look_dev_version = Version.query.\
+                filter(Version.task_id == look_dev_task.id).\
+                filter(Version.take_name == take_name).\
+                filter(Version.is_published == True).\
+                order_by(Version.version_number.desc()).\
+                first()
+            if latest_published_look_dev_version is None:
+                # no look dev version
+                if rig_task_id_as_str not in orphan_rigs:
+                    orphan_rigs[rig_task_id_as_str] = {}
+
+                orphan_rigs[rig_task_id_as_str][take_name] = {
+                    None: "no look dev published with same take",
+                    "look_dev_task_id": None,
+                    "look_dev_take_name": "Main",
+                    "no_render": []
+                }
+
+                continue
+
+    return orphan_rigs
+
