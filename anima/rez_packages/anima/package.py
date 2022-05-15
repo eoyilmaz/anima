@@ -102,25 +102,14 @@ def commands():
             anima_dev_path, houdini_short_version
         )
 
-        env.HOUDINI_OTLSCAN_PATH.append(anima_otl_path)
-        if "&" not in env.HOUDINI_OTLSCAN_PATH.value():
-            env.HOUDINI_OTLSCAN_PATH.append("&")
-
-        env.HOUDINI_DSO_PATH.append(anima_dso_path)
-        if "&" not in env.HOUDINI_DSO_PATH.value():
-            env.HOUDINI_DSO_PATH.append("&")
-
-        env.HOUDINI_PYTHON_PANEL_PATH.append(
+        env.HOUDINI_OTLSCAN_PATH.prepend(anima_otl_path)
+        env.HOUDINI_DSO_PATH.prepend(anima_dso_path)
+        env.HOUDINI_PYTHON_PANEL_PATH.prepend(
             "{}/anima/anima/dcc/houdini/python_panels/".format(anima_lib_path)
         )
-        if "&" not in env.HOUDINI_PYTHON_PANEL_PATH.value():
-            env.HOUDINI_PYTHON_PANEL_PATH.append("&")
-
-        env.HOUDINI_MENU_PATH.append(
+        env.HOUDINI_MENU_PATH.prepend(
             "{}/anima/anima/dcc/houdini/menus/".format(anima_lib_path)
         )
-        if "&" not in env.HOUDINI_MENU_PATH.value():
-            env.HOUDINI_MENU_PATH.append("&")
 
     # Blender
     if "blender" in this.root:

@@ -67,7 +67,7 @@ def commands():
     if "houdini" in this.root:
         env.HOUDINI_DSO_ERROR = 2
         env.PATH.prepend("{}/bin".format(env.REDSHIFT_LOCATION))
-        env.HOUDINI_PATH.append(
+        env.HOUDINI_PATH.prepend(
             "{}/redshift4houdini/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
                 env.REZ_HOUDINI_MAJOR_VERSION,

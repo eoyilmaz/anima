@@ -17,5 +17,8 @@ build_command = "python {root}/../build.py {install}"
 
 def commands():
     env.QLIB = "${HOME}/Documents/development/qLib"
-    env.QOTL = "${QLIB}/otls"
-    env.HOUDINI_PATH.prepend("${QLIB}")
+    env.QOTL = "$QLIB/otls"
+    env.HOUDINI_OTLSCAN_PATH.prepend(
+        "$QOTL/base:$QOTL/future:$QOTL/experimental"
+    )
+    env.HOUDINI_PATH.prepend("$QLIB")

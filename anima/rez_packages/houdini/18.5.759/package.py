@@ -52,6 +52,16 @@ def commands():
     elif "&" not in env.HOUDINI_OTLSCAN_PATH.value():
         env.HOUDINI_OTLSCAN_PATH.append("&")
 
+    if "HOUDINI_DSO_PATH" not in env.keys():
+        env.HOUDINI_DSO_PATH = "&"
+    elif "&" not in env.HOUDINI_DSO_PATH.value():
+        env.HOUDINI_DSO_PATH.append("&")
+
+    if "HOUDINI_PYTHON_PANEL_PATH" not in env.keys():
+        env.HOUDINI_PYTHON_PANEL_PATH = "&"
+    elif "&" not in env.HOUDINI_PYTHON_PANEL_PATH.value():
+        env.HOUDINI_PYTHON_PANEL_PATH.append("&")
+
     if "HOUDINI_MENU_PATH" not in env.keys():
         env.HOUDINI_MENU_PATH = "&"
     elif "&" not in env.HOUDINI_MENU_PATH.value():
