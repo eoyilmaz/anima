@@ -122,7 +122,7 @@ sourceimages/3dPaintTextures"""
         path_regex = r"\$REPO[\w\d\/_\.@]+"
         # so we have all the data
         # extract references
-        ref_paths = re.findall(path_regex, data)
+        ref_paths = list(set(re.findall(path_regex, data)))
 
         # also check for any paths that is starting with any of the $REPO
         # variable value
@@ -132,11 +132,13 @@ sourceimages/3dPaintTextures"""
                 # starting with this value
                 repo_path = os.environ[k]
                 path_regex = r"\%s[\w\d\/_\.@]+" % repo_path
-                temp_ref_paths = re.findall(path_regex, data)
+                temp_ref_paths = list(set(re.findall(path_regex, data)))
                 ref_paths += temp_ref_paths
 
-        return filter(
-            lambda x: os.path.splitext(x)[1] not in self.exclude_mask, ref_paths
+        return list(
+            filter(
+                lambda x: os.path.splitext(x)[-1] not in self.exclude_mask, ref_paths
+            )
         )
 
     def _move_file_and_fix_references(
@@ -215,7 +217,7 @@ sourceimages/3dPaintTextures"""
             # dirty patch
             # move image files in to the sourceimages folder
             # along with the RedshiftProxy files
-            file_extension = os.path.splitext(path)[1]
+            file_extension = os.path.splitext(path)[-1]
 
             new_file_path = os.path.join(
                 project_path,
@@ -226,7 +228,19 @@ sourceimages/3dPaintTextures"""
             import glob
 
             new_file_paths = [new_file_path]
-            if "1001" in new_file_path or "u1_v1" in new_file_path.lower():
+            texture_file_extensions = [
+                ".jpg",
+                ".png",
+                ".tif",
+                ".tiff",
+                ".tga",
+                ".exr",
+                ".hdr",
+            ]
+
+            if (
+                "1001" in new_file_path or "u1_v1" in new_file_path.lower()
+            ) and file_extension in texture_file_extensions:
                 # get the rest of the textures
                 new_file_paths = glob.glob(
                     new_file_path.replace("1001", "*")
@@ -293,9 +307,12 @@ sourceimages/3dPaintTextures"""
 
             if project is not None:
                 # use the given project
-                versions = Version.query.join(Task).filter(
-                    Version.full_path.endswith(ref_file_name)
-                ).filter(Task.project == project).all()
+                versions = (
+                    Version.query.join(Task)
+                    .filter(Version.full_path.endswith(ref_file_name))
+                    .filter(Task.project == project)
+                    .all()
+                )
             else:
                 # search on all projects
                 versions = Version.query.filter(

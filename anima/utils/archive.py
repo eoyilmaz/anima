@@ -71,7 +71,7 @@ class ArchiverBase(object):
         while len(ref_paths):
             ref_path = ref_paths.pop(0)
 
-            if self.exclude_mask and os.path.splitext(ref_path)[1] in self.exclude_mask:
+            if self.exclude_mask and os.path.splitext(ref_path)[-1] in self.exclude_mask:
                 logger.debug("skipping: %s" % ref_path)
                 continue
 
