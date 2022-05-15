@@ -102,7 +102,7 @@ def create_frustum_curve(camera):
 
     exp = """float $flen = {camera}.focalLength;
 float $hfa = {camera}.horizontalFilmAperture * 25.4;
-{curve}.sx = {curve}.sy = -{curve}.translateZ * $hfa/ $flen;""".format(
+{curve}.sx = {curve}.sy = {curve}.sz = -{curve}.translateZ * $hfa/ $flen;""".format(
         camera=camera.name(), curve=frame_curve.name()
     )
     pm.expression(s=exp, o="", ae=1, uc="all")
