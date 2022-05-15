@@ -21,6 +21,7 @@ variants = [
     ["fusion"],
     ["houdini"],
     ["maya"],
+    ["3de4"]
 ]
 
 build_command = "python {root}/build.py {install}"
@@ -101,3 +102,6 @@ def commands():
         env.BLENDER_USER_SCRIPTS = "${ANIMA_DEV_PATH}/blender"
         # Add extra libraries like PySide2
 
+    # 3DE4
+    if "3de4" in this.root:
+        pass

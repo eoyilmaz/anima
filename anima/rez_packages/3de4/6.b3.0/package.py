@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-name = "3DE4"
+name = "3de4"
 
 version = "6.b3.0"
 
@@ -20,14 +20,12 @@ build_command = "python {root}/../build.py {install}"
 
 
 def commands():
-    # env.PYTHONPATH.append("{root}/python")
     # env.PATH.append("{root}/bin")
     env.TDE4_ROOT = "/opt/3DE4_r{}{}".format(
         env.REZ_3DE4_MAJOR_VERSION,
         env.REZ_3DE4_MINOR_VERSION,
     )
-    env.PATH.append("/opt/3DE4_r{}{}/bin".format(
-            env.REZ_3DE4_MAJOR_VERSION,
-            env.REZ_3DE4_MINOR_VERSION,
-        )
-    )
+    env.PATH.append("${TDE4_ROOT}/bin")
+    env.PYTHONPATH.append("{root}/lib/python")
+    env.PY_SCRIPTS.append("{root}/lib/python")
+

@@ -8,21 +8,17 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     """Helper function for version_dialog UI for Maya"""
     # connect to db
     from anima.utils import do_db_setup
-
-    do_db_setup()
-
-    # use PySide2
     from anima import ui
 
+    do_db_setup()
     ui.SET_PYSIDE2()
 
     from anima.ui import version_dialog
     from anima.dcc import equalizer
 
-    e = equalizer.Equalizer()
-    e.name = tde4.get3DEVersion().split(" ")[0]
+    tde4 = equalizer.TDE4()
 
     logger.setLevel(logging_level)
 
     # set the parent object to the maya main window
-    version_dialog.UI(environment=e, mode=mode)
+    version_dialog.UI(environment=tde4, parent=None, mode=mode)

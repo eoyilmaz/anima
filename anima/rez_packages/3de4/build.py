@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import shutil
 import sys
 
 
@@ -8,6 +9,12 @@ def build(source_path, build_path, install_path, targets):
     print(f"build_path  : {build_path}")
     print(f"install_path: {install_path}")
     print(f"targets     : {targets}")
+    # copy the lib folder
+    shutil.copytree(
+        os.path.join(source_path, "..", "lib"),
+        os.path.join(install_path, "lib"),
+        dirs_exist_ok=True
+    )
 
 
 if __name__ == "__main__":
