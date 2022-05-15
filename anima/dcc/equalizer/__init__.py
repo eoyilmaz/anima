@@ -6,7 +6,7 @@ from anima.dcc.base import DCCBase
 
 class TDE4(DCCBase):
 
-    name = "3DEqualizer4"
+    name = "3DE4"
     extensions = [".3de"]
 
     def save_as(self, version, run_pre_publishers=True):
