@@ -127,7 +127,7 @@ class TDE4Point(object):
         :return:
         """
         for i, pos in enumerate(data):
-            pos = map(float, pos.split(" "))
+            pos = list(map(float, pos.split(" ")))
             self.data[int(pos[0])] = pos[1:]
 
 
