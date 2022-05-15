@@ -298,6 +298,7 @@ sourceimages/3dPaintTextures"""
         with open(path) as f:
             data = f.read()
 
+        unknown_references = []
         ref_paths = cls._extract_local_references(data)
         for ref_path in ref_paths:
             ref_file_name = os.path.basename(ref_path)
@@ -329,8 +330,13 @@ sourceimages/3dPaintTextures"""
             if version:
                 # replace it
                 data = data.replace(ref_path, version.full_path)
+            else:
+                # update unknown references
+                unknown_references.append(ref_path)
 
         if len(ref_paths):
             # save the file over itself
             with open(path, "w+") as f:
                 f.write(data)
+
+        return unknown_references
