@@ -157,6 +157,7 @@ class VersionsTableWidget(QtWidgets.QTableWidget):
             # created_with
             item = QtWidgets.QTableWidgetItem()
             if version.created_with:
+                item.setToolTip(version.created_with)
                 from anima.ui import utils as ui_utils
 
                 app_icon = ui_utils.get_icon(version.created_with.lower())
