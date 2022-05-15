@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
 
 from anima.dcc.base import DCCBase
 
 
-class Equalizer(DCCBase):
+class TDE4(DCCBase):
 
     name = "3DEqualizer4"
+    extensions = [".3de"]
 
     def save_as(self, version, run_pre_publishers=True):
         """runs when saving a document
@@ -14,11 +16,29 @@ class Equalizer(DCCBase):
         :param run_pre_publishers:
         :return:
         """
-
         import tde4
+
+        version.update_paths()
+
+        # set version extension to ma
+        version.extension = self.extensions[0]
+        version.created_with = self.name
+        # create the folder if it doesn't exists
+        try:
+            os.makedirs(version.absolute_path)
+        except OSError:
+            # already exists
+            pass
 
         tde4.setProjectPath(version.absolute_full_path)
         tde4.saveProject(version.absolute_full_path)
+
+        from stalker.db.session import DBSession
+        DBSession.add(version)
+        # append it to the recent file list
+        self.append_to_recent_files(version.absolute_full_path)
+
+        DBSession.commit()
 
     def open(
         self,
@@ -39,10 +59,21 @@ class Equalizer(DCCBase):
         """
         import tde4
 
-        from stalker import Version
+        tde4.loadProject(version.absolute_full_path)
+        self.append_to_recent_files(version.absolute_full_path)
+        from anima.dcc import empty_reference_resolution
+        return empty_reference_resolution()
 
-        assert isinstance(version, Version)
-        td4.loadProject(version.absolute_full_path)
+    def get_current_version(self):
+        """Return the current version from environment
+
+        :return:
+        """
+        import tde4
+
+        project_path = tde4.getProjectPath()
+        version = self.get_version_from_full_path(project_path)
+        return version
 
 
 class TDE4Lens(object):
