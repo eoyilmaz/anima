@@ -32,89 +32,72 @@ def commands():
 
     import os
 
-    anima_lib_path = os.path.expanduser("$HOME/Documents/development/anima")
-    anima_dev_path = os.path.expanduser("$HOME/Documents/DEV")
+    env.ANIMA_LIB_PATH = "${HOME}/Documents/development/anima"
+    env.ANIMA_DEV_PATH = "${HOME}/Documents/DEV"
+    env.ANIMA_PATH = os.path.expanduser("${ANIMA_LIB_PATH}/anima")
 
-    env.ANIMA_LIB_PATH = anima_lib_path
-    env.ANIMA_DEV_PATH = anima_dev_path
-    env.ANIMA_PATH = os.path.expanduser("{}/anima".format(anima_lib_path))
-
-    env.PYTHONPATH.append("{}/anima".format(anima_lib_path))
+    env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima")
     env.PYTHONPATH.append(
-        "{}/extra_libraries/py{}.{}".format(
-            anima_lib_path,
-            env.REZ_PYTHON_MAJOR_VERSION,
-            env.REZ_PYTHON_MINOR_VERSION,
-        )
+        "${ANIMA_LIB_PATH}/extra_libraries/"
+        "py${REZ_PYTHON_MAJOR_VERSION}.${REZ_PYTHON_MINOR_VERSION}"
     )
 
     # Maya
     if "maya" in this.root:
         # PYTHONPATH
         env.PYTHONPATH.append(
-            "{}/anima/anima/dcc/mayaEnv/config".format(anima_lib_path)
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config"
         )
         env.PYTHONPATH.append(
-            "{}/anima/anima/dcc/mayaEnv/config/{}".format(
-                anima_lib_path, env.REZ_MAYA_MAJOR_VERSION
-            )
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
-        env.PYTHONPATH.append("{}/maya/scripts".format(anima_dev_path))
+        env.PYTHONPATH.append("${ANIMA_DEV_PATH}/maya/scripts")
 
         # MAYA_SCRIPT_PATH
         env.MAYA_SCRIPT_PATH.append(
-            "{}/anima/anima/dcc/mayaEnv/config".format(anima_lib_path)
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config"
         )
         env.MAYA_SCRIPT_PATH.append(
-            "{}/anima/anima/dcc/mayaEnv/config/{}".format(
-                anima_lib_path, env.REZ_MAYA_MAJOR_VERSION
-            )
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         env.MAYA_PLUG_IN_PATH.append(
-            "{}/anima/anima/dcc/mayaEnv/plugins".format(anima_lib_path)
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins"
         )
         env.MAYA_PLUG_IN_PATH.append(
-            "{}/anima/anima/dcc/mayaEnv/plugins/{}".format(
-                anima_lib_path, env.REZ_MAYA_MAJOR_VERSION
-            )
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins/${REZ_MAYA_MAJOR_VERSION}"
         )
 
         # XMBLANGPATH
-        env.XBMLANGPATH.append("{}/maya/icons/%B".format(anima_dev_path))
-        env.XBMLANGPATH.append("{}/maya/icons/CustomIcons/%B".format(anima_dev_path))
+        env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/%B")
+        env.XBMLANGPATH.append("${ANIMA_DEV_PATH}/maya/icons/CustomIcons/%B")
 
         # MAYA_PRESET_PATH
-        env.MAYA_PRESET_PATH.append("{}/maya/presets".format(anima_dev_path))
+        env.MAYA_PRESET_PATH.append("${ANIMA_DEV_PATH}/maya/presets")
 
         # ANIMA MAYA SHELVES PATH
-        env.ANIMA_MAYA_SHELVES_PATH = "{}/maya/shelves".format(anima_dev_path)
+        env.ANIMA_MAYA_SHELVES_PATH = "${ANIMA_DEV_PATH}/maya/shelves"
 
     # Houdini
     if "houdini" in this.root:
-        houdini_short_version = "{}.{}".format(
-            env.REZ_HOUDINI_MAJOR_VERSION, env.REZ_HOUDINI_MINOR_VERSION
-        )
-        anima_otl_path = "{}/houdini/otls/{}".format(
-            anima_dev_path, houdini_short_version
-        )
-        anima_dso_path = "{}/houdini/dso/{}".format(
-            anima_dev_path, houdini_short_version
-        )
+        env.HOUDINI_SHORT_VERSION = \
+            "${REZ_HOUDINI_MAJOR_VERSION}.${REZ_HOUDINI_MINOR_VERSION}"
+        anima_otl_path = "${ANIMA_DEV_PATH}/houdini/otls/${HOUDINI_SHORT_VERSION}"
+        anima_dso_path = "${ANIMA_DEV_PATH}/houdini/dso/${HOUDINI_SHORT_VERSION}"
 
         env.HOUDINI_OTLSCAN_PATH.prepend(anima_otl_path)
         env.HOUDINI_DSO_PATH.prepend(anima_dso_path)
         env.HOUDINI_PYTHON_PANEL_PATH.prepend(
-            "{}/anima/anima/dcc/houdini/python_panels/".format(anima_lib_path)
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/houdini/python_panels/"
         )
         env.HOUDINI_MENU_PATH.prepend(
-            "{}/anima/anima/dcc/houdini/menus/".format(anima_lib_path)
+            "${ANIMA_LIB_PATH}/anima/anima/dcc/houdini/menus/"
         )
 
     # Blender
     if "blender" in this.root:
         # Blender cannot use multiple paths in BLENDER_USER_SCRIPTS
         # so, instead of append/prepend directly set to a value
-        env.BLENDER_USER_SCRIPTS = "{}/blender".format(anima_dev_path)
+        env.BLENDER_USER_SCRIPTS = "${ANIMA_DEV_PATH}/blender"
         # Add extra libraries like PySide2
 
