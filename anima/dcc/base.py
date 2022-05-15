@@ -220,6 +220,9 @@ class DCCBase(object):
 
         :return: :class:`~stalker.models.version.Version`
         """
+        if full_path is None or full_path == "":
+            return
+
         logger.debug("full_path: %s" % full_path)
         # convert '\\' to '/'
         full_path = os.path.normpath(os.path.expandvars(full_path)).replace("\\", "/")
