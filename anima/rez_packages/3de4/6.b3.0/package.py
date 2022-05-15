@@ -27,5 +27,5 @@ def commands():
     )
     env.PATH.append("${TDE4_ROOT}/bin")
     env.PYTHONPATH.append("{root}/lib/python")
-    env.PY_SCRIPTS.append("{root}/lib/python")
+    env.PYTHON_CUSTOM_SCRIPTS_3DE4.append("{root}/lib/python")
 
