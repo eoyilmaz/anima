@@ -243,7 +243,7 @@ class Houdini(DCCBase):
             return
 
         fs = scene_viewer.flipbookSettings()
-        flipbook_path = "$HIP/Outputs/playblasts"
+        flipbook_path = "$HIP/Outputs/playblast"
         fs.output("%s/$HIPNAME.$F4.jpg" % flipbook_path)
 
         # create the output folder
