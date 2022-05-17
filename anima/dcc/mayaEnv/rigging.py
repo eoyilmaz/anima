@@ -16,7 +16,7 @@ class Rigging(object):
         if not node.hasAttr("cacheable"):
             node.addAttr("cacheable", dt="string")
             if not cacheable_attr_value:
-                cacheable_attr_value = node.name().lower()
+                cacheable_attr_value = node.stripNamespace().split("|")[-1].lower()
             node.setAttr("cacheable", cacheable_attr_value)
 
     @classmethod
