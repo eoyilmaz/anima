@@ -1014,7 +1014,7 @@ workspace -fr "translatorData" "Outputs/data";
         """sets the playblast file name"""
         start = time.time()
         playblast_path = os.path.join(
-            version.absolute_path, "Outputs", "Playblast"
+            version.absolute_path, "Outputs", "playblast"
         ).replace("\\", "/")
 
         playblast_filename = cls.get_significant_name(
