@@ -168,6 +168,7 @@ sourceimages/3dPaintTextures"""
             ".ma": "scenes/refs",
             # alembic cache
             ".abc": "scenes/refs",
+            ".obj": "scenes/refs",
             # image files
             ".jpg": "sourceimages",
             ".png": "sourceimages",
