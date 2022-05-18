@@ -24,7 +24,11 @@ class ProjectComboBox(QtWidgets.QComboBox):
             from stalker import Status
 
             cmpl = Status.query.filter(Status.code == "CMPL").first()
-            projects = Project.query.filter(Project.status != cmpl).all()
+            projects = (
+                Project.query.filter(Project.status != cmpl)
+                .order_by(Project.name)
+                .all()
+            )
         else:
             projects = Project.query.order_by(Project.name).all()
 
