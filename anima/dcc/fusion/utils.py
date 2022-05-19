@@ -60,14 +60,43 @@ class NodeUtils(object):
 class TDE4LensDistortionImporter(object):
     """Imports lens files"""
 
-    lens_model_mapper = {
-        "3DE4 Radial - Standard, Degree 4": "DE4RadialStandardDegree4",
+    lens_attr_mapper = {
+        "3DE4 Radial - Standard, Degree 4": {
+            "Model": "DE4RadialStandardDegree4",
+            "DE4RadialStandardDegree4.DistortionDegree2": "distortion_degree_2",
+            "DE4RadialStandardDegree4.UDegree2": "u_degree_2",
+            "DE4RadialStandardDegree4.VDegree2": "v_degree_2",
+            "DE4RadialStandardDegree4.QuarticDistortionDegree4": "quartic_distortion_degree_4",
+            "DE4RadialStandardDegree4.UDegree4": "u_degree_4",
+            "DE4RadialStandardDegree4.VDegree4": "v_degree_4",
+            "DE4RadialStandardDegree4.PhiCylindricDirection": "phi",
+            "DE4RadialStandardDegree4.BCylindricBending": "beta",
+        },
+        "3DE4 Anamorphic - Standard, Degree 4": {
+            "Model": "DE4AnamorphicStandardDegree4",
+            "DE4AnamorphicStandardDegree4.Cx02Degree2": "cx02_degree_2",
+            "DE4AnamorphicStandardDegree4.Cy02Degree2": "cy02_degree_2",
+            "DE4AnamorphicStandardDegree4.Cx22Degree2": "cx22_degree_2",
+            "DE4AnamorphicStandardDegree4.Cy22Degree2": "cy22_degree_2",
+            "DE4AnamorphicStandardDegree4.Cx04Degree4": "cx04_degree_4",
+            "DE4AnamorphicStandardDegree4.Cy04Degree4": "cy04_degree_4",
+            "DE4AnamorphicStandardDegree4.Cx24Degree4": "cx24_degree_4",
+            "DE4AnamorphicStandardDegree4.Cy24Degree4": "cy24_degree_4",
+            "DE4AnamorphicStandardDegree4.Cx44Degree4": "cx44_degree_4",
+            "DE4AnamorphicStandardDegree4.Cy44Degree4": "cy44_degree_4",
+            "DE4AnamorphicStandardDegree4.LensRotation": "lens_rotation",
+            "DE4AnamorphicStandardDegree4.SqueezeX": "squeeze_x",
+            "DE4AnamorphicStandardDegree4.SqueezeY": "squeeze_y",
+        },
     }
 
     def __init__(self):
-        from anima.dcc.blackmagic import get_fusion
+        # from anima.dcc.blackmagic import get_fusion
+        from anima.dcc.fusion import Fusion
 
-        self.fusion = get_fusion()
+        fusion = Fusion()
+
+        self.fusion = fusion.fusion
         self.comp = self.fusion.GetCurrentComp()
 
     def import_(self, lens_file_path):
@@ -81,37 +110,21 @@ class TDE4LensDistortionImporter(object):
         # create the lens distortion node
         lens_distort = self.comp.LensDistort()
         NodeUtils.set_node_attr(lens_distort, "Mode", "Distort")
-        NodeUtils.set_node_attr(
-            lens_distort, "Model", self.lens_model_mapper[lens.distortion_model]
-        )
-        NodeUtils.set_node_attr(
-            lens_distort,
-            "DE4RadialStandardDegree4.DistortionDegree2",
-            lens.distortion_degree_2,
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.UDegree2", lens.u_degree_2
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.VDegree2", lens.v_degree_2
-        )
-        NodeUtils.set_node_attr(
-            lens_distort,
-            "DE4RadialStandardDegree4.QuarticDistortionDegree4",
-            lens.distortion_degree_4,
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.UDegree4", lens.u_degree_4
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.VDegree4", lens.v_degree_4
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.PhiCylindricDirection", lens.phi
-        )
-        NodeUtils.set_node_attr(
-            lens_distort, "DE4RadialStandardDegree4.BCylindricBending", lens.beta
-        )
+
+        distortion_model = lens.distortion.distortion_model
+        for node_attr_name in self.lens_attr_mapper[distortion_model]:
+            model_attr_name = self.lens_attr_mapper[distortion_model][node_attr_name]
+            if hasattr(lens.distortion, model_attr_name):
+                NodeUtils.set_node_attr(
+                    lens_distort,
+                    node_attr_name,
+                    getattr(lens.distortion, model_attr_name),
+                )
+            else:
+                # the attr doesn't exist on the distortion model
+                # directly set the the model_attr_name
+                NodeUtils.set_node_attr(lens_distort, node_attr_name, model_attr_name)
+
         NodeUtils.set_node_attr(lens_distort, "FLength", lens.focal_length)
         NodeUtils.set_node_attr(lens_distort, "FilmGate", "User")
         NodeUtils.set_node_attr(
