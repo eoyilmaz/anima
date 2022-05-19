@@ -1,6 +1,6 @@
 #
 #
-# 3DE4.script.name:	Save Version
+# 3DE4.script.name:	Save As Version
 #
 # 3DE4.script.version:	v1.00
 # 3DE4.script.gui:	Main Window::3DE4
