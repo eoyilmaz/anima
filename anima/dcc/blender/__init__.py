@@ -312,7 +312,7 @@ class Blender(DCCBase):
         :param fps:
         :return:
         """
-        bpy.context.scene.render.fps = fps
+        bpy.context.scene.render.fps = int(fps)  # Blender 3.1.2 wants int
 
     def set_frame_range(
         self, start_frame=1001, end_frame=1100, adjust_frame_range=False
