@@ -34,6 +34,7 @@ class TDE4(DCCBase):
         tde4.saveProject(version.absolute_full_path)
 
         from stalker.db.session import DBSession
+
         DBSession.add(version)
         # append it to the recent file list
         self.append_to_recent_files(version.absolute_full_path)
@@ -62,6 +63,7 @@ class TDE4(DCCBase):
         tde4.loadProject(version.absolute_full_path)
         self.append_to_recent_files(version.absolute_full_path)
         from anima.dcc import empty_reference_resolution
+
         return empty_reference_resolution()
 
     def get_current_version(self):
@@ -74,6 +76,124 @@ class TDE4(DCCBase):
         project_path = tde4.getProjectPath()
         version = self.get_version_from_full_path(project_path)
         return version
+
+
+class TDE4LensDistortionBase(object):
+    """Base class for other Lens Distortion classes."""
+
+    def __init__(self, distortion_model=None):
+        self.distortion_model = distortion_model
+        self.data = None
+
+    def get_data(self, label):
+        max_search_length = 60
+        start_i = 0
+        while self.data[start_i] != label and start_i < max_search_length:
+            start_i += 1
+        start_i += 1
+        return self.data[start_i]
+
+    @classmethod
+    def get_distortion(cls, distortion_model):
+        """Generate a proper distortion instance.
+
+        :param str distortion_model: One of the following:
+
+            3DE4 Radial - Standard, Degree 4
+            3DE4 Anamorphic - Standard, Degree 4
+
+            The rest of the distortion models will be implemented as they are required.
+
+        :return TDE4LensDistortionBase:
+        """
+        distortion_class_lut = {
+            "3DE4 Radial - Standard, Degree 4": TDE4RadialStandardDegree4,
+            "3DE4 Anamorphic - Standard, Degree 4": TDE4AnamorphicStandardDegree4,
+        }
+        return distortion_class_lut[distortion_model](distortion_model=distortion_model)
+
+    def load(self, data):
+        """Load self from the given data.
+
+        :param data: The raw data read from the lens file.
+        """
+        raise NotImplemented("Implement this on the child class.")
+
+
+class TDE4RadialStandardDegree4(TDE4LensDistortionBase):
+    """Radial - Standard Degree 4 lens distortion model."""
+
+    def __init__(self, distortion_model=None):
+        super(TDE4RadialStandardDegree4, self).__init__(
+            distortion_model=distortion_model
+        )
+        self.u_degree_2 = None
+        self.v_degree_2 = None
+        self.distortion_degree_2 = None
+        self.quartic_distortion_degree_4 = None
+        self.u_degree_4 = None
+        self.v_degree_4 = None
+        self.phi = None
+        self.beta = None
+
+    def load(self, data):
+        """Load self from the given data.
+
+        :param data: The raw data read from the lens file.
+        """
+        self.data = data
+        self.distortion_degree_2 = float(self.get_data("Distortion - Degree 2"))
+        self.u_degree_2 = float(self.get_data("U - Degree 2"))
+        self.v_degree_2 = float(self.get_data("V - Degree 2"))
+        self.quartic_distortion_degree_4 = float(
+            self.get_data("Quartic Distortion - Degree 4")
+        )
+        self.u_degree_4 = float(self.get_data("U - Degree 4"))
+        self.v_degree_4 = float(self.get_data("V - Degree 4"))
+        self.phi = float(self.get_data("Phi - Cylindric Direction"))
+        self.beta = float(self.get_data("B - Cylindric Bending"))
+
+
+class TDE4AnamorphicStandardDegree4(TDE4LensDistortionBase):
+    """Anamorphic - Standard, Degree 4 lens distortion model."""
+
+    def __init__(self, distortion_model=None):
+        super(TDE4AnamorphicStandardDegree4, self).__init__(
+            distortion_model=distortion_model
+        )
+        self.cx02_degree_2 = None
+        self.cy02_degree_2 = None
+        self.cx22_degree_2 = None
+        self.cy22_degree_2 = None
+        self.cx04_degree_4 = None
+        self.cy04_degree_4 = None
+        self.cx24_degree_4 = None
+        self.cy24_degree_4 = None
+        self.cx44_degree_4 = None
+        self.cy44_degree_4 = None
+        self.lens_rotation = None
+        self.squeeze_x = None
+        self.squeeze_y = None
+
+    def load(self, data):
+        """Load self from the given data.
+
+        :param data: The raw data read from the lens file.
+        """
+        self.data = data
+        self.cx02_degree_2 = float(self.get_data("Cx02 - Degree 2"))
+        self.cy02_degree_2 = float(self.get_data("Cy02 - Degree 2"))
+        self.cx22_degree_2 = float(self.get_data("Cx22 - Degree 2"))
+        self.cy22_degree_2 = float(self.get_data("Cy22 - Degree 2"))
+        self.cx04_degree_4 = float(self.get_data("Cx04 - Degree 4"))
+        self.cy04_degree_4 = float(self.get_data("Cy04 - Degree 4"))
+        self.cx24_degree_4 = float(self.get_data("Cx24 - Degree 4"))
+        self.cy24_degree_4 = float(self.get_data("Cy24 - Degree 4"))
+        self.cx44_degree_4 = float(self.get_data("Cx44 - Degree 4"))
+        self.cy44_degree_4 = float(self.get_data("Cy44 - Degree 4"))
+        self.lens_rotation = float(self.get_data("Lens Rotation"))
+        self.squeeze_x = float(self.get_data("Squeeze-X"))
+        self.squeeze_y = float(self.get_data("Squeeze-Y"))
 
 
 class TDE4Lens(object):
@@ -89,15 +209,7 @@ class TDE4Lens(object):
         self.lens_center_offset_y = None
         self.pixel_aspect = None
         self.dynamic_lens_distortion = None
-        self.distortion_model = None
-        self.distortion_degree_2 = None
-        self.u_degree_2 = None
-        self.v_degree_2 = None
-        self.distortion_degree_4 = None  # Quartic distortion
-        self.u_degree_4 = None
-        self.v_degree_4 = None
-        self.phi = None
-        self.beta = None
+        self.distortion = None
 
     def load(self, lens_file_path):
         """Loads the lens info and returns a dictionary
@@ -121,25 +233,11 @@ class TDE4Lens(object):
         self.pixel_aspect = float(sensor_info[6])
 
         self.dynamic_lens_distortion = data[2]
-        self.distortion_model = data[3]
 
-        def get_data(label):
-            max_search_length = 60
-            start_i = 0
-            while data[start_i] != label and start_i < max_search_length:
-                start_i += 1
-            start_i += 1
-            return data[start_i]
-
-        # Distortion - Degree 2
-        self.distortion_degree_2 = float(get_data("Distortion - Degree 2"))
-        self.u_degree_2 = float(get_data("U - Degree 2"))
-        self.v_degree_2 = float(get_data("V - Degree 2"))
-        self.distortion_degree_4 = float(get_data("Quartic Distortion - Degree 4"))
-        self.u_degree_4 = float(get_data("U - Degree 4"))
-        self.v_degree_4 = float(get_data("V - Degree 4"))
-        self.phi = float(get_data("Phi - Cylindric Direction"))
-        self.beta = float(get_data("B - Cylindric Bending"))
+        distortion_model = data[3]
+        self.distortion = TDE4LensDistortionBase.get_distortion(distortion_model)
+        # allow the distortion to load itself
+        self.distortion.load(data)
 
 
 class TDE4Point(object):
