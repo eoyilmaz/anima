@@ -15,6 +15,7 @@ variants = [
     ["maya-2022"],
     ["houdini-18.5.759"],
     ["houdini-19.0.561"],
+    ["houdini-19.0.589"],
 ]
 
 build_command = "python {root}/../build.py {install}"

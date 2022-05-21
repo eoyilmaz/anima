@@ -15,6 +15,8 @@ variants = [
     ["maya-2022"],
     ["houdini-18.5.759"],
     ["houdini-19.0.561"],
+    ["houdini-19.0.589"],
+    ["houdini-19.0.622"],
 ]
 
 build_command = "python {root}/../build.py {install}"
@@ -64,12 +66,24 @@ def commands():
     if "houdini" in this.root:
         env.HOUDINI_DSO_ERROR = 2
         env.PATH.prepend("{}/bin".format(env.REDSHIFT_LOCATION))
+
+        houdini_version_tuple = (
+            env.REZ_HOUDINI_MAJOR_VERSION,
+            env.REZ_HOUDINI_MINOR_VERSION,
+            env.REZ_HOUDINI_PATCH_VERSION,
+        )
+
+        if houdini_version_tuple == ("19", "0", "622"):
+            # 19.0.622 is not supported by Redshift 3.5.0b2 originally,
+            # use 19.0.589
+            houdini_version_tuple = ("19", "0", "589")
+
         env.HOUDINI_PATH.prepend(
             "{}/redshift4houdini/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
-                env.REZ_HOUDINI_MAJOR_VERSION,
-                env.REZ_HOUDINI_MINOR_VERSION,
-                env.REZ_HOUDINI_PATCH_VERSION,
+                houdini_version_tuple[0],
+                houdini_version_tuple[1],
+                houdini_version_tuple[2],
             )
         )
         env.REDSHIFT_RV_OPEN_ONLY = 1
@@ -77,8 +91,8 @@ def commands():
         env.PXR_PLUGINPATH_NAME.append(
             "{}/redshift4solaris/{}.{}.{}".format(
                 env.REDSHIFT_LOCATION,
-                env.REZ_HOUDINI_MAJOR_VERSION,
-                env.REZ_HOUDINI_MINOR_VERSION,
-                env.REZ_HOUDINI_PATCH_VERSION,
+                houdini_version_tuple[0],
+                houdini_version_tuple[1],
+                houdini_version_tuple[2],
             )
         )
