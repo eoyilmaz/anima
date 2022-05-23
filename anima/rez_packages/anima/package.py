@@ -100,7 +100,6 @@ def commands():
         # Blender cannot use multiple paths in BLENDER_USER_SCRIPTS
         # so, instead of append/prepend directly set to a value
         env.BLENDER_USER_SCRIPTS = "${ANIMA_DEV_PATH}/blender"
-        # Add extra libraries like PySide2
 
     # 3DE4
     if "3de4" in this.root:
