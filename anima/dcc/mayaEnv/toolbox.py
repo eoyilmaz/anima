@@ -1491,8 +1491,28 @@ def UI():
                     ann=camera_tools.import_3dequalizer_points.__doc__,
                     bgc=color.color,
                 )
-                pm.intField("import_3DEqualizer_points_width_int_field", min=1, v=1920)
-                pm.intField("import_3DEqualizer_points_height_int_field", min=1, v=1080)
+                default_image_width = 1920
+                default_image_height = 1080
+                # let's update the width and height of the image resolution from the
+                # current project
+                from anima.dcc import mayaEnv
+                m = mayaEnv.Maya()
+                v = m.get_current_version()
+                if v:
+                    imf = v.task.project.image_format
+                    default_image_width = imf.width
+                    default_image_height = imf.height
+
+                pm.intField(
+                    "import_3DEqualizer_points_width_int_field",
+                    min=1,
+                    v=default_image_width,
+                )
+                pm.intField(
+                    "import_3DEqualizer_points_height_int_field",
+                    min=1,
+                    v=default_image_height,
+                )
 
             pm.text(l="===================")
 
@@ -1955,6 +1975,7 @@ def UI():
             pm.text(l="===== EXPORT =====")
 
             from anima.dcc.mayaEnv.auxiliary import CACHE_FORMAT_DATA, ALEMBIC
+
             cache_format_names = list(CACHE_FORMAT_DATA.keys())
 
             with pm.rowLayout(nc=len(cache_format_names) + 1, adj=1):
@@ -1969,7 +1990,7 @@ def UI():
                         w=80,
                         al="left",
                         ann=cache_format_name,
-                        sl=cache_format_name == ALEMBIC
+                        sl=cache_format_name == ALEMBIC,
                     )
 
             with pm.rowLayout(nc=3, adj=3):
