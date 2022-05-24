@@ -54,7 +54,7 @@ class ToolboxDialog(QtWidgets.QDialog, AnimaDialogBase):
         # setup icon
         global __here__
         icon_path = os.path.abspath(
-            os.path.join(__here__, "../../../ui/images/fusion9.png")
+            os.path.join(__here__, "../../../ui/images/fusion.png")
         )
         icon = QtGui.QIcon(icon_path)
 
