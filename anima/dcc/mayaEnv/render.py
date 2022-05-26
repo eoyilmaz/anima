@@ -6,6 +6,7 @@ import tempfile
 
 from anima.dcc.mayaEnv import auxiliary
 from anima.utils.progress import ProgressManager
+
 from maya import cmds as cmds, mel as mel
 from pymel import core as pm
 
@@ -2771,20 +2772,13 @@ class LightingSceneBuilder(object):
     CAMERA_GROUP_NAME = "CAMERA"
 
     RIG_TO_CACHEABLE_LUT_FILE_NAME = "rig_to_cacheable_lut.json"
+    RIG_TO_LOOK_DEV_LUT_FILE_NAME = "rig_to_look_dev_lut.json"
 
     def __init__(self):
-        self.custom_rig_to_look_dev_lut = {}
         self.rig_to_cacheable_lut_file_path = None
         self.rig_to_cacheable_lut = {}
-
-    def update_rig_to_look_dev_lut(self, path):
-        """Update the ``custom_rig_to_look_dev_lut.
-
-        :param str path: The path to the custom json file.
-        """
-        import json
-        with open(path, "r") as f:
-            self.custom_rig_to_look_dev_lut = json.load(f)
+        self.rig_to_look_dev_lut_file_path = None
+        self.rig_to_look_dev_lut = {}
 
     def generate_rig_to_cacheable_lut_file_path(self, project):
         """Generate rig_to_cacheable_lut_file_path.
@@ -2808,6 +2802,37 @@ class LightingSceneBuilder(object):
             self.RIG_TO_CACHEABLE_LUT_FILE_NAME
         )
         return self.rig_to_cacheable_lut_file_path
+
+    def generate_rig_to_look_dev_lut_file_path(self, project):
+        """Generate rig_to_look_dev_lut_file_path.
+
+        :param project: A Stalker project.
+        :return str: The path of the JSON file path.
+        """
+        if self.rig_to_look_dev_lut_file_path:
+            return self.rig_to_look_dev_lut_file_path
+
+        from stalker import Project
+        if not isinstance(project, Project):
+            raise TypeError("Please supply a stalker Project instance, not {}".format(
+                project.__class__.__name__
+            ))
+
+        self.rig_to_look_dev_lut_file_path = os.path.join(
+            project.repository.path,
+            project.code,
+            "References",
+            self.RIG_TO_LOOK_DEV_LUT_FILE_NAME
+        )
+        return self.rig_to_look_dev_lut_file_path
+
+    def update_rig_to_look_dev_lut(self, path):
+        """Update the ``self.rig_to_look_dev_lut``.
+
+        :param str path: The path to the custom json file.
+        """
+        # override the default paths
+        self.rig_to_look_dev_lut_file_path = path
 
     def read_rig_to_cacheable_lut(self, project):
         """Read the JSON file at the given path.
@@ -2841,6 +2866,24 @@ class LightingSceneBuilder(object):
             pass
         with open(path, "w") as f:
             json.dump(self.rig_to_cacheable_lut, f, indent=4, sort_keys=True)
+
+    def read_rig_to_look_dev_lut(self, project):
+        """Read the JSON file at the given path.
+
+        Reads the rig -> cacheable attr value from the file for speeding the whole
+            process.
+
+        The path is for a JSON file that contains the mapping from rig_to_cacheable and
+        the reverse mapping. In theory, this should make things way faster by skipping
+        the loading of the reference files.
+
+        :param Project project: The Stalker Project instance.
+        """
+        import json
+        path = self.generate_rig_to_look_dev_lut_file_path(project)
+        if os.path.isfile(path):
+            with open(path, "r") as f:
+                self.rig_to_look_dev_lut = json.load(f)
 
     def get_cacheable_to_look_dev_version_lut(self, animation_version):
         """Build look dev version lut.
@@ -2878,6 +2921,7 @@ class LightingSceneBuilder(object):
 
         # load the self.rig_to_cacheable_lut
         self.read_rig_to_cacheable_lut(animation_version.task.project)
+        self.read_rig_to_look_dev_lut(animation_version.task.project)
 
         # now load all references
         for ref in pm.listReferences():
@@ -2918,11 +2962,11 @@ class LightingSceneBuilder(object):
             non_renderable_objects = []
             look_dev_take_name = None
             look_dev_task = None
-            if rig_task_id_as_str in self.custom_rig_to_look_dev_lut:
+            if rig_task_id_as_str in self.rig_to_look_dev_lut:
                 # there is a custom mapping for this rig use it
-                if rig_take_name in self.custom_rig_to_look_dev_lut[rig_task_id_as_str]:
+                if rig_take_name in self.rig_to_look_dev_lut[rig_task_id_as_str]:
                     lut_data = \
-                        self.custom_rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]
+                        self.rig_to_look_dev_lut[rig_task_id_as_str][rig_take_name]
                     look_dev_task_id = lut_data['look_dev_task_id']
                     look_dev_take_name = lut_data['look_dev_take_name']
                     look_dev_task = Task.query.get(look_dev_task_id)
