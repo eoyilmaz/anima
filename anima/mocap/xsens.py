@@ -61,7 +61,7 @@ class XSensListener(object):
                 pose_data = []
                 if packet_type_id == "01":
                     # euler data
-                    chunks = map("".join, zip(*[iter(raw_pose_data)] * 28))
+                    chunks = list(map("".join, zip(*[iter(raw_pose_data)] * 28)))
                     for chunk in chunks:
                         unpacked_data = struct.unpack(euler_data_format, chunk)
                         euler_data = Euler._make(unpacked_data)
@@ -70,7 +70,7 @@ class XSensListener(object):
                 elif packet_type_id == "02":
                     # quaternion data
                     # euler data
-                    chunks = map("".join, zip(*[iter(raw_pose_data)] * 32))
+                    chunks = list(map("".join, zip(*[iter(raw_pose_data)] * 32)))
                     for chunk in chunks:
                         unpacked_data = struct.unpack(quaternion_data_format, chunk)
                         quaternion_data = Quaternion._make(unpacked_data)

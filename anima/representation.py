@@ -153,11 +153,13 @@ class Representation(object):
         from stalker.db.session import DBSession
         from sqlalchemy import distinct
 
-        take_names = map(
-            lambda x: x[0],
-            DBSession.query(distinct(Version.take_name))
-            .filter(Version.task == self.version.task)
-            .all(),
+        take_names = list(
+            map(
+                lambda x: x[0],
+                DBSession.query(distinct(Version.take_name))
+                .filter(Version.task == self.version.task)
+                .all(),
+            )
         )
         take_names.sort()
 

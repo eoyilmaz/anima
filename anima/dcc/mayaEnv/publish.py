@@ -105,6 +105,7 @@ VALID_MATERIALS = {
         "RedshiftShaderSwitch",
         "RedshiftSkin",
         "RedshiftSprite",
+        "RedshiftStandardMaterial",
         "RedshiftState",
         "RedshiftSubSurfaceScatter",
         "RedshiftUserDataColor",
@@ -1005,7 +1006,7 @@ def check_empty_shapes(progress_controller=None):
 
     progress_controller.complete()
     if len(empty_shape_nodes) > 0:
-        pm.select(map(lambda x: x.getParent(), empty_shape_nodes))
+        pm.select(list(map(lambda x: x.getParent(), empty_shape_nodes)))
         raise PublishError(
             "There are <b>meshes with no geometry</b> in your scene, "
             "please delete them!!!"
@@ -1035,7 +1036,7 @@ def check_default_uv_set(progress_controller=None):
     progress_controller.complete()
     if len(nodes_with_non_default_uvset) > 0:
         # get transform nodes
-        tra_nodes = map(lambda x: x.getParent(), nodes_with_non_default_uvset)
+        tra_nodes = list(map(lambda x: x.getParent(), nodes_with_non_default_uvset))
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>non default UVSet (map1)</b>:
@@ -1085,7 +1086,7 @@ def check_uv_existence(progress_controller=None):
     progress_controller.complete()
     if len(nodes_with_no_uvs) > 0:
         # get transform nodes
-        tra_nodes = map(lambda x: x.getParent(), nodes_with_no_uvs)
+        tra_nodes = list(map(lambda x: x.getParent(), nodes_with_no_uvs))
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>no UVs</b>:
@@ -1129,12 +1130,12 @@ def check_out_of_space_uvs(progress_controller=None):
     progress_controller.complete()
     if len(nodes_with_out_of_space_uvs):
         # get transform nodes
-        tra_nodes = map(lambda x: x.getParent(), nodes_with_out_of_space_uvs)
+        tra_nodes = list(map(lambda x: x.getParent(), nodes_with_out_of_space_uvs))
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes which have a UV value bigger than <b>10</b>:
             <br><br>%s"""
-            % "<br>".join(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY]))
+            % "<br>".join(list(map(lambda x: x.name(), tra_nodes[:MAX_NODE_DISPLAY])))
         )
 
 
@@ -1235,7 +1236,7 @@ def check_uv_border_crossing(progress_controller=None):
     progress_controller.complete()
     if len(nodes_with_uvs_crossing_borders):
         # get transform nodes
-        tra_nodes = map(lambda x: x.getParent(), nodes_with_uvs_crossing_borders)
+        tra_nodes = list(map(lambda x: x.getParent(), nodes_with_uvs_crossing_borders))
         pm.select(tra_nodes)
         raise RuntimeError(
             """There are nodes with <b>UV-Shells</b> that are crossing
@@ -2620,7 +2621,7 @@ def check_reference_types(progress_controller=None):
     # allowed_types = \
     #     ['bg-building', 'building', 'building part', 'layout', 'prop',
     #      'interior', 'exterior']
-    allowed_types = ["layout", "vegetation"] + map(str.lower, LOOK_DEV_TYPES)
+    allowed_types = ["layout", "vegetation"] + list(map(str.lower, LOOK_DEV_TYPES))
     wrong_refs = []
     all_references = pm.listReferences()
     progress_controller.maximum = len(all_references)

@@ -208,7 +208,7 @@ def embedded_numbers(s):
 
     re_digits = re.compile(r"(\d+)")
     pieces = re_digits.split(str(s))
-    pieces[1::2] = map(int, pieces[1::2])
+    pieces[1::2] = list(map(int, pieces[1::2]))
     return pieces
 
 

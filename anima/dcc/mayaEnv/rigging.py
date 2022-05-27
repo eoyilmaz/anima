@@ -385,7 +385,7 @@ class Rigging(object):
         wm[1, :3] = reflected_local_y_axis
         wm[2, :3] = reflected_local_z_axis
 
-        pm.xform(target_node, ws=1, ro=map(math.degrees, wm.eulerRotation()))
+        pm.xform(target_node, ws=1, ro=list(map(math.degrees, wm.eulerRotation())))
         # pm.makeIdentity(
         #     target_node, apply=1, t=False, r=False, s=False, n=False,
         #     jointOrient=True
@@ -1516,9 +1516,11 @@ class BendyLimbJointHierarchy(JointHierarchy):
         for i in range(len(control_hierarchy.joints) - 1):
             curve = pm.curve(
                 d=3,
-                ep=map(
-                    lambda x: pm.xform(x, q=1, ws=1, t=1),
-                    control_hierarchy.joints[i : i + 2],
+                ep=list(
+                    map(
+                        lambda x: pm.xform(x, q=1, ws=1, t=1),
+                        control_hierarchy.joints[i : i + 2],
+                    )
                 ),
             )
             self.bendy_curves.append(curve)

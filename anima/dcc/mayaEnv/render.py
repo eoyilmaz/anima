@@ -1633,7 +1633,7 @@ class Render(object):
 
                     attr_value = skin_sss.getAttr(attr)
                     if isinstance(attr_value, tuple):
-                        attr_value = map(lambda x: x * multiplier, attr_value)
+                        attr_value = list(map(lambda x: x * multiplier, attr_value))
                     else:
                         attr_value *= multiplier
                     node.attr(attr_name).set(attr_value)

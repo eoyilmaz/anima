@@ -116,7 +116,9 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
 
         self.filename_templates_double_list_widget.clear()
         self.filename_templates_double_list_widget.add_primary_items(
-            map(lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id), fts)
+            list(
+                map(lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id), fts)
+            )
         )
 
     def name_line_edit_changed(self, text):
@@ -149,10 +151,10 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         # add the structure templates to the secondary list of the double list
         self.filename_templates_double_list_widget.clear()
         self.filename_templates_double_list_widget.add_secondary_items(
-            map(
+            list(map(
                 lambda x: "%s (%s) (%s)" % (x.name, x.target_entity_type, x.id),
                 self.structure.templates,
-            )
+            ))
         )
 
         # add all the other filename templates from the database

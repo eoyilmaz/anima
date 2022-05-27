@@ -335,7 +335,9 @@ class Modeling(object):
         ordered_vertices = order_vertices(ordered_edges)
 
         # now create a curve from the given vertices
-        pm.curve(p=map(lambda x: x.getPosition(space="world"), ordered_vertices), d=3)
+        pm.curve(
+            p=list(map(lambda x: x.getPosition(space="world"), ordered_vertices)), d=3
+        )
 
     @classmethod
     def vertex_aligned_locator(cls):

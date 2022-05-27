@@ -209,13 +209,13 @@ class VersionMover(QtWidgets.QDialog, AnimaDialogBase):
         # get distinct take names
         from stalker.db.session import DBSession
 
-        from_take_names = map(
+        from_take_names = list(map(
             lambda x: x[0],
             DBSession.query(distinct(Version.take_name))
             .filter(Version.task == from_task)
             .order_by(Version.take_name)
             .all(),
-        )
+        ))
 
         # create versions for each take
         answer = QtWidgets.QMessageBox.question(

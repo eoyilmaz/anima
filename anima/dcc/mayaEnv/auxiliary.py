@@ -1638,9 +1638,11 @@ class Playblaster(object):
         end_time = int(pm.playbackOptions(q=1, aet=1))
 
         if not self.batch_mode:
-            selected_start_time, selected_end_time = map(
-                int,
-                pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
+            selected_start_time, selected_end_time = list(
+                map(
+                    int,
+                    pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
+                )
             )
 
             if selected_end_time - selected_start_time > 1:
@@ -1653,9 +1655,13 @@ class Playblaster(object):
     def is_frame_range_selected(self):
         """returns true if a range in the time line is selected"""
         if not self.batch_mode:
-            start, end = map(
-                int,
-                pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
+            start, end = list(
+                map(
+                    int,
+                    pm.timeControl(
+                        pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
+                    ),
+                )
             )
             return (end - start) > 1
         else:
