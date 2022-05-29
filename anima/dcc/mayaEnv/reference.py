@@ -513,34 +513,44 @@ class Reference(object):
                 ref.unload()
 
     @classmethod
-    def to_base(cls):
-        """replaces the related references with Base representation"""
-        cls.to_repr("Base")
+    def to_base(cls, apply_to=0):
+        """Replace the related references with Base representation.
+
+        :param int apply_to: 0: All 1: Selected
+        """
+        cls.to_repr("Base", apply_to=apply_to)
 
     @classmethod
-    def to_gpu(cls):
-        """replaces the related references with GPU representation"""
-        cls.to_repr("GPU")
+    def to_gpu(cls, apply_to=0):
+        """Replace the related references with GPU representation.
+
+        :param int apply_to: 0: All 1: Selected
+        """
+        cls.to_repr("GPU", apply_to=apply_to)
 
     @classmethod
-    def to_ass(cls):
-        """replaces the related references with the ASS representation"""
-        cls.to_repr("ASS")
+    def to_ass(cls, apply_to=0):
+        """Replace the related references with the ASS representation.
+
+        :param int apply_to: 0: All 1: Selected
+        """
+        cls.to_repr("ASS", apply_to=apply_to)
 
     @classmethod
-    def to_rs(cls):
-        """replaces the related references with the RS representation"""
-        cls.to_repr("RS")
+    def to_rs(cls, apply_to=0):
+        """Replace the related references with the RS representation.
+
+        :param int apply_to: 0: All 1: Selected
+        """
+        cls.to_repr("RS", apply_to=apply_to)
 
     @classmethod
-    def to_repr(cls, repr_name):
+    def to_repr(cls, repr_name, apply_to=0):
         """replaces the related references with the given representation
 
         :param str repr_name: Desired representation name
+        :param int apply_to: 0: All 1: Selected
         """
-        # get apply to
-        apply_to = pm.radioButtonGrp("repr_apply_to_radio_button_grp", q=1, sl=1)
-
         if apply_to == 1:
             # work on every selected object
             selection = pm.ls(sl=1)
@@ -550,7 +560,7 @@ class Reference(object):
             for node in selection:
                 ref = node.referenceFile()
                 # get the topmost parent
-                ref = ref.topmost_parent()
+                ref = ref.topmost_parent
 
                 if ref is not None and ref not in references:
                     references.append(ref)

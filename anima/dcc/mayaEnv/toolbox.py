@@ -533,10 +533,17 @@ def UI():
                     sl=1,
                 )
 
+            def convert_selected_to_repr_callback(repr_name):
+                # get apply to
+                apply_to = pm.radioButtonGrp(
+                    "repr_apply_to_radio_button_grp", q=1, sl=1
+                )
+                Reference.to_repr(repr_name, apply_to)
+
             pm.button(
                 "to_base_button",
                 l="To Base",
-                c=repeated_callback(Reference.to_base),
+                c=repeated_callback(convert_selected_to_repr_callback, "Base"),
                 ann="Convert selected to Base representation",
                 bgc=color.color,
             )
@@ -544,7 +551,7 @@ def UI():
             pm.button(
                 "to_gpu_button",
                 l="To GPU",
-                c=repeated_callback(Reference.to_gpu),
+                c=repeated_callback(convert_selected_to_repr_callback, "GPU"),
                 ann="Convert selected to GPU representation",
                 bgc=color.color,
             )
@@ -552,7 +559,7 @@ def UI():
             pm.button(
                 "to_ass_button",
                 l="To ASS",
-                c=repeated_callback(Reference.to_ass),
+                c=repeated_callback(convert_selected_to_repr_callback, "ASS"),
                 ann="Convert selected to ASS representation",
                 bgc=color.color,
             )
@@ -560,7 +567,7 @@ def UI():
             pm.button(
                 "to_rs_button",
                 l="To RS",
-                c=repeated_callback(Reference.to_rs),
+                c=repeated_callback(convert_selected_to_repr_callback, "RS"),
                 ann="Convert selected to RS representation",
                 bgc=color.color,
             )
@@ -782,7 +789,7 @@ def UI():
             with pm.rowLayout(nc=6, adj=1):
 
                 def transfer_uvs_button_callback(*args, **kwargs):
-                    label_lut = {"W": 0, "L": 1, "UV": 2, "C": 3, "T": 4}
+                    label_lut = {"W": 0, "L": 1, "UV": 3, "C": 4, "T": 5}
                     sample_space = label_lut[
                         pm.radioCollection("transfer_uvs_radio_collection", q=1, sl=1)
                     ]
@@ -1807,6 +1814,19 @@ def UI():
                     ),
                     bgc=color.color,
                 )
+
+            def lighting_scene_builder_callback(*args):
+                from anima.dcc.mayaEnv import render
+                lsb = render.LightingSceneBuilder()
+                lsb.build()
+
+            color.next()
+            pm.button(
+                ann="Lighting Scene Builder",
+                l="Lighting Scene Builder",
+                c=repeated_callback(lighting_scene_builder_callback),
+                bgc=color.color,
+            )
 
         # store commands
         __commands__.extend(render_columnLayout.children())
