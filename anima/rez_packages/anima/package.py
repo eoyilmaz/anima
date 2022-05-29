@@ -46,18 +46,14 @@ def commands():
     # Maya
     if "maya" in this.root:
         # PYTHONPATH
-        env.PYTHONPATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config"
-        )
+        env.PYTHONPATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
         env.PYTHONPATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
         env.PYTHONPATH.append("${ANIMA_DEV_PATH}/maya/scripts")
 
         # MAYA_SCRIPT_PATH
-        env.MAYA_SCRIPT_PATH.append(
-            "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config"
-        )
+        env.MAYA_SCRIPT_PATH.append("${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config")
         env.MAYA_SCRIPT_PATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/config/${REZ_MAYA_MAJOR_VERSION}"
         )
@@ -65,6 +61,11 @@ def commands():
         env.MAYA_PLUG_IN_PATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins"
         )
+        env.MAYA_PLUG_IN_PATH.append("${ANIMA_DEV_PATH}/maya/plugins")
+        env.MAYA_PLUG_IN_PATH.append(
+            "${ANIMA_DEV_PATH}/maya/plugins/${REZ_MAYA_MAJOR_VERSION}"
+        )
+
         env.MAYA_PLUG_IN_PATH.append(
             "${ANIMA_LIB_PATH}/anima/anima/dcc/mayaEnv/plugins/${REZ_MAYA_MAJOR_VERSION}"
         )
