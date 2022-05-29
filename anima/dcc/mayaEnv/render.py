@@ -2766,10 +2766,11 @@ class LightingSceneBuilder(object):
     to the lighting scene.
     """
 
-    LOOK_DEVS_GROUP_NAME = "LOOK_DEVS"
     ANIMS_GROUP_NAME = "ANIMS"
-    LAYOUTS_GROUP_NAME = "LAYOUTS"
     CAMERA_GROUP_NAME = "CAMERA"
+    LAYOUTS_GROUP_NAME = "LAYOUTS"
+    LIGHTS_GROUP_NAME = "LIGHTS"
+    LOOK_DEVS_GROUP_NAME = "LOOK_DEVS"
 
     RIG_TO_CACHEABLE_LUT_FILE_NAME = "rig_to_cacheable_lut.json"
     RIG_TO_LOOK_DEV_LUT_FILE_NAME = "rig_to_look_dev_lut.json"
@@ -3112,6 +3113,7 @@ class LightingSceneBuilder(object):
         look_devs_group = self.create_item_group(self.LOOK_DEVS_GROUP_NAME)
         anims_group = self.create_item_group(self.ANIMS_GROUP_NAME)
         camera_group = self.create_item_group(self.CAMERA_GROUP_NAME)
+        lights_group = self.create_item_group(self.LIGHTS_GROUP_NAME)
 
         # get all referenced cache files
         # to prevent referencing the same look dev more than once,
@@ -3140,10 +3142,17 @@ class LightingSceneBuilder(object):
             if look_dev_version in look_dev_version_to_ref_node_lut:
                 # use the same ref_node
                 look_dev_ref_node = look_dev_version_to_ref_node_lut[look_dev_version]
-            else:
+            elif look_dev_version is not None:
                 # reference the look dev file
                 look_dev_ref_node = m.reference(look_dev_version)
                 look_dev_version_to_ref_node_lut[look_dev_version] = look_dev_ref_node
+            else:
+                # no published look dev
+                # skip this cacheable not
+                print("Warning: No published Look Dev version found for: {}".format(
+                    cacheable_attr_value
+                ))
+                continue
             # now we should have a reference node for the cache and a reference node for
             # the look dev
 
