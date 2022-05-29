@@ -70,37 +70,51 @@ class Modeling(object):
 
         :parm sample_space: The sampling space:
 
+          -1: Transfer using outMesh -> inMesh method
           0: World
           1: Local
-          2: UV
-          3: Component
-          4: Topology
+          3: UV
+          4: Component
+          5: Topology
         """
         selection = pm.ls(sl=1)
         pm.select(None)
         source = selection[0]
         target = selection[1]
-        # auxiliary.transfer_shaders(source, target)
-        # pm.select(selection)
 
         lut = auxiliary.match_hierarchy(source, target)
+        print("lut: {}".format(lut))
+        print("sample_space: {}".format(sample_space))
 
         for source, target in lut["match"]:
-            pm.transferAttributes(
-                source,
-                target,
-                transferPositions=0,
-                transferNormals=0,
-                transferUVs=2,
-                transferColors=2,
-                sampleSpace=sample_space,
-                sourceUvSpace="map1",
-                targetUvSpace="map1",
-                searchMethod=0,
-                flipUVs=0,
-                colorBorders=1,
-            )
-        # restore selection
+            if sample_space != -1:
+                pm.transferAttributes(
+                    source,
+                    target,
+                    transferPositions=0,
+                    transferNormals=0,
+                    transferUVs=2,
+                    transferColors=2,
+                    sampleSpace=sample_space,
+                    sourceUvSpace="map1",
+                    targetUvSpace="map1",
+                    searchMethod=3,  # closestToPoint
+                    flipUVs=0,
+                    colorBorders=1,
+                )
+            else:
+                # connect the source.outMesh -> target.inMesh
+                # but use the intermediate object if available
+                # get the mesh in the hierarchy that doesn't have an input
+                for mesh in target.listHistory(exactType="mesh"):
+                    if len(mesh.inputs()) == 0:
+                        # this doesn't seem to have any input
+                        source.outMesh >> mesh.inMesh
+                        source.outMesh >> mesh.outMesh
+                        # and disconnect it
+                        mesh.inMesh.disconnect()
+                        mesh.outMesh.disconnect()
+                        # that's all, we now should have the same mesh
         pm.select(selection)
 
     @classmethod
