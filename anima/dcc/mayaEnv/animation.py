@@ -316,8 +316,8 @@ class Animation(object):
                 source_node.attr(out_attr_name) >> target_node.attr(in_attr_name)
 
     @classmethod
-    def bake_component_animation(cls):
-        """bakes the selected component animation to a space locator"""
+    def bake_component_animation_to_locator(cls):
+        """Bake the selected component animation to a space locator."""
         start = int(pm.playbackOptions(q=1, minTime=1))
         end = int(pm.playbackOptions(q=1, maxTime=1))
 
@@ -340,6 +340,27 @@ class Animation(object):
             pm.setKeyframe(locator.tx)
             pm.setKeyframe(locator.ty)
             pm.setKeyframe(locator.tz)
+        pm.currentTime(start)
+
+    @classmethod
+    def bake_locator_animation_to_component(cls):
+        """Bake the selected locator animation to a the selected component."""
+        start = int(pm.playbackOptions(q=1, minTime=1))
+        end = int(pm.playbackOptions(q=1, maxTime=1))
+
+        selection = pm.ls(sl=1, fl=1)
+        vertex = selection[0]
+        locator = selection[1]
+        if not isinstance(locator, pm.nt.Transform):
+            vertex = selection[0]
+            locator = selection[1]
+
+        for i in range(start, end + 1):
+            pm.currentTime(i)
+            pos = pm.xform(locator, q=1, ws=1, t=1)
+            pm.xform(vertex, ws=1, t=pos)
+            pm.setKeyframe(vertex)
+        pm.currentTime(start)
 
     @classmethod
     def attach_follicle(cls):

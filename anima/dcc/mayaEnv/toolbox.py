@@ -2166,15 +2166,23 @@ def UI():
 
             color.next()
             pm.button(
-                "bake_component_animation_button",
-                l="Bake component animation to Locator",
-                c=repeated_callback(Animation.bake_component_animation),
+                "bake_component_animation_to_locator_button",
+                l="Bake Component animation to Locator",
+                c=repeated_callback(Animation.bake_component_animation_to_locator),
                 ann="Creates a locator at the center of selected components "
                 "and moves it with the components along the current "
                 "frame range",
                 bgc=color.color,
             )
+            pm.button(
+                "bake_locator_animation_to_component_button",
+                l="Bake Locator animation to Component",
+                c=repeated_callback(Animation.bake_locator_animation_to_component),
+                ann=Animation.bake_locator_animation_to_component.__doc__,
+                bgc=color.color,
+            )
 
+            color.next()
             pm.button(
                 "create_follicle_button",
                 l="Attach Follicle",
@@ -2183,6 +2191,7 @@ def UI():
                 bgc=color.color,
             )
 
+            color.next()
             pm.button(
                 "equalize_node_speed_button",
                 l="Equalize Node Speed",
