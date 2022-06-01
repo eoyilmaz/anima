@@ -278,14 +278,11 @@ def import_3dequalizer_points(width, height):
 
         # animate the locator
         for frame in point.data.keys():
-            pm.currentTime(frame)
             frame_data = point.data[frame]
             local_x = frame_data[0] / width - 0.5
             local_y = frame_data[1] / width - 0.5 * height / width
-            loc.tx.set(local_x)
-            loc.ty.set(local_y)
-            loc.tx.setKey()
-            loc.ty.setKey()
+            pm.setKeyframe(loc.tx, t=frame, v=local_x)
+            pm.setKeyframe(loc.ty, t=frame, v=local_y)
 
 
 def find_cut_info(cam):
