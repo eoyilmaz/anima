@@ -921,7 +921,7 @@ class Fusion(DCCBase):
                             "type": "OCIOColorSpace",
                             "ref_id": random_ref_id,
                             "input_list": {
-                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                 "SourceSpace": "ACES - ACES2065-1",
                                 "OutputSpace": "Output - Rec.709",
                             },
@@ -929,7 +929,7 @@ class Fusion(DCCBase):
                                 "Input": {
                                     "type": "OCIOColorSpace",
                                     "input_list": {
-                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                        "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                         "SourceSpace": "Utility - Linear - sRGB",
                                         "OutputSpace": "ACES - ACES2065-1",
                                     },
@@ -1089,7 +1089,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - sRGB",
                                 },
@@ -1098,7 +1098,7 @@ class Fusion(DCCBase):
                                         "type": "OCIOColorSpace",
                                         "ref_id": random_ref_id,
                                         "input_list": {
-                                            "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                            "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                             "SourceSpace": "ACES - ACES2065-1",
                                             "OutputSpace": "ACES - ACES2065-1",
                                         },
@@ -1151,7 +1151,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "ACES - ACES2065-1",
                                 },
@@ -1199,7 +1199,7 @@ class Fusion(DCCBase):
                             "Input": {
                                 "type": "OCIOColorSpace",
                                 "input_list": {
-                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.2/config.ocio",
+                                    "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
                                     "OutputSpace": "Output - Rec.709",
                                 },
