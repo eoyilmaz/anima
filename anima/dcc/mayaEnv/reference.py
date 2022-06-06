@@ -396,6 +396,11 @@ class Reference(object):
         project = None
         if current_version:
             project = current_version.task.project
+        else:
+            raise RuntimeError(
+                "The current scene is unknown to Stalker!!! "
+                "Please, save this scene first."
+            )
 
         # no project then do nothing
         if project:
