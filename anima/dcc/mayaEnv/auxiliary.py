@@ -543,28 +543,50 @@ def export_blend_connections():
     print("filename: %s     ...done\n" % filename)
 
 
-def transfer_shaders(source, target):
-    """transfers shader from source to target"""
+def transfer_shaders(source, target, allow_component_assignments=False):
+    """Transfer shader from source to target.
+    :param source: Source geo.
+    :param target: Target geo.
+    :param (bool) allow_component_assignments: If True will transfer component level
+        shader assignments.
+    """
     if isinstance(source, pm.nt.Transform):
         source_shape = source.getShape()
     else:
         source_shape = source
 
     # get the shadingEngines
-    shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
-
-    if len(shading_engines):
+    shapes_and_engines = source_shape.outputs(type=pm.nt.ShadingEngine, c=1)
+    if len(shapes_and_engines):
         # possible fix for locked shading engines
-        pm.lockNode(shading_engines[0], l=0, lockUnpublished=0)
-        pm.sets(shading_engines[0], fe=target)
-        # also assign instances to the same shader
-        if target.instanceCount() > 1:
-            for i in range(1, target.instanceCount()):
-                target.attr("instObjGroups[%s]" % i).disconnect()
-                (
-                    target.attr("instObjGroups[%s]" % i)
-                    >> shading_engines[0].attr("dagSetMembers").next_available
-                )
+        for source_attribute, shading_engine in shapes_and_engines:
+            pm.lockNode(shading_engine, l=0, lockUnpublished=0)
+
+            # check if there is component assignments
+            is_component_assignment = "objectgroups" in source_attribute.lower()
+            if is_component_assignment and allow_component_assignments:
+                # try to get the same components on the target
+                components = []
+                target_shape = target
+                if isinstance(target, pm.nt.Transform):
+                    target_shape = target.getShape()
+                for component in pm.sets(shading_engine, q=1):
+                    if source_shape.name() in str(component):
+                        target_component = component.replace(
+                            source_shape.name(), target_shape.name()
+                        )
+                        components.append(target_component)
+                pm.sets(shading_engine, fe=components)
+            else:
+                pm.sets(shading_engine, fe=target)
+                # also assign instances to the same shader
+                if target.instanceCount() > 1:
+                    for i in range(1, target.instanceCount()):
+                        target.attr("instObjGroups[%s]" % i).disconnect()
+                        (
+                            target.attr("instObjGroups[%s]" % i)
+                            >> shading_engine.attr("dagSetMembers").next_available
+                        )
 
 
 def benchmark(iter_cnt):

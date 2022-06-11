@@ -1078,9 +1078,12 @@ class Render(object):
             mel.eval("AEfileTextureReloadCmd(%s.fileTextureName)" % fileNode)
 
     @classmethod
-    def transfer_shaders(cls):
+    def transfer_shaders(cls, allow_component_assignments=False):
         """transfer shaders between selected objects. It can search for
         hierarchies both in source and target sides.
+
+        :param (bool) allow_component_assignments: If True will transfer component level
+            shader assignments.
         """
         selection = pm.ls(sl=1)
         pm.select(None)
@@ -1177,7 +1180,11 @@ class Render(object):
             lut = auxiliary.match_hierarchy(source, target)
 
         for source_node, target_node in lut["match"]:
-            auxiliary.transfer_shaders(source_node, target_node)
+            auxiliary.transfer_shaders(
+                source_node,
+                target_node,
+                allow_component_assignments=allow_component_assignments
+            )
             # also transfer render attributes
             for attr_name in attr_names:
                 try:

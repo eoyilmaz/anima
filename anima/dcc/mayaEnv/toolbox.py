@@ -1542,6 +1542,15 @@ def UI():
                 bgc=color.color,
             )
 
+            pm.button(
+                "transfer_shaders_with_components_button",
+                l="Transfer Shaders (Component)",
+                c=repeated_callback(Render.transfer_shaders, True),
+                ann="Transfers shaders from one object to other (includes component "
+                    "assignments, use it for LookDev -> Alembic",
+                bgc=color.color,
+            )
+
             color.next()
             pm.button(
                 "fitPlacementToUV_button",
