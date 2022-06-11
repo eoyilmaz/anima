@@ -219,6 +219,12 @@ def check_node_names_with_bad_characters(progress_controller=None):
         )
 
 
+@publisher
+def fix_locked_default_shader(progress_controller=None):
+    """Fix locked default shader."""
+    pm.lockNode('initialShadingGroup', l=0, lockUnpublished=0)
+
+
 @publisher("camera")
 def set_all_cameras_cacheable(progress_controller=None):
     """sets all the cameras in the current scene to cacheable"""
