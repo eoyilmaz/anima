@@ -554,6 +554,8 @@ def transfer_shaders(source, target):
     shading_engines = source_shape.outputs(type=pm.nt.ShadingEngine)
 
     if len(shading_engines):
+        # possible fix for locked shading engines
+        pm.lockNode(shading_engines[0], l=0, lockUnpublished=0)
         pm.sets(shading_engines[0], fe=target)
         # also assign instances to the same shader
         if target.instanceCount() > 1:
