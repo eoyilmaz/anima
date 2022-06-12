@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
@@ -237,6 +238,50 @@ class TakesListWidget(QtWidgets.QListWidget):
         QtWidgets.QListWidget.__init__(self, parent, *args, **kwargs)
         self._take_names = []
         self.take_names = []
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.custom_context_menu_requested)
+
+    def custom_context_menu_requested(self, position):
+        """Show custom context menu for the takes list widget."""
+        global_position = self.mapToGlobal(position)
+        item = self.itemAt(position)
+        # create the menu
+        menu = QtWidgets.QMenu()
+        new_take_action = menu.addAction("Add new Take Name...")
+        copy_take_action = menu.addAction("Copy Take Name")
+
+        selected_action = menu.exec_(global_position)
+        if selected_action == new_take_action:
+            self.show_add_take_dialog()
+        elif selected_action == copy_take_action:
+            if item:
+                clipboard = QtWidgets.QApplication.clipboard()
+                clipboard.setText(
+                    os.path.normpath(item.text())
+                )
+
+    def show_add_take_dialog(self):
+        """runs when the add_take_toolButton clicked"""
+        # open up a QInputDialog and ask for a take name
+        # anything is acceptable
+        # because the validation will occur in the Version instance
+
+        dialog = QtWidgets.QInputDialog(self)
+        current_take_name = self.current_take_name
+
+        take_name, ok = dialog.getText(
+            self,
+            "Add Take Name",
+            "New Take Name",
+            QtWidgets.QLineEdit.Normal,
+            current_take_name,
+        )
+
+        if ok:
+            # add the given text to the takes_combo_box
+            # if it is not empty
+            if take_name != "":
+                self.add_take(take_name)
 
     @property
     def take_names(self):

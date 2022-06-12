@@ -872,7 +872,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             self.tasks_tree_view_changed
         )
 
-        # takes_combo_box
+        # takes_list_widget
         self.takes_list_widget.currentItemChanged.connect(
             self.takes_list_widget_changed
         )
@@ -888,7 +888,9 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         )
 
         # add_take_toolButton
-        self.add_take_push_button.clicked.connect(self.add_take_push_button_clicked)
+        self.add_take_push_button.clicked.connect(
+            self.takes_list_widget.show_add_take_dialog
+        )
 
         # export_as
         self.export_as_push_button.clicked.connect(self.export_as_push_button_clicked)
@@ -1670,30 +1672,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.previous_versions_table_widget.update_content(versions)
         logger.debug("update_previous_versions_table_widget is finished")
-
-    def add_take_push_button_clicked(self):
-        """runs when the add_take_toolButton clicked"""
-        # open up a QInputDialog and ask for a take name
-        # anything is acceptable
-        # because the validation will occur in the Version instance
-
-        self.current_dialog = QtWidgets.QInputDialog(self)
-
-        current_take_name = self.takes_list_widget.current_take_name
-
-        take_name, ok = self.current_dialog.getText(
-            self,
-            "Add Take Name",
-            "New Take Name",
-            QtWidgets.QLineEdit.Normal,
-            current_take_name,
-        )
-
-        if ok:
-            # add the given text to the takes_combo_box
-            # if it is not empty
-            if take_name != "":
-                self.takes_list_widget.add_take(take_name)
 
     def get_new_version(self, publish=False):
         """returns a :class:`~oyProjectManager.models.version.Version` instance
