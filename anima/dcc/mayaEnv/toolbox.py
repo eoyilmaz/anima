@@ -6,7 +6,7 @@ import functools
 import pymel.core as pm
 import maya.mel as mel
 
-from anima.dcc.mayaEnv import auxiliary, camera_tools
+from anima.dcc.mayaEnv import auxiliary, camera_tools, publish
 from anima.dcc.mayaEnv.animation import Animation
 from anima.dcc.mayaEnv.general import General
 from anima.dcc.mayaEnv.modeling import Modeling
@@ -1164,6 +1164,17 @@ def UI():
         )
         with render_columnLayout:
             color.reset()
+
+            color.next()
+            pm.button(
+                "unlock_initial_shader_button",
+                l="Unlock Initial Shader",
+                c=repeated_callback(
+                    publish.fix_locked_default_shader
+                ),
+                ann=publish.fix_locked_default_shader.__doc__,
+                bgc=color.color,
+            )
 
             color.next()
             pm.button(
