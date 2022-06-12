@@ -2923,6 +2923,10 @@ class LightingSceneBuilder(object):
         # to get a proper version.inputs list
         m.update_version_inputs()
 
+        # there is a new bug in some animation scene
+        # that causes the initialShader to be locked
+        pm.lockNode('initialShadingGroup', l=0, lockUnpublished=0)
+
         cacheable_to_look_dev_version_lut = {}
         references_with_no_look_dev_task = []
         references_with_no_look_dev_version = []
