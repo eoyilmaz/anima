@@ -10,7 +10,7 @@ from anima.utils.progress import ProgressManager
 
 FIRST_CAP_RE = re.compile("(.)([A-Z][a-z]+)")
 ALL_CAP_RE = re.compile("([a-z0-9])([A-Z])")
-VERSION_NUMBER_RE = r"([\w\d/_]+v)([0-9]+)([\w\d._]+)"
+VERSION_NUMBER_RE = r"([\w\d/_\:\$]+v)([0-9]+)([\w\d._]+)"
 
 ALEMBIC = "Alembic"
 USD = "USD"
