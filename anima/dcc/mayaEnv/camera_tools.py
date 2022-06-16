@@ -21,7 +21,7 @@ def camera_film_offset_tool():
     # get the camera transform node
     camera_transform = camera_shape.getParent()
 
-    frustum_curve = create_frustum_curve(camera_transform)
+    frustum_curve = create_frustum_geo(camera_transform)
     handle = create_camera_space_locator(frustum_curve)
 
     # connect the locator tx and ty to film offset x and y
@@ -66,48 +66,108 @@ def create_camera_space_locator(frustum_curve, use_limits=True):
     return locator
 
 
-def create_frustum_curve(camera):
-    """Creates a curve showing the frustum of the given camera
+def create_frustum_geo(camera, shape_type=0, name=""):
+    """Create a geometry showing the frustum of the given camera.
 
-    :param camera:
-    :return:
+    :param pm.PyNode camera: The camera transform or shape node.
+    :param int shape_type: The shape type to use. 0=NurbsCurve, 1=NurbsPlane, default is
+        0.
+    :param str name: The name of the frustum geo.
+    :return: The newly created frustum geometry.
     """
 
+    if not name:
+        name = "frustumGeo#"
+    if not name.endswith("#"):
+        name = "{}#".format(name)
+
     if isinstance(camera, pm.nt.Transform):
-        camera_tranform = camera
-        camera = camera_tranform.getShape()
+        camera_transform = camera
+        camera = camera_transform.getShape()
     elif isinstance(camera, pm.nt.Camera):
-        camera_tranform = camera.getParent()
+        camera_transform = camera.getParent()
 
     # validate the camera
     if not isinstance(camera, pm.nt.Camera):
         raise RuntimeError("Please select a camera")
 
     # create the outer box
-    frame_curve = pm.curve(
-        d=1,
-        p=[
-            (-0.5, 0.5, 0),
-            (0.5, 0.5, 0),
-            (0.5, -0.5, 0),
-            (-0.5, -0.5, 0),
-            (-0.5, 0.5, 0),
-        ],
-        k=[0, 1, 2, 3, 4],
-    )
+    if shape_type == 0:
+        # use a curve
+        frustum_geo = pm.curve(
+            n=name,
+            d=1,
+            p=[
+                (-0.5, 0.5, 0),
+                (0.5, 0.5, 0),
+                (0.5, -0.5, 0),
+                (-0.5, -0.5, 0),
+                (-0.5, 0.5, 0),
+            ],
+            k=[0, 1, 2, 3, 4],
+        )
+    else:
+        # use a nurbs plane
+        frustum_geo = pm.nurbsPlane(
+            n=name, p=(0, 0, 0), ax=(0, 0, 1), w=1, lr=1, d=1, u=1, v=1, ch=0
+        )[0]
+        frame_shape = frustum_geo.getShape()
+        # set material
+        surface_shader = pm.shadingNode("surfaceShader", asShader=1)
+        pm.select(frustum_geo)
+        pm.hyperShade(a=surface_shader.name())
 
-    pm.parent(frame_curve, camera_tranform, r=True)
+        surface_shader.setAttr("outColor", (0.4, 0, 0))
+        surface_shader.setAttr("outTransparency", (0.5, 0.5, 0.5))
+
+        # prevent it from being rendered
+        frame_shape.setAttr("castsShadows", 0)
+        frame_shape.setAttr("receiveShadows", 0)
+        frame_shape.setAttr("motionBlur", 0)
+        frame_shape.setAttr("primaryVisibility", 0)
+        frame_shape.setAttr("smoothShading", 0)
+        frame_shape.setAttr("visibleInReflections", 0)
+        frame_shape.setAttr("visibleInRefractions", 0)
+
+        # Arnold attributes
+        try:
+            frame_shape.setAttr("aiSelfShadows", 0)
+            frame_shape.setAttr("aiVisibleInDiffuse", 0)
+            frame_shape.setAttr("aiVisibleInGlossy", 0)
+        except pm.MayaAttributeError:
+            pass
+
+    pm.parent(frustum_geo, camera_transform, r=True)
     # transform the frame curve
-    frame_curve.tz.set(-10.0)
+    frustum_geo.tz.set(-10.0)
 
     exp = """float $flen = {camera}.focalLength;
 float $hfa = {camera}.horizontalFilmAperture * 25.4;
-{curve}.sx = {curve}.sy = {curve}.sz = -{curve}.translateZ * $hfa/ $flen;""".format(
-        camera=camera.name(), curve=frame_curve.name()
+float $vfa = {camera}.verticalFilmAperture * 25.4;
+if ({camera}.filmFit == 1){{
+    // horizontal - fit resolution gate
+    {frustum_geo}.sx = {frustum_geo}.sz = -{frustum_geo}.translateZ * $hfa/ $flen;
+    {frustum_geo}.sy = {frustum_geo}.sx / defaultResolution.deviceAspectRatio;
+}} else {{
+    // vertical and others - fit resolution gate
+    {frustum_geo}.sy = {frustum_geo}.sz = -{frustum_geo}.translateZ * $vfa/ $flen;
+    {frustum_geo}.sx = {frustum_geo}.sy * defaultResolution.deviceAspectRatio;
+}}""".format(
+        camera=camera.name(), frustum_geo=frustum_geo.name()
     )
     pm.expression(s=exp, o="", ae=1, uc="all")
 
-    return frame_curve
+    # hide unnecessary attributes
+    frustum_geo.setAttr("tx", lock=True, keyable=False)
+    frustum_geo.setAttr("ty", lock=True, keyable=False)
+    frustum_geo.setAttr("rx", lock=True, keyable=False)
+    frustum_geo.setAttr("ry", lock=True, keyable=False)
+    frustum_geo.setAttr("rz", lock=True, keyable=False)
+    frustum_geo.setAttr("sx", lock=True, keyable=False)
+    frustum_geo.setAttr("sy", lock=True, keyable=False)
+    frustum_geo.setAttr("sz", lock=True, keyable=False)
+
+    return frustum_geo
 
 
 def get_selected_camera():
@@ -126,75 +186,45 @@ def camera_focus_plane_tool(camera):
     """sets up a focus plane for the selected camera"""
     camera_shape = camera.getShape()
 
-    frame = pm.nurbsPlane(
-        n="focusPlane#", p=(0, 0, 0), ax=(0, 0, 1), w=1, lr=1, d=1, u=1, v=1, ch=0
-    )[0]
-    frame_shape = frame.getShape()
-    pm.parent(frame, camera, r=True)
+    frustum_geo = create_frustum_geo(camera, shape_type=1)
 
-    # transform the frame surface
-    frame.tz.set(-10.0)
-
-    exp_scale = """float $flen = %(camera)s.focalLength;
-    float $hfa = %(camera)s.horizontalFilmAperture * 25.4;
-    %(frame)s.sx = -%(frame)s.translateZ * $hfa / $flen;
-    %(frame)s.sy = %(frame)s.sx / defaultResolution.deviceAspectRatio;
-    """ % {
-        "camera": camera_shape.name(),
-        "frame": frame.name(),
-    }
-    exp_focus_distance = """%(camera)s.focusDistance = -%(frame)s.tz;
+    exp_focus_distance = """%(camera)s.focusDistance = -%(frustum_geo)s.tz;
     %(camera)s.aiFocusDistance = %(camera)s.focusDistance;
     %(camera)s.aiApertureSize = %(camera)s.focalLength / %(camera)s.fStop * 0.1;
     """ % {
         "camera": camera_shape.name(),
-        "frame": frame.name(),
+        "frustum_geo": frustum_geo.name(),
     }
-    try:
-        pm.expression(s=exp_scale, ae=1, uc="all")
-    except RuntimeError:
-        pass
     try:
         pm.expression(s=exp_focus_distance, ae=1, uc="all")
     except RuntimeError:
         pass
 
-    # set material
-    surface_shader = pm.shadingNode("surfaceShader", asShader=1)
-    pm.select(frame)
-    pm.hyperShade(a=surface_shader.name())
+    return frustum_geo
 
-    surface_shader.setAttr("outColor", (0.4, 0, 0))
-    surface_shader.setAttr("outTransparency", (0.5, 0.5, 0.5))
 
-    # prevent it from being rendered
-    frame_shape.setAttr("castsShadows", 0)
-    frame_shape.setAttr("receiveShadows", 0)
-    frame_shape.setAttr("motionBlur", 0)
-    frame_shape.setAttr("primaryVisibility", 0)
-    frame_shape.setAttr("smoothShading", 0)
-    frame_shape.setAttr("visibleInReflections", 0)
-    frame_shape.setAttr("visibleInRefractions", 0)
+def camera_near_far_clip_plane_tool(camera):
+    """Set up a near and a far plane for the selected camera."""
+    if isinstance(camera, pm.nt.Transform):
+        camera = camera.getShape()
 
-    # Arnold attributes
-    try:
-        frame_shape.setAttr("aiSelfShadows", 0)
-        frame_shape.setAttr("aiVisibleInDiffuse", 0)
-        frame_shape.setAttr("aiVisibleInGlossy", 0)
-    except pm.MayaAttributeError:
-        pass
+    # get the default values for the planes
+    near_plane_dist = camera.nearClipPlane.get()
+    far_plane_dist = camera.farClipPlane.get()
 
-    # hide unnecessary attributes
-    frame.setAttr("tx", lock=True, keyable=False)
-    frame.setAttr("ty", lock=True, keyable=False)
-    frame.setAttr("rx", lock=True, keyable=False)
-    frame.setAttr("ry", lock=True, keyable=False)
-    frame.setAttr("rz", lock=True, keyable=False)
-    frame.setAttr("sx", lock=True, keyable=False)
-    frame.setAttr("sy", lock=True, keyable=False)
-    frame.setAttr("sz", lock=True, keyable=False)
+    near_plane = create_frustum_geo(camera, shape_type=1, name="nearPlane#")
+    far_plane = create_frustum_geo(camera, shape_type=1, name="farPlane#")
+    near_plane.tz.set(-near_plane_dist)
+    far_plane.tz.set(-far_plane_dist)
 
-    return frame
+    # connect to the near/far clip attributes
+    exp = """{camera}.nearClipPlane = -{near_plane}.tz;
+{camera}.farClipPlane = -{far_plane}.tz;
+""".format(
+        camera=camera.name(), near_plane=near_plane.name(), far_plane=far_plane.name()
+    )
+    pm.expression(s=exp, o="", ae=1, uc="all")
+    return near_plane, far_plane
 
 
 def cam_to_chan(start_frame, end_frame):
@@ -269,7 +299,7 @@ def import_3dequalizer_points(width, height):
     pm.getAttr("defaultResolution.deviceAspectRatio")
     pm.getAttr("defaultResolution.pixelAspect")
 
-    frustum_curve = create_frustum_curve(cam_shape)
+    frustum_curve = create_frustum_geo(cam_shape)
 
     for point in man.points:
         # create a locator

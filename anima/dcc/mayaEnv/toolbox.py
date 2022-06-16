@@ -1442,10 +1442,23 @@ def UI():
                 camera_tools.camera_focus_plane_tool(camera)
 
             pm.button(
-                "CameraFocusPlaneTool_button",
+                "camera_focus_plane_tool_button",
                 l="Camera Focus Plane Tool",
                 c=repeated_callback(camera_focus_plane_tool_callback),
-                ann="Camera Film Offset Tool",
+                ann=camera_tools.camera_focus_plane_tool.__doc__,
+                bgc=color.color,
+            )
+
+            def camera_near_far_plane_tool_callback():
+                """callback for the camera_near_far_plane_tool"""
+                camera = pm.ls(sl=1)[0]
+                camera_tools.camera_near_far_clip_plane_tool(camera)
+
+            pm.button(
+                "camera_near_far_clip_plane_tool_button",
+                l="Camera Near/Far Clipping Plane Tool",
+                c=repeated_callback(camera_near_far_plane_tool_callback),
+                ann=camera_tools.camera_near_far_clip_plane_tool.__doc__,
                 bgc=color.color,
             )
 
