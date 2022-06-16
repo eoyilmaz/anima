@@ -3045,7 +3045,7 @@ def update_cache_references(cache_type=ALEMBIC):
         # that includes the ``take_name``
 
         last_abc_file = all_abc_files[-1]
-        if last_abc_file != path:
+        if last_abc_file != os.path.expandvars(path):
             # replace it
             updated_path_info.append((path, last_abc_file))
             ref.replaceWith(last_abc_file)
