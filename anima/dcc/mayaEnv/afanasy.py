@@ -352,45 +352,7 @@ This system will be updated in Afanasy."""
                 v.extension,
             )
 
-        try:
-            # check if it is a oyProjectManager job
-            from oyProjectManager.environments import mayaEnv
-
-            m = mayaEnv.Maya()
-            v = m.get_current_version()
-            if v is not None:
-                from oyProjectManager.models.version import Version
-
-                assert isinstance(v, Version)
-                # get asset or shot
-                versionable = v.version_of
-
-                from oyProjectManager.models.asset import Asset
-                from oyProjectManager.models.shot import Shot
-
-                first_part = None
-                if isinstance(versionable, Asset):
-                    first_part = "%s:%s" % (versionable.project.code, versionable.code)
-                elif isinstance(versionable, Shot):
-                    first_part = "%s:%s" % (
-                        versionable.project.code,
-                        versionable.sequence.code,
-                    )
-
-                return "%s:%s" % (
-                    first_part,
-                    "%s_%s_%s_v%03i_%s%s"
-                    % (
-                        v.base_name,
-                        v.take_name,
-                        v.type.code,
-                        v.version_number,
-                        v.created_by.initials,
-                        v.extension,
-                    ),
-                )
-        except ImportError:
-            return os.path.basename(pm.sceneName())
+        return os.path.basename(pm.sceneName())
 
     def launch(self, *args, **kwargs):
         """launch renderer command"""

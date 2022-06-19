@@ -1674,10 +1674,10 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("update_previous_versions_table_widget is finished")
 
     def get_new_version(self, publish=False):
-        """returns a :class:`~oyProjectManager.models.version.Version` instance
+        """returns a :class:`~stalker.models.version.Version` instance
         from the UI by looking at the input fields
 
-        :returns: :class:`~oyProjectManager.models.version.Version` instance
+        :returns: :class:`~stalker.models.version.Version` instance
         """
         # create a new version
         from stalker import Task

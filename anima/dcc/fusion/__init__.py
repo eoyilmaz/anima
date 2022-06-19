@@ -451,7 +451,7 @@ class Fusion(DCCBase):
 
         If it can't find any then returns None.
 
-        :return: :class:`~oyProjectManager.models.version.Version`
+        :return: :class:`~stalker.models.version.Version`
         """
         # full_path = self._root.knob('name').value()
         import os
@@ -463,12 +463,12 @@ class Fusion(DCCBase):
 
     def get_version_from_recent_files(self):
         """It will try to create a
-        :class:`~oyProjectManager.models.version.Version` instance by looking
+        :class:`~stalker.models.version.Version` instance by looking
         at the recent files list.
 
         It will return None if it can not find one.
 
-        :return: :class:`~oyProjectManager.models.version.Version`
+        :return: :class:`~stalker.models.version.Version`
         """
         # full_path = self.fusion_prefs["LastCompFile"]
         # return self.get_version_from_full_path(full_path)
@@ -495,7 +495,7 @@ class Fusion(DCCBase):
     def get_version_from_project_dir(self):
         """Tries to find a Version from the current project directory
 
-        :return: :class:`~oyProjectManager.models.version.Version`
+        :return: :class:`~stalker.models.version.Version`
         """
         versions = self.get_versions_from_path(self.project_directory)
         version = None
