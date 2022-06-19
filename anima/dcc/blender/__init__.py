@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 import bpy
 
@@ -64,8 +65,6 @@ class Blender(DCCBase):
 
         # create the folder if it doesn't exist
         try:
-            import os
-
             os.makedirs(version.absolute_path)
         except OSError:
             # already exists
@@ -249,8 +248,6 @@ class Blender(DCCBase):
         :param parent_ref:
         :return:
         """
-        import os
-
         versions = []
         for lib_name in bpy.data.libraries.keys():
             lib = bpy.data.libraries[lib_name]
@@ -274,8 +271,6 @@ class Blender(DCCBase):
         :param reference_resolution:
         :return:
         """
-        import os
-
         for lib_name in bpy.data.libraries.keys():
             lib = bpy.data.libraries[lib_name]
             file_path = lib.filepath
@@ -353,7 +348,8 @@ class Blender(DCCBase):
         view_layer = bpy.context.view_layer.name
 
         output_filename_template = (
-            f"//Outputs/renders/{view_layer}/{version_sig_name}_{view_layer}.####"
+            f"//Outputs/renders/v{version.version_number:03d}/"
+            f"{view_layer}/{version_sig_name}_{view_layer}.####"
         )
 
         render_file_full_path = output_filename_template
@@ -397,8 +393,6 @@ class Blender(DCCBase):
 
         :param context: The current context that this script is running at
         """
-        import os
-
         version = self.get_current_version()
 
         # store the current render settings
@@ -510,8 +504,6 @@ def render_variables_init(scene):
     )
 
     # create the render path
-    import os
-
     render_dir_name = os.path.dirname(bpy.path.abspath(scene.render.filepath))
     print("creating render dir: %s" % render_dir_name)
     logger.debug("creating render dir: %s" % render_dir_name)
