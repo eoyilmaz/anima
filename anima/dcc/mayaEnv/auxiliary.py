@@ -3025,6 +3025,7 @@ def update_cache_references(cache_type=ALEMBIC):
 
     updated_path_info = []
     for ref in pm.listReferences():
+        is_loaded = ref.isLoaded()
         path = ref.path
         if not path.endswith(CACHE_FORMAT_DATA[cache_type]["file_extension"]):
             continue
@@ -3049,6 +3050,11 @@ def update_cache_references(cache_type=ALEMBIC):
             # replace it
             updated_path_info.append((path, last_abc_file))
             ref.replaceWith(last_abc_file)
+            # preserve the loaded state
+            if is_loaded:
+                ref.load()
+            else:
+                ref.unload()
 
     if updated_path_info:
         print("###################")
