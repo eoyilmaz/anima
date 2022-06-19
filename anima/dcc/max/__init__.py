@@ -456,7 +456,10 @@ class Max(DCCBase):
         import os
 
         render_output_folder = os.path.join(
-            version.absolute_path, "Outputs", "renders"
+            version.absolute_path,
+            "Outputs",
+            "v{:03d}".format(version.version_number),
+            "renders"
         ).replace("\\", "/")
         version_sig_name = self.get_significant_name(version)
 
