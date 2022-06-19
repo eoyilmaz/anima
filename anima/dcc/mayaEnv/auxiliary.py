@@ -3051,9 +3051,7 @@ def update_cache_references(cache_type=ALEMBIC):
             updated_path_info.append((path, last_abc_file))
             ref.replaceWith(last_abc_file)
             # preserve the loaded state
-            if is_loaded:
-                ref.load()
-            else:
+            if not is_loaded:
                 ref.unload()
 
     if updated_path_info:

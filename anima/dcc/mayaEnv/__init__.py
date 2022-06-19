@@ -1475,6 +1475,7 @@ workspace -fr "translatorData" "Outputs/data";
         from stalker import Repository
 
         for ref in pm.listReferences():
+            is_loaded = ref.isLoaded()
             unresolved_path = os.path.normpath(ref.unresolvedPath()).replace("\\", "/")
 
             # check if it is already containing some environment variables
@@ -1490,6 +1491,8 @@ workspace -fr "translatorData" "Outputs/data";
                 logger.info("replacing reference: %s" % ref.path)
                 logger.info("replacing with: %s" % new_ref_path)
                 ref.replaceWith(new_ref_path)
+                if not is_loaded:
+                    ref.unload()
 
         # *********************************************************************
         # Texture Files
