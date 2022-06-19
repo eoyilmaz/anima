@@ -400,7 +400,8 @@ class Houdini(DCCBase):
         # output_filename = '$HIP/Outputs/renders/$OS/`$HIPNAME`_$OS.$F4.exr'
         import os
 
-        output_filename = "$HIP/Outputs/renders/$OS/%s_$OS.$F4.exr" % (
+        output_filename = "$HIP/Outputs/renders/v{:03d}/$OS/{}_$OS.$F4.exr".format(
+            version.version_number,
             os.path.splitext(version.filename)[0]
         )
 
