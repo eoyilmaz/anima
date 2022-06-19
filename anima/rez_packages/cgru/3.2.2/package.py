@@ -155,3 +155,12 @@ def commands():
 
         env.APP_DIR = "${BLENDER_LOCATION}"
         env.APP_EXE = "${BLENDER_LOCATION}/blender"
+
+    # Fusion
+    if "fusion" in this.root:
+        env.FUSION_LOCATION = "/opt/BlackmagicDesign/Fusion{}/".format(
+            env.REZ_FUSION_MAJOR_VERSION
+        )
+        env.FUSION_CGRU_PATH = "${CGRU_LOCATION}/plugins/fusion"
+        env.APP_DIR = "${FUSION_LOCATION}"
+        env.APP_EXE = "Fusion"
