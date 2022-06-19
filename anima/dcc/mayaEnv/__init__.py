@@ -873,7 +873,10 @@ workspace -fr "translatorData" "Outputs/data";
     def set_render_filename(self, version):
         """sets the render file name"""
         render_output_folder = os.path.join(
-            version.absolute_path, "Outputs", "renders"
+            version.absolute_path,
+            "Outputs",
+            "renders",
+            "v{:03d}".format(version.version_number),
         ).replace("\\", "/")
 
         # image folder from the workspace.mel
