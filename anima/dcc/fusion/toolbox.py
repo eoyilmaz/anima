@@ -217,6 +217,14 @@ class ToolboxLayout(QtWidgets.QVBoxLayout):
             tooltip=GenericTools.create_slate_for_current_version.__doc__,
         )
 
+        # Cache Node Setup
+        create_button(
+            "Cache Node Setup",
+            general_tab_vertical_layout,
+            functools.partial(GenericTools.cache_node_setup),
+            tooltip=GenericTools.cache_node_setup.__doc__,
+        )
+
         # -------------------------------------------------------------------
         # Add the stretcher
         general_tab_vertical_layout.addStretch()
@@ -336,6 +344,30 @@ class GenericTools(object):
         # get the output path from one of the main savers
 
     @classmethod
+    def disable_auto_clip_browse(cls):
+        """Disable the AutoClipBrowse setting."""
+        from anima.dcc import fusion
+
+        fusion_env = fusion.Fusion()
+        auto_browse = fusion_env.fusion.GetPrefs("Global.UserInterface.AutoClipBrowse")
+        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", False)
+        return auto_browse
+
+    @classmethod
+    def set_auto_clip_browse(cls, auto_clip_browse):
+        """Set the AutoClipBrowse setting.
+
+        :param bool auto_clip_browse: The bool value to set the AutoClipBrowse attribute
+            to.
+        """
+        from anima.dcc import fusion
+
+        fusion_env = fusion.Fusion()
+        fusion_env.fusion.SetPrefs(
+            "Global.UserInterface.AutoClipBrowse", auto_clip_browse
+        )
+
+    @classmethod
     def loader_from_saver(cls):
         """creates a loader from the selected saver node"""
         from anima.dcc import fusion
@@ -348,18 +380,63 @@ class GenericTools(object):
         x, y = flow.GetPosTable(node).values()
 
         # instead of lock/unlock disable AutoClipBrowse temporarily
-        auto_browse = fusion_env.fusion.GetPrefs("Global.UserInterface.AutoClipBrowse")
-        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", False)
+        auto_browse = cls.disable_auto_clip_browse()
 
         loader_node = comp.Loader()
         loader_node.Clip[0] = node.Clip[0]
-        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", auto_browse)
+        cls.set_auto_clip_browse(auto_browse)
 
         # set position near to the saver node
         flow.SetPos(loader_node, x + 1.0, y)
         flow.Select(node, False)
         flow.Select(loader_node, True)
         comp.SetActiveTool(loader_node)
+
+    @classmethod
+    def cache_node_setup(cls):
+        """Create a Saver node for the selected node that renders the cache."""
+        from anima.dcc import fusion
+
+        fusion_env = fusion.Fusion()
+        comp = fusion_env.comp
+        attributes = comp.GetAttrs()
+        flow = comp.CurrentFrame.FlowView
+        node = comp.ActiveTool
+        node_name = node.GetAttrs("TOOLS_Name")
+        first_frame = attributes["COMPN_RenderStartTime"]
+        path = "Project:/Comp/Outputs/cache/{}.{:04d}.raw".format(
+            node_name, int(first_frame)
+        )
+
+        auto_browse = cls.disable_auto_clip_browse()
+        # create a loader with the path
+        loader_node = comp.Loader()
+        loader_node.SetAttrs({"TOOLS_Name": "{}_CacheLoader".format(node_name)})
+        loader_node.Clip[0] = path
+
+        # get all node outputs
+        output = node.FindMainOutput(1)
+        connected_inputs = output.GetConnectedInputs()
+
+        # connect it to the other nodes
+        for connected_input in connected_inputs.values():
+            connected_input.ConnectTo(loader_node)
+
+        saver_node = comp.Saver({"Input": node})
+        saver_node.SetAttrs({"TOOLS_Name": "{}_CacheSaver".format(node_name)})
+        saver_node.Clip[0] = path
+        flow.Select(saver_node, False)
+        comp.SetActiveTool(None)
+        cls.set_auto_clip_browse(auto_browse)
+
+        # place the nodes next to the current node
+        x, y = flow.GetPosTable(node).values()
+        flow.SetPos(saver_node, x, y + 1.0)
+        flow.SetPos(loader_node, x, y + 2.0)
+        flow.Select(node, False)
+        flow.Select(loader_node, True)
+        flow.Select(saver_node, True)
+        comp.SetActiveTool(saver_node)
 
     @classmethod
     def delete_recent_comps(cls):
