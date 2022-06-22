@@ -404,8 +404,11 @@ class GenericTools(object):
         node = comp.ActiveTool
         node_name = node.GetAttrs("TOOLS_Name")
         first_frame = attributes["COMPN_RenderStartTime"]
-        path = "Project:/Comp/Outputs/cache/{}.{:04d}.raw".format(
-            node_name, int(first_frame)
+        path = (
+            "Project:/Comp/Outputs/cache/{node_name}/"
+            "{node_name}.{first_frame:04d}.raw".format(
+                node_name=node_name, first_frame=int(first_frame)
+            )
         )
 
         auto_browse = cls.disable_auto_clip_browse()
