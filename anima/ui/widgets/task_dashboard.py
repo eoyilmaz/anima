@@ -237,7 +237,11 @@ class TaskDashboardWidget(QtWidgets.QWidget):
             self.description_field_is_updating = True
             self.description_field.setText(self._task.description)
             self.description_field_is_updating = False
-            self.task_progress.setValue(self._task.percent_complete)
+            if self._task.schedule_seconds > 0:
+                # TODO: This is a bug in Stalker which raises ZeroDivisionError
+                self.task_progress.setValue(self._task.percent_complete)
+            else:
+                self.task_progress.setValue(0)
         else:
             self.description_field_is_updating = True
             self.description_field.setText("")
