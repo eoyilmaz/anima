@@ -365,7 +365,7 @@ class ShotClip(object):
         self._shot_code = None
 
     def create_shot_hierarchy(self, handle=0, take_name=None):
-        """creates the related shot hierarchy
+        """Create the related shot hierarchy.
 
         :param int handle: The handle on each side of the clip. The default value is 0.
         :param str take_name: The take_name of the created Plate. The default value is DEFAULT_TAKE_NAME.
@@ -793,12 +793,13 @@ class ShotClip(object):
         return type_instance
 
     def create_render_job(self, handle=0, take_name=None, preset_name=None):
-        """creates render job for the clip
+        """Create render job for the clip.
 
         :param int handle: The handles on each side of the clip. The default value is 0.
-        :param str take_name: The take_name of the created Version. Default value is DEFAULT_DEFAULT_TAKE_NAME.
-        :param str preset_name: The template name in Resolve to use when exporting the shot. The default is
-          DEFAULT_RENDER_PRESET_NAME.
+        :param str take_name: The take_name of the created Version. Default value is
+            DEFAULT_DEFAULT_TAKE_NAME.
+        :param str preset_name: The template name in Resolve to use when exporting the
+            shot. The default is DEFAULT_RENDER_PRESET_NAME.
         """
         if take_name is None:
             take_name = DEFAULT_TAKE_NAME

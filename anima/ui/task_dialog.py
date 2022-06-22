@@ -487,96 +487,64 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     def _setup_signals(self):
         """set the signals"""
         # Entity type changed
-        QtCore.QObject.connect(
-            self.entity_type_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.entity_type_combo_box_changed,
+        self.entity_type_combo_box.currentIndexChanged.connect(
+            self.entity_type_combo_box_changed
         )
 
         # project_combo_box changed
-        QtCore.QObject.connect(
-            self.projects_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.projects_combo_box_changed,
+        self.projects_combo_box.currentIndexChanged.connect(
+            self.projects_combo_box_changed
         )
 
         # name_line_edit is changed
-        QtCore.QObject.connect(
-            self.name_line_edit,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.name_line_edit_changed,
-        )
+        self.name_line_edit.textChanged.connect(self.name_line_edit_changed)
 
         # code_line_edit is changed
-        QtCore.QObject.connect(
-            self.code_line_edit,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.code_line_edit_changed,
-        )
+        self.code_line_edit.textChanged.connect(self.code_line_edit_changed)
 
         # pick_task_push_button
-        QtCore.QObject.connect(
-            self.pick_parent_task_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.pick_parent_task_push_button_clicked,
+        self.pick_parent_task_push_button.clicked.connect(
+            self.pick_parent_task_push_button_clicked
         )
 
         # add_depending_task_push_button
-        QtCore.QObject.connect(
-            self.add_depending_task_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.add_depending_task_push_button_clicked,
+        self.add_depending_task_push_button.clicked.connect(
+            self.add_depending_task_push_button_clicked
         )
 
         # remove_depending_task_push_button
-        QtCore.QObject.connect(
-            self.remove_depending_task_push_button,
-            QtCore.SIGNAL("clicked()"),
-            self.remove_depending_task_push_button_clicked,
+        self.remove_depending_task_push_button.clicked.connect(
+            self.remove_depending_task_push_button_clicked
         )
 
         # depends_to_list_widget doubleClicked
-        QtCore.QObject.connect(
-            self.depends_to_list_widget,
-            QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.depends_to_list_widget_item_double_clicked,
+        self.depends_to_list_widget.itemDoubleClicked.connect(
+            self.depends_to_list_widget_item_double_clicked
         )
 
         # resources_combo_box changed
-        QtCore.QObject.connect(
-            self.resources_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.resources_combo_box_changed,
+        self.resources_combo_box.currentIndexChanged.connect(
+            self.resources_combo_box_changed
         )
 
         # resources_list_widget doubleClicked
-        QtCore.QObject.connect(
-            self.resources_list_widget,
-            QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.resources_list_widget_item_double_clicked,
+        self.resources_list_widget.itemDoubleClicked.connect(
+            self.resources_list_widget_item_double_clicked
         )
 
         # responsible_combo_box changed
-        QtCore.QObject.connect(
-            self.responsible_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.responsible_combo_box_changed,
+        self.responsible_combo_box.currentIndexChanged.connect(
+            self.responsible_combo_box_changed
         )
 
         # responsible_list_widget doubleClicked
-        QtCore.QObject.connect(
-            self.responsible_list_widget,
-            QtCore.SIGNAL("itemDoubleClicked(QListWidgetItem*)"),
-            self.responsible_list_widget_item_double_clicked,
+        self.responsible_list_widget.itemDoubleClicked.connect(
+            self.responsible_list_widget_item_double_clicked
         )
 
         # button box
-        QtCore.QObject.connect(
-            self.button_box, QtCore.SIGNAL("accepted()"), self.accept
-        )
-        QtCore.QObject.connect(
-            self.button_box, QtCore.SIGNAL("rejected()"), self.reject
-        )
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
 
     def _set_defaults(self):
         """sets the defaults fro the ui"""
@@ -1282,31 +1250,37 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             from stalker import Entity, Task, Project
 
             parent_task = Entity.query.get(parent_task_id)
-
             if parent_task is not None:
                 self.set_parent_task(parent_task)
-
                 if isinstance(parent_task, Task):
                     # also validate if this parent task is ok
-                    if self.tasks[0] and self.mode == self.UPDATE_MODE:
-                        # check if the picked parent task is suitable for the updated
-                        # task
-                        if (
-                            self.tasks[0] in parent_task.parents
-                            or self.tasks[0] == parent_task
-                        ):
-                            # warn the user by invalidating the field
-                            self.parent_task_line_edit.set_invalid(
-                                "New parent is not valid!"
-                            )
-                        else:
-                            self.parent_task_line_edit.set_valid()
+                    invalid = False
+                    for task in self.tasks:
+                        if self.mode == self.UPDATE_MODE:
+                            # check if the picked parent task
+                            # is suitable for the updated task
+                            if task in parent_task.parents or task == parent_task:
+                                # warn the user by invalidating the field
+                                self.parent_task_line_edit.set_invalid(
+                                    "New parent is not valid!"
+                                )
+                                invalid = True
+                                break
+                    if not invalid:
+                        self.parent_task_line_edit.set_valid()
 
         # delete the dialog
         task_picker_main_dialog.deleteLater()
 
     def projects_combo_box_changed(self, project_name):
         """runs when the project_combo_box is changed"""
+        if not isinstance(project_name, str):
+            logger.debug(
+                "Project.name should be a str, not {}".format(
+                    project_name.__class__.__name__
+                )
+            )
+            return
         # reset the parent task
         self.parent_task_line_edit.setText("")
 
@@ -1850,22 +1824,22 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                         # format so set the shot.image_format to None
                         self.tasks[0].image_format = None
 
-                from stalker.exceptions import CircularDependencyError
-
-                try:
-                    self.tasks[0].parent = parent_task
-                except CircularDependencyError as e:
-                    DBSession.rollback()
-                    QtWidgets.QMessageBox.critical(self, "Error", str(e))
-                    # revert the parent field
-                    if self.tasks[0].parent:
-                        self.parent_task_line_edit.setText(
-                            self.get_task_hierarchy_name(self.tasks[0].parent)
-                        )
-                    else:
-                        self.parent_task_line_edit.setText("")
-                    self.parent_task_line_edit.set_valid()
-                    return
+            from stalker.exceptions import CircularDependencyError
+            try:
+                for task in self.tasks:
+                    task.parent = parent_task
+            except CircularDependencyError as e:
+                DBSession.rollback()
+                QtWidgets.QMessageBox.critical(self, "Error", str(e))
+                # revert the parent field
+                if self.tasks[0].parent:
+                    self.parent_task_line_edit.setText(
+                        self.get_task_hierarchy_name(self.tasks[0].parent)
+                    )
+                else:
+                    self.parent_task_line_edit.setText("")
+                self.parent_task_line_edit.set_valid()
+                return
 
             try:
                 from stalker.exceptions import StatusError
