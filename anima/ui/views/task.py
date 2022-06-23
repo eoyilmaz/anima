@@ -62,12 +62,8 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         self.main_layout.addWidget(self.button_box)
 
         # setup signals
-        QtCore.QObject.connect(
-            self.button_box, QtCore.SIGNAL("accepted()"), self.accept
-        )
-        QtCore.QObject.connect(
-            self.button_box, QtCore.SIGNAL("rejected()"), self.reject
-        )
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
 
 
 class TaskTreeView(QtWidgets.QTreeView):
@@ -78,6 +74,12 @@ class TaskTreeView(QtWidgets.QTreeView):
         allow_multi_selection = False
         try:
             allow_multi_selection = kwargs.pop("allow_multi_selection")
+        except KeyError:
+            pass
+
+        allow_drag = False
+        try:
+            allow_drag = kwargs.pop("allow_drag")
         except KeyError:
             pass
 
@@ -96,6 +98,13 @@ class TaskTreeView(QtWidgets.QTreeView):
         if allow_multi_selection:
             self.setSelectionMode(self.ExtendedSelection)
 
+        if allow_drag:
+            self.setSelectionMode(self.ExtendedSelection)
+            self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
+            self.setDragEnabled(True)
+            self.setAcceptDrops(True)
+            self.setDropIndicatorShown(True)
+
         # delegate = TaskItemDelegate(self)
         # self.setItemDelegate(delegate)
         self.setup_signals()
@@ -103,28 +112,13 @@ class TaskTreeView(QtWidgets.QTreeView):
     def setup_signals(self):
         """connects the signals to slots"""
         # fit column 0 on expand/collapse
-        QtCore.QObject.connect(
-            self, QtCore.SIGNAL("expanded(QModelIndex)"), self.expand_all_selected
-        )
-
-        QtCore.QObject.connect(
-            self, QtCore.SIGNAL("collapsed(QModelIndex)"), self.collapse_all_selected
-        )
+        self.expanded.connect(self.expand_all_selected)
+        self.collapsed.connect(self.collapse_all_selected)
 
         # custom context menu for the tasks_treeView
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-
-        QtCore.QObject.connect(
-            self,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self.show_context_menu,
-        )
-
-        QtCore.QObject.connect(
-            self,
-            QtCore.SIGNAL("doubleClicked(const QModelIndex&)"),
-            self.double_clicked_on_entity,
-        )
+        self.customContextMenuRequested.connect(self.show_context_menu)
+        self.doubleClicked.connect(self.double_clicked_on_entity)
 
     def replace_with_other(self, layout, index, tree_view=None):
         """Replaces the given tree_view with itself

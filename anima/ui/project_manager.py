@@ -87,9 +87,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
         self.settings.setValue("windowState", self.saveState())
-        self.settings.setValue(
-            "last_viewed_task_id", self.task_dashboard_widget.task.id
-        )
+        if self.task_dashboard_widget.task:
+            self.settings.setValue(
+                "last_viewed_task_id", self.task_dashboard_widget.task.id
+            )
 
         self.settings.endGroup()
 
@@ -134,13 +135,8 @@ class MainWindow(QtWidgets.QMainWindow):
             # hide logout_action
             self.login_action.setVisible(False)
 
-        QtCore.QObject.connect(
-            self.login_action, QtCore.SIGNAL("triggered()"), self.login
-        )
-
-        QtCore.QObject.connect(
-            self.logout_action, QtCore.SIGNAL("triggered()"), self.logout
-        )
+        self.login_action.triggered.connect(self.login)
+        self.logout_action.triggered.connect(self.logout)
 
         file_menu.addSeparator()
 
@@ -152,25 +148,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # save_action = file_menu.addAction('&Save...')
 
         # run the new Project dialog
-        QtCore.QObject.connect(
-            create_project_action,
-            QtCore.SIGNAL("triggered()"),
-            self.create_project_action_clicked,
-        )
+        create_project_action.triggered.connect(self.create_project_action_clicked)
 
         file_menu.addSeparator()
 
         exit_action = file_menu.addAction("E&xit")
-        QtCore.QObject.connect(exit_action, QtCore.SIGNAL("triggered()"), self.close)
+        exit_action.triggered.connect(self.close)
 
         view_menu = self.menuBar().addMenu(self.tr("&View"))
 
         reset_action = view_menu.addAction("&Reset Window States")
-        QtCore.QObject.connect(
-            reset_action, QtCore.SIGNAL("triggered()"), self.reset_window_state
-        )
-
-        # QtWidgets.QAction.
+        reset_action.triggered.connect(self.reset_window_state)
 
     def create_project_action_clicked(self):
         """runs when new project menu action is clicked"""
@@ -251,11 +239,7 @@ class MainWindow(QtWidgets.QMainWindow):
         create_project_action = file_toolbar.addAction("Create Project")
 
         # Create signals
-        QtCore.QObject.connect(
-            create_project_action,
-            QtCore.SIGNAL("triggered()"),
-            self.create_project_action_clicked,
-        )
+        create_project_action.triggered.connect(self.create_project_action_clicked)
 
     def create_dock_widgets(self):
         """creates the dock widgets"""
@@ -266,19 +250,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # create the TaskTreeView as the main widget
         from anima.ui.views.task import TaskTreeView
 
-        self.tasks_tree_view = TaskTreeView(parent=self, allow_multi_selection=True)
+        self.tasks_tree_view = TaskTreeView(
+            parent=self, allow_multi_selection=True, allow_drag=True
+        )
         self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         self.tasks_tree_view.show_completed_projects = True
         self.tasks_tree_view.fill()
 
         # also setup the signal
-        QtCore.QObject.connect(
-            self.tasks_tree_view.selectionModel(),
-            QtCore.SIGNAL(
-                "selectionChanged(const QItemSelection &, " "const QItemSelection &)"
-            ),
-            self.tasks_tree_view_changed,
+        self.tasks_tree_view.selectionModel().selectionChanged.connect(
+            self.tasks_tree_view_changed
         )
 
         self.project_dock_widget.setWidget(self.tasks_tree_view)

@@ -322,11 +322,73 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         :return:
         """
         if not model_index.isValid():
-            return QtCore.Qt.ItemIsEnabled
+            return (
+                QtCore.Qt.ItemIsEnabled
+                | QtCore.Qt.ItemIsDropEnabled
+                # | default_flags
+            )
 
-        # super(TaskTreeModel, self).flags(model_index)
-        return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable  # \
-        # | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDropEnabled
+        return (
+            QtCore.Qt.ItemIsEnabled
+            | QtCore.Qt.ItemIsSelectable
+            | QtCore.Qt.ItemIsDragEnabled
+            | QtCore.Qt.ItemIsDropEnabled
+            # | default_flags
+        )
+
+    def canDropMimeData(self, data, action, row, column, parent):
+        return True
+
+    def mimeTypes(self):
+        return ['application/vnd.treeviewdragdrop.list']
+
+    def mimeData(self, indexes):
+        encoded_data = QtCore.QByteArray()
+        stream = QtCore.QDataStream(encoded_data, QtCore.QIODevice.WriteOnly)
+        for index in indexes:
+            if index.isValid():
+                item = self.itemFromIndex(index)
+                if isinstance(item, TaskItem):
+                    text = "{}".format(item.task.id)
+                    stream << QtCore.QByteArray(text.encode('utf-8'))
+        mime_data = QtCore.QMimeData()
+        mime_data.setData('application/vnd.treeviewdragdrop.list', encoded_data)
+        return mime_data
+
+    def dropMimeData(self, data, action, row, column, parent):
+        """Handle drop data."""
+        if action == QtCore.Qt.IgnoreAction:
+            return True
+        if not data.hasFormat('application/vnd.treeviewdragdrop.list'):
+            return False
+
+        parent_item = self.itemFromIndex(parent)
+        if not isinstance(parent_item, TaskItem):
+            return False
+        from stalker import Task
+        parent_task = Task.query.get(parent_item.task.id)
+        if not parent_task:
+            return False
+
+        encoded_data = data.data('application/vnd.treeviewdragdrop.list')
+        stream = QtCore.QDataStream(encoded_data, QtCore.QIODevice.ReadOnly)
+        dropped_ids = []
+        while not stream.atEnd():
+            text = QtCore.QByteArray()
+            stream >> text
+            text = bytes(text).decode('utf-8')
+            dropped_ids.append(text)
+        for id_ in dropped_ids:
+            dropped_task = Task.query.get(id_)
+            dropped_task.parent = parent_task
+
+        from stalker.db.session import DBSession
+        DBSession.commit()
+        parent_item.reload()
+        return True
+
+    def supportedDropActions(self):
+        return QtCore.Qt.MoveAction
 
     def populateTree(self, projects):
         """populates tree with user projects"""
