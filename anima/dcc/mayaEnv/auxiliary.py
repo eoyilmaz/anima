@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+import copy
+
 import os
 import re
 
@@ -1665,7 +1667,9 @@ class Playblaster(object):
             selected_start_time, selected_end_time = list(
                 map(
                     int,
-                    pm.timeControl(pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True),
+                    pm.timeControl(
+                        pm.melGlobals["$gPlayBackSlider"], q=1, rangeArray=True
+                    ),
                 )
             )
 
@@ -2428,7 +2432,9 @@ def get_cacheable_nodes(reference_node=None):
     if not reference_node:
         transform_nodes = pm.ls(type=pm.nt.Transform)
     else:
-        transform_nodes = pm.ls(reference_node.nodes(recursive=True), type=pm.nt.Transform)
+        transform_nodes = pm.ls(
+            reference_node.nodes(recursive=True), type=pm.nt.Transform
+        )
 
     caller = pdm.register(len(transform_nodes), "Searching for Cacheable Nodes")
     for node in transform_nodes:
@@ -2567,23 +2573,37 @@ def export_cache_of_nodes(
 
             # get related references
             # sometimes the node is parented or constrained to an object
-            related_references = []
-            nodes_to_evaluate = [cacheable_node] + cacheable_node.listRelatives(
-                ad=1, type=pm.nt.Transform
-            )
-            for node in nodes_to_evaluate:
-                for constraint_node in pm.ls(node.listHistory(), type=pm.nt.Constraint):
-                    for input_node in constraint_node.inputs():
-                        related_ref = input_node.referenceFile()
-                        if related_ref is not None:
-                            # go to the top most reference
-                            parent_ref = related_ref.parent()
-                            while parent_ref:
-                                related_ref = parent_ref
-                                parent_ref = related_ref.parent()
+            # try to find all the required references to load for this cacheable node
+            # to work properly
+            related_references = set()
+            references_to_traverse = {cacheable_node.referenceFile()}
+            references_already_visited = set()
 
-                            if related_ref != ref:
-                                related_references.append(related_ref)
+            while references_to_traverse:
+                current_ref = references_to_traverse.pop()
+                if current_ref in references_already_visited:
+                    # already scanned this reference
+                    continue
+                else:
+                    references_already_visited.add(current_ref)
+                roots_of_ref_node = get_root_nodes(current_ref)
+                nodes_to_evaluate = copy.copy(roots_of_ref_node)
+                for root_node in roots_of_ref_node:
+                    nodes_to_evaluate += root_node.listRelatives(
+                        ad=1, type=pm.nt.Transform
+                    )
+                for node in nodes_to_evaluate:
+                    for constraint_node in pm.ls(
+                        node.listHistory(), type=pm.nt.Constraint
+                    ):
+                        for input_node in constraint_node.inputs():
+                            related_ref = input_node.referenceFile()
+                            if related_ref is not None:
+                                # go to the top most reference
+                                related_ref = related_ref.topmost_parent()
+                                if related_ref != ref:
+                                    related_references.add(related_ref)
+                                    references_to_traverse.add(related_ref)
 
             # make it a list of unique values
             related_references = list(set(related_references))
@@ -3762,7 +3782,9 @@ def orphan_rig_finder(project):
     rig_type = Type.query.filter(Type.name == "Rig").first()
     look_dev_type = Type.query.filter(Type.name == "Look Development").first()
 
-    all_rig_tasks = Task.query.filter(Task.project == project).filter(Task.type == rig_type).all()
+    all_rig_tasks = (
+        Task.query.filter(Task.project == project).filter(Task.type == rig_type).all()
+    )
     total_rig_task_count = len(all_rig_tasks)
     print("found rig count: {}".format(total_rig_task_count))
     skipped = []
@@ -3778,31 +3800,35 @@ def orphan_rig_finder(project):
         # get the latest published rig version
         # we need to consider all the takes differently
 
-        unique_takes = DBSession.query(Version.take_name)\
-            .filter(Version.task_id == rig_task.id)\
-            .filter(~Version.take_name.contains("@"))\
-            .distinct()\
+        unique_takes = (
+            DBSession.query(Version.take_name)
+            .filter(Version.task_id == rig_task.id)
+            .filter(~Version.take_name.contains("@"))
+            .distinct()
             .all()
+        )
         unique_takes = [t[0] for t in unique_takes]
 
         # check LookDev first
         # if no LookDev with the same take_name
         # we found an orphan rig
-        look_dev_task = Task.query.\
-            filter(Task.parent_id==rig_task.parent.id).\
-            filter(Task.type == look_dev_type).\
-            first()
+        look_dev_task = (
+            Task.query.filter(Task.parent_id == rig_task.parent.id)
+            .filter(Task.type == look_dev_type)
+            .first()
+        )
 
         rig_task_id_as_str = str(rig_task.id)
         for take_name in unique_takes:
             # -----------------------------
             # get the latest published rig version
-            latest_published_rig_version = Version.query.\
-                filter(Version.task_id == rig_task.id).\
-                filter(Version.take_name == take_name).\
-                filter(Version.is_published == True).\
-                order_by(Version.version_number.desc()).\
-                first()
+            latest_published_rig_version = (
+                Version.query.filter(Version.task_id == rig_task.id)
+                .filter(Version.take_name == take_name)
+                .filter(Version.is_published == True)
+                .order_by(Version.version_number.desc())
+                .first()
+            )
 
             if latest_published_rig_version is None:
                 # no rig published
@@ -3820,19 +3846,20 @@ def orphan_rig_finder(project):
                     None: "no look dev task",
                     "look_dev_task_id": None,
                     "look_dev_take_name": "Main",
-                    "no_render": []
+                    "no_render": [],
                 }
 
                 continue
 
             # -----------------------------
             # get latest published look dev version with the same take name
-            latest_published_look_dev_version = Version.query.\
-                filter(Version.task_id == look_dev_task.id).\
-                filter(Version.take_name == take_name).\
-                filter(Version.is_published == True).\
-                order_by(Version.version_number.desc()).\
-                first()
+            latest_published_look_dev_version = (
+                Version.query.filter(Version.task_id == look_dev_task.id)
+                .filter(Version.take_name == take_name)
+                .filter(Version.is_published == True)
+                .order_by(Version.version_number.desc())
+                .first()
+            )
             if latest_published_look_dev_version is None:
                 # no look dev version
                 if rig_task_id_as_str not in orphan_rigs:
@@ -3842,10 +3869,9 @@ def orphan_rig_finder(project):
                     None: "no look dev published with same take",
                     "look_dev_task_id": None,
                     "look_dev_take_name": "Main",
-                    "no_render": []
+                    "no_render": [],
                 }
 
                 continue
 
     return orphan_rigs
-
