@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+from functools import partial
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
@@ -943,12 +944,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if self._tasks and len(self._tasks) > 1:
             self.multi_selection_mode = True
 
-    def entity_type_combo_box_changed(self, entity_type):
+    def entity_type_combo_box_changed(self, index):
         """runs when the entity_type_combo_box has changed
 
-        :param str entity_type:
+        :param int index:
         :return:
         """
+        entity_type = ""
+        if isinstance(index, int):
+            entity_type = self.entity_type_combo_box.itemText(index)
+        elif isinstance(index, str):
+            entity_type = index
+
         if entity_type == "Task":
             # code fields
             self.code_label.setVisible(False)
@@ -1272,8 +1279,14 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # delete the dialog
         task_picker_main_dialog.deleteLater()
 
-    def projects_combo_box_changed(self, project_name):
+    def projects_combo_box_changed(self, index):
         """runs when the project_combo_box is changed"""
+        project_name = ""
+        if isinstance(index, int):
+            project_name = self.projects_combo_box.itemText(index)
+        elif isinstance(index, str):
+            project_name = index
+
         if not isinstance(project_name, str):
             logger.debug(
                 "Project.name should be a str, not {}".format(
@@ -1465,12 +1478,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             for item in items:
                 list_widget.takeItem(list_widget.row(item))
 
-    def resources_combo_box_changed(self, item_text):
+    def resources_combo_box_changed(self, index):
         """runs when resources_combo_box item changed
 
-        :param str item_text: Currently selected item text
+        :param int index: Item index
         :return:
         """
+        item_text = ""
+        if isinstance(index, int):
+            item_text = self.resources_combo_box.itemText(index)
+        elif isinstance(index, str):
+            item_text = index
+
         if item_text == "":
             return
 
@@ -1501,12 +1520,18 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
         self.updating_resources_combo_box = False
 
-    def responsible_combo_box_changed(self, item_text):
+    def responsible_combo_box_changed(self, index):
         """runs when responsible_combo_box item changed
 
-        :param str item_text: Currently selected item text
+        :param int index: Item index
         :return:
         """
+        item_text = ""
+        if isinstance(index, int):
+            item_text = self.responsible_combo_box.itemText(index)
+        elif isinstance(index, str):
+            item_text = index
+
         if item_text == "":
             return
 
