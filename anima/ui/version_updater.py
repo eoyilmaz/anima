@@ -4,16 +4,7 @@ from anima import logger
 from anima.dcc import empty_reference_resolution
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.models.version import VersionTreeModel
-from anima.ui.lib import QtGui, QtCore, QtWidgets
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import version_updater_UI_pyside as version_updater_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import version_updater_UI_pyside2 as version_updater_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import version_updater_UI_pyqt4 as version_updater_UI
+from anima.ui.lib import QtCore, QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -32,7 +23,7 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The main dialog of the version updater system
 
     The version_tuple list consist of a Version instance and a reference
@@ -44,15 +35,17 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
 
     def __init__(self, environment=None, parent=None, reference_resolution=None):
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
+        self.new_versions = []
+        self.versions_tree_view = None
+        self.select_none_push_button = None
+        self.select_all_push_button = None
+        self.update_push_button = None
+        self.cancel_push_button = None
 
-        # change the window title
-        self.setWindowTitle(self.windowTitle())
+        self.setup_ui()
 
         # center to the window
         self.center_window()
-
-        self.new_versions = []
 
         # setup the environment
         self.environment = self._validate_environment(environment)
@@ -66,9 +59,92 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
                 reference_resolution = empty_reference_resolution()
         self.reference_resolution = reference_resolution
 
-        self.setup_signals()
-
         self.fill_ui()
+
+    def setup_ui(self):
+        """Create UI elements."""
+        # change the window title
+        self.setWindowTitle("Version Updater")
+
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.resize(1304, 753)
+        main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Description
+        description_label = QtWidgets.QLabel(self)
+        description_label.setText(
+            "<html>"
+            "   <head/>"
+            "   <body>"
+            "       <p>"
+            '           <span style=" color:#c00000;">Red Versions need update,</span>'
+            '           <span style=" color:#00c000;">Greens are OK</span>, '
+            "           check the Versions that you want to trigger an update."
+            "       </p>"
+            "   </body>"
+            "</html>",
+        )
+        main_layout.addWidget(description_label)
+
+        # Versions Tree View
+        self.versions_tree_view = QtWidgets.QTreeView(self)
+        # fit column 0 on expand/collapse
+        self.versions_tree_view.expanded.connect(
+            self.versions_tree_view_auto_fit_column
+        )
+        self.versions_tree_view.collapsed.connect(
+            self.versions_tree_view_auto_fit_column
+        )
+
+        # custom context menu for the version_treeView
+        self.versions_tree_view.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.versions_tree_view.customContextMenuRequested.connect(
+            self.show_versions_tree_view_context_menu
+        )
+        main_layout.addWidget(self.versions_tree_view)
+
+        # Main Widget
+        main_widget = QtWidgets.QWidget(self)
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred
+        )
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(main_widget.sizePolicy().hasHeightForWidth())
+        main_widget.setSizePolicy(size_policy)
+        layout = QtWidgets.QHBoxLayout(main_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addItem(
+            QtWidgets.QSpacerItem(
+                40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            )
+        )
+
+        # Select None
+        self.select_none_push_button = QtWidgets.QPushButton(main_widget)
+        self.select_none_push_button.setText("Select None")
+        self.select_none_push_button.clicked.connect(self.select_no_version)
+        layout.addWidget(self.select_none_push_button)
+
+        # Select All
+        self.select_all_push_button = QtWidgets.QPushButton(main_widget)
+        self.select_all_push_button.setText("Select All")
+        self.select_all_push_button.clicked.connect(self.select_all_versions)
+        layout.addWidget(self.select_all_push_button)
+
+        # Update
+        self.update_push_button = QtWidgets.QPushButton(main_widget)
+        self.update_push_button.setText("Update")
+        self.update_push_button.clicked.connect(self.update_versions)
+        layout.addWidget(self.update_push_button)
+
+        # Cancel
+        self.cancel_push_button = QtWidgets.QPushButton(main_widget)
+        self.cancel_push_button.setText("Cancel")
+        self.cancel_push_button.clicked.connect(self.close)
+        layout.addWidget(self.cancel_push_button)
+        main_layout.addWidget(main_widget)
+
 
     def _validate_environment(self, environment):
         """validates the given DCC value"""
@@ -87,42 +163,17 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
 
         return environment
 
-    def setup_signals(self):
-        """sets up the signals"""
-        # SIGNALS
-        # cancel button
-        self.cancel_pushButton.clicked.connect(self.close)
-
-        # select all button
-        self.selectAll_pushButton.clicked.connect(self._select_all_versions)
-
-        # select none button
-        self.selectNone_pushButton.clicked.connect(self._select_no_version)
-
-        # update button
-        self.update_pushButton.clicked.connect(self.update_versions)
-
-        # fit column 0 on expand/collapse
-        self.versions_treeView.expanded.connect(self.versions_treeView_auto_fit_column)
-        self.versions_treeView.collapsed.connect(self.versions_treeView_auto_fit_column)
-
-        # custom context menu for the version_treeView
-        self.versions_treeView.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
-        self.versions_treeView.customContextMenuRequested.connect(
-            self._show_versions_treeView_context_menu
-        )
-
-    def versions_treeView_auto_fit_column(self):
+    def versions_tree_view_auto_fit_column(self):
         """fits columns to content"""
-        self.versions_treeView.resizeColumnToContents(0)
-        self.versions_treeView.resizeColumnToContents(1)
-        self.versions_treeView.resizeColumnToContents(2)
-        self.versions_treeView.resizeColumnToContents(3)
-        self.versions_treeView.resizeColumnToContents(4)
-        self.versions_treeView.resizeColumnToContents(5)
-        self.versions_treeView.resizeColumnToContents(6)
+        self.versions_tree_view.resizeColumnToContents(0)
+        self.versions_tree_view.resizeColumnToContents(1)
+        self.versions_tree_view.resizeColumnToContents(2)
+        self.versions_tree_view.resizeColumnToContents(3)
+        self.versions_tree_view.resizeColumnToContents(4)
+        self.versions_tree_view.resizeColumnToContents(5)
+        self.versions_tree_view.resizeColumnToContents(6)
 
-    def fill_versions_treeView(self):
+    def fill_versions_tree_view(self):
         """sets up the versions_treeView"""
         logger.debug("start filling versions_treeView")
         logger.debug("creating a new model")
@@ -133,7 +184,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
         # populate with all update items
         version_tree_model.populateTree(self.reference_resolution["root"])
 
-        self.versions_treeView.setModel(version_tree_model)
+        self.versions_tree_view.setModel(version_tree_model)
 
         logger.debug("setting up signals for versions_treeView_changed")
         # versions_treeView
@@ -144,38 +195,38 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
         #     self.versions_treeView_changed
         # )
 
-        self.versions_treeView.is_updating = False
-        self.versions_treeView_auto_fit_column()
+        self.versions_tree_view.is_updating = False
+        self.versions_tree_view_auto_fit_column()
         logger.debug("finished filling versions_treeView")
 
     def fill_ui(self):
         """fills the UI with the asset data"""
         # set the row count
-        self.fill_versions_treeView()
+        self.fill_versions_tree_view()
 
-    def _select_all_versions(self):
+    def select_all_versions(self):
         """selects all the versions in the tableWidget"""
-        version_tree_model = self.versions_treeView.model()
+        version_tree_model = self.versions_tree_view.model()
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
             version_item = version_tree_model.itemFromIndex(index)
             version_item.setCheckState(QtCore.Qt.Checked)
 
-    def _select_no_version(self):
+    def select_no_version(self):
         """deselects all versions in the tableWidget"""
-        version_tree_model = self.versions_treeView.model()
+        version_tree_model = self.versions_tree_view.model()
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
             version_item = version_tree_model.itemFromIndex(index)
             version_item.setCheckState(QtCore.Qt.Unchecked)
 
-    def _show_versions_treeView_context_menu(self, position):
+    def show_versions_tree_view_context_menu(self, position):
         """the custom context menu for the versions_treeView"""
         # convert the position to global screen position
-        global_position = self.versions_treeView.mapToGlobal(position)
+        global_position = self.versions_tree_view.mapToGlobal(position)
 
-        index = self.versions_treeView.indexAt(position)
-        model = self.versions_treeView.model()
+        index = self.versions_tree_view.indexAt(position)
+        model = self.versions_tree_view.model()
 
         # get the column 0 item which holds the Version instance
         # index = self.versions_treeView.model().index(index.row(), 0)
@@ -192,11 +243,6 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
         latest_published_version = None
         if version:
             latest_published_version = version.latest_published_version
-
-        item_action = item.action
-
-        # if item_action != 'create':
-        #    return
 
         from stalker import Version
 
@@ -280,7 +326,7 @@ class MainDialog(QtWidgets.QDialog, version_updater_UI.Ui_Dialog, AnimaDialogBas
 
         # append anything that is checked
 
-        version_tree_model = self.versions_treeView.model()
+        version_tree_model = self.versions_tree_view.model()
         for i in range(version_tree_model.rowCount()):
             index = version_tree_model.index(i, 0)
             version_item = version_tree_model.itemFromIndex(index)

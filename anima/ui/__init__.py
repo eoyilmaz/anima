@@ -11,7 +11,7 @@ QTPY = "QtPy"  # support for https://www.gihub.com/motttoso/Qt.py
 
 # set the default
 qt_lib_key = "QT_LIB"
-qt_lib = PYSIDE
+qt_lib = PYSIDE2
 
 ICON_CACHE = {}
 FONT_CACHE = {}

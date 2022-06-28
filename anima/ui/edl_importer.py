@@ -5,18 +5,8 @@ import subprocess
 import os
 from anima.utils import do_db_setup
 
-import anima
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui.lib import QtGui, QtCore, QtWidgets
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import edl_importer_UI_pyside as edl_importer_UI
-if IS_PYSIDE2():
-    from anima.ui.ui_compiled import edl_importer_UI_pyside2 as edl_importer_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import edl_importer_UI_pyqt4 as edl_importer_UI
+from anima.ui.lib import QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -58,7 +48,7 @@ class LineEdit(QtWidgets.QLineEdit):
         path = ""
         if mime_data.hasFormat("text/plain"):
             # on linux
-            path = mime_data().text().replace("file://", "").strip()
+            path = mime_data.text().replace("file://", "").strip()
         elif mime_data.hasUrls():
             # on windows
             url = mime_data.urls()[0]
@@ -66,7 +56,7 @@ class LineEdit(QtWidgets.QLineEdit):
         self.setText(path)
 
 
-class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The Main Window for EDL Importer.
 
     This is mainly written for AVID Media Composer. It makes it easy to import
@@ -78,7 +68,12 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
 
     def __init__(self):
         super(MainDialog, self).__init__()
-        self.setupUi(self)
+        self.media_files_path_line_edit = None
+        self.edl_path_line_edit = None
+        self.edl_preview_plain_text_edit = None
+        self.send_push_button = None
+
+        self.setup_ui()
 
         from anima import defaults
 
@@ -94,33 +89,58 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
             )
         )
 
-        self.edl_path_lineEdit = LineEdit()
-
-        self.formLayout.setWidget(
-            1, QtWidgets.QFormLayout.FieldRole, self.edl_path_lineEdit
-        )
-
-        self.setup_signals()
         self.restore_media_file_path()
 
         # connect to database
         do_db_setup()
 
-    def setup_signals(self):
-        """setting up signals"""
-        QtCore.QObject.connect(
-            self.media_files_path_lineEdit,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.store_media_file_path,
-        )
+    def setup_ui(self):
+        self.setWindowTitle("EDL Importer")
+        self.resize(923, 542)
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
 
-        QtCore.QObject.connect(
-            self.edl_path_lineEdit, QtCore.SIGNAL("textChanged(QString)"), self.open_edl
-        )
+        # Form Layout
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
+        main_layout.addLayout(form_layout)
 
-        QtCore.QObject.connect(
-            self.send_pushButton, QtCore.SIGNAL("clicked()"), self.send
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        # AVID Media Files Path
+        form_layout.setWidget(
+            0, label_role, QtWidgets.QLabel("AVID Media Files Path", self)
         )
+        self.media_files_path_line_edit = QtWidgets.QLineEdit(self)
+        form_layout.setWidget(0, field_role, self.media_files_path_line_edit)
+
+        # EDL Path
+        form_layout.setWidget(1, label_role, QtWidgets.QLabel("EDL Path", self))
+        self.edl_path_line_edit = LineEdit()
+        form_layout.setWidget(1, field_role, self.edl_path_line_edit)
+
+        # EDL Preview
+        self.edl_preview_plain_text_edit = QtWidgets.QPlainTextEdit(self)
+        self.edl_preview_plain_text_edit.setReadOnly(True)
+        main_layout.addWidget(self.edl_preview_plain_text_edit)
+
+        # Send To AVID Button
+        horizontal_layout = QtWidgets.QHBoxLayout()
+        self.send_push_button = QtWidgets.QPushButton(self)
+        self.send_push_button.setText("Send To AVID")
+        horizontal_layout.addWidget(self.send_push_button)
+        main_layout.addLayout(horizontal_layout)
+
+        self.setTabOrder(
+            self.media_files_path_line_edit, self.edl_preview_plain_text_edit
+        )
+        self.setTabOrder(self.edl_preview_plain_text_edit, self.send_push_button)
+
+        # Signals
+        self.media_files_path_line_edit.textChanged.connect(self.store_media_file_path)
+        self.edl_path_line_edit.textChanged.connect(self.open_edl)
+        self.send_push_button.clicked.connect(self.send)
 
     def open_edl(self, path):
         """Opens the edl in the given path
@@ -129,7 +149,7 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
         :return:
         """
         edl_content = self.read_edl(path)
-        self.edl_preview_plainTextEdit.setPlainText(edl_content)
+        self.edl_preview_plain_text_edit.setPlainText(edl_content)
 
     def read_edl(self, path):
         """Reads the content of the edl in the given path
@@ -147,8 +167,8 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
 
     def send(self):
         """Sends the edl content to"""
-        edl_path = self.edl_path_lineEdit.text()
-        media_path = self.media_files_path_lineEdit.text()
+        edl_path = self.edl_path_line_edit.text()
+        media_path = self.media_files_path_line_edit.text()
 
         # error if media_path does not exist
         if not os.path.exists(media_path):
@@ -224,6 +244,6 @@ class MainDialog(QtWidgets.QDialog, edl_importer_UI.Ui_Dialog, AnimaDialogBase):
             with open(self.cache_file_full_path) as f:
                 media_file_path = f.read()
 
-            self.media_files_path_lineEdit.setText(media_file_path)
+            self.media_files_path_line_edit.setText(media_file_path)
         except IOError:
             pass  # not stored yet

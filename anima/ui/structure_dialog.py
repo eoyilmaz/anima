@@ -2,18 +2,8 @@
 
 import re
 
-
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
-from anima.ui.lib import QtCore, QtWidgets, QtGui
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import structure_dialog_UI_pyside as structure_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import structure_dialog_UI_pyside2 as structure_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import structure_dialog_UI_pyqt4 as structure_dialog_UI
+from anima.ui.lib import QtCore, QtWidgets
 
 
 def UI(app_in=None, executor=None, **kwargs):
@@ -28,35 +18,87 @@ def UI(app_in=None, executor=None, **kwargs):
     return ui_caller(app_in, executor, MainDialog, **kwargs)
 
 
-class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """The structure Dialog"""
 
     def __init__(self, parent=None, structure=None):
         super(MainDialog, self).__init__(parent=parent)
-        self.setupUi(self)
-
         self.structure = structure
-
         self.mode = "Create"
-
         if self.structure:
             self.mode = "Update"
 
-        self.dialog_label.setText("%s Structure" % self.mode)
+        self.name_validator_label = None
+        self.name_line_edit = None
+        self.filename_templates_double_list_widget = None
+        self.custom_template_plain_text_edit = None
+        self.button_box = None
 
-        # create name_line_edit
+        self.setup_ui()
+
+        self._set_defaults()
+
+        if self.structure:
+            self.fill_ui_with_structure(self.structure)
+
+    def setup_ui(self):
+        """Create UI elements."""
+        self.setWindowTitle("Structure Dialog")
+        self.resize(754, 662)
+        main_layout = QtWidgets.QVBoxLayout(self)
+
+        # Dialog Label
+        dialog_label = QtWidgets.QLabel(self)
+        dialog_label.setText("%s Structure" % self.mode)
+        dialog_label.setStyleSheet("color: rgb(71, 143, 202);\n" "font: 18pt;")
+        main_layout.addWidget(dialog_label)
+
+        line = QtWidgets.QFrame(self)
+        line.setFrameShape(QtWidgets.QFrame.HLine)
+        line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        main_layout.addWidget(line)
+
+        # Form Layout
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setLabelAlignment(
+            QtCore.Qt.AlignRight | QtCore.Qt.AlignTrailing | QtCore.Qt.AlignVCenter
+        )
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        # ========================================
+        # Name Fields
+        form_layout.setWidget(0, label_role, QtWidgets.QLabel("Name", self))
+        name_fields_layout = QtWidgets.QVBoxLayout()
+
+        # Validator
         from anima.ui.widgets import ValidatedLineEdit
+        self.name_validator_label = QtWidgets.QLabel(self)
+        self.name_validator_label.setStyleSheet("color: rgb(255, 0, 0);")
 
+        # Field
         self.name_line_edit = ValidatedLineEdit(message_field=self.name_validator_label)
         self.name_line_edit.setPlaceholderText("Enter Name")
-        self.name_fields_verticalLayout.insertWidget(0, self.name_line_edit)
+        self.name_line_edit.textChanged.connect(self.name_line_edit_changed)
+        name_fields_layout.addWidget(self.name_line_edit)
+        name_fields_layout.addWidget(self.name_validator_label)
+        form_layout.setLayout(0, field_role, name_fields_layout)
 
-        # create DoubleListWidget
+        # ========================================
+        # Filename Templates
+        filename_templates_label = QtWidgets.QLabel(self)
+        filename_templates_label.setText(
+            '<html><head/><body><p align="right">Filename<br/>Templates</p></body></html>'
+        )
+        form_layout.setWidget(1, label_role, filename_templates_label)
+
+        # Filename Template DoubleListWidget
+        filename_template_fields_layout = QtWidgets.QVBoxLayout()
         from anima.ui.widgets import DoubleListWidget
 
         self.filename_templates_double_list_widget = DoubleListWidget(
             dialog=self,
-            parent_layout=self.filename_template_fields_verticalLayout,
+            parent_layout=filename_template_fields_layout,
             primary_label_text="Templates From DB",
             secondary_label_text="Selected Templates",
         )
@@ -67,44 +109,51 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         self.filename_templates_double_list_widget.secondary_list_widget.setToolTip(
             "Right Click to Create/Update FilenameTemplates"
         )
-
-        self._setup_signals()
-
-        self._set_defaults()
-
-        if self.structure:
-            self.fill_ui_with_structure(self.structure)
-
-    def _setup_signals(self):
-        """create the signals"""
-        # name_line_edit is changed
-        QtCore.QObject.connect(
-            self.name_line_edit,
-            QtCore.SIGNAL("textChanged(QString)"),
-            self.name_line_edit_changed,
-        )
-
         # add context menu for primary items in DoubleListWidget
-        self.filename_templates_double_list_widget.primary_list_widget.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu
-        )
+        widget = self.filename_templates_double_list_widget.primary_list_widget
+        widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        QtCore.QObject.connect(
-            self.filename_templates_double_list_widget.primary_list_widget,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self.show_primary_filename_template_context_menu,
+        widget = self.filename_templates_double_list_widget.primary_list_widget
+        widget.customContextMenuRequested.connect(
+            self.show_primary_filename_template_context_menu
         )
 
         # add context menu for secondary items in DoubleListWidget
-        self.filename_templates_double_list_widget.secondary_list_widget.setContextMenuPolicy(
-            QtCore.Qt.CustomContextMenu
-        )
+        widget = self.filename_templates_double_list_widget.secondary_list_widget
+        widget.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
 
-        QtCore.QObject.connect(
-            self.filename_templates_double_list_widget.secondary_list_widget,
-            QtCore.SIGNAL("customContextMenuRequested(const QPoint&)"),
-            self.show_secondary_filename_template_context_menu,
+        widget = self.filename_templates_double_list_widget.secondary_list_widget
+        widget.customContextMenuRequested.connect(
+            self.show_secondary_filename_template_context_menu
         )
+        form_layout.setLayout(1, field_role, filename_template_fields_layout,)
+
+        # ========================================
+        # Custom Template
+        custom_template_label = QtWidgets.QLabel(self)
+        custom_template_label.setText(
+            '<html><head/><body><p align="right">Custom<br/>Template</p></body></html>'
+        )
+        form_layout.setWidget(
+            2, label_role, custom_template_label
+        )
+        self.custom_template_plain_text_edit = QtWidgets.QPlainTextEdit(self)
+        form_layout.setWidget(
+            2, field_role, self.custom_template_plain_text_edit
+        )
+        main_layout.addLayout(form_layout)
+
+        # ========================================
+        # Button Box
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        main_layout.addWidget(self.button_box)
+        main_layout.setStretch(2, 1)
 
     def _set_defaults(self):
         """sets the default values"""
@@ -137,16 +186,11 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
         :param structure: A Stalker ImageFormat instance
         :return:
         """
-        if False:
-            from stalker import Structure
-
-            assert isinstance(structure, Structure)
-
         self.structure = structure
         self.name_line_edit.setText(self.structure.name)
         self.name_line_edit.set_valid()
 
-        self.custom_template_plainTextEdit.setPlainText(self.structure.custom_template)
+        self.custom_template_plain_text_edit.setPlainText(self.structure.custom_template)
 
         # add the structure templates to the secondary list of the double list
         self.filename_templates_double_list_widget.clear()
@@ -266,7 +310,7 @@ class MainDialog(QtWidgets.QDialog, structure_dialog_UI.Ui_Dialog, AnimaDialogBa
             return
         name = self.name_line_edit.text()
 
-        custom_template = self.custom_template_plainTextEdit.toPlainText()
+        custom_template = self.custom_template_plain_text_edit.toPlainText()
 
         filename_template_items = (
             self.filename_templates_double_list_widget.secondary_items()

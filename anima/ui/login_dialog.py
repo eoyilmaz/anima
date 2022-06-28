@@ -2,17 +2,8 @@
 
 import anima
 from anima import logger
-from anima.ui import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-
-
-if IS_PYSIDE():
-    from anima.ui.ui_compiled import login_dialog_UI_pyside as login_dialog_UI
-elif IS_PYSIDE2():
-    from anima.ui.ui_compiled import login_dialog_UI_pyside2 as login_dialog_UI
-elif IS_PYQT4():
-    from anima.ui.ui_compiled import login_dialog_UI_pyqt4 as login_dialog_UI
 
 
 def UI(app_in=None, executor=None):
@@ -27,42 +18,70 @@ def UI(app_in=None, executor=None):
     return ui_caller(app_in, executor, MainDialog)
 
 
-class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
+class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
     """This is a simple login dialog which connects to Stalker to authenticate
     the username/password couple.
     """
 
     def __init__(self, parent=None):
         logger.debug("initializing the interface")
-
         super(MainDialog, self).__init__(parent)
-        self.setupUi(self)
-
-        window_title = "Login Dialog | " + "Anima v" + anima.__version__
-
-        # change the window title
-        self.setWindowTitle(window_title)
-
-        # create some default data
         self.success = False
-
-        # setup signals
-        self._setup_signals()
-
-        # center window
+        self.login_or_email_label = None
+        self.login_or_email_line_edit = None
+        self.password_line_edit = None
+        self.button_box = None
+        self.setup_ui()
         self.center_window()
-
         logger.debug("finished initializing the interface")
 
-    def _setup_signals(self):
-        """sets up the signals"""
-        logger.debug("start setting up interface signals")
+    def setup_ui(self):
+        """Create UI elements."""
+        # change the window title
+        self.setWindowTitle("Login Dialog | Anima v{}".format(anima.__version__))
 
+        self.setObjectName("Dialog")
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.resize(364, 138)
+        self.setModal(True)
+        main_layout = QtWidgets.QVBoxLayout()
+        self.setLayout(main_layout)
+        form_layout = QtWidgets.QFormLayout()
+        form_layout.setFieldGrowthPolicy(QtWidgets.QFormLayout.AllNonFixedFieldsGrow)
+        form_layout.setContentsMargins(-1, 10, -1, -1)
+
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        self.login_or_email_label = QtWidgets.QLabel(self)
+        self.login_or_email_label.setText("Login or email")
+        form_layout.setWidget(0, label_role, self.login_or_email_label)
+        self.login_or_email_line_edit = QtWidgets.QLineEdit(self)
+        self.login_or_email_line_edit.setInputMask("")
+        form_layout.setWidget(0, field_role, self.login_or_email_line_edit)
+
+        # Password
+        form_layout.setWidget(1, label_role, QtWidgets.QLabel("Password", self))
+        self.password_line_edit = QtWidgets.QLineEdit(self)
+        self.password_line_edit.setInputMask("")
+        self.password_line_edit.setText("")
+        self.password_line_edit.setEchoMode(QtWidgets.QLineEdit.Password)
+        form_layout.setWidget(1, field_role, self.password_line_edit)
+
+        # Button Box
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        form_layout.setWidget(2, field_role, self.button_box)
+        main_layout.addLayout(form_layout)
+
+        # setup signals
         # cancel button
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("rejected()"), self.close)
+        self.button_box.rejected.connect(self.close)
 
         # Ok button
-        QtCore.QObject.connect(self.buttonBox, QtCore.SIGNAL("accepted()"), self.login)
+        self.button_box.accepted.connect(self.login)
 
         logger.debug("finished setting up interface signals")
 
@@ -71,8 +90,8 @@ class MainDialog(QtWidgets.QDialog, login_dialog_UI.Ui_Dialog, AnimaDialogBase):
         from anima.utils import authenticate
 
         # get the user first
-        login = self.login_or_email_lineEdit.text()
-        password = self.password_lineEdit.text()
+        login = self.login_or_email_line_edit.text()
+        password = self.password_line_edit.text()
 
         if authenticate(login, password):
             self.accept()
