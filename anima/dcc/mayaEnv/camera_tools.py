@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import os
 import pymel.core as pm
 
 
@@ -313,6 +314,259 @@ def import_3dequalizer_points(width, height):
             local_y = frame_data[1] / width - 0.5 * height / width
             pm.setKeyframe(loc.tx, t=frame, v=local_x)
             pm.setKeyframe(loc.ty, t=frame, v=local_y)
+
+
+def export_camera_curves_to_3de4_ui():
+    """UI for export_camera_curves_to_3de4."""
+    # Use PySide2 for the UI
+    # from anima.ui.lib import QtCore, QtGui, QtWidgets
+    from PySide2 import QtCore, QtGui, QtWidgets
+
+    class UI(QtWidgets.QDialog):
+        """The UI."""
+
+        def __init__(self, parent, *args, **kwargs):
+            super(UI, self).__init__(parent, *args, **kwargs)
+            self.main_layout = None
+            self.camera_line_edit = None
+            self.pick_camera_button = None
+            self.start_frame_spin_box = None
+            self.end_frame_spin_box = None
+            self.start_frame_picker_button = None
+            self.end_frame_picker_button = None
+            self.frame_offset_spin_box = None
+            self.button_box = None
+            self.setup_ui()
+
+        def setup_ui(self):
+            """Create UI elements."""
+            self.setWindowTitle("Export Camera Curves To 3DE4")
+            self.setFixedWidth(350)
+            self.main_layout = QtWidgets.QVBoxLayout()
+            self.setLayout(self.main_layout)
+            form_layout = QtWidgets.QFormLayout()
+            self.main_layout.addLayout(form_layout)
+            label_role = QtWidgets.QFormLayout.LabelRole
+            field_role = QtWidgets.QFormLayout.FieldRole
+
+            i = -1
+
+            # Camera Name
+            i += 1
+            form_layout.setWidget(i, label_role, QtWidgets.QLabel("Camera"))
+            camera_fields_layout = QtWidgets.QHBoxLayout()
+            self.camera_line_edit = QtWidgets.QLineEdit(self)
+            self.camera_line_edit.setEnabled(False)
+            camera_fields_layout.addWidget(self.camera_line_edit)
+            self.pick_camera_button = QtWidgets.QPushButton("<<")
+            self.pick_camera_button.setFixedWidth(20)
+            self.pick_camera_button.clicked.connect(self.pick_camera_button_clicked)
+            camera_fields_layout.addWidget(self.pick_camera_button)
+            camera_fields_layout.setStretch(0, 1)
+            camera_fields_layout.setStretch(1, 0)
+            form_layout.setLayout(i, field_role, camera_fields_layout)
+
+            # start - end frame
+            i += 1
+            form_layout.setWidget(i, label_role, QtWidgets.QLabel("Frame Range"))
+            self.start_frame_picker_button = QtWidgets.QPushButton(">>")
+            self.start_frame_picker_button.setToolTip("Get start frame from Maya")
+            self.start_frame_picker_button.setFixedWidth(20)
+            self.start_frame_picker_button.clicked.connect(
+                self.start_frame_picker_button_clicked
+            )
+            self.start_frame_spin_box = QtWidgets.QSpinBox(self)
+            self.start_frame_spin_box.setMaximum(-10000000)
+            self.start_frame_spin_box.setMaximum(10000000)
+            self.end_frame_spin_box = QtWidgets.QSpinBox(self)
+            self.end_frame_spin_box.setMaximum(-10000000)
+            self.end_frame_spin_box.setMaximum(10000000)
+            self.end_frame_picker_button = QtWidgets.QPushButton("<<")
+            self.end_frame_picker_button.setToolTip("Get end frame from Maya")
+            self.end_frame_picker_button.setFixedWidth(20)
+            self.end_frame_picker_button.clicked.connect(
+                self.end_frame_picker_button_clicked
+            )
+            frame_range_layout = QtWidgets.QHBoxLayout()
+            frame_range_layout.addWidget(self.start_frame_picker_button)
+            frame_range_layout.addWidget(self.start_frame_spin_box)
+            frame_range_layout.addWidget(self.end_frame_spin_box)
+            frame_range_layout.addWidget(self.end_frame_picker_button)
+            frame_range_layout.setStretch(0, 0)
+            frame_range_layout.setStretch(1, 1)
+            frame_range_layout.setStretch(2, 1)
+            frame_range_layout.setStretch(3, 0)
+            form_layout.setLayout(i, field_role, frame_range_layout)
+            self.start_frame_picker_button_clicked()
+            self.end_frame_picker_button_clicked()
+
+            # Frame offset
+            i += 1
+            form_layout.setWidget(i, label_role, QtWidgets.QLabel("Frame Offset"))
+            self.frame_offset_spin_box = QtWidgets.QSpinBox(self)
+            self.frame_offset_spin_box.setMinimumWidth(50)
+            self.frame_offset_spin_box.setMaximum(-10000000)
+            self.frame_offset_spin_box.setMaximum(10000000)
+            self.frame_offset_spin_box.setValue(0)
+            form_layout.setWidget(i, field_role, self.frame_offset_spin_box)
+
+            # Button box
+            self.button_box = QtWidgets.QDialogButtonBox(self)
+            self.button_box.setStandardButtons(
+                QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+            )
+            self.button_box.accepted.connect(self.accept)
+            self.button_box.rejected.connect(self.reject)
+            self.main_layout.addWidget(self.button_box)
+
+        def pick_camera_button_clicked(self):
+            """Get the camera name from Maya."""
+            selection = pm.ls(sl=1)
+            if not selection:
+                return
+
+            camera = selection[0]
+            if isinstance(camera, pm.nt.Transform) and isinstance(
+                camera.getShape(), pm.nt.Camera
+            ):
+                self.camera_line_edit.setText(camera.name())
+
+        def start_frame_picker_button_clicked(self):
+            """Get start frame from Maya."""
+            self.start_frame_spin_box.setValue(int(pm.playbackOptions(q=1, min=1)))
+
+        def end_frame_picker_button_clicked(self):
+            """Get end frame from Maya."""
+            self.end_frame_spin_box.setValue(int(pm.playbackOptions(q=1, max=1)))
+
+        def accept(self):
+            """Do export the data."""
+            # get the file path
+            # show a file browser
+            dialog = QtWidgets.QFileDialog(self, "Choose file")
+            dialog.setNameFilter("Text Files (*.txt)")
+            dialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+            if not dialog.exec_():
+                return
+
+            selected_files = dialog.selectedFiles()
+            if not selected_files:
+                return
+
+            file_path = selected_files[0]
+            if not file_path:
+                return
+
+            camera_name = self.camera_line_edit.text()
+            camera = pm.PyNode(camera_name)
+            start_frame = self.start_frame_spin_box.value()
+            end_frame = self.end_frame_spin_box.value()
+            frame_offset = self.frame_offset_spin_box.value()
+            output_path = os.path.dirname(file_path)
+            file_base_name = os.path.basename(file_path)
+
+            export_camera_curves_to_3de4(
+                camera,
+                output_path,
+                file_base_name,
+                start_frame,
+                end_frame,
+                frame_offset,
+            )
+            super(UI, self).accept()
+
+    from anima.dcc.mayaEnv import get_maya_main_window
+
+    ui = UI(parent=get_maya_main_window())
+    ui.show()
+
+
+def export_camera_curves_to_3de4(
+    camera,
+    output_path,
+    file_base_name="",
+    start_frame=None,
+    end_frame=None,
+    frame_offset=0,
+):
+    """Export camera curves to 3DE4 as text files.
+
+    This will output 6 text files representing the tx, ty, tz and rx, ry, rz suitable to
+    be imported to 3DE4 as an animation curve by using
+    ``Edit -> File -> Import Curve...`` menu on the curve editor.
+
+    :param pm.nt.Transform camera: A Maya pm.nt.Transform node of a Camera.
+    :param str output_path: The output path.
+    :param str file_base_name: The file base name, if skipped or set as None the string
+        value of ``camera`` will be used.
+    :param (int, None) start_frame: The start frame, if None the minimum playback range
+        will be used.
+    :param (int, None) end_frame: The end frame, if None the maximum playback range will
+        be used.
+    :param int frame_offset: The frame offset to be added to the output data. Defaults
+        to 0.
+
+    :return:
+    """
+    if file_base_name == "" or file_base_name is None:
+        file_base_name = "camera"
+
+    # filter out any file ext
+    file_base_name, ext = os.path.splitext(file_base_name)
+    if ext == "":
+        ext = ".txt"
+
+    file_base_name = "{}_{}{}".format(
+        file_base_name, "{transform_name}{channel_name}", ext
+    )
+
+    if isinstance(camera, pm.nt.Camera):
+        camera = camera.getParent()
+
+    if start_frame is None:
+        start_frame = int(pm.playbackOptions(q=1, min=1))
+
+    if end_frame is None:
+        end_frame = int(pm.playbackOptions(q=1, max=1))
+
+    tra_data = []
+    rot_data = []
+
+    for i in range(start_frame, end_frame + 1):
+        pm.currentTime(i)
+        tra_data.append([i] + pm.xform(camera, q=1, ws=1, t=1))
+        rot_data.append([i] + pm.xform(camera, q=1, ws=1, ro=1))
+
+    data_template = (
+        "{frame} {data} "
+        "-1.000000000000000 0.000000000000000 "
+        "1.000000000000000 0.000000000000000 LINEAR"
+    )
+
+    channel_names = {0: "x", 1: "y", 2: "z"}
+    transform_data = {"t": tra_data, "r": rot_data}
+
+    for transform_name in transform_data:
+        transform = transform_data[transform_name]
+        for channel_id in channel_names:
+            channel_name = channel_names[channel_id]
+            file_name = os.path.join(
+                output_path,
+                file_base_name.format(
+                    transform_name=transform_name, channel_name=channel_name
+                ),
+            )
+
+            content = [str(len(transform))]
+            for i in range(len(transform)):
+                frame = transform[i][0] + frame_offset
+                data = transform[i][channel_id + 1]
+                content.append(data_template.format(frame=frame, data=data))
+            # add an empty line
+            content.append("")
+
+            with open(file_name, "w") as f:
+                f.write("\n".join(content))
 
 
 def find_cut_info(cam):

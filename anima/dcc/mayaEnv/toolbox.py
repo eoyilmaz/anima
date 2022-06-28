@@ -1545,6 +1545,14 @@ def UI():
                     v=default_image_height,
                 )
 
+            pm.button(
+                "export_camera_curves_to_3de4_button",
+                l="Export Camera Curves To 3DE4",
+                c=repeated_callback(camera_tools.export_camera_curves_to_3de4_ui),
+                ann=camera_tools.export_camera_curves_to_3de4_ui.__doc__,
+                bgc=color.color,
+            )
+
             pm.text(l="===================")
 
             color.next()
