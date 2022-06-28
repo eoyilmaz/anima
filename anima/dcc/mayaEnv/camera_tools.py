@@ -3,13 +3,13 @@
 import pymel.core as pm
 
 
-def camera_film_offset_tool():
+def camera_2d_pan_zoom_tool():
     """Adds a locator to the selected camera with which you can adjust the 2d
     pan and zoom.
 
     Usage :
     -------
-    - To add it, select the camera and use camera_film_offset_tool
+    - To add it, select the camera and use camera_2d_pan_zoom_tool
     - To remove it, set the transformations to 0 0 1 and then simply delete
     the curve
     - You can also use the ``enable`` option to temporarily disable the effect

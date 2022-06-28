@@ -1429,9 +1429,9 @@ def UI():
             pm.text(l="============ Camera Tools ============")
             color.next()
             pm.button(
-                "CameraFilmOffsetTool_button",
-                l="Camera Film Offset Tool",
-                c=repeated_callback(camera_tools.camera_film_offset_tool),
+                "camera_2d_pan_zoom_button",
+                l="Camera 2D Pan/Zoom Tool",
+                c=repeated_callback(camera_tools.camera_2d_pan_zoom_tool),
                 ann="Camera Film Offset Tool",
                 bgc=color.color,
             )
