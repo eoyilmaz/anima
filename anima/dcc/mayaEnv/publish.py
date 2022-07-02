@@ -222,7 +222,10 @@ def check_node_names_with_bad_characters(progress_controller=None):
 @publisher
 def fix_locked_default_shader(progress_controller=None):
     """Fix locked default shader."""
+    if progress_controller is None:
+        progress_controller = ProgressControllerBase()
     pm.lockNode('initialShadingGroup', l=0, lockUnpublished=0)
+    progress_controller.complete()
 
 
 @publisher("camera")
