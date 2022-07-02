@@ -583,6 +583,7 @@ workspace -fr "translatorData" "Outputs/data";
         reference_depth=0,
         skip_update_check=False,
         prompt=True,
+        clean_malware=True,
     ):
         """The open action for Maya DCC.
 
@@ -617,6 +618,8 @@ workspace -fr "translatorData" "Outputs/data";
         :param bool skip_update_check: Skip update check if True.
 
         :param bool prompt: prompts for missing references
+
+        :param bool clean_malware: Cleans the malware if True (default).
 
         :returns: (Bool, Dictionary)
         """
@@ -705,7 +708,8 @@ workspace -fr "translatorData" "Outputs/data";
         # after opening the file
         # fix modelPanel scriptJob errors
         self.remove_rogue_model_panel_change_events()
-        self.clean_malware()
+        if clean_malware:
+            self.clean_malware()
 
         if not skip_update_check:
             # check the referenced versions for any possible updates
