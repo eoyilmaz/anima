@@ -23,7 +23,7 @@ class ShotComboBox(QtWidgets.QComboBox):
         from stalker import Shot
 
         for shot in (
-            Shot.query.filter(Shot.sequence == self.sequence)
+            Shot.query.filter(Shot.sequences.contains(self.sequence))
             .order_by(Shot.name)
             .all()
         ):
