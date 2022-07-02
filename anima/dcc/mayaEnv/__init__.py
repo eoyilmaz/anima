@@ -2005,41 +2005,46 @@ workspace -fr "translatorData" "Outputs/data";
 
     @classmethod
     def remove_rogue_model_panel_change_events(cls):
-        EVIL_METHOD_NAMES = [
+        evil_method_names = [
             "DCF_updateViewportList",
             "CgAbBlastPanelOptChangeCallback",
             "onModelChange3dc",
             "look",
         ]
-        capitalEvilMethodNames = [name.upper() for name in EVIL_METHOD_NAMES]
-        modelPanelLabel = pm.mel.eval('localizedPanelLabel("ModelPanel")')
-        processedPanelNames = []
-        panelName = mc.sceneUIReplacement(getNextPanel=("modelPanel", modelPanelLabel))
-        while panelName and panelName not in processedPanelNames:
-            editorChangedValue = mc.modelEditor(
-                panelName, query=True, editorChanged=True
+        capital_evil_method_names = [name.upper() for name in evil_method_names]
+        model_panel_label = pm.mel.eval('localizedPanelLabel("ModelPanel")')
+        processed_panel_names = []
+        panel_name = mc.sceneUIReplacement(
+            getNextPanel=("modelPanel", model_panel_label)
+        )
+        while panel_name and panel_name not in processed_panel_names:
+            editor_changed_value = mc.modelEditor(
+                panel_name, query=True, editorChanged=True
             )
-            parts = editorChangedValue.split(";")
-            newParts = []
+            parts = editor_changed_value.split(";")
+            new_parts = []
             changed = False
             for part in parts:
-                for evilMethodName in capitalEvilMethodNames:
-                    if evilMethodName in part.upper():
+                for evil_method_name in capital_evil_method_names:
+                    if evil_method_name in part.upper():
                         changed = True
                         break
                 else:
-                    newParts.append(part)
+                    new_parts.append(part)
             if changed:
-                mc.modelEditor(panelName, edit=True, editorChanged=";".join(newParts))
+                mc.modelEditor(panel_name, edit=True, editorChanged=";".join(new_parts))
                 print("Model panel error fixed!")
-            processedPanelNames.append(panelName)
-            panelName = mc.sceneUIReplacement(
-                getNextPanel=("modelPanel", modelPanelLabel)
+            processed_panel_names.append(panel_name)
+            panel_name = mc.sceneUIReplacement(
+                getNextPanel=("modelPanel", model_panel_label)
             )
 
     @classmethod
     def clean_malware(cls):
-        """cleans malware"""
+        """Clean malware.
+
+        :return bool: True if any malicious script file is removed, False otherwise.
+        """
         malicious_node_names = ["vaccine_gene", "breed_gene"]
         for node_name in malicious_node_names:
             malicious_nodes = pm.ls("*%s*" % node_name)
@@ -2060,6 +2065,7 @@ workspace -fr "translatorData" "Outputs/data";
             "userSetup.py",
             "userSetup.pyc",
         ]
+        removed_malicious_script_file = False
         for malicious_script_file_name in malicious_script_file_names:
             malicious_script_file_full_path = os.path.join(
                 user_app_dir, malicious_script_file_name
@@ -2067,5 +2073,7 @@ workspace -fr "translatorData" "Outputs/data";
             try:
                 os.remove(malicious_script_file_full_path)
                 print("Removed: %s" % malicious_script_file_full_path)
+                removed_malicious_script_file = True
             except OSError:
                 pass
+        return removed_malicious_script_file
