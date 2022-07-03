@@ -82,6 +82,7 @@ def create_frustum_geo(camera, shape_type=0, name=""):
     if not name.endswith("#"):
         name = "{}#".format(name)
 
+    camera_transform = None
     if isinstance(camera, pm.nt.Transform):
         camera_transform = camera
         camera = camera_transform.getShape()
@@ -145,15 +146,16 @@ def create_frustum_geo(camera, shape_type=0, name=""):
     exp = """float $flen = {camera}.focalLength;
 float $hfa = {camera}.horizontalFilmAperture * 25.4;
 float $vfa = {camera}.verticalFilmAperture * 25.4;
+float $fa;
 if ({camera}.filmFit == 1){{
     // horizontal - fit resolution gate
-    {frustum_geo}.sx = {frustum_geo}.sz = -{frustum_geo}.translateZ * $hfa/ $flen;
-    {frustum_geo}.sy = {frustum_geo}.sx / defaultResolution.deviceAspectRatio;
+    $fa = $hfa;
 }} else {{
     // vertical and others - fit resolution gate
-    {frustum_geo}.sy = {frustum_geo}.sz = -{frustum_geo}.translateZ * $vfa/ $flen;
-    {frustum_geo}.sx = {frustum_geo}.sy * defaultResolution.deviceAspectRatio;
-}}""".format(
+    $fa = $vfa;
+}}
+{frustum_geo}.sx = {frustum_geo}.sy = {frustum_geo}.sz = -{frustum_geo}.translateZ * $hfa/ $flen;
+""".format(
         camera=camera.name(), frustum_geo=frustum_geo.name()
     )
     pm.expression(s=exp, o="", ae=1, uc="all")
@@ -288,7 +290,6 @@ def import_3dequalizer_points(width, height):
     path = pm.fileDialog()
 
     # parse the file
-    from anima import utils
     from anima.dcc.equalizer import TDE4PointManager
 
     man = TDE4PointManager()
