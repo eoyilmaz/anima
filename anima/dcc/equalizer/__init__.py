@@ -299,7 +299,7 @@ class TDE4PointManager(object):
             cursor += 1
             data_start = cursor
             length = 0
-            while " " in data[cursor] and cursor < len(data) - 1:
+            while cursor < len(data) - 1 and " " in data[cursor]:
                 cursor += 1
                 length += 1
 
