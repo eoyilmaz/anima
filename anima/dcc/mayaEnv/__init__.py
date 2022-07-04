@@ -727,7 +727,9 @@ workspace -fr "translatorData" "Outputs/data";
         """
         if use_namespace:
             namespace = os.path.basename(version.filename)
-            pm.importFile(version.absolute_full_path, namespace=namespace)
+            pm.importFile(
+                version.absolute_full_path, namespace=namespace, preserveReferences=True
+            )
         else:
             pm.importFile(version.absolute_full_path, defaultNamespace=True)
 
