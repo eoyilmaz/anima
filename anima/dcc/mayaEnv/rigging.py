@@ -15,9 +15,9 @@ class Rigging(object):
         """adds the cacheable attribute to the selected node"""
         if not node.hasAttr("cacheable"):
             node.addAttr("cacheable", dt="string")
-            if not cacheable_attr_value:
-                cacheable_attr_value = node.stripNamespace().split("|")[-1].lower()
-            node.setAttr("cacheable", cacheable_attr_value)
+        if not cacheable_attr_value:
+            cacheable_attr_value = node.stripNamespace().split("|")[-1].lower()
+        node.setAttr("cacheable", cacheable_attr_value)
 
     @classmethod
     def setup_stretchy_spline_ik_curve(cls):
