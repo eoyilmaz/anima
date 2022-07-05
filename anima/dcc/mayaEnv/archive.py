@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import glob
 import os
 import re
 
@@ -119,7 +120,7 @@ sourceimages/3dPaintTextures"""
         import os
         import re
 
-        path_regex = r"\$REPO[\w\d\/_\.@]+"
+        path_regex = r"\$REPO[\w\d\/_\.@\<\>]+"
         # so we have all the data
         # extract references
         ref_paths = list(set(re.findall(path_regex, data)))
@@ -131,7 +132,7 @@ sourceimages/3dPaintTextures"""
                 # consider this as a repository path and find all of the paths
                 # starting with this value
                 repo_path = os.environ[k]
-                path_regex = r"\%s[\w\d\/_\.@]+" % repo_path
+                path_regex = r"{}[\w\d\/_\.@\<\>]+".format(repo_path)
                 temp_ref_paths = list(set(re.findall(path_regex, data)))
                 ref_paths += temp_ref_paths
 
@@ -156,13 +157,24 @@ sourceimages/3dPaintTextures"""
         import shutil
 
         # fix any env vars
+        logger.debug("========================")
+        logger.debug("path: {}".format(path))
         path = os.path.expandvars(path)
 
+        # skip directories
+        if os.path.isdir(path):
+            logger.debug("Skipping directory: {}".format(path))
+            return []
+
+        # skip the file if it doesn't exist (unless it is a UDIM texture)
+        if "<udim>" not in path and not os.path.isfile(path):
+            # return early
+            logger.debug("File doesn't exist: {}".format(path))
+            return []
+
         original_file_name = os.path.basename(path)
-        logger.debug("original_file_name: %s" % original_file_name)
 
         new_file_path = os.path.join(project_path, scenes_folder, original_file_name)
-        logger.debug("new_file_path: %s" % new_file_path)
 
         scenes_folder_lut = {
             ".ma": "scenes/refs",
@@ -183,11 +195,6 @@ sourceimages/3dPaintTextures"""
         }
 
         ref_paths = []
-        # skip the file if it doesn't exist
-        if not os.path.exists(path):
-            # return early
-            return ref_paths
-
         # only get new ref paths for '.ma' files
         if path.endswith(".ma"):
             # read the data of the original file
@@ -200,20 +207,19 @@ sourceimages/3dPaintTextures"""
                 ref_ext = os.path.splitext(ref_path)[-1]
                 data = data.replace(
                     ref_path,
-                    "%s/%s"
-                    % (
+                    "{}/{}".format(
                         scenes_folder_lut.get(ref_ext, refs_folder),
                         os.path.basename(ref_path),
-                    ),
+                    )
                 )
 
             # now write all the data back to a new temp scene
+            logger.debug("new_file_path: {}".format(new_file_path))
             with open(new_file_path, "w+") as f:
                 f.write(data)
         else:
             # fix for UDIM texture paths
-            # if the path contains 1001 or u1_v1 than find the other
-            # textures
+            # if the path contains <udim> find the other textures
 
             # dirty patch
             # move image files in to the sourceimages folder
@@ -226,9 +232,6 @@ sourceimages/3dPaintTextures"""
                 original_file_name,
             )
 
-            import glob
-
-            new_file_paths = [new_file_path]
             texture_file_extensions = [
                 ".jpg",
                 ".png",
@@ -239,26 +242,42 @@ sourceimages/3dPaintTextures"""
                 ".hdr",
             ]
 
-            if (
-                "1001" in new_file_path or "u1_v1" in new_file_path.lower()
-            ) and file_extension in texture_file_extensions:
-                # get the rest of the textures
-                new_file_paths = glob.glob(
-                    new_file_path.replace("1001", "*")
+            if file_extension in texture_file_extensions and "<udim>" in new_file_path:
+                # get the rest of the UDIMs
+                new_file_paths = []
+                texture_file_paths = glob.glob(
+                    path.replace("<udim>", "*")
                     .replace("u1_v1", "u*_v*")
                     .replace("U1_V1", "U*_V*")
                 )
-                if new_file_paths:
+                if texture_file_paths:
                     logger.debug("found UDIM textures:")
 
-                for p in new_file_paths:
-                    logger.debug(p)
+                for texture_file_path in texture_file_paths:
+                    logger.debug(texture_file_path)
+                    texture_file_name = os.path.basename(texture_file_path)
+                    new_texture_file_path = os.path.join(
+                        project_path,
+                        scenes_folder_lut.get(file_extension, refs_folder),
+                        texture_file_name,
+                    )
+                    new_file_paths.append((texture_file_path, new_texture_file_path))
+            elif file_extension == ".rs":
+                # # this could be a .rs cache file series
+                # new_file_paths = []
+                # rs_cache_files = glob.glob(
+                #     path.
+                # )
+                # TODO: Implement this.
+                new_file_paths = [(path, new_file_path)]
+            else:
+                new_file_paths = [(path, new_file_path)]
 
             # just copy the file
-            for new_file_path in new_file_paths:
-                logger.debug("%s -> %s" % (path, new_file_path))
+            for original_file_path, new_file_path in new_file_paths:
+                logger.debug("new_file_path: {}".format(new_file_path))
                 try:
-                    shutil.copy(path, new_file_path)
+                    shutil.copy(original_file_path, new_file_path)
                 except IOError:
                     pass
 
