@@ -2606,7 +2606,7 @@ def export_cache_of_nodes(
                             related_ref = input_node.referenceFile()
                             if related_ref is not None:
                                 # go to the top most reference
-                                related_ref = related_ref.topmost_parent()
+                                related_ref = related_ref.topmost_parent
                                 if related_ref != ref:
                                     related_references.add(related_ref)
                                     references_to_traverse.add(related_ref)
