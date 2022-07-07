@@ -806,7 +806,13 @@ def get_root_nodes(reference_node=None):
         if not reference_node:
             no_parent = parent is None
         else:
-            no_parent = parent.referenceFile() != reference_node if parent else True
+            # check if the parent is from the same reference file,
+            # consider the topmost parent reference file
+            no_parent = (
+                parent.referenceFile().topmost_parent != reference_node.topmost_parent
+                if parent
+                else True
+            )
 
         if no_parent:
             shape = node.getShape()
