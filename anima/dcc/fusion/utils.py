@@ -56,6 +56,30 @@ class NodeUtils(object):
                 input_entry[0] = value
                 break
 
+    @classmethod
+    def disable_auto_clip_browse(cls):
+        """Disable the AutoClipBrowse setting."""
+        from anima.dcc import fusion
+
+        fusion_env = fusion.Fusion()
+        auto_browse = fusion_env.fusion.GetPrefs("Global.UserInterface.AutoClipBrowse")
+        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", False)
+        return auto_browse
+
+    @classmethod
+    def set_auto_clip_browse(cls, auto_clip_browse):
+        """Set the AutoClipBrowse setting.
+
+        :param bool auto_clip_browse: The bool value to set the AutoClipBrowse attribute
+            to.
+        """
+        from anima.dcc import fusion
+
+        fusion_env = fusion.Fusion()
+        fusion_env.fusion.SetPrefs(
+            "Global.UserInterface.AutoClipBrowse", auto_clip_browse
+        )
+
 
 class TDE4LensDistortionImporter(object):
     """Imports lens files"""

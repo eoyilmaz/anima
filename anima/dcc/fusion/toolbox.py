@@ -344,33 +344,10 @@ class GenericTools(object):
         # get the output path from one of the main savers
 
     @classmethod
-    def disable_auto_clip_browse(cls):
-        """Disable the AutoClipBrowse setting."""
-        from anima.dcc import fusion
-
-        fusion_env = fusion.Fusion()
-        auto_browse = fusion_env.fusion.GetPrefs("Global.UserInterface.AutoClipBrowse")
-        fusion_env.fusion.SetPrefs("Global.UserInterface.AutoClipBrowse", False)
-        return auto_browse
-
-    @classmethod
-    def set_auto_clip_browse(cls, auto_clip_browse):
-        """Set the AutoClipBrowse setting.
-
-        :param bool auto_clip_browse: The bool value to set the AutoClipBrowse attribute
-            to.
-        """
-        from anima.dcc import fusion
-
-        fusion_env = fusion.Fusion()
-        fusion_env.fusion.SetPrefs(
-            "Global.UserInterface.AutoClipBrowse", auto_clip_browse
-        )
-
-    @classmethod
     def loader_from_saver(cls):
         """creates a loader from the selected saver node"""
         from anima.dcc import fusion
+        from anima.dcc.fusion.utils import NodeUtils
 
         fusion_env = fusion.Fusion()
         comp = fusion_env.comp
@@ -380,11 +357,11 @@ class GenericTools(object):
         x, y = flow.GetPosTable(node).values()
 
         # instead of lock/unlock disable AutoClipBrowse temporarily
-        auto_browse = cls.disable_auto_clip_browse()
+        auto_browse = NodeUtils.disable_auto_clip_browse()
 
         loader_node = comp.Loader()
         loader_node.Clip[0] = node.Clip[0]
-        cls.set_auto_clip_browse(auto_browse)
+        NodeUtils.set_auto_clip_browse(auto_browse)
 
         # set position near to the saver node
         flow.SetPos(loader_node, x + 1.0, y)
@@ -396,6 +373,7 @@ class GenericTools(object):
     def cache_node_setup(cls):
         """Create a Saver node for the selected node that renders the cache."""
         from anima.dcc import fusion
+        from anima.dcc.fusion.utils import NodeUtils
 
         fusion_env = fusion.Fusion()
         comp = fusion_env.comp
@@ -411,7 +389,7 @@ class GenericTools(object):
             )
         )
 
-        auto_browse = cls.disable_auto_clip_browse()
+        auto_browse = NodeUtils.disable_auto_clip_browse()
         # create a loader with the path
         loader_node = comp.Loader()
         loader_node.SetAttrs({"TOOLS_Name": "{}_CacheLoader".format(node_name)})
@@ -430,7 +408,7 @@ class GenericTools(object):
         saver_node.Clip[0] = path
         flow.Select(saver_node, False)
         comp.SetActiveTool(None)
-        cls.set_auto_clip_browse(auto_browse)
+        NodeUtils.set_auto_clip_browse(auto_browse)
 
         # place the nodes next to the current node
         x, y = flow.GetPosTable(node).values()
