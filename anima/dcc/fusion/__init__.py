@@ -9,17 +9,12 @@ else:
     exceptions = ImportError
 
 try:
-    # for Fusion 6 and 7
-    import PeyeonScript as bmf
+    # for Fusion inside Resolve
+    import BlackmagicFusion as bmf
 except exceptions:
-    # for Fusion 8+
-    try:
-        # for Fusion inside Resolve
-        import BlackmagicFusion as bmf
-    except exceptions:
-        from anima.dcc import blackmagic as bmd
+    from anima.dcc import blackmagic as bmd
 
-        bmf = bmd.get_bmd()
+    bmf = bmd.get_bmd()
 
 
 from anima import logger
