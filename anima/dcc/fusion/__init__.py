@@ -295,13 +295,14 @@ class Fusion(DCCBase):
 
         version_full_path = os.path.normpath(version.absolute_full_path)
 
-        self.comp.Lock()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = NodeUtils.disable_auto_clip_browse()
         self.comp.Save(
             version_full_path
             if sys.version_info[0] >= 3
             else version_full_path.encode()
         )
-        self.comp.Unlock()
+        NodeUtils.set_auto_clip_browse(auto_browse)
 
         # create a local copy
         self.create_local_copy(version)
@@ -418,7 +419,8 @@ class Fusion(DCCBase):
             else version_full_path.encode()
         )
 
-        self.comp.Lock()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = NodeUtils.disable_auto_clip_browse()
 
         # set the project_directory
         # get the current comp fist
@@ -428,11 +430,12 @@ class Fusion(DCCBase):
         # update the savers
         self.create_main_saver_node(version)
 
-        # file paths in different OS'es should be replaced with a path that is suitable for the current one
+        # file paths in different OS'es should be replaced with a path that is suitable
+        # for the current one
         # update loaders
         self.fix_loader_paths()
 
-        self.comp.Unlock()
+        NodeUtils.set_auto_clip_browse(auto_browse)
 
         rfm = RecentFileManager()
         rfm.add(self.name, version.absolute_full_path)
@@ -645,9 +648,10 @@ class Fusion(DCCBase):
 
         node_type = node_tree["type"]
 
-        self.comp.Lock()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = NodeUtils.disable_auto_clip_browse()
         node = self.comp.AddTool(node_type)
-        self.comp.Unlock()
+        NodeUtils.set_auto_clip_browse(auto_browse)
 
         # attributes
         if "attr" in node_tree:
@@ -773,10 +777,11 @@ class Fusion(DCCBase):
         slate_node = self.comp.FindTool("MainSlate")
         if not slate_node:
             # create one
-            self.comp.Lock()
+            # instead of lock/unlock disable AutoClipBrowse temporarily
+            auto_browse = NodeUtils.disable_auto_clip_browse()
             self.comp.DoAction("AddSetting", {"filename": "Macros:/AnimaSlate.setting"})
             slate_node = self.comp.FindTool("AnimaSlate1")
-            self.comp.Unlock()
+            NodeUtils.set_auto_clip_browse(auto_browse)
             slate_node.SetAttrs({"TOOLS_Name": "MainSlate", "TOOLB_Locked": False})
 
         # set slate attributes

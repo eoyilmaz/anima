@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Merges sliced renders in to one big plate
 """
+from anima.dcc.fusion.toolbox import GenericTools
 
 try:
     # for Fusion 6 and 7
@@ -68,9 +69,10 @@ class RenderMerger(object):
         :return (int, int): Returns the width and height of the resulting plate
         """
         # calculate total width and height
-        self.comp.Lock()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = GenericTools.disable_auto_clip_browse()
         loader = self.comp.Loader()
-        self.comp.Unlock()
+        GenericTools.set_auto_clip_browse(auto_browse)
 
         NodeUtils.set_node_attr(loader, "Clip", self.path)
 
@@ -108,7 +110,8 @@ class RenderMerger(object):
         prev_merge = bg
 
         t = 0
-        self.comp.Lock()
+        # instead of lock/unlock disable AutoClipBrowse temporarily
+        auto_browse = GenericTools.disable_auto_clip_browse()
         for i in range(self.slices_in_y):
             # vertical stuff
             for j in range(self.slices_in_x):
@@ -135,4 +138,4 @@ class RenderMerger(object):
 
                 prev_merge = merge
                 t += 1
-        self.comp.Unlock()
+        GenericTools.set_auto_clip_browse(auto_browse)
