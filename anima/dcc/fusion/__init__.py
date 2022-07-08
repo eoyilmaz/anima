@@ -25,6 +25,7 @@ except exceptions:
 from anima import logger
 from anima.dcc import empty_reference_resolution
 from anima.dcc.base import DCCBase
+from anima.dcc.fusion.utils import NodeUtils
 from anima.recent import RecentFileManager
 
 
