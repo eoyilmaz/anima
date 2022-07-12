@@ -810,7 +810,7 @@ def get_root_nodes(reference_node=None):
             # consider the topmost parent reference file
             no_parent = (
                 parent.referenceFile().topmost_parent != reference_node.topmost_parent
-                if parent
+                if parent and parent.referenceFile() is not None
                 else True
             )
 
