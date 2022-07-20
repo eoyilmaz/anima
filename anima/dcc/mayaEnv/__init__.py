@@ -310,10 +310,15 @@ workspace -fr "translatorData" "Outputs/data";
             "set_arnold_texture_search_path() took " "%f seconds" % (end - start)
         )
 
-    def save_as(self, version, run_pre_publishers=True):
+    def save_as(self, version, run_pre_publishers=True, allow_external_references=False):
         """The save_as action for maya dccDCC.
 
         It saves the given ``Version`` instance to the Version.absolute_full_path.
+
+        :param Version version: Stalker Version instance.
+        :param bool run_pre_publishers: Runs pre-publishers, True by default.
+        :param bool allow_external_references: Allows external references which are
+          unknown to Stalker. False by default.
         """
         # clean malware
         self.clean_malware()
@@ -356,8 +361,9 @@ workspace -fr "translatorData" "Outputs/data";
         # set version extension to ma
         version.extension = self.extensions[0]
 
-        # do not save if there are local files
-        self.check_external_files(version)
+        if not allow_external_references:
+            # do not save if there are local files
+            self.check_external_files(version)
 
         # define that this version is created with Maya
         version.created_with = self.name
