@@ -1213,9 +1213,14 @@ class Previs(object):
         seq.get_sequence_name()
 
         # create shot nodes from cameras
+        import time
         for cam in cams:
             # read camera keyframes
+            print("-------------------------------------------")
+            print(cam)
+            start_time = time.time()
             keyframes = pm.keyframe(cam.tx, q=1, timeChange=True)
+            print("pm.keyframes()             : {:0.2f} s".format(time.time() - start_time))
 
             if not keyframes:
                 continue
@@ -1224,14 +1229,25 @@ class Previs(object):
             end_frame = keyframes[-1]
 
             # create a shot node
+            start_time = time.time()
             shot = seq.create_shot()
+            print("seq.create_shot()          : {:0.2f} s".format(time.time() - start_time))
+            start_time = time.time()
             shot.startFrame.set(start_frame)
             shot.endFrame.set(end_frame)
+            print("set startFrame and endFrame: {:0.2f} s".format(time.time() - start_time))
+            start_time = time.time()
             shot.setSequenceStartTime(start_frame)
+            print("shot.setSequenceStartTime(): {:0.2f} s".format(time.time() - start_time))
+            start_time = time.time()
             shot.set_camera(cam)
+            print("shot.set_camera()          : {:0.2f} s".format(time.time() - start_time))
 
             # TODO: write this properly
+            start_time = time.time()
             shot.track.set(1)
+            print("shot.track.set(1)          : {:0.2f} s".format(time.time() - start_time))
+            print("Done! {}".format(cam))
 
     @classmethod
     def save_previs_to_shots(cls):
