@@ -2,7 +2,7 @@
 
 name = "fusion"
 
-version = "18.0.b4"
+version = "18.0.0"
 
 author = [
     "Erkan Ozgur Yilmaz"
