@@ -1891,6 +1891,9 @@ def duplicate_task_hierarchy(
 
     :return: A list of stalker.models.task.Task
     """
+    from stalker import Shot
+    from stalker.db.session import DBSession
+
     dup_tasks = []
     for i in range(number_of_copies):
         dup_task = walk_and_duplicate_task_hierarchy(
@@ -1906,19 +1909,23 @@ def duplicate_task_hierarchy(
         dup_task.parent = parent
         # just rename the dup_task
 
+        # check if this is a Shot before setting the name
+        if isinstance(task, Shot):
+            # generate a new unique name
+            name = generate_unique_shot_name(name)
+
+            # set the other data
+            dup_task.sequences = task.sequences
+            dup_task.cut_in = task.cut_in
+            dup_task.cut_out = task.cut_out
+
         dup_task.name = name
         dup_task.code = name
         dup_task.description = description
 
-        from stalker import Shot
-
-        if isinstance(task, Shot):
-            dup_task.sequences = task.sequences
-
-        from stalker.db.session import DBSession
-
-        DBSession.add(dup_task)
         dup_tasks.append(dup_task)
+        DBSession.add(dup_task)
+        DBSession.commit()
 
     return dup_tasks
 

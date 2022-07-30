@@ -49,7 +49,7 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         self.main_layout.addWidget(self.line_edit)
 
         # number of copies
-        self.number_of_copies_spin_box = QtWidgets.QSpinbox(self)
+        self.number_of_copies_spin_box = QtWidgets.QSpinBox(self)
         self.number_of_copies_spin_box.setMinimum(1)
         self.number_of_copies_spin_box.setMaximum(1000)
         self.main_layout.addWidget(self.number_of_copies_spin_box)
