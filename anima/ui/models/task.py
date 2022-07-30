@@ -305,6 +305,9 @@ class TaskItem(QtGui.QStandardItem):
         self.fetched_all = False
         self.fetchMore()
 
+    def __hash__(self):
+        return self.task.id
+
 
 class TaskTreeModel(QtGui.QStandardItemModel):
     """Implements the model view for the task hierarchy"""

@@ -17,9 +17,10 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
 
         # storage for widgets
         self.main_layout = None
+        self.rename_new_task_checkbox = None
         self.label = None
-        self.line_edit = None
-        self.check_box = None
+        self.task_name_line_edit = None
+        self.keep_resources_check_box = None
         self.number_of_copies_spin_box = None
         self.button_box = None
 
@@ -32,34 +33,60 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         self.setWindowTitle("Duplicate Task Hierarchy")
 
         # set window size
-        self.resize(285, 118)
+        self.resize(420, 118)
 
         # create the main layout
         self.main_layout = QtWidgets.QVBoxLayout(self)
         self.setLayout(self.main_layout)
 
-        # the label
-        self.label = QtWidgets.QLabel(self)
-        self.label.setText("Duplicated Task Name:")
-        self.main_layout.addWidget(self.label)
+        # form layout
+        form_layout = QtWidgets.QFormLayout()
+        self.main_layout.addLayout(form_layout)
+
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        i = 0
+        # =======================
+        # Rename Tasks
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Rename Tasks", self))
+
+        self.rename_new_task_checkbox = QtWidgets.QCheckBox(self)
+        self.rename_new_task_checkbox.setChecked(False)
+        form_layout.setWidget(i, field_role, self.rename_new_task_checkbox)
+
+        # ====================
+        # Duplicated Task Name
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Duplicated Task Name", self))
 
         # the line edit
-        self.line_edit = QtWidgets.QLineEdit(self)
-        self.line_edit.setText(self.duplicated_task_name)
-        self.main_layout.addWidget(self.line_edit)
+        self.task_name_line_edit = QtWidgets.QLineEdit(self)
+        self.task_name_line_edit.setText(self.duplicated_task_name)
+        self.task_name_line_edit.setEnabled(False)
+        form_layout.setWidget(i, field_role, self.task_name_line_edit)
 
-        # number of copies
+        # ===================
+        # Number Of Copies
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Number Of Copies", self))
+
         self.number_of_copies_spin_box = QtWidgets.QSpinBox(self)
         self.number_of_copies_spin_box.setMinimum(1)
         self.number_of_copies_spin_box.setMaximum(1000)
-        self.main_layout.addWidget(self.number_of_copies_spin_box)
+        form_layout.setWidget(i, field_role, self.number_of_copies_spin_box)
 
-        # the checkbox
-        self.check_box = QtWidgets.QCheckBox(self)
-        self.check_box.setText("Keep resources")
-        self.check_box.setChecked(True)
-        self.main_layout.addWidget(self.check_box)
+        # ==============
+        # Keep Resources
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Keep Resources", self))
 
+        self.keep_resources_check_box = QtWidgets.QCheckBox(self)
+        self.keep_resources_check_box.setChecked(True)
+        form_layout.setWidget(i, field_role, self.keep_resources_check_box)
+
+        # ===================
         # the button box
         self.button_box = QtWidgets.QDialogButtonBox(self)
         self.button_box.setOrientation(QtCore.Qt.Horizontal)
@@ -71,6 +98,17 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         # setup signals
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
+        self.rename_new_task_checkbox.stateChanged.connect(
+            self.rename_new_task_checkbox_state_changed
+        )
+
+    def rename_new_task_checkbox_state_changed(self, state):
+        """Update the line edit
+
+        :param state:
+        :return:
+        """
+        self.task_name_line_edit.setEnabled(state)
 
 
 class TaskTreeView(QtWidgets.QTreeView):
@@ -596,31 +634,40 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                     result = dth_dialog.result()
                     if result == accepted:
-                        new_task_name = dth_dialog.line_edit.text()
+                        new_task_name = dth_dialog.task_name_line_edit.text()
+                        rename_new_tasks = (
+                            dth_dialog.rename_new_task_checkbox.isChecked()
+                        )
                         keep_resources = (
-                            dth_dialog.check_box.checkState()
+                            dth_dialog.keep_resources_check_box.checkState()
                         )
                         number_of_copies = dth_dialog.number_of_copies_spin_box.value()
 
                         from anima import utils
                         from stalker import Task
 
-                        task = Task.query.get(item.task.id)
-                        new_tasks = utils.duplicate_task_hierarchy(
-                            task,
-                            None,
-                            new_task_name,
-                            description="Duplicated from Task(%s)" % task.id,
-                            user=logged_in_user,
-                            keep_resources=keep_resources,
-                            number_of_copies=number_of_copies
-                        )
-                        if new_tasks:
-                            from stalker.db.session import DBSession
+                        new_tasks = []
+                        parents_to_reload = set()
+                        for item in self.get_selected_task_items():
+                            task = Task.query.get(item.task.id)
+                            new_tasks += utils.duplicate_task_hierarchy(
+                                task,
+                                None,
+                                new_task_name if rename_new_tasks else None,
+                                description="Duplicated from Task(%s)" % task.id,
+                                user=logged_in_user,
+                                keep_resources=keep_resources,
+                                number_of_copies=number_of_copies
+                            )
 
-                            DBSession.commit()
-                            item.parent.reload()
-                            self.find_and_select_entity_item(new_tasks)
+                            parents_to_reload.add(item.parent)
+
+                        # reload all the parents
+                        for parent in parents_to_reload:
+                            parent.reload()
+
+                        # now select new tasks
+                        self.find_and_select_entity_item(new_tasks)
 
                 elif selected_action is delete_task_action:
                     answer = QtWidgets.QMessageBox.question(
@@ -929,38 +976,37 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 self.find_and_select_entity_item(entity)
 
-    def find_and_select_entity_item(self, task, tree_view=None):
-        """finds and selects the task in the given tree_view item"""
-        if not task:
+    def find_and_select_entity_item(self, tasks, tree_view=None):
+        """Find and select the task in the given tree_view item.
+
+        :param tasks: A list of Stalker tasks. A single Task is also accepted.
+        :param tree_view: QTreeView or derivative.
+        """
+        if not tasks:
             return
 
-        # TODO: For now just select the first item in the list, update this later.
-        if isinstance(task, list):
-            task = task[0]
+        selection_model = self.selectionModel()
+        selection_model.clearSelection()
+        selection_flag = QtCore.QItemSelectionModel.Select
 
         if not tree_view:
             tree_view = self
 
-        item = self.load_task_item_hierarchy(task, tree_view)
+        if not isinstance(tasks, list):
+            tasks = [tasks]
 
-        selection_model = self.selectionModel()
-        if not item:
-            selection_model.clearSelection()
-            return
+        items = []
+        for task in tasks:
+            item = self.load_task_item_hierarchy(task, tree_view)
+            if item:
+                selection_model.select(item.index(), selection_flag)
 
-        try:
-            selection_model.select(
-                item.index(), QtGui.QItemSelectionModel.ClearAndSelect
+        # scroll to the first item
+        if items:
+            self.scrollTo(
+                items[0].index(), QtWidgets.QAbstractItemView.PositionAtCenter
             )
-        except AttributeError:  # Fix for Qt5
-            selection_model.select(
-                item.index(), QtCore.QItemSelectionModel.ClearAndSelect
-            )
-
-        self.setCurrentIndex(item.index())
-
-        self.scrollTo(item.index(), QtWidgets.QAbstractItemView.PositionAtCenter)
-        return item
+        return items
 
     def load_task_item_hierarchy(self, task, tree_view):
         """loads the TaskItem related to the given task in the given tree_view

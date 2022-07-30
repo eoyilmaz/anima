@@ -1912,6 +1912,9 @@ def duplicate_task_hierarchy(
     from stalker import Shot
     from stalker.db.session import DBSession
 
+    if not name:
+        name = task.name
+
     dup_tasks = []
     for i in range(number_of_copies):
         if isinstance(task, Shot):
