@@ -20,6 +20,7 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         self.label = None
         self.line_edit = None
         self.check_box = None
+        self.number_of_copies_spin_box = None
         self.button_box = None
 
         # setup dialog
@@ -47,7 +48,13 @@ class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
         self.line_edit.setText(self.duplicated_task_name)
         self.main_layout.addWidget(self.line_edit)
 
-        # the check box
+        # number of copies
+        self.number_of_copies_spin_box = QtWidgets.QSpinbox(self)
+        self.number_of_copies_spin_box.setMinimum(1)
+        self.number_of_copies_spin_box.setMaximum(1000)
+        self.main_layout.addWidget(self.number_of_copies_spin_box)
+
+        # the checkbox
         self.check_box = QtWidgets.QCheckBox(self)
         self.check_box.setText("Keep resources")
         self.check_box.setChecked(True)
@@ -582,36 +589,38 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(tasks[0])
 
                 elif selected_action is duplicate_task_hierarchy_action:
-                    duplicate_task_hierarchy_dialog = DuplicateTaskHierarchyDialog(
+                    dth_dialog = DuplicateTaskHierarchyDialog(
                         parent=self, duplicated_task_name=item.task.name
                     )
-                    duplicate_task_hierarchy_dialog.exec_()
+                    dth_dialog.exec_()
 
-                    result = duplicate_task_hierarchy_dialog.result()
+                    result = dth_dialog.result()
                     if result == accepted:
-                        new_task_name = duplicate_task_hierarchy_dialog.line_edit.text()
+                        new_task_name = dth_dialog.line_edit.text()
                         keep_resources = (
-                            duplicate_task_hierarchy_dialog.check_box.checkState()
+                            dth_dialog.check_box.checkState()
                         )
+                        number_of_copies = dth_dialog.number_of_copies_spin_box.value()
 
                         from anima import utils
                         from stalker import Task
 
                         task = Task.query.get(item.task.id)
-                        new_task = utils.duplicate_task_hierarchy(
+                        new_tasks = utils.duplicate_task_hierarchy(
                             task,
                             None,
                             new_task_name,
                             description="Duplicated from Task(%s)" % task.id,
                             user=logged_in_user,
                             keep_resources=keep_resources,
+                            number_of_copies=number_of_copies
                         )
-                        if new_task:
+                        if new_tasks:
                             from stalker.db.session import DBSession
 
                             DBSession.commit()
                             item.parent.reload()
-                            self.find_and_select_entity_item(new_task)
+                            self.find_and_select_entity_item(new_tasks)
 
                 elif selected_action is delete_task_action:
                     answer = QtWidgets.QMessageBox.question(
@@ -922,12 +931,12 @@ class TaskTreeView(QtWidgets.QTreeView):
 
     def find_and_select_entity_item(self, task, tree_view=None):
         """finds and selects the task in the given tree_view item"""
-        # import time
-        # start = time.time()
         if not task:
-            # print('TaskTreeView.find_and_select_entity_item returned early '
-            #        '(1) and took: %0.2f seconds' % (time.time() - start))
             return
+
+        # TODO: For now just select the first item in the list, update this later.
+        if isinstance(task, list):
+            task = task[0]
 
         if not tree_view:
             tree_view = self
@@ -937,8 +946,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         selection_model = self.selectionModel()
         if not item:
             selection_model.clearSelection()
-            # print('TaskTreeView.find_and_select_entity_item returned early '
-            #        '(2) and took: %0.2f seconds' % (time.time() - start))
             return
 
         try:
@@ -953,8 +960,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         self.setCurrentIndex(item.index())
 
         self.scrollTo(item.index(), QtWidgets.QAbstractItemView.PositionAtCenter)
-        # print('TaskTreeView.find_and_select_entity_item took: '
-        #        '%0.2f seconds' % (time.time() - start))
         return item
 
     def load_task_item_hierarchy(self, task, tree_view):

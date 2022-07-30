@@ -1874,7 +1874,7 @@ def cleanup_duplicate_residuals(task):
 
 
 def duplicate_task_hierarchy(
-    task, parent, name, description, user, keep_resources=False
+    task, parent, name, description, user, keep_resources=False, number_of_copies=1
 ):
     """Duplicates the given task hierarchy.
 
@@ -1887,36 +1887,40 @@ def duplicate_task_hierarchy(
     :param description:
     :param user:
     :param keep_resources:
+    :param number_of_copies: The number of copies, default is 1.
 
     :return: A list of stalker.models.task.Task
     """
-    dup_task = walk_and_duplicate_task_hierarchy(
-        task, user, keep_resources=keep_resources
-    )
-    update_dependencies_in_duplicated_hierarchy(task)
+    dup_tasks = []
+    for i in range(number_of_copies):
+        dup_task = walk_and_duplicate_task_hierarchy(
+            task, user, keep_resources=keep_resources
+        )
+        update_dependencies_in_duplicated_hierarchy(task)
 
-    cleanup_duplicate_residuals(task)
-    # update the parent
-    if parent is None and task.parent is not None:
-        parent = task.parent
+        cleanup_duplicate_residuals(task)
+        # update the parent
+        if parent is None and task.parent is not None:
+            parent = task.parent
 
-    dup_task.parent = parent
-    # just rename the dup_task
+        dup_task.parent = parent
+        # just rename the dup_task
 
-    dup_task.name = name
-    dup_task.code = name
-    dup_task.description = description
+        dup_task.name = name
+        dup_task.code = name
+        dup_task.description = description
 
-    from stalker import Shot
+        from stalker import Shot
 
-    if isinstance(task, Shot):
-        dup_task.sequences = task.sequences
+        if isinstance(task, Shot):
+            dup_task.sequences = task.sequences
 
-    from stalker.db.session import DBSession
+        from stalker.db.session import DBSession
 
-    DBSession.add(dup_task)
+        DBSession.add(dup_task)
+        dup_tasks.append(dup_task)
 
-    return dup_task
+    return dup_tasks
 
 
 def fix_task_statuses(task):
