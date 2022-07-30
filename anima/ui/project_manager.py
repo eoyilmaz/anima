@@ -12,6 +12,7 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.utils import load_font
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -19,7 +20,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     __company_name__ = "Erkan Ozgur Yilmaz"
     __app_name__ = "Project Manager"
-    __version__ = "0.0.1"
+    __version__ = "1.0.0"
 
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
@@ -33,24 +34,23 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.project_dock_widget = None
 
-        # import qdarkgraystyle
-        # app = QtWidgets.QApplication.instance()
-        #
-        # from anima.ui.lib import IS_PYQT4, IS_PYSIDE, IS_PYSIDE2
-        #
-        # if IS_PYSIDE():
-        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet())
-        # elif IS_PYQT4():
-        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet(pyside=False))
-        # elif IS_PYSIDE2():
-        #     app.setStyleSheet(qdarkgraystyle.load_stylesheet_pyqt5())
+        app = QtWidgets.QApplication.instance()
+        default_application_font = app.font()
+        default_font_size = default_application_font.pixelSize()
+
+        loaded_font_families = load_font("FontAwesome.otf")
+        application_font = QtGui.QFont()
+        if loaded_font_families:
+            application_font.setFamily(loaded_font_families[0])
+            # self.application_font.setStyleHint(QtGui.QFont.Normal)
+            application_font.setPixelSize(default_font_size)
+            app.setFont(application_font)
 
         # storage for UI stuff
         self.task_dashboard_widget = None
         self.tasks_tree_view = None
 
         # self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
-
         self.settings = QtCore.QSettings(self.__company_name__, self.__app_name__)
         self._setup_ui()
 
