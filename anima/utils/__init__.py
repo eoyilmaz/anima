@@ -1667,17 +1667,16 @@ def file_browser_name():
     return file_browsers[platform.system().lower()]
 
 
-def generate_unique_shot_name(base_name, shot_name_increment=10):
+def generate_unique_shot_name(project, base_name, shot_name_increment=10):
     """generates a unique shot name and code based of the base_name
 
+    :param project: Search unique shot in this project.
     :param base_name: The base shot name
     :param int shot_name_increment: The increment amount
     """
-    logger.debug("generating unique shot number based on: %s" % base_name)
-    logger.debug("shot_name_increment is: %s" % shot_name_increment)
+    logger.debug("generating unique shot number based on: {}".format(base_name))
+    logger.debug("shot_name_increment is: {}".format(shot_name_increment))
     import re
-    from stalker.db.session import DBSession
-    from stalker import Shot
 
     regex = re.compile("[0-9]+")
 
@@ -1698,22 +1697,40 @@ def generate_unique_shot_name(base_name, shot_name_increment=10):
     # initialize from the given shot_number
     i = shot_number
 
-    logger.debug("start shot_number: %s" % shot_number)
+    logger.debug("start shot_number: {}".format(shot_number))
 
-    # initialize existing_shot variable with base_name
     while True and i < 100000:
         name_parts[-1] = str(i).zfill(padding)
         shot_name = "_".join(name_parts)
-        with DBSession.no_autoflush:
-            existing_shot = (
-                DBSession.query(Shot.name).filter(Shot.name == shot_name).first()
-            )
-        if not existing_shot:
+        if is_unique_shot_name(project, shot_name):
             logger.debug("generated unique shot name: %s" % shot_name)
             return shot_name
         i += shot_name_increment
 
     raise RuntimeError("Can not generate a unique shot name!!!")
+
+
+def is_unique_shot_name(project, shot_name):
+    """Check if the given shot name is unique for the given project.
+
+    :param Project project: A Stalker Project instance.
+    :param str shot_name: The Shot name to check against being unique.
+    :return: bool
+    """
+    from stalker.db.session import DBSession
+    from stalker import Shot
+    from sqlalchemy.sql import exists, and_
+
+    with DBSession.no_autoflush:
+        unique_shot_name = not DBSession.query(
+            exists().where(
+                and_(
+                    Shot.project == project,
+                    Shot.name == shot_name
+                )
+            )
+        ).scalar()
+    return unique_shot_name
 
 
 def duplicate_task(task, user, keep_resources=False):
@@ -1741,7 +1758,7 @@ def duplicate_task(task, user, keep_resources=False):
 
         # generate a unique shot name based on task.name
         logger.debug("generating unique shot name!")
-        shot_name = generate_unique_shot_name(task.name)
+        shot_name = generate_unique_shot_name(task.project, task.name)
 
         from anima import defaults
 
@@ -1882,11 +1899,12 @@ def duplicate_task_hierarchy(
     instance it finds in a new task.
 
     :param task: The task that wanted to be duplicated
-    :param parent:
-    :param name:
-    :param description:
-    :param user:
-    :param keep_resources:
+    :param parent: The parent task to move the newly created tasks under.
+    :param name: The new task name.
+    :param description: The new task description
+    :param user: The new task resource
+    :param bool keep_resources: If True, the task resources will be kept on newly
+      created tasks. Default is False.
     :param number_of_copies: The number of copies, default is 1.
 
     :return: A list of stalker.models.task.Task
@@ -1896,6 +1914,11 @@ def duplicate_task_hierarchy(
 
     dup_tasks = []
     for i in range(number_of_copies):
+        if isinstance(task, Shot):
+            # generate a new unique name
+            if not is_unique_shot_name(task.project, name):
+                name = generate_unique_shot_name(task.project, name)
+
         dup_task = walk_and_duplicate_task_hierarchy(
             task, user, keep_resources=keep_resources
         )
@@ -1911,9 +1934,6 @@ def duplicate_task_hierarchy(
 
         # check if this is a Shot before setting the name
         if isinstance(task, Shot):
-            # generate a new unique name
-            name = generate_unique_shot_name(name)
-
             # set the other data
             dup_task.sequences = task.sequences
             dup_task.cut_in = task.cut_in
