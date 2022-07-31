@@ -12,7 +12,7 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import load_font
+from anima.ui.utils import load_font, set_app_style
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -31,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.login_action = None
         self.logout_action = None
         self.logged_in_user = self.login()
-
+        self.dark_theme = True  # Dark Theme is default
         self.project_dock_widget = None
 
         app = QtWidgets.QApplication.instance()
@@ -53,6 +53,17 @@ class MainWindow(QtWidgets.QMainWindow):
         # self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
         self.settings = QtCore.QSettings(self.__company_name__, self.__app_name__)
         self._setup_ui()
+
+    def set_ui_theme(self, dark_theme=False):
+        """Set the UI theme.
+
+        Args:
+            dark_theme (bool): If set to True the dark_theme will be used.
+        """
+        self.dark_theme = dark_theme
+        qapp = QtWidgets.QApplication.instance()
+        if qapp:
+            set_app_style(qapp, dark_theme=dark_theme)
 
     @classmethod
     def setup_db(cls):
@@ -87,6 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("size", self.size())
         self.settings.setValue("pos", self.pos())
         self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("dark_theme", self.dark_theme)
         if self.task_dashboard_widget.task:
             self.settings.setValue(
                 "last_viewed_task_id", self.task_dashboard_widget.task.id
@@ -101,6 +113,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resize(self.settings.value("size", QtCore.QSize(800, 600)))
         self.move(self.settings.value("pos", QtCore.QPoint(100, 100)))
         self.restoreState(self.settings.value("windowState"))
+        bool_settings_value_lut = {"false": False, "true": True}
+        self.set_ui_theme(
+            dark_theme=bool_settings_value_lut[
+                self.settings.value("dark_theme", "false")
+            ]
+        )
 
         from anima.ui.views.task import TaskTreeView
 
@@ -155,7 +173,13 @@ class MainWindow(QtWidgets.QMainWindow):
         exit_action = file_menu.addAction("E&xit")
         exit_action.triggered.connect(self.close)
 
-        view_menu = self.menuBar().addMenu(self.tr("&View"))
+        view_menu = self.menuBar().addMenu("&View")
+        switch_theme = view_menu.addAction("Switch Theme")
+
+        def ui_theme_setter_wrapper():
+            self.set_ui_theme(not self.dark_theme)
+
+        switch_theme.triggered.connect(ui_theme_setter_wrapper)
 
         reset_action = view_menu.addAction("&Reset Window States")
         reset_action.triggered.connect(self.reset_window_state)
