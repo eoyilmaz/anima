@@ -12,7 +12,7 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import load_font, set_app_style
+from anima.ui.utils import load_font, set_widget_style
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -61,9 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
             dark_theme (bool): If set to True the dark_theme will be used.
         """
         self.dark_theme = dark_theme
-        qapp = QtWidgets.QApplication.instance()
-        if qapp:
-            set_app_style(qapp, dark_theme=dark_theme)
+        set_widget_style(self, dark_theme=dark_theme)
 
     @classmethod
     def setup_db(cls):
