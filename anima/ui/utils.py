@@ -369,15 +369,15 @@ def set_widget_bg_color(widget, color):
     )
 
 
-def set_app_style(app, dark_theme=False):
+def set_widget_style(widget, dark_theme=False):
     """Set the application style.
 
-    :param app: A QtWidgets.QApplication instance.
+    :param widget: A QtWidgets.QWidget instance.
     :param dark_theme: Set it True for a darker theme.
     """
     # Force the style to be the same on all OSs:
-    app.setStyle("Fusion")
-    palette = app.palette()
+    # widget.setStyle("Fusion")
+    palette = widget.palette()
 
     if os.getenv("RBL_PIPE_UI_DARK") or dark_theme:
         # Now use a palette to switch to dark colors:
@@ -418,4 +418,4 @@ def set_app_style(app, dark_theme=False):
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(48, 140, 198))
         palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
 
-    app.setPalette(palette)
+    widget.setPalette(palette)
