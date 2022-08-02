@@ -2022,6 +2022,15 @@ class Playblaster(object):
         import os
         import glob
 
+        frame_rate = 25
+        from anima.dcc import mayaEnv
+
+        maya_env = mayaEnv.Maya()
+        v = maya_env.get_current_version()
+        if v:
+            frame_rate = v.task.project.fps
+
+
         # convert image sequences to h264
         new_result = []
         original_image_sequence_path = ""
@@ -2054,7 +2063,10 @@ class Playblaster(object):
                         if start_number < smallest_start_number:
                             smallest_start_number = start_number
 
-                    options = {"start_number": smallest_start_number}
+                    options["start_number"] = smallest_start_number
+            
+                # use the correct frame rate
+                options["framerate"] = frame_rate
 
                 # first convert the #'s to %03d format
                 temp_str = video_file_path.replace("#", "")
@@ -2076,13 +2088,6 @@ class Playblaster(object):
                         # and should be converted to a TimeCode
                         audio_offset = audio_data.get("offset", 0)
                         audio_duration = audio_data.get("duration", 0)
-                        frame_rate = 25
-                        from anima.dcc import mayaEnv
-
-                        maya_env = mayaEnv.Maya()
-                        v = maya_env.get_current_version()
-                        if v:
-                            frame_rate = v.task.project.fps
 
                         options["i"] = [
                             os.path.normpath(video_file_path),
