@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Custom UI items and models are here."""
 
-from anima import logger, defaults
+from anima import defaults, logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font
 
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import aliased
 
-from stalker import Task, Project, User, SimpleEntity
+from stalker import Project, SimpleEntity, Task, User
 from stalker.db.session import DBSession
 from stalker.models.task import Task_Resources
 
 
 class TaskIcon(QtGui.QIcon):
-    """A custom QIcon that creates icons from text"""
+    """A custom QIcon that creates icons from text."""
 
     task_entity_type_icons = {
         "Task": "\uf0ae",
@@ -38,14 +39,11 @@ class TaskIcon(QtGui.QIcon):
             self.icon_font.setPixelSize(14)
 
     def paint(self, *args, **kwargs):
-        """Custom painter
+        """Customize the painter.
 
-        :param QPainter painter:
-        :param QRect rect:
-        :param Qt.Alignment alignment:
-        :param mode:
-        :param state:
-        :return:
+        Args:
+            args: Arguments.
+            kwargs: Keyword arguments
         """
         super(TaskIcon, self).paint(*args, **kwargs)
 
@@ -62,12 +60,26 @@ class TaskIcon(QtGui.QIcon):
 
 
 class TaskNameCompleter(QtWidgets.QCompleter):
+    """Task name completer.
+
+    Currently this is not used anywhere. Needs more work.
+
+    Args:
+        parent: The parent QWidget.
+    """
+
     def __init__(self, parent):
         QtWidgets.QCompleter.__init__(self, [], parent)
 
     def update(self, completion_prefix):
+        """Update the completion.
 
-        tasks = Task.query.filter(Task.name.ilike("%" + completion_prefix + "%")).all()
+        Args:
+            completion_prefix (str): The completion prefix.
+        """
+        tasks = Task.query.filter(
+            Task.name.ilike("%{}%".format(completion_prefix))
+        ).all()
         logger.debug("completer tasks : %s" % tasks)
         task_names = [task.name for task in tasks]
         model = QtGui.QStringListModel(task_names)
@@ -159,11 +171,11 @@ class TaskNameCompleter(QtWidgets.QCompleter):
 
 
 class TaskItem(QtGui.QStandardItem):
-    """Implements the Task as a QStandardItem
+    """Implement the Task as a QStandardItem.
 
-
-    :param entity: An entity that has id, name, entity_type, status_id and
-      has_children fields
+    Args:
+        entity: An entity that has id, name, entity_type, status_id and has_children
+            fields
     """
 
     task_entity_types = ["Task", "Asset", "Shot", "Sequence"]
@@ -184,7 +196,11 @@ class TaskItem(QtGui.QStandardItem):
         self.setData(self.task.name, QtCore.Qt.DisplayRole)
 
     def clone(self):
-        """returns a copy of this item"""
+        """Return a copy of this item.
+
+        Returns:
+            TaskItem: A copy of this item.
+        """
         logger.debug("TaskItem.clone() is started for item: %s" % self.text())
         new_item = TaskItem(task=self.task)
         new_item.parent = self.parent
@@ -193,6 +209,11 @@ class TaskItem(QtGui.QStandardItem):
         return new_item
 
     def canFetchMore(self):
+        """Check if this item have children.
+
+        Returns:
+            bool: True if the item has children, False otherwise.
+        """
         logger.debug("TaskItem.canFetchMore() is started for item: %s" % self.text())
         # return_value = False
         if self.task and self.task.id and not self.fetched_all:
@@ -203,6 +224,7 @@ class TaskItem(QtGui.QStandardItem):
         return return_value
 
     def fetchMore(self):
+        """Fetch child items."""
         logger.debug("TaskItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
@@ -265,7 +287,8 @@ class TaskItem(QtGui.QStandardItem):
             if task_items:
                 # self.appendRows(task_items)
                 for task_item in task_items:
-                    # TODO: Create a custom QStandardItem for each data type in different columns
+                    # TODO: Create a custom QStandardItem for each data type in
+                    #       different columns
                     entity_type_item = QtGui.QStandardItem()
                     entity_type_item.setData(
                         task_item.task.entity_type, QtCore.Qt.DisplayRole
@@ -285,6 +308,11 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.fetchMore() is finished for item: %s" % self.text())
 
     def hasChildren(self):
+        """Check if this TaskItem has children.
+
+        Returns:
+            bool: True if the Task related to this item has children, False otherwise.
+        """
         logger.debug("TaskItem.hasChildren() is started for item: %s" % self.text())
         return_value = self.task.has_children
 
@@ -292,23 +320,36 @@ class TaskItem(QtGui.QStandardItem):
         return return_value
 
     def type(self, *args, **kwargs):
-        """ """
+        """Generate a custom type to distinguish this item from a QStandardItem.
+
+        Args:
+            args (list): The given arguments.
+            kwargs (dict): The given keyword arguments.
+
+        Returns:
+            int: The custom user type value.
+        """
         return QtGui.QStandardItem.UserType + 1
 
     def reload(self):
-        """reloads the self data"""
+        """Reload the data."""
         # delete all the children and fetch them again
-        for i in range(self.rowCount()):
+        for _ in range(self.rowCount()):
             self.removeRow(0)
         self.fetched_all = False
         self.fetchMore()
 
     def __hash__(self):
+        """Generate a hash value from the Task.id.
+
+        Returns:
+            int: The hash value which is the task id.
+        """
         return self.task.id
 
 
 class TaskTreeModel(QtGui.QStandardItemModel):
-    """Implements the model view for the task hierarchy"""
+    """Implement the model view for the task hierarchy."""
 
     def __init__(self, *args, **kwargs):
         QtGui.QStandardItemModel.__init__(self, *args, **kwargs)
@@ -317,10 +358,13 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug("TaskTreeModel.__init__() is finished")
 
     def flags(self, model_index):
-        """Returns model flags
+        """Return model flags.
 
-        :param model_index: The item models index
-        :return:
+        Args:
+            model_index: The item models index.
+
+        Returns:
+            int: Combined enum data of model flags.
         """
         if not model_index.isValid():
             return (
@@ -338,12 +382,38 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         )
 
     def canDropMimeData(self, data, action, row, column, parent):
+        """Return if the item in the index can drop mime data.
+
+        Args:
+            data: The data.
+            action: The given action.
+            row: The dropped row.
+            column: The dropped column.
+            parent: The dropped parent item's model index.
+
+        Returns:
+            bool: Returns True if the data and action were handled by the model,
+                otherwise returns False.
+        """
         return True
 
     def mimeTypes(self):
+        """Return the supported mime types.
+
+        Returns:
+            list: A list of strings of supported mime types.
+        """
         return ["application/vnd.treeviewdragdrop.list"]
 
     def mimeData(self, indexes):
+        """Generate the mime data.
+
+        Args:
+            indexes (list): List of dragged items' model indexes.
+
+        Returns:
+            QtCore.QMimeData: The QMimeData that contains the dragged Tasks ids.
+        """
         encoded_data = QtCore.QByteArray()
         stream = QtCore.QDataStream(encoded_data, QtCore.QIODevice.WriteOnly)
         for index in indexes:
@@ -357,7 +427,19 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return mime_data
 
     def dropMimeData(self, data, action, row, column, parent):
-        """Handle drop data."""
+        """Handle drop data.
+
+        Args:
+            data: The data.
+            action: The given action.
+            row: The dropped row.
+            column: The dropped column.
+            parent: The dropped parent item's model index.
+
+        Returns:
+            bool: Returns True if the data and action were handled by the model,
+                otherwise returns False.
+        """
         if action == QtCore.Qt.IgnoreAction:
             return True
         if not data.hasFormat("application/vnd.treeviewdragdrop.list"):
@@ -391,10 +473,19 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return True
 
     def supportedDropActions(self):
+        """Return the supported drop actions.
+
+        Returns:
+            int: A combined int of enum data of QtCore.Qt.*Action of sort.
+        """
         return QtCore.Qt.MoveAction
 
     def populateTree(self, projects):
-        """populates tree with user projects"""
+        """Populate tree with user projects.
+
+        Args:
+            projects (list): A list of Stalker Project instances.
+        """
         logger.debug("TaskTreeModel.populateTree() is started")
         self.setColumnCount(4)
         self.setHorizontalHeaderLabels(["Name", "Type", "Resources", "Dependencies"])
@@ -423,6 +514,14 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug("TaskTreeModel.populateTree() is finished")
 
     def canFetchMore(self, index):
+        """Check if the item can fetch more items.
+
+        Args:
+            index: The model index.
+
+        Returns:
+            bool: True if the item with the given index can fetch more items.
+        """
         logger.debug("TaskTreeModel.canFetchMore() is started for index: %s" % index)
         if not index.isValid():
             return_value = False
@@ -433,7 +532,11 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return return_value
 
     def fetchMore(self, index):
-        """fetches more elements"""
+        """Fetch more elements.
+
+        Args:
+            index: The model index.
+        """
         logger.debug("TaskTreeModel.canFetchMore() is started for index: %s" % index)
         if index.isValid():
             item = self.itemFromIndex(index)
@@ -442,6 +545,12 @@ class TaskTreeModel(QtGui.QStandardItemModel):
 
     def hasChildren(self, index):
         """Return True or False depending on to the index and the item on the index.
+
+        Args:
+            index: The model index.
+
+        Returns:
+            bool: True if the item in the given index has children, False otherwise.
         """
         logger.debug("TaskTreeModel.hasChildren() is started for index: %s" % index)
         if not index.isValid():
@@ -456,7 +565,11 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return return_value
 
     def reload(self, index):
-        """Reload the item at the given index."""
+        """Reload the item at the given index.
+
+        Args:
+            index: The model index to reload.
+        """
         if not index.isValid():
             # just return
             return
