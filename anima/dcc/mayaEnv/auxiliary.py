@@ -2067,6 +2067,7 @@ class Playblaster(object):
             
                 # use the correct frame rate
                 options["framerate"] = frame_rate
+                options["r"] = frame_rate
 
                 # first convert the #'s to %03d format
                 temp_str = video_file_path.replace("#", "")
