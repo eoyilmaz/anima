@@ -307,7 +307,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         from stalker import Task
 
-        task = Task.query.get(task_id)
+        task = Task.query.filter_by(id=task_id).first()
 
         # update the task dashboard widget
         self.task_dashboard_widget.task = task
