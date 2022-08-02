@@ -1949,7 +1949,7 @@ class Playblaster(object):
             output_dir = os.path.join(os.path.dirname(pm.sceneName()), "temp")
             import tempfile
 
-            playblast_options["filename"] = os.path.join(output_dir, filename)
+            playblast_options["filename"] = os.path.join(output_dir, filename).replace("\\", "/")
 
         from anima.dcc import mayaEnv
 
@@ -2051,7 +2051,7 @@ class Playblaster(object):
                 # add start_number option
                 temp_str = video_file_path.replace("#", "*")
                 sequence = sorted(glob.glob(temp_str))
-                options = {"-y": ""}  # overwrite previous playblast
+                options = dict()
                 if sequence:
                     # Ep002_004_0210_v007.mov.####.png
                     # fix start number for %04d to %05d passage (eg. 9900 to 10010)
