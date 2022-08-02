@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from anima import logger
+from anima import logger, defaults
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font
+
+from sqlalchemy.dialects.postgresql import array_agg
+from sqlalchemy.orm import aliased
+
+from stalker import Task, Project, User, SimpleEntity
+from stalker.db.session import DBSession
+from stalker.models.task import Task_Resources
 
 
 class TaskIcon(QtGui.QIcon):
@@ -59,7 +66,6 @@ class TaskNameCompleter(QtWidgets.QCompleter):
         QtWidgets.QCompleter.__init__(self, [], parent)
 
     def update(self, completion_prefix):
-        from stalker import Task
 
         tasks = Task.query.filter(Task.name.ilike("%" + completion_prefix + "%")).all()
         logger.debug("completer tasks : %s" % tasks)
@@ -200,12 +206,6 @@ class TaskItem(QtGui.QStandardItem):
         logger.debug("TaskItem.fetchMore() is started for item: %s" % self.text())
 
         if self.canFetchMore():
-            from sqlalchemy.orm import aliased
-            from sqlalchemy.dialects.postgresql import array_agg
-            from stalker import Task, User
-            from stalker.models.task import Task_Resources
-            from stalker.db.session import DBSession
-
             inner_tasks = aliased(Task)
             subquery = DBSession.query(Task.id).filter(Task.id == inner_tasks.parent_id)
 
@@ -246,8 +246,6 @@ class TaskItem(QtGui.QStandardItem):
             # # TODO: update it later on
 
             # start = time.time()
-            from anima import defaults
-
             task_items = []
             for task in tasks:
                 task_item = TaskItem(0, 4, task=task)
@@ -343,7 +341,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return True
 
     def mimeTypes(self):
-        return ['application/vnd.treeviewdragdrop.list']
+        return ["application/vnd.treeviewdragdrop.list"]
 
     def mimeData(self, indexes):
         encoded_data = QtCore.QByteArray()
@@ -353,39 +351,41 @@ class TaskTreeModel(QtGui.QStandardItemModel):
                 item = self.itemFromIndex(index)
                 if isinstance(item, TaskItem):
                     text = "{}".format(item.task.id)
-                    stream << QtCore.QByteArray(text.encode('utf-8'))
+                    stream << QtCore.QByteArray(text.encode("utf-8"))
         mime_data = QtCore.QMimeData()
-        mime_data.setData('application/vnd.treeviewdragdrop.list', encoded_data)
+        mime_data.setData("application/vnd.treeviewdragdrop.list", encoded_data)
         return mime_data
 
     def dropMimeData(self, data, action, row, column, parent):
         """Handle drop data."""
         if action == QtCore.Qt.IgnoreAction:
             return True
-        if not data.hasFormat('application/vnd.treeviewdragdrop.list'):
+        if not data.hasFormat("application/vnd.treeviewdragdrop.list"):
             return False
 
         parent_item = self.itemFromIndex(parent)
         if not isinstance(parent_item, TaskItem):
             return False
-        from stalker import Task
-        parent_task = Task.query.get(parent_item.task.id)
-        if not parent_task:
+        parent_entity = SimpleEntity.query.filter(
+            SimpleEntity.id == parent_item.task.id
+        ).first()
+        if not parent_entity:
             return False
 
-        encoded_data = data.data('application/vnd.treeviewdragdrop.list')
+        encoded_data = data.data("application/vnd.treeviewdragdrop.list")
         stream = QtCore.QDataStream(encoded_data, QtCore.QIODevice.ReadOnly)
         dropped_ids = []
         while not stream.atEnd():
             text = QtCore.QByteArray()
             stream >> text
-            text = bytes(text).decode('utf-8')
+            text = bytes(text).decode("utf-8")
             dropped_ids.append(text)
         for id_ in dropped_ids:
             dropped_task = Task.query.get(id_)
-            dropped_task.parent = parent_task
-
-        from stalker.db.session import DBSession
+            if isinstance(parent_entity, Task):
+                dropped_task.parent = parent_entity
+            elif isinstance(parent_entity, Project):
+                dropped_task.parent = None
         DBSession.commit()
         parent_item.reload()
         return True
@@ -410,8 +410,6 @@ class TaskTreeModel(QtGui.QStandardItemModel):
             project_item.setFont(my_font)
 
             # color with task status
-            from anima import defaults
-
             project_item.setData(
                 QtGui.QColor(*defaults.status_colors_by_id.get(project.status_id)),
                 QtCore.Qt.BackgroundRole,
@@ -443,14 +441,10 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         logger.debug("TaskTreeModel.canFetchMore() is finished for index: %s" % index)
 
     def hasChildren(self, index):
-        """returns True or False depending on to the index and the item on the
-        index
+        """Return True or False depending on to the index and the item on the index.
         """
         logger.debug("TaskTreeModel.hasChildren() is started for index: %s" % index)
         if not index.isValid():
-            from stalker import Project
-            from stalker.db.session import DBSession
-
             projects_count = DBSession.query(Project.id).count()
             return_value = projects_count > 0
         else:
@@ -462,7 +456,7 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         return return_value
 
     def reload(self, index):
-        """reloads the item at the given index"""
+        """Reload the item at the given index."""
         if not index.isValid():
             # just return
             return
