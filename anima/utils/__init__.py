@@ -787,6 +787,19 @@ class MediaManager(object):
             # append the value
             args.append(str(value))
 
+        # process framerate option
+        # if this is included later it causes the video duration to be
+        # interpretted in a wrong manner
+        if "framerate" in kwargs:
+            key = "framerate"
+            flag = "-%s" % key
+            # use pop to remove the key
+            value = kwargs.pop(key)
+            # append the flag
+            args.append(flag)
+            # append the value
+            args.append(str(value))
+
         # first process the -i flag
         if "i" in kwargs:
             ss_key = "ss"
@@ -854,13 +867,13 @@ class MediaManager(object):
                     args.append(str(v))
 
         # if output format is not a jpg or png
-        if output.split(".")[-1] not in ["jpg", "jpeg", "png", "tga"]:
-            # use all cpus
-            import multiprocessing
+        # if output.split(".")[-1] not in ["jpg", "jpeg", "png", "tga"]:
+        #     # use all cpus
+        #     import multiprocessing
 
-            num_of_threads = multiprocessing.cpu_count()
-            args.append("-threads")
-            args.append("%s" % num_of_threads)
+        #     num_of_threads = multiprocessing.cpu_count()
+        #     args.append("-threads")
+        #     args.append("%s" % num_of_threads)
 
         # overwrite any file
         args.append("-y")
