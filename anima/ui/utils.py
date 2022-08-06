@@ -7,7 +7,7 @@ from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 
-def get_icon(icon_name):
+def get_app_icon(icon_name):
     """Returns an icon from ui library"""
     import time
 
