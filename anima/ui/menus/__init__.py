@@ -3,6 +3,7 @@ from functools import partial
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from stalker import Project, Status, StatusList, Studio
+import qtawesome
 
 if False:
     # this is for the IDE to pickup the code more easily
@@ -23,6 +24,7 @@ class MainMenuBar(QtWidgets.QMenuBar):
     view_project_signal = QtCore.Signal(object)
     view_studio_signal = QtCore.Signal(object)
     view_user_signal = QtCore.Signal(object)
+    create_project_signal = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
         super(MainMenuBar, self).__init__(*args, **kwargs)
@@ -91,6 +93,12 @@ class MainMenuBar(QtWidgets.QMenuBar):
                 project_action.triggered.connect(
                     partial(self.view_project_signal.emit, project)
                 )
+        # also add the new project dialog
+        self.projects_menu.addSeparator()
+        plus_icon = qtawesome.icon("fa5s.plus")
+        new_project_action = self.projects_menu.addAction("New Project")
+        new_project_action.setIcon(plus_icon)
+        new_project_action.triggered.connect(self.create_project_signal.emit)
 
     def home_action_triggered(self):
         """Get the logged in user and emit a View User signal."""
