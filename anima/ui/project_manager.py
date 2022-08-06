@@ -15,6 +15,8 @@ from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font, set_widget_style
 from anima.ui.menus import MainMenuBar
 
+from stalker import Client, Department, Group, User
+
 if False:
     from PySide2 import QtCore, QtGui, QtWidgets
 
@@ -87,11 +89,52 @@ class MainWindow(QtWidgets.QMainWindow):
         app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))
 
-        self.setMenuBar(MainMenuBar())
+        menu_bar = MainMenuBar()
+        self.setMenuBar(menu_bar)
+        menu_bar.view_project_signal.connect(self.view_project)
+        menu_bar.view_user_signal.connect(self.view_user)
+        menu_bar.view_studio_signal.connect(self.view_studio)
+        menu_bar.list_clients_signal.connect(self.list_clients)
+        menu_bar.list_departments_signal.connect(self.list_departments)
+        menu_bar.list_groups_signal.connect(self.list_groups)
+        menu_bar.list_users_signal.connect(self.list_users)
+
         self.create_toolbars()
         self.create_dock_widgets()
 
         self.read_settings()
+
+    def list_clients(self):
+        """Show List Clients page."""
+        for client in Client.query.order_by(Client.name).all():
+            print(client.name)
+
+    def list_departments(self):
+        """Show List Departments page."""
+        for department in Department.query.order_by(Department.name).all():
+            print(department.name)
+
+    def list_groups(self):
+        """Show List Groups page."""
+        for group in Group.query.order_by(Group.name).all():
+            print(group.name)
+
+    def list_users(self):
+        """Show List Users page."""
+        for user in User.query.order_by(User.name).all():
+            print(user.name)
+
+    def view_project(self, project):
+        """Show Project page."""
+        print(project.name)
+
+    def view_user(self, user):
+        """Show User page."""
+        print(user.name)
+
+    def view_studio(self, studio):
+        """Show Studio page."""
+        print(studio.name)
 
     def write_settings(self):
         """stores the settings to persistent storage"""
