@@ -3,6 +3,7 @@ import anima.utils
 from anima import logger
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.task import TaskTreeModel
+import qtawesome
 
 
 class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
@@ -304,7 +305,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         if task_id:
             entity = SimpleEntity.query.get(task_id)
 
-        reload_action = menu.addAction("\uf0e8 Reload")
+        reload_action = menu.addAction(qtawesome.icon("ei.refresh"), "Reload")
 
         # sub menus
         create_sub_menu = menu.addMenu("Create")
@@ -313,43 +314,52 @@ class TaskTreeView(QtWidgets.QTreeView):
         if defaults.is_power_user(logged_in_user):
             # create the Create Project menu item
             create_project_action = create_sub_menu.addAction(
-                "\uf0e8 Create Project..."
+                qtawesome.icon("fa5s.sitemap"), "Create Project..."
             )
 
             if isinstance(entity, Project):
                 # this is a project!
                 if defaults.is_power_user(logged_in_user):
                     update_project_action = update_sub_menu.addAction(
-                        "\uf044 Update Project..."
+                        qtawesome.icon("fa.pencil-square-o"), "Update Project..."
                     )
-                    assign_users_action = menu.addAction("\uf0c0 Assign Users...")
+                    assign_users_action = menu.addAction(
+                        qtawesome.icon("fa5s.users"), "Assign Users..."
+                    )
                     create_project_structure_action = create_sub_menu.addAction(
-                        "\uf115 Create Project Structure"
+                        qtawesome.icon("fa5.folder-open"), "Create Project Structure"
                     )
                     create_child_task_action = create_sub_menu.addAction(
-                        "\uf0ae Create Child Task..."
+                        qtawesome.icon("fa.tasks"), "Create Child Task..."
                     )
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
-                    # export_to_json_action = create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+                    # export_to_json_action = create_sub_menu.addAction(
+                    #     qtawesome.icon("fa5s.file-export"), "Export To JSON..."
+                    # )
 
                     import_from_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Import From JSON..."
+                        qtawesome.icon("fa5s.file-import"), "Import From JSON..."
                     )
 
         if entity:
             # separate the Project and Task related menu items
             menu.addSeparator()
 
-            open_in_web_browser_action = menu.addAction("\uf14c Open In Web Browser...")
-            open_in_file_browser_action = menu.addAction("\uf07c Browse Folders...")
-            copy_url_action = menu.addAction("\uf0c5 Copy URL")
-            copy_id_to_clipboard = menu.addAction("\uf0c5 Copy ID to clipboard")
+            open_in_web_browser_action = menu.addAction(
+                qtawesome.icon("fa.external-link-square"), "Open In Web Browser..."
+            )
+            open_in_file_browser_action = menu.addAction(
+                qtawesome.icon("fa5.folder-open"), "Browse Folders..."
+            )
+            copy_icon = qtawesome.icon("fa5.copy")
+            copy_url_action = menu.addAction(copy_icon, "Copy URL")
+            copy_id_to_clipboard = menu.addAction(copy_icon, "Copy ID to clipboard")
 
             if isinstance(entity, Task):
                 # this is a task
                 create_project_structure_action = create_sub_menu.addAction(
-                    "\uf115 Create Task Folder Structure"
+                    qtawesome.icon("fa5.folder-open"), "Create Task Folder Structure"
                 )
 
                 task = entity
@@ -365,14 +375,17 @@ class TaskTreeView(QtWidgets.QTreeView):
                 ]:
                     create_sub_menu.addSeparator()
                     create_time_log_action = create_sub_menu.addAction(
-                        "\uf073 Create TimeLog..."
+                        qtawesome.icon("fa5.calendar-alt"), "Create TimeLog..."
                     )
 
                 # Add Depends To menu
                 menu.addSeparator()
                 depends = task.depends
                 if depends:
-                    depends_to_menu = menu.addMenu("\uf090 Depends To")
+                    depends_to_menu = menu.addMenu(
+                        qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
+                        "Depends To"
+                    )
 
                     for dTask in depends:
                         action = depends_to_menu.addAction(dTask.name)
@@ -381,14 +394,19 @@ class TaskTreeView(QtWidgets.QTreeView):
                 # Add Dependent Of Menu
                 dependent_of = task.dependent_of
                 if dependent_of:
-                    dependent_of_menu = menu.addMenu("\uf08b Dependent Of")
+                    dependent_of_menu = menu.addMenu(
+                        qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
+                        "Dependent Of"
+                    )
 
                     for dTask in dependent_of:
                         action = dependent_of_menu.addAction(dTask.name)
                         action.task = dTask
 
                 if not depends and not dependent_of:
-                    no_deps_action = menu.addAction("\uf00d No Dependencies")
+                    no_deps_action = menu.addAction(
+                        qtawesome.icon("ph.x-bold"), "No Dependencies"
+                    )
                     no_deps_action.setEnabled(False)
 
                 # update task and create child task menu items
@@ -396,39 +414,43 @@ class TaskTreeView(QtWidgets.QTreeView):
                 if defaults.is_power_user(logged_in_user):
                     create_sub_menu.addSeparator()
                     update_task_action = update_sub_menu.addAction(
-                        "\uf044 Update Task..."
+                        qtawesome.icon("fa.pencil-square-o"), "Update Task..."
                     )
 
                     upload_thumbnail_action = update_sub_menu.addAction(
-                        "\uf03e Upload Thumbnail..."
+                        qtawesome.icon("fa5.image"), "Upload Thumbnail..."
                     )
 
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
                     export_to_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Export To JSON..."
+                        qtawesome.icon("fa5s.file-export"), "Export To JSON..."
                     )
 
                     import_from_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Import From JSON..."
+                        qtawesome.icon("fa5s.file-import"), "Import From JSON..."
                     )
                     create_sub_menu.addSeparator()
 
                     create_child_task_action = create_sub_menu.addAction(
-                        "\uf0ae Create Child Task..."
+                        qtawesome.icon("fa.tasks"), "Create Child Task..."
                     )
 
                     duplicate_task_hierarchy_action = create_sub_menu.addAction(
-                        "\uf0c5 Duplicate Task Hierarchy..."
+                        qtawesome.icon("fa5.copy"), "Duplicate Task Hierarchy..."
                     )
-                    delete_task_action = menu.addAction("\uf1f8 Delete Task...")
+                    delete_task_action = menu.addAction(
+                        qtawesome.icon("fa5.trash-alt"), "Delete Task..."
+                    )
 
                     menu.addSeparator()
 
                 # create the status_menu
                 status_menu = update_sub_menu.addMenu("Status")
 
-                fix_task_status_action = status_menu.addAction("\uf0e8 Fix Task Status")
+                fix_task_status_action = status_menu.addAction(
+                    qtawesome.icon("fa5s.sitemap"), "Fix Task Status"
+                )
 
                 assert isinstance(status_menu, QtWidgets.QMenu)
                 status_menu.addSeparator()
