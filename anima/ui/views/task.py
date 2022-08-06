@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import anima.utils
 from anima import logger
-from anima.ui.lib import QtWidgets
+from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.task import TaskTreeModel
 from anima.ui.utils import get_cached_icon
 

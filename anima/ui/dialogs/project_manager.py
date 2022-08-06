@@ -98,14 +98,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_dock_widgets()
 
         self.read_settings()
-        # from anima.ui.styles import DarkStyle
-
-        # proxy = DarkStyle(QtWidgets.QApplication.instance().style())
-        # proxy.setParent(self)  # take ownership to avoid memleak
-        # self.setStyle(proxy)
-
-        # style = DarkStyle(self.style())
-        # self.setStyle(style)
 
     def list_clients(self):
         """Show List Clients page."""
