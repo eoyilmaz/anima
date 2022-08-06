@@ -11,7 +11,7 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
 
 from anima.ui.base import ui_caller
-from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.lib import QtWidgets
 from anima.ui.utils import load_font, set_widget_style
 from anima.ui.menus import MainMenuBar
 
@@ -86,7 +86,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         print("ui.__path__: %s" % ui.__path__[0])
 
-        app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
+        app_icon_path = os.path.join(ui.__path__[0], "../images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))
 
         menu_bar = MainMenuBar()
@@ -185,7 +185,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_project_action_clicked(self):
         """runs when new project menu action is clicked"""
         # show the new project dialog
-        from anima.ui import project_dialog
+        from anima.ui.dialogs import project_dialog
 
         dialog = project_dialog.MainDialog(parent=self)
         dialog.exec_()
@@ -215,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
             logged_in_user = local_session.logged_in_user
 
         if not logged_in_user:
-            from anima.ui import login_dialog
+            from anima.ui.dialogs import login_dialog
 
             dialog = login_dialog.MainDialog(parent=self)
             # dialog.deleteLater()

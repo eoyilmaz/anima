@@ -4,8 +4,8 @@ import logging
 import unittest
 import sys
 
-from anima.ui import IS_PYSIDE, IS_PYQT4, reference_editor
-
+from anima.ui import IS_PYSIDE, IS_PYQT4
+from anima.ui.dialogs import reference_editor
 
 logger = logging.getLogger('anima.ui.reference_editor')
 

@@ -7,7 +7,7 @@ def edl_importer():
 
     SET_PYSIDE()
 
-    from anima.ui import edl_importer
+    from anima.ui.dialogs import edl_importer
 
     reload(edl_importer)
 

@@ -530,7 +530,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui import repository_dialog
+        from anima.ui.dialogs import repository_dialog
 
         create_repository_dialog = repository_dialog.MainDialog(parent=self)
         create_repository_dialog.exec_()
@@ -560,7 +560,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not repo:
             return
 
-        from anima.ui import repository_dialog
+        from anima.ui.dialogs import repository_dialog
 
         update_repository_dialog = repository_dialog.MainDialog(
             parent=self, repository=repo
@@ -588,7 +588,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui import structure_dialog
+        from anima.ui.dialogs import structure_dialog
 
         create_structure_dialog = structure_dialog.MainDialog(parent=self)
         create_structure_dialog.exec_()
@@ -618,7 +618,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if not structure:
             return
 
-        from anima.ui import structure_dialog
+        from anima.ui.dialogs import structure_dialog
 
         update_structure_dialog = structure_dialog.MainDialog(
             parent=self, structure=structure

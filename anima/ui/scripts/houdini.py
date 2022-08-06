@@ -28,7 +28,7 @@ def version_dialog(mode=2):
 
     log.logging_level = logging.WARNING
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
     from anima.dcc import houdini
 
     h = houdini.Houdini()

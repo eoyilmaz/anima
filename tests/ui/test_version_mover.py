@@ -8,7 +8,7 @@ from sqlalchemy import distinct
 
 from anima.ui import SET_PYSIDE, IS_PYSIDE, IS_PYQT4
 
-from anima.ui.version_mover import VersionMover
+from anima.ui.dialogs.version_mover import VersionMover
 from anima.ui.testing import PatchedMessageBox
 
 logger = logging.getLogger(__name__)

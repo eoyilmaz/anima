@@ -6,7 +6,7 @@ import unittest
 
 from anima import utils
 
-from anima.ui import uiCompiler
+from anima.ui import ui_compiler
 
 
 class UIFileTestCase(unittest.TestCase):
@@ -20,7 +20,7 @@ class UIFileTestCase(unittest.TestCase):
         # fill test data to the file
         with open(self.test_uicFile_path, 'w+') as f:
             f.write('test')
-        self.test_uicFile = uiCompiler.UIFile(self.test_uicFile_path)
+        self.test_uicFile = ui_compiler.UIFile(self.test_uicFile_path)
 
     def tearDown(self):
         """clear test data
@@ -31,7 +31,7 @@ class UIFileTestCase(unittest.TestCase):
         """testing if a TypeError will be raised when the full_path argument is
         skipped
         """
-        self.assertRaises(TypeError, uiCompiler.UIFile)
+        self.assertRaises(TypeError, ui_compiler.UIFile)
 
     def test_filename_attribute_initialized_correctly(self):
         """testing if the filename attribute is initialized correctly

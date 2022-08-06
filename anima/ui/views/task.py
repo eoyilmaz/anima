@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import anima.utils
 from anima import logger
-from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.task import TaskTreeModel
 
 
@@ -485,7 +485,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         item.reload()
 
             if create_project_action and selected_action is create_project_action:
-                from anima.ui import project_dialog
+                from anima.ui.dialogs import project_dialog
 
                 project_main_dialog = project_dialog.MainDialog(
                     parent=self, project=None
@@ -551,7 +551,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     )
 
                 elif selected_action is create_time_log_action:
-                    from anima.ui import time_log_dialog
+                    from anima.ui.dialogs import time_log_dialog
 
                     time_log_dialog_main_dialog = time_log_dialog.MainDialog(
                         parent=self,
@@ -572,7 +572,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(entity)
 
                 elif selected_action is update_task_action:
-                    from anima.ui import task_dialog
+                    from anima.ui.dialogs import task_dialog
 
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self, tasks=self.get_selected_tasks()
@@ -608,7 +608,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     anima.utils.upload_thumbnail(entity, thumbnail_full_path)
 
                 elif selected_action is create_child_task_action:
-                    from anima.ui import task_dialog
+                    from anima.ui.dialogs import task_dialog
 
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self, parent_task=entity
@@ -850,7 +850,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         parent_item.reload()
 
                 elif selected_action is update_project_action:
-                    from anima.ui import project_dialog
+                    from anima.ui.dialogs import project_dialog
 
                     project_main_dialog = project_dialog.MainDialog(
                         parent=self, project=entity
@@ -868,7 +868,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     project_main_dialog.deleteLater()
 
                 elif selected_action is assign_users_action:
-                    from anima.ui import project_users_dialog
+                    from anima.ui.dialogs import project_users_dialog
 
                     project_users_main_dialog = project_users_dialog.MainDialog(
                         parent=self, project=entity
@@ -942,8 +942,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         except AttributeError:
             return
 
-        from stalker import Task
-
         if item.task.entity_type == "Task":
 
             if task_id:
@@ -951,7 +949,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 entity = SimpleEntity.query.get(task_id)
 
-            from anima.ui import task_dialog
+            from anima.ui.dialogs import task_dialog
 
             task_main_dialog = task_dialog.MainDialog(parent=self, tasks=[entity])
             task_main_dialog.exec_()

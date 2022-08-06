@@ -246,7 +246,7 @@ class GenericTools(object):
         fusion_env = fusion.Fusion()
         fusion_env.name = "Fusion"
 
-        from anima.ui import version_dialog
+        from anima.ui.dialogs import version_dialog
 
         ui_instance = version_dialog.MainDialog(environment=fusion_env, **args)
         ui_instance.show()

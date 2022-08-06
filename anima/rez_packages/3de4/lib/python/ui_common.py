@@ -13,7 +13,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     do_db_setup()
     ui.SET_PYSIDE2()
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
     from anima.dcc import equalizer
 
     tde4 = equalizer.TDE4()

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import re
-from functools import partial
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
@@ -1228,7 +1227,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def pick_parent_task_push_button_clicked(self):
         """runs when pick_parent_task_push_button is clicked"""
-        from anima.ui import task_picker_dialog
+        from anima.ui.dialogs import task_picker_dialog
 
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project()
@@ -1392,7 +1391,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui import task_picker_dialog
+        from anima.ui.dialogs import task_picker_dialog
 
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project(), allow_multi_selection=True

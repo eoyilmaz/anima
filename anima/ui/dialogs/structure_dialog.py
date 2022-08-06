@@ -259,7 +259,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         if selected_item:
             choice = selected_item.text()
             if choice == "Create FilenameTemplate...":
-                from anima.ui import filename_template_dialog
+                from anima.ui.dialogs import filename_template_dialog
 
                 create_filename_template_dialog = filename_template_dialog.MainDialog(
                     parent=self
@@ -282,7 +282,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
                 ft = FilenameTemplate.query.get(ft_id)
 
-                from anima.ui import filename_template_dialog
+                from anima.ui.dialogs import filename_template_dialog
 
                 update_filename_template_dialog = filename_template_dialog.MainDialog(
                     parent=self, filename_template=ft

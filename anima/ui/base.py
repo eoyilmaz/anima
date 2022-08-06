@@ -62,7 +62,7 @@ class AnimaDialogBase(object):
             logged_in_user = local_session.logged_in_user
 
         if not logged_in_user:
-            from anima.ui import login_dialog
+            from anima.ui.dialogs import login_dialog
 
             dialog = login_dialog.MainDialog(parent=parent)
             # dialog.deleteLater()

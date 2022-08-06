@@ -24,7 +24,7 @@ def version_dialog(mode=2):
     # set PySide or PySide2
     set_qt_lib()
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
     from anima.dcc import nukeEnv
     import nuke
 

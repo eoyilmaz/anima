@@ -3,7 +3,7 @@
 import unittest
 from anima.testing import CallInfo
 from anima.ui.lib import QtGui
-from anima.ui.progress_dialog import ProgressDialogManager
+from anima.ui.dialogs.progress_dialog import ProgressDialogManager
 from anima.utils.progress import ProgressCaller
 
 

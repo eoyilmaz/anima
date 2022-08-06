@@ -2168,7 +2168,7 @@ def check_time_logs(progress_controller=None):
                     elif task.status.code == "HREV":
                         window_title = "Task status is HREV, please create a TimeLog!!!"
 
-                    from anima.ui import time_log_dialog
+                    from anima.ui.dialogs import time_log_dialog
 
                     dialog = time_log_dialog.MainDialog(task=task)
                     dialog.setWindowTitle(window_title)
@@ -2425,7 +2425,6 @@ def check_shot_name_format___fix():
 
     # auto fix if there is only 1 shot in the scene
     if len(shot_nodes) == 1:
-        from anima import defaults
         from stalker import Shot
         from anima.dcc import mayaEnv
 
@@ -2845,9 +2844,6 @@ def generate_playblast(progress_controller=None):
     """
     if progress_controller is None:
         progress_controller = ProgressControllerBase()
-
-    import anima
-    from anima import utils
 
     # before doing a playblast set all shot handles to 48
     shots = pm.ls(type="shot")

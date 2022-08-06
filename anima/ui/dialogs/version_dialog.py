@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# License: http://www.opensource.org/licenses/MIT
-
 import sys
 import os
 import logging
@@ -1806,7 +1804,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     self.save_as_wrapper, version=new_version, run_pre_publishers=False
                 )
                 # create the publish window
-                from anima.ui import publish_checker
+                from anima.ui.dialogs import publish_checker
 
                 self.close()
                 dialog = publish_checker.UI(
@@ -2053,7 +2051,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # check the reference_resolution to update old versions
             if reference_resolution["create"] or reference_resolution["update"]:
                 # invoke the version_updater for this scene
-                from anima.ui import version_updater
+                from anima.ui.dialogs import version_updater
 
                 version_updater_main_dialog = version_updater.MainDialog(
                     environment=self.dcc,

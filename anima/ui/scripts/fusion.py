@@ -32,7 +32,7 @@ def version_dialog(lib="PySide", logging_level=logging.WARNING, parent=None):
     fusion_env = fusion.Fusion()
     fusion_env.name = "Fusion"
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
 
     logger.setLevel(logging_level)
     version_dialog.UI(environment=fusion_env, parent=parent)

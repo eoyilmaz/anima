@@ -27,7 +27,7 @@ def version_dialog(lib="PySide"):
     reload(photoshop)
     p = photoshop.Photoshop()
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
 
     reload(version_dialog)
     # display only warning messages

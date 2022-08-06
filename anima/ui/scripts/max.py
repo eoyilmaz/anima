@@ -29,7 +29,7 @@ def version_dialog():
 
     ui.SET_PYSIDE()
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
     from anima.dcc import max as max_env
 
     m = max_env.Max()
@@ -51,7 +51,7 @@ def version_updater():
 
     ui.SET_PYSIDE()
 
-    from anima.ui import version_updater
+    from anima.ui.dialogs import version_updater
     from anima.dcc import max as max_env
 
     m = max_env.Max()
