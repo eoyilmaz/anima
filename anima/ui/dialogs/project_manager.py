@@ -9,13 +9,17 @@ SET_PYSIDE2()
 from anima.ui import project_manager
 project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
+import os
 
+from anima import ui
 from anima.ui.base import ui_caller
-from anima.ui.lib import QtWidgets
-from anima.ui.utils import load_font, set_widget_style
+from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.utils import set_widget_style
 from anima.ui.menus import MainMenuBar
 
 from stalker import Client, Department, Group, User
+
+from anima.ui.widgets.user_page import UserPage
 
 if False:
     from PySide2 import QtCore, QtGui, QtWidgets
@@ -28,6 +32,8 @@ class MainWindow(QtWidgets.QMainWindow):
     __app_name__ = "Project Manager"
     __version__ = "1.0.0"
 
+    pages = {}
+
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
@@ -39,18 +45,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.logged_in_user = self.login()
         self.dark_theme = True  # Dark Theme is default
         self.project_dock_widget = None
-
-        app = QtWidgets.QApplication.instance()
-        default_application_font = app.font()
-        default_font_size = default_application_font.pixelSize()
-
-        loaded_font_families = load_font("FontAwesome.otf")
-        application_font = QtGui.QFont()
-        if loaded_font_families:
-            application_font.setFamily(loaded_font_families[0])
-            # self.application_font.setStyleHint(QtGui.QFont.Normal)
-            application_font.setPixelSize(default_font_size)
-            app.setFont(application_font)
 
         # storage for UI stuff
         self.task_dashboard_widget = None
@@ -81,9 +75,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
 
         # set application icon
-        from anima import ui
-        import os
-
         print("ui.__path__: %s" % ui.__path__[0])
 
         app_icon_path = os.path.join(ui.__path__[0], "../images", "app_icon.png")
@@ -98,6 +89,7 @@ class MainWindow(QtWidgets.QMainWindow):
         menu_bar.list_departments_signal.connect(self.list_departments)
         menu_bar.list_groups_signal.connect(self.list_groups)
         menu_bar.list_users_signal.connect(self.list_users)
+        menu_bar.create_project_signal.connect(self.create_project)
 
         self.create_toolbars()
         self.create_dock_widgets()
@@ -130,7 +122,21 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def view_user(self, user):
         """Show User page."""
-        print(user.name)
+        # find the User Page in the Main Stacked Widget
+        # and get the main widget on the User Page
+        # if there is no widget just create a new UserPage widget
+        # set the user
+        user_page_widget = self.pages.get("UserPage")
+        if not user_page_widget:
+            user_page_widget = UserPage(parent=self)
+        index = self.main_stacked_widget.indexOf(user_page_widget)
+        if index == -1:
+            index = self.main_stacked_widget.addWidget(user_page_widget)
+            self.pages["UserPage"] = user_page_widget
+
+        user_page_widget.user = user
+
+        self.main_stacked_widget.setCurrentIndex(index)
 
     def view_studio(self, studio):
         """Show Studio page."""
@@ -144,10 +150,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings.setValue("pos", self.pos())
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("dark_theme", self.dark_theme)
-        if self.task_dashboard_widget.task:
-            self.settings.setValue(
-                "last_viewed_task_id", self.task_dashboard_widget.task.id
-            )
+        # if self.task_dashboard_widget.task:
+        #     self.settings.setValue(
+        #         "last_viewed_task_id", self.task_dashboard_widget.task.id
+        #     )
 
         self.settings.endGroup()
 
@@ -165,24 +171,24 @@ class MainWindow(QtWidgets.QMainWindow):
             ]
         )
 
-        from anima.ui.views.task import TaskTreeView
-
-        assert isinstance(self.tasks_tree_view, TaskTreeView)
-
-        task_id = self.settings.value("last_viewed_task_id")
-        if task_id:
-            from stalker import Task
-
-            task = Task.query.get(task_id)
-            self.tasks_tree_view.find_and_select_entity_item(task)
+        # from anima.ui.views.task import TaskTreeView
+        #
+        # assert isinstance(self.tasks_tree_view, TaskTreeView)
+        #
+        # task_id = self.settings.value("last_viewed_task_id")
+        # if task_id:
+        #     from stalker import Task
+        #
+        #     task = Task.query.get(task_id)
+        #     self.tasks_tree_view.find_and_select_entity_item(task)
 
         self.settings.endGroup()
 
     def reset_window_state(self):
         """reset window states"""
-        self.project_dock_widget.setVisible(True)
+        # self.project_dock_widget.setVisible(True)
 
-    def create_project_action_clicked(self):
+    def create_project(self):
         """runs when new project menu action is clicked"""
         # show the new project dialog
         from anima.ui.dialogs import project_dialog
@@ -198,9 +204,9 @@ class MainWindow(QtWidgets.QMainWindow):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        # refresh the task list
-        if dialog.result() == accepted:
-            self.tasks_tree_view.fill()
+        # # refresh the task list
+        # if dialog.result() == accepted:
+        #     self.tasks_tree_view.fill()
 
         dialog.deleteLater()
 
@@ -256,61 +262,63 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def create_toolbars(self):
         """creates the toolbars"""
-        file_toolbar = self.addToolBar(self.tr("File"))
+        file_toolbar = self.addToolBar("File")
         file_toolbar.setObjectName("file_toolbar")
         create_project_action = file_toolbar.addAction("Create Project")
 
         # Create signals
-        create_project_action.triggered.connect(self.create_project_action_clicked)
+        create_project_action.triggered.connect(self.create_project)
 
     def create_dock_widgets(self):
         """creates the dock widgets"""
-        # ----------------------------------------
-        # create the Project Dock Widget
-        self.project_dock_widget = QtWidgets.QDockWidget("Projects", self)
-        self.project_dock_widget.setObjectName("project_dock_widget")
-        # create the TaskTreeView as the main widget
-        from anima.ui.views.task import TaskTreeView
+        # # ----------------------------------------
+        # # create the Project Dock Widget
+        # self.project_dock_widget = QtWidgets.QDockWidget("Projects", self)
+        # self.project_dock_widget.setObjectName("project_dock_widget")
+        # # create the TaskTreeView as the main widget
+        # from anima.ui.views.task import TaskTreeView
+        #
+        # self.tasks_tree_view = TaskTreeView(
+        #     parent=self, allow_multi_selection=True, allow_drag=True
+        # )
+        # self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        #
+        # self.tasks_tree_view.show_completed_projects = True
+        # self.tasks_tree_view.fill()
+        #
+        # # also setup the signal
+        # self.tasks_tree_view.selectionModel().selectionChanged.connect(
+        #     self.tasks_tree_view_changed
+        # )
+        #
+        # self.project_dock_widget.setWidget(self.tasks_tree_view)
+        #
+        # # and set the left dock widget
+        # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.project_dock_widget)
+        #
+        # # ----------------------------------------
+        # # create the Central Widget
+        # from anima.ui.widgets.task_dashboard import TaskDashboardWidget
+        #
+        # self.task_dashboard_widget = TaskDashboardWidget(parent=self)
+        # self.setCentralWidget(self.task_dashboard_widget)
+        self.main_stacked_widget = QtWidgets.QStackedWidget(self)
+        self.setCentralWidget(self.main_stacked_widget)
 
-        self.tasks_tree_view = TaskTreeView(
-            parent=self, allow_multi_selection=True, allow_drag=True
-        )
-        self.tasks_tree_view.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        self.tasks_tree_view.show_completed_projects = True
-        self.tasks_tree_view.fill()
-
-        # also setup the signal
-        self.tasks_tree_view.selectionModel().selectionChanged.connect(
-            self.tasks_tree_view_changed
-        )
-
-        self.project_dock_widget.setWidget(self.tasks_tree_view)
-
-        # and set the left dock widget
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.project_dock_widget)
-
-        # ----------------------------------------
-        # create the Central Widget
-        from anima.ui.widgets.task_dashboard import TaskDashboardWidget
-
-        self.task_dashboard_widget = TaskDashboardWidget(parent=self)
-        self.setCentralWidget(self.task_dashboard_widget)
-
-    def tasks_tree_view_changed(self):
-        """runs when the tasks tree view changed"""
-        # get the currently selected task
-        task_id = None
-        task_ids = self.tasks_tree_view.get_selected_task_ids()
-        if task_ids:
-            task_id = task_ids[-1]
-
-        from stalker import Task
-
-        task = Task.query.filter_by(id=task_id).first()
-
-        # update the task dashboard widget
-        self.task_dashboard_widget.task = task
+    # def tasks_tree_view_changed(self):
+    #     """runs when the tasks tree view changed"""
+    #     # get the currently selected task
+    #     task_id = None
+    #     task_ids = self.tasks_tree_view.get_selected_task_ids()
+    #     if task_ids:
+    #         task_id = task_ids[-1]
+    #
+    #     from stalker import Task
+    #
+    #     task = Task.query.filter_by(id=task_id).first()
+    #
+    #     # update the task dashboard widget
+    #     self.task_dashboard_widget.task = task
 
     def show_and_raise(self):
         """ """

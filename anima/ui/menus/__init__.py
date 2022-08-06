@@ -2,8 +2,9 @@
 from functools import partial
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.utils import get_cached_icon
 from stalker import Project, Status, StatusList, Studio
-import qtawesome
+
 
 if False:
     # this is for the IDE to pickup the code more easily
@@ -95,7 +96,7 @@ class MainMenuBar(QtWidgets.QMenuBar):
                 )
         # also add the new project dialog
         self.projects_menu.addSeparator()
-        plus_icon = qtawesome.icon("fa5s.plus")
+        plus_icon = get_cached_icon("new_entity")
         new_project_action = self.projects_menu.addAction("New Project")
         new_project_action.setIcon(plus_icon)
         new_project_action.triggered.connect(self.create_project_signal.emit)

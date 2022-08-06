@@ -2241,7 +2241,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             task = Task.query.get(task_id)
             if task and task.thumbnail:
                 self.clear_thumbnail_push_button.setEnabled(True)
-            ui_utils.update_graphics_view_with_task_thumbnail(
+            ui_utils.update_graphics_view_with_entity_thumbnail(
                 task, self.thumbnail_graphics_view
             )
 
