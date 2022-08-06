@@ -13,6 +13,10 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import load_font, set_widget_style
+from anima.ui.menus import MainMenuBar
+
+if False:
+    from PySide2 import QtCore, QtGui, QtWidgets
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -83,7 +87,7 @@ class MainWindow(QtWidgets.QMainWindow):
         app_icon_path = os.path.join(ui.__path__[0], "images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))
 
-        self.create_main_menu()
+        self.setMenuBar(MainMenuBar())
         self.create_toolbars()
         self.create_dock_widgets()
 
@@ -134,53 +138,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def reset_window_state(self):
         """reset window states"""
         self.project_dock_widget.setVisible(True)
-
-    def create_main_menu(self):
-        """creates the main application menu"""
-        file_menu = self.menuBar().addMenu(self.tr("&File"))
-
-        # -------------------------
-        # Authentication Actions
-        self.login_action = file_menu.addAction("&Login...")
-        self.logout_action = file_menu.addAction("&Logout...")
-
-        if self.logged_in_user:
-            # hide login_action
-            self.login_action.setVisible(False)
-        else:
-            # hide logout_action
-            self.login_action.setVisible(False)
-
-        self.login_action.triggered.connect(self.login)
-        self.logout_action.triggered.connect(self.logout)
-
-        file_menu.addSeparator()
-
-        # ---------------------------
-        # Standard File menu actions
-
-        create_project_action = file_menu.addAction("&Create Project...")
-        # open_action = file_menu.addAction('&Open...')
-        # save_action = file_menu.addAction('&Save...')
-
-        # run the new Project dialog
-        create_project_action.triggered.connect(self.create_project_action_clicked)
-
-        file_menu.addSeparator()
-
-        exit_action = file_menu.addAction("E&xit")
-        exit_action.triggered.connect(self.close)
-
-        view_menu = self.menuBar().addMenu("&View")
-        switch_theme = view_menu.addAction("Switch Theme")
-
-        def ui_theme_setter_wrapper():
-            self.set_ui_theme(not self.dark_theme)
-
-        switch_theme.triggered.connect(ui_theme_setter_wrapper)
-
-        reset_action = view_menu.addAction("&Reset Window States")
-        reset_action.triggered.connect(self.reset_window_state)
 
     def create_project_action_clicked(self):
         """runs when new project menu action is clicked"""
