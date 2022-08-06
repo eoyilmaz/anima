@@ -6,6 +6,72 @@ import os
 from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
+import qtawesome
+
+ICONS_LUT = {}
+
+
+def get_cached_icon(icon_name):
+    """qtAwesome needs a Qt application to work.
+
+    Args:
+        icon_name (str): The icon name.
+    """
+    # To make it all consistent use an icon lut
+    global ICONS_LUT
+    if not ICONS_LUT:
+        ICONS_LUT.update({
+            'PREV': qtawesome.icon('fa.pencil'),
+            'HREV': qtawesome.icon('fa.mail-reply-all'),
+            'RTS':  qtawesome.icon('ei.check-empty'),
+            'CMPL':  qtawesome.icon('ei.check'),
+            'WIP':  qtawesome.icon('fa5s.play'),
+            'WFD':  qtawesome.icon('fa.circle-o'),
+            'DREV':  qtawesome.icon('fa5s.step-backward'),
+            'OH':  qtawesome.icon('ei.pause'),
+            'STOP':  qtawesome.icon('ei.stop'),
+            'asset':  qtawesome.icon('fa5s.puzzle-piece'),
+            "browse_folder": qtawesome.icon("fa5.folder-open"),
+            'budget':  qtawesome.icon('fa.credit-card-alt'),
+            "create_project": qtawesome.icon("fa5s.sitemap"),
+            "cross": qtawesome.icon("ph.x-bold"),
+            "copy": qtawesome.icon("fa5.copy"),
+            'daily':  qtawesome.icon('ei.eye-open'),
+            'dashboard':  qtawesome.icon('fa.dashboard'),
+            'default':  qtawesome.icon('fa5s.key'),
+            "delete": qtawesome.icon("fa5.trash-alt"),
+            "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
+            "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
+            'department':  qtawesome.icon('fa.group'),
+            "edit_entity": qtawesome.icon("fa.pencil-square-o"),
+            'export': qtawesome.icon("fa5s.file-export"),
+            'group':  qtawesome.icon('fa5s.key'),
+            "image": qtawesome.icon("fa5.image"),
+            "import": qtawesome.icon("fa5s.file-import"),
+            'new_entity':  qtawesome.icon('fa5s.plus'),
+            "open_external_link": qtawesome.icon("fa.external-link-square"),
+            'permission':  qtawesome.icon('fa5s.key'),
+            'previs':  qtawesome.icon('fa.coffee'),
+            'project':  qtawesome.icon('ei.folder-close'),
+            'reference':  qtawesome.icon('ei.book'),
+            'reload': qtawesome.icon("ei.refresh"),
+            'report':  qtawesome.icon('fa.bar-chart'),
+            'resource':  qtawesome.icon('fa.user'),
+            'review':  qtawesome.icon('fa.comments-o'),
+            'sequence':  qtawesome.icon('fa.film'),
+            'shot':  qtawesome.icon('fa.camera'),
+            'task':  qtawesome.icon('fa.tasks'),
+            'ticket':  qtawesome.icon('fa.ticket'),
+            'timelog':  qtawesome.icon('fa.calendar'),
+            "update_project": qtawesome.icon("fa.pencil-square-o"),
+            'user':  qtawesome.icon('fa.user'),
+            'users':  qtawesome.icon('fa.users'),
+            'vacation':  qtawesome.icon('fa.sun-o'),
+            'version':  qtawesome.icon('fa.sitemap'),
+            'version_output':  qtawesome.icon('fa.picture-o'),
+        })
+    return ICONS_LUT[icon_name]
+
 
 def get_app_icon(icon_name):
     """Returns an icon from ui library"""
@@ -72,42 +138,42 @@ def clear_thumbnail(graphics_view):
     scene.clear()
 
 
-def update_graphics_view_with_task_thumbnail(task, graphics_view):
-    """Updates the given QGraphicsView with the given Task thumbnail
+def update_graphics_view_with_entity_thumbnail(entity, graphics_view):
+    """Updates the given QGraphicsView with the given Entity thumbnail
 
-    :param task: A
-      :class:`~stalker.models.task.Task` instance
-
-    :param graphics_view: A QtGui.QGraphicsView instance
+    Args:
+        entity: A :class:`~stalker.SimpleEntity` instance.
+        graphics_view: A ``QtWidgets.QGraphicsView`` instance.
     """
-    from stalker import Task
+    from stalker import SimpleEntity, Task
 
-    if not isinstance(task, Task) or not isinstance(
+    if not isinstance(entity, SimpleEntity) or not isinstance(
         graphics_view, QtWidgets.QGraphicsView
     ):
         # do nothing
-        logger.debug("task is not a stalker.models.task.Task instance")
+        logger.debug("task is not a stalker.SimpleEntity instance")
         return
 
     # get the thumbnail full path
     full_path = None
-    if task.thumbnail:
+    if entity.thumbnail:
         # use the cache system to get the thumbnail
         # try to get it as a normal file
-        full_path = os.path.expandvars(task.thumbnail.full_path)
+        full_path = os.path.expandvars(entity.thumbnail.full_path)
         if not os.path.exists(full_path):
             full_path = None
     else:
         logger.debug("there is no thumbnail")
         # try to get the thumbnail from parents
-        for parent in reversed(task.parents):
-            if parent.thumbnail:
-                # try to get it as a normal file
-                full_path = os.path.expandvars(parent.thumbnail.full_path)
-                if not os.path.exists(full_path):
-                    full_path = None
-                logger.debug("found parent thumbnail at: %s" % full_path)
-                break
+        if isinstance(entity, Task):
+            for parent in reversed(entity.parents):
+                if parent.thumbnail:
+                    # try to get it as a normal file
+                    full_path = os.path.expandvars(parent.thumbnail.full_path)
+                    if not os.path.exists(full_path):
+                        full_path = None
+                    logger.debug("found parent thumbnail at: %s" % full_path)
+                    break
 
     if full_path:
         update_graphics_view_with_image_file(full_path, graphics_view)
