@@ -54,6 +54,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.settings = QtCore.QSettings(self.__company_name__, self.__app_name__)
         self._setup()
 
+        # set the default page to logged in users home page
+        self.view_user(self.logged_in_user)
+
     def set_ui_theme(self, dark_theme=False):
         """Set the UI theme.
 
@@ -95,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_dock_widgets()
 
         self.read_settings()
-        from anima.ui.styles import DarkStyle
+        # from anima.ui.styles import DarkStyle
 
         # proxy = DarkStyle(QtWidgets.QApplication.instance().style())
         # proxy.setParent(self)  # take ownership to avoid memleak
