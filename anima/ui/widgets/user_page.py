@@ -436,12 +436,21 @@ class UserTasksByStatusWidget(
         self.setLayout(self.main_layout)
 
         # Project Combo Box
+        project_combo_box_layout = QtWidgets.QHBoxLayout()
+        project_combo_box_layout.setMargin(0)
+        self.main_layout.addLayout(project_combo_box_layout)
+
         self.project_combo_box = ProjectComboBox(self)
         self.project_combo_box.show_active_projects = True
         self.project_combo_box.currentIndexChanged.connect(
             partial(self.project_combo_box_changed)
         )
-        self.main_layout.addWidget(self.project_combo_box)
+        project_combo_box_layout.addWidget(self.project_combo_box)
+        project_combo_box_layout.addSpacerItem(
+            QtWidgets.QSpacerItem(
+                -1, -1, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum
+            )
+        )
 
         # the tabWidget
         self.main_tab_widget = QtWidgets.QTabWidget(self)
@@ -507,3 +516,4 @@ class UserTasksByStatusWidget(
                     get_cached_icon(status_code),
                     "{} ({})".format(status_code, status_codes_and_counts[status_code]),
                 )
+                # add a TaskTableView to this status_tab
