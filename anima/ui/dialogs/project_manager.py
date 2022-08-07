@@ -11,7 +11,7 @@ project_manager.ui_caller(None, None, project_manager.MainWindow)
 """
 import os
 
-from anima import ui
+from anima import ui, logger
 from anima.ui.base import ui_caller
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.utils import set_widget_style
@@ -19,7 +19,7 @@ from anima.ui.menus import MainMenuBar
 
 from stalker import Client, Department, Group, User
 
-from anima.ui.widgets.user_page import UserPage
+from anima.ui.widgets.user_page import UserPageWidget
 
 if False:
     from PySide2 import QtCore, QtGui, QtWidgets
@@ -52,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # self.setWindowFlags(QtCore.Qt.ApplicationAttribute)
         self.settings = QtCore.QSettings(self.__company_name__, self.__app_name__)
-        self._setup_ui()
+        self._setup()
 
     def set_ui_theme(self, dark_theme=False):
         """Set the UI theme.
@@ -70,12 +70,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         do_db_setup()
 
-    def _setup_ui(self):
+    def _setup(self):
         """creates the UI widgets"""
         self.setWindowTitle("%s v%s" % (self.__app_name__, self.__version__))
 
         # set application icon
-        print("ui.__path__: %s" % ui.__path__[0])
+        logger.debug("ui.__path__: %s" % ui.__path__[0])
 
         app_icon_path = os.path.join(ui.__path__[0], "../images", "app_icon.png")
         self.setWindowIcon(QtGui.QIcon(app_icon_path))
@@ -95,6 +95,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.create_dock_widgets()
 
         self.read_settings()
+        from anima.ui.styles import DarkStyle
+
+        # proxy = DarkStyle(QtWidgets.QApplication.instance().style())
+        # proxy.setParent(self)  # take ownership to avoid memleak
+        # self.setStyle(proxy)
+
+        # style = DarkStyle(self.style())
+        # self.setStyle(style)
 
     def list_clients(self):
         """Show List Clients page."""
@@ -128,14 +136,12 @@ class MainWindow(QtWidgets.QMainWindow):
         # set the user
         user_page_widget = self.pages.get("UserPage")
         if not user_page_widget:
-            user_page_widget = UserPage(parent=self)
+            user_page_widget = UserPageWidget(parent=self)
+            self.pages["UserPage"] = user_page_widget
         index = self.main_stacked_widget.indexOf(user_page_widget)
         if index == -1:
             index = self.main_stacked_widget.addWidget(user_page_widget)
-            self.pages["UserPage"] = user_page_widget
-
         user_page_widget.user = user
-
         self.main_stacked_widget.setCurrentIndex(index)
 
     def view_studio(self, studio):
@@ -165,11 +171,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.move(self.settings.value("pos", QtCore.QPoint(100, 100)))
         self.restoreState(self.settings.value("windowState"))
         bool_settings_value_lut = {"false": False, "true": True}
-        self.set_ui_theme(
-            dark_theme=bool_settings_value_lut[
-                self.settings.value("dark_theme", "false")
-            ]
-        )
+        # self.set_ui_theme(
+        #     dark_theme=bool_settings_value_lut[
+        #         self.settings.value("dark_theme", "false")
+        #     ]
+        # )
 
         # from anima.ui.views.task import TaskTreeView
         #

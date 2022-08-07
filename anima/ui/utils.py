@@ -20,56 +20,60 @@ def get_cached_icon(icon_name):
     # To make it all consistent use an icon lut
     global ICONS_LUT
     if not ICONS_LUT:
-        ICONS_LUT.update({
-            'PREV': qtawesome.icon('fa.pencil'),
-            'HREV': qtawesome.icon('fa.mail-reply-all'),
-            'RTS':  qtawesome.icon('ei.check-empty'),
-            'CMPL':  qtawesome.icon('ei.check'),
-            'WIP':  qtawesome.icon('fa5s.play'),
-            'WFD':  qtawesome.icon('fa.circle-o'),
-            'DREV':  qtawesome.icon('fa5s.step-backward'),
-            'OH':  qtawesome.icon('ei.pause'),
-            'STOP':  qtawesome.icon('ei.stop'),
-            'asset':  qtawesome.icon('fa5s.puzzle-piece'),
-            "browse_folder": qtawesome.icon("fa5.folder-open"),
-            'budget':  qtawesome.icon('fa.credit-card-alt'),
-            "create_project": qtawesome.icon("fa5s.sitemap"),
-            "cross": qtawesome.icon("ph.x-bold"),
-            "copy": qtawesome.icon("fa5.copy"),
-            'daily':  qtawesome.icon('ei.eye-open'),
-            'dashboard':  qtawesome.icon('fa.dashboard'),
-            'default':  qtawesome.icon('fa5s.key'),
-            "delete": qtawesome.icon("fa5.trash-alt"),
-            "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
-            "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
-            'department':  qtawesome.icon('fa.group'),
-            "edit_entity": qtawesome.icon("fa.pencil-square-o"),
-            'export': qtawesome.icon("fa5s.file-export"),
-            'group':  qtawesome.icon('fa5s.key'),
-            "image": qtawesome.icon("fa5.image"),
-            "import": qtawesome.icon("fa5s.file-import"),
-            'new_entity':  qtawesome.icon('fa5s.plus'),
-            "open_external_link": qtawesome.icon("fa.external-link-square"),
-            'permission':  qtawesome.icon('fa5s.key'),
-            'previs':  qtawesome.icon('fa.coffee'),
-            'project':  qtawesome.icon('ei.folder-close'),
-            'reference':  qtawesome.icon('ei.book'),
-            'reload': qtawesome.icon("ei.refresh"),
-            'report':  qtawesome.icon('fa.bar-chart'),
-            'resource':  qtawesome.icon('fa.user'),
-            'review':  qtawesome.icon('fa.comments-o'),
-            'sequence':  qtawesome.icon('fa.film'),
-            'shot':  qtawesome.icon('fa.camera'),
-            'task':  qtawesome.icon('fa.tasks'),
-            'ticket':  qtawesome.icon('fa.ticket'),
-            'timelog':  qtawesome.icon('fa.calendar'),
-            "update_project": qtawesome.icon("fa.pencil-square-o"),
-            'user':  qtawesome.icon('fa.user'),
-            'users':  qtawesome.icon('fa.users'),
-            'vacation':  qtawesome.icon('fa.sun-o'),
-            'version':  qtawesome.icon('fa.sitemap'),
-            'version_output':  qtawesome.icon('fa.picture-o'),
-        })
+        ICONS_LUT.update(
+            {
+                "PREV": qtawesome.icon("fa.pencil"),
+                "HREV": qtawesome.icon("fa.mail-reply-all"),
+                "RTS": qtawesome.icon("ei.check-empty"),
+                "CMPL": qtawesome.icon("ei.check"),
+                "WIP": qtawesome.icon("fa5s.play"),
+                "WFD": qtawesome.icon("fa.circle-o"),
+                "DREV": qtawesome.icon("fa5s.step-backward"),
+                "OH": qtawesome.icon("ei.pause"),
+                "STOP": qtawesome.icon("ei.stop"),
+                "asset": qtawesome.icon("fa5s.puzzle-piece"),
+                "authlog": qtawesome.icon("fa.calendar-check-o"),
+                "browse_folder": qtawesome.icon("fa5.folder-open"),
+                "budget": qtawesome.icon("fa.credit-card-alt"),
+                "create_project": qtawesome.icon("fa5s.sitemap"),
+                "cross": qtawesome.icon("ph.x-bold"),
+                "copy": qtawesome.icon("fa5.copy"),
+                "daily": qtawesome.icon("ei.eye-open"),
+                "dashboard": qtawesome.icon("fa.dashboard"),
+                "default": qtawesome.icon("fa5s.key"),
+                "delete": qtawesome.icon("fa5.trash-alt"),
+                "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
+                "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
+                "department": qtawesome.icon("fa.group"),
+                "edit_entity": qtawesome.icon("fa.pencil-square-o"),
+                "export": qtawesome.icon("fa5s.file-export"),
+                "group": qtawesome.icon("fa5s.key"),
+                "image": qtawesome.icon("fa5.image"),
+                "import": qtawesome.icon("fa5s.file-import"),
+                "new_entity": qtawesome.icon("fa5s.plus"),
+                "open_external_link": qtawesome.icon("fa.external-link-square"),
+                "permission": qtawesome.icon("fa5s.key"),
+                "previs": qtawesome.icon("fa.coffee"),
+                "project": qtawesome.icon("ei.folder-close"),
+                "reference": qtawesome.icon("ei.book"),
+                "reload": qtawesome.icon("ei.refresh"),
+                "report": qtawesome.icon("fa.bar-chart"),
+                "resource": qtawesome.icon("fa.user"),
+                "result": qtawesome.icon("msc.graph-line"),
+                "review": qtawesome.icon("fa.comments-o"),
+                "sequence": qtawesome.icon("fa.film"),
+                "shot": qtawesome.icon("fa.camera"),
+                "task": qtawesome.icon("fa.tasks"),
+                "ticket": qtawesome.icon("fa.ticket"),
+                "timelog": qtawesome.icon("fa.calendar"),
+                "update_project": qtawesome.icon("fa.pencil-square-o"),
+                "user": qtawesome.icon("fa.user"),
+                "users": qtawesome.icon("fa.users"),
+                "vacation": qtawesome.icon("fa.sun-o"),
+                "version": qtawesome.icon("fa.sitemap"),
+                "version_output": qtawesome.icon("fa.picture-o"),
+            }
+        )
     return ICONS_LUT[icon_name]
 
 
@@ -445,7 +449,7 @@ def set_widget_style(widget, dark_theme=False):
     # widget.setStyle("Fusion")
     palette = widget.palette()
 
-    if os.getenv("RBL_PIPE_UI_DARK") or dark_theme:
+    if dark_theme:
         # Now use a palette to switch to dark colors:
         palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
         palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
@@ -454,14 +458,24 @@ def set_widget_style(widget, dark_theme=False):
         palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
         palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(QtCore.Qt.darkGray))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.Text,
+            QtGui.QColor(QtCore.Qt.darkGray),
+        )
         palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
         palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
         palette.setColor(
-            QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(QtCore.Qt.darkGray)
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.ButtonText,
+            QtGui.QColor(QtCore.Qt.darkGray),
         )
         palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.BrightText, QtGui.QColor(255, 128, 128))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.BrightText,
+            QtGui.QColor(255, 128, 128),
+        )
         palette.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
         palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
@@ -474,12 +488,22 @@ def set_widget_style(widget, dark_theme=False):
         palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 220))
         palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
         palette.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(190, 190, 190))
+        palette.setColor(
+            QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(190, 190, 190)
+        )
         palette.setColor(QtGui.QPalette.Button, QtGui.QColor(239, 239, 239))
         palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(190, 190, 190))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.ButtonText,
+            QtGui.QColor(190, 190, 190),
+        )
         palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 255, 255))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.BrightText, QtGui.QColor(216, 216, 216))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.BrightText,
+            QtGui.QColor(216, 216, 216),
+        )
         palette.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 0, 255))
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(48, 140, 198))
         palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))
