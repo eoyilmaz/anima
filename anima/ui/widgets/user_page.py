@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 from functools import partial
 
-from stalker import User
+from stalker import Project, Status, Task, User
+from stalker.db.session import DBSession
+from sqlalchemy import distinct
+
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
 from anima.ui.utils import update_graphics_view_with_entity_thumbnail, get_cached_icon
 from anima.ui.widgets.button import DashboardButton
 from anima.ui.widgets.page import PageTitleWidget
+from anima.ui.widgets.project import ProjectComboBox
 
 if False:
     from PySide2 import QtCore, QtGui, QtWidgets
@@ -38,14 +42,50 @@ class UserPropertyMixin(object):
         if not isinstance(user, User):
             raise TypeError(
                 "{}.user should be a stalker.models.auth.User instance, not {}".format(
-                    self.__class__.__name__, user.__class__.__name,
+                    self.__class__.__name__,
+                    user.__class__.__name,
                 )
             )
         self._user = user
 
 
+class ProjectPropertyMixin(object):
+    def __init__(self):
+        self._project = None
+
+    @property
+    def project(self):
+        """Return the project.
+
+        Returns:
+            :obj:`stalker.Project`: The project stored in this page.
+        """
+        return self._project
+
+    @project.setter
+    def project(self, project):
+        """Set the project.
+
+        Args:
+            project (:obj:`stalker.project`): The project for this widget to show the
+                details of.
+        """
+        # validate the data first
+        if project is not None and not isinstance(project, Project):
+            raise TypeError(
+                "{}.project should be a stalker.models.auth.Project instance, "
+                "not {}".format(
+                    self.__class__.__name__,
+                    project.__class__.__name,
+                )
+            )
+        self._project = project
+
+
 class UserPageWidget(QtWidgets.QWidget, UserPropertyMixin):
     """User home page."""
+
+    pages = {}
 
     def __init__(self, *args, **kwargs):
         super(UserPageWidget, self).__init__(*args, **kwargs)
@@ -56,10 +96,14 @@ class UserPageWidget(QtWidgets.QWidget, UserPropertyMixin):
         self.main_layout = QtWidgets.QHBoxLayout()
         self.setLayout(self.main_layout)
 
+        # -------------------------
         # Side Bar
         self.side_bar = UserSideBarWidget(parent=self)
         self.main_layout.addWidget(self.side_bar)
+        # Signals
+        self.side_bar.view_user_dashboard.connect(self.view_dashboard)
 
+        # -------------------------
         # Main Stacked Widget
         self.main_stacked_widget = QtWidgets.QStackedWidget(self)
         self.main_layout.addWidget(self.main_stacked_widget)
@@ -74,6 +118,22 @@ class UserPageWidget(QtWidgets.QWidget, UserPropertyMixin):
         """
         UserPropertyMixin.user.fset(self, user)
         self.side_bar.user = user
+
+    def view_dashboard(self, user):
+        """Show User page."""
+        # find the User Page in the Main Stacked Widget
+        # and get the main widget on the User Page
+        # if there is no widget just create a new UserPage widget
+        # set the user
+        user_dashboard_widget = self.pages.get("UserDashboard")
+        if not user_dashboard_widget:
+            user_dashboard_widget = UserDashboardWidget(parent=self)
+            self.pages["UserDashboard"] = user_dashboard_widget
+        index = self.main_stacked_widget.indexOf(user_dashboard_widget)
+        if index == -1:
+            index = self.main_stacked_widget.addWidget(user_dashboard_widget)
+        user_dashboard_widget.user = user
+        self.main_stacked_widget.setCurrentIndex(index)
 
 
 class UserSideBarWidget(QtWidgets.QWidget, UserPropertyMixin):
@@ -264,8 +324,7 @@ class UserSideBarWidget(QtWidgets.QWidget, UserPropertyMixin):
         # update the thumbnail
         if self._user.thumbnail:
             update_graphics_view_with_entity_thumbnail(
-                self._user,
-                self.thumbnail_graphics_view
+                self._user, self.thumbnail_graphics_view
             )
 
         # Update Name
@@ -297,8 +356,23 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
         page_title = PageTitleWidget("Dashboard")
         self.main_layout.addWidget(page_title)
 
+        self.user_tasks_by_status_widget = UserTasksByStatusWidget(self)
+        # self.user_tasks_by_status_widget.user = self.user
+        self.main_layout.addWidget(self.user_tasks_by_status_widget)
 
-class UserTasksByStatus(QtWidgets.QWidget, UserPropertyMixin):
+    @UserPropertyMixin.user.setter
+    def user(self, user):
+        """Set the user.
+
+        Args:
+            user (:obj:`stalker.user`): The user for this widget to show the details of.
+        """
+        UserPropertyMixin.user.fset(self, user)
+        # update the widgets
+        self.user_tasks_by_status_widget.user = user
+
+
+class UserTasksByStatusWidget(QtWidgets.QWidget, UserPropertyMixin, ProjectPropertyMixin):
     """Display user tasks grouped by their statuses.
 
     This is a classic Stalker Pyramid widget implemented in Qt.
@@ -306,13 +380,84 @@ class UserTasksByStatus(QtWidgets.QWidget, UserPropertyMixin):
     TaskTable.
     """
 
+    status_order = ["WFD", "RTS", "WIP", "PREV", "HREV", "DREV", "CMPL", "OH", "STOP"]
+
     def __init__(self, *args, **kwargs):
-        super(UserTasksByStatus, self).__init__(*args, **kwargs)
+        super(UserTasksByStatusWidget, self).__init__(*args, **kwargs)
         UserPropertyMixin.__init__(self)
+        ProjectPropertyMixin.__init__(self)
+        self.tabs = []
         self._setup()
 
     def _setup(self):
         self.main_layout = QtWidgets.QVBoxLayout()
         self.setLayout(self.main_layout)
 
+        # Project Combo Box
+        self.project_combo_box = ProjectComboBox(self)
+        self.project_combo_box.show_active_projects = True
+        self.project_combo_box.currentIndexChanged.connect(
+            partial(self.project_combo_box_changed)
+        )
+        self.main_layout.addWidget(self.project_combo_box)
 
+        # the tabWidget
+        self.main_tab_widget = QtWidgets.QTabWidget(self)
+        self.main_layout.addWidget(self.main_tab_widget)
+
+    def project_combo_box_changed(self, index):
+        """Update the project from the combo box."""
+        self.project = self.project_combo_box.get_current_project()
+
+    @UserPropertyMixin.user.setter
+    def user(self, user):
+        """Set the user.
+
+        Args:
+            user (:obj:`stalker.user`): The user for this widget to show the details of.
+        """
+        UserPropertyMixin.user.fset(self, user)
+        self.update()
+
+    @ProjectPropertyMixin.project.setter
+    def project(self, project):
+        """Set the project.
+
+        Args:
+            project (:obj:`stalker.Project`): The project for this widget to show the
+                details of.
+        """
+        ProjectPropertyMixin.project.fset(self, project)
+        self.update()
+
+    def update(self):
+        """Update the data in the tabs."""
+        # update tab widgets with user tasks tabs
+        # get all the distinct Statuses for the user for the specific project
+
+        from sqlalchemy.sql.functions import count
+        status_codes_and_counts = (
+            DBSession.query(distinct(Status.code), count(Status.code))
+            .join(Task.status)
+            .filter(Task.resources.contains(self.user))
+            .filter(Task.project == self.project)
+            .group_by(Status.code)
+            .all()
+        )
+        # convert it to a dictionary,
+        # where the status code is the key and count is the value
+        status_codes_and_counts = dict(status_codes_and_counts)
+
+        # clear all the tabs
+        self.main_tab_widget.clear()
+
+        # Orchestrate the order of the statuses
+        for status_code in self.status_order:
+            if status_code in status_codes_and_counts:
+                # create one tab for each status
+                status_tab = QtWidgets.QWidget(self)
+                self.main_tab_widget.addTab(
+                    status_tab,
+                    get_cached_icon(status_code),
+                    "{} ({})".format(status_code, status_codes_and_counts[status_code])
+                )

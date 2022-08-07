@@ -3,7 +3,7 @@
 
 from anima import defaults, logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import load_font
+from anima.ui.utils import load_font, get_cached_icon
 
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import aliased
@@ -11,52 +11,6 @@ from sqlalchemy.orm import aliased
 from stalker import Project, SimpleEntity, Task, User
 from stalker.db.session import DBSession
 from stalker.models.task import Task_Resources
-
-
-class TaskIcon(QtGui.QIcon):
-    """A custom QIcon that creates icons from text."""
-
-    task_entity_type_icons = {
-        "Task": "\uf0ae",
-        "Asset": "\uf12e",
-        "Shot": "\uf030",
-        "Sequence": "\uf1de",
-        "Project": "\uf0e8",
-    }
-
-    def __init__(self, *args, **kwargs):
-        self.entity_type = kwargs.pop("entity_type", None)
-
-        pixmap = QtGui.QPixmap(20, 20)
-        super(TaskIcon, self).__init__(pixmap)
-
-        loaded_font_families = load_font("FontAwesome.otf")
-        # default_font = QtGui.QFont()
-        self.icon_font = QtGui.QFont()
-
-        if loaded_font_families:
-            self.icon_font.setFamily(loaded_font_families[0])
-            self.icon_font.setPixelSize(14)
-
-    def paint(self, *args, **kwargs):
-        """Customize the painter.
-
-        Args:
-            args: Arguments.
-            kwargs: Keyword arguments
-        """
-        super(TaskIcon, self).paint(*args, **kwargs)
-
-        # # set text and icon
-        # pixmap = QtGui.QPixmap(20, 20)
-        # painter.setFont(self.icon_font)
-        # # painter.begin(pixmap)
-        # painter.drawText(
-        #     rect.x() + 4, rect.y() + 4, 16, 16, 0,
-        #     self.task_entity_type_icons[self.entity_type]
-        # )
-        # # painter.end()
-        # self.setPixmap(pixmap)
 
 
 class TaskNameCompleter(QtWidgets.QCompleter):
@@ -191,7 +145,7 @@ class TaskItem(QtGui.QStandardItem):
         self.setEditable(False)
         logger.debug("TaskItem.__init__() is finished for item: %s" % self.text())
 
-        icon = TaskIcon(self.task.entity_type)
+        icon = get_cached_icon(self.task.entity_type.lower())
         self.setData(icon, QtCore.Qt.DecorationRole)
         self.setData(self.task.name, QtCore.Qt.DisplayRole)
 
@@ -264,8 +218,8 @@ class TaskItem(QtGui.QStandardItem):
 
             tasks = query.order_by(Task.name).all()
 
-            # # model = self.model() # This will cause a SEGFAULT
-            # # TODO: update it later on
+            # model = self.model() # This will cause a SEGFAULT
+            # TODO: update it later on
 
             # start = time.time()
             task_items = []
@@ -576,3 +530,16 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         else:
             item = self.itemFromIndex(index)
             item.reload()
+
+
+class TaskTableModel(QtGui.QStandardItemModel):
+    """Task model suitable for data tables."""
+
+    def __init__(self, *args, **kwargs):
+        super(TaskTableModel, self).__init__(*args, **kwargs)
+
+    def populate_table(self, tasks):
+        """Populate table with data."""
+        for task in tasks:
+            item = TaskItem(task=task)
+            self.appendRow(item)

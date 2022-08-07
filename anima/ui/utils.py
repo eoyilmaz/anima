@@ -22,15 +22,15 @@ def get_cached_icon(icon_name):
     if not ICONS_LUT:
         ICONS_LUT.update(
             {
-                "PREV": qtawesome.icon("fa.pencil"),
-                "HREV": qtawesome.icon("fa.mail-reply-all"),
-                "RTS": qtawesome.icon("ei.check-empty"),
-                "CMPL": qtawesome.icon("ei.check"),
-                "WIP": qtawesome.icon("fa5s.play"),
-                "WFD": qtawesome.icon("fa.circle-o"),
-                "DREV": qtawesome.icon("fa5s.step-backward"),
-                "OH": qtawesome.icon("ei.pause"),
-                "STOP": qtawesome.icon("ei.stop"),
+                "prev": qtawesome.icon("fa.pencil"),
+                "hrev": qtawesome.icon("fa.mail-reply-all"),
+                "rts": qtawesome.icon("ei.check-empty"),
+                "cmpl": qtawesome.icon("ei.check"),
+                "wip": qtawesome.icon("fa5s.play"),
+                "wfd": qtawesome.icon("fa.circle-o"),
+                "drev": qtawesome.icon("fa5s.step-backward"),
+                "oh": qtawesome.icon("ei.pause"),
+                "stop": qtawesome.icon("ei.stop"),
                 "asset": qtawesome.icon("fa5s.puzzle-piece"),
                 "authlog": qtawesome.icon("fa.calendar-check-o"),
                 "browse_folder": qtawesome.icon("fa5.folder-open"),
@@ -40,7 +40,7 @@ def get_cached_icon(icon_name):
                 "copy": qtawesome.icon("fa5.copy"),
                 "daily": qtawesome.icon("ei.eye-open"),
                 "dashboard": qtawesome.icon("fa.dashboard"),
-                "default": qtawesome.icon("fa5s.key"),
+                "default": qtawesome.icon("ei.ban-circle"),
                 "delete": qtawesome.icon("fa5.trash-alt"),
                 "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
                 "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
@@ -74,7 +74,7 @@ def get_cached_icon(icon_name):
                 "version_output": qtawesome.icon("fa.picture-o"),
             }
         )
-    return ICONS_LUT[icon_name]
+    return ICONS_LUT.get(icon_name.lower(), ICONS_LUT["default"])
 
 
 def get_app_icon(icon_name):
