@@ -13,6 +13,10 @@ from stalker.db.session import DBSession
 from stalker.models.task import Task_Resources
 
 
+if False:
+    from PySide2 import QtCore, QtGui, QtWidgets
+
+
 class TaskNameCompleter(QtWidgets.QCompleter):
     """Task name completer.
 
@@ -537,9 +541,64 @@ class TaskTableModel(QtGui.QStandardItemModel):
 
     def __init__(self, *args, **kwargs):
         super(TaskTableModel, self).__init__(*args, **kwargs)
+        self.setColumnCount(7)
+        self.setHorizontalHeaderLabels(
+            ["", "Thumbnail", "Start", "End", "Name", "Bid", "Sched."]
+        )
 
     def populate_table(self, tasks):
         """Populate table with data."""
         for task in tasks:
-            item = TaskItem(task=task)
-            self.appendRow(item)
+            assert isinstance(task, Task)
+
+            # CheckBox item
+            check_box_item = QtGui.QStandardItem()
+            check_box_item.setCheckable(True)
+            check_box_item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+            # Thumbnail
+            thumbnail_item = QtGui.QStandardItem()
+
+            # Start Date
+            start_date_item = QtGui.QStandardItem(
+                "{}-{}-{}".format(task.start.year, task.start.month, task.start.day)
+            )
+
+            # End Date
+            end_date_item = QtGui.QStandardItem(
+                "{}-{}-{}".format(task.end.year, task.end.month, task.end.day)
+            )
+
+            # Name
+            name_item = QtGui.QStandardItem(
+                "{} ({} | {})".format(
+                    task.name,
+                    task.project.code,
+                    " | ".join(list(map(lambda x: x.name, task.parents)))
+                )
+            )
+
+            # Bid
+            bid_timing_item = QtGui.QStandardItem(
+                "{} {}".format(int(task.bid_timing), task.bid_unit)
+            )
+
+            # Schedule Timing
+            schedule_timing_item = QtGui.QStandardItem(
+                "{} {}".format(int(task.schedule_timing), task.schedule_unit)
+            )
+
+            self.appendRow([
+                check_box_item,
+                thumbnail_item,
+                start_date_item,
+                end_date_item,
+                name_item,
+                bid_timing_item,
+                schedule_timing_item,
+            ])
+
+
+# class TaskTableSortFilterProxyModel(QtCore.QSortFilterProxyModel):
+#     """
+#     """

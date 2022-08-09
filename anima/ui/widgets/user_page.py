@@ -4,7 +4,9 @@
 from functools import partial
 
 from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.models.task import TaskTableModel
 from anima.ui.utils import get_cached_icon, update_graphics_view_with_entity_thumbnail
+from anima.ui.views.task import TaskTableView
 from anima.ui.widgets.button import DashboardButton
 from anima.ui.widgets.page import PageTitleWidget
 from anima.ui.widgets.project import ProjectComboBox
@@ -510,10 +512,29 @@ class UserTasksByStatusWidget(
         for status_code in self.status_order:
             if status_code in status_codes_and_counts:
                 # create one tab for each status
+                status = Status.query.filter(Status.code == status_code).first()
                 status_tab = QtWidgets.QWidget(self)
                 self.main_tab_widget.addTab(
                     status_tab,
                     get_cached_icon(status_code),
                     "{} ({})".format(status_code, status_codes_and_counts[status_code]),
                 )
+                # add a layout to this widget
+                status_tab_layout = QtWidgets.QVBoxLayout()
+                status_tab.setLayout(status_tab_layout)
+
                 # add a TaskTableView to this status_tab
+                task_table = TaskTableView(self)
+                task_table_model = TaskTableModel(self)
+                task_table.setModel(task_table_model)
+                status_tab_layout.addWidget(task_table)
+
+                tasks = (
+                    Task.query
+                    .filter(Task.project==self.project)
+                    .filter(Task.resources.contains(self.user))
+                    .filter(Task.status == status)
+                    .all()
+                )
+                task_table_model.populate_table(tasks)
+                task_table.resizeColumnsToContents()

@@ -1058,4 +1058,4 @@ class TaskTableView(QtWidgets.QTableView):
     """A QTableView variant that shows task related data."""
 
     def __init__(self, *args, **kwargs):
-        super(TaskTableView, self).__init__(self, *args, **kwargs)
+        super(TaskTableView, self).__init__(*args, **kwargs)
