@@ -441,8 +441,12 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
         # update the widgets
         self.user_tasks_by_status_widget.user = user
 
-        for child in self.notes_layout.children():
-            child.deleteLater()
+        i = 0
+        child = self.notes_layout.takeAt(0)
+        while child is not None:
+            del child
+            child = self.notes_layout.takeAt(0)
+            i += 1
 
         # get the latest 50 notes of the users Tasks
         all_notes = (
