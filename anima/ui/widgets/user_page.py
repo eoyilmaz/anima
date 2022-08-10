@@ -3,18 +3,22 @@
 
 from functools import partial
 
+from stalker.models.entity import Entity_Notes
+from stalker.models.task import Task_Resources
+
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 from anima.ui.models.task import TaskTableModel
 from anima.ui.utils import get_cached_icon, update_graphics_view_with_entity_thumbnail
 from anima.ui.views.task import TaskTableView
 from anima.ui.widgets.button import DashboardButton
+from anima.ui.widgets.note import NoteWidget
 from anima.ui.widgets.page import PageTitleWidget
 from anima.ui.widgets.project import ProjectComboBox
 
 from sqlalchemy import distinct
 from sqlalchemy.sql.functions import count
 
-from stalker import Project, Status, Task, User
+from stalker import Project, Status, Task, User, Note
 from stalker.db.session import DBSession
 
 
@@ -395,11 +399,36 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
 
         # ---------------------------------
         # User Calendar
-        pass
+        self.calendar_widget = QtWidgets.QCalendarWidget(self)
+        self.calendar_widget.setFirstDayOfWeek(QtCore.Qt.Monday)
+        self.content_layout.addWidget(self.calendar_widget)
 
         # ---------------------------------
         # User Recent messages
-        pass
+        # This is currently not a single widget, but can be converted to an individual
+        # widget later on.
+        self.notes_scroll_area = QtWidgets.QScrollArea(self)
+        self.notes_scroll_area.setFrameStyle(QtWidgets.QScrollArea.Plain)
+        self.notes_scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.notes_scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.notes_scroll_area.setWidgetResizable(True)
+        self.notes_scroll_area.setFixedWidth(275)
+        self.notes_scroll_area.setSizePolicy(
+            QtWidgets.QSizePolicy.Fixed,
+            QtWidgets.QSizePolicy.Expanding
+        )
+
+        self.notes_scroll_area_widget = QtWidgets.QWidget(self)
+        self.notes_scroll_area.setWidget(self.notes_scroll_area_widget)
+
+        self.notes_layout = QtWidgets.QVBoxLayout()
+        self.notes_layout.setContentsMargins(0, 0, 0, 0)
+        self.notes_scroll_area_widget.setLayout(self.notes_layout)
+        self.content_layout.addWidget(self.notes_scroll_area)
+
+        self.content_layout.setStretch(0, 1)
+        self.content_layout.setStretch(1, 1)
+        self.content_layout.setStretch(2, 0)
 
     @UserPropertyMixin.user.setter
     def user(self, user):
@@ -411,6 +440,33 @@ class UserDashboardWidget(QtWidgets.QWidget, UserPropertyMixin):
         UserPropertyMixin.user.fset(self, user)
         # update the widgets
         self.user_tasks_by_status_widget.user = user
+
+        for child in self.notes_layout.children():
+            child.deleteLater()
+
+        # get the latest 50 notes of the users Tasks
+        all_notes = (
+            DBSession
+            .query(Note)
+            .join(Entity_Notes, Entity_Notes.c.note_id == Note.id)
+            .join(Task, Task.id == Entity_Notes.c.entity_id)
+            .join(Task_Resources, Task.id == Task_Resources.c.task_id)
+            .filter(Task_Resources.c.resource_id == self.user.id)
+            .filter(Note.name != 'Auto Extended Time')
+            .order_by(Note.date_updated.desc())
+            .limit(50)
+            .all()
+        )
+        size_policy = QtWidgets.QSizePolicy(
+            QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Maximum
+        )
+        for note in all_notes:
+            # create an individual NoteWidget
+            note_widget = NoteWidget(note=note, parent=self)
+            note_widget.setSizePolicy(size_policy)
+            self.notes_layout.addWidget(note_widget)
+        # self.notes_scroll_area.setVerticalScrollBarPolicy()
+        self.notes_scroll_area.setWidgetResizable(True)
 
 
 class UserTasksByStatusWidget(
@@ -424,6 +480,44 @@ class UserTasksByStatusWidget(
     """
 
     status_order = ["WFD", "RTS", "WIP", "PREV", "HREV", "DREV", "CMPL", "OH", "STOP"]
+    status_colors = {
+        "WFD": {
+            "bg": QtGui.QColor(0xcddce5),
+            "fg": QtGui.QColor(0x000000),
+        },
+        "RTS": {
+            "bg": QtGui.QColor(0xd15b47),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "WIP": {
+            "bg": QtGui.QColor(0xffc657),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "PREV": {
+            "bg": QtGui.QColor(0x6fb3e0),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "HREV": {
+            "bg": QtGui.QColor(0x6f3cc4),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "DREV": {
+            "bg": QtGui.QColor(0x6f3cc4),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "CMPL": {
+            "bg": QtGui.QColor(0x82af6f),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "OH": {
+            "bg": QtGui.QColor(0xf76162),
+            "fg": QtGui.QColor(0xffffff),
+        },
+        "STOP": {
+            "bg": QtGui.QColor(0x4e5962),
+            "fg": QtGui.QColor(0xffffff),
+        },
+    }
 
     def __init__(self, *args, **kwargs):
         super(UserTasksByStatusWidget, self).__init__(*args, **kwargs)
@@ -514,6 +608,18 @@ class UserTasksByStatusWidget(
                 # create one tab for each status
                 status = Status.query.filter(Status.code == status_code).first()
                 status_tab = QtWidgets.QWidget(self)
+                status_tab.setAutoFillBackground(True)
+                palette = status_tab.palette()
+                palette.setColor(
+                    status_tab.backgroundRole(),
+                    self.status_colors[status_code]["bg"]
+                )
+                palette.setColor(
+                    status_tab.foregroundRole(),
+                    self.status_colors[status_code]["fg"]
+                )
+                status_tab.setPalette(palette)
+
                 self.main_tab_widget.addTab(
                     status_tab,
                     get_cached_icon(status_code),
@@ -521,6 +627,7 @@ class UserTasksByStatusWidget(
                 )
                 # add a layout to this widget
                 status_tab_layout = QtWidgets.QVBoxLayout()
+                status_tab_layout.setMargin(0)
                 status_tab.setLayout(status_tab_layout)
 
                 # add a TaskTableView to this status_tab
