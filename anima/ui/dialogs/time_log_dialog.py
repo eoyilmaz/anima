@@ -332,49 +332,29 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         logger.debug("start setting up interface signals")
 
         # Dialog buttons
-        QtCore.QObject.connect(
-            self.dialog_button_box, QtCore.SIGNAL("accepted()"), self.accept
-        )
-        QtCore.QObject.connect(
-            self.dialog_button_box, QtCore.SIGNAL("rejected()"), self.reject
-        )
+        self.dialog_button_box.accepted.connect(self.accept)
+        self.dialog_button_box.rejected.connect(self.reject)
 
         # tasks_combo_box
-        QtCore.QObject.connect(
-            self.tasks_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.tasks_combo_box_index_changed,
+        self.tasks_combo_box.currentIndexChanged.connect(
+            self.tasks_combo_box_index_changed
         )
 
         # start_time_edit
-        QtCore.QObject.connect(
-            self.start_time_edit,
-            QtCore.SIGNAL("timeChanged(QTime)"),
-            self.start_time_changed,
-        )
+        self.start_time_edit.timeChanged.connect(self.start_time_changed)
 
         # end_time_edit
-        QtCore.QObject.connect(
-            self.end_time_edit,
-            QtCore.SIGNAL("timeChanged(QTime)"),
-            self.end_time_changed,
-        )
+        self.end_time_edit.timeChanged.connect(self.end_time_changed)
 
         # effort_time_edit
         self.effort_time_edit.timeChanged.connect(self.effort_time_changed)
 
         # resource changed
-        QtCore.QObject.connect(
-            self.resource_combo_box,
-            QtCore.SIGNAL("currentIndexChanged(QString)"),
-            self.resource_changed,
-        )
+        self.resource_combo_box.currentIndexChanged.connect(self.resource_changed)
 
         # calendar day selected
-        QtCore.QObject.connect(
-            self.calendar_widget,
-            QtCore.SIGNAL("selectionChanged()"),
-            self.calendar_widget_selection_changed,
+        self.calendar_widget.selectionChanged.connect(
+            self.calendar_widget_selection_changed
         )
 
         self.show_advanced_time_controls_check_box.stateChanged.connect(
