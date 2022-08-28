@@ -3,7 +3,7 @@
 
 from anima import defaults, logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
-from anima.ui.utils import load_font
+from anima.ui.utils import load_font, get_cached_icon
 
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.orm import aliased
@@ -13,50 +13,8 @@ from stalker.db.session import DBSession
 from stalker.models.task import Task_Resources
 
 
-class TaskIcon(QtGui.QIcon):
-    """A custom QIcon that creates icons from text."""
-
-    task_entity_type_icons = {
-        "Task": "\uf0ae",
-        "Asset": "\uf12e",
-        "Shot": "\uf030",
-        "Sequence": "\uf1de",
-        "Project": "\uf0e8",
-    }
-
-    def __init__(self, *args, **kwargs):
-        self.entity_type = kwargs.pop("entity_type", None)
-
-        pixmap = QtGui.QPixmap(20, 20)
-        super(TaskIcon, self).__init__(pixmap)
-
-        loaded_font_families = load_font("FontAwesome.otf")
-        # default_font = QtGui.QFont()
-        self.icon_font = QtGui.QFont()
-
-        if loaded_font_families:
-            self.icon_font.setFamily(loaded_font_families[0])
-            self.icon_font.setPixelSize(14)
-
-    def paint(self, *args, **kwargs):
-        """Customize the painter.
-
-        Args:
-            args: Arguments.
-            kwargs: Keyword arguments
-        """
-        super(TaskIcon, self).paint(*args, **kwargs)
-
-        # # set text and icon
-        # pixmap = QtGui.QPixmap(20, 20)
-        # painter.setFont(self.icon_font)
-        # # painter.begin(pixmap)
-        # painter.drawText(
-        #     rect.x() + 4, rect.y() + 4, 16, 16, 0,
-        #     self.task_entity_type_icons[self.entity_type]
-        # )
-        # # painter.end()
-        # self.setPixmap(pixmap)
+if False:
+    from PySide2 import QtCore, QtGui, QtWidgets
 
 
 class TaskNameCompleter(QtWidgets.QCompleter):
@@ -174,26 +132,59 @@ class TaskItem(QtGui.QStandardItem):
     """Implement the Task as a QStandardItem.
 
     Args:
-        entity: An entity that has id, name, entity_type, status_id and has_children
-            fields
+        task (Entity): An entity that has id, name, entity_type, status_id and
+            has_children fields.
+        display_full_path (bool): When set to True, it will display the full path of the
+            entity (if this is a Task derivative). False by default.
     """
 
     task_entity_types = ["Task", "Asset", "Shot", "Sequence"]
 
     def __init__(self, *args, **kwargs):
-        self.task = kwargs.pop("task", None)
         self.loaded = False
         self.fetched_all = False
+        task = kwargs.pop("task", None)
+        self.display_full_path = kwargs.pop("display_full_path", False)
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug("TaskItem.__init__() is started for item: %s" % self.text())
         self.parent = None
         self.setEditable(False)
-        logger.debug("TaskItem.__init__() is finished for item: %s" % self.text())
 
-        icon = TaskIcon(self.task.entity_type)
+        self._task = None
+        self.task = task
+
+    @property
+    def task(self):
+        """Return Task.
+
+        Returns:
+            Task: The Stalker Task instance stored in this item.
+        """
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """Set the task property.
+
+        Args:
+            task: A stalker Task instance
+        """
+        self._task = task
+        if not self._task:
+            return
+
+        icon = get_cached_icon(self._task.entity_type.lower())
         self.setData(icon, QtCore.Qt.DecorationRole)
-        self.setData(self.task.name, QtCore.Qt.DisplayRole)
+
+        task_name = self.task.name
+        if self.display_full_path:
+            task_name = "{} ({} | {})".format(
+                task.name,
+                task.project.code,
+                " | ".join(list(map(lambda x: x.name, task.parents)))
+            )
+
+        self.setData(task_name, QtCore.Qt.DisplayRole)
 
     def clone(self):
         """Return a copy of this item.
@@ -264,8 +255,8 @@ class TaskItem(QtGui.QStandardItem):
 
             tasks = query.order_by(Task.name).all()
 
-            # # model = self.model() # This will cause a SEGFAULT
-            # # TODO: update it later on
+            # model = self.model() # This will cause a SEGFAULT
+            # TODO: update it later on
 
             # start = time.time()
             task_items = []
@@ -576,3 +567,65 @@ class TaskTreeModel(QtGui.QStandardItemModel):
         else:
             item = self.itemFromIndex(index)
             item.reload()
+
+
+class TaskTableModel(QtGui.QStandardItemModel):
+    """Task model suitable for data tables."""
+
+    def __init__(self, *args, **kwargs):
+        super(TaskTableModel, self).__init__(*args, **kwargs)
+        self.setColumnCount(7)
+        self.setHorizontalHeaderLabels(
+            ["", "Thumbnail", "Start", "End", "Name", "Bid", "Sched."]
+        )
+
+    def populate_table(self, tasks):
+        """Populate table with data."""
+        for task in tasks:
+            assert isinstance(task, Task)
+
+            # CheckBox item
+            check_box_item = QtGui.QStandardItem()
+            check_box_item.setCheckable(True)
+            check_box_item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+
+            # Thumbnail
+            thumbnail_item = QtGui.QStandardItem()
+
+            # Start Date
+            start_date_item = QtGui.QStandardItem(
+                "{}-{}-{}".format(task.start.year, task.start.month, task.start.day)
+            )
+
+            # End Date
+            end_date_item = QtGui.QStandardItem(
+                "{}-{}-{}".format(task.end.year, task.end.month, task.end.day)
+            )
+
+            # Name
+            name_item = TaskItem(task=task, display_full_path=True)
+
+            # Bid
+            bid_timing_item = QtGui.QStandardItem(
+                "{} {}".format(int(task.bid_timing), task.bid_unit)
+            )
+
+            # Schedule Timing
+            schedule_timing_item = QtGui.QStandardItem(
+                "{} {}".format(int(task.schedule_timing), task.schedule_unit)
+            )
+
+            self.appendRow([
+                check_box_item,
+                thumbnail_item,
+                start_date_item,
+                end_date_item,
+                name_item,
+                bid_timing_item,
+                schedule_timing_item,
+            ])
+
+
+# class TaskTableSortFilterProxyModel(QtCore.QSortFilterProxyModel):
+#     """
+#     """

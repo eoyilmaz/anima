@@ -111,7 +111,7 @@ class EntityThumbnailWidget(QtWidgets.QWidget):
         if task:
             from anima.ui import utils
 
-            utils.update_graphics_view_with_task_thumbnail(
+            utils.update_graphics_view_with_entity_thumbnail(
                 self.task, self.thumbnail_graphics_view
             )
 

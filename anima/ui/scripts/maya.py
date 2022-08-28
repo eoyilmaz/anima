@@ -30,7 +30,7 @@ def version_dialog(logging_level=logging.WARNING, mode=2):
     # and PySide2 for Maya 2017
     set_qt_lib()
 
-    from anima.ui import version_dialog
+    from anima.ui.dialogs import version_dialog
     from anima.dcc import mayaEnv
 
     m = mayaEnv.Maya()
@@ -55,7 +55,7 @@ def version_updater(logging_level=logging.WARNING):
     # set Qt lib
     set_qt_lib()
 
-    from anima.ui import version_updater
+    from anima.ui.dialogs import version_updater
     from anima.dcc import mayaEnv
 
     m = mayaEnv.Maya()
@@ -84,7 +84,7 @@ def version_mover():
 
     do_db_setup()
 
-    from anima.ui import version_mover as vm
+    from anima.ui.dialogs import version_mover as vm
 
     vm.UI()
 
@@ -100,8 +100,7 @@ def project_manager(logging_level=logging.WARNING):
     # and PySide2 for Maya 2017
     set_qt_lib()
 
-    from anima.ui import project_manager
-    from anima.dcc import mayaEnv
+    from anima.ui.dialogs import project_manager
 
     # set the parent object to the maya main window
     project_manager.ui_caller(None, None, project_manager.MainWindow)

@@ -44,7 +44,8 @@ setup(
         "Topic :: Utilities",
     ],
     requires=['stalker', 'edl', 'timecode', 'sqlalchemy', 'pillow', 'exifread',
-              'jinja2', 'pytz', 'ldap3', 'pyside2', 'tzlocal'],
+              'jinja2', 'pytz', 'ldap3', 'pyside2', 'tzlocal', 'qtawesome', 'qtpy',
+              'packaging'],
     install_requires=['stalker', 'edl', 'timecode', 'sqlalchemy'],
     test_requires=['pytest', 'pytest-xdist', 'coverage', 'pytest-cov']
 )

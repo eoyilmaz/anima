@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import re
-from functools import partial
 
 from anima import logger
 from anima.ui.base import AnimaDialogBase, ui_caller
 from anima.ui.lib import QtCore, QtWidgets
 
+if False:
+    from PySide2 import QtWidgets, QtCore
 
 MULTI_VALUE_ENUM = "---Multiple_Values---"
 
@@ -1228,7 +1229,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
 
     def pick_parent_task_push_button_clicked(self):
         """runs when pick_parent_task_push_button is clicked"""
-        from anima.ui import task_picker_dialog
+        from anima.ui.dialogs import task_picker_dialog
 
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project()
@@ -1392,7 +1393,7 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui import task_picker_dialog
+        from anima.ui.dialogs import task_picker_dialog
 
         task_picker_main_dialog = task_picker_dialog.MainDialog(
             parent=self, project=self.get_project(), allow_multi_selection=True
@@ -1953,3 +1954,109 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
         # store the settings
         self.write_settings()
         super(MainDialog, self).reject()
+
+
+class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
+    """custom dialog for duplicating task hierarchies"""
+
+    def __init__(self, parent=None, duplicated_task_name="", *args, **kwargs):
+        super(DuplicateTaskHierarchyDialog, self).__init__(
+            parent=parent, *args, **kwargs
+        )
+
+        self.duplicated_task_name = duplicated_task_name
+
+        # storage for widgets
+        self.main_layout = None
+        self.rename_new_task_checkbox = None
+        self.label = None
+        self.task_name_line_edit = None
+        self.keep_resources_check_box = None
+        self.number_of_copies_spin_box = None
+        self.button_box = None
+
+        # setup dialog
+        self._setup_dialog()
+
+    def _setup_dialog(self):
+        """create the UI elements"""
+        # set window title
+        self.setWindowTitle("Duplicate Task Hierarchy")
+
+        # set window size
+        self.resize(420, 118)
+
+        # create the main layout
+        self.main_layout = QtWidgets.QVBoxLayout(self)
+        self.setLayout(self.main_layout)
+
+        # form layout
+        form_layout = QtWidgets.QFormLayout()
+        self.main_layout.addLayout(form_layout)
+
+        label_role = QtWidgets.QFormLayout.LabelRole
+        field_role = QtWidgets.QFormLayout.FieldRole
+
+        i = 0
+        # =======================
+        # Rename Tasks
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Rename Tasks", self))
+
+        self.rename_new_task_checkbox = QtWidgets.QCheckBox(self)
+        self.rename_new_task_checkbox.setChecked(False)
+        form_layout.setWidget(i, field_role, self.rename_new_task_checkbox)
+
+        # ====================
+        # Duplicated Task Name
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Duplicated Task Name", self))
+
+        # the line edit
+        self.task_name_line_edit = QtWidgets.QLineEdit(self)
+        self.task_name_line_edit.setText(self.duplicated_task_name)
+        self.task_name_line_edit.setEnabled(False)
+        form_layout.setWidget(i, field_role, self.task_name_line_edit)
+
+        # ===================
+        # Number Of Copies
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Number Of Copies", self))
+
+        self.number_of_copies_spin_box = QtWidgets.QSpinBox(self)
+        self.number_of_copies_spin_box.setMinimum(1)
+        self.number_of_copies_spin_box.setMaximum(1000)
+        form_layout.setWidget(i, field_role, self.number_of_copies_spin_box)
+
+        # ==============
+        # Keep Resources
+        i += 1
+        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Keep Resources", self))
+
+        self.keep_resources_check_box = QtWidgets.QCheckBox(self)
+        self.keep_resources_check_box.setChecked(True)
+        form_layout.setWidget(i, field_role, self.keep_resources_check_box)
+
+        # ===================
+        # the button box
+        self.button_box = QtWidgets.QDialogButtonBox(self)
+        self.button_box.setOrientation(QtCore.Qt.Horizontal)
+        self.button_box.setStandardButtons(
+            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
+        )
+        self.main_layout.addWidget(self.button_box)
+
+        # setup signals
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        self.rename_new_task_checkbox.stateChanged.connect(
+            self.rename_new_task_checkbox_state_changed
+        )
+
+    def rename_new_task_checkbox_state_changed(self, state):
+        """Update the line edit
+
+        :param state:
+        :return:
+        """
+        self.task_name_line_edit.setEnabled(state)

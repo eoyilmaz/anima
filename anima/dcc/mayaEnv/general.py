@@ -25,7 +25,7 @@ class General(object):
         version = m.get_current_version()
 
         # create the publish window
-        from anima.ui import publish_checker
+        from anima.ui.dialogs import publish_checker
 
         dialog = publish_checker.UI(
             environment=m,

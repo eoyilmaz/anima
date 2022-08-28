@@ -1,114 +1,12 @@
 # -*- coding: utf-8 -*-
 import anima.utils
 from anima import logger
-from anima.ui.lib import QtCore, QtGui, QtWidgets
+from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.models.task import TaskTreeModel
+from anima.ui.utils import get_cached_icon
 
-
-class DuplicateTaskHierarchyDialog(QtWidgets.QDialog):
-    """custom dialog for duplicating task hierarchies"""
-
-    def __init__(self, parent=None, duplicated_task_name="", *args, **kwargs):
-        super(DuplicateTaskHierarchyDialog, self).__init__(
-            parent=parent, *args, **kwargs
-        )
-
-        self.duplicated_task_name = duplicated_task_name
-
-        # storage for widgets
-        self.main_layout = None
-        self.rename_new_task_checkbox = None
-        self.label = None
-        self.task_name_line_edit = None
-        self.keep_resources_check_box = None
-        self.number_of_copies_spin_box = None
-        self.button_box = None
-
-        # setup dialog
-        self._setup_dialog()
-
-    def _setup_dialog(self):
-        """create the UI elements"""
-        # set window title
-        self.setWindowTitle("Duplicate Task Hierarchy")
-
-        # set window size
-        self.resize(420, 118)
-
-        # create the main layout
-        self.main_layout = QtWidgets.QVBoxLayout(self)
-        self.setLayout(self.main_layout)
-
-        # form layout
-        form_layout = QtWidgets.QFormLayout()
-        self.main_layout.addLayout(form_layout)
-
-        label_role = QtWidgets.QFormLayout.LabelRole
-        field_role = QtWidgets.QFormLayout.FieldRole
-
-        i = 0
-        # =======================
-        # Rename Tasks
-        i += 1
-        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Rename Tasks", self))
-
-        self.rename_new_task_checkbox = QtWidgets.QCheckBox(self)
-        self.rename_new_task_checkbox.setChecked(False)
-        form_layout.setWidget(i, field_role, self.rename_new_task_checkbox)
-
-        # ====================
-        # Duplicated Task Name
-        i += 1
-        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Duplicated Task Name", self))
-
-        # the line edit
-        self.task_name_line_edit = QtWidgets.QLineEdit(self)
-        self.task_name_line_edit.setText(self.duplicated_task_name)
-        self.task_name_line_edit.setEnabled(False)
-        form_layout.setWidget(i, field_role, self.task_name_line_edit)
-
-        # ===================
-        # Number Of Copies
-        i += 1
-        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Number Of Copies", self))
-
-        self.number_of_copies_spin_box = QtWidgets.QSpinBox(self)
-        self.number_of_copies_spin_box.setMinimum(1)
-        self.number_of_copies_spin_box.setMaximum(1000)
-        form_layout.setWidget(i, field_role, self.number_of_copies_spin_box)
-
-        # ==============
-        # Keep Resources
-        i += 1
-        form_layout.setWidget(i, label_role, QtWidgets.QLabel("Keep Resources", self))
-
-        self.keep_resources_check_box = QtWidgets.QCheckBox(self)
-        self.keep_resources_check_box.setChecked(True)
-        form_layout.setWidget(i, field_role, self.keep_resources_check_box)
-
-        # ===================
-        # the button box
-        self.button_box = QtWidgets.QDialogButtonBox(self)
-        self.button_box.setOrientation(QtCore.Qt.Horizontal)
-        self.button_box.setStandardButtons(
-            QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok
-        )
-        self.main_layout.addWidget(self.button_box)
-
-        # setup signals
-        self.button_box.accepted.connect(self.accept)
-        self.button_box.rejected.connect(self.reject)
-        self.rename_new_task_checkbox.stateChanged.connect(
-            self.rename_new_task_checkbox_state_changed
-        )
-
-    def rename_new_task_checkbox_state_changed(self, state):
-        """Update the line edit
-
-        :param state:
-        :return:
-        """
-        self.task_name_line_edit.setEnabled(state)
+if False:
+    from PySide2 import QtCore, QtWidgets
 
 
 class TaskTreeView(QtWidgets.QTreeView):
@@ -304,7 +202,7 @@ class TaskTreeView(QtWidgets.QTreeView):
         if task_id:
             entity = SimpleEntity.query.get(task_id)
 
-        reload_action = menu.addAction("\uf0e8 Reload")
+        reload_action = menu.addAction(get_cached_icon("reload"), "Reload")
 
         # sub menus
         create_sub_menu = menu.addMenu("Create")
@@ -313,43 +211,53 @@ class TaskTreeView(QtWidgets.QTreeView):
         if defaults.is_power_user(logged_in_user):
             # create the Create Project menu item
             create_project_action = create_sub_menu.addAction(
-                "\uf0e8 Create Project..."
+                get_cached_icon("create_project"), "Create Project..."
             )
 
             if isinstance(entity, Project):
                 # this is a project!
                 if defaults.is_power_user(logged_in_user):
                     update_project_action = update_sub_menu.addAction(
-                        "\uf044 Update Project..."
+                        get_cached_icon("update_project"), "Update Project..."
                     )
-                    assign_users_action = menu.addAction("\uf0c0 Assign Users...")
+                    assign_users_action = menu.addAction(
+                        get_cached_icon("users"), "Assign Users..."
+                    )
                     create_project_structure_action = create_sub_menu.addAction(
-                        "\uf115 Create Project Structure"
+                        get_cached_icon("browse_folder"),
+                        "Create Project Structure"
                     )
                     create_child_task_action = create_sub_menu.addAction(
-                        "\uf0ae Create Child Task..."
+                        get_cached_icon("task"), "Create Child Task..."
                     )
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
-                    # export_to_json_action = create_sub_menu.addAction(u'\uf1f8 Export To JSON...')
+                    # export_to_json_action = create_sub_menu.addAction(
+                    #     get_cached_icon("export"), "Export To JSON..."
+                    # )
 
                     import_from_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Import From JSON..."
+                        get_cached_icon("import"), "Import From JSON..."
                     )
 
         if entity:
             # separate the Project and Task related menu items
             menu.addSeparator()
 
-            open_in_web_browser_action = menu.addAction("\uf14c Open In Web Browser...")
-            open_in_file_browser_action = menu.addAction("\uf07c Browse Folders...")
-            copy_url_action = menu.addAction("\uf0c5 Copy URL")
-            copy_id_to_clipboard = menu.addAction("\uf0c5 Copy ID to clipboard")
+            open_in_web_browser_action = menu.addAction(
+                get_cached_icon("open_external_link"), "Open In Web Browser..."
+            )
+            open_in_file_browser_action = menu.addAction(
+                get_cached_icon("browse_folder"), "Browse Folders..."
+            )
+            copy_icon = get_cached_icon("copy")
+            copy_url_action = menu.addAction(copy_icon, "Copy URL")
+            copy_id_to_clipboard = menu.addAction(copy_icon, "Copy ID to clipboard")
 
             if isinstance(entity, Task):
                 # this is a task
                 create_project_structure_action = create_sub_menu.addAction(
-                    "\uf115 Create Task Folder Structure"
+                    get_cached_icon("browse_folder"), "Create Task Folder Structure"
                 )
 
                 task = entity
@@ -365,14 +273,16 @@ class TaskTreeView(QtWidgets.QTreeView):
                 ]:
                     create_sub_menu.addSeparator()
                     create_time_log_action = create_sub_menu.addAction(
-                        "\uf073 Create TimeLog..."
+                        get_cached_icon("timelog"), "Create TimeLog..."
                     )
 
                 # Add Depends To menu
                 menu.addSeparator()
                 depends = task.depends
                 if depends:
-                    depends_to_menu = menu.addMenu("\uf090 Depends To")
+                    depends_to_menu = menu.addMenu(
+                        get_cached_icon("depends_to"), "Depends To"
+                    )
 
                     for dTask in depends:
                         action = depends_to_menu.addAction(dTask.name)
@@ -381,14 +291,18 @@ class TaskTreeView(QtWidgets.QTreeView):
                 # Add Dependent Of Menu
                 dependent_of = task.dependent_of
                 if dependent_of:
-                    dependent_of_menu = menu.addMenu("\uf08b Dependent Of")
+                    dependent_of_menu = menu.addMenu(
+                        get_cached_icon("dependent_of"), "Dependent Of"
+                    )
 
                     for dTask in dependent_of:
                         action = dependent_of_menu.addAction(dTask.name)
                         action.task = dTask
 
                 if not depends and not dependent_of:
-                    no_deps_action = menu.addAction("\uf00d No Dependencies")
+                    no_deps_action = menu.addAction(
+                        get_cached_icon("cross"), "No Dependencies"
+                    )
                     no_deps_action.setEnabled(False)
 
                 # update task and create child task menu items
@@ -396,39 +310,43 @@ class TaskTreeView(QtWidgets.QTreeView):
                 if defaults.is_power_user(logged_in_user):
                     create_sub_menu.addSeparator()
                     update_task_action = update_sub_menu.addAction(
-                        "\uf044 Update Task..."
+                        get_cached_icon("edit_entity"), "Update Task..."
                     )
 
                     upload_thumbnail_action = update_sub_menu.addAction(
-                        "\uf03e Upload Thumbnail..."
+                        get_cached_icon("image"), "Upload Thumbnail..."
                     )
 
                     # Export and Import JSON
                     create_sub_menu.addSeparator()
                     export_to_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Export To JSON..."
+                        get_cached_icon("export"), "Export To JSON..."
                     )
 
                     import_from_json_action = create_sub_menu.addAction(
-                        "\uf1f8 Import From JSON..."
+                        get_cached_icon("import"), "Import From JSON..."
                     )
                     create_sub_menu.addSeparator()
 
                     create_child_task_action = create_sub_menu.addAction(
-                        "\uf0ae Create Child Task..."
+                        get_cached_icon("task"), "Create Child Task..."
                     )
 
                     duplicate_task_hierarchy_action = create_sub_menu.addAction(
-                        "\uf0c5 Duplicate Task Hierarchy..."
+                        get_cached_icon("copy"), "Duplicate Task Hierarchy..."
                     )
-                    delete_task_action = menu.addAction("\uf1f8 Delete Task...")
+                    delete_task_action = menu.addAction(
+                        get_cached_icon("delete"), "Delete Task..."
+                    )
 
                     menu.addSeparator()
 
                 # create the status_menu
                 status_menu = update_sub_menu.addMenu("Status")
 
-                fix_task_status_action = status_menu.addAction("\uf0e8 Fix Task Status")
+                fix_task_status_action = status_menu.addAction(
+                    get_cached_icon("create_project"), "Fix Task Status"
+                )
 
                 assert isinstance(status_menu, QtWidgets.QMenu)
                 status_menu.addSeparator()
@@ -485,7 +403,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         item.reload()
 
             if create_project_action and selected_action is create_project_action:
-                from anima.ui import project_dialog
+                from anima.ui.dialogs import project_dialog
 
                 project_main_dialog = project_dialog.MainDialog(
                     parent=self, project=None
@@ -551,7 +469,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     )
 
                 elif selected_action is create_time_log_action:
-                    from anima.ui import time_log_dialog
+                    from anima.ui.dialogs import time_log_dialog
 
                     time_log_dialog_main_dialog = time_log_dialog.MainDialog(
                         parent=self,
@@ -572,7 +490,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(entity)
 
                 elif selected_action is update_task_action:
-                    from anima.ui import task_dialog
+                    from anima.ui.dialogs import task_dialog
 
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self, tasks=self.get_selected_tasks()
@@ -608,7 +526,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     anima.utils.upload_thumbnail(entity, thumbnail_full_path)
 
                 elif selected_action is create_child_task_action:
-                    from anima.ui import task_dialog
+                    from anima.ui.dialogs import task_dialog
 
                     task_main_dialog = task_dialog.MainDialog(
                         parent=self, parent_task=entity
@@ -627,6 +545,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         self.find_and_select_entity_item(tasks[0])
 
                 elif selected_action is duplicate_task_hierarchy_action:
+                    from anima.ui.dialogs.task_dialog import DuplicateTaskHierarchyDialog
                     dth_dialog = DuplicateTaskHierarchyDialog(
                         parent=self, duplicated_task_name=item.task.name
                     )
@@ -850,7 +769,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                         parent_item.reload()
 
                 elif selected_action is update_project_action:
-                    from anima.ui import project_dialog
+                    from anima.ui.dialogs import project_dialog
 
                     project_main_dialog = project_dialog.MainDialog(
                         parent=self, project=entity
@@ -868,7 +787,7 @@ class TaskTreeView(QtWidgets.QTreeView):
                     project_main_dialog.deleteLater()
 
                 elif selected_action is assign_users_action:
-                    from anima.ui import project_users_dialog
+                    from anima.ui.dialogs import project_users_dialog
 
                     project_users_main_dialog = project_users_dialog.MainDialog(
                         parent=self, project=entity
@@ -942,8 +861,6 @@ class TaskTreeView(QtWidgets.QTreeView):
         except AttributeError:
             return
 
-        from stalker import Task
-
         if item.task.entity_type == "Task":
 
             if task_id:
@@ -951,7 +868,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
                 entity = SimpleEntity.query.get(task_id)
 
-            from anima.ui import task_dialog
+            from anima.ui.dialogs import task_dialog
 
             task_main_dialog = task_dialog.MainDialog(parent=self, tasks=[entity])
             task_main_dialog.exec_()
@@ -1136,3 +1053,10 @@ class TaskTreeView(QtWidgets.QTreeView):
         for item in self.get_selected_task_items():
             self.setExpanded(item.index(), False)
         self.auto_fit_column()
+
+
+class TaskTableView(QtWidgets.QTableView):
+    """A QTableView variant that shows task related data."""
+
+    def __init__(self, *args, **kwargs):
+        super(TaskTableView, self).__init__(*args, **kwargs)

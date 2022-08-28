@@ -6,8 +6,88 @@ import os
 from anima import logger
 from anima.ui.lib import QtCore, QtGui, QtWidgets
 
+import qtawesome
 
-def get_icon(icon_name):
+ICONS_LUT = {}
+
+
+def get_cached_icon(icon_name):
+    """qtAwesome needs a Qt application to work.
+
+    Args:
+        icon_name (str): The icon name.
+    """
+    # To make it all consistent use an icon lut
+    qtawesome_version_info = qtawesome._version.version_info
+
+    global ICONS_LUT
+    if not ICONS_LUT:
+        ICONS_LUT.update(
+            {
+                "prev": qtawesome.icon("fa.pencil"),
+                "hrev": qtawesome.icon("fa.mail-reply-all"),
+                "rts": qtawesome.icon("ei.check-empty"),
+                "cmpl": qtawesome.icon("ei.check"),
+                "wip": qtawesome.icon("fa5s.play"),
+                "wfd": qtawesome.icon("fa.circle-o"),
+                "drev": qtawesome.icon("fa5s.step-backward"),
+                "oh": qtawesome.icon("ei.pause"),
+                "stop": qtawesome.icon("ei.stop"),
+                "asset": qtawesome.icon("fa5s.puzzle-piece"),
+                "authlog": qtawesome.icon("fa.calendar-check-o"),
+                "browse_folder": qtawesome.icon("fa5.folder-open"),
+                "budget": qtawesome.icon("fa.credit-card-alt"),
+                "create_project": qtawesome.icon("fa5s.sitemap"),
+                "cross": qtawesome.icon("ph.x-bold")
+                if qtawesome_version_info[0]
+                else qtawesome.icon("fa.close"),
+                "copy": qtawesome.icon("fa5.copy"),
+                "daily": qtawesome.icon("ei.eye-open"),
+                "dashboard": qtawesome.icon("fa.dashboard"),
+                "default": qtawesome.icon("ei.ban-circle"),
+                "delete": qtawesome.icon("fa5.trash-alt"),
+                "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90)
+                if qtawesome_version_info[0]
+                else qtawesome.icon("ei.arrow-left"),
+                "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
+                if qtawesome_version_info[0]
+                else qtawesome.icon("ei.arrow-right"),
+                "department": qtawesome.icon("fa.group"),
+                "edit_entity": qtawesome.icon("fa.pencil-square-o"),
+                "export": qtawesome.icon("fa5s.file-export"),
+                "group": qtawesome.icon("fa5s.key"),
+                "image": qtawesome.icon("fa5.image"),
+                "import": qtawesome.icon("fa5s.file-import"),
+                "new_entity": qtawesome.icon("fa5s.plus"),
+                "open_external_link": qtawesome.icon("fa.external-link-square"),
+                "permission": qtawesome.icon("fa5s.key"),
+                "previs": qtawesome.icon("fa.coffee"),
+                "project": qtawesome.icon("ei.folder-close"),
+                "reference": qtawesome.icon("ei.book"),
+                "reload": qtawesome.icon("ei.refresh"),
+                "report": qtawesome.icon("fa.bar-chart"),
+                "resource": qtawesome.icon("fa.user"),
+                "result": qtawesome.icon("msc.graph-line")
+                if qtawesome_version_info[0]
+                else qtawesome.icon("ei.graph"),
+                "review": qtawesome.icon("fa.comments-o"),
+                "sequence": qtawesome.icon("fa.film"),
+                "shot": qtawesome.icon("fa.camera"),
+                "task": qtawesome.icon("fa.tasks"),
+                "ticket": qtawesome.icon("fa.ticket"),
+                "timelog": qtawesome.icon("fa.calendar"),
+                "update_project": qtawesome.icon("fa.pencil-square-o"),
+                "user": qtawesome.icon("fa.user"),
+                "users": qtawesome.icon("fa.users"),
+                "vacation": qtawesome.icon("fa.sun-o"),
+                "version": qtawesome.icon("fa.sitemap"),
+                "version_output": qtawesome.icon("fa.picture-o"),
+            }
+        )
+    return ICONS_LUT.get(icon_name.lower(), ICONS_LUT["default"])
+
+
+def get_app_icon(icon_name):
     """Returns an icon from ui library"""
     import time
 
@@ -72,42 +152,42 @@ def clear_thumbnail(graphics_view):
     scene.clear()
 
 
-def update_graphics_view_with_task_thumbnail(task, graphics_view):
-    """Updates the given QGraphicsView with the given Task thumbnail
+def update_graphics_view_with_entity_thumbnail(entity, graphics_view):
+    """Updates the given QGraphicsView with the given Entity thumbnail
 
-    :param task: A
-      :class:`~stalker.models.task.Task` instance
-
-    :param graphics_view: A QtGui.QGraphicsView instance
+    Args:
+        entity: A :class:`~stalker.SimpleEntity` instance.
+        graphics_view: A ``QtWidgets.QGraphicsView`` instance.
     """
-    from stalker import Task
+    from stalker import SimpleEntity, Task
 
-    if not isinstance(task, Task) or not isinstance(
+    if not isinstance(entity, SimpleEntity) or not isinstance(
         graphics_view, QtWidgets.QGraphicsView
     ):
         # do nothing
-        logger.debug("task is not a stalker.models.task.Task instance")
+        logger.debug("task is not a stalker.SimpleEntity instance")
         return
 
     # get the thumbnail full path
     full_path = None
-    if task.thumbnail:
+    if entity.thumbnail:
         # use the cache system to get the thumbnail
         # try to get it as a normal file
-        full_path = os.path.expandvars(task.thumbnail.full_path)
+        full_path = os.path.expandvars(entity.thumbnail.full_path)
         if not os.path.exists(full_path):
             full_path = None
     else:
         logger.debug("there is no thumbnail")
         # try to get the thumbnail from parents
-        for parent in reversed(task.parents):
-            if parent.thumbnail:
-                # try to get it as a normal file
-                full_path = os.path.expandvars(parent.thumbnail.full_path)
-                if not os.path.exists(full_path):
-                    full_path = None
-                logger.debug("found parent thumbnail at: %s" % full_path)
-                break
+        if isinstance(entity, Task):
+            for parent in reversed(entity.parents):
+                if parent.thumbnail:
+                    # try to get it as a normal file
+                    full_path = os.path.expandvars(parent.thumbnail.full_path)
+                    if not os.path.exists(full_path):
+                        full_path = None
+                    logger.debug("found parent thumbnail at: %s" % full_path)
+                    break
 
     if full_path:
         update_graphics_view_with_image_file(full_path, graphics_view)
@@ -379,7 +459,7 @@ def set_widget_style(widget, dark_theme=False):
     # widget.setStyle("Fusion")
     palette = widget.palette()
 
-    if os.getenv("RBL_PIPE_UI_DARK") or dark_theme:
+    if dark_theme:
         # Now use a palette to switch to dark colors:
         palette.setColor(QtGui.QPalette.Window, QtGui.QColor(53, 53, 53))
         palette.setColor(QtGui.QPalette.WindowText, QtCore.Qt.white)
@@ -388,14 +468,24 @@ def set_widget_style(widget, dark_theme=False):
         palette.setColor(QtGui.QPalette.ToolTipBase, QtCore.Qt.white)
         palette.setColor(QtGui.QPalette.ToolTipText, QtCore.Qt.white)
         palette.setColor(QtGui.QPalette.Text, QtCore.Qt.white)
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(QtCore.Qt.darkGray))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.Text,
+            QtGui.QColor(QtCore.Qt.darkGray),
+        )
         palette.setColor(QtGui.QPalette.Button, QtGui.QColor(53, 53, 53))
         palette.setColor(QtGui.QPalette.ButtonText, QtCore.Qt.white)
         palette.setColor(
-            QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(QtCore.Qt.darkGray)
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.ButtonText,
+            QtGui.QColor(QtCore.Qt.darkGray),
         )
         palette.setColor(QtGui.QPalette.BrightText, QtCore.Qt.red)
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.BrightText, QtGui.QColor(255, 128, 128))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.BrightText,
+            QtGui.QColor(255, 128, 128),
+        )
         palette.setColor(QtGui.QPalette.Link, QtGui.QColor(42, 130, 218))
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(42, 130, 218))
         palette.setColor(QtGui.QPalette.HighlightedText, QtCore.Qt.black)
@@ -408,12 +498,22 @@ def set_widget_style(widget, dark_theme=False):
         palette.setColor(QtGui.QPalette.ToolTipBase, QtGui.QColor(255, 255, 220))
         palette.setColor(QtGui.QPalette.ToolTipText, QtGui.QColor(0, 0, 0))
         palette.setColor(QtGui.QPalette.Text, QtGui.QColor(0, 0, 0))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(190, 190, 190))
+        palette.setColor(
+            QtGui.QPalette.Disabled, QtGui.QPalette.Text, QtGui.QColor(190, 190, 190)
+        )
         palette.setColor(QtGui.QPalette.Button, QtGui.QColor(239, 239, 239))
         palette.setColor(QtGui.QPalette.ButtonText, QtGui.QColor(0, 0, 0))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.ButtonText, QtGui.QColor(190, 190, 190))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.ButtonText,
+            QtGui.QColor(190, 190, 190),
+        )
         palette.setColor(QtGui.QPalette.BrightText, QtGui.QColor(255, 255, 255))
-        palette.setColor(QtGui.QPalette.Disabled, QtGui.QPalette.BrightText, QtGui.QColor(216, 216, 216))
+        palette.setColor(
+            QtGui.QPalette.Disabled,
+            QtGui.QPalette.BrightText,
+            QtGui.QColor(216, 216, 216),
+        )
         palette.setColor(QtGui.QPalette.Link, QtGui.QColor(0, 0, 255))
         palette.setColor(QtGui.QPalette.Highlight, QtGui.QColor(48, 140, 198))
         palette.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 255, 255))

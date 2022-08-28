@@ -3,6 +3,9 @@
 
 from anima.ui.lib import QtWidgets
 
+if False:
+    from PySide2 import QtWidgets
+
 
 class ProjectComboBox(QtWidgets.QComboBox):
     """A QComboBox variant for Stalker Project instances"""

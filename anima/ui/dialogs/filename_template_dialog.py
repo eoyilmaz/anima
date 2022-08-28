@@ -3,7 +3,6 @@
 import re
 
 from anima.ui.base import AnimaDialogBase, ui_caller
-from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4
 from anima.ui.lib import QtCore, QtWidgets, QtGui
 
 

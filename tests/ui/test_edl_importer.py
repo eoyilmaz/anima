@@ -26,7 +26,7 @@ elif IS_PYQT4():
     from PyQt4.QtTest import QTest
     from PyQt4.QtCore import Qt
 
-from anima.ui import edl_importer
+from anima.ui.dialogs import edl_importer
 
 logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.DEBUG)

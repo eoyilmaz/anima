@@ -1950,8 +1950,8 @@ class ReviewManagerUI(object):
                 logged_in_user
             ):
                 # initialize the Review Dialog
-                from anima.ui.widgets.review import APPROVE, REQUEST_REVISION
-                from anima.ui import review_dialog
+                from anima.ui.widgets.review import REQUEST_REVISION
+                from anima.ui.dialogs import review_dialog
 
                 dialog = review_dialog.ReviewDialog(
                     review_type=REQUEST_REVISION,

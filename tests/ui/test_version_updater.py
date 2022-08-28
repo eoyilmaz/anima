@@ -13,7 +13,8 @@ from anima.dcc.testing import TestEnvironment
 logger = logging.getLogger('anima.ui.version_updater')
 logger.setLevel(logging.DEBUG)
 
-from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE, version_updater
+from anima.ui import IS_PYSIDE, IS_PYQT4, SET_PYSIDE
+from anima.ui.dialogs import version_updater
 
 SET_PYSIDE()
 

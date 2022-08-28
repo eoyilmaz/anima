@@ -16,7 +16,7 @@ from stalker import (db, User, Project, Repository, Structure,
 from stalker.db.session import DBSession
 from stalker.models.auth import LocalSession
 from anima.ui import IS_PYSIDE, IS_PYSIDE2, IS_PYQT4, SET_PYSIDE
-from anima.ui import version_dialog
+from anima.ui.dialogs import version_dialog
 
 SET_PYSIDE()
 
@@ -28,7 +28,7 @@ if IS_PYSIDE():
     QtWidgets = QtGui
 if IS_PYSIDE2():
     logger.debug('environment is set to pyside, importing pyside')
-    from PySide2 import QtCore, QtGui, QtWidgets
+    from PySide2 import QtCore, QtGui
     from PySide2.QtTest import QTest
     from PySide2.QtCore import Qt
 elif IS_PYQT4():

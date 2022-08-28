@@ -89,7 +89,7 @@ class ImageFormatWidget(object):
             # PyQt4
             accepted = QtWidgets.QDialog.Accepted
 
-        from anima.ui import image_format_dialog
+        from anima.ui.dialogs import image_format_dialog
 
         create_image_format_dialog = image_format_dialog.MainDialog(parent=self.parent)
         create_image_format_dialog.exec_()
@@ -117,7 +117,7 @@ class ImageFormatWidget(object):
         if not image_format:
             return
 
-        from anima.ui import image_format_dialog
+        from anima.ui.dialogs import image_format_dialog
 
         update_image_format_dialog = image_format_dialog.MainDialog(
             parent=self.parent, image_format=image_format
