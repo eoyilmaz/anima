@@ -834,7 +834,7 @@ workspace -fr "translatorData" "Outputs/data";
 
         # pm.env.sceneName() always uses "/"
         full_path = pm.sceneName()
-        logger.debug("full_path : %s" % full_path)
+        logger.debug("current scene full_path : %s" % full_path)
         # try to get it from the current open scene
         if full_path != "":
             logger.debug("trying to get the version from current file")
