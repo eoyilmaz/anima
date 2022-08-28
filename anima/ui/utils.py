@@ -18,6 +18,8 @@ def get_cached_icon(icon_name):
         icon_name (str): The icon name.
     """
     # To make it all consistent use an icon lut
+    qtawesome_version_info = qtawesome._version.version_info
+
     global ICONS_LUT
     if not ICONS_LUT:
         ICONS_LUT.update(
@@ -36,14 +38,17 @@ def get_cached_icon(icon_name):
                 "browse_folder": qtawesome.icon("fa5.folder-open"),
                 "budget": qtawesome.icon("fa.credit-card-alt"),
                 "create_project": qtawesome.icon("fa5s.sitemap"),
-                "cross": qtawesome.icon("ph.x-bold"),
+                "cross": qtawesome.icon("ph.x-bold")
+                    if qtawesome_version_info[0] else qtawesome.icon("fa.close"),
                 "copy": qtawesome.icon("fa5.copy"),
                 "daily": qtawesome.icon("ei.eye-open"),
                 "dashboard": qtawesome.icon("fa.dashboard"),
                 "default": qtawesome.icon("ei.ban-circle"),
                 "delete": qtawesome.icon("fa5.trash-alt"),
-                "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90),
-                "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90),
+                "dependent_of": qtawesome.icon("mdi6.tray-arrow-up", rotated=90)
+                    if qtawesome_version_info[0] else qtawesome.icon("ei.arrow-left"),
+                "depends_to": qtawesome.icon("mdi6.tray-arrow-down", rotated=-90)
+                    if qtawesome_version_info[0] else qtawesome.icon("ei.arrow-right"),
                 "department": qtawesome.icon("fa.group"),
                 "edit_entity": qtawesome.icon("fa.pencil-square-o"),
                 "export": qtawesome.icon("fa5s.file-export"),
@@ -59,7 +64,8 @@ def get_cached_icon(icon_name):
                 "reload": qtawesome.icon("ei.refresh"),
                 "report": qtawesome.icon("fa.bar-chart"),
                 "resource": qtawesome.icon("fa.user"),
-                "result": qtawesome.icon("msc.graph-line"),
+                "result": qtawesome.icon("msc.graph-line")
+                    if qtawesome_version_info[0] else qtawesome.icon("ei.graph"),
                 "review": qtawesome.icon("fa.comments-o"),
                 "sequence": qtawesome.icon("fa.film"),
                 "shot": qtawesome.icon("fa.camera"),
