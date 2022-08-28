@@ -221,7 +221,7 @@ class TDE4Lens(object):
         with open(lens_file_path) as f:
             data = f.read().split("\n")
 
-        self.lens_name = data[0]
+        self.lens_name = data[0].strip()
 
         sensor_info = data[1].split(" ")
         self.horizontal_aperture = float(sensor_info[0]) * 10
@@ -259,6 +259,49 @@ class TDE4Point(object):
             pos = list(map(float, pos.split(" ")))
             self.data[int(pos[0])] = pos[1:]
 
+    def __str__(self):
+        """Output data as string."""
+        data = [self.name, "0", "{}".format(len(self.data))]
+        for frame_number in self.data:
+            x, y = self.data[frame_number]
+            data.append("{} {} {}".format(frame_number, x, y))
+        return "\n".join(data)
+
+    def resize(
+        self,
+        old_width,
+        old_height,
+        new_width,
+        new_height,
+        keep_aspect_ratio=True,
+    ):
+        """Resize data according to the given data.
+
+        Args:
+            old_width (int): The old width of the image plane.
+            old_height (int): The old height of the image plane.
+            new_width (int): The new width of the image plane.
+            new_height (int): The new height of the image plane.
+            keep_aspect_ratio (bool): When set to True, the aspect ratio of the frame is
+                preserved and any difference between the aspect ratios will be
+                considered as letterbox or pillarbox.
+        """
+        old_width = float(old_width)
+        old_height = float(old_height)
+        new_width = float(new_width)
+        new_height = float(new_height)
+        if keep_aspect_ratio is False:
+            new_height_from_width = new_height
+        else:
+            new_height_from_width = old_height / old_width * new_width
+
+        for frame_number in self.data:
+            x, y = self.data[frame_number]
+            self.data[frame_number] = [
+                (x - old_width * 0.5) / old_width * new_width + new_width * 0.5,
+                (y - old_height * 0.5) / old_height * new_height_from_width + new_height  * 0.5,
+            ]
+
 
 class TDE4PointManager(object):
     """Manages 3DEqualizer points"""
@@ -285,21 +328,12 @@ class TDE4PointManager(object):
         cursor = 1
         for i in range(number_of_points):
             # gather individual point data
-            point_name = data[cursor]
-
-            # get start
-            cursor += 1
-            start = int(data[cursor])
-
-            # get end
-            cursor += 1
-            end = int(data[cursor])
-
+            point_name = data[cursor].strip()
+            cursor += 3
             # find the length
-            cursor += 1
             data_start = cursor
             length = 0
-            while cursor < len(data) - 1 and " " in data[cursor]:
+            while cursor < len(data) and " " in data[cursor]:
                 cursor += 1
                 length += 1
 
@@ -310,3 +344,18 @@ class TDE4PointManager(object):
             point = TDE4Point(point_name, point_data)
 
             self.points.append(point)
+
+    def write(self, file_path):
+        """Write point data to the given path.
+
+        Args:
+            file_path (str): File path to output.
+        """
+        data = ["{}".format(len(self.points))]
+        for point in self.points:
+            data.append(str(point))
+
+        data.append("")
+
+        with open(file_path, "w") as f:
+            f.write("\n".join(data))
