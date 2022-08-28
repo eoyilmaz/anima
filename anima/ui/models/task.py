@@ -132,26 +132,59 @@ class TaskItem(QtGui.QStandardItem):
     """Implement the Task as a QStandardItem.
 
     Args:
-        entity: An entity that has id, name, entity_type, status_id and has_children
-            fields
+        task (Entity): An entity that has id, name, entity_type, status_id and
+            has_children fields.
+        display_full_path (bool): When set to True, it will display the full path of the
+            entity (if this is a Task derivative). False by default.
     """
 
     task_entity_types = ["Task", "Asset", "Shot", "Sequence"]
 
     def __init__(self, *args, **kwargs):
-        self.task = kwargs.pop("task", None)
         self.loaded = False
         self.fetched_all = False
+        task = kwargs.pop("task", None)
+        self.display_full_path = kwargs.pop("display_full_path", False)
 
         QtGui.QStandardItem.__init__(self, *args, **kwargs)
-        logger.debug("TaskItem.__init__() is started for item: %s" % self.text())
         self.parent = None
         self.setEditable(False)
-        logger.debug("TaskItem.__init__() is finished for item: %s" % self.text())
 
-        icon = get_cached_icon(self.task.entity_type.lower())
+        self._task = None
+        self.task = task
+
+    @property
+    def task(self):
+        """Return Task.
+
+        Returns:
+            Task: The Stalker Task instance stored in this item.
+        """
+        return self._task
+
+    @task.setter
+    def task(self, task):
+        """Set the task property.
+
+        Args:
+            task: A stalker Task instance
+        """
+        self._task = task
+        if not self._task:
+            return
+
+        icon = get_cached_icon(self._task.entity_type.lower())
         self.setData(icon, QtCore.Qt.DecorationRole)
-        self.setData(self.task.name, QtCore.Qt.DisplayRole)
+
+        task_name = self.task.name
+        if self.display_full_path:
+            task_name = "{} ({} | {})".format(
+                task.name,
+                task.project.code,
+                " | ".join(list(map(lambda x: x.name, task.parents)))
+            )
+
+        self.setData(task_name, QtCore.Qt.DisplayRole)
 
     def clone(self):
         """Return a copy of this item.
@@ -570,13 +603,7 @@ class TaskTableModel(QtGui.QStandardItemModel):
             )
 
             # Name
-            name_item = QtGui.QStandardItem(
-                "{} ({} | {})".format(
-                    task.name,
-                    task.project.code,
-                    " | ".join(list(map(lambda x: x.name, task.parents)))
-                )
-            )
+            name_item = TaskItem(task=task, display_full_path=True)
 
             # Bid
             bid_timing_item = QtGui.QStandardItem(
