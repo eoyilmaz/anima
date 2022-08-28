@@ -10,7 +10,7 @@ author = [
 
 uuid = "fc2910d27b3247ca935e7dde7f7b1835"
 
-description = "3DEqualizer4 Package"
+description = "3DE4 Package"
 
 requires = [
     "python-2.7",

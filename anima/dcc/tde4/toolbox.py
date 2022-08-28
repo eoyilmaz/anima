@@ -8,14 +8,14 @@ os.environ['STALKER_PATH'] = '/mnt/T/STALKER_CONFIG'
 sys.path.append("/home/eoyilmaz/Documents/development/anima/anima")
 sys.path.append("/home/eoyilmaz/Documents/development/anima/extra_libraries/py2")
 sys.path.append("/home/eoyilmaz/Documents/development/anima/extra_libraries/py2/__extras__")
-from anima.dcc.equalizer import toolbox
+from anima.dcc.tde4 import toolbox
 
 toolbox.Toolbox.bake_3d_to_2d()
 """
 
 
 class Toolbox(object):
-    """toolbox for 3DEqualizer"""
+    """toolbox for 3DE4"""
 
     @classmethod
     def bake_3d_to_2d(cls):

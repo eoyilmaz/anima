@@ -277,8 +277,8 @@ def cam_to_chan(start_frame, end_frame):
         f.writelines("\n".join(lines))
 
 
-def import_3dequalizer_points(width, height):
-    """creates 3d equalizer points under the selected camera
+def import_3de4_points(width, height):
+    """Create 3DE4 points under the selected camera.
 
     :param width: The width of the plate
     :param height: The height of the plate
@@ -290,7 +290,7 @@ def import_3dequalizer_points(width, height):
     path = pm.fileDialog()
 
     # parse the file
-    from anima.dcc.equalizer import TDE4PointManager
+    from anima.dcc.tde4 import TDE4PointManager
 
     man = TDE4PointManager()
     man.read(path)

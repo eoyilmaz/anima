@@ -507,7 +507,7 @@ class GenericTools(object):
 
     @classmethod
     def tde4_import_track_point(cls, parent):
-        """imports 3DEqualizer track point as a Tracker"""
+        """imports 3DE4 track point as a Tracker"""
         # show a file browser
         dialog = QtWidgets.QFileDialog(parent, "Choose file")
         dialog.setNameFilter("3DE4 Track Point (*.txt)")

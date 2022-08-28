@@ -1505,21 +1505,21 @@ def UI():
 
             with pm.rowLayout(nc=3, adj=1):
 
-                def import_3dequalizer_points_callback():
-                    """callback for Import 3DEqualizer points"""
+                def import_3de4_points_callback():
+                    """callback for Import 3DE4 points"""
                     cam_width = pm.intField(
-                        "import_3DEqualizer_points_width_int_field", q=1, v=1
+                        "import_3DE4_points_width_int_field", q=1, v=1
                     )
                     cam_height = pm.intField(
-                        "import_3DEqualizer_points_height_int_field", q=1, v=1
+                        "import_3DE4_points_height_int_field", q=1, v=1
                     )
-                    camera_tools.import_3dequalizer_points(cam_width, cam_height)
+                    camera_tools.import_3de4_points(cam_width, cam_height)
 
                 pm.button(
-                    "import_3DEqualizer_points_button",
-                    l="Import 3DEqualizer Points",
-                    c=repeated_callback(import_3dequalizer_points_callback),
-                    ann=camera_tools.import_3dequalizer_points.__doc__,
+                    "import_3DE4_points_button",
+                    l="Import 3DE4 Points",
+                    c=repeated_callback(import_3de4_points_callback),
+                    ann=camera_tools.import_3de4_points.__doc__,
                     bgc=color.color,
                 )
                 default_image_width = 1920
@@ -1535,12 +1535,12 @@ def UI():
                     default_image_height = imf.height
 
                 pm.intField(
-                    "import_3DEqualizer_points_width_int_field",
+                    "import_3DE4_points_width_int_field",
                     min=1,
                     v=default_image_width,
                 )
                 pm.intField(
-                    "import_3DEqualizer_points_height_int_field",
+                    "import_3DE4_points_height_int_field",
                     min=1,
                     v=default_image_height,
                 )

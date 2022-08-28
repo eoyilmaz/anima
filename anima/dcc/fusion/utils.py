@@ -126,7 +126,7 @@ class TDE4LensDistortionImporter(object):
     def import_(self, lens_file_path):
         """imports the"""
         # load 3de4 lens info
-        from anima.dcc.equalizer import TDE4Lens
+        from anima.dcc.tde4 import TDE4Lens
 
         lens = TDE4Lens()
         lens.load(lens_file_path)
@@ -164,7 +164,7 @@ class TDE4LensDistortionImporter(object):
 
 
 class TDE4PointImporter(object):
-    """Imports 3DEqualizer points as tracker point data"""
+    """Import 3DE4 points as tracker point data."""
 
     def __init__(self, xres=1920, yres=1080):
         self.xres = xres
@@ -172,9 +172,9 @@ class TDE4PointImporter(object):
 
     def load_points(self, path):
         """loads the points from the given path"""
-        from anima.dcc import equalizer
+        from anima.dcc import tde4
 
-        pm = equalizer.TDE4PointManager()
+        pm = tde4.TDE4PointManager()
         pm.read(path)
 
         from anima.dcc import fusion
@@ -251,7 +251,7 @@ class TDE4PointImporter(object):
         # print("float_y_res: %s" % float_y_res)
 
         for point in pm.points:
-            assert isinstance(point, equalizer.TDE4Point)
+            assert isinstance(point, tde4.TDE4Point)
             for frame in sorted(point.data):
                 pos_data = point.data[frame]
                 # print("pos_data: %s" % pos_data)

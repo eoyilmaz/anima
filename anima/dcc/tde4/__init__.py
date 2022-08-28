@@ -241,7 +241,7 @@ class TDE4Lens(object):
 
 
 class TDE4Point(object):
-    """Represents a 3DEqualizer track point"""
+    """Represents a 3DE4 track point"""
 
     def __init__(self, name, data):
         self.data = {}
@@ -249,10 +249,9 @@ class TDE4Point(object):
         self.name = name
 
     def parse_data(self, data):
-        """Loads data from the given text
+        """Load data from the given text.
 
-        :param data: The data as text which is exported directly from
-          3DEqualizer
+        :param data: The data as text which is exported directly from 3DE4.
         :return:
         """
         for i, pos in enumerate(data):
@@ -304,7 +303,7 @@ class TDE4Point(object):
 
 
 class TDE4PointManager(object):
-    """Manages 3DEqualizer points"""
+    """Manages 3DE4 points"""
 
     def __init__(self):
         self.points = []
