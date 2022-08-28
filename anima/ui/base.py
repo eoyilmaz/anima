@@ -100,20 +100,20 @@ def ui_caller(app_in, executor, ui_class, **kwargs):
     global app
     global ui_instance
     self_quit = False
-    try:
-        app = QtWidgets.QApplication.instance()
-    except TypeError:
-        app = None
-    if app is None:
-        if not app_in:
+    app = app_in
+    if not app:
+        try:
+            app = QtWidgets.QApplication.instance()
+        except TypeError:
+            app = None
+
+        if app is None:
             try:
                 app = QtWidgets.QApplication(sys.argv)
             except (TypeError, AttributeError):  # sys.argv gives argv.error or
                 # Qt gives TypeError
                 app = QtWidgets.QApplication([])
-        else:
-            app = app_in
-        self_quit = True
+            self_quit = True
 
     ui_instance = ui_class(**kwargs)
     ui_instance.show()
