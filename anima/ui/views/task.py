@@ -1000,6 +1000,7 @@ class TaskTreeView(QtWidgets.QTreeView):
             item = self.load_task_item_hierarchy(task, tree_view)
             if item:
                 selection_model.select(item.index(), selection_flag)
+                items.append(item)
 
         # scroll to the first item
         if items:

@@ -1234,30 +1234,6 @@ class MainDialog(QtWidgets.QDialog, AnimaDialogBase):
                     # now reload the UI
                     self.update_previous_versions_table_widget()
 
-    @classmethod
-    def get_item_indices_containing_text(cls, text, tree_view):
-        """returns the indexes of the item indices containing the given text"""
-        model = tree_view.model()
-        logger.debug("searching for text : %s" % text)
-        return model.match(model.index(0, 0), 0, text, -1, QtCore.Qt.MatchRecursive)
-
-    def find_entity_item_in_tree_view(self, entity, tree_view):
-        """finds the item related to the stalker entity in the given
-        QtTreeView
-        """
-        if not entity:
-            return None
-
-        indexes = self.get_item_indices_containing_text(entity.name, tree_view)
-        model = tree_view.model()
-        logger.debug("items matching name : %s" % indexes)
-        for index in indexes:
-            item = model.itemFromIndex(index)
-            if item:
-                if item.task_id == entity.id:
-                    return item
-        return None
-
     def clear_recent_files(self):
         """clears the recent files"""
         if self.dcc:
