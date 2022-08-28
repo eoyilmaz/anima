@@ -549,6 +549,9 @@ class ShotClip(object):
             resolve = blackmagic.get_resolve()
             version_info = resolve.GetVersion()
             v.created_with = "Resolve%s.%s" % (version_info[0], version_info[1])
+            v.update_paths()
+
+            # TODO: Add the plate itself as the version output
             DBSession.add(v)
             DBSession.commit()
 
