@@ -185,7 +185,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def create_project_action_clicked(self):
         """runs when new project menu action is clicked"""
         # show the new project dialog
-        from anima.ui import project_dialog
+        from anima.ui.dialogs import project_dialog
 
         dialog = project_dialog.MainDialog(parent=self)
         dialog.exec_()
