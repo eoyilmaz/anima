@@ -921,9 +921,7 @@ class TaskTreeView(QtWidgets.QTreeView):
 
         # scroll to the first item
         if items:
-            self.scrollTo(
-                items[0].index(), QtWidgets.QAbstractItemView.PositionAtCenter
-            )
+            self.scrollTo(items[0].index())
         return items
 
     def load_task_item_hierarchy(self, task, tree_view):
