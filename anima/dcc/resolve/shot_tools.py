@@ -413,6 +413,27 @@ class ShotClip(object):
             DBSession.add(anim_task)
             DBSession.commit()
 
+        # Track
+        with DBSession.no_autoflush:
+            track_task = (
+                Task.query.filter(Task.parent == shot)
+                .filter(Task.name == "Track")
+                .first()
+            )
+        if not track_task:
+            track_task = Task(
+                name="Track",
+                parent=shot,
+                type=self.get_type("Track"),
+                bid_timing=10,
+                bid_unit="min",
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
+                description="Autocreated by Resolve",
+            )
+            DBSession.add(track_task)
+            DBSession.commit()
+
         # Camera
         with DBSession.no_autoflush:
             camera_task = (
@@ -570,7 +591,14 @@ class ShotClip(object):
 
         with DBSession.no_autoflush:
             try:
-                camera_task.depends = [plate_task]
+                track_task.depends = [plate_task]
+            except StatusError as e:
+                print(e)
+                DBSession.rollback()
+                pass
+
+            try:
+                camera_task.depends = [plate_task, track_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
