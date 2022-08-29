@@ -241,9 +241,7 @@ def set_all_cameras_cacheable(progress_controller=None):
         if camera_transform.name() not in ["persp", "top", "front", "side"]:
             from anima.dcc.mayaEnv import rigging
 
-            rigging.Rigging.add_cacheable_attribute(
-                camera_transform, cacheable_attr_value="camera"
-            )
+            rigging.Rigging.add_cacheable_attribute(camera_transform)
         progress_controller.increment()
 
     progress_controller.complete()
