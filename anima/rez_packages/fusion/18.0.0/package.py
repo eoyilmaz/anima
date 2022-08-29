@@ -33,3 +33,6 @@ def commands():
     env.PATH.append(
         "/opt/BlackmagicDesign/FusionRenderNode{}/".format(env.REZ_FUSION_MAJOR_VERSION)
     )
+    env.PYTHONPATH.append(
+        "/opt/BlackmagicDesign/Fusion{}/".format(env.REZ_FUSION_MAJOR_VERSION)
+    )
