@@ -889,7 +889,7 @@ class Fusion(DCCBase):
                                 "input_list": {
                                     "OCIOConfig": "LUTs:/OpenColorIO-Configs/aces_1.3/config.ocio",
                                     "SourceSpace": "ACES - ACES2065-1",
-                                    "OutputSpace": "Output - sRGB",
+                                    "OutputSpace": "Utility - sRGB - Texture",
                                 },
                                 "connected_to": {
                                     "Input": {
