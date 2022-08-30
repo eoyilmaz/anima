@@ -242,26 +242,33 @@ sourceimages/3dPaintTextures"""
                 ".hdr",
             ]
 
-            if file_extension in texture_file_extensions and "<udim>" in new_file_path:
+            if file_extension in texture_file_extensions:
                 # get the rest of the UDIMs
                 new_file_paths = []
-                texture_file_paths = glob.glob(
-                    path.replace("<udim>", "*")
-                    .replace("u1_v1", "u*_v*")
-                    .replace("U1_V1", "U*_V*")
-                )
-                if texture_file_paths:
-                    logger.debug("found UDIM textures:")
+                if "<udim>" in new_file_path:
+                    image_file_paths = glob.glob(
+                        path.replace("<udim>", "*")
+                        .replace("u1_v1", "u*_v*")
+                        .replace("U1_V1", "U*_V*")
+                    )
+                    if image_file_paths:
+                        logger.debug("found UDIM textures:")
+                else:
+                    # TODO: Update this to also catch frames that doesn't start from
+                    #       1001.
+                    image_file_paths = glob.glob(
+                        path.replace(".1001.", ".*.")
+                    )
 
-                for texture_file_path in texture_file_paths:
-                    logger.debug(texture_file_path)
-                    texture_file_name = os.path.basename(texture_file_path)
-                    new_texture_file_path = os.path.join(
+                for image_file_path in image_file_paths:
+                    logger.debug(image_file_path)
+                    image_file_name = os.path.basename(image_file_path)
+                    new_image_file_path = os.path.join(
                         project_path,
                         scenes_folder_lut.get(file_extension, refs_folder),
-                        texture_file_name,
+                        image_file_name,
                     )
-                    new_file_paths.append((texture_file_path, new_texture_file_path))
+                    new_file_paths.append((image_file_path, new_image_file_path))
             elif file_extension == ".rs":
                 # # this could be a .rs cache file series
                 # new_file_paths = []
