@@ -11,10 +11,16 @@ timeline = resolve_project.GetCurrentTimeline()
 clip = timeline.GetCurrentVideoItem()
 
 """
+import os
+
 from anima import logger
+from anima.dcc import blackmagic
+from anima.dcc.base import DCCBase
 from anima.ui.lib import QtCore, QtWidgets
 from anima.ui.utils import ColorList, set_widget_bg_color
 
+from stalker.db.session import DBSession
+from stalker import Version
 
 DEFAULT_TAKE_NAME = "Main"
 DEFAULT_RENDER_PRESET_NAME = "PlateInjector"
@@ -518,6 +524,35 @@ class ShotClip(object):
             DBSession.add(lighting_task)
             DBSession.commit()
 
+        # Sound
+        with DBSession.no_autoflush:
+            sound_task = (
+                Task.query.filter(Task.parent == shot)
+                .filter(Task.name == "Sound")
+                .first()
+            )
+        if not sound_task:
+            import datetime
+            import pytz
+            from stalker import defaults
+
+            utc_now = datetime.datetime.now(pytz.utc)
+            sound_task = Task(
+                name="Sound",
+                parent=shot,
+                type=self.get_type("Sound"),
+                schedule_timing=10,
+                schedule_unit="min",
+                schedule_model="duration",
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
+                description="Autocreated by Resolve",
+                start=utc_now,  # this will be rounded to the timing resolution
+                duration=defaults.timing_resolution,
+            )
+            DBSession.add(sound_task)
+            DBSession.commit()
+
         # Plate
         with DBSession.no_autoflush:
             plate_task = (
@@ -547,41 +582,13 @@ class ShotClip(object):
             DBSession.add(plate_task)
             DBSession.commit()
 
-        # Create a dummy version if there is non
-        from stalker import Version
-
-        with DBSession.no_autoflush:
-            all_versions = (
-                Version.query.filter(Version.task == plate_task)
-                .filter(Version.take_name == take_name)
-                .all()
-            )
-
-        if not all_versions:
-            v = Version(
-                task=plate_task,
-                take_name=take_name,
-                created_by=logged_in_user,
-                updated_by=logged_in_user,
-                description="Autocreated by Resolve",
-            )
-            from anima.dcc import blackmagic
-
-            resolve = blackmagic.get_resolve()
-            version_info = resolve.GetVersion()
-            v.created_with = "Resolve%s.%s" % (version_info[0], version_info[1])
-            v.update_paths()
-
-            # TODO: Add the plate itself as the version output
-            DBSession.add(v)
-            DBSession.commit()
-
         # set the status the task
         with DBSession.no_autoflush:
             from stalker import Status
 
             cmpl = Status.query.filter(Status.code == "CMPL").first()
             plate_task.status = cmpl
+            sound_task.status = cmpl
 
         # Flush the DB first to prevent some empty id errors on already existing shots
         DBSession.commit()
@@ -605,7 +612,7 @@ class ShotClip(object):
                 pass
 
             try:
-                anim_task.depends = [camera_task]
+                anim_task.depends = [camera_task, sound_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
@@ -626,7 +633,7 @@ class ShotClip(object):
                 pass
 
             try:
-                comp_task.depends = [lighting_task, plate_task]
+                comp_task.depends = [lighting_task, plate_task, sound_task]
             except StatusError as e:
                 print(e)
                 DBSession.rollback()
@@ -855,37 +862,72 @@ class ShotClip(object):
         # get the shot
         from stalker import Task, Type
 
-        # shot = Shot.query.filter(Shot.project==self.stalker_project).filter(Shot.code==self.shot_code).first()
-        # if not shot:
-        #     # raise RuntimeError("No shot with code: %s" % self.shot_code)
         shot = self.create_shot_hierarchy(handle=handle, take_name=take_name)
 
-        # get plate task
-        plate_type = Type.query.filter(Type.name == "Plate").first()
-        if not plate_type:
-            raise RuntimeError("No plate type!!!")
+        # check if the preset is Audio Only
+        # TODO: Use a better approach to define if the preset is audio only.
+        audio_only = "Audio Only" in preset_name
 
-        from stalker.db.session import DBSession
+        main_task = None
+        if not audio_only:
+            # use the plate task
+            plate_type = Type.query.filter(Type.name == "Plate").first()
+            if not plate_type:
+                raise RuntimeError("No plate type!!!")
 
+            with DBSession.no_autoflush:
+                plate_task = (
+                    Task.query.filter(Task.parent == shot)
+                    .filter(Task.type == plate_type)
+                    .first()
+                )
+            if not plate_task:
+                raise RuntimeError("No plate task in shot: %s" % self.shot_code)
+            main_task = plate_task
+        else:
+            # use the sound task
+            sound_type = Type.query.filter(Type.name == "Sound").first()
+            if not sound_type:
+                raise RuntimeError("No sound type!!!")
+
+            with DBSession.no_autoflush:
+                sound_task = (
+                    Task.query.filter(Task.parent == shot)
+                        .filter(Task.type == sound_type)
+                        .first()
+                )
+            if not sound_task:
+                raise RuntimeError("No sound task in shot: %s" % self.shot_code)
+            main_task = sound_task
+
+        # Create a dummy version if there is none
         with DBSession.no_autoflush:
-            plate_task = (
-                Task.query.filter(Task.parent == shot)
-                .filter(Task.type == plate_type)
-                .first()
+            all_versions = (
+                Version.query.filter(Version.task == main_task)
+                .filter(Version.take_name == take_name)
+                .all()
             )
-        if not plate_task:
-            raise RuntimeError("No plate task in shot: %s" % self.shot_code)
 
-        # proj.SetCurrentRenderFormatAndCodec('exr', 'RGBHalfZIP')
+        if not all_versions:
+            logged_in_user = self.get_logged_in_user()
+            version = Version(
+                task=main_task,
+                take_name=take_name,
+                created_by=logged_in_user,
+                updated_by=logged_in_user,
+                description="Autocreated by Resolve",
+            )
 
-        version = plate_task.versions[-1]
-        from stalker import Version
+            resolve = blackmagic.get_resolve()
+            version_info = resolve.GetVersion()
+            version.created_with = "Resolve%s.%s" % (version_info[0], version_info[1])
+            version.update_paths()
 
-        assert isinstance(version, Version)
+            DBSession.add(version)
+            DBSession.commit()
+        else:
+            version = all_versions[-1]
         version = version.latest_version
-        assert isinstance(version, Version)
-        from anima.dcc.base import DCCBase
-
         version_sig_name = DCCBase.get_significant_name(
             version, include_project_code=False
         )
@@ -894,16 +936,15 @@ class ShotClip(object):
         version.update_paths()
         version.extension = extension
 
-        import os
-
-        custom_name = "%s." % version_sig_name
+        custom_name = "%s." % version_sig_name if not audio_only else version_sig_name
         target_dir = os.path.join(
             version.absolute_path,
             "Outputs",
             version.take_name,
             "v%03d" % version.version_number,
-            "exr",
+            "wav" if audio_only else "exr",
         )
+        # TODO: Add the plate/sound itself as the version output
 
         proj.SetRenderSettings(
             {
